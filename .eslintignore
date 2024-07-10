@@ -1,0 +1,7 @@
+node_modules/*
+static/*
+dist/*
+@types/*
+.eslintrc.js
+integration-tests/*
+commitlint.config.js
