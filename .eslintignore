@@ -2,6 +2,7 @@ node_modules/*
 static/*
 dist/*
 @types/*
-.eslintrc.js
+.eslintrc.cjs
 integration-tests/*
 commitlint.config.js
+**.config.js
