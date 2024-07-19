@@ -22,5 +22,5 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src/", "@types"],
-  "exclude": ["*.config.js", ".*.cjs"]
+  "exclude": ["*.config.js", ".*.cjs", "node_modules", "config/*"]
 }
