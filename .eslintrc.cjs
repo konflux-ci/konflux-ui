@@ -23,7 +23,7 @@ module.exports = {
     tsconfigRootDir: './',
     extraFileExtensions: ['.json'],
   },
-  plugins: ['react-refresh'],
+  plugins: ['prettier', 'react-refresh'],
   rules: {
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     camelcase: [
