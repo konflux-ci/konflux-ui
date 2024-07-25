@@ -1,0 +1,16 @@
+{
+  "$schema": "https://swc.rs/schema.json",
+  "sourceMaps": true,
+  "jsc": {
+    "parser": {
+      "syntax": "typescript"
+    },
+    "transform": {
+      "useDefineForClassFields": true,
+      "react": {
+        "runtime": "automatic"
+      }
+    },
+    "target": "es2020"
+  }
+}
