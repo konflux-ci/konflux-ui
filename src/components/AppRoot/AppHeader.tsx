@@ -1,12 +1,16 @@
 import * as React from 'react';
 import {
+  Brand,
   Masthead,
   MastheadBrand,
+  MastheadContent,
   MastheadMain,
   MastheadToggle,
   PageToggleButton,
 } from '@patternfly/react-core';
 import BarsIcon from '@patternfly/react-icons/dist/js/icons/bars-icon';
+import konfluxLogo from '../../assets/konflux.svg';
+import { Header } from '../Header.tsx/Header';
 
 export const AppHeader: React.FC<{ isSideBarOpen: boolean; onSideBarOpen: () => void }> = ({
   isSideBarOpen,
@@ -25,8 +29,13 @@ export const AppHeader: React.FC<{ isSideBarOpen: boolean; onSideBarOpen: () => 
         </PageToggleButton>
       </MastheadToggle>
       <MastheadMain>
-        <MastheadBrand>Konflux Logo</MastheadBrand>
+        <MastheadBrand>
+          <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
+        </MastheadBrand>
       </MastheadMain>
+      <MastheadContent>
+        <Header />
+      </MastheadContent>
     </Masthead>
   );
 };

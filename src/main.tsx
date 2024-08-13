@@ -2,7 +2,9 @@ import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
 import { router } from './routes';
+
 import '@patternfly/react-core/dist/styles/base.css';
+import './main.scss';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

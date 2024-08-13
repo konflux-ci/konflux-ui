@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "webpack -c ./webpack.prod.config.js",
-    "start": "webpack server --open -c ./webpack.dev.config.js",
+    "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",
     "test": "jest",
     "coverage": "jest --coverage --runInBand --detectOpenHandles --forceExit --testPathIgnorePatterns=/pact-tests",
     "lint": "yarn lint:ts && yarn lint:sass",
@@ -25,6 +25,7 @@
   "devDependencies": {
     "@commitlint/cli": "^19.3.0",
     "@commitlint/config-conventional": "^19.2.2",
+    "@dotenvx/dotenvx": "^1.7.0",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.15",
     "@swc/core": "^1.6.13",
     "@swc/jest": "^0.2.36",
