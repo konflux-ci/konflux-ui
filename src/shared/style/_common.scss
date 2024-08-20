@@ -1,0 +1,90 @@
+@use 'sass:math';
+
+.pane-body {
+  margin: $grid-gutter-width 0 0;
+  padding: 0 math.div($grid-gutter-width, 2) $grid-gutter-width;
+  @media (min-width: $screen-sm-min) {
+    padding-left: $grid-gutter-width;
+    padding-right: $grid-gutter-width;
+  }
+  &--full-height {
+    height: 100%;
+  }
+  &--no-top-margin {
+    margin-top: 0;
+  }
+  &--section-heading {
+    padding-bottom: 0;
+  }
+  + .pane-body {
+    border-top: 1px solid $color-grey-background-border;
+    margin-top: 0;
+    padding-top: $grid-gutter-width;
+  }
+}
+
+.pane__heading {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 $grid-gutter-width;
+  &--baseline {
+    align-items: baseline;
+  }
+  &--center {
+    justify-content: center;
+  }
+  &--logo {
+    align-items: center;
+    margin-bottom: math.div($grid-gutter-width, 2);
+  }
+}
+
+.loader {
+  min-width: 18px;
+}
+
+.loader-dot__one,
+.loader-dot__two,
+.loader-dot__three {
+  animation-delay: 0;
+  animation-direction: normal;
+  animation-duration: 1s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: bouncedelay;
+  animation-play-state: running;
+  animation-timing-function: ease-in-out;
+  background: #419eda;
+  border-radius: 100%;
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+}
+
+.loader-dot__one {
+  animation-delay: -0.32s;
+}
+
+.loader-dot__two {
+  animation-delay: -0.16s;
+}
+
+.icon-and-text {
+  align-items: baseline;
+  display: block;
+
+  &__icon {
+    flex-shrink: 0;
+    margin-right: 5px;
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.hacDev {
+  .pf-v5-c-toolbar__group, .pf-v5-c-toolbar__item {
+    align-items: center;
+  }
+}

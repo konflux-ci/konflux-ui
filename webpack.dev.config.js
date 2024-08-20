@@ -37,7 +37,7 @@ export default merge(commonConfig, {
         changeOrigin: true,
         autoRewrite: true,
         ws: true,
-        pathRewrite: { '^/api/k8s/registration': '' },
+        // pathRewrite: { '^/api/k8s/registration': '' },
       },
       {
         context: (path) => path.includes('/api/k8s'),
@@ -46,7 +46,7 @@ export default merge(commonConfig, {
         changeOrigin: true,
         autoRewrite: true,
         ws: true,
-        pathRewrite: { '^/api/k8s': '' },
+        // pathRewrite: { '^/api/k8s': '' },
       },
       {
         context: (path) => path.includes('/wss/k8s'),
@@ -55,7 +55,7 @@ export default merge(commonConfig, {
         changeOrigin: true,
         autoRewrite: true,
         ws: true,
-        pathRewrite: { '^/wss/k8s': '' },
+        // pathRewrite: { '^/wss/k8s': '' },
       },
     ],
   },
@@ -86,5 +86,5 @@ export default merge(commonConfig, {
       },
     ],
   },
-  plugins: [new ReactRefreshWebpackPlugin(), new ForkTsCheckerWebpackPlugin()],
+  plugins: [new ReactRefreshWebpackPlugin(), new ForkTsCheckerWebpackPlugin({ devServer: false })],
 });

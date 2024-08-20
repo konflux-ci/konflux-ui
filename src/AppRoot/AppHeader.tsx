@@ -9,8 +9,8 @@ import {
   PageToggleButton,
 } from '@patternfly/react-core';
 import BarsIcon from '@patternfly/react-icons/dist/js/icons/bars-icon';
-import konfluxLogo from '../../assets/konflux.svg';
-import { Header } from '../Header.tsx/Header';
+import konfluxLogo from '../assets/konflux.svg';
+import { Header } from '../components/Header/Header';
 
 export const AppHeader: React.FC<{ isSideBarOpen: boolean; onSideBarOpen: () => void }> = ({
   isSideBarOpen,

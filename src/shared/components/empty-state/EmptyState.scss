@@ -1,0 +1,20 @@
+.app-empty-state {
+  &.pf-v5-c-empty-state {
+    padding-top: var(--pf-v5-global--spacer--2xl);
+    padding-bottom: var(--pf-v5-global--spacer--2xl);
+    &.m-is-top-level {
+      border: var(--pf-v5-global--BorderWidth--sm) var(--pf-v5-global--palette--black-500) dashed;
+      border-radius: 3px;
+      margin-top: var(--pf-v5-global--spacer--xl);
+    }
+  }
+  &__icon {
+    width: var(--pf-v5-global--spacer--3xl);
+    &.m-is-xl {
+      width: var(--pf-v5-global--spacer--4xl);
+    }
+    &.m-is-error {
+      color: var(--pf-v5-global--danger-color--100);
+    }
+  }
+}
