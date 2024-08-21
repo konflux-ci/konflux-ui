@@ -53,11 +53,8 @@ const validateStatus = async (response: Response) => {
   });
 };
 
-export const applyDefaults = <TObject>(
-  obj: TObject,
-  defaults: unknown,
-  // eslint-disable-next-line
-): TObject => defaultsDeep({}, obj, defaults);
+export const applyDefaults = <TObject>(obj: TObject, defaults: unknown): TObject =>
+  defaultsDeep({}, obj, defaults);
 
 const basicFetch = async (url: string, requestInit: RequestInit = {}): Promise<Response> => {
   return validateStatus(

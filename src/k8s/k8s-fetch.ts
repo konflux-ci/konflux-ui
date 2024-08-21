@@ -1,9 +1,9 @@
-import { queryClient } from './query/core';
-import { createQueryKeys } from './query/utils';
 import { AnyObject } from '../types/common';
 import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptions } from '../types/k8s';
 import { commonFetchJSON } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
+import { queryClient } from './query/core';
+import { createQueryKeys } from './query/utils';
 
 export type K8sResourceBaseOptions<TQueryOptions = QueryOptions> = {
   model: K8sModelCommon;

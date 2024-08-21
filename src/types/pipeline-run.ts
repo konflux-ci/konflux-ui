@@ -1,6 +1,6 @@
-import { K8sResourceCommon } from './k8s';
 import { ObjectMetadata } from '../shared/components/types';
 import { TektonResultsRun } from './coreTekton';
+import { K8sResourceCommon } from './k8s';
 import { PipelineKind, PipelineSpec, WhenExpression } from './pipeline';
 import { TaskRunStatus, TaskRunStatusV1Beta1 } from './task-run';
 

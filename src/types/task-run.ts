@@ -1,10 +1,10 @@
-import { K8sResourceCommon } from './k8s';
 import {
   TektonResource,
   TektonResultsRun,
   TektonTaskSpec,
   TektonTaskSpecV1Beta1,
 } from './coreTekton';
+import { K8sResourceCommon } from './k8s';
 import { PipelineTaskParam, PipelineTaskRef } from './pipeline';
 import {
   Condition,

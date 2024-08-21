@@ -80,7 +80,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
       {({ height, isScrolling, registerChild, onChildScroll, scrollTop }) => (
         <AutoSizer disableHeight>
           {({ width }) => (
-            <div ref={registerChild as any}>
+            <div ref={registerChild}>
               <VirtualBody
                 Row={Row}
                 customData={customData}

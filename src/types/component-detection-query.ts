@@ -1,5 +1,5 @@
-import { K8sResourceCommon } from './k8s';
 import { ComponentSpecs } from './component';
+import { K8sResourceCommon } from './k8s';
 
 export type DetectedComponents = {
   [key: string]: {

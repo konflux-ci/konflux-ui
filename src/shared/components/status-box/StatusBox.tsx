@@ -6,8 +6,8 @@ import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import isString from 'lodash/isString';
 import * as restrictedSignImg from '../../../assets/restricted-sign.svg';
-import { AnyObject } from '../../../types/common';
 import { TimeoutError } from '../../../k8s/error';
+import { AnyObject } from '../../../types/common';
 
 import './StatusBox.scss';
 
