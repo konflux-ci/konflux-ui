@@ -1,4 +1,3 @@
-import React from 'react';
 import { useK8sWatchResource } from '../k8s/hooks/useK8sWatchResource';
 import { ApplicationGroupVersionKind, ApplicationModel } from '../models';
 import { ApplicationKind } from '../types';
@@ -11,7 +10,7 @@ export const useApplications = (
     data: applications,
     isLoading,
     error,
-  } = useK8sWatchResource(
+  } = useK8sWatchResource<ApplicationKind[]>(
     {
       groupVersionKind: ApplicationGroupVersionKind,
       namespace,
@@ -19,18 +18,26 @@ export const useApplications = (
       isList: true,
     },
     ApplicationModel,
+    {
+      filterData: (resource) =>
+        resource?.filter(
+          (application: ApplicationKind) => !application.metadata?.deletionTimestamp,
+        ) ?? [],
+    },
   );
 
-  return React.useMemo(
-    () => [
-      (applications as unknown as ApplicationKind[]).filter(
-        (application: ApplicationKind) => !application.metadata?.deletionTimestamp,
-      ),
-      !isLoading,
-      error,
-    ],
-    [applications, isLoading, error],
+  useK8sWatchResource(
+    {
+      groupVersionKind: ApplicationGroupVersionKind,
+      namespace,
+      workspace,
+      name: 'sample-component',
+      isList: true,
+    },
+    ApplicationModel,
   );
+
+  return [applications, !isLoading, error];
 };
 
 // export const useApplication = (

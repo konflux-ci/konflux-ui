@@ -271,7 +271,7 @@ export const convertToK8sQueryParams = (resourceInit: WatchK8sResource): QueryOp
     queryParams.labelSelector = selectorToString(resourceInit.selector);
   }
   if (!isEmpty(resourceInit.fieldSelector)) {
-    queryParams.fieldManager = resourceInit.fieldSelector;
+    queryParams.fieldSelector = resourceInit.fieldSelector;
   }
   if (resourceInit.limit) {
     queryParams.limit = resourceInit.limit;

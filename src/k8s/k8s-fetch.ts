@@ -3,7 +3,8 @@ import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptions } from '../types
 import { commonFetchJSON } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
 import { queryClient } from './query/core';
-import { createQueryKeys } from './query/utils';
+import { TQueryOptions } from './query/type';
+import { createQueryOptions } from './query/utils';
 
 export type K8sResourceBaseOptions<TQueryOptions = QueryOptions> = {
   model: K8sModelCommon;
@@ -42,6 +43,10 @@ export type K8sResourceListResult<TResource extends K8sResourceCommon> = {
   };
 };
 
+export type ResourcePromiseFunction = <TResource>(
+  args: K8sResourceBaseOptions,
+) => Promise<TResource>;
+
 export const getResource = <TResource extends K8sResourceCommon>({
   model,
   queryOptions = {},
@@ -55,20 +60,11 @@ export const getResource = <TResource extends K8sResourceCommon>({
   );
 };
 
-export const k8sGetResource = <TResource extends K8sResourceCommon>({
-  model,
-  queryOptions = {},
-  fetchOptions = {},
-}: K8sResourceReadOptions): Promise<TResource> => {
-  return queryClient.fetchQuery({
-    queryKey: createQueryKeys(
-      { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
-      queryOptions.ws,
-      queryOptions.name,
-    ),
-    queryFn: () => getResource({ model, queryOptions, fetchOptions }),
-  });
-};
+export const k8sGetResource = <TResource extends K8sResourceCommon>(
+  resourceInit: K8sResourceReadOptions,
+  options: TQueryOptions<TResource>,
+): Promise<TResource> =>
+  queryClient.ensureQueryData(createQueryOptions<TResource>(getResource)([resourceInit], options));
 
 export const k8sListResource = <TResource extends K8sResourceCommon>({
   model,
@@ -97,18 +93,10 @@ export const listResourceItems = <TResource extends K8sResourceCommon>(
   options: K8sResourceListOptions,
 ): Promise<TResource[]> => k8sListResource<TResource>(options).then((result) => result.items);
 
-export const K8sListResourceItems = <TResource extends K8sResourceCommon>({
-  model,
-  queryOptions,
-  fetchOptions,
-}: K8sResourceListOptions): Promise<TResource[]> =>
-  queryClient.fetchQuery({
-    queryKey: createQueryKeys(
-      { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
-      queryOptions?.ws,
-    ),
-    queryFn: () =>
-      k8sListResource<TResource>({ model, queryOptions, fetchOptions }).then(
-        (result) => result.items,
-      ),
-  });
+export const K8sListResourceItems = <TResource extends K8sResourceCommon>(
+  resourceInit: K8sResourceListOptions,
+  options?: TQueryOptions<TResource[]>,
+): Promise<TResource[]> =>
+  queryClient.ensureQueryData(
+    createQueryOptions<TResource[]>(listResourceItems)([resourceInit], options),
+  );

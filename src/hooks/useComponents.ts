@@ -33,7 +33,7 @@ export const useComponents = (
     data: components,
     isLoading: componentsLoaded,
     error,
-  } = useK8sWatchResource(
+  } = useK8sWatchResource<ComponentKind[]>(
     {
       groupVersionKind: ComponentGroupVersionKind,
       workspace,
