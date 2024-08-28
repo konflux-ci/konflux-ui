@@ -32,7 +32,8 @@ export const useApplications = (
       namespace,
       workspace,
       name: 'sample-component',
-      isList: true,
+      // isList: true,
+      watch: true,
     },
     ApplicationModel,
   );

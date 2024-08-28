@@ -69,13 +69,13 @@ export type OwnerReference = {
   blockOwnerDeletion?: boolean;
 };
 
-export type QueryOptions = Partial<{
+export type QueryOptions = {
   ns: string;
   ws: string;
-  name: string;
-  path: string;
+  name?: string;
+  path?: string;
   queryParams: QueryParams;
-}>;
+};
 
 export type QueryParams = Partial<{
   watch: string;
@@ -162,4 +162,5 @@ export type WatchK8sResource = {
   fieldSelector?: string;
   optional?: boolean;
   partialMetadata?: boolean;
+  watch?: boolean;
 };

@@ -100,3 +100,5 @@ export const K8sListResourceItems = <TResource extends K8sResourceCommon>(
   queryClient.ensureQueryData(
     createQueryOptions<TResource[]>(listResourceItems)([resourceInit], options),
   );
+
+export const paginatedListResource = (resourceOption: K8sResourceListOptions, token?: string) => {};

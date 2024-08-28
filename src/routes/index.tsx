@@ -20,7 +20,7 @@ export const router = createBrowserRouter(
           element: <Overview />,
         },
         {
-          path: '/ws/:workspace/applications',
+          path: '/workspaces/:workspace/applications',
           loader: applicationPageLoader,
           element: <ApplicationListView />,
         },

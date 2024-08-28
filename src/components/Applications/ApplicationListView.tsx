@@ -34,6 +34,20 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   // const applicationBreadcrumbs = useApplicationBreadcrumbs();
   // const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
   // const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
+
+  React.useEffect(() => {
+    console.log('############ - mounted');
+    return () => {
+      console.log('############### - unmounted');
+    };
+  }, []);
+
+  React.useEffect(() => {
+    console.log('############ - rerender');
+    return () => {
+      console.log('############### - unmounted - render');
+    };
+  });
   const namespace = 'user-ns1',
     workspace = 'user1';
   const [applications, loaded] = useApplications(namespace, workspace);

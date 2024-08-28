@@ -13,7 +13,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               <NavLink to="/">Overview</NavLink>
             </NavItem>
             <NavItem isActive={location.pathname.includes('applications')}>
-              <NavLink to="/ws/user1/applications">Applications</NavLink>
+              <NavLink to="/workspaces/user1/applications">Applications</NavLink>
             </NavItem>
           </NavList>
         </Nav>

@@ -6,6 +6,7 @@ import {
   ResourcePromiseFunction,
 } from '../k8s-fetch';
 import { CreateQueryOptionsArgs, TQueryOptions } from './type';
+import { isPlainObject } from 'lodash-es';
 
 export const createQueryKeys = ([
   { model, queryOptions },
@@ -42,3 +43,19 @@ export const createQueryOptions =
       ...(options ?? {}),
     });
   };
+
+export const hashQueryKeys = (key: ReadonlyArray<unknown>): string => {
+  return JSON.stringify(key, (_, val) =>
+    isPlainObject(val)
+      ? Object.keys(val as object)
+          .sort()
+          .reduce(
+            (result, k) => {
+              result[k] = val[k];
+              return result;
+            },
+            {} as { [key: string]: unknown },
+          )
+      : val,
+  );
+};

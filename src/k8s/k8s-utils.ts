@@ -14,6 +14,8 @@ import type {
   K8sGroupVersionKind,
   K8sStatus,
 } from '../types/k8s';
+import { WebSocketOptions } from './web-socket/types';
+import { WebSocketFactory } from './web-socket/WebSocketFactory';
 
 type CreateQueryParams = Pick<
   QueryParams,
@@ -181,57 +183,64 @@ export const selectorToString = (selector: Selector | undefined): string => {
   return requirements.map(requirementToString).join(',');
 };
 
-// export const k8sWatch = (
-//   kind: K8sModelCommon,
-//   query: {
-//     labelSelector?: Selector;
-//     resourceVersion?: string;
-//     ns?: string;
-//     fieldSelector?: string;
-//   } = {},
-//   options: Partial<
-//     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
-//   > = {},
-// ) => {
-//   const queryParams: QueryParams = { watch: 'true' };
-//   const opts: {
-//     queryParams: QueryParams;
-//     ns?: string;
-//   } = { queryParams };
-//   const wsOptionsUpdated: WebSocketOptions = {
-//     path: '',
-//     reconnect: true,
-//     jsonParse: true,
-//     bufferFlushInterval: 500,
-//     bufferMax: 1000,
-//     ...options,
-//   };
+export const k8sWatch = (
+  kind: K8sModelCommon,
+  query: {
+    labelSelector?: Selector;
+    resourceVersion?: string;
+    ns?: string;
+    fieldSelector?: string;
+    ws?: string;
+  } = {},
+  options: Partial<
+    WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
+  > = {},
+) => {
+  const queryParams: QueryParams = { watch: 'true' };
+  const opts: {
+    queryParams: QueryParams;
+    ns?: string;
+    ws?: string;
+  } = { queryParams };
+  const wsOptionsUpdated: WebSocketOptions = {
+    path: '',
+    reconnect: true,
+    jsonParse: true,
+    bufferFlushInterval: 500,
+    bufferMax: 1000,
+    ...options,
+  };
 
-//   const { labelSelector } = query;
-//   if (labelSelector) {
-//     const encodedSelector = selectorToString(labelSelector);
-//     if (encodedSelector) {
-//       queryParams.labelSelector = encodedSelector;
-//     }
-//   }
+  const { labelSelector } = query;
+  if (labelSelector) {
+    const encodedSelector = selectorToString(labelSelector);
+    if (encodedSelector) {
+      queryParams.labelSelector = encodedSelector;
+    }
+  }
 
-//   if (query.fieldSelector) {
-//     queryParams.fieldSelector = query.fieldSelector;
-//   }
+  if (query.fieldSelector) {
+    queryParams.fieldSelector = query.fieldSelector;
+  }
 
-//   if (query.ns) {
-//     opts.ns = query.ns;
-//   }
+  if (query.ns) {
+    opts.ns = query.ns;
+  }
 
-//   if (query.resourceVersion) {
-//     queryParams.resourceVersion = query.resourceVersion;
-//   }
+  if (query.ws) {
+    opts.ws = query.ws;
+  }
 
-//   const path = getK8sResourceURL(kind, undefined, opts);
-//   wsOptionsUpdated.path = path;
+  if (query.resourceVersion) {
+    queryParams.resourceVersion = query.resourceVersion;
+  }
 
-//   return new WebSocketFactory(path, wsOptionsUpdated);
-// };
+  const path = getK8sResourceURL(kind, undefined, opts);
+  wsOptionsUpdated.path = `/wss/k8s${path}`;
+  wsOptionsUpdated.host = 'auto';
+
+  return new WebSocketFactory(path, wsOptionsUpdated);
+};
 
 /**
  * Provides a group, version, and kind for a k8s model.
@@ -277,9 +286,9 @@ export const convertToK8sQueryParams = (resourceInit: WatchK8sResource): QueryOp
     queryParams.limit = resourceInit.limit;
   }
   return {
-    ns: resourceInit.namespace,
+    ns: resourceInit.namespace as string,
     name: resourceInit.name,
-    ws: resourceInit.workspace,
+    ws: resourceInit.workspace as string,
     queryParams,
   };
 };
