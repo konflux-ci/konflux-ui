@@ -69,7 +69,7 @@ const getK8sAPIPath = (
 export const getK8sResourceURL = (
   model: K8sModelCommon,
   resource?: K8sResourceCommon,
-  queryOptions: QueryOptions = {},
+  queryOptions: Partial<QueryOptions> = {},
   isCreate = false,
 ) => {
   const { ns, name, path, queryParams } = queryOptions;

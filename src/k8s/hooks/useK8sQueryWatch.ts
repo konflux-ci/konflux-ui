@@ -27,8 +27,8 @@ const watchListResource = async (
       },
     },
   });
-  const queryKey = createQueryKeys([{ model, queryOptions: options }]);
-  queryClient.setQueryData(queryKey, (oldData) => {
+  const queryKey = createQueryKeys({ model, queryOptions: options });
+  queryClient.setQueryData(queryKey, (oldData: K8sResourceCommon) => {
     if (!isEqual(oldData, response.items)) {
       return response.items;
     }
@@ -43,7 +43,7 @@ const watchListResource = async (
       ws: options.ws,
       resourceVersion: response.metadata.resourceVersion,
     },
-    { timeout: 60_000 },
+    { ...fetchOptions, timeout: 60_000 },
   ).onBulkMessage((events: MessageDataType[]) => {
     const safeEvents = filter(events, (e: MessageDataType): e is K8sEvent => typeof e !== 'string');
     safeEvents.forEach(({ type, object }: K8sEvent) => {
@@ -75,7 +75,7 @@ export const watchObjectResource = (
   >,
 ) => {
   const options = convertToK8sQueryParams(initResource);
-  const queryKey = createQueryKeys([{ model, queryOptions: options }]);
+  const queryKey = createQueryKeys({ model, queryOptions: options });
   if (options.name) {
     options.queryParams.fieldSelector = `metadata.name=${options.name}`;
     delete options.name;

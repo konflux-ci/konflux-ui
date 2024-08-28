@@ -2,11 +2,8 @@ import { AnyObject } from '../types/common';
 import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptions } from '../types/k8s';
 import { commonFetchJSON } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
-import { queryClient } from './query/core';
-import { TQueryOptions } from './query/type';
-import { createQueryOptions } from './query/utils';
 
-export type K8sResourceBaseOptions<TQueryOptions = QueryOptions> = {
+export type K8sResourceBaseOptions<TQueryOptions = Partial<QueryOptions>> = {
   model: K8sModelCommon;
   queryOptions?: TQueryOptions;
   fetchOptions?: Partial<{
@@ -31,7 +28,7 @@ export type K8sResourceDeleteOptions = K8sResourceBaseOptions & {
 };
 
 export type K8sResourceListOptions = K8sResourceBaseOptions<
-  Pick<QueryOptions, 'ns' | 'queryParams' | 'ws'>
+  Pick<Partial<QueryOptions>, 'ns' | 'queryParams' | 'ws'>
 >;
 
 export type K8sResourceListResult<TResource extends K8sResourceCommon> = {
@@ -47,7 +44,7 @@ export type ResourcePromiseFunction = <TResource>(
   args: K8sResourceBaseOptions,
 ) => Promise<TResource>;
 
-export const getResource = <TResource extends K8sResourceCommon>({
+export const K8sGetResource = <TResource extends K8sResourceCommon>({
   model,
   queryOptions = {},
   fetchOptions = {},
@@ -59,12 +56,6 @@ export const getResource = <TResource extends K8sResourceCommon>({
     true,
   );
 };
-
-export const k8sGetResource = <TResource extends K8sResourceCommon>(
-  resourceInit: K8sResourceReadOptions,
-  options: TQueryOptions<TResource>,
-): Promise<TResource> =>
-  queryClient.ensureQueryData(createQueryOptions<TResource>(getResource)([resourceInit], options));
 
 export const k8sListResource = <TResource extends K8sResourceCommon>({
   model,
@@ -89,16 +80,6 @@ export const k8sListResource = <TResource extends K8sResourceCommon>({
     })),
   }));
 
-export const listResourceItems = <TResource extends K8sResourceCommon>(
+export const K8sListResourceItems = <TResource extends K8sResourceCommon>(
   options: K8sResourceListOptions,
 ): Promise<TResource[]> => k8sListResource<TResource>(options).then((result) => result.items);
-
-export const K8sListResourceItems = <TResource extends K8sResourceCommon>(
-  resourceInit: K8sResourceListOptions,
-  options?: TQueryOptions<TResource[]>,
-): Promise<TResource[]> =>
-  queryClient.ensureQueryData(
-    createQueryOptions<TResource[]>(listResourceItems)([resourceInit], options),
-  );
-
-export const paginatedListResource = (resourceOption: K8sResourceListOptions, token?: string) => {};

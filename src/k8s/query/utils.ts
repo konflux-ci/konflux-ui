@@ -1,48 +1,58 @@
-import { QueryFunctionContext, queryOptions as _createQueryOptions } from '@tanstack/react-query';
-import {
-  getResource,
-  listResourceItems,
-  K8sResourceBaseOptions,
-  ResourcePromiseFunction,
-} from '../k8s-fetch';
-import { CreateQueryOptionsArgs, TQueryOptions } from './type';
+import { UseQueryOptions, queryOptions as _createQueryOptions } from '@tanstack/react-query';
 import { isPlainObject } from 'lodash-es';
+import { K8sModelCommon, K8sResourceCommon, QueryOptions } from '../../types/k8s';
+import {
+  K8sResourceBaseOptions,
+  K8sGetResource,
+  K8sResourceListOptions,
+  K8sListResourceItems,
+} from '../k8s-fetch';
+import { TQueryOptions } from './type';
 
-export const createQueryKeys = ([
-  { model, queryOptions },
-  groupVersionKind,
-]: CreateQueryOptionsArgs) => {
+export const createQueryKeys = ({
+  model,
+  queryOptions,
+}: {
+  model: K8sModelCommon;
+  queryOptions: QueryOptions;
+}) => {
   const idKey = queryOptions?.name ? [{ metadata: { name: queryOptions.name } }] : [];
   return [
     queryOptions?.ws,
     {
-      group: model?.apiGroup ?? groupVersionKind?.group ?? 'core',
-      version: model?.apiVersion ?? groupVersionKind?.version,
-      kind: model?.kind ?? groupVersionKind?.kind,
+      group: model?.apiGroup ?? 'core',
+      version: model?.apiVersion,
+      kind: model?.kind,
     },
     ...idKey,
   ];
 };
 
-export const createQueryFunction =
-  (isList: boolean) => (args: K8sResourceBaseOptions) => (_: QueryFunctionContext) => {
-    return (isList ? listResourceItems : getResource)(args);
-  };
+export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
+  args: K8sResourceBaseOptions,
+  options: Omit<TQueryOptions<TResource>, 'filterData'>,
+): UseQueryOptions<TResource> => {
+  return _createQueryOptions({
+    queryKey: createQueryKeys({ model: args.model, queryOptions: args.queryOptions }),
+    queryFn: () => {
+      return K8sGetResource(args);
+    },
+    ...options,
+  });
+};
 
-export const createQueryOptions =
-  <TResource>(fetchFn: ResourcePromiseFunction<TResource>) =>
-  (
-    args: CreateQueryOptionsArgs,
-    { filterData = (a) => a, ...options }: TQueryOptions<TResource> = {},
-  ) => {
-    return _createQueryOptions({
-      queryKey: createQueryKeys(args),
-      queryFn: async (): Promise<TResource> => {
-        return fetchFn(args[0]).then(filterData);
-      },
-      ...(options ?? {}),
-    });
-  };
+export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
+  args: K8sResourceListOptions,
+  { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource>,
+): UseQueryOptions<TResource> => {
+  return _createQueryOptions({
+    queryKey: createQueryKeys({ model: args.model, queryOptions: args.queryOptions }),
+    queryFn: () => {
+      return K8sListResourceItems(args).then(filterData);
+    },
+    ...options,
+  });
+};
 
 export const hashQueryKeys = (key: ReadonlyArray<unknown>): string => {
   return JSON.stringify(key, (_, val) =>
