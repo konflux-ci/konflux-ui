@@ -11,6 +11,7 @@ export default merge(commonConfig, {
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
+    historyApiFallback: true,
     port: DEV_SERVER_PORT,
     hot: true,
     proxy: [

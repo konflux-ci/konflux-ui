@@ -43,14 +43,14 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
 
 export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
   args: K8sResourceListOptions,
-  { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource>,
+  { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource> = {},
 ): UseQueryOptions<TResource> => {
   return _createQueryOptions({
     queryKey: createQueryKeys({ model: args.model, queryOptions: args.queryOptions }),
     queryFn: () => {
       return K8sListResourceItems(args).then(filterData);
     },
-    ...options,
+    ...(options ?? {}),
   });
 };
 
