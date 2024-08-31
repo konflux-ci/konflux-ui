@@ -106,7 +106,7 @@ export type PipelineRunWorkspace = {
     | VolumeTypeConfigMaps
     | VolumeTypePVC
     | VolumeTypeClaim
-    | {};
+    | object;
 };
 
 export type PipelineRunParam = {

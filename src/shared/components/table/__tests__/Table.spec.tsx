@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { routerRenderer } from '../../../../k8s/test-utils';
+import { routerRenderer } from '../../../../utils/test-utils';
 import { RowFunctionArgs, Table, TableData } from '../index';
 
 jest.mock('react-i18next', () => ({

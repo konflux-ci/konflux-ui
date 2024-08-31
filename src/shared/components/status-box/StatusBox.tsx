@@ -178,7 +178,7 @@ export const StatusBox: React.FC<React.PropsWithChildren<StatusBoxProps>> = (pro
       );
     }
     if (status === 403) {
-      return <AccessDenied message={loadError.message} />;
+      return <AccessDenied message={(loadError as { message: string }).message} />;
     }
 
     if (loaded && loadError instanceof TimeoutError) {
@@ -195,7 +195,7 @@ export const StatusBox: React.FC<React.PropsWithChildren<StatusBoxProps>> = (pro
 
     return (
       <LoadError
-        message={loadError.message}
+        message={(loadError as { message: string }).message}
         label={props.label}
         className="loading-box loading-box__errored"
       />

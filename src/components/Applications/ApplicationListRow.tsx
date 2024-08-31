@@ -10,13 +10,14 @@ import { RowFunctionArgs, TableData } from '../../shared';
 import { ApplicationKind } from '../../types';
 // import { useWorkspaceInfo } from '../../utils/workspace-context-utils';
 // import { useApplicationActions } from './application-actions';
+import { useWorkspaceInfo } from '../Workspace/workspace-context';
 import { applicationTableColumnClasses } from './ApplicationListHeader';
 
 const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<ApplicationKind>>> = ({
   obj,
 }) => {
-  const [components, loaded] = useComponents('user-ns1', 'user1', obj.metadata?.name as string);
-  const workspace = 'user1';
+  const { workspace, namespace } = useWorkspaceInfo();
+  const [components, loaded] = useComponents(namespace, workspace, obj.metadata?.name);
   // const { namespace } = useWorkspaceInfo();
 
   // const [snapshotsEnvironmentBindings, snapshotsLoaded] = useSnapshotsEnvironmentBindings(

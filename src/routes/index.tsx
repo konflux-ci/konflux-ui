@@ -1,18 +1,24 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, defer } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
-import { AuthProvider } from '../auth/AuthContext';
 import { applicationPageLoader } from '../components/Applications';
 import ApplicationListView from '../components/Applications/ApplicationListView';
 import { Overview } from '../components/Overview/Overview';
+import { queryWorkspaces } from '../components/Workspace/utils';
+import { WorkspaceProvider } from '../components/Workspace/workspace-context';
+import { RouterParams } from './utils';
 
 export const router = createBrowserRouter(
   [
     {
       path: '/',
+      loader: async () => {
+        const workspaces = await queryWorkspaces();
+        return defer({ workspaces });
+      },
       element: (
-        <AuthProvider>
+        <WorkspaceProvider>
           <AppRoot />
-        </AuthProvider>
+        </WorkspaceProvider>
       ),
       children: [
         {
@@ -20,7 +26,7 @@ export const router = createBrowserRouter(
           element: <Overview />,
         },
         {
-          path: '/workspaces/:workspace/applications',
+          path: `/workspaces/:${RouterParams.workspaceName}/applications`,
           loader: applicationPageLoader,
           element: <ApplicationListView />,
         },

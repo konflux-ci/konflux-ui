@@ -6,7 +6,6 @@ import { AppSideBar } from './AppSideBar';
 
 export const AppRoot: React.FC = () => {
   const [isSideBarOpen, setSideBarOpen] = React.useState<boolean>(true);
-
   return (
     <Page
       sidebar={<AppSideBar isOpen={isSideBarOpen} />}

@@ -17,44 +17,26 @@ import { useApplications } from '../../hooks/useApplications';
 import { Table } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { ApplicationKind } from '../../types';
-// import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 // import { useAccessReviewForModel } from '../../utils/rbac';
 // import { useWorkspaceInfo } from '../../utils/workspace-context-utils';
 // import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 // import { GettingStartedCard } from '../GettingStartedCard/GettingStartedCard';
-// import PageLayout from '../PageLayout/PageLayout';
+import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import PageLayout from '../PageLayout/PageLayout';
+import { useWorkspaceInfo } from '../Workspace/workspace-context';
 import { ApplicationListHeader } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
 
-// const GETTING_STARTED_CARD_KEY = 'application-list-getting-started-card';
-
 const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
-  // const { namespace, workspace } = useWorkspaceInfo();
-  // const applicationBreadcrumbs = useApplicationBreadcrumbs();
+  const { namespace, workspace } = useWorkspaceInfo();
+  const applicationBreadcrumbs = useApplicationBreadcrumbs();
   // const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
   // const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 
-  React.useEffect(() => {
-    console.log('############ - mounted');
-    return () => {
-      console.log('############### - unmounted');
-    };
-  }, []);
-
-  React.useEffect(() => {
-    console.log('############ - rerender');
-    return () => {
-      console.log('############### - unmounted - render');
-    };
-  });
-  const namespace = 'user-ns1',
-    workspace = 'user1';
   const [applications, loaded] = useApplications(namespace, workspace);
   applications?.sort(
     (app1, app2) =>
-      +new Date(app2.metadata?.creationTimestamp as string) -
-      +new Date(app1.metadata?.creationTimestamp as string),
+      +new Date(app2.metadata?.creationTimestamp) - +new Date(app1.metadata?.creationTimestamp),
   );
 
   if (!loaded) {
@@ -67,20 +49,8 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
 
   return (
     <>
-      {/* {!hacbs && applications.length === 0 && (
-        <GettingStartedCard
-          imgClassName="pf-v5-u-px-2xl-on-xl"
-          localStorageKey={GETTING_STARTED_CARD_KEY}
-          title="Create and manage your applications"
-          imgSrc={imageUrl}
-          imgAlt="Illustration showing users managing applications"
-        >
-          Your application will automatically be deployed to the development environment. Promote it
-          across your stages and add components.
-        </GettingStartedCard>
-      )} */}
       <PageLayout
-        // breadcrumbs={applicationBreadcrumbs}
+        breadcrumbs={applicationBreadcrumbs}
         title="Applications"
         description="An application is 1 or more components running together for building and releasing."
       >

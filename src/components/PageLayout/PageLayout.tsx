@@ -9,9 +9,9 @@ import {
   Text,
   TextContent,
 } from '@patternfly/react-core';
+import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 // import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 // import { Action, ActionMenuVariant } from '../../shared/components/action-menu/types';
-// import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 
 type PageLayoutProps = {
   title: string;
@@ -34,7 +34,7 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
     <>
       <PageGroup>
         {breadcrumbs && (
-          <PageBreadcrumb>{/* <BreadCrumbs breadcrumbs={breadcrumbs} /> */}</PageBreadcrumb>
+          <PageBreadcrumb>{<BreadCrumbs breadcrumbs={breadcrumbs} />}</PageBreadcrumb>
         )}
         <PageSection variant={PageSectionVariants.light}>
           <Flex>

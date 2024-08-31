@@ -25,19 +25,6 @@ export const useApplications = (
         ) ?? [],
     },
   );
-
-  useK8sWatchResource(
-    {
-      groupVersionKind: ApplicationGroupVersionKind,
-      namespace,
-      workspace,
-      name: 'sample-component',
-      // isList: true,
-      // watch: true,
-    },
-    ApplicationModel,
-  );
-
   return [applications, !isLoading, error];
 };
 
