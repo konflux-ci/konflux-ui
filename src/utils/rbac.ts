@@ -39,7 +39,7 @@ export const checkAccess = memoize(
 export function checkReviewAccesses(
   resourceAttributesArray: AccessReviewResource | AccessReviewResource[],
   namespace: string,
-) {
+): Promise<boolean> {
   if (!Array.isArray(resourceAttributesArray)) {
     const model = resourceAttributesArray.model;
     return checkAccess(
@@ -72,6 +72,7 @@ export function checkReviewAccesses(
     .catch((e) => {
       // eslint-disable-next-line no-console
       console.warn(`SelfSubjectAccessReview failed: ${e}`);
+      return true;
     });
 }
 
@@ -182,12 +183,13 @@ export const useAccessReviewForModels = (
 export const createLoaderWithAccessCheck =
   (loader: LoaderFunction, res: AccessReviewResource | AccessReviewResource[]): LoaderFunction =>
   async (args: LoaderFunctionArgs) => {
-    const ns = getNamespaceUsingWorspaceFromQueryCache(args.params.workspaceName);
+    const ns = await getNamespaceUsingWorspaceFromQueryCache(args.params.workspaceName);
+    let allowed: boolean;
     if (ns) {
-      const allowed = await checkReviewAccesses(res, ns);
+      allowed = await checkReviewAccesses(res, ns);
       if (!allowed) {
         throw new Response('Access check Denied', { status: 403 });
       }
     }
-    return await loader(args);
+    return { accessCheck: allowed, data: await loader(args) };
   };

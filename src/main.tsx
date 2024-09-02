@@ -10,7 +10,7 @@ import { router } from './routes';
 import '@patternfly/react-core/dist/styles/base.css';
 import './main.scss';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

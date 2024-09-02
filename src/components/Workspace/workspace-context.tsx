@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useQuery } from '@tanstack/react-query';
 import { RouterParams } from '../../routes/utils';
 import { Workspace } from '../../types';
@@ -8,6 +9,7 @@ import {
   getDefaultNsForWorkspace,
   getHomeWorkspace,
   getLastUsedWorkspace,
+  setLastUsedWorkspace,
 } from './utils';
 
 export type WorkspaceContextData = {
@@ -43,19 +45,19 @@ export const WorkspaceProvider: React.FC<React.PropsWithChildren> = ({ children 
   const activeWorkspaceName =
     params.workspaceName ?? getLastUsedWorkspace() ?? getHomeWorkspace(workspaces)?.metadata?.name;
 
-  const {
-    data: workspaceResource,
-    isLoading: activeWorkspaceLoading,
-    refetch: refetchActiveWorkspace,
-  } = useQuery(createWorkspaceQueryOptions(activeWorkspaceName));
+  const { data: workspaceResource, isLoading: activeWorkspaceLoading } = useQuery(
+    createWorkspaceQueryOptions(activeWorkspaceName),
+  );
 
   const namespace = !activeWorkspaceLoading
     ? getDefaultNsForWorkspace(workspaceResource)?.name
     : undefined;
 
   React.useEffect(() => {
-    refetchActiveWorkspace().catch(() => {});
-  }, [activeWorkspaceName, refetchActiveWorkspace]);
+    if (getLastUsedWorkspace() !== activeWorkspaceName) {
+      setLastUsedWorkspace(activeWorkspaceName);
+    }
+  }, [activeWorkspaceName]);
 
   return (
     <WorkspaceContext.Provider
@@ -68,7 +70,13 @@ export const WorkspaceProvider: React.FC<React.PropsWithChildren> = ({ children 
         updateWorkspace: () => {},
       }}
     >
-      {children}
+      {!(workspaceLoading && activeWorkspaceLoading) ? (
+        children
+      ) : (
+        <Bullseye>
+          <Spinner />
+        </Bullseye>
+      )}
     </WorkspaceContext.Provider>
   );
 };

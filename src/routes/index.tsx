@@ -1,4 +1,4 @@
-import { createBrowserRouter, defer } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { applicationPageLoader } from '../components/Applications';
 import ApplicationListView from '../components/Applications/ApplicationListView';
@@ -14,7 +14,7 @@ export const router = createBrowserRouter(
       path: '/',
       loader: async () => {
         const workspaces = await queryWorkspaces();
-        return defer({ workspaces });
+        return { data: workspaces };
       },
       element: (
         <WorkspaceProvider>

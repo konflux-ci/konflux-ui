@@ -27,15 +27,6 @@ export const getDefaultNsForWorkspace = (obj: Workspace) => {
   return obj?.status?.namespaces.find((n) => n.type === 'default');
 };
 
-export const getNamespaceUsingWorspaceFromQueryCache = (workspace: string): string | undefined => {
-  return getDefaultNsForWorkspace(
-    queryClient.getQueryData<Workspace>(createWorkspaceQueryKey(workspace)) ??
-      queryClient
-        .getQueryData<Workspace[]>(createWorkspaceQueryKey())
-        ?.find((w) => w.metadata?.name === workspace),
-  )?.name;
-};
-
 function fetchWorkspaces(): Promise<Workspace[]>;
 function fetchWorkspaces(name: string): Promise<Workspace>;
 function fetchWorkspaces(name?: string): Promise<Workspace | Workspace[]> {
@@ -59,8 +50,20 @@ export function createWorkspaceQueryOptions(
             ?.find((w: Workspace) => w.metadata.name === name);
         }
       : undefined,
+    staleTime: name ? 5_00_000 : Infinity,
   });
 }
+
+export const getNamespaceUsingWorspaceFromQueryCache = async (
+  workspace: string,
+): Promise<string | undefined> => {
+  return getDefaultNsForWorkspace(
+    await queryClient.ensureQueryData({
+      ...createWorkspaceQueryOptions(workspace),
+      revalidateIfStale: true,
+    }),
+  )?.name;
+};
 
 export const queryWorkspaces = () => {
   return queryClient.ensureQueryData(createWorkspaceQueryOptions());

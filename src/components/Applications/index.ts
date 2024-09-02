@@ -5,7 +5,7 @@ import { createLoaderWithAccessCheck } from '../../utils/rbac';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../Workspace/utils';
 
 const applicationPage: LoaderFunction = async ({ params }) => {
-  const ns = getNamespaceUsingWorspaceFromQueryCache(params.workspaceName);
+  const ns = await getNamespaceUsingWorspaceFromQueryCache(params.workspaceName);
   return ns
     ? await K8sListResourceItems({
         model: ApplicationModel,
