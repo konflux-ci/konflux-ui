@@ -1,4 +1,3 @@
-import * as React from 'react';
 import '@testing-library/jest-dom';
 import { configure, render, screen } from '@testing-library/react';
 import { ApplicationModel } from '../../../models';

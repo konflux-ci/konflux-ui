@@ -12,7 +12,7 @@ const BreadCrumbs: React.FC<React.PropsWithChildren<BreadCrumbsProps>> = ({
   className,
 }) => (
   <Breadcrumb className={className}>
-    {breadcrumbs.map((crumb, i, { length }) => {
+    {breadcrumbs.map((crumb: { name: string; path: string }, i, { length }) => {
       const isLast = i === length - 1;
 
       if (React.isValidElement(crumb)) {

@@ -3803,6 +3803,11 @@ form-data@^4.0.0:
     combined-stream "^1.0.8"
     mime-types "^2.1.12"
 
+formik-pf@^0.0.1-alpha11:
+  version "0.0.1-alpha11"
+  resolved "https://registry.yarnpkg.com/formik-pf/-/formik-pf-0.0.1-alpha11.tgz#72000409e95cb9bbb2866e06b838f6dc18055f0e"
+  integrity sha512-m47WluvIKNTFe02psUZa0gkooAJNe9ErlsUPbrSqh7EzPi4Wyse1V3phOFPsGmp6ybOdHK9FtAcpdqcM722kVw==
+
 formik@^2.4.6:
   version "2.4.6"
   resolved "https://registry.yarnpkg.com/formik/-/formik-2.4.6.tgz#4da75ca80f1a827ab35b08fd98d5a76e928c9686"

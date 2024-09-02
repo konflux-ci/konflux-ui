@@ -1,4 +1,4 @@
-import * as React from 'react';
+// import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Badge, BreadcrumbItem } from '@patternfly/react-core';
 import styles from '@patternfly/react-styles/css/components/Breadcrumb/breadcrumb';
@@ -51,16 +51,16 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
         <span>Applications</span>
       )}
     </BreadcrumbItem>,
-    // ...(applicationName
-    //   ? [
-    //       {
-    //         path: withLink
-    //           ? `/application-pipeline/workspaces/${workspace}/applications/${applicationName}`
-    //           : '',
-    //         name: appDisplayName || applicationName,
-    //       },
-    //       <ApplicationSwitcher key="app" selectedApplication={applicationName} />,
-    //     ]
-    //   : []),
+    ...(applicationName
+      ? [
+          {
+            path: withLink
+              ? `/application-pipeline/workspaces/${workspace}/applications/${applicationName}`
+              : '',
+            name: appDisplayName || applicationName,
+          },
+          // <ApplicationSwitcher key="app" selectedApplication={applicationName} />,
+        ]
+      : []),
   ];
 };

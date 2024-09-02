@@ -1,4 +1,3 @@
-import * as React from 'react';
 import '@testing-library/jest-dom';
 import { useParams } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';

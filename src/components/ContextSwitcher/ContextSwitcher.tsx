@@ -123,7 +123,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
   };
 
   const onDrillIn = (
-    event: React.KeyboardEvent | React.MouseEvent,
+    _: React.KeyboardEvent | React.MouseEvent,
     fromMenuId: string,
     toMenuId: string,
     pathId: string,
@@ -133,7 +133,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     setActiveMenu(toMenuId);
   };
 
-  const onDrillOut = (event: React.KeyboardEvent | React.MouseEvent, toMenuId: string) => {
+  const onDrillOut = (_: React.KeyboardEvent | React.MouseEvent, toMenuId: string) => {
     const menuDrilledInSansLast = menuDrilledIn.slice(0, menuDrilledIn.length - 1);
     const pathSansLast = drilldownPath.slice(0, drilldownPath.length - 1);
     setMenuDrilledIn(menuDrilledInSansLast);

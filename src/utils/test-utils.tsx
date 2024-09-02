@@ -21,23 +21,23 @@ export const formikRenderer = (
 
 export const namespaceRenderer = (
   element: React.ReactElement,
-  namespace: string = 'test-ns',
-  contextValues?: Partial<WorkspaceContextData>,
+  _: string,
+  __?: Partial<WorkspaceContextData>,
   options?: Omit<RenderOptions, 'wrapper'>,
 ) =>
   render(element, {
     wrapper: ({ children }) => (
       <WorkspaceProvider
-        value={{
-          namespace,
-          lastUsedWorkspace: 'test-ws',
-          workspace: '',
-          workspaceResource: undefined,
-          workspaces: [],
-          workspacesLoaded: false,
-          updateWorkspace: jest.fn(),
-          ...contextValues,
-        }}
+      // value={{
+      //   namespace,
+      //   lastUsedWorkspace: 'test-ws',
+      //   workspace: '',
+      //   workspaceResource: undefined,
+      //   workspaces: [],
+      //   workspacesLoaded: false,
+      //   updateWorkspace: jest.fn(),
+      //   ...contextValues,
+      // }}
       >
         {children}
       </WorkspaceProvider>
