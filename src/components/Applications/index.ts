@@ -1,9 +1,10 @@
 import { LoaderFunction } from 'react-router-dom';
 import { K8sListResourceItems } from '../../k8s/k8s-fetch';
 import { ApplicationModel } from '../../models';
+import { createLoaderWithAccessCheck } from '../../utils/rbac';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../Workspace/utils';
 
-export const applicationPageLoader: LoaderFunction<{ ws: string }> = async ({ params }) => {
+const applicationPage: LoaderFunction = async ({ params }) => {
   const ns = getNamespaceUsingWorspaceFromQueryCache(params.workspaceName);
   return ns
     ? await K8sListResourceItems({
@@ -12,3 +13,8 @@ export const applicationPageLoader: LoaderFunction<{ ws: string }> = async ({ pa
       })
     : Promise.resolve([]);
 };
+
+export const applicationPageLoader = createLoaderWithAccessCheck(applicationPage, {
+  model: ApplicationModel,
+  verb: 'list',
+});

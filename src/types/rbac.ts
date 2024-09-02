@@ -10,10 +10,12 @@ export type AccessReviewResourceAttributes = {
 
 export type AccessReviewResourceAttributesArray = AccessReviewResourceAttributes[];
 
-export type AccessReviewResources = {
+export type AccessReviewResource = {
   model: K8sModelCommon;
   verb: K8sVerb;
-}[];
+};
+
+export type AccessReviewResources = AccessReviewResource[];
 
 export type SelfSubjectAccessReviewKind = K8sResourceCommon & {
   spec: {

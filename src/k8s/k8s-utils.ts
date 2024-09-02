@@ -286,9 +286,9 @@ export const convertToK8sQueryParams = (resourceInit: WatchK8sResource): QueryOp
     queryParams.limit = resourceInit.limit;
   }
   return {
-    ns: resourceInit.namespace as string,
+    ns: resourceInit.namespace,
     name: resourceInit.name,
-    ws: resourceInit.workspace as string,
+    ws: resourceInit.workspace,
     queryParams,
   };
 };

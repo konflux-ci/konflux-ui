@@ -53,15 +53,7 @@ export default merge(commonConfig, {
         // pathRewrite: { '^/api/k8s': '' },
       },
       {
-        context: (path) => {
-          console.log(
-            '##############',
-            path,
-            path.includes('/wss/k8s'),
-            process.env.PROXY_WEBSOCKET_URL,
-          );
-          return path.includes('/wss/k8s');
-        },
+        context: (path) => path.includes('/wss/k8s'),
         target: process.env.PROXY_WEBSOCKET_URL,
         secure: false,
         changeOrigin: true,

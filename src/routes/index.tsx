@@ -5,6 +5,7 @@ import ApplicationListView from '../components/Applications/ApplicationListView'
 import { Overview } from '../components/Overview/Overview';
 import { queryWorkspaces } from '../components/Workspace/utils';
 import { WorkspaceProvider } from '../components/Workspace/workspace-context';
+import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { RouterParams } from './utils';
 
 export const router = createBrowserRouter(
@@ -29,6 +30,7 @@ export const router = createBrowserRouter(
           path: `/workspaces/:${RouterParams.workspaceName}/applications`,
           loader: applicationPageLoader,
           element: <ApplicationListView />,
+          errorElement: <RouteErrorBoundry />,
         },
       ],
     },
