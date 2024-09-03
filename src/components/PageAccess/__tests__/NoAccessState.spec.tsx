@@ -16,7 +16,7 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModels: jest.fn(),
 }));
 
-jest.mock('../../../utils/workspace-context-utils', () => ({
+jest.mock('../../Workspace/workspace-context', () => ({
   useWorkspaceInfo: jest.fn(() => ({ workspace: 'test-ws' })),
 }));
 
@@ -47,7 +47,7 @@ describe('NoAccessState', () => {
     render(<NoAccessState />);
     fireEvent.click(screen.queryByTestId('no-access-action'));
     await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith('/application-pipeline');
+      expect(navigateMock).toHaveBeenCalledWith('/');
     });
   });
 

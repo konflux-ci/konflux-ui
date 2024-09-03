@@ -19,7 +19,7 @@ export default {
     'lodash-es': 'lodash',
   },
   roots: ['<rootDir>/src/'],
-  transformIgnorePatterns: ['/node_modules/'],
+  transformIgnorePatterns: ['/node_modules/(?!@patternfly)'],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/stories/*'],
   coverageDirectory: './coverage/',
   setupFilesAfterEnv: ['<rootDir>/config/jest.setup.js'],

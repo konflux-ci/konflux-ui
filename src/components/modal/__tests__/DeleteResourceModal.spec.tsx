@@ -5,7 +5,7 @@ import { ApplicationModel } from '../../../models';
 import { DeleteResourceModal } from '../DeleteResourceModal';
 
 jest.mock('../../../k8s/k8s-fetch', () => {
-  const actual = jest.requireActual('@openshift/dynamic-plugin-sdk-utils');
+  const actual = jest.requireActual('../../../k8s/k8s-fetch');
   return {
     ...actual,
     k8sDeleteResource: jest.fn(),

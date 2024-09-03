@@ -26,7 +26,7 @@ describe('ErrorEmptyState', () => {
     jest.clearAllMocks();
   });
 
-  it('Should show 404 page on a 404 error', async () => {
+  it('Should show 404 page on a 404 error', () => {
     render(
       <ErrorEmptyState httpError={HttpError.fromCode(404)} title="test title" body="test body" />,
     );
@@ -35,13 +35,13 @@ describe('ErrorEmptyState', () => {
     expect(screen.queryByText('test body')).toBeNull();
 
     const appsButton = screen.getByText('Go to applications list');
-    await act(async () => {
+    act(() => {
       fireEvent.click(appsButton);
     });
     expect(navigateMock).toHaveBeenCalledWith('/application-pipeline/workspaces');
   });
 
-  it('Should show title and body on non-404 errors', async () => {
+  it('Should show title and body on non-404 errors', () => {
     render(
       <ErrorEmptyState httpError={HttpError.fromCode(403)} title="test title" body="test body" />,
     );
@@ -51,7 +51,7 @@ describe('ErrorEmptyState', () => {
     expect(screen.queryByText('Go to applications list')).toBeNull();
   });
 
-  it('Should allow custom errors', async () => {
+  it('Should allow custom errors', () => {
     render(
       <ErrorEmptyState>
         <Title headingLevel="h4" size="lg">

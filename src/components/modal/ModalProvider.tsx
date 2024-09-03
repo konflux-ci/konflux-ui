@@ -3,7 +3,7 @@ import { AnyObject } from '../../types/common';
 import { ModalLauncher } from './createModalLauncher';
 import { ModalPortal } from './ModalPortal';
 
-type ModalContextType = <T = AnyObject>(launcher: ModalLauncher) => { closed?: Promise<T> };
+type ModalContextType = <T extends AnyObject>(launcher: ModalLauncher) => { closed?: Promise<T> };
 
 const ModalContext = React.createContext<ModalContextType>(null);
 

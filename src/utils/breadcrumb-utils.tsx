@@ -1,10 +1,9 @@
-// import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Badge, BreadcrumbItem } from '@patternfly/react-core';
 import styles from '@patternfly/react-styles/css/components/Breadcrumb/breadcrumb';
+import { ApplicationSwitcher } from '../components/Applications/switcher/ApplicationSwitcher';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
 import { WorkspaceSwitcher } from '../components/Workspace/WorkspaceSwitcher';
-// import { ApplicationSwitcher } from '../components/ApplicationDetails/ApplicationSwitcher';
 
 export const useWorkspaceBreadcrumbs = () => {
   const { workspace } = useWorkspaceInfo();
@@ -59,7 +58,7 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
               : '',
             name: appDisplayName || applicationName,
           },
-          // <ApplicationSwitcher key="app" selectedApplication={applicationName} />,
+          <ApplicationSwitcher key="app" selectedApplication={applicationName} />,
         ]
       : []),
   ];
