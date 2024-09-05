@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';

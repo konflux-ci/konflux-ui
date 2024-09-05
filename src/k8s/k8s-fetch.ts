@@ -1,9 +1,9 @@
 import { AnyObject } from '../types/common';
-import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptions } from '../types/k8s';
+import { K8sModelCommon, K8sResourceCommon, Patch, QueryOptionsWithSelector } from '../types/k8s';
 import { commonFetchJSON } from './fetch';
 import { getK8sResourceURL } from './k8s-utils';
 
-export type K8sResourceBaseOptions<TQueryOptions = Partial<QueryOptions>> = {
+export type K8sResourceBaseOptions<TQueryOptions = Partial<QueryOptionsWithSelector>> = {
   model: K8sModelCommon;
   queryOptions?: TQueryOptions;
   fetchOptions?: Partial<{
@@ -28,7 +28,7 @@ export type K8sResourceDeleteOptions = K8sResourceBaseOptions & {
 };
 
 export type K8sResourceListOptions = K8sResourceBaseOptions<
-  Pick<Partial<QueryOptions>, 'ns' | 'queryParams' | 'ws'>
+  Pick<Partial<QueryOptionsWithSelector>, 'ns' | 'queryParams' | 'ws'>
 >;
 
 export type K8sResourceListResult<TResource extends K8sResourceCommon> = {

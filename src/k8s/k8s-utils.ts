@@ -1,4 +1,3 @@
-// import { WebSocketFactory, WebSocketOptions } from '@openshift/dynamic-plugin-sdk-utils';
 import { isEmpty, isPlainObject, pick, toArray } from 'lodash-es';
 import { WatchK8sResource } from '../types/k8s';
 import type {
@@ -13,6 +12,7 @@ import type {
   GetGroupVersionKindForModel,
   K8sGroupVersionKind,
   K8sStatus,
+  QueryOptionsWithSelector,
 } from '../types/k8s';
 import { WebSocketOptions } from './web-socket/types';
 import { WebSocketFactory } from './web-socket/WebSocketFactory';
@@ -53,65 +53,6 @@ const getK8sAPIPath = (
   const isLegacy = apiGroup === 'core' && apiVersion === 'v1';
   path += isLegacy ? `/api/${apiVersion}` : `/apis/${apiGroup}/${apiVersion}`;
   return path;
-};
-
-/**
- * Builds a k8s resource URL to the provided model, augmented with the resource or query metadata.
- * @param model - the model of the resource you want to connect to
- * @param resource - inspected if you provide it for metadata attributes
- * @param queryOptions - additional and alternative configuration for the URL
- * @param queryOptions.ns - namespace, if omitted resource.metadata.namespace
- * @param queryOptions.name - name, if omitted resource.metadata.name
- * @param queryOptions.path - additional path you want on the end
- * @param queryOptions.queryParams - any additional query params you way want
- * @param isCreate - boolean indicating if the resulting URL will be used for resource creation
- */
-export const getK8sResourceURL = (
-  model: K8sModelCommon,
-  resource?: K8sResourceCommon,
-  queryOptions: Partial<QueryOptions> = {},
-  isCreate = false,
-) => {
-  const { ns, name, path, queryParams } = queryOptions;
-  let resourcePath = getK8sAPIPath(model, queryOptions.ws);
-
-  if (resource?.metadata?.namespace) {
-    resourcePath += `/namespaces/${resource.metadata.namespace}`;
-  } else if (ns) {
-    resourcePath += `/namespaces/${ns}`;
-  }
-
-  if (resource?.metadata?.namespace && ns && resource.metadata.namespace !== ns) {
-    throw new Error('Resource payload namespace vs. query options namespace mismatch');
-  }
-
-  resourcePath += `/${model.plural}`;
-
-  if (!isCreate) {
-    if (resource?.metadata?.name) {
-      resourcePath += `/${encodeURIComponent(resource.metadata.name)}`;
-    } else if (name) {
-      resourcePath += `/${encodeURIComponent(name)}`;
-    }
-
-    if (resource?.metadata?.name && name && resource.metadata.name !== name) {
-      throw new Error('Resource payload name vs. query options name mismatch');
-    }
-  }
-
-  if (path) {
-    resourcePath += `/${path}`;
-  }
-
-  const filteredQueryParams = isCreate
-    ? pick(queryParams, FILTERED_CREATE_QUERY_PARAMS)
-    : queryParams;
-
-  if (filteredQueryParams && !isEmpty(filteredQueryParams)) {
-    resourcePath += `?${getQueryString(filteredQueryParams)}`;
-  }
-
-  return resourcePath;
 };
 
 const requirementToString = (requirement: MatchExpression): string => {
@@ -183,6 +124,69 @@ export const selectorToString = (selector: Selector | undefined): string => {
   return requirements.map(requirementToString).join(',');
 };
 
+/**
+ * Builds a k8s resource URL to the provided model, augmented with the resource or query metadata.
+ * @param model - the model of the resource you want to connect to
+ * @param resource - inspected if you provide it for metadata attributes
+ * @param queryOptions - additional and alternative configuration for the URL
+ * @param queryOptions.ns - namespace, if omitted resource.metadata.namespace
+ * @param queryOptions.name - name, if omitted resource.metadata.name
+ * @param queryOptions.path - additional path you want on the end
+ * @param queryOptions.queryParams - any additional query params you way want
+ * @param isCreate - boolean indicating if the resulting URL will be used for resource creation
+ */
+export const getK8sResourceURL = (
+  model: K8sModelCommon,
+  resource?: K8sResourceCommon,
+  queryOptions: Partial<QueryOptionsWithSelector> = {},
+  isCreate = false,
+) => {
+  const { ns, name, path, queryParams } = queryOptions;
+  let resourcePath = getK8sAPIPath(model, queryOptions.ws);
+
+  if (resource?.metadata?.namespace) {
+    resourcePath += `/namespaces/${resource.metadata.namespace}`;
+  } else if (ns) {
+    resourcePath += `/namespaces/${ns}`;
+  }
+
+  if (resource?.metadata?.namespace && ns && resource.metadata.namespace !== ns) {
+    throw new Error('Resource payload namespace vs. query options namespace mismatch');
+  }
+
+  resourcePath += `/${model.plural}`;
+
+  if (!isCreate) {
+    if (resource?.metadata?.name) {
+      resourcePath += `/${encodeURIComponent(resource.metadata.name)}`;
+    } else if (name) {
+      resourcePath += `/${encodeURIComponent(name)}`;
+    }
+
+    if (resource?.metadata?.name && name && resource.metadata.name !== name) {
+      throw new Error('Resource payload name vs. query options name mismatch');
+    }
+  }
+
+  if (path) {
+    resourcePath += `/${path}`;
+  }
+
+  const filteredQueryParams: QueryOptions['queryParams'] = isCreate
+    ? pick(queryParams, FILTERED_CREATE_QUERY_PARAMS)
+    : queryParams;
+
+  if (queryOptions?.queryParams?.labelSelector) {
+    filteredQueryParams.labelSelector = selectorToString(queryOptions.queryParams.labelSelector);
+  }
+
+  if (filteredQueryParams && !isEmpty(filteredQueryParams)) {
+    resourcePath += `?${getQueryString(filteredQueryParams)}`;
+  }
+
+  return resourcePath;
+};
+
 export const k8sWatch = (
   kind: K8sModelCommon,
   query: {
@@ -196,9 +200,9 @@ export const k8sWatch = (
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   > = {},
 ) => {
-  const queryParams: QueryParams = { watch: 'true' };
+  const queryParams: QueryParams<Selector> = { watch: 'true' };
   const opts: {
-    queryParams: QueryParams;
+    queryParams: QueryParams<Selector>;
     ns?: string;
     ws?: string;
   } = { queryParams };
@@ -213,10 +217,7 @@ export const k8sWatch = (
 
   const { labelSelector } = query;
   if (labelSelector) {
-    const encodedSelector = selectorToString(labelSelector);
-    if (encodedSelector) {
-      queryParams.labelSelector = encodedSelector;
-    }
+    queryParams.labelSelector = labelSelector;
   }
 
   if (query.fieldSelector) {
@@ -274,10 +275,12 @@ export const getReference = ({
   kind,
 }: K8sGroupVersionKind): K8sResourceKindReference => [group || 'core', version, kind].join('~');
 
-export const convertToK8sQueryParams = (resourceInit: WatchK8sResource): QueryOptions => {
-  const queryParams: QueryOptions['queryParams'] = {};
+export const convertToK8sQueryParams = (
+  resourceInit: WatchK8sResource,
+): QueryOptionsWithSelector => {
+  const queryParams: QueryOptionsWithSelector['queryParams'] = {};
   if (!isEmpty(resourceInit.selector)) {
-    queryParams.labelSelector = selectorToString(resourceInit.selector);
+    queryParams.labelSelector = resourceInit.selector;
   }
   if (!isEmpty(resourceInit.fieldSelector)) {
     queryParams.fieldSelector = resourceInit.fieldSelector;

@@ -69,24 +69,28 @@ export type OwnerReference = {
   blockOwnerDeletion?: boolean;
 };
 
-export type QueryOptions = {
+type _QueryOptions<S extends string | Selector> = {
   ns: string;
   ws: string;
   name?: string;
   path?: string;
-  queryParams: QueryParams;
+  queryParams: QueryParams<S>;
 };
 
-export type QueryParams = Partial<{
+export type QueryOptions = _QueryOptions<string>;
+
+export type QueryOptionsWithSelector = _QueryOptions<Selector>;
+
+export type QueryParams<S extends string | Selector = string> = Partial<{
   watch: string;
-  labelSelector: string;
+  labelSelector: S;
   fieldSelector: string;
   resourceVersion: string;
   pretty: string;
   dryRun: string;
   fieldManager: string;
   fieldValidation: string;
-  [key: string]: string | number;
+  [key: string]: string | number | S;
 }>;
 
 export type Patch = {

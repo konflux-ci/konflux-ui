@@ -100,13 +100,13 @@ export type PipelineRunReferenceResource = {
 type PipelineRunResource = PipelineRunReferenceResource | PipelineRunEmbeddedResource;
 
 export type PipelineRunWorkspace = {
-  name: string;
   [volumeType: string]:
     | VolumeTypeSecret
     | VolumeTypeConfigMaps
     | VolumeTypePVC
     | VolumeTypeClaim
-    | object;
+    | object
+    | string;
 };
 
 export type PipelineRunParam = {
