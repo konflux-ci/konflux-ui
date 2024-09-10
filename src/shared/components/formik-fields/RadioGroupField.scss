@@ -1,0 +1,19 @@
+.radio-group-field {
+  padding-left: var(--pf-v5-global--spacer--sm);
+
+  .pf-v5-c-radio {
+    &__description {
+      width: 100%;
+    }
+  }
+
+  &--inline {
+    display: flex;
+    align-items: flex-start;
+
+    > .pf-v5-c-form__group-label {
+      margin-right: var(--pf-v5-global--spacer--md);
+    }
+  }
+
+}

@@ -73,3 +73,21 @@ export const mockLocation = (location?: {
     Object.assign(window.location, location);
   }
 };
+
+export const mockFetch = () => {
+  const windowFetch = window.fetch;
+  delete window.fetch;
+  Object.defineProperty(window, 'fetch', {
+    configurable: true,
+    writable: true,
+    value: windowFetch,
+  });
+  Object.assign(
+    window.fetch,
+    jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ data: 'mocked data' }),
+      }),
+    ),
+  );
+};

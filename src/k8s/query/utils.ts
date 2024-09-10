@@ -32,9 +32,9 @@ export const createQueryKeys = ({
   ];
 };
 
-export const createGetQueryOptions = <TResource extends K8sResourceCommon = K8sResourceCommon>(
+export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
   args: K8sResourceBaseOptions,
-  options: ReactQueryOptions<TResource> = {},
+  options: Omit<ReactQueryOptions<TResource>, 'queryKey' | 'queryFn'> = {},
 ): UseQueryOptions<TResource> => {
   return {
     queryKey: createQueryKeys(args),
@@ -45,7 +45,7 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon = K8sR
   };
 };
 
-export const createListqueryOptions = <TResource extends K8sResourceCommon[] = K8sResourceCommon[]>(
+export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
   args: K8sResourceListOptions,
   { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource> = {},
 ): UseQueryOptions<TResource> => {

@@ -8,7 +8,7 @@ const config = JSON.parse(fs.readFileSync(`${__dirname}/.swcrc`, 'utf-8'));
 
 export default {
   transform: {
-    '^.+\\.(t|j)sx?$': ['@swc/jest', { ...config }],
+    '^.+\\.(ts|tsx|js|jsx)$': ['@swc/jest', { ...config }],
   },
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   testEnvironment: 'jsdom',
@@ -19,7 +19,7 @@ export default {
     'lodash-es': 'lodash',
   },
   roots: ['<rootDir>/src/'],
-  transformIgnorePatterns: ['/node_modules/(?!@patternfly)'],
+  transformIgnorePatterns: ['/node_modules/(?!@patternfly|uuid)'],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/stories/*'],
   coverageDirectory: './coverage/',
   setupFilesAfterEnv: ['<rootDir>/config/jest.setup.js'],
