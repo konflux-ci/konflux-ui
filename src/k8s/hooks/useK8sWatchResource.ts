@@ -2,6 +2,7 @@ import {
   hashKey,
   QueryOptions as ReactQueryOptions,
   useQuery,
+  UseQueryOptions,
   UseQueryResult,
 } from '@tanstack/react-query';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
@@ -28,19 +29,23 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     options,
   );
 
-  const queryOptionsTyped = resourceInit.isList
-    ? queryOptions
-    : (queryOptions as Omit<ReactQueryOptions<R>, 'queryKey' | 'queryFn'>);
+  // [TODO]: add better typing for the query options
+  const getQueryOptions = (): UseQueryOptions<R> => {
+    const queryOptionsTyped = resourceInit.isList
+      ? queryOptions
+      : (queryOptions as Omit<ReactQueryOptions<R>, 'queryKey' | 'queryFn'>);
+    return (
+      resourceInit.isList
+        ? createListqueryOptions(
+            { model, queryOptions: k8sQueryOptions, fetchOptions: options },
+            queryOptionsTyped as TQueryOptions<K8sResourceCommon[]>,
+          )
+        : createGetQueryOptions(
+            { model, queryOptions: k8sQueryOptions, fetchOptions: options },
+            queryOptionsTyped as Omit<ReactQueryOptions<K8sResourceCommon>, 'queryKey' | 'queryFn'>,
+          )
+    ) as UseQueryOptions<R>;
+  };
 
-  return useQuery(
-    resourceInit.isList
-      ? createListqueryOptions<R>(
-          { model, queryOptions: k8sQueryOptions, fetchOptions: options },
-          queryOptionsTyped,
-        )
-      : createGetQueryOptions<R>(
-          { model, queryOptions: k8sQueryOptions, fetchOptions: options },
-          queryOptionsTyped,
-        ),
-  );
+  return useQuery<R>(getQueryOptions());
 };

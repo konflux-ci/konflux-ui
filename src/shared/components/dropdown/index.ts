@@ -1,1 +1,3 @@
-export { default as BasicDropdown, DropdownItemObject } from './BasicDropdown';
+export { default as BasicDropdown } from './BasicDropdown';
+
+export type { DropdownItemObject } from './BasicDropdown';

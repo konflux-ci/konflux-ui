@@ -49,7 +49,7 @@ const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
 }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState<boolean>(false);
   const onToggle = (
-    ev:
+    _:
       | MouseEvent
       | TouchEvent
       | KeyboardEvent

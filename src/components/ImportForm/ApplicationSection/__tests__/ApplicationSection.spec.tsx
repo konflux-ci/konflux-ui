@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { useField, useFormikContext } from 'formik';
 import ApplicationSection from '../ApplicationSection';
