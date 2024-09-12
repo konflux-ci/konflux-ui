@@ -43,7 +43,10 @@ export const WorkspaceProvider: React.FC<React.PropsWithChildren> = ({ children 
   const params = useParams<RouterParams>();
 
   const activeWorkspaceName =
-    params.workspaceName ?? getLastUsedWorkspace() ?? getHomeWorkspace(workspaces)?.metadata?.name;
+    params.workspaceName ??
+    getLastUsedWorkspace() ??
+    getHomeWorkspace(workspaces)?.metadata?.name ??
+    workspaces[0]?.metadata?.name;
 
   const { data: workspaceResource, isLoading: activeWorkspaceLoading } = useQuery(
     createWorkspaceQueryOptions(activeWorkspaceName),
