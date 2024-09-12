@@ -14,10 +14,7 @@ export const useWorkspaceBreadcrumbs = () => {
     </Badge>,
     <span key="badge-divider" className={styles.breadcrumbItemDivider} />,
     <BreadcrumbItem key="workspace-link" to="#" component="div">
-      <Link
-        className="pf-v5-c-breadcrumb__link"
-        to={`/application-pipeline/workspaces/${workspace}/applications`}
-      >
+      <Link className="pf-v5-c-breadcrumb__link" to={`/workspaces/${workspace}/applications`}>
         {workspace}
       </Link>
     </BreadcrumbItem>,
@@ -42,7 +39,7 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
         <Link
           data-test="applications-breadcrumb-link"
           className="pf-v5-c-breadcrumb__link"
-          to={`/application-pipeline/workspaces/${workspace}/applications`}
+          to={`/workspaces/${workspace}/applications`}
         >
           Applications
         </Link>
@@ -53,9 +50,7 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
     ...(applicationName
       ? [
           {
-            path: withLink
-              ? `/application-pipeline/workspaces/${workspace}/applications/${applicationName}`
-              : '',
+            path: withLink ? `/workspaces/${workspace}/applications/${applicationName}` : '',
             name: appDisplayName || applicationName,
           },
           <ApplicationSwitcher key="app" selectedApplication={applicationName} />,

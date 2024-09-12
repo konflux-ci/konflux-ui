@@ -38,7 +38,7 @@ describe('ErrorEmptyState', () => {
     act(() => {
       fireEvent.click(appsButton);
     });
-    expect(navigateMock).toHaveBeenCalledWith('/application-pipeline/workspaces');
+    expect(navigateMock).toHaveBeenCalledWith('/workspaces');
   });
 
   it('Should show title and body on non-404 errors', () => {

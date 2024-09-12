@@ -27,8 +27,7 @@ export const ApplicationSwitcher: React.FC<
   const selectedItem = menuItems.find((item) => item.key === selectedApplication);
 
   const onSelect = (item: ContextMenuItem) => {
-    selectedItem.key !== item.key &&
-      navigate(`/application-pipeline/workspaces/${workspace}/applications/${item.key}`);
+    selectedItem.key !== item.key && navigate(`/workspaces/${workspace}/applications/${item.key}`);
   };
 
   return menuItems.length > 1 ? (
@@ -42,9 +41,7 @@ export const ApplicationSwitcher: React.FC<
           <LevelItem>
             <ButtonWithAccessTooltip
               variant="link"
-              component={(props) => (
-                <Link {...props} to={`/application-pipeline/workspaces/${workspace}/import`} />
-              )}
+              component={(props) => <Link {...props} to={`/workspaces/${workspace}/import`} />}
               isInline
               tooltip="You don't have access to create an application"
               isDisabled={!(canCreateApplication && canCreateComponent)}
@@ -60,10 +57,7 @@ export const ApplicationSwitcher: React.FC<
             <Button
               variant="link"
               component={(props) => (
-                <Link
-                  {...props}
-                  to={`/application-pipeline/workspaces/${workspace}/applications`}
-                />
+                <Link {...props} to={`/workspaces/${workspace}/applications`} />
               )}
               isInline
             >

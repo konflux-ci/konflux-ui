@@ -75,7 +75,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
               {/* <ButtonWithAccessTooltip
                 variant="primary"
                 component={(props) => (
-                  <Link {...props} to={`/application-pipeline/workspaces/${workspace}/import`} />
+                  <Link {...props} to={`/workspaces/${workspace}/import`} />
                 )}
                 isDisabled={!(canCreateApplication && canCreateComponent)}
                 tooltip="You don't have access to create an application"
@@ -97,7 +97,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                       component={(props) => (
                         <Link
                           {...props}
-                          to={`/application-pipeline/workspaces/${workspace}/import`}
+                          to={`/workspaces/${workspace}/import`}
                         />
                       )}
                       isDisabled={!(canCreateApplication && canCreateComponent)}

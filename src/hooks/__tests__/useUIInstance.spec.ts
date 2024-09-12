@@ -26,7 +26,7 @@ describe('getInternalInstance', () => {
 describe('useUIInstance', () => {
   it('should return correct environment', () => {
     mockEnv.mockReturnValue('prod');
-    mockLocation({ hostname: 'console.redhat.com/preview/application-pipeline' });
+    mockLocation({ hostname: 'console.redhat.com/preview' });
     const { result } = renderHook(() => useUIInstance());
     expect(result.current).toEqual('prod');
   });
