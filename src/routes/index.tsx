@@ -4,6 +4,11 @@ import { ApplicationDetails } from '../components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '../components/Applications';
 import { importPageLoader, ImportForm } from '../components/ImportForm';
 import {
+  integrationDetailsPageLoader,
+  IntegrationTestDetailsView,
+  IntegrationTestOverviewTab,
+} from '../components/IntegrationTests/IntegrationTestDetails';
+import {
   IntegrationTestCreateForm,
   integrationTestCreateFormLoader,
   IntegrationTestEditForm,
@@ -77,6 +82,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      /* IntegrationTestScenario routes */
       {
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
         loader: integrationTestCreateFormLoader,
@@ -88,6 +94,22 @@ export const router = createBrowserRouter([
         loader: integrationTestEditFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestEditForm />,
+      },
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
+        loader: integrationDetailsPageLoader,
+        errorElement: <RouteErrorBoundry />,
+        element: <IntegrationTestDetailsView />,
+        children: [
+          {
+            index: true,
+            element: <IntegrationTestOverviewTab />,
+          },
+          {
+            path: 'pipelineruns',
+            element: <div>pipeline run tab</div>,
+          },
+        ],
       },
     ],
   },

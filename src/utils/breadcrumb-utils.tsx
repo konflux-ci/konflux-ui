@@ -1,6 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Badge, BreadcrumbItem } from '@patternfly/react-core';
-import styles from '@patternfly/react-styles/css/components/Breadcrumb/breadcrumb';
+import { BreadcrumbItem } from '@patternfly/react-core';
 import { ApplicationSwitcher } from '../components/Applications/switcher/ApplicationSwitcher';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
 import { WorkspaceSwitcher } from '../components/Workspace/WorkspaceSwitcher';
@@ -10,11 +9,10 @@ export const useWorkspaceBreadcrumbs = () => {
   const { workspace } = useWorkspaceInfo();
 
   return [
-    <Badge key="badge" isRead>
-      WS
-    </Badge>,
-    <span key="badge-divider" className={styles.breadcrumbItemDivider} />,
-    <BreadcrumbItem key="workspace-link" to="#" component="div">
+    <BreadcrumbItem key="workspace-link" component="div">
+      <span>Workspaces</span>
+    </BreadcrumbItem>,
+    <BreadcrumbItem key="workspace-link" to="#" component="div" showDivider>
       <Link className="pf-v5-c-breadcrumb__link" to={`/workspaces/${workspace}/applications`}>
         {workspace}
       </Link>
@@ -32,10 +30,7 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
 
   return [
     ...workspaceBreadcrumbs,
-    <span key="workspace-divider" className={styles.breadcrumbItemDivider}>
-      |
-    </span>,
-    <BreadcrumbItem key="app-link" component="div">
+    <BreadcrumbItem key="app-link" component="div" showDivider>
       {applicationName ? (
         <Link
           data-test="applications-breadcrumb-link"

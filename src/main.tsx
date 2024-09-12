@@ -9,6 +9,7 @@ import { queryClient } from './k8s/query/core';
 import { router } from './routes';
 
 import '@patternfly/react-core/dist/styles/base.css';
+import '@patternfly/react-styles/css/utilities/Spacing/spacing.css';
 import './main.scss';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

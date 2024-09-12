@@ -47,7 +47,7 @@ type DetailsPageProps = {
   breadcrumbs?: ({ name: string; path: string } | React.ReactElement)[];
   actions?: Action[];
   tabs: DetailsPageTabProps[];
-  baseURL: string;
+  baseURL?: string;
   onTabSelect?: (selectedTabKey: string) => void;
 };
 
