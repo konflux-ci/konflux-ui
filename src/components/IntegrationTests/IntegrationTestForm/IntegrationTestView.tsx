@@ -1,0 +1,155 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Formik } from 'formik';
+import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
+import { useTrackEvent, TrackEvents } from '../../../utils/analytics';
+import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import IntegrationTestForm from './IntegrationTestForm';
+import { IntegrationTestFormValues, IntegrationTestLabels } from './types';
+import {
+  editIntegrationTest,
+  createIntegrationTest,
+  ResolverRefParams,
+} from './utils/create-utils';
+import { integrationTestValidationSchema } from './utils/validation-utils';
+
+type IntegrationTestViewProps = {
+  applicationName: string;
+  integrationTest?: IntegrationTestScenarioKind;
+};
+
+const IntegrationTestView: React.FunctionComponent<
+  React.PropsWithChildren<IntegrationTestViewProps>
+> = ({ applicationName, integrationTest }) => {
+  const track = useTrackEvent();
+  const navigate = useNavigate();
+  const { namespace, workspace } = useWorkspaceInfo();
+
+  const url = integrationTest?.spec.resolverRef?.params?.find(
+    (param) => param.name === ResolverRefParams.URL,
+  );
+
+  const revision = integrationTest?.spec.resolverRef?.params?.find(
+    (param) => param.name === ResolverRefParams.REVISION,
+  );
+
+  const path = integrationTest?.spec.resolverRef?.params?.find(
+    (param) => param.name === ResolverRefParams.PATH,
+  );
+
+  const getFormParamValues = (params) => {
+    if (!params || !Array.isArray(params) || params?.length === 0) {
+      return [];
+    }
+    const formParams = [];
+    params.forEach((param) => {
+      if (param.value) {
+        formParams.push({ name: param.name, values: [param.value] });
+      } else {
+        formParams.push(param);
+      }
+    });
+    return formParams;
+  };
+
+  const initialValues = {
+    integrationTest: {
+      name: integrationTest?.metadata.name ?? '',
+      url: url?.value ?? '',
+      revision: revision?.value ?? '',
+      path: path?.value ?? '',
+      params: getFormParamValues(integrationTest?.spec?.params),
+      optional:
+        integrationTest?.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true' ?? false,
+    },
+    isDetected: true,
+  };
+
+  const handleSubmit = (values, actions) => {
+    if (integrationTest) {
+      track(TrackEvents.ButtonClicked, {
+        link_name: 'edit-integration-test-submit',
+        app_name: integrationTest.spec.application,
+        integration_test_name: integrationTest.metadata.name,
+        workspace,
+      });
+    } else {
+      track(TrackEvents.ButtonClicked, {
+        link_name: 'add-integration-test-submit',
+        app_name: applicationName,
+        workspace,
+      });
+    }
+    return (
+      integrationTest
+        ? editIntegrationTest(integrationTest, values.integrationTest as IntegrationTestFormValues)
+        : createIntegrationTest(
+            values.integrationTest as IntegrationTestFormValues,
+            applicationName,
+            namespace,
+          )
+    )
+      .then((newIntegrationTest) => {
+        track(integrationTest ? 'Integration test Edited' : 'Integration test Created', {
+          app_name: newIntegrationTest.spec.application,
+          integration_test_name: newIntegrationTest.metadata.name,
+          bundle: newIntegrationTest.spec.bundle,
+          pipeline: newIntegrationTest.spec.pipeline,
+          workspace,
+        });
+        if (integrationTest) {
+          if (window.history.state && window.history.state.idx > 0) {
+            // go back to the page where the edit was launched
+            navigate(-1);
+          } else {
+            navigate(
+              `/workspaces/${workspace}/applications/${applicationName}/integrationtests/${integrationTest.metadata.name}`,
+            );
+          }
+        } else {
+          navigate(`/workspaces/${workspace}/applications/${applicationName}/integrationtests`);
+        }
+      })
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.warn('Error while submitting integration test:', error);
+        actions.setSubmitting(false);
+        actions.setStatus({ submitError: error.message });
+      });
+  };
+
+  return (
+    <Formik
+      onSubmit={handleSubmit}
+      onReset={() => {
+        if (integrationTest) {
+          track(TrackEvents.ButtonClicked, {
+            link_name: 'edit-integration-test-leave',
+            app_name: integrationTest.spec.application,
+            integration_test_name: integrationTest.metadata.name,
+            workspace,
+          });
+        } else {
+          track(TrackEvents.ButtonClicked, {
+            link_name: 'add-integration-test-leave',
+            app_name: applicationName,
+            workspace,
+          });
+        }
+        navigate(-1);
+      }}
+      initialValues={initialValues}
+      validationSchema={integrationTestValidationSchema}
+    >
+      {(props) => (
+        <IntegrationTestForm
+          {...props}
+          applicationName={applicationName}
+          edit={!!integrationTest}
+        />
+      )}
+    </Formik>
+  );
+};
+
+export default IntegrationTestView;

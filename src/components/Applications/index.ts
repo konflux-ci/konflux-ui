@@ -18,3 +18,5 @@ export const applicationPageLoader = createLoaderWithAccessCheck(applicationPage
   model: ApplicationModel,
   verb: 'list',
 });
+
+export { default as ApplicationListView } from './ApplicationListView';

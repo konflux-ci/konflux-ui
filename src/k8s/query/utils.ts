@@ -7,6 +7,7 @@ import {
   K8sResourceListOptions,
   K8sListResourceItems,
 } from '../k8s-fetch';
+import { queryClient } from './core';
 import { TQueryOptions } from './type';
 
 export const createQueryKeys = ({
@@ -40,6 +41,16 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
     queryKey: createQueryKeys(args),
     queryFn: () => {
       return K8sGetResource(args);
+    },
+    initialData: () => {
+      const name = args.queryOptions?.name;
+      return name
+        ? queryClient
+            .getQueryData<
+              TResource[]
+            >(createQueryKeys({ model: args.model, queryOptions: { ws: args.queryOptions?.ws, queryParams: args.queryOptions?.queryParams } }))
+            ?.find((res) => res.metadata.name === name)
+        : null;
     },
     ...options,
   };

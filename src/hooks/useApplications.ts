@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useK8sWatchResource } from '../k8s/hooks/useK8sWatchResource';
 import { ApplicationGroupVersionKind, ApplicationModel } from '../models';
 import { ApplicationKind } from '../types';
@@ -28,20 +29,33 @@ export const useApplications = (
   return [applications, !isLoading, error];
 };
 
-// export const useApplication = (
-//   namespace: string,
-//   applicationName: string,
-// ): [ApplicationKind, boolean, unknown] => {
-//   const {data: application, isLoading, error} = useK8sWatchResource({
-//     groupVersionKind: ApplicationGroupVersionKind,
-//     name: applicationName,
-//     namespace,
-//   }, ApplicationModel);
+export const useApplication = (
+  namespace: string,
+  workspace: string,
+  applicationName: string,
+): [ApplicationKind, boolean, unknown] => {
+  const {
+    data: application,
+    isLoading,
+    error,
+  } = useK8sWatchResource<ApplicationKind>(
+    {
+      groupVersionKind: ApplicationGroupVersionKind,
+      name: applicationName,
+      namespace,
+      workspace,
+    },
+    ApplicationModel,
+  );
 
-//   return React.useMemo(() => {
-//     if (isLoading && !error && (application as unknown as ApplicationKind).metadata?.deletionTimestamp) {
-//       return [null, isLoading, { code: 404 }];
-//     }
-//     return [application, isLoading as unknown as boolean, error as unknown];
-//   }, [application, isLoading, error]);
-// };
+  return React.useMemo(() => {
+    if (
+      !isLoading &&
+      !error &&
+      (application as unknown as ApplicationKind).metadata?.deletionTimestamp
+    ) {
+      return [null, !isLoading, { code: 404 }];
+    }
+    return [application, !isLoading as unknown as boolean, error as unknown];
+  }, [application, isLoading, error]);
+};

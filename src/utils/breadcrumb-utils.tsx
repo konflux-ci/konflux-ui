@@ -4,6 +4,7 @@ import styles from '@patternfly/react-styles/css/components/Breadcrumb/breadcrum
 import { ApplicationSwitcher } from '../components/Applications/switcher/ApplicationSwitcher';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
 import { WorkspaceSwitcher } from '../components/Workspace/WorkspaceSwitcher';
+import { RouterParams } from '../routes/utils';
 
 export const useWorkspaceBreadcrumbs = () => {
   const { workspace } = useWorkspaceInfo();
@@ -23,8 +24,8 @@ export const useWorkspaceBreadcrumbs = () => {
 };
 
 export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true) => {
-  const params = useParams();
-  const applicationName = params.appName || appDisplayName;
+  const params = useParams<RouterParams>();
+  const applicationName = params.applicationName || appDisplayName;
 
   const { workspace } = useWorkspaceInfo();
   const workspaceBreadcrumbs = useWorkspaceBreadcrumbs();

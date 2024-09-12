@@ -1,0 +1,18 @@
+.form-footer {
+  padding: var(--pf-v5-global--spacer--md) (--pf-v5-global--gutter/2);
+  @media (min-width: 768px) {
+    padding: var(--pf-v5-global--spacer--md) (--pf-v5-global--gutter);
+  }
+  &__sticky {
+    position: sticky;
+    background: var(--pf-v5-global--palette--white);
+    bottom: 0;
+  }
+  &__shadow {
+    box-shadow: var(--pf-v5-global--BoxShadow--sm-top);
+  }
+
+  &__no-top-margin {
+    margin-top: 0;
+  }
+}
