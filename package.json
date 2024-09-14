@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "/",
   "scripts": {
     "build": "webpack -c ./webpack.prod.config.js",
     "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",
@@ -20,6 +21,7 @@
     "@patternfly/react-styles": "^5.3.1",
     "@patternfly/react-table": "^5.3.4",
     "@patternfly/react-tokens": "^5.3.1",
+    "@patternfly/react-topology": "^5.4.0",
     "@patternfly/react-virtualized-extension": "^5.1.0",
     "@tanstack/react-query": "^5.51.23",
     "@tanstack/react-query-devtools": "^5.52.0",

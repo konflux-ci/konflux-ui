@@ -7,6 +7,7 @@ import {
   integrationDetailsPageLoader,
   IntegrationTestDetailsView,
   IntegrationTestOverviewTab,
+  IntegrationTestPipelineRunTab,
 } from '../components/IntegrationTests/IntegrationTestDetails';
 import {
   IntegrationTestCreateForm,
@@ -107,7 +108,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'pipelineruns',
-            element: <div>pipeline run tab</div>,
+            element: <IntegrationTestPipelineRunTab />,
           },
         ],
       },
