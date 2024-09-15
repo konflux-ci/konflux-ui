@@ -1,21 +1,10 @@
 import * as React from 'react';
 import {
-  matchPath,
-  Outlet,
-  resolvePath,
-  useLocation,
-  useNavigate,
-  useResolvedPath,
-} from 'react-router-dom';
-import {
   Flex,
   FlexItem,
   PageGroup,
   PageSection,
   PageSectionVariants,
-  Tab,
-  Tabs,
-  TabTitleText,
   Text,
   TextContent,
 } from '@patternfly/react-core';
@@ -27,12 +16,9 @@ import {
   DropdownToggle,
 } from '@patternfly/react-core/deprecated';
 import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
-import cx from 'classnames';
-import { FULL_APPLICATION_TITLE } from '../../consts/labels';
-import { useDocumentTitle } from '../../hooks/useDocumentTitle';
-import { HttpError } from '../../k8s/error';
+import { css } from '@patternfly/react-styles';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
+import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
 
 import './DetailsPage.scss';
@@ -64,23 +50,6 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   onTabSelect,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
-  const location = useLocation();
-  const resolveBase = useResolvedPath('.');
-  const basePath = baseURL ?? resolveBase.pathname;
-  const currentTab = tabs.find(
-    (t) => !!matchPath(resolvePath(t.key, basePath).pathname, location.pathname),
-  )?.key;
-
-  const activeTabKey = React.useMemo(() => currentTab || tabs?.[0]?.key, [currentTab, tabs]);
-  const navigate = useNavigate();
-  const setActiveTab = React.useCallback(
-    (newTab: string) => {
-      if (activeTabKey !== newTab) {
-        navigate(`${basePath}${newTab ? `/${newTab}` : ''}`);
-      }
-    },
-    [activeTabKey, navigate, basePath],
-  );
 
   const dropdownItems = React.useMemo(
     () =>
@@ -130,19 +99,8 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
     [actions],
   );
 
-  const tabComponents = tabs?.map(({ key, label, isFilled = true, ...rest }) => {
-    return (
-      <Tab
-        data-test={`details__tabItem ${label.toLocaleLowerCase().replace(/\s/g, '')}`}
-        key={key}
-        eventKey={key}
-        title={<TabTitleText>{label}</TabTitleText>}
-        className={cx('app-details__tabs__tabItem', { isFilled })}
-        {...rest}
-      >
-        <Outlet />
-      </Tab>
-    );
+  const tabComponents = tabs?.map(({ isFilled, className, ...rest }) => {
+    return { ...rest, className: css(className, { 'app-details__tabs__tabItem': isFilled }) };
   });
 
   const renderTitle = () => {
@@ -155,17 +113,6 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
     }
     return title;
   };
-
-  const activeTab: DetailsPageTabProps = React.useMemo(
-    () => tabs?.find((t) => (t.partial ? activeTabKey.startsWith(t.key) : t.key === activeTabKey)),
-    [activeTabKey, tabs],
-  );
-
-  useDocumentTitle(`${headTitle} - ${activeTab.label} | ${FULL_APPLICATION_TITLE}`);
-
-  if (!activeTab) {
-    return <ErrorEmptyState httpError={HttpError.fromCode(404)} />;
-  }
 
   return (
     <PageGroup data-test="details" className="app-details">
@@ -203,18 +150,13 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
       {preComponent}
       {tabs?.length && (
         <PageSection className="app-details__tabs" isFilled variant={PageSectionVariants.light}>
-          <Tabs
-            data-test="app-details__tabs"
-            onSelect={(_, k: string) => {
-              setActiveTab(k);
-              onTabSelect && onTabSelect(k);
-            }}
-            mountOnEnter
-            unmountOnExit
-            activeKey={activeTab.key}
-          >
-            {tabComponents}
-          </Tabs>
+          <TabsLayout
+            id="app-details"
+            onTabSelect={onTabSelect}
+            tabs={tabComponents}
+            headTitle={headTitle}
+            baseURL={baseURL}
+          />
         </PageSection>
       )}
       {footer && (

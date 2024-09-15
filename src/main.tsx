@@ -1,5 +1,6 @@
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
@@ -17,7 +18,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ModalProvider>
-          <RouterProvider router={router} />
+          <RouterProvider
+            router={router}
+            fallbackElement={
+              <Bullseye>
+                <Spinner />
+              </Bullseye>
+            }
+          />
           <ReactQueryDevtools initialIsOpen={false} position="bottom" />
         </ModalProvider>
       </AuthProvider>

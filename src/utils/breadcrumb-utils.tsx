@@ -9,7 +9,7 @@ export const useWorkspaceBreadcrumbs = () => {
   const { workspace } = useWorkspaceInfo();
 
   return [
-    <BreadcrumbItem key="workspace-link" component="div">
+    <BreadcrumbItem key="workspace-label" component="div">
       <span>Workspaces</span>
     </BreadcrumbItem>,
     <BreadcrumbItem key="workspace-link" to="#" component="div" showDivider>

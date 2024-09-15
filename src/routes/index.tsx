@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
+import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails } from '../components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '../components/Applications';
 import { importPageLoader, ImportForm } from '../components/ImportForm';
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
         element: <ApplicationListView />,
         errorElement: <RouteErrorBoundry />,
       },
+      /* Application details */
       {
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
         element: <ApplicationDetails />,
@@ -64,8 +66,12 @@ export const router = createBrowserRouter([
             element: <div>Overview tab</div>,
           },
           {
-            path: 'activity',
-            element: <div>Activty tab</div>,
+            path: `activity/:${RouterParams.activityTab}`,
+            element: <ActivityTab />,
+          },
+          {
+            path: `activity`,
+            element: <ActivityTab />,
           },
           {
             path: 'components',

@@ -143,7 +143,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
         ]}
         tabs={[
           {
-            key: '',
+            key: 'index',
             label: 'Overview',
             isFilled: true,
           },
