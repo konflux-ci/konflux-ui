@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { RouterParams } from '../../routes/utils';
+import PipelineRunsTab from './PipelineRunsTab';
 
 import './ActivityTab.scss';
 
@@ -80,7 +81,7 @@ export const ActivityTab: React.FC<React.PropsWithChildren<{ applicationName?: s
           eventKey="pipelineruns"
           className="activity-tab"
         >
-          <div>Pipeline runs</div>
+          <PipelineRunsTab applicationName={applicationName} />
         </Tab>
       </Tabs>
     </>

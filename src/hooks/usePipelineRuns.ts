@@ -3,10 +3,15 @@ import { differenceBy, uniqBy } from 'lodash-es';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
-import { PipelineRunGroupVersionKind, PipelineRunModel, TaskRunGroupVersionKind } from '../models';
+import {
+  PipelineRunGroupVersionKind,
+  PipelineRunModel,
+  TaskRunGroupVersionKind,
+  TaskRunModel,
+} from '../models';
 import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind, TaskRunKind } from '../types';
-import { K8sGroupVersionKind, K8sResourceCommon, Selector } from '../types/k8s';
+import { K8sGroupVersionKind, K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
 import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
@@ -15,6 +20,7 @@ import { GetNextPage, useTRPipelineRuns, useTRTaskRuns } from './useTektonResult
 
 const useRuns = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
+  model: K8sModelCommon,
   namespace: string,
   options?: {
     selector?: Selector;
@@ -35,18 +41,15 @@ const useRuns = <Kind extends K8sResourceCommon>(
       ? {
           groupVersionKind,
           namespace,
+          workspace,
           isList,
           selector: optionsMemo?.selector,
           name: optionsMemo?.name,
+          watch: true,
         }
       : null;
-  }, [groupVersionKind, namespace, optionsMemo, isList]);
-
-  const {
-    data: resources,
-    isLoading,
-    error,
-  } = useK8sWatchResource<Kind[]>(watchOptions, PipelineRunModel);
+  }, [namespace, groupVersionKind, workspace, isList, optionsMemo?.selector, optionsMemo?.name]);
+  const { data: resources, isLoading, error } = useK8sWatchResource<Kind[]>(watchOptions, model);
   // if a pipeline run was removed from etcd, we want to still include it in the return value without re-querying tekton-results
   const etcdRuns = React.useMemo(() => {
     if (isLoading || error) {
@@ -160,7 +163,7 @@ export const usePipelineRuns = (
     limit?: number;
   },
 ): [PipelineRunKind[], boolean, unknown, GetNextPage] =>
-  useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, namespace, options);
+  useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
 
 export const useTaskRuns = (
   namespace: string,
@@ -169,7 +172,7 @@ export const useTaskRuns = (
     limit?: number;
   },
 ): [TaskRunKind[], boolean, unknown, GetNextPage] =>
-  useRuns<TaskRunKind>(TaskRunGroupVersionKind, namespace, options);
+  useRuns<TaskRunKind>(TaskRunGroupVersionKind, TaskRunModel, namespace, options);
 
 export const useLatestBuildPipelineRunForComponent = (
   namespace: string,

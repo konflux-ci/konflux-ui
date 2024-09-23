@@ -73,11 +73,7 @@ export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKi
   return [null, []];
 };
 
-export const useScanResults = (
-  pipelineRunName: string,
-  // enable cache only if the pipeline run has completed
-  cache?: boolean,
-): [ScanResults, boolean] => {
+export const useScanResults = (pipelineRunName: string): [ScanResults, boolean] => {
   const { namespace } = useWorkspaceInfo();
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
   const [taskRuns, loaded] = useTRTaskRuns(
@@ -95,7 +91,6 @@ export const useScanResults = (
       }),
       [pipelineRunName],
     ),
-    cache ? `useScaneResults-${pipelineRunName}` : undefined,
   );
 
   return React.useMemo(() => {
@@ -184,7 +179,6 @@ export const usePLRScanResults = (
       }),
       [pipelineRunNames],
     ),
-    pipelineRunNames.length ? `useScanResults-${pipelineRunNames.sort().join('|')}` : undefined,
   );
 
   return React.useMemo(() => {

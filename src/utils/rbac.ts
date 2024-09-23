@@ -1,6 +1,6 @@
 import React from 'react';
 import { LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
-import memoize from 'lodash/memoize';
+import { memoize } from 'lodash-es';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../components/Workspace/utils';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
 import { k8sCreateResource } from '../k8s/k8s-fetch';

@@ -1,5 +1,6 @@
 import * as React from 'react';
 // import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { pluralize, Skeleton } from '@patternfly/react-core';
 // import { useSnapshotsEnvironmentBindings } from '../../hooks/useSnapshotsEnvironmentBindings';
 // import ActionMenu from '../../shared/components/action-menu/ActionMenu';
@@ -42,12 +43,12 @@ const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Appli
   return (
     <>
       <TableData className={applicationTableColumnClasses.name} data-testid="app-row-test-id">
-        {/* <Link
+        <Link
           to={`/workspaces/${workspace}/applications/${obj.metadata?.name}`}
           title={displayName}
-        > */}
-        {displayName}
-        {/* </Link> */}
+        >
+          {displayName}
+        </Link>
       </TableData>
       <TableData className={applicationTableColumnClasses.components}>
         {loaded ? (

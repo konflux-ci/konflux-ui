@@ -1,6 +1,6 @@
 import { filter, isEqual } from 'lodash-es';
 import { K8sResourceCommon } from '../types/k8s';
-import { k8sListResource, K8sResourceBaseOptions } from './k8s-fetch';
+import { K8sResourceBaseOptions } from './k8s-fetch';
 import { k8sWatch } from './k8s-utils';
 import { queryClient } from './query/core';
 import { createQueryKeys } from './query/utils';
@@ -8,20 +8,13 @@ import { MessageDataType, WebSocketOptions } from './web-socket/types';
 
 type K8sEvent = { type: 'ADDED' | 'DELETED' | 'MODIFIED'; object: K8sResourceCommon };
 
-export const watchListResource = async (
+export const watchListResource = (
   { model, queryOptions }: K8sResourceBaseOptions,
   fetchOptions?: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   >,
 ) => {
-  const response = await k8sListResource({ model, queryOptions });
   const queryKey = createQueryKeys({ model, queryOptions });
-  queryClient.setQueryData(queryKey, (oldData: K8sResourceCommon) => {
-    if (!isEqual(oldData, response.items)) {
-      return response.items;
-    }
-    return undefined;
-  });
   return k8sWatch(
     model,
     {
@@ -29,27 +22,58 @@ export const watchListResource = async (
       ns: queryOptions.ns,
       fieldSelector: queryOptions.queryParams.fieldSelector,
       ws: queryOptions.ws,
-      resourceVersion: response.metadata.resourceVersion,
+      // resourceVersion: response.metadata.resourceVersion,
     },
     { ...fetchOptions, timeout: 60_000 },
   ).onBulkMessage((events: MessageDataType[]) => {
     const safeEvents = filter(events, (e: MessageDataType): e is K8sEvent => typeof e !== 'string');
-    safeEvents.forEach(({ type, object }: K8sEvent) => {
+    safeEvents.forEach(({ type, object: resource }: K8sEvent) => {
       queryClient.setQueryData(queryKey, (oldData: K8sResourceCommon[]) => {
         if (oldData === undefined) {
           return undefined;
         }
-        if (type === 'DELETED') {
-          return oldData.filter((obj) => obj.metadata?.name !== object.metadata?.name);
-        } else if (['ADDED', 'MODIFIED'].includes(type)) {
-          const index = oldData.findIndex((d) => d.metadata?.uid === object.metadata?.uid);
-          if (index === -1) {
-            return [...oldData, object];
+        switch (type) {
+          case 'ADDED': {
+            const index = oldData.findIndex(
+              (item) => item.metadata.name === resource.metadata.name,
+            );
+            return index === -1 ? [...oldData, resource] : oldData;
           }
-          oldData[index] = object;
-          return oldData;
+          case 'MODIFIED': {
+            const index = oldData.findIndex(
+              (item) => item.metadata.name === resource.metadata.name,
+            );
+            if (index === -1) return oldData;
+
+            const oldItem = oldData[index];
+            const newItem = { ...oldItem, ...resource };
+
+            // Check if only resourceVersion has changed
+            const oldItemWithoutVersion = { ...oldItem };
+            const newItemWithoutVersion = { ...newItem };
+            delete oldItemWithoutVersion.metadata.resourceVersion;
+            delete newItemWithoutVersion.metadata.resourceVersion;
+
+            if (isEqual(oldItemWithoutVersion, newItemWithoutVersion)) {
+              // Only resourceVersion has changed, update it in place
+              oldData[index].metadata.resourceVersion = resource.metadata.resourceVersion;
+              return oldData;
+            }
+
+            // Other data has changed, create a new array
+            const newData = [...oldData];
+            newData[index] = newItem;
+            return newData;
+          }
+          case 'DELETED': {
+            const newData = oldData.filter((item) => item.metadata.name !== resource.metadata.name);
+            return newData.length === oldData.length ? oldData : newData;
+          }
+          default:
+            // eslint-disable-next-line no-console
+            console.warn('Unknown event type:', type);
+            return oldData;
         }
-        return undefined;
       });
     });
   });
@@ -61,19 +85,14 @@ export const watchObjectResource = (
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
   >,
 ) => {
-  const options = { ...queryOptions };
   const queryKey = createQueryKeys({ model, queryOptions });
-  if (options.name) {
-    options.queryParams.fieldSelector = `metadata.name=${options.name}`;
-    delete options.name;
-  }
   return k8sWatch(
     model,
     {
       labelSelector: queryOptions.queryParams.labelSelector,
-      ns: options.ns,
-      fieldSelector: options.queryParams.fieldSelector,
-      ws: options.ws,
+      ns: queryOptions.ns,
+      fieldSelector: `metadata.name=${queryOptions.name}`,
+      ws: queryOptions.ws,
     },
     fetchOptions,
   ).onBulkMessage((events: MessageDataType[]) => {
@@ -85,7 +104,7 @@ export const watchObjectResource = (
       queryClient.setQueryData(queryKey, (oldData: K8sResourceCommon) => {
         oldData.metadata.resourceVersion = newObj.metadata?.resourceVersion;
         if (isEqual(oldData, newObj)) {
-          return undefined;
+          return oldData;
         }
         return newObj;
       });

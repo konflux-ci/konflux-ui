@@ -1,13 +1,17 @@
 import React from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { curry } from 'lodash-es';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { PipelineRunModel, TaskRunModel } from '../models';
 import { PipelineRunKind, TaskRunKind } from '../types';
-import { K8sResourceCommon } from '../types/k8s';
+import { K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
 import {
   getPipelineRuns,
   TektonResultsOptions,
   RecordsList,
   getTaskRuns,
   getTaskRunLog,
+  selectorToFilter,
 } from '../utils/tekton-results';
 
 export type GetNextPage = () => void | undefined;
@@ -102,7 +106,72 @@ const useTRRuns = <Kind extends K8sResourceCommon>(
   return result;
 };
 
+const createTektonResultsQueryKeys = (
+  model: K8sModelCommon,
+  workspace: string,
+  selector: Selector,
+  filter: string,
+) => {
+  const selectorFilter = selectorToFilter(selector);
+  return [
+    'tekton-results',
+    workspace,
+    { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
+    ...(selectorFilter ? [selectorFilter] : []),
+    ...(filter ? [filter] : []),
+  ];
+};
+
+export const createTektonResultQueryOptions = curry(
+  (
+    fetchFn,
+    model: K8sModelCommon,
+    namespace: string,
+    workspace: string,
+    options: TektonResultsOptions,
+  ) => {
+    return {
+      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
+      queryFn: async ({ pageParam }) => {
+        const trData = await fetchFn(workspace, namespace, options, pageParam as string);
+        return { data: trData[0], nextPage: trData[1].nextPageToken };
+      },
+      enabled: !!namespace,
+      initialPageParam: null,
+      getNextPageParam: (lastPage) => lastPage.nextPage || undefined,
+      staleTime: 1000 * 60 * 5,
+    };
+  },
+);
+
+const createPipelineRunTektonResultsQueryOptions = createTektonResultQueryOptions(
+  getPipelineRuns,
+  PipelineRunModel,
+);
+const createTaskRunTektonResultsQueryOptions = createTektonResultQueryOptions(
+  getTaskRuns,
+  TaskRunModel,
+);
+
 export const useTRPipelineRuns = (
+  namespace: string,
+  options?: TektonResultsOptions,
+): [PipelineRunKind[], boolean, unknown, GetNextPage] => {
+  const { workspace } = useWorkspaceInfo();
+  const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
+    useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, workspace, options));
+  const resourceData = React.useMemo(() => {
+    return data?.pages ? data.pages.flatMap((page) => page.data) : [];
+  }, [data]);
+  return [
+    resourceData,
+    !(isLoading || isFetchingNextPage),
+    error,
+    hasNextPage ? fetchNextPage : () => {},
+  ];
+};
+
+export const useTRPipelineRuns2 = (
   namespace: string,
   options?: TektonResultsOptions,
   cacheKey?: string,
@@ -110,6 +179,24 @@ export const useTRPipelineRuns = (
   useTRRuns<PipelineRunKind>(getPipelineRuns, namespace, options, cacheKey);
 
 export const useTRTaskRuns = (
+  namespace: string,
+  options?: TektonResultsOptions,
+): [TaskRunKind[], boolean, unknown, GetNextPage] => {
+  const { workspace } = useWorkspaceInfo();
+  const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
+    useInfiniteQuery(createTaskRunTektonResultsQueryOptions(namespace, workspace, options));
+  const resourceData = React.useMemo(() => {
+    return data?.pages ? data.pages.flatMap((page) => page.data) : [];
+  }, [data]);
+  return [
+    resourceData,
+    !(isLoading || isFetchingNextPage),
+    error,
+    hasNextPage ? fetchNextPage : () => {},
+  ];
+};
+
+export const useTRTaskRuns2 = (
   namespace: string,
   options?: TektonResultsOptions,
   cacheKey?: string,
