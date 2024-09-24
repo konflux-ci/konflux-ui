@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { RouterParams } from '../../routes/utils';
+import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
 import PipelineRunsTab from './PipelineRunsTab';
 
 import './ActivityTab.scss';
@@ -72,7 +73,7 @@ export const ActivityTab: React.FC<React.PropsWithChildren<{ applicationName?: s
           eventKey="latest-commits"
           className="activity-tab"
         >
-          <div>Latest commits</div>
+          <CommitsListView applicationName={applicationName} />
         </Tab>
         <Tab
           data-testid={`activity__tabItem pipelineruns`}
