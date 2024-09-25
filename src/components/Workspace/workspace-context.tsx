@@ -18,13 +18,7 @@ export type WorkspaceContextData = {
   workspaceResource: Workspace | undefined;
   workspacesLoaded: boolean;
   lastUsedWorkspace: string;
-  /**
-   * This is used to trigger a manual re-fetch of the Workspace CR when there
-   * are status updates to the space lister API. Needed because we cannot use
-   * k8s utils to get/watch the resource since k8s utils add workspace context
-   * in url and the workspace API does not like it.
-   */
-  updateWorkspace: () => void;
+  workspaces: Workspace[];
 };
 
 const WorkspaceContext = React.createContext<WorkspaceContextData>({
@@ -32,8 +26,8 @@ const WorkspaceContext = React.createContext<WorkspaceContextData>({
   workspace: '',
   workspaceResource: undefined,
   workspacesLoaded: false,
+  workspaces: [],
   lastUsedWorkspace: getLastUsedWorkspace(),
-  updateWorkspace: () => {},
 });
 
 export const useWorkspaceInfo = () => React.useContext(WorkspaceContext);
@@ -68,9 +62,9 @@ export const WorkspaceProvider: React.FC<React.PropsWithChildren> = ({ children 
         namespace,
         workspace: activeWorkspaceName,
         workspaceResource,
+        workspaces,
         workspacesLoaded: !(workspaceLoading && activeWorkspaceLoading),
         lastUsedWorkspace: getLastUsedWorkspace(),
-        updateWorkspace: () => {},
       }}
     >
       {!(workspaceLoading && activeWorkspaceLoading) ? (

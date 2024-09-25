@@ -122,7 +122,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               type="search"
               aria-label="name filter"
               placeholder="Filter by name..."
-              onChange={(e, name) => onNameInput(name)}
+              onChange={(_, name) => onNameInput(name)}
               value={nameFilter}
             />
           </ToolbarItem>

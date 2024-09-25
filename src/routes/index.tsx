@@ -21,6 +21,13 @@ import {
   IntegrationTestsListView,
 } from '../components/IntegrationTests/IntegrationTestsListView';
 import { Overview } from '../components/Overview/Overview';
+import {
+  ReleaseDetailsLayout,
+  releaseDetailsViewLoader,
+  ReleaseListViewTab,
+  releaseListViewTabLoader,
+  ReleaseOverviewTab,
+} from '../components/Releases';
 import { queryWorkspaces } from '../components/Workspace/utils';
 import { WorkspaceProvider } from '../components/Workspace/workspace-context';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
@@ -85,24 +92,29 @@ export const router = createBrowserRouter([
           },
           {
             path: 'releases',
-            element: <div>Release tab</div>,
+            loader: releaseListViewTabLoader,
+            errorElement: <RouteErrorBoundry />,
+            element: <ReleaseListViewTab />,
           },
         ],
       },
       /* IntegrationTestScenario routes */
       {
+        // create form
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
         loader: integrationTestCreateFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestCreateForm />,
       },
       {
+        // edit form
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
         loader: integrationTestEditFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestEditForm />,
       },
       {
+        // details page
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
         loader: integrationDetailsPageLoader,
         errorElement: <RouteErrorBoundry />,
@@ -115,6 +127,20 @@ export const router = createBrowserRouter([
           {
             path: 'pipelineruns',
             element: <IntegrationTestPipelineRunTab />,
+          },
+        ],
+      },
+      /* Release routes */
+      {
+        // details page
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/releases/:${RouterParams.releaseName}`,
+        loader: releaseDetailsViewLoader,
+        errorElement: <RouteErrorBoundry />,
+        element: <ReleaseDetailsLayout />,
+        children: [
+          {
+            index: true,
+            element: <ReleaseOverviewTab />,
           },
         ],
       },
