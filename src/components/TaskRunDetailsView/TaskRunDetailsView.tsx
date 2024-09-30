@@ -12,6 +12,7 @@ import { runStatus, taskRunStatus } from '../../utils/pipeline-utils';
 // import { SecurityEnterpriseContractTab } from '../EnterpriseContractView/SecurityEnterpriseContractTab';
 // import { isResourceEnterpriseContract } from '../EnterpriseContractView/utils';
 import { DetailsPage } from '../DetailsPage';
+import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
 import { useWorkspaceInfo } from '../Workspace/workspace-context';
 
@@ -57,7 +58,7 @@ export const TaskRunDetailsView: React.FC = () => {
   }
 
   const plrName = taskRun.metadata?.labels[TektonResourceLabel.pipelinerun];
-  // const isEnterpriseContract = isResourceEnterpriseContract(taskRun);
+  const isEnterpriseContract = isResourceEnterpriseContract(taskRun);
 
   return (
     <DetailsPage
@@ -98,15 +99,14 @@ export const TaskRunDetailsView: React.FC = () => {
           label: 'Logs',
           isFilled: true,
         },
-        // ...(isEnterpriseContract
-        //   ? [
-        //       {
-        //         key: 'security',
-        //         label: 'Security',
-        //         component: <SecurityEnterpriseContractTab pipelineRun={plrName} />,
-        //       },
-        //     ]
-        //   : []),
+        ...(isEnterpriseContract
+          ? [
+              {
+                key: 'security',
+                label: 'Security',
+              },
+            ]
+          : []),
       ]}
     />
   );

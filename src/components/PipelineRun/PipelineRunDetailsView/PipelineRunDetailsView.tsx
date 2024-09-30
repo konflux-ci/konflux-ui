@@ -9,6 +9,7 @@ import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 // import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
+import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
@@ -53,7 +54,7 @@ export const PipelineRunDetailsView: React.FC = () => {
     );
   }
 
-  // const isEnterpriseContract = isResourceEnterpriseContract(pipelineRun);
+  const isEnterpriseContract = isResourceEnterpriseContract(pipelineRun);
 
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
   return (
@@ -122,17 +123,14 @@ export const PipelineRunDetailsView: React.FC = () => {
             label: 'Logs',
             isFilled: true,
           },
-          // ...(isEnterpriseContract
-          //   ? [
-          //       {
-          //         key: 'security',
-          //         label: 'Security',
-          //         component: (
-          //           <SecurityEnterpriseContractTab pipelineRun={pipelineRun.metadata.name} />
-          //         ),
-          //       },
-          //     ]
-          //   : []),
+          ...(isEnterpriseContract
+            ? [
+                {
+                  key: 'security',
+                  label: 'Security',
+                },
+              ]
+            : []),
         ]}
       />
     </SidePanelHost>
