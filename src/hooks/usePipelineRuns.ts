@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
-import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
   PipelineRunGroupVersionKind,
@@ -335,4 +335,28 @@ export const useTaskRun = (
     () => [result[0]?.[0], result[1], result[0]?.[0] ? undefined : result[2]],
     [result],
   );
+};
+
+export const useLatestPushBuildPipelineRunForComponent = (
+  namespace: string,
+  componentName: string,
+): [PipelineRunKind, boolean, unknown] => {
+  const result = usePipelineRuns(
+    namespace,
+    React.useMemo(
+      () => ({
+        selector: {
+          matchLabels: {
+            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+            [PipelineRunLabel.COMPONENT]: componentName,
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+          },
+        },
+        limit: 1,
+      }),
+      [componentName],
+    ),
+  );
+
+  return [result[0]?.[0], result[1], result[2]];
 };

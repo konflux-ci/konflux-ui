@@ -3,6 +3,12 @@ import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails } from '../components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '../components/Applications';
+import {
+  ComponentActivityTab,
+  ComponentDetailsTab,
+  ComponentDetailsViewLayout,
+  componentDetailsViewLoader,
+} from '../components/Components/ComponentDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { importPageLoader, ImportForm } from '../components/ImportForm';
 import {
@@ -114,6 +120,27 @@ export const router = createBrowserRouter([
             loader: releaseListViewTabLoader,
             errorElement: <RouteErrorBoundry />,
             element: <ReleaseListViewTab />,
+          },
+        ],
+      },
+      /* Component details route */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/components/:${RouterParams.componentName}`,
+        errorElement: <RouteErrorBoundry />,
+        loader: componentDetailsViewLoader,
+        element: <ComponentDetailsViewLayout />,
+        children: [
+          {
+            index: true,
+            element: <ComponentDetailsTab />,
+          },
+          {
+            path: `activity/:${RouterParams.activityTab}`,
+            element: <ComponentActivityTab />,
+          },
+          {
+            path: `activity`,
+            element: <ComponentActivityTab />,
           },
         ],
       },

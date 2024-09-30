@@ -6,7 +6,7 @@ import { ComponentKind } from '../types';
 export const useComponent = (
   namespace: string,
   workspace: string,
-  componentName?: string,
+  componentName: string,
   watch?: boolean,
 ): [ComponentKind, boolean, unknown] => {
   const {
