@@ -8,6 +8,7 @@ import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
+import { useComponentRelationAction } from '../ComponentRelation/useComponentRelationAction';
 import DetailsPage from '../DetailsPage/DetailsPage';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
@@ -26,6 +27,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
     'create',
   );
   const [canDeleteApplication] = useAccessReviewForModel(ApplicationModel, 'delete');
+  const defineComponentRelationAction = useComponentRelationAction(applicationName);
 
   const navigate = useNavigate();
   const showModal = useModalLauncher();
@@ -122,7 +124,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             isDisabled: !canCreateIntegrationTest,
             disabledTooltip: "You don't have access to add an integration test",
           },
-          // defineComponentRelationAction(),
+          defineComponentRelationAction(),
           {
             type: 'separator',
             key: 'delete-separator',

@@ -4,6 +4,7 @@ import { Button, ButtonVariant } from '@patternfly/react-core';
 import { useComponent } from '../../../../hooks/useComponents';
 import { RouterParams } from '../../../../routes/utils';
 import { TrackEvents, useTrackEvent } from '../../../../utils/analytics';
+import ComponentNudgesDependencies from '../../../ComponentRelation/details-page/ComponentNudgesDependencies';
 import { createCustomizeComponentPipelineModalLauncher } from '../../../CustomizedPipeline/CustomizePipelinesModal';
 import { DetailsSection } from '../../../DetailsPage';
 import { useModalLauncher } from '../../../modal/ModalProvider';
@@ -57,7 +58,7 @@ const ComponentDetailsTab: React.FC = () => {
         }
       >
         <ComponentBuildSettings component={component} />
-        {/* <ComponentNudgesDependencies component={component} /> */}
+        <ComponentNudgesDependencies component={component} />
       </DetailsSection>
     </div>
   );

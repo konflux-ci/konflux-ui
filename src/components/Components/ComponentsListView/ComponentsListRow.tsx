@@ -8,6 +8,7 @@ import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
+import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import ComponentPACStateLabel from '../../CustomizedPipeline/ComponentPACStateLabel';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 // import { useComponentActions } from '../ApplicationDetails/component-actions';
@@ -59,10 +60,10 @@ const ComponentsListRow: React.FC<RowFunctionArgs<ComponentWithLatestBuildPipeli
               to={`/workspaces/${workspace}/applications/${applicationName}/components/${name}`}
             >
               <b>{name}</b>{' '}
-              {/* <ComponentRelationStatusIcon
+              <ComponentRelationStatusIcon
                 component={component}
                 style={{ height: '10px', maxWidth: '25px' }}
-              /> */}
+              />
             </Link>
           </FlexItem>
           {component.spec.source?.git && (

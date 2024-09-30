@@ -84,19 +84,31 @@ export const useComponents = (
 //   return [components, loaded, error];
 // };
 
-// export const useAllComponents = (namespace: string): [ComponentKind[], boolean, unknown] => {
-//   const [components, componentsLoaded, error] = useK8sWatchResource<ComponentKind[]>(
-//     namespace
-//       ? {
-//           groupVersionKind: ComponentGroupVersionKind,
-//           namespace,
-//           isList: true,
-//         }
-//       : null,
-//   );
-//   const allComponents: ComponentKind[] = React.useMemo(
-//     () => (componentsLoaded ? components?.filter((c) => !c.metadata.deletionTimestamp) || [] : []),
-//     [components, componentsLoaded],
-//   );
-//   return [allComponents, componentsLoaded, error];
-// };
+export const useAllComponents = (
+  namespace: string,
+  workspace,
+): [ComponentKind[], boolean, unknown] => {
+  const {
+    data: components,
+    isLoading: componentsLoaded,
+    error,
+  } = useK8sWatchResource<ComponentKind[]>(
+    {
+      groupVersionKind: ComponentGroupVersionKind,
+      workspace,
+      namespace,
+      isList: true,
+    },
+    ComponentModel,
+  );
+  const allComponents: ComponentKind[] = React.useMemo(
+    () =>
+      !componentsLoaded
+        ? (components as unknown as ComponentKind[])?.filter(
+            (c) => !c.metadata?.deletionTimestamp,
+          ) || []
+        : [],
+    [components, componentsLoaded],
+  );
+  return [allComponents, !componentsLoaded, error];
+};

@@ -5,3 +5,4 @@ export * from './close-button';
 export * from './button-bar';
 export * from './timestamp';
 export * from './markdown-view';
+export * from './help-tooltip';
