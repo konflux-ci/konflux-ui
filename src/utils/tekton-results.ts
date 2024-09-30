@@ -1,7 +1,15 @@
+import { curry } from 'lodash-es';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { commonFetchJSON, commonFetchText } from '../k8s';
+import { PipelineRunModel, TaskRunModel } from '../models';
 import { PipelineRunKindV1Beta1, TaskRunKindV1Beta1 } from '../types';
-import { K8sResourceCommon, MatchExpression, MatchLabels, Selector } from '../types/k8s';
+import {
+  K8sModelCommon,
+  K8sResourceCommon,
+  MatchExpression,
+  MatchLabels,
+  Selector,
+} from '../types/k8s';
 
 // REST API spec
 // https://github.com/tektoncd/results/blob/main/docs/api/rest-api-spec.md
@@ -344,3 +352,50 @@ export const getTaskRunLog = (
       ? getLog(workspace, x?.[1]?.records[0].name).catch(() => throw404())
       : throw404(),
   );
+
+export const createTektonResultsQueryKeys = (
+  model: K8sModelCommon,
+  workspace: string,
+  selector: Selector,
+  filter: string,
+) => {
+  const selectorFilter = selectorToFilter(selector);
+  return [
+    'tekton-results',
+    workspace,
+    { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
+    ...(selectorFilter ? [selectorFilter] : []),
+    ...(filter ? [filter] : []),
+  ];
+};
+
+export const createTektonResultQueryOptions = curry(
+  (
+    fetchFn,
+    model: K8sModelCommon,
+    namespace: string,
+    workspace: string,
+    options: TektonResultsOptions,
+  ) => {
+    return {
+      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
+      queryFn: async ({ pageParam }) => {
+        const trData = await fetchFn(workspace, namespace, options, pageParam as string);
+        return { data: trData[0], nextPage: trData[1].nextPageToken };
+      },
+      enabled: !!namespace,
+      initialPageParam: null,
+      getNextPageParam: (lastPage) => lastPage.nextPage || undefined,
+      staleTime: 1000 * 60 * 5,
+    };
+  },
+);
+
+export const createPipelineRunTektonResultsQueryOptions = createTektonResultQueryOptions(
+  getPipelineRuns,
+  PipelineRunModel,
+);
+export const createTaskRunTektonResultsQueryOptions = createTektonResultQueryOptions(
+  getTaskRuns,
+  TaskRunModel,
+);

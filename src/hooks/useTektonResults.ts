@@ -1,17 +1,16 @@
 import React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { curry } from 'lodash-es';
 import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
-import { PipelineRunModel, TaskRunModel } from '../models';
 import { PipelineRunKind, TaskRunKind } from '../types';
-import { K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
+import { K8sResourceCommon } from '../types/k8s';
 import {
   getPipelineRuns,
   TektonResultsOptions,
   RecordsList,
   getTaskRuns,
   getTaskRunLog,
-  selectorToFilter,
+  createPipelineRunTektonResultsQueryOptions,
+  createTaskRunTektonResultsQueryOptions,
 } from '../utils/tekton-results';
 
 export type GetNextPage = () => void | undefined;
@@ -105,53 +104,6 @@ const useTRRuns = <Kind extends K8sResourceCommon>(
   }, [workspace, namespace, options, nextPageToken, localCacheKey, getRuns]);
   return result;
 };
-
-const createTektonResultsQueryKeys = (
-  model: K8sModelCommon,
-  workspace: string,
-  selector: Selector,
-  filter: string,
-) => {
-  const selectorFilter = selectorToFilter(selector);
-  return [
-    'tekton-results',
-    workspace,
-    { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
-    ...(selectorFilter ? [selectorFilter] : []),
-    ...(filter ? [filter] : []),
-  ];
-};
-
-export const createTektonResultQueryOptions = curry(
-  (
-    fetchFn,
-    model: K8sModelCommon,
-    namespace: string,
-    workspace: string,
-    options: TektonResultsOptions,
-  ) => {
-    return {
-      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
-      queryFn: async ({ pageParam }) => {
-        const trData = await fetchFn(workspace, namespace, options, pageParam as string);
-        return { data: trData[0], nextPage: trData[1].nextPageToken };
-      },
-      enabled: !!namespace,
-      initialPageParam: null,
-      getNextPageParam: (lastPage) => lastPage.nextPage || undefined,
-      staleTime: 1000 * 60 * 5,
-    };
-  },
-);
-
-const createPipelineRunTektonResultsQueryOptions = createTektonResultQueryOptions(
-  getPipelineRuns,
-  PipelineRunModel,
-);
-const createTaskRunTektonResultsQueryOptions = createTektonResultQueryOptions(
-  getTaskRuns,
-  TaskRunModel,
-);
 
 export const useTRPipelineRuns = (
   namespace: string,

@@ -24,6 +24,12 @@ import {
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
 import {
+  PipelineRunDetailsLayout,
+  PipelineRunDetailsLogsTab,
+  PipelineRunDetailsTab,
+  pipelineRunDetailsViewLoader,
+} from '../components/PipelineRun/PipelineRunDetailsView';
+import {
   ReleaseDetailsLayout,
   releaseDetailsViewLoader,
   ReleaseListViewTab,
@@ -148,6 +154,18 @@ export const router = createBrowserRouter([
             index: true,
             element: <ReleaseOverviewTab />,
           },
+        ],
+      },
+      /* Pipeline Run routes */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
+        errorElement: <RouteErrorBoundry />,
+        loader: pipelineRunDetailsViewLoader,
+        element: <PipelineRunDetailsLayout />,
+        children: [
+          { index: true, element: <PipelineRunDetailsTab /> },
+          { path: 'taskruns', element: <div>task runs</div> },
+          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
         ],
       },
     ],

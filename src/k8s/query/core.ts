@@ -8,4 +8,4 @@ export const queryClient = new QueryClient({
   },
 });
 
-export const setupQueryClient = (): QueryClient => queryClient;
+export const getQueryClient = (): QueryClient => queryClient;

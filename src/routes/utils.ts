@@ -4,4 +4,5 @@ export enum RouterParams {
   integrationTestName = 'integrationTestName',
   releaseName = 'releaseName',
   activityTab = 'activityTab',
+  pipelineRunName = 'pipelineRunName',
 }
