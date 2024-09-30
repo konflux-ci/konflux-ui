@@ -30,7 +30,7 @@ const PipelineRunEmptyState: React.FC<React.PropsWithChildren<PipelineRunEmptySt
           component={(props) => (
             <Link
               {...props}
-              to={`/application-pipeline/workspaces/${workspace}/import?application=${applicationName}`}
+              to={`/workspaces/${workspace}/import?application=${applicationName}`}
             />
           )}
           variant="secondary"

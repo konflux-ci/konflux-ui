@@ -3,6 +3,7 @@ import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails } from '../components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '../components/Applications';
+import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { importPageLoader, ImportForm } from '../components/ImportForm';
 import {
   integrationDetailsPageLoader,
@@ -20,6 +21,7 @@ import {
   integrationListPageLoader,
   IntegrationTestsListView,
 } from '../components/IntegrationTests/IntegrationTestsListView';
+import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
 import {
   ReleaseDetailsLayout,
@@ -42,7 +44,9 @@ export const router = createBrowserRouter([
     },
     element: (
       <WorkspaceProvider>
-        <AppRoot />
+        <ModalProvider>
+          <AppRoot />
+        </ModalProvider>
       </WorkspaceProvider>
     ),
     children: [
@@ -82,7 +86,9 @@ export const router = createBrowserRouter([
           },
           {
             path: 'components',
-            element: <div>Component tab</div>,
+            loader: componentsTabLoader,
+            errorElement: <RouteErrorBoundry />,
+            element: <ComponentListTab />,
           },
           {
             path: 'integrationtests',

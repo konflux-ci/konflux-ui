@@ -19,7 +19,7 @@ const ReleasesListRow: React.FC<
     <>
       <TableData className={releasesTableColumnClasses.name}>
         <Link
-          to={`/application-pipeline/workspaces/${workspace}/applications/${applicationName}/releases/${obj.metadata.name}`}
+          to={`/workspaces/${workspace}/applications/${applicationName}/releases/${obj.metadata.name}`}
         >
           {obj.metadata.name}
         </Link>
@@ -35,7 +35,7 @@ const ReleasesListRow: React.FC<
       </TableData>
       <TableData className={releasesTableColumnClasses.releaseSnapshot}>
         <Link
-          to={`/application-pipeline/workspaces/${workspace}/applications/${applicationName}/snapshots/${obj.spec.snapshot}`}
+          to={`/workspaces/${workspace}/applications/${applicationName}/snapshots/${obj.spec.snapshot}`}
         >
           {obj.spec.snapshot}
         </Link>

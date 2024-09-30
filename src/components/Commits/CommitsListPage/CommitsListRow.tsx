@@ -25,9 +25,7 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
     <>
       <TableData className={commitsTableColumnClasses.name}>
         <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
-        <Link
-          to={`/application-pipeline/workspaces/${workspace}/applications/${obj.application}/commit/${obj.sha}`}
-        >
+        <Link to={`/workspaces/${workspace}/applications/${obj.application}/commit/${obj.sha}`}>
           {prNumber} {obj.shaTitle}
         </Link>
         {obj.shaURL && (
@@ -50,7 +48,7 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
             ? obj.components.map((c) => (
                 <Link
                   key={c}
-                  to={`/application-pipeline/workspaces/${workspace}/applications/${
+                  to={`/workspaces/${workspace}/applications/${
                     obj.application
                   }/components/${c.trim()}`}
                 >

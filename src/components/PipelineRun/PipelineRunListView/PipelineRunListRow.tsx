@@ -41,7 +41,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
         <Link
-          to={`/application-pipeline/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${obj.metadata?.name}`}
+          to={`/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${obj.metadata?.name}`}
           title={obj.metadata?.name}
         >
           {obj.metadata?.name}
@@ -86,7 +86,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
           obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
             <Link
-              to={`/application-pipeline/workspaces/${workspace}/applications/${
+              to={`/workspaces/${workspace}/applications/${
                 obj.metadata?.labels[PipelineRunLabel.APPLICATION]
               }/components/${obj.metadata?.labels[PipelineRunLabel.COMPONENT]}`}
             >

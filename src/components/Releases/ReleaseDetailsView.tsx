@@ -42,11 +42,11 @@ const ReleaseDetailsView: React.FC = () => {
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
-          path: `/application-pipeline/workspaces/${workspace}/applications/${applicationName}/releases`,
+          path: `/workspaces/${workspace}/applications/${applicationName}/releases`,
           name: 'Releases',
         },
         {
-          path: `/application-pipeline/workspaces/${workspace}/applications/${applicationName}/releases/${releaseName}`,
+          path: `/workspaces/${workspace}/applications/${applicationName}/releases/${releaseName}`,
           name: release.metadata.name,
         },
       ]}
@@ -55,7 +55,7 @@ const ReleaseDetailsView: React.FC = () => {
           <b data-test="release-name">{release.metadata.name}</b>
         </Text>
       }
-      baseURL={`/application-pipeline/workspaces/${workspace}/applications/${applicationName}/releases/${releaseName}`}
+      baseURL={`/workspaces/${workspace}/applications/${applicationName}/releases/${releaseName}`}
       tabs={[
         {
           key: 'index',

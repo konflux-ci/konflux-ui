@@ -105,7 +105,7 @@ const ReleaseOverviewTab: React.FC = () => {
                   <DescriptionListTerm>Snapshot</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Link
-                      to={`/application-pipeline/workspaces/${workspace}/applications/${releasePlan.spec.application}/snapshots/${release.spec.snapshot}`}
+                      to={`/workspaces/${workspace}/applications/${releasePlan.spec.application}/snapshots/${release.spec.snapshot}`}
                     >
                       {release.spec.snapshot}
                     </Link>
@@ -129,7 +129,7 @@ const ReleaseOverviewTab: React.FC = () => {
                 <DescriptionListDescription>
                   {pipelineRun && prWorkspace && releasePlanLoaded ? (
                     <Link
-                      to={`/application-pipeline/workspaces/${prWorkspace}/applications/${releasePlan.spec.application}/pipelineruns/${pipelineRun}`}
+                      to={`/workspaces/${prWorkspace}/applications/${releasePlan.spec.application}/pipelineruns/${pipelineRun}`}
                     >
                       {pipelineRun}
                     </Link>

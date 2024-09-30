@@ -9,8 +9,8 @@ import { v4 as uuidv4 } from 'uuid';
 // import { linkSecretToServiceAccount } from '../components/Secrets/utils/service-account-utils';
 import { getRandomSvgNumber, THUMBNAIL_ANNOTATION } from '../components/ApplicationThumbnail';
 import { commonFetch } from '../k8s/fetch';
-import { k8sCreateResource, K8sListResourceItems, k8sUpdateResource } from '../k8s/k8s-fetch';
-import { K8sQueryCreateResource } from '../k8s/query/fetch';
+import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
+import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
 import {
   ApplicationModel,
   ComponentModel,
@@ -155,7 +155,7 @@ export const createComponent = (
         },
         resource,
       })
-    : k8sUpdateResource<ComponentKind>({
+    : K8sQueryUpdateResource<ComponentKind>({
         model: ComponentModel,
         resource,
         queryOptions: { ws: workspace, ns: namespace },

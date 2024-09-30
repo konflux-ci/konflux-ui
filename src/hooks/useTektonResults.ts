@@ -167,7 +167,7 @@ export const useTRPipelineRuns = (
     resourceData,
     !(isLoading || isFetchingNextPage),
     error,
-    hasNextPage ? fetchNextPage : () => {},
+    hasNextPage ? fetchNextPage : null,
   ];
 };
 

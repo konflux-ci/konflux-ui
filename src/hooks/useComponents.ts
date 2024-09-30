@@ -7,6 +7,7 @@ export const useComponent = (
   namespace: string,
   workspace: string,
   componentName?: string,
+  watch?: boolean,
 ): [ComponentKind, boolean, unknown] => {
   const {
     data: component,
@@ -19,6 +20,7 @@ export const useComponent = (
           workspace,
           namespace,
           name: componentName,
+          watch,
         }
       : undefined,
     ComponentModel,

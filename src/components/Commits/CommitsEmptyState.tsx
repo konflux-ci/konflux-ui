@@ -34,7 +34,7 @@ const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps
           component={(props) => (
             <Link
               {...props}
-              to={`/application-pipeline/workspaces/${workspace}/import?application=${applicationName}`}
+              to={`/workspaces/${workspace}/import?application=${applicationName}`}
             />
           )}
           variant="secondary"
