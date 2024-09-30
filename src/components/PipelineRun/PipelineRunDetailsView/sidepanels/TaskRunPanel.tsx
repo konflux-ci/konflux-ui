@@ -9,9 +9,9 @@ import {
   Tabs,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
-// import TaskRunLogs from '../../TaskRuns/TaskRunLogs';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { StatusIconWithTextLabel } from '../../../StatusIcon/StatusIcon';
+import TaskRunLogs from '../../../TaskRuns/TaskRunLogs';
 import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
 import { PipelineRunNodeData } from '../visualization/types';
 import TaskRunDetails from './TaskRunDetails';
@@ -22,10 +22,6 @@ type Props = {
   onClose: () => void;
   taskNode: GraphElement<ElementModel, PipelineRunNodeData>;
 };
-
-// [TODO]
-// eslint-disable-next-line
-const TaskRunLogs: React.FC<any> = () => <div> Logs Tab </div>;
 
 const TaskRunPanel: React.FC<React.PropsWithChildren<Props>> = ({ taskNode, onClose }) => {
   const task = taskNode.getData().task;

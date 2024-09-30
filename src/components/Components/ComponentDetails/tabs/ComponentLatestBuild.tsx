@@ -20,9 +20,9 @@ import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { ComponentKind } from '../../../../types';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
+import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
-// import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 
 type ComponentLatestBuildProps = {
   component: ComponentKind;
@@ -41,8 +41,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
     [pipelineRunLoaded, pipelineRun],
   );
   const [taskRuns, taskRunsLoaded] = useTaskRuns(namespace, pipelineRun?.metadata?.name);
-  // [TODO]
-  // const buildLogsModal = useBuildLogViewerModal(component);
+  const buildLogsModal = useBuildLogViewerModal(component);
 
   const containerImage = component.spec.containerImage;
 
@@ -85,7 +84,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
                   <Timestamp timestamp={pipelineRun?.status?.completionTime ?? '-'} />
                 </div>
                 <Button
-                  // onClick={buildLogsModal}
+                  onClick={buildLogsModal}
                   variant="link"
                   data-testid={`view-build-logs-${component.metadata.name}`}
                   isInline

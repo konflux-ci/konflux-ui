@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button, Flex, FlexItem } from '@patternfly/react-core';
 import { PACState } from '../../../hooks/usePACState';
 import { RowFunctionArgs, TableData } from '../../../shared';
-// import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
+import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
@@ -11,11 +11,10 @@ import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import ComponentPACStateLabel from '../../CustomizedPipeline/ComponentPACStateLabel';
 import GitRepoLink from '../../GitLink/GitRepoLink';
-// import { useComponentActions } from '../ApplicationDetails/component-actions';
-// import { ComponentRelationStatusIcon } from '../ComponentRelation/details-page/ComponentRelationStatusIcon';
-// import { useBuildLogViewerModal } from '../LogViewer/BuildLogViewer';
+import { useBuildLogViewerModal } from '../../LogViewer/BuildLogViewer';
 import PipelineRunStatus from '../../PipelineRun/PipelineRunStatus';
 import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useComponentActions } from '../component-actions';
 import ComponentBuildTrigger from '../ComponentBuildTrigger';
 import { componentsTableColumnClasses } from './ComponentsListHeader';
 
@@ -35,9 +34,9 @@ const ComponentsListRow: React.FC<RowFunctionArgs<ComponentWithLatestBuildPipeli
   const { workspace } = useWorkspaceInfo();
   const applicationName = component.spec.application;
   const name = component.metadata.name;
-  // const actions = useComponentActions(component, name);
+  const actions = useComponentActions(component, name);
   const { componentPACStates } = customData;
-  // const buildLogsModal = useBuildLogViewerModal(component);
+  const buildLogsModal = useBuildLogViewerModal(component);
   const pacState = componentPACStates[name] ?? PACState.loading;
 
   const commit = React.useMemo(
@@ -123,14 +122,14 @@ const ComponentsListRow: React.FC<RowFunctionArgs<ComponentWithLatestBuildPipeli
       <TableData className={componentsTableColumnClasses.kebab}>
         <div className="component-list-view__row-actions">
           <Button
-            // onClick={buildLogsModal}
+            onClick={buildLogsModal}
             variant="link"
             data-testid={`view-build-logs-${component.metadata.name}`}
             isInline
           >
             View build logs
           </Button>
-          {/* <ActionMenu actions={actions} /> */}
+          <ActionMenu actions={actions} />
         </div>
       </TableData>
     </>

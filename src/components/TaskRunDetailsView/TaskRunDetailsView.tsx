@@ -96,6 +96,7 @@ export const TaskRunDetailsView: React.FC = () => {
         {
           key: 'logs',
           label: 'Logs',
+          isFilled: true,
         },
         // ...(isEnterpriseContract
         //   ? [

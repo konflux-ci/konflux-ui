@@ -63,7 +63,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
         {relatedComponents.map((comp, i) => (
           <li key={i} data-test="nudges-connector">
             <Link
-              to={`/application-pipeline/workspaces/${workspace}/applications/${comp.spec?.application}/components/${comp.metadata.name}`}
+              to={`/workspaces/${workspace}/applications/${comp.spec?.application}/components/${comp.metadata.name}`}
               data-test={isNudges ? 'nudges-cmp-link' : 'nudged-by-cmp-link'}
             >
               {comp.metadata.name}
@@ -83,7 +83,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
                   component={(props) => (
                     <Link
                       {...props}
-                      to={`/application-pipeline/workspaces/${workspace}/applications/${comp?.spec?.application}/`}
+                      to={`/workspaces/${workspace}/applications/${comp?.spec?.application}/`}
                       target="_blank"
                     />
                   )}

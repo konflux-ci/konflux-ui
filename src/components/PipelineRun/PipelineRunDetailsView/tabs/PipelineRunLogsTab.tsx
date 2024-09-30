@@ -3,16 +3,12 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
-// import { PipelineRunLogs } from '../../../shared';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
+import { PipelineRunLogs } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
-
-// [TODO]
-// eslint-disable-next-line
-const PipelineRunLogs: React.FC<any> = () => <div> Logs Tab </div>;
 
 const PipelineRunLogsTab: React.FC = () => {
   const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();

@@ -71,7 +71,7 @@ describe('ComponentNudgesDependencies', () => {
     const links = screen.queryAllByTestId('nudges-cmp-link');
     expect(links.length).toBe(3);
     expect(links[0].getAttribute('href')).toBe(
-      '/application-pipeline/workspaces/test-ws/applications/app1/components/cmp1',
+      '/workspaces/test-ws/applications/app1/components/cmp1',
     );
   });
 });
@@ -122,7 +122,7 @@ describe('ComponentNudgesDependencies nudged by', () => {
     const links = screen.queryAllByTestId('nudged-by-cmp-link');
     expect(links.length).toBe(2);
     expect(links[1].getAttribute('href')).toBe(
-      '/application-pipeline/workspaces/test-ws/applications/app2/components/cmp2',
+      '/workspaces/test-ws/applications/app2/components/cmp2',
     );
   });
 });

@@ -100,7 +100,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   );
 
   const tabComponents = tabs?.map(({ isFilled, className, ...rest }) => {
-    return { ...rest, className: css(className, { 'app-details__tabs__tabItem': isFilled }) };
+    return { ...rest, className: css(className, { 'app-details__tabs__tabItem': true, isFilled }) };
   });
 
   const renderTitle = () => {
