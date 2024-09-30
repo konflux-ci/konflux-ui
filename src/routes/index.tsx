@@ -28,6 +28,7 @@ import {
   PipelineRunDetailsLogsTab,
   PipelineRunDetailsTab,
   pipelineRunDetailsViewLoader,
+  PipelineRunTaskRunsTab,
 } from '../components/PipelineRun/PipelineRunDetailsView';
 import {
   ReleaseDetailsLayout,
@@ -36,6 +37,12 @@ import {
   releaseListViewTabLoader,
   ReleaseOverviewTab,
 } from '../components/Releases';
+import {
+  TaskRunDetailsTab,
+  TaskRunDetailsViewLayout,
+  taskRunDetailsViewLoader,
+  TaskRunLogsTab,
+} from '../components/TaskRunDetailsView';
 import { queryWorkspaces } from '../components/Workspace/utils';
 import { WorkspaceProvider } from '../components/Workspace/workspace-context';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
@@ -156,7 +163,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      /* Pipeline Run routes */
+      /* Pipeline Run details routes */
       {
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
         errorElement: <RouteErrorBoundry />,
@@ -164,8 +171,19 @@ export const router = createBrowserRouter([
         element: <PipelineRunDetailsLayout />,
         children: [
           { index: true, element: <PipelineRunDetailsTab /> },
-          { path: 'taskruns', element: <div>task runs</div> },
+          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
           { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
+        ],
+      },
+      /* Task Run details routes */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
+        errorElement: <RouteErrorBoundry />,
+        loader: taskRunDetailsViewLoader,
+        element: <TaskRunDetailsViewLayout />,
+        children: [
+          { index: true, element: <TaskRunDetailsTab /> },
+          { path: 'logs', element: <TaskRunLogsTab /> },
         ],
       },
     ],

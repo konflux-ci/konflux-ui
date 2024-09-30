@@ -5,4 +5,5 @@ export enum RouterParams {
   releaseName = 'releaseName',
   activityTab = 'activityTab',
   pipelineRunName = 'pipelineRunName',
+  taskRunName = 'taskRunName',
 }

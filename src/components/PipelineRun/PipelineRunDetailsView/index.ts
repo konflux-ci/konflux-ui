@@ -22,3 +22,4 @@ export const pipelineRunDetailsViewLoader = createLoaderWithAccessCheck(
 export { default as PipelineRunDetailsLayout } from './PipelineRunDetailsView';
 export { default as PipelineRunDetailsTab } from './tabs/PipelineRunDetailsTab';
 export { default as PipelineRunDetailsLogsTab } from './tabs/PipelineRunLogsTab';
+export { default as PipelineRunTaskRunsTab } from './tabs/PipelineRunTaskRunsTab';
