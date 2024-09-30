@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
-import { ApplicationDetails } from '../components/ApplicationDetails';
+import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '../components/Applications';
 import {
   ComponentActivityTab,
@@ -95,7 +95,7 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            element: <div>Overview tab</div>,
+            element: <ApplicationOverviewTab />,
           },
           {
             path: `activity/:${RouterParams.activityTab}`,
