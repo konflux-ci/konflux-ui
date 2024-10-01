@@ -1,5 +1,5 @@
 import * as React from 'react';
-// import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Bullseye,
   EmptyStateBody,
@@ -11,17 +11,14 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import emptyStateImgUrl from '../../assets/Application.svg';
-// import imageUrl from '../../imgs/getting-started-illustration.svg';
 import { useApplications } from '../../hooks/useApplications';
-// import { ApplicationModel, ComponentModel } from '../../models';
+import { ApplicationModel, ComponentModel } from '../../models';
 import { Table } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { ApplicationKind } from '../../types';
-// import { useAccessReviewForModel } from '../../utils/rbac';
-// import { useWorkspaceInfo } from '../../utils/workspace-context-utils';
-// import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-// import { GettingStartedCard } from '../GettingStartedCard/GettingStartedCard';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
+import { useAccessReviewForModel } from '../../utils/rbac';
+import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import PageLayout from '../PageLayout/PageLayout';
 import { useWorkspaceInfo } from '../Workspace/workspace-context';
 import { ApplicationListHeader } from './ApplicationListHeader';
@@ -30,8 +27,8 @@ import ApplicationListRow from './ApplicationListRow';
 const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { namespace, workspace } = useWorkspaceInfo();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
-  // const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
-  // const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
+  const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
+  const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 
   const [applications, loaded] = useApplications(namespace, workspace);
   applications?.sort(
@@ -72,11 +69,9 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 <br />
                 To get started, create an application.
               </EmptyStateBody>
-              {/* <ButtonWithAccessTooltip
+              <ButtonWithAccessTooltip
                 variant="primary"
-                component={(props) => (
-                  <Link {...props} to={`/workspaces/${workspace}/import`} />
-                )}
+                component={(props) => <Link {...props} to={`/workspaces/${workspace}/import`} />}
                 isDisabled={!(canCreateApplication && canCreateComponent)}
                 tooltip="You don't have access to create an application"
                 analytics={{
@@ -85,20 +80,17 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 }}
               >
                 Create application
-              </ButtonWithAccessTooltip> */}
+              </ButtonWithAccessTooltip>
             </AppEmptyState>
           ) : (
             <>
               <Toolbar usePageInsets>
                 <ToolbarContent>
                   <ToolbarItem>
-                    {/* <ButtonWithAccessTooltip
+                    <ButtonWithAccessTooltip
                       variant="primary"
                       component={(props) => (
-                        <Link
-                          {...props}
-                          to={`/workspaces/${workspace}/import`}
-                        />
+                        <Link {...props} to={`/workspaces/${workspace}/import`} />
                       )}
                       isDisabled={!(canCreateApplication && canCreateComponent)}
                       tooltip="You don't have access to create an application"
@@ -108,7 +100,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                       }}
                     >
                       Create application
-                    </ButtonWithAccessTooltip> */}
+                    </ButtonWithAccessTooltip>
                   </ToolbarItem>
                 </ToolbarContent>
               </Toolbar>

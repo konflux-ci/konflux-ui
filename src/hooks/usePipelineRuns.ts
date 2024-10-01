@@ -16,7 +16,7 @@ import { getCommitSha } from '../utils/commits-utils';
 import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
 import { useComponents } from './useComponents';
-import { GetNextPage, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
+import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
 const useRuns = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
@@ -27,7 +27,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
     limit?: number;
     name?: string;
   },
-): [Kind[], boolean, unknown, GetNextPage] => {
+): [Kind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const { workspace } = useWorkspaceInfo();
   const etcdRunsRef = React.useRef<Kind[]>([]);
   const optionsMemo = useDeepCompareMemoize(options);
@@ -108,9 +108,15 @@ const useRuns = <Kind extends K8sResourceCommon>(
 
   // tekton-results includes items in etcd, therefore options must use the same limit
   // these duplicates will later be de-duped
-  const [trResources, trLoaded, trError, trGetNextPage] = (
+  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = (
     groupVersionKind === PipelineRunGroupVersionKind ? useTRPipelineRuns : useTRTaskRuns
-  )(queryTr ? namespace : null, trOptions) as [Kind[], boolean, unknown, GetNextPage];
+  )(queryTr ? namespace : null, trOptions) as [
+    Kind[],
+    boolean,
+    unknown,
+    GetNextPage,
+    NextPageProps,
+  ];
 
   return React.useMemo(() => {
     const rResources =
@@ -141,6 +147,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
           : error
         : undefined,
       trGetNextPage,
+      nextPageProps,
     ];
   }, [
     runs,
@@ -153,6 +160,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
     trError,
     error,
     trGetNextPage,
+    nextPageProps,
   ]);
 };
 
@@ -162,7 +170,7 @@ export const usePipelineRuns = (
     selector?: Selector;
     limit?: number;
   },
-): [PipelineRunKind[], boolean, unknown, GetNextPage] =>
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
   useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
 
 export const useTaskRuns = (
@@ -171,7 +179,7 @@ export const useTaskRuns = (
     selector?: Selector;
     limit?: number;
   },
-): [TaskRunKind[], boolean, unknown, GetNextPage] =>
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
   useRuns<TaskRunKind>(TaskRunGroupVersionKind, TaskRunModel, namespace, options);
 
 export const useLatestBuildPipelineRunForComponent = (

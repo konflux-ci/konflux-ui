@@ -1,6 +1,9 @@
 import * as React from 'react';
 import {
+  Bullseye,
   SearchInput,
+  Spinner,
+  Stack,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
@@ -56,29 +59,32 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [pipelineRuns, loaded, error, getNextPage] = usePipelineRuns(
-    componentsLoaded ? namespace : null,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: {
-            [PipelineRunLabel.APPLICATION]: applicationName,
+  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
+    usePipelineRuns(
+      componentsLoaded ? namespace : null,
+      React.useMemo(
+        () => ({
+          selector: {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+            },
+            ...(!onLoadName && {
+              matchExpressions: [
+                {
+                  key: `${PipelineRunLabel.COMPONENT}`,
+                  operator: 'In',
+                  values: componentName
+                    ? [componentName]
+                    : components?.map((c) => c.metadata?.name),
+                },
+              ],
+            }),
+            ...(onLoadName && { filterByName: onLoadName.trim().toLowerCase() }),
           },
-          ...(!onLoadName && {
-            matchExpressions: [
-              {
-                key: `${PipelineRunLabel.COMPONENT}`,
-                operator: 'In',
-                values: componentName ? [componentName] : components?.map((c) => c.metadata?.name),
-              },
-            ],
-          }),
-          ...(onLoadName && { filterByName: onLoadName.trim().toLowerCase() }),
-        },
-      }),
-      [applicationName, componentName, components, onLoadName],
-    ),
-  );
+        }),
+        [applicationName, componentName, components, onLoadName],
+      ),
+    );
   const statusFilters = React.useMemo(
     () => (statusFiltersParam ? statusFiltersParam.split(',') : []),
     [statusFiltersParam],
@@ -211,33 +217,40 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }
   return (
-    <Table
-      key={`${pipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
-      data={filteredPLRs}
-      unfilteredData={pipelineRuns}
-      NoDataEmptyMsg={NoDataEmptyMsg}
-      EmptyMsg={EmptyMsg}
-      Toolbar={DataToolbar}
-      aria-label="Pipeline run List"
-      customData={vulnerabilities}
-      Header={PipelineRunListHeaderWithVulnerabilities}
-      Row={PipelineRunListRowWithVulnerabilities}
-      loaded={loaded}
-      getRowProps={(obj: PipelineRunKind) => ({
-        id: obj.metadata.name,
-      })}
-      onRowsRendered={({ stopIndex }) => {
-        if (loaded && stopIndex === filteredPLRs.length - 1 && !nameFilter) {
-          if (vulnerabilities.fetchedPipelineRuns.length === filteredPLRs.length) {
-            getNextPage?.();
-          } else {
-            if (requestQueue.current.length === 0) {
-              getNextPage && requestQueue.current.push(getNextPage);
-            }
-          }
-        }
-      }}
-    />
+    <div>
+      <Table
+        data={filteredPLRs}
+        unfilteredData={pipelineRuns}
+        NoDataEmptyMsg={NoDataEmptyMsg}
+        EmptyMsg={EmptyMsg}
+        Toolbar={DataToolbar}
+        aria-label="Pipeline run List"
+        customData={vulnerabilities}
+        Header={PipelineRunListHeaderWithVulnerabilities}
+        Row={PipelineRunListRowWithVulnerabilities}
+        loaded={isFetchingNextPage || loaded}
+        getRowProps={(obj: PipelineRunKind) => ({
+          id: obj.metadata.name,
+        })}
+        isInfiniteLoading
+        infiniteLoaderProps={{
+          isRowLoaded: (args) => {
+            return !!filteredPLRs[args.index];
+          },
+          loadMoreRows: () => {
+            hasNextPage && !isFetchingNextPage && getNextPage?.();
+          },
+          rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
+        }}
+      />
+      {isFetchingNextPage ? (
+        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+          <Bullseye>
+            <Spinner size="lg" aria-label="Loading more pipeline runs" />
+          </Bullseye>
+        </Stack>
+      ) : null}
+    </div>
   );
 };
 

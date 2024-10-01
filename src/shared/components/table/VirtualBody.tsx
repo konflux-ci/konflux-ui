@@ -61,12 +61,10 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
       columns,
       customData,
     };
-
     // do not render non visible elements (this excludes overscan)
     if (!isVisible) {
       return null;
     }
-
     const rowProps = getRowProps?.(rowArgs.obj);
     const rowId = rowProps?.id ?? key;
     return (

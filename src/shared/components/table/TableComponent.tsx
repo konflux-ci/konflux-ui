@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { RouteMatch } from 'react-router-dom';
+import { InfiniteLoader } from 'react-virtualized';
 import { TableGridBreakpoint } from '@patternfly/react-table';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { AutoSizer, WindowScroller } from '@patternfly/react-virtualized-extension';
@@ -65,6 +66,8 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   getRowProps,
   virtualize = true,
   onRowsRendered,
+  infiniteLoaderProps,
+  isInfiniteLoading,
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
@@ -79,24 +82,49 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
     <WindowScroller scrollElement={scrollContainer}>
       {({ height, isScrolling, registerChild, onChildScroll, scrollTop }) => (
         <AutoSizer disableHeight>
-          {({ width }) => (
-            <div ref={registerChild}>
-              <VirtualBody
-                Row={Row}
-                customData={customData}
-                height={height}
-                isScrolling={isScrolling}
-                onChildScroll={onChildScroll}
-                data={data}
-                columns={columns}
-                scrollTop={scrollTop}
-                width={width}
-                expand={expand}
-                getRowProps={getRowProps}
-                onRowsRendered={onRowsRendered}
-              />
-            </div>
-          )}
+          {({ width }) =>
+            isInfiniteLoading ? (
+              <InfiniteLoader {...infiniteLoaderProps}>
+                {({ onRowsRendered: handleRowsRendered, registerChild: infiniteRegisterChild }) => {
+                  return (
+                    <div ref={infiniteRegisterChild}>
+                      <VirtualBody
+                        Row={Row}
+                        customData={customData}
+                        height={height}
+                        isScrolling={isScrolling}
+                        onChildScroll={onChildScroll}
+                        data={data}
+                        columns={columns}
+                        scrollTop={scrollTop}
+                        width={width}
+                        expand={expand}
+                        getRowProps={getRowProps}
+                        onRowsRendered={handleRowsRendered}
+                      />
+                    </div>
+                  );
+                }}
+              </InfiniteLoader>
+            ) : (
+              <div ref={registerChild}>
+                <VirtualBody
+                  Row={Row}
+                  customData={customData}
+                  height={height}
+                  isScrolling={isScrolling}
+                  onChildScroll={onChildScroll}
+                  data={data}
+                  columns={columns}
+                  scrollTop={scrollTop}
+                  width={width}
+                  expand={expand}
+                  getRowProps={getRowProps}
+                  onRowsRendered={onRowsRendered}
+                />
+              </div>
+            )
+          }
         </AutoSizer>
       )}
     </WindowScroller>
