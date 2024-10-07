@@ -22,7 +22,7 @@ import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptySt
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { getCommitsFromPLRs, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import CommitsEmptyState from '../CommitsEmptyState';
 import CommitsListHeader from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';

@@ -11,7 +11,7 @@ import {
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { getScanResults } from '../../../../hooks/useScanResults';
 import { TaskRunKind, TektonResourceLabel } from '../../../../types';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { ScanDetailStatus } from '../../ScanDetailStatus';
 
 import './ScanDescriptionListGroup.scss';

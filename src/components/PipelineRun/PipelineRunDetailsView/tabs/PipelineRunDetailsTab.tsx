@@ -37,7 +37,7 @@ import {
 import GitRepoLink from '../../../GitLink/GitRepoLink';
 import MetadataList from '../../../MetadataList';
 import { StatusIconWithText } from '../../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSourceUrl } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';

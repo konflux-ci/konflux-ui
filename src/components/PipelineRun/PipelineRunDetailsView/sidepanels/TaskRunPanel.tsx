@@ -12,7 +12,7 @@ import { ElementModel, GraphElement } from '@patternfly/react-topology';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { StatusIconWithTextLabel } from '../../../StatusIcon/StatusIcon';
 import TaskRunLogs from '../../../TaskRuns/TaskRunLogs';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { PipelineRunNodeData } from '../visualization/types';
 import TaskRunDetails from './TaskRunDetails';
 

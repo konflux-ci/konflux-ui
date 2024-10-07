@@ -29,7 +29,7 @@ import MetadataList from '../../MetadataList';
 import RunResultsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
 import ScanDescriptionListGroup from '../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithText } from '../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 const TaskRunDetailsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();

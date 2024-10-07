@@ -13,7 +13,7 @@ import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { ComponentKind } from '../../../../types';
 import { getPipelineRunStatusResults } from '../../../../utils/pipeline-utils';
 import GitRepoLink from '../../../GitLink/GitRepoLink';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 type ComponentDetailsProps = {
   component: ComponentKind;

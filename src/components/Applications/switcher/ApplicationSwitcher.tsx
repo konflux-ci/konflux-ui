@@ -6,7 +6,7 @@ import { ApplicationModel, ComponentModel } from '../../../models';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { ContextMenuItem, ContextSwitcher } from '../../ContextSwitcher';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const ApplicationSwitcher: React.FC<
   React.PropsWithChildren<{ selectedApplication?: string }>

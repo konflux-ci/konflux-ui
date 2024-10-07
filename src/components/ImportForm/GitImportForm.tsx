@@ -4,7 +4,7 @@ import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useBombinoUrl } from '../../hooks/useUIInstance';
 import { AnalyticsProperties, TrackEvents, useTrackEvent } from '../../utils/analytics';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ApplicationSection from './ApplicationSection/ApplicationSection';
 import { ComponentSection } from './ComponentSection/ComponentSection';
 import GitImportActions from './GitImportActions';

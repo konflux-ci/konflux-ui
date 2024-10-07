@@ -7,7 +7,7 @@ import { Commit } from '../../../types';
 import { createRepoBranchURL, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
 import { CommitIcon } from '../CommitIcon';

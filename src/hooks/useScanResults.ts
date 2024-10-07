@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { difference, merge, uniq } from 'lodash-es';
-import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { TektonResourceLabel, TaskRunKind, TektonResultsRun, PipelineRunKind } from '../types';
 import { isTaskV1Beta1 } from '../utils/pipeline-utils';

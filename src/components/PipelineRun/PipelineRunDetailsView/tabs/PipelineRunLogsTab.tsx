@@ -8,7 +8,7 @@ import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunLogs } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 const PipelineRunLogsTab: React.FC = () => {
   const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();

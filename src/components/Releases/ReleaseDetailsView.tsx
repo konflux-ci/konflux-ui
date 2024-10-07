@@ -7,7 +7,7 @@ import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const ReleaseDetailsView: React.FC = () => {
   const { applicationName, releaseName } = useParams<RouterParams>();

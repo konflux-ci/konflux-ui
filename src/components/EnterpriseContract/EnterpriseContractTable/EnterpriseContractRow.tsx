@@ -10,7 +10,7 @@ import {
 import { ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { UIEnterpriseContractData } from '../types';
 import { getRuleStatus } from '../utils';
 

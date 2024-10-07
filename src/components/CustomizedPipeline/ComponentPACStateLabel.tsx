@@ -5,7 +5,7 @@ import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
 import { useComponentBuildStatus } from '../../utils/component-utils';
 import { useModalLauncher } from '../modal/ModalProvider';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { createCustomizeComponentPipelineModalLauncher } from './CustomizePipelinesModal';
 
 type Props = {

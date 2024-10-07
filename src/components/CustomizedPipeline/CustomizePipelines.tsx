@@ -35,7 +35,7 @@ import AnalyticsButton from '../AnalyticsButton/AnalyticsButton';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import GitRepoLink from '../GitLink/GitRepoLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ComponentPACStateLabel from './ComponentPACStateLabel';
 
 type Props = RawComponentProps & {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Formik } from 'formik';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useTrackEvent, TrackEvents } from '../../../utils/analytics';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import IntegrationTestForm from './IntegrationTestForm';
 import { IntegrationTestFormValues, IntegrationTestLabels } from './types';
 import {

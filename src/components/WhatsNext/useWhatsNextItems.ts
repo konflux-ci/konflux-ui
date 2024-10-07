@@ -10,7 +10,7 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { WhatsNextItem } from '../WhatsNext/WhatsNextSection';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const useWhatsNextItems = (applicationName: string) => {
   const showModal = useModalLauncher();

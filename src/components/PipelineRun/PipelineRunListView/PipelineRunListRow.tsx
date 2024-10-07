@@ -8,7 +8,7 @@ import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { PipelineRunKind } from '../../../types';
 import { calculateDuration, pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';

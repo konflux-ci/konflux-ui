@@ -6,7 +6,7 @@ import { RowFunctionArgs, TableData } from '../../shared/components/table';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { ReleaseKind } from '../../types';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { releasesTableColumnClasses } from './ReleasesListHeader';
 
 const ReleasesListRow: React.FC<

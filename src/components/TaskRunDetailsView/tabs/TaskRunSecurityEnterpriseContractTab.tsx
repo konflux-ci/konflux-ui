@@ -4,7 +4,7 @@ import { useTaskRun } from '../../../hooks/usePipelineRuns';
 import { RouterParams } from '../../../routes/utils';
 import { TektonResourceLabel } from '../../../types';
 import { SecurityEnterpriseContractTab } from '../../EnterpriseContract/SecurityEnterpriseContractTab';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();

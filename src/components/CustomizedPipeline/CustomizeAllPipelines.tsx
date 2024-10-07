@@ -14,7 +14,7 @@ import { ComponentKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import CustomizePipeline from './CustomizePipelines';
 
 type Props = RawComponentProps & {

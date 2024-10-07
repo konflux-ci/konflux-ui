@@ -22,7 +22,7 @@ import { ComponentKind, PipelineRunKind } from '../../../types';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const FAILED_STATUS_FILTER_ID = 'failed';
 export const SUCCESS_STATUS_FILTER_ID = 'success';

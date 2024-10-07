@@ -13,7 +13,7 @@ import ComponentPACStateLabel from '../../CustomizedPipeline/ComponentPACStateLa
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { useBuildLogViewerModal } from '../../LogViewer/BuildLogViewer';
 import PipelineRunStatus from '../../PipelineRun/PipelineRunStatus';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useComponentActions } from '../component-actions';
 import ComponentBuildTrigger from '../ComponentBuildTrigger';
 import { componentsTableColumnClasses } from './ComponentsListHeader';

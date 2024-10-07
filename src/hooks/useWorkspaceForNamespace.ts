@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { Workspace } from '../types';
 
 export const useWorkspaceForNamespace = (namespace: string): Workspace => {

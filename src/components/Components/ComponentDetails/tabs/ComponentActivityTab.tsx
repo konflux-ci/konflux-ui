@@ -9,7 +9,7 @@ import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
 import CommitsListView from '../../../Commits/CommitsListPage/CommitsListView';
 import { DetailsSection } from '../../../DetailsPage';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 

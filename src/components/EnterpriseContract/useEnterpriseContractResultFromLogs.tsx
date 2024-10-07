@@ -4,7 +4,7 @@ import { commonFetchJSON } from '../../k8s';
 import { getK8sResourceURL } from '../../k8s/k8s-utils';
 import { PodModel } from '../../models/pod';
 import { getTaskRunLog } from '../../utils/tekton-results';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import {
   ComponentEnterpriseContractResult,
   EnterpriseContractResult,

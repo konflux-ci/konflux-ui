@@ -7,7 +7,7 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeComponentPipelineModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { componentDeleteModal } from '../modal/resource-modals';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const useComponentActions = (component: ComponentKind, name: string): Action[] => {
   const { workspace } = useWorkspaceInfo();

@@ -20,7 +20,7 @@ import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import PageLayout from '../PageLayout/PageLayout';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { ApplicationListHeader } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
 

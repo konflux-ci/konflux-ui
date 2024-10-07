@@ -1,5 +1,5 @@
-import { K8sQueryCreateResource } from '../../../../../k8s';
 import { IntegrationTestScenarioModel } from '../../../../../models';
+import { createK8sUtilMock } from '../../../../../utils/test-utils';
 import { MockIntegrationTestsWithGit } from '../../../IntegrationTestsListView/__data__/mock-integration-tests';
 import {
   EC_INTEGRATION_TEST_KIND,
@@ -16,11 +16,7 @@ import {
   formatParams,
 } from '../create-utils';
 
-jest.mock('../../../../../k8s', () => ({
-  k8sQueryCreateResource: jest.fn(),
-}));
-
-const createResourceMock = K8sQueryCreateResource as jest.Mock;
+const createResourceMock = createK8sUtilMock('K8sQueryCreateResource');
 
 const integrationTestData = {
   apiVersion: `${IntegrationTestScenarioModel.apiGroup}/${IntegrationTestScenarioModel.apiVersion}`,
@@ -51,6 +47,7 @@ const integrationTestData = {
 
 describe('Create Utils', () => {
   it('Should call k8sCreateResource with integration test data', async () => {
+    createResourceMock.mockImplementation(({ resource }) => resource);
     await createIntegrationTest(
       {
         name: 'app-test',
@@ -148,7 +145,6 @@ describe('Create Utils', () => {
   });
 
   it('Should return correct labels for params', () => {
-    createResourceMock.mockImplementation(({ resource }) => resource);
     const resource = MockIntegrationTestsWithGit[0];
     expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('GitHub URL');
     expect(getLabelForParam(resource.spec.resolverRef.params[1].name)).toBe('Revision');
@@ -157,7 +153,6 @@ describe('Create Utils', () => {
   });
 
   it('Should return correct link for params', () => {
-    createResourceMock.mockImplementation(({ resource }) => resource);
     const resource = MockIntegrationTestsWithGit[0];
     const k8sResource = MockIntegrationTestsWithGit[2];
     expect(getURLForParam(resource.spec.resolverRef.params, ResolverRefParams.URL)).toBe(

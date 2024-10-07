@@ -6,7 +6,7 @@ import { ComponentModel } from '../../models';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 type CommitsEmptyStateProps = {
   applicationName: string;

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useComponent } from '../../hooks/useComponents';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import CustomizePipeline from './CustomizePipelines';
 
 type Props = RawComponentProps & {

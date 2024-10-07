@@ -10,7 +10,7 @@ jest.mock('../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [componentCRMocks, true, null]),
 }));
 
-jest.mock('../../../utils/workspace-context-utils', () => ({
+jest.mock('../../../utils/useWorkspaceInfo-utils', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'asd', workspace: 'def' })),
 }));
 

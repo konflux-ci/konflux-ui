@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
-import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {

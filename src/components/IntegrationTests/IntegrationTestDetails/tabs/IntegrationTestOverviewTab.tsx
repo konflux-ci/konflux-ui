@@ -19,9 +19,10 @@ import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import MetadataList from '../../../MetadataList';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useModalLauncher } from '../../../modal/ModalProvider';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { createEditParamsModal } from '../../EditParamsModal';
 import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
-// import { useModalLauncher } from '../../../modal/ModalProvider';
 import {
   getLabelForParam,
   getURLForParam,
@@ -42,7 +43,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   const optionalReleaseLabel =
     integrationTest.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true';
 
-  // const showModal = useModalLauncher();
+  const showModal = useModalLauncher();
 
   const params = integrationTest?.spec?.params;
 
@@ -156,13 +157,13 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                       <Button
                         variant={ButtonVariant.link}
                         className="pf-v5-u-pl-0"
-                        // onClick={() =>
-                        //   // showModal(
-                        //   //   createEditParamsModal({
-                        //   //     intTest: integrationTest,
-                        //   //   }),
-                        //   // )
-                        // }
+                        onClick={() =>
+                          showModal(
+                            createEditParamsModal({
+                              intTest: integrationTest,
+                            }),
+                          )
+                        }
                         data-test="edit-param-button"
                       >
                         Edit parameters

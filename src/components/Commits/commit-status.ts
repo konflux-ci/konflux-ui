@@ -2,7 +2,7 @@ import React from 'react';
 import { usePipelineRunsForCommit } from '../../hooks/usePipelineRuns';
 import { statuses } from '../../utils/commits-utils';
 import { pipelineRunStatus } from '../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const useCommitStatus = (
   application: string,

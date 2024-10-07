@@ -5,7 +5,7 @@ import isEmpty from 'lodash/isEmpty';
 import { FormFooter } from '../../../shared';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import IntegrationTestSection from './IntegrationTestSection';
 
 // [TODO]: Refactor form styles from the shared style sheet

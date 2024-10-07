@@ -17,7 +17,7 @@ import { pipelineRunStatus } from '../../utils/pipeline-utils';
 import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 import './BuildLogViewer.scss';
 

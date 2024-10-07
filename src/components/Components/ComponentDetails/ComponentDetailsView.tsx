@@ -22,7 +22,7 @@ import { DetailsPage } from '../../DetailsPage';
 import { Action } from '../../DetailsPage/types';
 import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useComponentActions } from '../component-actions';
 
 import './ComponentDetailsView.scss';

@@ -18,7 +18,7 @@ import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { calculateDuration } from '../../utils/pipeline-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();

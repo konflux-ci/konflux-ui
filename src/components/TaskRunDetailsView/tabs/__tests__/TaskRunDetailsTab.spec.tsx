@@ -8,7 +8,7 @@ jest.mock('../../../../k8s', () => ({
   useK8sWatchResource: jest.fn(),
 }));
 
-jest.mock('../../../../utils/workspace-context-utils', () => ({
+jest.mock('../../../../utils/useWorkspaceInfo-utils', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 

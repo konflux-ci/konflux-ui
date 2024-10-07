@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { useK8sWatchResource } from '../k8s';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../models';
 import { ReleaseKind } from '../types';

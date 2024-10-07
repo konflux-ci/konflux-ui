@@ -21,7 +21,7 @@ export type WorkspaceContextData = {
   workspaces: Workspace[];
 };
 
-const WorkspaceContext = React.createContext<WorkspaceContextData>({
+export const WorkspaceContext = React.createContext<WorkspaceContextData>({
   namespace: '',
   workspace: '',
   workspaceResource: undefined,
@@ -29,8 +29,6 @@ const WorkspaceContext = React.createContext<WorkspaceContextData>({
   workspaces: [],
   lastUsedWorkspace: getLastUsedWorkspace(),
 });
-
-export const useWorkspaceInfo = () => React.useContext(WorkspaceContext);
 
 export const WorkspaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { data: workspaces, isLoading: workspaceLoading } = useQuery(createWorkspaceQueryOptions());

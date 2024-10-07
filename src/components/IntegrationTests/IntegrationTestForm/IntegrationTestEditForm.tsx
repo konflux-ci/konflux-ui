@@ -5,7 +5,7 @@ import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestSce
 import { HttpError } from '../../../k8s/error';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import IntegrationTestView from './IntegrationTestView';
 
 export const IntegrationTestEditForm: React.FC = () => {

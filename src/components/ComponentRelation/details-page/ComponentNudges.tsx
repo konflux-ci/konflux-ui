@@ -5,7 +5,7 @@ import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/exte
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
 import { ComponentKind } from '../../../types';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { ComponentRelationStatusIcon } from './ComponentRelationStatusIcon';
 
 import './ComponentNudges.scss';

@@ -6,7 +6,7 @@ import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { PipelineRunGroupVersionKind } from '../../../models';
 import { PipelineRunKind } from '../../../types';
 import { getCommitSha } from '../../../utils/commits-utils';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipelineRun }) => {
   const { namespace, workspace } = useWorkspaceInfo();

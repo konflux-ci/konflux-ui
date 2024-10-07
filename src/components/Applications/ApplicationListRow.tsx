@@ -5,7 +5,7 @@ import { useComponents } from '../../hooks/useComponents';
 import { RowFunctionArgs, TableData } from '../../shared';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { ApplicationKind } from '../../types';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { useApplicationActions } from './application-actions';
 import { applicationTableColumnClasses } from './ApplicationListHeader';
 

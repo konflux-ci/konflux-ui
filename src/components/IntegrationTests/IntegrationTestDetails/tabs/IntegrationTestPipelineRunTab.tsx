@@ -11,7 +11,7 @@ import { PipelineRunKind } from '../../../../types';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
 
 const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {

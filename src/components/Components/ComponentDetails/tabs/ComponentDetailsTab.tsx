@@ -8,7 +8,7 @@ import ComponentNudgesDependencies from '../../../ComponentRelation/details-page
 import { createCustomizeComponentPipelineModalLauncher } from '../../../CustomizedPipeline/CustomizePipelinesModal';
 import { DetailsSection } from '../../../DetailsPage';
 import { useModalLauncher } from '../../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import ComponentBuildSettings from './ComponentBuildSettings';
 import ComponentDetails from './ComponentDetails';
 import ComponentLatestBuild from './ComponentLatestBuild';

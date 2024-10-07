@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { BreadcrumbItem } from '@patternfly/react-core';
 import { ApplicationSwitcher } from '../components/Applications/switcher/ApplicationSwitcher';
-import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { WorkspaceSwitcher } from '../components/Workspace/WorkspaceSwitcher';
 import { RouterParams } from '../routes/utils';
 

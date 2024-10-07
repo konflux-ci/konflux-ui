@@ -5,7 +5,7 @@ import { RouterParams } from '../../../routes/utils';
 import { TaskRunKind } from '../../../types';
 import { taskRunStatus } from '../../../utils/pipeline-utils';
 import TaskRunLogs from '../../TaskRuns/TaskRunLogs';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export type TaskRunLogProps = {
   taskRun: TaskRunKind;

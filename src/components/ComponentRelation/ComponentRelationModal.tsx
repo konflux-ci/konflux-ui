@@ -4,7 +4,7 @@ import { useAllComponents, useComponents } from '../../hooks/useComponents';
 import { ComponentKind } from '../../types';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { RawComponentProps, createRawModalLauncher } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import {
   ConfirmCancelationComponentRelationModal,
   ConfirmSubmissionComponentRelationModal,

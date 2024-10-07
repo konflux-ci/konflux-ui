@@ -5,7 +5,7 @@ import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import TaskRunListView from '../../../TaskRunListView/TaskRunListView';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 const PipelineRunTaskRunsTab: React.FC = () => {
   const { pipelineRunName } = useParams<RouterParams>();

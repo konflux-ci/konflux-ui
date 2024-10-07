@@ -10,7 +10,7 @@ import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { integrationTestDeleteModalAndNavigate } from '../IntegrationTestsListView/useIntegrationTestActions';
 
 const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {

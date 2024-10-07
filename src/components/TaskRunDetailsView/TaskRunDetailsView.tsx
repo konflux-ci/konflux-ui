@@ -14,7 +14,7 @@ import { runStatus, taskRunStatus } from '../../utils/pipeline-utils';
 import { DetailsPage } from '../DetailsPage';
 import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const TaskRunDetailsView: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();

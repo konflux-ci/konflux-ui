@@ -3,7 +3,7 @@ import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
 import { EnterpriseContractRow } from '../EnterpriseContractRow';
 import '@testing-library/jest-dom';
 
-jest.mock('../../../../utils/workspace-context-utils', () => ({
+jest.mock('../../../../utils/useWorkspaceInfo-utils', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 

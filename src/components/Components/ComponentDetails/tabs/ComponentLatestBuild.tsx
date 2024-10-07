@@ -22,7 +22,7 @@ import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
 import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
-import { useWorkspaceInfo } from '../../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 type ComponentLatestBuildProps = {
   component: ComponentKind;

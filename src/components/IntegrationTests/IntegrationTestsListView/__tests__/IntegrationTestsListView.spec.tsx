@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { configure, fireEvent, waitFor, render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useK8sWatchResource } from '../../../../k8s';
+import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
 import IntegrationTestsListView from '../IntegrationTestsListView';
 
@@ -11,17 +11,14 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useSearchParams: () => React.useState(() => new URLSearchParams()),
   useNavigate: () => navigateMock,
+  useParams: () => ({ applicationName: 'test-app' }),
 }));
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../k8s', () => ({
-  useK8sWatchResource: jest.fn(),
-}));
-
-jest.mock('../../../Workspace/workspace-context', () => ({
+jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
@@ -29,9 +26,9 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useK8sWatchResourceMock = useK8sWatchResource as jest.Mock;
-
 configure({ testIdAttribute: 'data-test' });
+
+const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 describe('IntegrationTestsListView', () => {
   it('should render the skeleton table if integration tests data is not loaded', () => {

@@ -29,7 +29,7 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';

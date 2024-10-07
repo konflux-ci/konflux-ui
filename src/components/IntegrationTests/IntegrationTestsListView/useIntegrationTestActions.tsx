@@ -4,7 +4,7 @@ import { IntegrationTestScenarioKind, ResolverType } from '../../../types/coreBu
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { createDeleteModalLauncher } from '../../modal/DeleteResourceModal';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const integrationTestDeleteModal = (integrationTestObj: IntegrationTestScenarioKind) =>
   createDeleteModalLauncher(integrationTestObj.kind)({

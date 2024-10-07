@@ -1,9 +1,12 @@
 import * as React from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import * as ReactRouterDom from 'react-router-dom';
 import { Form } from '@patternfly/react-core';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RenderOptions, render } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
-import { WorkspaceContextData, WorkspaceProvider } from '../components/Workspace/workspace-context';
+import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
+import * as WorkspaceUtils from '../components/Workspace/workspace-context';
+import * as k8s from '../k8s';
 
 export const formikRenderer = (
   element: React.ReactElement,
@@ -21,26 +24,25 @@ export const formikRenderer = (
 
 export const namespaceRenderer = (
   element: React.ReactElement,
-  _: string,
-  __?: Partial<WorkspaceContextData>,
+  namespace: string,
+  contextValues?: Partial<WorkspaceUtils.WorkspaceContextData>,
   options?: Omit<RenderOptions, 'wrapper'>,
 ) =>
   render(element, {
     wrapper: ({ children }) => (
-      <WorkspaceProvider
-      // value={{
-      //   namespace,
-      //   lastUsedWorkspace: 'test-ws',
-      //   workspace: '',
-      //   workspaceResource: undefined,
-      //   workspaces: [],
-      //   workspacesLoaded: false,
-      //   updateWorkspace: jest.fn(),
-      //   ...contextValues,
-      // }}
+      <WorkspaceUtils.WorkspaceContext.Provider
+        value={{
+          namespace,
+          lastUsedWorkspace: 'test-ws',
+          workspace: 'test-ws',
+          workspaceResource: undefined,
+          workspaces: [],
+          workspacesLoaded: false,
+          ...contextValues,
+        }}
       >
         {children}
-      </WorkspaceProvider>
+      </WorkspaceUtils.WorkspaceContext.Provider>
     ),
     ...options,
   });
@@ -50,7 +52,9 @@ export const routerRenderer = (
   options?: Omit<RenderOptions, 'wrapper'>,
 ) =>
   render(element, {
-    wrapper: ({ children }) => <BrowserRouter>{children}</BrowserRouter>,
+    wrapper: ({ children }) => (
+      <ReactRouterDom.BrowserRouter>{children}</ReactRouterDom.BrowserRouter>
+    ),
     ...options,
   });
 
@@ -90,4 +94,85 @@ export const mockFetch = () => {
       }),
     ),
   );
+};
+
+export const transformReturnDataForUseK8sWatchResource = (args) => {
+  const [data, loaded, error] = args;
+  return {
+    data,
+    isLoading: typeof loaded === 'boolean' ? !loaded : undefined,
+    error,
+  };
+};
+
+export const createK8sWatchResourceMock = () => {
+  const mockFn = jest.fn();
+
+  const mockImplementation = (returnValue) => {
+    if (Array.isArray(returnValue)) {
+      const [data, loaded, error] = returnValue;
+      return { data, isLoading: typeof loaded === 'boolean' ? !loaded : undefined, error };
+    }
+    return returnValue;
+  };
+
+  jest
+    .spyOn(k8s, 'useK8sWatchResource')
+    .mockImplementation((...args) => mockImplementation(mockFn(...args)));
+
+  return {
+    mockReturnValue: (value) => mockFn.mockReturnValue(value),
+    // eslint-disable-next-line
+    mockImplementation: (impl: (args: any) => any) => mockFn.mockImplementation(impl),
+  };
+};
+
+export const createK8sUtilMock = (name) => {
+  const mockFn = jest.fn();
+
+  jest.spyOn(k8s, name).mockImplementation((...args) => mockFn(...args));
+
+  return mockFn;
+};
+
+export function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+}
+
+export function renderWithQueryClient(
+  ui: React.ReactElement,
+  client?: QueryClient,
+  renderOptions?: Omit<RenderOptions, 'wrapper'>,
+) {
+  const queryClient = client ?? createTestQueryClient();
+
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  }
+
+  return render(ui, { wrapper: Wrapper, ...renderOptions });
+}
+
+export const createUseParamsMock = (initialValue: Record<string, string> = {}): jest.Mock => {
+  const mockFn = jest.fn().mockReturnValue(initialValue);
+
+  jest.spyOn(ReactRouterDom, 'useParams').mockImplementation(mockFn);
+
+  return mockFn;
+};
+
+export const createUseWorkspaceInfoMock = (
+  initialValue: Record<string, string> = {},
+): jest.Mock => {
+  const mockFn = jest.fn().mockReturnValue(initialValue);
+
+  jest.spyOn(WorkspaceHook, 'useWorkspaceInfo').mockImplementation(mockFn);
+
+  return mockFn;
 };

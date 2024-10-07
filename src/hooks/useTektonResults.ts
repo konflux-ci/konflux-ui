@@ -1,6 +1,6 @@
 import React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useWorkspaceInfo } from '../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunKind, TaskRunKind } from '../types';
 import {
   TektonResultsOptions,

@@ -6,7 +6,7 @@ import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { TaskRunKind } from '../../types/task-run';
 import { taskName, taskRunStatus } from '../../utils/pipeline-utils';
 import { StatusIconWithText } from '../topology/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { taskRunTableColumnClasses } from './TaskRunListHeader';
 
 const TaskRunListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<TaskRunKind>>> = ({

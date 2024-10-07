@@ -16,7 +16,7 @@ import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
 import SidePanelHost from '../../SidePanel/SidePanelHost';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';
 
 export const PipelineRunDetailsView: React.FC = () => {

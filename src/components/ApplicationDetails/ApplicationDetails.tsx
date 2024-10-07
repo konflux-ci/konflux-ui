@@ -12,7 +12,7 @@ import { useComponentRelationAction } from '../ComponentRelation/useComponentRel
 import DetailsPage from '../DetailsPage/DetailsPage';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { ApplicationHeader } from './ApplicationHeader';
 
 import './ApplicationDetails.scss';

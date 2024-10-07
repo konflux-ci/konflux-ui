@@ -10,7 +10,7 @@ import { startNewBuild } from '../../../utils/component-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
   const navigate = useNavigate();

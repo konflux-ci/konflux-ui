@@ -2,7 +2,7 @@ import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { useModalLauncher } from '../modal/ModalProvider';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { createComponentRelationModal } from './ComponentRelationModal';
 
 export const useComponentRelationAction = (application: string) => {

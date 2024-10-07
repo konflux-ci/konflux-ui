@@ -25,7 +25,7 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { IntegrationTestListHeader } from './IntegrationTestListHeader';
 import IntegrationTestListRow from './IntegrationTestListRow';
 

@@ -5,7 +5,7 @@ import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { IntegrationTestLabels } from '../IntegrationTestForm/types';
 import { ResolverRefParams, getURLForParam } from '../IntegrationTestForm/utils/create-utils';
 import { integrationListTableColumnClasses } from './IntegrationTestListHeader';

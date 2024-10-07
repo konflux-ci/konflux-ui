@@ -35,7 +35,7 @@ import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { createCustomizeAllPipelinesModalLauncher } from '../../CustomizedPipeline/CustomizePipelinesModal';
 import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import ComponentsListHeader from './ComponentsListHeader';
 import ComponentsListRow from './ComponentsListRow';
 import ComponentsToolbar, { pipelineRunStatusFilterId } from './ComponentsToolbar';
