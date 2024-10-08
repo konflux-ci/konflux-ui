@@ -1,0 +1,20 @@
+html,
+body,
+#app,
+.pf-v5-c-drawer {
+  height: 100%;
+}
+
+#app,
+#content {
+  display: flex;
+  flex-basis: 100%;
+  flex-direction: column;
+}
+
+.page-body {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+  

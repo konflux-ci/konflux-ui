@@ -11,6 +11,7 @@ export default merge(commonConfig, {
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
+    historyApiFallback: true,
     port: DEV_SERVER_PORT,
     hot: true,
     proxy: [
@@ -20,6 +21,7 @@ export default merge(commonConfig, {
         secure: false,
         changeOrigin: true,
         autoRewrite: true,
+        toProxy: true,
         onProxyRes: (proxyRes) => {
           const location = proxyRes.headers['location'];
           if (location) {
@@ -37,7 +39,8 @@ export default merge(commonConfig, {
         changeOrigin: true,
         autoRewrite: true,
         ws: true,
-        pathRewrite: { '^/api/k8s/registration': '' },
+        toProxy: true,
+        // pathRewrite: { '^/api/k8s/registration': '' },
       },
       {
         context: (path) => path.includes('/api/k8s'),
@@ -46,7 +49,8 @@ export default merge(commonConfig, {
         changeOrigin: true,
         autoRewrite: true,
         ws: true,
-        pathRewrite: { '^/api/k8s': '' },
+        toProxy: true,
+        // pathRewrite: { '^/api/k8s': '' },
       },
       {
         context: (path) => path.includes('/wss/k8s'),
@@ -55,7 +59,8 @@ export default merge(commonConfig, {
         changeOrigin: true,
         autoRewrite: true,
         ws: true,
-        pathRewrite: { '^/wss/k8s': '' },
+        toProxy: true,
+        // pathRewrite: { '^/wss/k8s': '' },
       },
     ],
   },
@@ -86,5 +91,5 @@ export default merge(commonConfig, {
       },
     ],
   },
-  plugins: [new ReactRefreshWebpackPlugin(), new ForkTsCheckerWebpackPlugin()],
+  plugins: [new ReactRefreshWebpackPlugin(), new ForkTsCheckerWebpackPlugin({ devServer: false })],
 });

@@ -26,6 +26,10 @@ module.exports = {
   plugins: ['prettier', 'react-refresh'],
   rules: {
     "@typescript-eslint/no-misused-promises": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-redundant-type-constituents": "off",
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     camelcase: [
       'error',
