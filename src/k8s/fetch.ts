@@ -97,8 +97,8 @@ export const commonFetchText = async (
   ...[url, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<string> => {
   const response = await commonFetch(
-    url,
-    applyDefaults(requestInit, { headers: { Accept: 'text/plain' } }),
+    `/api/k8s${url}`,
+    applyDefaults(requestInit, { headers: { Accept: 'application/json' } }),
     timeout,
   );
 

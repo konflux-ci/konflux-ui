@@ -10,7 +10,7 @@ jest.mock('../../../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
 }));
 
-jest.mock('../../../Workspace/workspace-context', () => ({
+jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ workspace: 'test-ws' })),
 }));
 

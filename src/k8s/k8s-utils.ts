@@ -175,7 +175,6 @@ export const getK8sResourceURL = (
   const filteredQueryParams: QueryOptions['queryParams'] = isCreate
     ? pick(queryParams, FILTERED_CREATE_QUERY_PARAMS)
     : queryParams;
-
   if (queryOptions?.queryParams?.labelSelector) {
     filteredQueryParams.labelSelector = selectorToString(queryOptions.queryParams.labelSelector);
   }
@@ -183,7 +182,6 @@ export const getK8sResourceURL = (
   if (filteredQueryParams && !isEmpty(filteredQueryParams)) {
     resourcePath += `?${getQueryString(filteredQueryParams)}`;
   }
-
   return resourcePath;
 };
 
@@ -217,7 +215,7 @@ export const k8sWatch = (
 
   const { labelSelector } = query;
   if (labelSelector) {
-    queryParams.labelSelector = labelSelector;
+    queryParams.labelSelector = { ...labelSelector };
   }
 
   if (query.fieldSelector) {
@@ -278,7 +276,11 @@ export const getReference = ({
 export const convertToK8sQueryParams = (
   resourceInit: WatchK8sResource,
 ): QueryOptionsWithSelector => {
+  if (!resourceInit) {
+    return undefined;
+  }
   const queryParams: QueryOptionsWithSelector['queryParams'] = {};
+
   if (!isEmpty(resourceInit.selector)) {
     queryParams.labelSelector = resourceInit.selector;
   }

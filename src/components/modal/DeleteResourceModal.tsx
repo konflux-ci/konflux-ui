@@ -17,7 +17,7 @@ import {
 } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { InputField } from 'formik-pf';
-import { k8sDeleteResource } from '../../k8s/k8s-fetch';
+import { K8sQueryDeleteResource } from '../../k8s';
 import { K8sModelCommon, K8sResourceCommon } from '../../types/k8s';
 import { ComponentProps, createModalLauncher } from './createModalLauncher';
 
@@ -44,7 +44,7 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
   const deleteResource = async () => {
     setError(null);
     try {
-      await k8sDeleteResource({
+      await K8sQueryDeleteResource({
         model,
         queryOptions: {
           name: obj.metadata.name,

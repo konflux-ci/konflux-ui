@@ -19,6 +19,12 @@ export type ComponentProps<D = any> = {
   kindObj: any;
 };
 
+export type InfiniteLoaderProps = {
+  rowCount?: number | undefined;
+  loadMoreRows: (params: { startIndex: number; stopIndex: number }) => Promise<unknown> | void;
+  isRowLoaded: (params: { index: number }) => boolean;
+};
+
 export type HeaderFunc = (componentProps: ComponentProps) => { title: string; props: ThProps }[];
 
 export type TableProps<D = any, C = any> = Partial<ComponentProps<D>> & {
@@ -45,6 +51,8 @@ export type TableProps<D = any, C = any> = Partial<ComponentProps<D>> & {
   getRowProps?: VirtualBodyProps<D>['getRowProps'];
   virtualize?: boolean;
   onRowsRendered?: VirtualBodyProps<D>['onRowsRendered'];
+  isInfiniteLoading?: boolean;
+  infiniteLoaderProps?: InfiniteLoaderProps;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = ({

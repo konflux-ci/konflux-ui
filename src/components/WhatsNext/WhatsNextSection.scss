@@ -1,0 +1,23 @@
+.whats-next-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: var(--pf-v5-global--spacer--md);
+  margin-bottom: var(--pf-v5-global--spacer--sm);
+  &__content {
+    margin-left: var(--pf-v5-global--spacer--xl);
+    margin-right: var(--pf-v5-global--spacer--lg);
+  }
+
+  &__icon {
+    min-width: var(--pf-v5-global--target-size--MinWidth);
+    min-height: var(--pf-v5-global--target-size--MinHeight);
+    width: 55px;
+    height: 55px;
+  }
+
+  &__cta {
+    display: inherit;
+    flex-wrap: nowrap;
+  }
+}

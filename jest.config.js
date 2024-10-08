@@ -19,7 +19,9 @@ export default {
     'lodash-es': 'lodash',
   },
   roots: ['<rootDir>/src/'],
-  transformIgnorePatterns: ['/node_modules/(?!@patternfly|uuid)'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!@patternfly|uuid|lodash-es|@popperjs|i18next|d3|d3-array|delaunator|robust-predicates|internmap)',
+  ],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/stories/*'],
   coverageDirectory: './coverage/',
   setupFilesAfterEnv: ['<rootDir>/config/jest.setup.js'],

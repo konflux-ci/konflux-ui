@@ -1,0 +1,15 @@
+.app-details {
+  flex-grow: 1;
+
+  &__tabs {
+    display: flex;
+    flex-direction: column;
+
+    &__tabItem {
+      position: relative;
+      &.isFilled.pf-v5-c-tab-content {
+        flex: 1;
+      }
+    }
+  }
+}

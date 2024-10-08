@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { useWorkspaceInfo } from '../../components/Workspace/workspace-context';
+import { useWorkspaceInfo } from '../../components/Workspace/useWorkspaceInfo';
 import { k8sCreateResource } from '../../k8s/k8s-fetch';
 import { IntegrationTestScenarioModel } from '../../models';
 import { AccessReviewResources } from '../../types';
@@ -16,7 +16,7 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   getActiveWorkspace: jest.fn(() => 'test-ws'),
 }));
 
-jest.mock('../../components/Workspace/workspace-context', () => ({
+jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns' })),
 }));
 
