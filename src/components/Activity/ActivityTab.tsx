@@ -10,7 +10,7 @@ import './ActivityTab.scss';
 
 export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
-export const ActivityTab: React.FC<React.PropsWithChildren<{ applicationName?: string }>> = () => {
+export const ActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
   const { applicationName, workspaceName, activityTab } = params;
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
