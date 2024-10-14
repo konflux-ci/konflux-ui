@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useK8sWatchResource } from '../k8s/hooks/useK8sWatchResource';
+import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
 import { ComponentKind } from '../types';
 

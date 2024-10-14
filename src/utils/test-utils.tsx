@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactRouterDom from 'react-router-dom';
 import { Form } from '@patternfly/react-core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RenderOptions, render } from '@testing-library/react';
+import { RenderOptions, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
@@ -111,7 +111,11 @@ export const createK8sWatchResourceMock = () => {
   const mockImplementation = (returnValue) => {
     if (Array.isArray(returnValue)) {
       const [data, loaded, error] = returnValue;
-      return { data, isLoading: typeof loaded === 'boolean' ? !loaded : undefined, error };
+      return {
+        data: data ?? [],
+        isLoading: typeof loaded === 'boolean' ? !loaded : undefined,
+        error,
+      };
     }
     return returnValue;
   };
@@ -120,11 +124,7 @@ export const createK8sWatchResourceMock = () => {
     .spyOn(k8s, 'useK8sWatchResource')
     .mockImplementation((...args) => mockImplementation(mockFn(...args)));
 
-  return {
-    mockReturnValue: (value) => mockFn.mockReturnValue(value),
-    // eslint-disable-next-line
-    mockImplementation: (impl: (args: any) => any) => mockFn.mockImplementation(impl),
-  };
+  return mockFn;
 };
 
 export const createK8sUtilMock = (name) => {
@@ -176,3 +176,23 @@ export const createUseWorkspaceInfoMock = (
 
   return mockFn;
 };
+
+export const WithTestWorkspaceContext =
+  (children, data?: WorkspaceUtils.WorkspaceContextData) => () => (
+    <WorkspaceUtils.WorkspaceContext.Provider
+      value={{
+        namespace: 'test-ns',
+        lastUsedWorkspace: 'test-ws',
+        workspace: 'test-ws',
+        workspaceResource: undefined,
+        workspacesLoaded: true,
+        workspaces: [],
+        ...data,
+      }}
+    >
+      {children}
+    </WorkspaceUtils.WorkspaceContext.Provider>
+  );
+
+export const waitForLoadingToFinish = async () =>
+  await waitForElementToBeRemoved(() => screen.getByRole('progressbar'));
