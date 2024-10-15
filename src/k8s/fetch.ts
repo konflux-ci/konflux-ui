@@ -78,8 +78,9 @@ type ResourceReadArgs = [url: string, ...args: FetchOptionArgs];
 const defaultTimeout = 60_000;
 
 export const commonFetch = async (
-  ...[url, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
+  ...[apiUrl, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<Response> => {
+  const url = `/api/k8s/${apiUrl}`;
   const fetchPromise = basicFetch(url, applyDefaults(requestInit, { method: 'GET' }));
 
   if (timeout <= 0) {
@@ -97,7 +98,7 @@ export const commonFetchText = async (
   ...[url, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<string> => {
   const response = await commonFetch(
-    `/api/k8s${url}`,
+    url,
     applyDefaults(requestInit, { headers: { Accept: 'application/json' } }),
     timeout,
   );
@@ -114,7 +115,7 @@ export const commonFetchJSON = async <TResult>(
   ...[url, requestInit = {}, timeout = defaultTimeout, isK8sAPIRequest = false]: ResourceReadArgs
 ): Promise<TResult> => {
   const response = await commonFetch(
-    `/api/k8s${url}`,
+    url,
     applyDefaults(requestInit, { headers: { Accept: 'application/json' } }),
     timeout,
   );

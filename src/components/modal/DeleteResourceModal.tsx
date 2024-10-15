@@ -19,6 +19,7 @@ import { Formik } from 'formik';
 import { InputField } from 'formik-pf';
 import { K8sQueryDeleteResource } from '../../k8s';
 import { K8sModelCommon, K8sResourceCommon } from '../../types/k8s';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { ComponentProps, createModalLauncher } from './createModalLauncher';
 
 type DeleteResourceModalProps = ComponentProps & {
@@ -27,7 +28,7 @@ type DeleteResourceModalProps = ComponentProps & {
   displayName?: string;
   isEntryNotRequired?: boolean;
   description?: React.ReactNode;
-  submitCallback?: (obj: unknown, namespace?: string) => void;
+  submitCallback?: (obj: unknown, namespace?: string, workspace?: string) => void;
 };
 
 export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourceModalProps>> = ({
@@ -41,6 +42,7 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
 }) => {
   const [error, setError] = React.useState<string>();
   const resourceName = displayName || obj.metadata.name;
+  const { workspace } = useWorkspaceInfo();
   const deleteResource = async () => {
     setError(null);
     try {
@@ -49,9 +51,10 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
         queryOptions: {
           name: obj.metadata.name,
           ns: obj.metadata.namespace,
+          ws: workspace,
         },
       });
-      submitCallback && submitCallback(obj, obj.metadata?.namespace);
+      submitCallback && submitCallback(obj, obj.metadata?.namespace, workspace);
       onClose(null, { submitClicked: true });
     } catch (e) {
       setError((e.message || e.toString()) as string);

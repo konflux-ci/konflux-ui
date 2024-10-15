@@ -49,6 +49,7 @@ import {
   releaseListViewTabLoader,
   ReleaseOverviewTab,
 } from '../components/Releases';
+import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
   TaskRunDetailsTab,
   TaskRunDetailsViewLayout,
@@ -159,6 +160,7 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestCreateForm />,
       },
+      /* Integration test edit form */
       {
         // edit form
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
@@ -166,6 +168,7 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestEditForm />,
       },
+      /* Integration tests Details routes */
       {
         // details page
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
@@ -231,6 +234,19 @@ export const router = createBrowserRouter([
           { index: true, element: <CommitOverviewTab /> },
           { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
         ],
+      },
+      /* Secrets create form */
+      {
+        path: `/workspaces/:workspaceName/secrets/create`,
+        element: <AddSecretForm />,
+        errorElement: <RouteErrorBoundry />,
+      },
+      /* Secrets list view */
+      {
+        path: `/workspaces/:workspaceName/secrets`,
+        loader: secretListViewLoader,
+        element: <SecretsListPage />,
+        errorElement: <RouteErrorBoundry />,
       },
     ],
   },

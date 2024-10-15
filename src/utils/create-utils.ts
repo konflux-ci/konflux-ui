@@ -1,13 +1,13 @@
 import { isEqual, isNumber } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-// import {
-//   getAnnotationForSecret,
-//   getLabelsForSecret,
-//   getSecretFormData,
-//   typeToLabel,
-// } from '../components/Secrets/utils/secret-utils';
-// import { linkSecretToServiceAccount } from '../components/Secrets/utils/service-account-utils';
 import { getRandomSvgNumber, THUMBNAIL_ANNOTATION } from '../components/ApplicationThumbnail';
+import {
+  getAnnotationForSecret,
+  getLabelsForSecret,
+  getSecretFormData,
+  typeToLabel,
+} from '../components/Secrets/utils/secret-utils';
+import { linkSecretToServiceAccount } from '../components/Secrets/utils/service-account-utils';
 import { commonFetch } from '../k8s/fetch';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
@@ -25,9 +25,9 @@ import {
   ComponentDetectionQueryKind,
   SPIAccessTokenBindingKind,
   K8sSecretType,
-  // SecretKind,
-  // AddSecretFormValues,
-  // SecretTypeDisplayLabel,
+  SecretKind,
+  AddSecretFormValues,
+  SecretTypeDisplayLabel,
   ImportSecret,
   ImageRepositoryKind,
   ImageRepositoryVisibility,
@@ -295,48 +295,52 @@ export const initiateAccessTokenBinding = async (url: string, namespace: string)
   return createAccessTokenBinding(url, namespace);
 };
 
-// export const createSecretResource = async (
-//   values: AddSecretFormValues,
-//   workspace: string,
-//   namespace: string,
-//   dryRun: boolean,
-// ) => {
-//   const secretResource: SecretKind = getSecretFormData(values, namespace);
+export const createSecretResource = async (
+  values: AddSecretFormValues,
+  workspace: string,
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const secretResource: SecretKind = getSecretFormData(values, namespace);
 
-//   const labels = {
-//     secret: getLabelsForSecret(values),
-//   };
-//   const annotations = getAnnotationForSecret(values);
-//   const k8sSecretResource = {
-//     ...secretResource,
-//     metadata: {
-//       ...secretResource.metadata,
-//       labels: {
-//         ...labels?.secret,
-//       },
-//       annotations,
-//     },
-//   };
-//   // if image pull secret, link to service account
-//   if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-//     linkSecretToServiceAccount(secretResource, namespace);
-//   }
+  const labels = {
+    secret: getLabelsForSecret(values),
+  };
+  const annotations = getAnnotationForSecret(values);
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels?.secret,
+      },
+      annotations,
+    },
+  };
+  // if image pull secret, link to service account
+  if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
+    await linkSecretToServiceAccount(secretResource, namespace, workspace);
+  }
 
-//   // Todo: K8sCreateResource appends the resource name and errors out.
-//   // Fix the below code when this sdk-utils issue is resolved https://issues.redhat.com/browse/RHCLOUD-21655.
-//   return await commonFetch(
-//     `/workspaces/${workspace}/api/v1/namespaces/${namespace}/secrets${dryRun ? '?dryRun=All' : ''}`,
-//     {
-//       method: 'POST',
-//       body: JSON.stringify(k8sSecretResource),
-//       headers: { 'Content-type': 'application/json' },
-//     },
-//   );
-// };
+  // Todo: K8sCreateResource appends the resource name and errors out.
+  // Fix the below code when this sdk-utils issue is resolved https://issues.redhat.com/browse/RHCLOUD-21655.
+  return await commonFetch(
+    `/workspaces/${workspace}/api/v1/namespaces/${namespace}/secrets${dryRun ? '?dryRun=All' : ''}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(k8sSecretResource),
+      headers: { 'Content-type': 'application/json' },
+    },
+  );
+};
 
-// export const addSecret = async (values: any, workspace: string, namespace: string) => {
-//   return await createSecretResource(values, workspace, namespace, false);
-// };
+export const addSecret = async (
+  values: AddSecretFormValues,
+  workspace: string,
+  namespace: string,
+) => {
+  return await createSecretResource(values, workspace, namespace, false);
+};
 
 export const createSecret = async (
   secret: ImportSecret,
