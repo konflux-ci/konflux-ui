@@ -16,13 +16,13 @@ import { createGetQueryOptions, createListqueryOptions, createQueryKeys } from '
 
 export const k8sQueryGetResource = <TResource extends K8sResourceCommon>(
   resourceInit: K8sResourceReadOptions,
-  options: TQueryOptions<TResource>,
+  options?: TQueryOptions<TResource>,
 ): Promise<TResource> =>
   queryClient.ensureQueryData<TResource>(createGetQueryOptions<TResource>(resourceInit, options));
 
 export const K8sQueryListResourceItems = <TResource extends K8sResourceCommon[]>(
   resourceInit: K8sResourceListOptions,
-  options: TQueryOptions<TResource>,
+  options?: TQueryOptions<TResource>,
 ): Promise<TResource> =>
   queryClient.ensureQueryData(createListqueryOptions<TResource>(resourceInit, options));
 

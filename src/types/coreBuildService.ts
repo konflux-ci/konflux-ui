@@ -34,7 +34,7 @@ export type Context = {
 
 export type Environment = {
   name: string;
-  params?: any[];
+  params?: unknown[];
   type?: string;
   configuration?: {
     env: { name: string; value: string }[];
@@ -126,7 +126,7 @@ export type ReleasePlanKind = K8sResourceCommon & {
 export type ReleasePlanSpec = {
   application: string;
   target: string;
-  data?: any;
+  data?: unknown;
   pipelineRef?: {
     resolver: ResolverType;
     params: Param[];

@@ -3,4 +3,5 @@ export type ResourceStatusCondition = {
   status: 'True' | 'False';
   reason: 'OK' | 'Error';
   message: string;
+  lastTransitionTime?: string;
 };

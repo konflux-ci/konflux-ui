@@ -1,0 +1,10 @@
+.key-value--remove-button {
+  display: flex;
+  flex-flow: row-reverse;
+  margin-bottom: 0 !important;
+}
+.key-value--wrapper + .key-value--wrapper {
+  border-top: 1px solid var(--pf-v5-global--BorderColor--100);
+  margin-top: var(--pf-v5-global--spacer--md);
+  padding-top: var(--pf-v5-global--spacer--sm);
+}

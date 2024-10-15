@@ -1,28 +1,37 @@
 import * as React from 'react';
-import { useK8sWatchResource } from '../k8s/hooks/useK8sWatchResource';
+import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
 import { ComponentKind } from '../types';
 
-// export const useComponent = (
-//   namespace: string,
-//   componentName?: string,
-// ): [ComponentKind, boolean, unknown] => {
-//   const [component, componentsLoaded, error] = useK8sWatchResource<ComponentKind>(
-//     componentName
-//       ? {
-//           groupVersionKind: ComponentGroupVersionKind,
-//           namespace,
-//           name: componentName,
-//         }
-//       : undefined,
-//   );
-//   return React.useMemo(() => {
-//     if (componentsLoaded && !error && component?.metadata.deletionTimestamp) {
-//       return [null, componentsLoaded, { code: 404 }];
-//     }
-//     return [component, componentsLoaded, error];
-//   }, [component, componentsLoaded, error]);
-// };
+export const useComponent = (
+  namespace: string,
+  workspace: string,
+  componentName: string,
+  watch?: boolean,
+): [ComponentKind, boolean, unknown] => {
+  const {
+    data: component,
+    isLoading,
+    error,
+  } = useK8sWatchResource<ComponentKind>(
+    componentName
+      ? {
+          groupVersionKind: ComponentGroupVersionKind,
+          workspace,
+          namespace,
+          name: componentName,
+          watch,
+        }
+      : undefined,
+    ComponentModel,
+  );
+  return React.useMemo(() => {
+    if (!isLoading && !error && component?.metadata.deletionTimestamp) {
+      return [null, !isLoading, { code: 404 }];
+    }
+    return [component, !isLoading, error];
+  }, [component, isLoading, error]);
+};
 
 export const useComponents = (
   namespace: string,
@@ -75,19 +84,31 @@ export const useComponents = (
 //   return [components, loaded, error];
 // };
 
-// export const useAllComponents = (namespace: string): [ComponentKind[], boolean, unknown] => {
-//   const [components, componentsLoaded, error] = useK8sWatchResource<ComponentKind[]>(
-//     namespace
-//       ? {
-//           groupVersionKind: ComponentGroupVersionKind,
-//           namespace,
-//           isList: true,
-//         }
-//       : null,
-//   );
-//   const allComponents: ComponentKind[] = React.useMemo(
-//     () => (componentsLoaded ? components?.filter((c) => !c.metadata.deletionTimestamp) || [] : []),
-//     [components, componentsLoaded],
-//   );
-//   return [allComponents, componentsLoaded, error];
-// };
+export const useAllComponents = (
+  namespace: string,
+  workspace,
+): [ComponentKind[], boolean, unknown] => {
+  const {
+    data: components,
+    isLoading: componentsLoaded,
+    error,
+  } = useK8sWatchResource<ComponentKind[]>(
+    {
+      groupVersionKind: ComponentGroupVersionKind,
+      workspace,
+      namespace,
+      isList: true,
+    },
+    ComponentModel,
+  );
+  const allComponents: ComponentKind[] = React.useMemo(
+    () =>
+      !componentsLoaded
+        ? (components as unknown as ComponentKind[])?.filter(
+            (c) => !c.metadata?.deletionTimestamp,
+          ) || []
+        : [],
+    [components, componentsLoaded],
+  );
+  return [allComponents, !componentsLoaded, error];
+};

@@ -19,3 +19,4 @@ export * from './release';
 export * from './space-binding-request';
 export * from './workspace';
 export * from './image-repository';
+export * from './enterprise-contract';

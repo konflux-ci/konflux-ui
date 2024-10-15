@@ -5,7 +5,8 @@ import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import PageLayout from '../PageLayout/PageLayout';
 import { GitImportForm } from './GitImportForm';
 
-const ImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {
+const ImportForm: React.FC = () => {
+  const applicationName = new URLSearchParams(window.location.search).get('application');
   const applicationBreadcrumbs = useApplicationBreadcrumbs(applicationName);
   return (
     <PageLayout
