@@ -23,7 +23,7 @@ export const useTRPipelineRuns = (
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
     useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, workspace, options));
   const resourceData = React.useMemo(() => {
-    return data?.pages ? data.pages.flatMap((page) => page.data) : [];
+    return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
   }, [data]);
   return [
     resourceData,
@@ -45,7 +45,7 @@ export const useTRTaskRuns = (
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
     useInfiniteQuery(createTaskRunTektonResultsQueryOptions(namespace, workspace, options));
   const resourceData = React.useMemo(() => {
-    return data?.pages ? data.pages.flatMap((page) => page.data) : [];
+    return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
   }, [data]);
   return [
     resourceData,

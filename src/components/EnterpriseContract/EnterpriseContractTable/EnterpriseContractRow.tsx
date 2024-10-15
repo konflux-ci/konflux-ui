@@ -41,9 +41,7 @@ export const EnterpriseContractRow: React.FC<
         <Td data-testid="rule-status">{getRuleStatus(data.status)}</Td>
         <Td>{data.msg ? <Truncate content={data.msg} /> : '-'}</Td>
         <Td>
-          <Link
-            to={`/application-pipeline/workspaces/${workspace}/applications/${appName}/components`}
-          >
+          <Link to={`/workspaces/${workspace}/applications/${appName}/components`}>
             {data.component}
           </Link>
         </Td>

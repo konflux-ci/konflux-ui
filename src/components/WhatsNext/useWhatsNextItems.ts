@@ -30,7 +30,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: componentsIcon,
       cta: {
         label: 'Add component',
-        href: `/application-pipeline/workspaces/${workspace}/import?application=${applicationName}`,
+        href: `/workspaces/${workspace}/import?application=${applicationName}`,
         disabled: !canCreateComponent,
         disabledTooltip: "You don't have access to add a component",
         testId: 'add-component',
@@ -50,7 +50,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: integrationTestIcon,
       cta: {
         label: 'Add a test',
-        href: `/application-pipeline/workspaces/${workspace}/applications/${applicationName}/integrationtests/add`,
+        href: `/workspaces/${workspace}/applications/${applicationName}/integrationtests/add`,
         disabled: !canCreateIntegrationTest,
         disabledTooltip: "You don't have access to add an integration test",
         testId: 'add-test',
@@ -70,7 +70,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: releaseIcon,
       cta: {
         label: 'Create a plan',
-        href: `/application-pipeline/release/workspaces/${workspace}/release-plan/create`,
+        href: `/release/workspaces/${workspace}/release-plan/create`,
         disabled: !canCreateReleasePlan,
         disabledTooltip: "You don't have access to create a release plan",
         testId: 'add-release-plan',
@@ -106,7 +106,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: editCodeIcon,
       cta: {
         label: 'View build activity',
-        href: `/application-pipeline/workspaces/${workspace}/applications/${applicationName}/activity`,
+        href: `/workspaces/${workspace}/applications/${applicationName}/activity`,
         analytics: {
           link_name: 'view-build-activity',
           link_location: 'whats-next',

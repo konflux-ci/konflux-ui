@@ -167,6 +167,14 @@ export const createUseParamsMock = (initialValue: Record<string, string> = {}): 
   return mockFn;
 };
 
+export const createReactRouterMock = (name): jest.Mock => {
+  const mockFn = jest.fn();
+
+  jest.spyOn(ReactRouterDom, name).mockImplementation(mockFn);
+
+  return mockFn;
+};
+
 export const createUseWorkspaceInfoMock = (
   initialValue: Record<string, string> = {},
 ): jest.Mock => {

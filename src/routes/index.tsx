@@ -4,6 +4,11 @@ import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '../components/Applications';
 import {
+  CommitDetailsView,
+  CommitOverviewTab,
+  CommitsPipelineRunTab,
+} from '../components/Commits/CommitDetails';
+import {
   ComponentActivityTab,
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
@@ -215,6 +220,16 @@ export const router = createBrowserRouter([
           { index: true, element: <TaskRunDetailsTab /> },
           { path: 'logs', element: <TaskRunLogsTab /> },
           { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
+        ],
+      },
+      /* Commit list view */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
+        errorElement: <RouteErrorBoundry />,
+        element: <CommitDetailsView />,
+        children: [
+          { index: true, element: <CommitOverviewTab /> },
+          { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
         ],
       },
     ],

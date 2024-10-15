@@ -7,4 +7,5 @@ export enum RouterParams {
   pipelineRunName = 'pipelineRunName',
   taskRunName = 'taskRunName',
   componentName = 'componentName',
+  commitName = 'commitName',
 }

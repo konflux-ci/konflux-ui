@@ -50,7 +50,6 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
-  const requestQueue = React.useRef<(() => void)[]>([]);
   const [onLoadName, setOnLoadName] = React.useState(nameFilter);
   React.useEffect(() => {
     if (nameFilter) {
@@ -126,17 +125,6 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
-
-  React.useEffect(() => {
-    if (
-      vulnerabilities.fetchedPipelineRuns.length === pipelineRuns.length &&
-      requestQueue.current.length
-    ) {
-      const [nextPage] = requestQueue.current;
-      nextPage?.();
-      requestQueue.current = [];
-    }
-  }, [vulnerabilities, pipelineRuns.length]);
 
   const onClearFilters = () => {
     onLoadName.length && setOnLoadName('');

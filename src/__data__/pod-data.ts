@@ -165,7 +165,6 @@ export const samplePod: PodKind = {
         imageID:
           'registry.access.redhat.com/ubi9/skopeo@sha256:6ebbdfce633f9915a6a99d8ee035d9fd258121aa1acf944229e90696eb353549',
         containerID: 'cri-o://5e596b389a3c995e30138eff66b3d310b477e0859700902e7656ac82ecf6f2d9',
-        started: false,
       },
     ],
     qosClass: 'Burstable',

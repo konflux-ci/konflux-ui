@@ -247,7 +247,7 @@ export const usePipelineRunsForCommit = (
   applicationName: string,
   commit: string,
   limit?: number,
-): [PipelineRunKind[], boolean, unknown, GetNextPage] => {
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
 
   const componentNames = React.useMemo(
@@ -255,7 +255,7 @@ export const usePipelineRunsForCommit = (
     [components, componentsLoaded],
   );
 
-  const [pipelineRuns, plrsLoaded, plrError, getNextPage] = usePipelineRuns(
+  const [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps] = usePipelineRuns(
     namespace && applicationName && commit && componentsLoaded ? namespace : null,
     React.useMemo(
       () => ({
@@ -287,7 +287,7 @@ export const usePipelineRunsForCommit = (
   // TODO: Remove this if/when tekton results are really filtered by component names above
   return React.useMemo(() => {
     if (!loaded || plrError) {
-      return [[], loaded, plrError, getNextPage];
+      return [[], loaded, plrError, getNextPage, nextPageProps];
     }
     return [
       pipelineRuns
@@ -299,8 +299,9 @@ export const usePipelineRunsForCommit = (
       true,
       undefined,
       getNextPage,
+      nextPageProps,
     ];
-  }, [componentNames, getNextPage, limit, loaded, pipelineRuns, plrError]);
+  }, [componentNames, getNextPage, limit, loaded, nextPageProps, pipelineRuns, plrError]);
 };
 
 export const usePipelineRun = (

@@ -882,12 +882,6 @@ export const testPipelineRuns: TestPipelineRuns = {
   [DataState.STATUS_WITHOUT_CONDITIONS]: {
     ...samplePipelineRun,
     status: {
-      pipelineSpec: samplePipelineSpec,
-    },
-  },
-  [DataState.STATUS_WITHOUT_CONDITIONS]: {
-    ...samplePipelineRun,
-    status: {
       conditions: [],
       pipelineSpec: samplePipelineSpec,
     },

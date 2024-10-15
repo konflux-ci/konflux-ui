@@ -44,7 +44,7 @@ const SecurityTabEmptyState: React.FC<
             variant={ButtonVariant.primary}
             onClick={() =>
               navigate(
-                `/application-pipeline/workspaces/${workspaceName}/applications/${appName}/pipelineruns/${plrName}`,
+                `/workspaces/${workspaceName}/applications/${appName}/pipelineruns/${plrName}`,
               )
             }
           >
