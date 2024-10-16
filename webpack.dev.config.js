@@ -14,20 +14,24 @@ export default merge(commonConfig, {
     historyApiFallback: true,
     port: DEV_SERVER_PORT,
     hot: true,
+    server: 'https',
     proxy: [
       {
-        context: (path) => path.includes('/oauth2/') || path.includes('/idp/'),
+        context: (path) => path.includes('/oauth2/'),
         target: process.env.AUTH_URL,
         secure: false,
         changeOrigin: true,
-        autoRewrite: true,
+        autoRewrite: false,
         toProxy: true,
+        headers: {
+          'X-Forwarded-Host': `localhost:${DEV_SERVER_PORT}`,
+        },
         onProxyRes: (proxyRes) => {
           const location = proxyRes.headers['location'];
           if (location) {
             proxyRes.headers['location'] = location.replace(
-              'https://localhost:9443',
-              `http://localhost:${DEV_SERVER_PORT}`,
+              'konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com%2Foauth2',
+              `localhost:${DEV_SERVER_PORT}/oauth2`,
             );
           }
         },
