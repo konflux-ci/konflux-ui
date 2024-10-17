@@ -9,7 +9,7 @@ import ApplicationSection from './ApplicationSection/ApplicationSection';
 import { ComponentSection } from './ComponentSection/ComponentSection';
 import GitImportActions from './GitImportActions';
 import { PipelineSection } from './PipelineSection/PipelineSection';
-// import SecretSection from './SecretSection/SecretSection';
+import SecretSection from './SecretSection/SecretSection';
 import { createResources } from './submit-utils';
 import { ImportFormValues } from './type';
 import { formValidationSchema } from './validation.utils';
@@ -100,7 +100,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                 <>
                   <ComponentSection />
                   <PipelineSection />
-                  {/* <SecretSection /> */}
+                  <SecretSection />
                 </>
               ) : null}
             </PageSection>

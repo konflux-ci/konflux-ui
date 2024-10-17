@@ -22,7 +22,11 @@ export const useSecrets = (
   );
 
   return React.useMemo(
-    () => [secrets.filter((rs) => !rs.metadata.deletionTimestamp), !isLoading, error],
+    () => [
+      !isLoading && !error ? secrets?.filter((rs) => !rs.metadata.deletionTimestamp) : [],
+      !isLoading,
+      error,
+    ],
     [secrets, isLoading, error],
   );
 };
