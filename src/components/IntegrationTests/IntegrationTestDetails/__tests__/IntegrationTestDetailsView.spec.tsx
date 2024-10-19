@@ -20,7 +20,7 @@ jest.mock('../../../../utils/rbac', () => ({
 
 createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
-const watchResourceMock = createK8sWatchResourceMock() as jest.Mock;
+const watchResourceMock = createK8sWatchResourceMock();
 
 configure({ testIdAttribute: 'data-test' });
 

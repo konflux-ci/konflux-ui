@@ -23,7 +23,7 @@ export const useK8sQueryWatch = (
         WS.set(hashedKey, websocket);
       }
     };
-    // eslint-disable-next-line
+
     startWatch();
     return () => {
       if (deepResourceInit && WS.has(hashedKey)) {

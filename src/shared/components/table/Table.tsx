@@ -10,13 +10,13 @@ import './Table.scss';
 
 export type Filter = { key: string; value: string };
 
-export type ComponentProps<D = any> = {
+export type ComponentProps<D = unknown> = {
   data: D[];
   unfilteredData: D[];
   filters: Filter[];
   selected: boolean;
-  match: RouteMatch<any>;
-  kindObj: any;
+  match: RouteMatch<string>;
+  kindObj: unknown;
 };
 
 export type InfiniteLoaderProps = {
@@ -27,15 +27,15 @@ export type InfiniteLoaderProps = {
 
 export type HeaderFunc = (componentProps: ComponentProps) => { title: string; props: ThProps }[];
 
-export type TableProps<D = any, C = any> = Partial<ComponentProps<D>> & {
+export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & {
   customData?: C;
   Header: HeaderFunc;
-  loadError?: string | Object;
+  loadError?: string | object;
   Row?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   'aria-label': string;
   onSelect?: OnSelect;
-  NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<{}>>;
-  EmptyMsg?: React.ComponentType<React.PropsWithChildren<{}>>;
+  NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;
+  EmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;
   Toolbar?: React.ReactNode;
   loaded?: boolean;
   reduxID?: string;

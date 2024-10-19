@@ -23,7 +23,7 @@ configure({ testIdAttribute: 'data-test' });
 
 createUseWorkspaceInfoMock({ namespace: 'test-namepsace', workspace: 'test-ws' });
 
-const watchResourceMock = createK8sWatchResourceMock() as jest.Mock;
+const watchResourceMock = createK8sWatchResourceMock();
 
 configure({ testIdAttribute: 'data-test' });
 

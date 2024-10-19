@@ -7,7 +7,7 @@ interface Cancelable {
   flush(): void;
 }
 
-export const useDebounceCallback = <T extends (...args: any[]) => any>(
+export const useDebounceCallback = <T extends (...args: unknown[]) => unknown>(
   callback: T,
   timeout: number = 500,
   debounceParams: { leading?: boolean; trailing?: boolean; maxWait?: number } = {
@@ -20,7 +20,10 @@ export const useDebounceCallback = <T extends (...args: any[]) => any>(
   callbackRef.current = callback;
 
   return React.useMemo(() => {
-    return debounce((...args) => callbackRef.current(...args), timeout, memDebounceParams) as T &
-      Cancelable;
+    return debounce(
+      (...args) => callbackRef.current(...(args as unknown[])),
+      timeout,
+      memDebounceParams,
+    ) as T & Cancelable;
   }, [memDebounceParams, timeout]);
 };

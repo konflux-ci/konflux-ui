@@ -41,7 +41,7 @@ export type EnterpriseContractRule = {
     description: string;
     collections: string[];
     code: string;
-    // eslint-disable-next-line camelcase
+
     effective_on?: string;
     solution?: string;
   };

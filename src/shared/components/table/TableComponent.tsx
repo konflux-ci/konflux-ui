@@ -35,12 +35,12 @@ const getActiveColumns = (Header: HeaderFunc, componentProps: ComponentProps) =>
   Header(componentProps);
 
 const getComponentProps = (
-  data: any[],
-  unfilteredData: any[],
+  data: unknown[],
+  unfilteredData: unknown[],
   filters: Filter[],
   selected: boolean,
-  match: RouteMatch<any>,
-  kindObj: any,
+  match: RouteMatch<string>,
+  kindObj: unknown,
 ): ComponentProps => ({
   data,
   unfilteredData,
