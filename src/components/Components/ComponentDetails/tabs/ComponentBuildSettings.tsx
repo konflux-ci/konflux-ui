@@ -32,7 +32,7 @@ const ComponentBuildSettings: React.FC<React.PropsWithChildren<ComponentBuildSet
           >
             <DescriptionListGroup>
               <DescriptionListTerm>Build pipeline plan</DescriptionListTerm>
-              <DescriptionListDescription data-test="edit-build-pipeline">
+              <DescriptionListDescription data-testid="edit-build-pipeline">
                 <ComponentPACStateLabel component={component} enableAction />
               </DescriptionListDescription>
             </DescriptionListGroup>

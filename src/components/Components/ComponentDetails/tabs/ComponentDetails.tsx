@@ -84,7 +84,7 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
           >
             <DescriptionListGroup>
               <DescriptionListTerm>Latest image</DescriptionListTerm>
-              <DescriptionListDescription data-test="component-latest-image">
+              <DescriptionListDescription data-testid="component-latest-image">
                 <ExternalLink
                   href={
                     componentImageURL.startsWith('http')
