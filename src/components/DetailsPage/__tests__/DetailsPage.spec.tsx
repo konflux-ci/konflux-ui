@@ -1,5 +1,4 @@
 import * as React from 'react';
-import '@testing-library/jest-dom';
 import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { routerRenderer } from '../../../utils/test-utils';
@@ -22,7 +21,7 @@ describe('DetailsPage', () => {
         headTitle="test"
         title="Details"
         baseURL="/test"
-        tabs={[{ key: 'test', label: 'test', component: 'test' }]}
+        tabs={[{ key: 'test', label: 'test' }]}
       />,
     );
     expect(getByTestId('details')).toBeInTheDocument();
@@ -31,7 +30,6 @@ describe('DetailsPage', () => {
   it('should not render the tabs if invalid values are passed', () => {
     routerRenderer(<DetailsPage headTitle="test" title="Details" baseURL="/" tabs={null} />);
     expect(screen.queryByTestId('app-details__tabs')).not.toBeInTheDocument();
-    expect(screen.getByText('404: Page not found')).toBeInTheDocument();
   });
 
   it('should render the tabs', () => {
@@ -40,7 +38,7 @@ describe('DetailsPage', () => {
         headTitle="test"
         title="Details"
         baseURL="/"
-        tabs={[{ key: 'tab1', label: 'Tab 1', component: <div>Tab1 content</div> }]}
+        tabs={[{ key: 'tab1', label: 'Tab 1' }]}
       />,
     );
     expect(getByTestId('app-details__tabs')).toBeInTheDocument();
@@ -55,13 +53,13 @@ describe('DetailsPage', () => {
         title="Details"
         baseURL="/"
         tabs={[
-          { key: 'tab1', label: 'Tab 1', component: <div>Tab1 content</div> },
-          { key: 'tab2', label: 'Tab 2', component: <div>Tab2 content</div> },
+          { key: 'tab1', label: 'Tab 1' },
+          { key: 'tab2', label: 'Tab 2' },
         ]}
       />,
     );
 
-    const tab2 = screen.queryByTestId('details__tabItem tab2');
+    const tab2 = screen.getByTestId('app-details__tabItem tab2');
 
     act(() => {
       fireEvent.click(tab2);
@@ -87,7 +85,7 @@ describe('DetailsPage', () => {
         headTitle="test"
         title="Details"
         baseURL="/"
-        tabs={[{ key: 'test', label: 'test', component: 'test' }]}
+        tabs={[{ key: 'test', label: 'test' }]}
         actions={[
           {
             type: 'section-label',
@@ -110,7 +108,7 @@ describe('DetailsPage', () => {
         headTitle="test"
         title="Details"
         baseURL="/"
-        tabs={[{ key: 'test', label: 'test', component: 'test' }]}
+        tabs={[{ key: 'test', label: 'test' }]}
         actions={[
           {
             key: 'disabled-section',
@@ -142,7 +140,7 @@ describe('DetailsPage', () => {
         headTitle="test"
         title="Details"
         baseURL="/"
-        tabs={[{ key: 'test', label: 'test', component: 'test' }]}
+        tabs={[{ key: 'test', label: 'test' }]}
         actions={[
           {
             key: 'disabled-section',
@@ -176,8 +174,8 @@ describe('DetailsPage', () => {
         title="Details"
         baseURL="/"
         tabs={[
-          { key: 'tab1', label: 'Tab 1', component: <div>Tab1 content</div> },
-          { key: 'tab2', label: 'Tab 2', component: <div>Tab2 content</div> },
+          { key: 'tab1', label: 'Tab 1' },
+          { key: 'tab2', label: 'Tab 2' },
         ]}
       />,
     );
