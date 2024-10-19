@@ -8,6 +8,7 @@ import { useSortedResources } from '../../hooks/useSortedResources';
 import { RouterParams } from '../../routes/utils';
 import { Table } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
+import { ReleaseKind } from '../../types';
 import { FilterToolbar } from '../Filter/FilterToolbar';
 import ReleasesEmptyState from './ReleasesEmptyState';
 import getReleasesListHeader, { SortableHeaders } from './ReleasesListHeader';
@@ -101,8 +102,8 @@ const ReleasesListView: React.FC = () => {
               Header={ReleasesListHeader}
               Row={ReleasesListRow}
               loaded
-              getRowProps={(obj) => ({
-                id: obj.sha,
+              getRowProps={(obj: ReleaseKind) => ({
+                id: obj?.metadata?.uid,
               })}
               customData={{ applicationName }}
             />

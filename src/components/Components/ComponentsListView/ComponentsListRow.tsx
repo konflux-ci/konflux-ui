@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Flex, FlexItem } from '@patternfly/react-core';
 import { PACState } from '../../../hooks/usePACState';
+import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -27,10 +28,9 @@ export const getContainerImageLink = (url: string) => {
   return imageUrl.startsWith('http') ? imageUrl : `https://${imageUrl}`;
 };
 
-const ComponentsListRow: React.FC<RowFunctionArgs<ComponentWithLatestBuildPipeline>> = ({
-  obj: component,
-  customData,
-}) => {
+const ComponentsListRow: React.FC<
+  RowFunctionArgs<ComponentWithLatestBuildPipeline, PacStatesForComponents>
+> = ({ obj: component, customData }) => {
   const { workspace } = useWorkspaceInfo();
   const applicationName = component.spec.application;
   const name = component.metadata.name;

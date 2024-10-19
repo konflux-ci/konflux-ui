@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { ScanResults } from '../../../hooks/useScanResults';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
@@ -13,7 +14,14 @@ import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
 
-type PipelineRunListRowProps = RowFunctionArgs<PipelineRunKind>;
+type PipelineRunListRowProps = RowFunctionArgs<
+  PipelineRunKind,
+  {
+    vulnerabilities: { [key: string]: ScanResults };
+    fetchedPipelineRuns: string[];
+    error: unknown;
+  }
+>;
 
 type BasePipelineRunListRowProps = PipelineRunListRowProps & { showVulnerabilities?: boolean };
 
@@ -25,6 +33,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
+  // @ts-expect-error vulnerabilities will not be available until fetched for the next page
   const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
   const scanResults = scanLoaded ? vulnerabilities || {} : undefined;

@@ -20,6 +20,7 @@ import { HttpError } from '../../../k8s/error';
 import { Table } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { Commit } from '../../../types';
 import { getCommitsFromPLRs, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
@@ -188,7 +189,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       Header={CommitsListHeader}
       Row={CommitsListRow}
       loaded={loaded && componentsLoaded}
-      getRowProps={(obj) => ({
+      getRowProps={(obj: Commit) => ({
         id: obj.sha,
       })}
       onRowsRendered={({ stopIndex }) => {

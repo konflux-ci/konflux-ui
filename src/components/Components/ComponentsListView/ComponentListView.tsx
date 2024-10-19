@@ -29,6 +29,7 @@ import { Table } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
+import { ComponentKind } from '../../../types';
 import { useURLForComponentPRs } from '../../../utils/component-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -251,7 +252,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           Row={ComponentsListRow}
           loaded={componentsLoaded && pipelineRunsLoaded}
           customData={{ componentPACStates }}
-          getRowProps={(obj) => ({
+          getRowProps={(obj: ComponentKind) => ({
             id: `${obj.metadata.name}-component-list-item`,
             'aria-label': obj.metadata.name,
           })}

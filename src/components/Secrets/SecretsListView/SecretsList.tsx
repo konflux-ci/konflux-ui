@@ -17,7 +17,7 @@ const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secr
         Header={SecretsListHeader}
         Row={SecretsListRow}
         loaded
-        getRowProps={(obj) => ({
+        getRowProps={(obj: SecretKind) => ({
           id: obj.metadata.name,
         })}
       />

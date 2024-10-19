@@ -57,7 +57,9 @@ const testHeader = () => {
   ];
 };
 
-const TestRow: React.FC<React.PropsWithChildren<RowFunctionArgs>> = ({ obj }) => {
+const TestRow: React.FC<
+  React.PropsWithChildren<RowFunctionArgs<{ name: string; value: string }>>
+> = ({ obj }) => {
   return (
     <>
       <TableData>{obj.name}</TableData>
@@ -81,7 +83,7 @@ describe('Table', () => {
         aria-label="Test List"
         Header={testHeader}
         Row={TestRow}
-        getRowProps={(obj) => ({
+        getRowProps={(obj: { id: string }) => ({
           id: obj.id,
         })}
         loaded
@@ -99,7 +101,7 @@ describe('Table', () => {
         aria-label="Test List"
         Header={testHeader}
         Row={TestRow}
-        getRowProps={(obj) => ({
+        getRowProps={(obj: { id: string }) => ({
           id: obj.id,
         })}
         loaded
