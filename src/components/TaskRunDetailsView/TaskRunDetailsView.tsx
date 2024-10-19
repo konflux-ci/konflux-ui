@@ -9,8 +9,6 @@ import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState
 import { TektonResourceLabel } from '../../types';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { runStatus, taskRunStatus } from '../../utils/pipeline-utils';
-// import { SecurityEnterpriseContractTab } from '../EnterpriseContractView/SecurityEnterpriseContractTab';
-// import { isResourceEnterpriseContract } from '../EnterpriseContractView/utils';
 import { DetailsPage } from '../DetailsPage';
 import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';

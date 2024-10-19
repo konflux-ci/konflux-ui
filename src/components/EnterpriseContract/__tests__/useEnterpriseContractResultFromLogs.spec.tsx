@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useTaskRuns } from '../../../hooks/useTaskRuns';
-import { commonFetchJSON } from '../../../k8s';
 import { getTaskRunLog } from '../../../utils/tekton-results';
+import { createK8sUtilMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
 import {
   mockEnterpriseContractJSON,
   mockEnterpriseContractUIData,
@@ -13,33 +13,22 @@ import {
   useEnterpriseContractResults,
 } from '../useEnterpriseContractResultFromLogs';
 
-jest.mock('../../../utils/useWorkspaceInfo-utils', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 jest.mock('../../../hooks/useTaskRuns', () => ({
   useTaskRuns: jest.fn(),
 }));
 
-jest.mock('../../../k8s', () => {
-  const actual = jest.requireActual('@openshift/dynamic-plugin-sdk-utils');
-  return {
-    ...actual,
-    commonFetchJSON: jest.fn(),
-  };
-});
-
 jest.mock('../../../utils/tekton-results', () => ({
-  ...jest.requireActual('../../../utils/tekton-results'),
   getTaskRunLog: jest.fn(),
 }));
 
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
-const mockCommmonFetchJSON = commonFetchJSON as unknown as jest.Mock;
+const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
 const mockUseTaskRuns = useTaskRuns as jest.Mock;
+const mockWorkspaceInfo = createUseWorkspaceInfoMock();
 
 describe('useEnterpriseContractResultFromLogs', () => {
   beforeEach(() => {
+    mockWorkspaceInfo.mockReturnValue({ namespace: 'test-ns', workspace: 'test-ws' });
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
     mockUseTaskRuns.mockReturnValue([
       [

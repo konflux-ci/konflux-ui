@@ -4,12 +4,6 @@ import componentsIcon from '../../../assets/Components.svg';
 import gitAppIcon from '../../../assets/git-app.svg';
 import WhatsNextSection, { WhatsNextItem } from '../WhatsNextSection';
 
-jest.mock('@redhat-cloud-services/frontend-components/useChrome', () => ({
-  useChrome: () => ({
-    helpTopics: { setActiveTopic: jest.fn(), enableTopics: jest.fn(), disableTopics: jest.fn() },
-  }),
-}));
-
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
@@ -33,7 +27,7 @@ const mockWhatsNextItems: WhatsNextItem[] = [
       label: 'Take me to router link',
       href: '/application/import',
     },
-    helpId: 'mock-help-id',
+    helpLink: 'mock-help-id',
   },
   {
     title: 'External link action',

@@ -5,11 +5,11 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../../utils/useWorkspaceInfo-utils', () => ({
+jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
-jest.mock('../../../utils/rbac', () => ({
+jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 

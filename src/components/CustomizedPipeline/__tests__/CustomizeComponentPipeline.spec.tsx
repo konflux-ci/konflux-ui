@@ -1,12 +1,8 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import { useK8sWatchResource } from '../../../k8s';
 import { ComponentKind } from '../../../types';
+import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import CustomizeComponentPipeline from '../CustomizeComponentPipeline';
-
-jest.mock('../../../k8s', () => ({
-  useK8sWatchResource: jest.fn(() => [[], true]),
-}));
 
 jest.mock('../../../hooks/useApplicationPipelineGitHubApp', () => ({
   useApplicationPipelineGitHubApp: jest.fn(() => ({
@@ -19,7 +15,11 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useK8sWatchResourceMock = useK8sWatchResource as jest.Mock;
+jest.mock('../../../hooks/usePipelineRuns', () => ({
+  usePipelineRuns: jest.fn(() => [[], true]),
+}));
+
+const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 const mockComponent = {
   metadata: {
@@ -49,7 +49,7 @@ describe('CustomizeAllPipelines', () => {
   });
 
   it('should render modal with components table', () => {
-    useK8sWatchResourceMock.mockReturnValueOnce([mockComponent, true]);
+    useK8sWatchResourceMock.mockReturnValue([mockComponent, true]);
     const result = render(
       <CustomizeComponentPipeline
         name="my-component"

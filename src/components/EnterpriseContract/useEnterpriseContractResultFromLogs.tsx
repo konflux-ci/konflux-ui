@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
-import { commonFetchJSON } from '../../k8s';
-import { getK8sResourceURL } from '../../k8s/k8s-utils';
+import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
 import { getTaskRunLog } from '../../utils/tekton-results';
 import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';

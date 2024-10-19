@@ -1,7 +1,6 @@
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { componentCRMocks } from '../../Components/__data__/mock-data';
 import { ComponentRelationModal } from '../ComponentRelationModal';
-import '@testing-library/jest-dom';
 
 configure({ testIdAttribute: 'id' });
 
@@ -10,7 +9,7 @@ jest.mock('../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [componentCRMocks, true, null]),
 }));
 
-jest.mock('../../../utils/useWorkspaceInfo-utils', () => ({
+jest.mock('../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'asd', workspace: 'def' })),
 }));
 

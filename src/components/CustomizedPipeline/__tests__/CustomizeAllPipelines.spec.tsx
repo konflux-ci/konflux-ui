@@ -1,11 +1,7 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import { useK8sWatchResource } from '../../../k8s';
+import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import CustomizeAllPipelines from '../CustomizeAllPipelines';
-
-jest.mock('../../../k8s', () => ({
-  useK8sWatchResource: jest.fn(() => [[], true]),
-}));
 
 jest.mock('../../../hooks/useApplicationPipelineGitHubApp', () => ({
   useApplicationPipelineGitHubApp: jest.fn(() => ({
@@ -22,7 +18,9 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useK8sWatchResourceMock = useK8sWatchResource as jest.Mock;
+jest.mock('../../../hooks/useTektonResults');
+
+const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 describe('CustomizeAllPipelines', () => {
   it('should render nothing while loading', () => {

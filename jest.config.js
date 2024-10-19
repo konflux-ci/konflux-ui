@@ -20,7 +20,7 @@ export default {
   },
   roots: ['<rootDir>/src/'],
   transformIgnorePatterns: [
-    '/node_modules/(?!@patternfly|uuid|lodash-es|@popperjs|i18next|d3|d3-array|delaunator|robust-predicates|internmap)',
+    '/node_modules/(?!@patternfly|uuid|lodash-es|@popperjs|i18next|d3|d3-array|delaunator|robust-predicates|internmap|react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd)',
   ],
   collectCoverageFrom: ['src/**/*.{js,jsx,ts,tsx}', '!src/**/stories/*'],
   coverageDirectory: './coverage/',

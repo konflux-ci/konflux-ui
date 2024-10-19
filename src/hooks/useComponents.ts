@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
 import { ComponentKind } from '../types';
@@ -63,26 +64,26 @@ export const useComponents = (
   return [appComponents, !componentsLoaded, error];
 };
 
-// const sortComponentsByCreation = (components: ComponentKind[]): ComponentKind[] =>
-//   components.sort(
-//     (a, b) =>
-//       new Date(b.metadata?.creationTimestamp).getTime() -
-//       new Date(a.metadata?.creationTimestamp).getTime(),
-//   );
+const sortComponentsByCreation = (components: ComponentKind[]): ComponentKind[] =>
+  components.sort(
+    (a, b) =>
+      new Date(b.metadata?.creationTimestamp).getTime() -
+      new Date(a.metadata?.creationTimestamp).getTime(),
+  );
 
-// export const useSortedComponents = (
-//   applicationName: string,
-//   namespace?: string,
-// ): [ComponentKind[], boolean, unknown] => {
-//   const { namespace: ns } = useWorkspaceInfo();
-//   const [cmps, loaded, error] = useComponents(namespace ?? ns, applicationName);
+export const useSortedComponents = (
+  applicationName: string,
+  namespace?: string,
+): [ComponentKind[], boolean, unknown] => {
+  const { namespace: ns, workspace } = useWorkspaceInfo();
+  const [cmps, loaded, error] = useComponents(namespace ?? ns, workspace, applicationName);
 
-//   const components = React.useMemo(() => {
-//     return loaded && !error ? sortComponentsByCreation(cmps) : [];
-//   }, [cmps, error, loaded]);
+  const components = React.useMemo(() => {
+    return loaded && !error ? sortComponentsByCreation(cmps) : [];
+  }, [cmps, error, loaded]);
 
-//   return [components, loaded, error];
-// };
+  return [components, loaded, error];
+};
 
 export const useAllComponents = (
   namespace: string,

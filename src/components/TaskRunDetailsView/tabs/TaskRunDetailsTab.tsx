@@ -17,6 +17,8 @@ import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useTaskRun } from '../../../hooks/usePipelineRuns';
 import { RouterParams } from '../../../routes/utils';
 import { SyncMarkdownView } from '../../../shared/components/markdown-view/MarkdownView';
+import { ErrorDetailsWithStaticLog } from '../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
+import { getTRLogSnippet } from '../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { TektonResourceLabel } from '../../../types';
 import {
@@ -36,7 +38,7 @@ const TaskRunDetailsTab: React.FC = () => {
   const { namespace } = useWorkspaceInfo();
   const [taskRun, , error] = useTaskRun(namespace, taskRunName);
   const { workspace } = useWorkspaceInfo();
-  const taskRunFailed = {} as { staticMessage: string; title: string }; //(getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
+  const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
   const results = isTaskV1Beta1(taskRun) ? taskRun.status?.taskResults : taskRun.status?.results;
   const duration = calculateDuration(
     typeof taskRun.status?.startTime === 'string' ? taskRun.status?.startTime : '',

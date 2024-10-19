@@ -159,6 +159,24 @@ export function renderWithQueryClient(
   return render(ui, { wrapper: Wrapper, ...renderOptions });
 }
 
+export function renderWithQueryClientAndRouter(
+  ui: React.ReactElement,
+  client?: QueryClient,
+  renderOptions?: Omit<RenderOptions, 'wrapper'>,
+) {
+  const queryClient = client ?? createTestQueryClient();
+
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <ReactRouterDom.BrowserRouter>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </ReactRouterDom.BrowserRouter>
+    );
+  }
+
+  return render(ui, { wrapper: Wrapper, ...renderOptions });
+}
+
 export const createUseParamsMock = (initialValue: Record<string, string> = {}): jest.Mock => {
   const mockFn = jest.fn().mockReturnValue(initialValue);
 
@@ -181,6 +199,10 @@ export const createUseWorkspaceInfoMock = (
   const mockFn = jest.fn().mockReturnValue(initialValue);
 
   jest.spyOn(WorkspaceHook, 'useWorkspaceInfo').mockImplementation(mockFn);
+
+  beforeEach(() => {
+    mockFn.mockReturnValue(initialValue);
+  });
 
   return mockFn;
 };

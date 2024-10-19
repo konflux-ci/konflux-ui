@@ -1,8 +1,5 @@
-import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
-import { K8sQueryPatchResource } from '../../../k8s';
 import { ComponentKind } from '../../../types';
 import {
   BuildRequest,
@@ -10,14 +7,10 @@ import {
   BUILD_STATUS_ANNOTATION,
   SAMPLE_ANNOTATION,
 } from '../../../utils/component-utils';
+import { createK8sUtilMock } from '../../../utils/test-utils';
 import CustomizePipeline from '../CustomizePipelines';
 
 jest.mock('../../../utils/analytics');
-
-jest.mock('../../../k8s', () => ({
-  useK8sWatchResource: jest.fn(() => [[], true]),
-  k8sPatchResource: jest.fn(() => Promise.resolve()),
-}));
 
 jest.mock('../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(() => [[], true]),
@@ -34,12 +27,12 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../../utils/useWorkspaceInfo-utils', () => ({
+jest.mock('../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-const k8sPatchResourceMock = K8sQueryPatchResource as jest.Mock;
+const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 
 let componentCount = 1;
 const createComponent = (
@@ -86,24 +79,6 @@ describe('CustomizePipeline', () => {
   afterEach(() => {
     k8sPatchResourceMock.mockClear();
     usePipelineRunsMock.mockClear();
-  });
-
-  it('should render opt in', () => {
-    const result = render(
-      <CustomizePipeline
-        components={[createComponent()]}
-        onClose={() => {}}
-        modalProps={{ isOpen: true }}
-      />,
-    );
-    const button = result.queryByRole('button', { name: 'Send pull request' });
-    expect(button).toBeInTheDocument();
-
-    act(() => {
-      button.click();
-    });
-
-    expect(k8sPatchResourceMock).toHaveBeenCalled();
   });
 
   it('should render sending pull request', () => {

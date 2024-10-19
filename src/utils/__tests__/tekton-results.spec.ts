@@ -1,4 +1,3 @@
-import { commonFetchJSON, commonFetchText } from '../../k8s';
 import {
   AND,
   createTektonResultsUrl,
@@ -19,11 +18,10 @@ import {
   nameFilter,
   selectorToFilter,
 } from '../tekton-results';
+import { createK8sUtilMock } from '../test-utils';
 
-jest.mock('../../k8s');
-
-const commonFetchJSONMock = commonFetchJSON as unknown as jest.Mock;
-const commonFetchTextMock = commonFetchText as unknown as jest.Mock;
+const commonFetchJSONMock = createK8sUtilMock('commonFetchJSON');
+const commonFetchTextMock = createK8sUtilMock('commonFetchText');
 const sampleOptions: TektonResultsOptions = {
   filter: 'count > 1',
   selector: {

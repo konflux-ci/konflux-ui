@@ -1,11 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
 import { EnterpriseContractRow } from '../EnterpriseContractRow';
-import '@testing-library/jest-dom';
-
-jest.mock('../../../../utils/useWorkspaceInfo-utils', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -21,6 +17,8 @@ jest.mock('react-router-dom', () => {
 });
 
 describe('EnterpriseContractRow', () => {
+  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+
   it('should render the component', () => {
     render(
       <EnterpriseContractRow

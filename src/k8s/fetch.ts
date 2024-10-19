@@ -1,6 +1,6 @@
-import { defaultsDeep, isPlainObject } from 'lodash-es';
-import { K8sStatus } from '../types/k8s';
+import { defaultsDeep } from 'lodash-es';
 import { HttpError, K8sStatusError, TimeoutError } from './error';
+import { isK8sStatus } from './k8s-utils';
 import { applyOverrides } from './object';
 
 type ResponseJsonError = {
@@ -107,9 +107,6 @@ export const commonFetchText = async (
 
   return responseText ?? '';
 };
-
-export const isK8sStatus = (data: unknown): data is K8sStatus =>
-  isPlainObject(data) && (data as K8sStatus).kind === 'Status';
 
 export const commonFetchJSON = async <TResult>(
   ...[url, requestInit = {}, timeout = defaultTimeout, isK8sAPIRequest = false]: ResourceReadArgs

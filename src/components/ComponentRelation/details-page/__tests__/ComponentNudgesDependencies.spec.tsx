@@ -3,9 +3,10 @@ import { ComponentKind, NudgeStats } from '../../../../types';
 import { routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
 
-jest.mock('../../../../utils/useWorkspaceInfo-utils', () => ({
+jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
+
 const mockComponent = {
   metadata: { name: 'component' },
   spec: { application: 'application' },

@@ -1,17 +1,15 @@
-import { useComponents } from '../../../hooks/useComponents';
+import { useComponents, useSortedComponents } from '../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { useLatestBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
-// import { useLatestIntegrationTestPipelines } from '../../../hooks/useLatestIntegrationTestPipelines';
+import { useLatestIntegrationTestPipelines } from '../../../hooks/useLatestIntegrationTestPipelines';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
 import { useReleases } from '../../../hooks/useReleases';
-// import { useSnapshotsEnvironmentBindings } from '../../../hooks/useSnapshotsEnvironmentBindings';
 import {
   mockBuildPipelinesData,
   mockComponentsData,
   mockIntegrationTestScenariosData,
   mockReleasePlansData,
   mockReleasesData,
-  mockSnapshotsEnvironmentBindings,
   mockTestPipelinesData,
 } from './index';
 
@@ -34,20 +32,16 @@ jest.mock('../../../hooks/useReleasePlans', () => ({
 jest.mock('../../../hooks/useLatestIntegrationTestPipelines', () => ({
   useLatestIntegrationTestPipelines: jest.fn(),
 }));
-jest.mock('../../../hooks/useSnapshotsEnvironmentBindings', () => ({
-  useSnapshotsEnvironmentBindings: jest.fn(),
-}));
 
 export const getMockWorkflows = () => {
   const workflowMocks = {
     useComponentsMock: useComponents as jest.Mock,
-    // useSortedComponentsMock: useSortedComponents as jest.Mock,
+    useSortedComponentsMock: useSortedComponents as jest.Mock,
     useIntegrationTestScenariosMock: useIntegrationTestScenarios as jest.Mock,
     useLatestBuildPipelinesMock: useLatestBuildPipelines as jest.Mock,
     useReleasesMock: useReleases as jest.Mock,
     useReleasePlansMock: useReleasePlans as jest.Mock,
-    // useLatestIntegrationTestPipelinesMock: useLatestIntegrationTestPipelines as jest.Mock,
-    // useSnapshotsEnvironmentBindingsMock: useSnapshotsEnvironmentBindings as jest.Mock,
+    useLatestIntegrationTestPipelinesMock: useLatestIntegrationTestPipelines as jest.Mock,
   };
 
   const applyWorkflowMocks = (mockFns) => {
@@ -61,10 +55,6 @@ export const getMockWorkflows = () => {
     mockFns.useReleasePlansMock.mockReturnValue([mockReleasePlansData, true]);
     mockFns.useReleasesMock.mockReturnValue([mockReleasesData, true]);
     mockFns.useLatestIntegrationTestPipelinesMock.mockReturnValue([mockTestPipelinesData, true]);
-    mockFns.useSnapshotsEnvironmentBindingsMock.mockReturnValue([
-      mockSnapshotsEnvironmentBindings,
-      true,
-    ]);
   };
   return { workflowMocks, applyWorkflowMocks };
 };

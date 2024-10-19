@@ -7,10 +7,6 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('@openshift/dynamic-plugin-sdk-utils', () => ({
-  getActiveWorkspace: jest.fn(() => 'test-ws'),
-}));
-
 jest.mock('../../../hooks/useSearchParam', () => ({
   useSearchParam: jest.fn(),
 }));
