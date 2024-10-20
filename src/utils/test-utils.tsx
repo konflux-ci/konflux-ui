@@ -78,22 +78,29 @@ export const mockLocation = (location?: {
   }
 };
 
-export const mockFetch = () => {
-  const windowFetch = window.fetch;
-  delete window.fetch;
-  Object.defineProperty(window, 'fetch', {
-    configurable: true,
-    writable: true,
-    value: windowFetch,
-  });
-  Object.assign(
-    window.fetch,
-    jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ data: 'mocked data' }),
-      }),
-    ),
+export const mockWindowFetch = () => {
+  const originalFetch = window.fetch;
+
+  // Ensure window.fetch exists before mocking
+  if (typeof window.fetch !== 'function') {
+    window.fetch = jest.fn();
+  }
+
+  // Use jest.spyOn to mock fetch
+  jest.spyOn(window, 'fetch').mockImplementation(() =>
+    Promise.resolve({
+      json: () => Promise.resolve({ data: 'mocked data' }),
+      // Add other methods as needed, e.g.:
+      // text: () => Promise.resolve('mocked text'),
+      // blob: () => Promise.resolve(new Blob(['mocked blob'])),
+    } as Response),
   );
+
+  // Return a cleanup function
+  return () => {
+    window.fetch = originalFetch;
+    jest.restoreAllMocks();
+  };
 };
 
 export const transformReturnDataForUseK8sWatchResource = (args) => {

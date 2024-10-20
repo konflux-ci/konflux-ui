@@ -1,24 +1,20 @@
 import { omit } from 'lodash-es';
-// import { THUMBNAIL_ANNOTATION } from '../../components/ApplicationDetails/ApplicationThumbnail';
-// import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
 import { THUMBNAIL_ANNOTATION } from '../../components/ApplicationThumbnail';
+import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
 import { commonFetch } from '../../k8s/fetch';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
-import {
-  // AddSecretFormValues,
-  // SecretFor,
-  SecretTypeDropdownLabel,
-} from '../../types';
+import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../types';
 import { ComponentKind, ComponentSpecs } from '../../types/component';
 import {
   createApplication,
   createComponent,
   sanitizeName,
   createSecret,
-  // addSecret,
+  addSecret,
 } from '../create-utils';
+import { mockWindowFetch } from '../test-utils';
 
 jest.mock('../../k8s/fetch', () => {
   const actual = jest.requireActual('../../k8s/fetch');
@@ -37,13 +33,13 @@ jest.mock('../../k8s/k8s-fetch', () => ({
  * [TODO]: enable test for linkSecret and secret utils
  */
 
-// jest.mock('../../components/Secrets/utils/service-account-utils', () => {
-//   return { linkSecretToServiceAccount: jest.fn() };
-// });
+jest.mock('../../components/Secrets/utils/service-account-utils', () => {
+  return { linkSecretToServiceAccount: jest.fn() };
+});
 
 const createResourceMock = k8sCreateResource as jest.Mock;
 const commonFetchMock = commonFetch as jest.Mock;
-// const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
+const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
 
 jest.mock('../../components/ApplicationThumbnail', () => {
   const actual = jest.requireActual('../../components/ApplicationThumbnail');
@@ -137,39 +133,39 @@ const mockComponentDataWithPAC = {
   },
 };
 
-// const addSecretFormValues: AddSecretFormValues = {
-//   type: 'Image pull secret',
-//   name: 'test',
-//   secretFor: SecretFor.Build,
-//   opaque: {
-//     keyValues: [
-//       {
-//         key: 'test',
-//         value: 'dGVzdA==',
-//       },
-//     ],
-//   },
-//   image: {
-//     authType: 'Image registry credentials',
-//     registryCreds: [
-//       {
-//         registry: 'test.io',
-//         username: 'test',
-//         password: 'test',
-//         email: 'test@test.com',
-//       },
-//     ],
-//   },
-//   source: {
-//     authType: 'Basic authentication',
-//     username: 'test',
-//     password: 'test',
-//   },
-//   labels: [{ key: 'test', value: 'test' }],
-// };
+const addSecretFormValues: AddSecretFormValues = {
+  type: 'Image pull secret',
+  name: 'test',
+  secretFor: SecretFor.Build,
+  opaque: {
+    keyValues: [
+      {
+        key: 'test',
+        value: 'dGVzdA==',
+      },
+    ],
+  },
+  image: {
+    authType: 'Image registry credentials',
+    registryCreds: [
+      {
+        registry: 'test.io',
+        username: 'test',
+        password: 'test',
+        email: 'test@test.com',
+      },
+    ],
+  },
+  source: {
+    authType: 'Basic authentication',
+    username: 'test',
+    password: 'test',
+  },
+  labels: [{ key: 'test', value: 'test' }],
+};
 describe('Create Utils', () => {
   beforeEach(() => {
-    // mockFetch();
+    mockWindowFetch();
   });
   it('Should call k8s create util with correct model and data for application', async () => {
     await createApplication('test-application', 'test-ns', 'test-ws');
@@ -558,26 +554,27 @@ describe('Create Utils', () => {
 
     expect(commonFetchMock).toHaveBeenCalled();
   });
-  // it('should add secret', async () => {
-  //   commonFetchMock.mockClear();
-  //   await addSecret(addSecretFormValues, 'test-ws', 'test-ns', 'test-ws');
-  //   expect(commonFetchMock).toHaveBeenCalled();
+  it('should add secret', async () => {
+    commonFetchMock.mockClear();
+    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    expect(commonFetchMock).toHaveBeenCalled();
 
-  //   expect(commonFetchMock).toHaveBeenCalledWith(
-  //     '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
-  //     expect.objectContaining({
-  //       body: expect.stringContaining('"type":"kubernetes.io/dockerconfigjson"'),
-  //     }),
-  //   );
-  // });
+    expect(commonFetchMock).toHaveBeenCalledWith(
+      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+      expect.objectContaining({
+        body: expect.stringContaining('"type":"kubernetes.io/dockerconfigjson"'),
+      }),
+    );
+  });
 
-  // it('should call linkToServiceAccount For image pull secrets', async () => {
-  //   linkSecretToServiceAccountMock.mockClear();
-  //   await addSecret(addSecretFormValues, 'test-ws', 'test-ns', 'test-ws');
-  //   expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
-  //   expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
-  //     expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
-  //     'test-ns',
-  //   );
-  // });
+  it('should call linkToServiceAccount For image pull secrets', async () => {
+    linkSecretToServiceAccountMock.mockClear();
+    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
+    expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
+      'test-ns',
+      'test-ws',
+    );
+  });
 });

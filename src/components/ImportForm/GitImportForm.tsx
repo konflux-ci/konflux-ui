@@ -16,10 +16,6 @@ import { formValidationSchema } from './validation.utils';
 
 import './GitImportForm.scss';
 
-/**
- * [TODO]: enable Secret section once SecretForm and it's utils are imported
- */
-
 export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {
   const track = useTrackEvent();
   const navigate = useNavigate();
