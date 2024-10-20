@@ -19,7 +19,7 @@ type PipelineRunListRowProps = RowFunctionArgs<
   {
     vulnerabilities: { [key: string]: ScanResults };
     fetchedPipelineRuns: string[];
-    error: unknown;
+    error?: unknown;
   }
 >;
 
