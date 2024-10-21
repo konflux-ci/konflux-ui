@@ -8,4 +8,5 @@ export enum RouterParams {
   taskRunName = 'taskRunName',
   componentName = 'componentName',
   commitName = 'commitName',
+  releasePlanName = 'releasePlanName',
 }

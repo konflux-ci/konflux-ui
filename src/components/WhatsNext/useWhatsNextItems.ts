@@ -70,7 +70,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: releaseIcon,
       cta: {
         label: 'Create a plan',
-        href: `/release/workspaces/${workspace}/release-plan/create`,
+        href: `/workspaces/${workspace}/release/release-plan/create`,
         disabled: !canCreateReleasePlan,
         disabledTooltip: "You don't have access to create a release plan",
         testId: 'add-release-plan',

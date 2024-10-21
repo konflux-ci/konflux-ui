@@ -29,7 +29,7 @@ export const createRawModalLauncher =
     const { onClose, ...restModalProps } = modalProps;
     const handleClose = (event: KeyboardEvent | React.MouseEvent, obj?: unknown) => {
       onClose?.(event);
-      onModalClose(obj as D);
+      onModalClose((obj ?? {}) as D);
     };
 
     return (

@@ -26,45 +26,45 @@ const validateStatus = async (response: Response) => {
   if (!contentType || contentType.indexOf('json') === -1) {
     throw new HttpError(response.statusText, response.status, response);
   }
-
+  const json: ResponseJsonError = await response.json();
   if (response.status === 403) {
-    return response.json().then((json: ResponseJsonError) => {
-      throw new HttpError(
-        json.message || 'Access denied due to cluster policy.',
-        response.status,
-        response,
-        json,
-      );
-    });
+    throw new HttpError(
+      json.message || 'Access denied due to cluster policy.',
+      response.status,
+      response,
+      json,
+    );
   }
 
-  return response.json().then((json: ResponseJsonError) => {
-    const cause = json.details?.causes?.[0];
-    let reason;
-    if (cause) {
-      reason = `Error "${cause.message}" for field "${cause.field}".`;
-    }
-    if (!reason) {
-      reason = json.message;
-    }
-    if (!reason) {
-      reason = json.error;
-    }
-    if (!reason) {
-      reason = response.statusText;
-    }
+  const cause = json.details?.causes?.[0];
+  let reason;
+  if (cause) {
+    reason = `Error "${cause.message}" for field "${cause.field}".`;
+  }
+  if (!reason) {
+    reason = json.message;
+  }
+  if (!reason) {
+    reason = json.error;
+  }
+  if (!reason) {
+    reason = response.statusText;
+  }
 
-    throw new HttpError(reason as string, response.status, response, json);
-  });
+  throw new HttpError(reason as string, response.status, response, json);
 };
 
 export const applyDefaults = <TObject>(obj: TObject, defaults: unknown): TObject =>
   defaultsDeep({}, obj, defaults);
 
 const basicFetch = async (url: string, requestInit: RequestInit = {}): Promise<Response> => {
-  return validateStatus(
-    await fetch(url, applyDefaults<RequestInit>(requestInit, { method: 'GET' })),
-  );
+  try {
+    return validateStatus(
+      await fetch(url, applyDefaults<RequestInit>(requestInit, { method: 'GET' })),
+    );
+  } catch (e) {
+    return Promise.reject(e);
+  }
 };
 
 export type FetchOptionArgs = [
@@ -80,7 +80,7 @@ const defaultTimeout = 60_000;
 export const commonFetch = async (
   ...[apiUrl, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<Response> => {
-  const url = `/api/k8s/${apiUrl}`;
+  const url = `/api/k8s${apiUrl}`;
   const fetchPromise = basicFetch(url, applyDefaults(requestInit, { method: 'GET' }));
 
   if (timeout <= 0) {

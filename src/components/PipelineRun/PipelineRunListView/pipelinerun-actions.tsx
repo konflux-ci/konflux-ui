@@ -79,7 +79,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
           !componentError &&
           startNewBuild(component).then(() => {
             navigate(
-              `/application-pipeline/workspaces/${workspace}/applications/${component.spec.application}/activity/pipelineruns?name=${component.metadata.name}`,
+              `/workspaces/${workspace}/applications/${component.spec.application}/activity/pipelineruns?name=${component.metadata.name}`,
             );
           })
         : runType === PipelineRunType.TEST &&
@@ -87,7 +87,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
           scenario &&
           rerunTestPipeline(snapshot, scenario).then(() => {
             navigate(
-              `/application-pipeline/workspaces/${workspace}/applications/${component.spec.application}/activity/pipelineruns?name=${component.metadata.name}`,
+              `/workspaces/${workspace}/applications/${component.spec.application}/activity/pipelineruns?name=${component.metadata.name}`,
             );
           }),
     isDisabled:

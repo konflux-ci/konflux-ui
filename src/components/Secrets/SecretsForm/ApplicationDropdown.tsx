@@ -17,8 +17,9 @@ export const ApplicationDropdown: React.FC<React.PropsWithChildren<ApplicationDr
   const [, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(
-    () => applications.map((a) => ({ key: a.metadata.name, value: a.metadata.name })),
-    [applications],
+    () =>
+      loaded ? applications.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
+    [applications, loaded],
   );
 
   return (

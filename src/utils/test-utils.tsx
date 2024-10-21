@@ -8,19 +8,32 @@ import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
 import * as k8s from '../k8s';
 
+export function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+}
 export const formikRenderer = (
   element: React.ReactElement,
   initialValues?: FormikValues,
   options?: Omit<RenderOptions, 'wrapper'>,
-) =>
-  render(element, {
+) => {
+  const client = createTestQueryClient();
+  return render(element, {
     wrapper: ({ children }) => (
-      <Formik initialValues={initialValues} onSubmit={() => {}}>
-        {({ handleSubmit }) => <Form onSubmit={handleSubmit}>{children}</Form>}
-      </Formik>
+      <QueryClientProvider client={client}>
+        <Formik initialValues={initialValues} onSubmit={() => {}}>
+          {({ handleSubmit }) => <Form onSubmit={handleSubmit}>{children}</Form>}
+        </Formik>
+      </QueryClientProvider>
     ),
     ...options,
   });
+};
 
 export const namespaceRenderer = (
   element: React.ReactElement,
@@ -141,16 +154,6 @@ export const createK8sUtilMock = (name) => {
 
   return mockFn;
 };
-
-export function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-}
 
 export function renderWithQueryClient(
   ui: React.ReactElement,

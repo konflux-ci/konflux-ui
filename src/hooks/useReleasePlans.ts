@@ -4,7 +4,7 @@ import { ReleasePlanKind } from '../types/coreBuildService';
 
 export const useReleasePlans = (
   namespace: string,
-  workspace,
+  workspace: string,
 ): [ReleasePlanKind[], boolean, unknown] => {
   const { data, isLoading, error } = useK8sWatchResource<ReleasePlanKind[]>(
     {

@@ -87,7 +87,7 @@ export const useSortedComponents = (
 
 export const useAllComponents = (
   namespace: string,
-  workspace,
+  workspace: string,
 ): [ComponentKind[], boolean, unknown] => {
   const {
     data: components,

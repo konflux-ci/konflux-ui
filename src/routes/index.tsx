@@ -49,6 +49,19 @@ import {
   releaseListViewTabLoader,
   ReleaseOverviewTab,
 } from '../components/Releases';
+import {
+  releasePlanAdmissionListLoader,
+  ReleasePlanAdmissionListView,
+  releasePlanCreateFormLoader,
+  ReleasePlanCreateFormPage,
+  releasePlanEditFormLoader,
+  ReleasePlanEditFormPage,
+  releasePlanListLoader,
+  ReleasePlanListView,
+  releasePlanTriggerLoader,
+  ReleaseService,
+  TriggerReleaseFormPage,
+} from '../components/ReleaseService';
 import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
   TaskRunDetailsTab,
@@ -243,10 +256,57 @@ export const router = createBrowserRouter([
       },
       /* Secrets list view */
       {
-        path: `/workspaces/:workspaceName/secrets`,
+        path: `/workspaces/:${RouterParams.workspaceName}/secrets`,
         loader: secretListViewLoader,
         element: <SecretsListPage />,
         errorElement: <RouteErrorBoundry />,
+      },
+      /* Trigger Release plan */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/${RouterParams.releasePlanName}`,
+        loader: releasePlanTriggerLoader,
+        errorElement: <RouteErrorBoundry />,
+        element: <TriggerReleaseFormPage />,
+      },
+      /* Create Release plan */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/${RouterParams.releasePlanName}`,
+        loader: releasePlanEditFormLoader,
+        errorElement: <RouteErrorBoundry />,
+        element: <ReleasePlanEditFormPage />,
+      },
+      /* Edit Release plan */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
+        loader: releasePlanCreateFormLoader,
+        errorElement: <RouteErrorBoundry />,
+        element: <ReleasePlanCreateFormPage />,
+      },
+      /* Release service list view */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/release`,
+        element: <ReleaseService />,
+        errorElement: <RouteErrorBoundry />,
+        children: [
+          {
+            index: true,
+            loader: releasePlanListLoader,
+            element: <ReleasePlanListView />,
+            errorElement: <RouteErrorBoundry />,
+          },
+          {
+            path: 'release-plan',
+            loader: releasePlanListLoader,
+            element: <ReleasePlanListView />,
+            errorElement: <RouteErrorBoundry />,
+          },
+          {
+            path: 'release-plan-admission',
+            loader: releasePlanAdmissionListLoader,
+            element: <ReleasePlanAdmissionListView />,
+            errorElement: <RouteErrorBoundry />,
+          },
+        ],
       },
     ],
   },
