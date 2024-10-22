@@ -64,6 +64,12 @@ import {
 } from '../components/ReleaseService';
 import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
+  SnapshotDetailsView,
+  snapshotDetailsViewLoader,
+  SnapshotOverviewTab,
+  SnapshotPipelineRunsTab,
+} from '../components/SnapshotDetails';
+import {
   TaskRunDetailsTab,
   TaskRunDetailsViewLayout,
   taskRunDetailsViewLoader,
@@ -306,6 +312,25 @@ export const router = createBrowserRouter([
             path: 'release-plan-admission',
             loader: releasePlanAdmissionListLoader,
             element: <ReleasePlanAdmissionListView />,
+            errorElement: <RouteErrorBoundry />,
+          },
+        ],
+      },
+      /* Snapshot Details view */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
+        loader: snapshotDetailsViewLoader,
+        element: <SnapshotDetailsView />,
+        errorElement: <RouteErrorBoundry />,
+        children: [
+          {
+            index: true,
+            element: <SnapshotOverviewTab />,
+            errorElement: <RouteErrorBoundry />,
+          },
+          {
+            path: 'pipelineruns',
+            element: <SnapshotPipelineRunsTab />,
             errorElement: <RouteErrorBoundry />,
           },
         ],

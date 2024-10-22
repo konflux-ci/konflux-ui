@@ -37,3 +37,24 @@ export const useSnapshots = (
     [commit, error, isLoading, snapshots],
   );
 };
+
+export const useSnapshot = (
+  namespace: string,
+  workspace: string,
+  name: string,
+): [Snapshot, boolean, unknown] => {
+  const {
+    data: snapshot,
+    isLoading,
+    error,
+  } = useK8sWatchResource<Snapshot>(
+    {
+      groupVersionKind: SnapshotGroupVersionKind,
+      namespace,
+      workspace,
+      name,
+    },
+    SnapshotModel,
+  );
+  return [snapshot, !isLoading, error];
+};

@@ -9,4 +9,5 @@ export enum RouterParams {
   componentName = 'componentName',
   commitName = 'commitName',
   releasePlanName = 'releasePlanName',
+  snapshotName = 'snapshotName',
 }
