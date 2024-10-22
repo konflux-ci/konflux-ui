@@ -5,7 +5,7 @@ import { getQueryClient } from '../k8s/query/core';
 import { PipelineRunModel, TaskRunModel } from '../models';
 import { PipelineRunKind } from '../types';
 import { K8sModelCommon } from '../types/k8s';
-import { createTektonResultsQueryKeys, EQ, getPipelineRuns, getTaskRuns } from './tekton-results';
+import { getPipelineRuns, getTaskRuns, createTektonResultQueryOptions, EQ } from './tekton-results';
 
 export const stripQueryStringParams = (url: string) => {
   if (!url) return undefined;
@@ -42,21 +42,16 @@ const QueryRun = curry(
       );
     } catch (e) {
       if (e.code === 404) {
-        return await getQueryClient().ensureQueryData({
-          queryKey: createTektonResultsQueryKeys(
-            model,
-            workspace,
-            undefined,
-            EQ('data.metadata.name', name),
-          ),
-          queryFn: async () => {
-            const results = await fetchFn(workspace, namespace, {
+        return await getQueryClient()
+          .fetchInfiniteQuery({
+            ...createTektonResultQueryOptions(fetchFn, model, namespace, workspace, {
               filter: EQ('data.metadata.name', name),
-            });
-            return results?.[0]?.[0];
-          },
-          retry: false,
-        });
+            }),
+            retry: false,
+          })
+          .then((data) => {
+            return data.pages[0]?.data;
+          });
       }
       throw e;
     }

@@ -72,6 +72,8 @@ import {
 } from '../components/TaskRunDetailsView';
 import { queryWorkspaces } from '../components/Workspace/utils';
 import { WorkspaceProvider } from '../components/Workspace/workspace-context';
+import { HttpError } from '../k8s/error';
+import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { RouterParams } from './utils';
 
@@ -263,14 +265,14 @@ export const router = createBrowserRouter([
       },
       /* Trigger Release plan */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/${RouterParams.releasePlanName}`,
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
         loader: releasePlanTriggerLoader,
         errorElement: <RouteErrorBoundry />,
         element: <TriggerReleaseFormPage />,
       },
       /* Create Release plan */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/${RouterParams.releasePlanName}`,
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
         loader: releasePlanEditFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <ReleasePlanEditFormPage />,
@@ -307,6 +309,10 @@ export const router = createBrowserRouter([
             errorElement: <RouteErrorBoundry />,
           },
         ],
+      },
+      {
+        path: '*',
+        element: <ErrorEmptyState httpError={HttpError.fromCode(404)} />,
       },
     ],
   },

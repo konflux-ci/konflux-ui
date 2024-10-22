@@ -49,7 +49,11 @@ const useRuns = <Kind extends K8sResourceCommon>(
         }
       : null;
   }, [namespace, groupVersionKind, workspace, isList, optionsMemo?.selector, optionsMemo?.name]);
-  const { data: resources, isLoading, error } = useK8sWatchResource<Kind[]>(watchOptions, model);
+  const {
+    data: resources,
+    isLoading,
+    error,
+  } = useK8sWatchResource<Kind[]>(watchOptions, model, { retry: false });
   // if a pipeline run was removed from etcd, we want to still include it in the return value without re-querying tekton-results
   const etcdRuns = React.useMemo(() => {
     if (isLoading || error) {

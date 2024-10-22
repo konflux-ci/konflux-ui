@@ -47,7 +47,9 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
   const setActiveTab = React.useCallback(
     (newTab: string) => {
       if (activeTabKey !== newTab) {
-        navigate(`${basePath}${newTab ? `/${getRouteFromKey(newTab)}` : ''}`);
+        navigate(
+          `${basePath}${basePath[basePath.length - 1] !== '/' ? '/' : ''}${newTab ? `${getRouteFromKey(newTab)}` : ''}`,
+        );
       }
     },
     [activeTabKey, navigate, basePath],
