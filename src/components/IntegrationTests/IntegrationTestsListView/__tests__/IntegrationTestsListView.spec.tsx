@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { configure, fireEvent, waitFor, render, screen, act } from '@testing-library/react';
+import { fireEvent, waitFor, render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
@@ -25,8 +25,6 @@ jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 

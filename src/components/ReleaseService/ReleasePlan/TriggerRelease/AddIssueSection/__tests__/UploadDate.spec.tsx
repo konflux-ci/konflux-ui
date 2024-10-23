@@ -1,11 +1,9 @@
-import { act, configure, fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { formikRenderer } from '../../../../../../utils/test-utils';
 import UploadDate, { dateFormat } from '../UploadDate';
 
 describe('UploadDate', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('dateFormat should format correct date', () => {
     const formattedDate = dateFormat(new Date('10-03-2024'));

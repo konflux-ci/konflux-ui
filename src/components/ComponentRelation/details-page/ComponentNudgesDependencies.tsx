@@ -28,7 +28,7 @@ const ComponentBuildSettings: React.FC<React.PropsWithChildren<ComponentBuildSet
   };
 
   return (
-    <div className="component-nudges" data-testid="component-nudges-dependencies">
+    <div className="component-nudges" data-test="component-nudges-dependencies">
       <ExpandableSection
         isExpanded={expanded}
         toggleContent="Show related components"

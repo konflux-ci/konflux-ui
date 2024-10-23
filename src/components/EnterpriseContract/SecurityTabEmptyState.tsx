@@ -28,7 +28,7 @@ const SecurityTabEmptyState: React.FC<
   return (
     <EmptyState
       className="app-empty-state"
-      data-testid="security-tab-empty-state"
+      data-test="security-tab-empty-state"
       variant={EmptyStateVariant.full}
       {...props}
     >

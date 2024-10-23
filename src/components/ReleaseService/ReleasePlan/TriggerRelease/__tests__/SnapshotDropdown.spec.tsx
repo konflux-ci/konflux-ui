@@ -1,4 +1,4 @@
-import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import * as formik from 'formik';
 import { useSnapshots } from '../../../../../hooks/useSnapshots';
 import { formikRenderer } from '../../../../../utils/test-utils';
@@ -11,9 +11,7 @@ jest.mock('../../../../../hooks/useSnapshots', () => ({
 const useSnapshotsMock = useSnapshots as jest.Mock;
 
 describe('SnapshotDropdown', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show loading indicator if snapshot arent loaded', () => {
     useSnapshotsMock.mockReturnValue([[], false]);

@@ -70,7 +70,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
   const removeButton = (
     <Tooltip content={tooltip || 'Remove'}>
       <Button
-        data-testid={`${name}-${idx}-remove-button`}
+        data-test={`${name}-${idx}-remove-button`}
         aria-label={tooltip || 'Remove'}
         variant={ButtonVariant.plain}
         type={ButtonType.button}
@@ -98,7 +98,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
       >
         {dndEnabled && (
           <FlexItem style={{ cursor: 'move' }}>
-            <div ref={dragRef} data-testid="drag-and-drop-handle">
+            <div ref={dragRef} data-test="drag-and-drop-handle">
               <GripVerticalIcon />
             </div>
           </FlexItem>

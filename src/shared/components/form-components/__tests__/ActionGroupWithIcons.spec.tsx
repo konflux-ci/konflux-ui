@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { configure, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import ActionGroupWithIcons from '../ActionGroupWithIcons';
 import '@testing-library/jest-dom';
 
@@ -10,8 +10,6 @@ jest.mock('react-i18next', () => ({
 const onSubmit = jest.fn();
 const onClose = jest.fn();
 const mockUseTranslation = useTranslation as jest.Mock;
-
-configure({ testIdAttribute: 'data-test' });
 
 beforeEach(() => {
   mockUseTranslation.mockImplementation(() => ({ t: (x) => x }));

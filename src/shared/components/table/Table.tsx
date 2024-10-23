@@ -68,7 +68,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = ({
 }) => (
   <StatusBox
     skeleton={
-      <div className="table-skeleton" data-testId="data-table-skeleton">
+      <div className="table-skeleton" data-test="data-table-skeleton">
         {Toolbar ? <div className="skeleton-overview--head" /> : null}
         <div className="loading-skeleton--table" />
       </div>

@@ -15,7 +15,7 @@ describe('createModalLauncher', () => {
     };
     const onCloseCP = jest.fn();
     const launcher = createRawModalLauncher(Modal, {
-      'data-testid': 'test',
+      'data-test': 'test',
       onClose: onCloseCP,
     });
     const onClose = jest.fn();
@@ -23,7 +23,7 @@ describe('createModalLauncher', () => {
     expect(result.container).toHaveTextContent('test');
 
     expect(props.modalProps.isOpen).toBe(true);
-    expect(props.modalProps['data-testid']).toBe('test');
+    expect(props.modalProps['data-test']).toBe('test');
     props.onClose();
     expect(onClose).toHaveBeenCalled();
     expect(onCloseCP).toBeCalled();
@@ -37,7 +37,7 @@ describe('createModalLauncher', () => {
     };
     const onCloseCP = jest.fn();
     const launcher = createModalLauncher(Modal, {
-      'data-testid': 'test',
+      'data-test': 'test',
       onClose: onCloseCP,
     });
     const onClose = jest.fn();

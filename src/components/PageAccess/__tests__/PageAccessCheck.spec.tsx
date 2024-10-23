@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { configure, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { ApplicationModel } from '../../../models';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import PageAccessCheck from '../PageAccessCheck';
@@ -15,8 +15,6 @@ jest.mock('react-router-dom', () => {
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModels: jest.fn(),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 const accessReviewMock = useAccessReviewForModels as jest.Mock;
 

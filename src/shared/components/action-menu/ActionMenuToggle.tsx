@@ -86,7 +86,7 @@ const ActionMenuToggle: React.FC<React.PropsWithChildren<ActionMenuToggleProps>>
       aria-expanded={isOpen}
       aria-label={toggleLabel}
       aria-haspopup="true"
-      data-testid={isKebabVariant ? 'kebab-button' : toggleLabel}
+      data-test={isKebabVariant ? 'kebab-button' : toggleLabel}
       onClick={handleToggleClick}
       onFocus={onToggleHover}
       onMouseOver={onToggleHover}

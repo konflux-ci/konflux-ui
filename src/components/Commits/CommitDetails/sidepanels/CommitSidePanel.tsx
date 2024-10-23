@@ -41,7 +41,7 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
 
   return (
     <>
-      <DrawerHead data-testid="commit-side-panel-head">
+      <DrawerHead data-test="commit-side-panel-head">
         <span className="commit-side-panel__head-title">
           <CommitIcon isPR={commit.isPullRequest} className="commit-details__title-icon" />{' '}
           {commit.shaTitle}
@@ -54,7 +54,7 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
           <DrawerCloseButton onClick={onClose} />
         </DrawerActions>
       </DrawerHead>
-      <DrawerPanelBody data-testid="commit-side-panel-body">
+      <DrawerPanelBody data-test="commit-side-panel-body">
         <DescriptionList columnModifier={{ default: '2Col' }}>
           <DescriptionListGroup>
             <DescriptionListTerm>Commit ID</DescriptionListTerm>

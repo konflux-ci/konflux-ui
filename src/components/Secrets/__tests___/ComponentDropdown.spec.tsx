@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { useComponents } from '../../../hooks/useComponents';
 import { formikRenderer } from '../../../utils/test-utils';
 import { ComponentDropdown } from '../SecretsForm/ComponentDropdown';
@@ -15,9 +15,7 @@ jest.mock('../../Workspace/useWorkspaceInfo', () => ({
 const useComponentsMock = useComponents as jest.Mock;
 
 describe('ComponentDropdown', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show loading indicator if components arent loaded', () => {
     useComponentsMock.mockReturnValue([[], false]);

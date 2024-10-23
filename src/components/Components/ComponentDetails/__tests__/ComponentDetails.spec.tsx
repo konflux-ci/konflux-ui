@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { screen, fireEvent, act, configure } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent } from '../../../../hooks/useComponents';
 import { PACState } from '../../../../hooks/usePACState';
 import {
@@ -58,8 +58,6 @@ const watchResourceMock = createK8sWatchResourceMock();
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 
 const ComponentDetailsViewWrapper = WithTestWorkspaceContext(<ComponentDetailsView />);
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('ComponentDetailsView', () => {
   let navigateMock: jest.Mock;

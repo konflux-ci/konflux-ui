@@ -133,7 +133,7 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
                     handleSubmit();
                   }}
                   isDisabled={!isEntryNotRequired && (!isValid || isSubmitting)}
-                  data-testid="delete-resource"
+                  data-test="delete-resource"
                 >
                   Delete
                 </Button>
@@ -151,7 +151,7 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
 
 export const createDeleteModalLauncher = (kind: string) =>
   createModalLauncher(DeleteResourceModal, {
-    'data-testid': `delete-${kind}-modal`,
+    'data-test': `delete-${kind}-modal`,
     variant: ModalVariant.small,
     title: `Delete ${kind}?`,
     titleIconVariant: 'warning',

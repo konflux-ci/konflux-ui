@@ -69,7 +69,7 @@ const EncodedKeyValueFileInputField: React.FC<
               />
               <EncodedFileUploadField
                 required
-                data-testid={`file-upload-value-${idx}`}
+                data-test={`file-upload-value-${idx}`}
                 id="value"
                 label="Upload the file with value for your key or paste its contents"
                 name={`${name}.${idx.toString()}.value`}

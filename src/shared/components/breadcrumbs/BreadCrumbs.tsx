@@ -27,7 +27,7 @@ const BreadCrumbs: React.FC<React.PropsWithChildren<BreadCrumbsProps>> = ({
             <Link
               className="pf-v5-c-breadcrumb__link"
               to={crumb.path}
-              data-test-id={`breadcrumb-link-${i}`}
+              data-test={`breadcrumb-link-${i}`}
             >
               {crumb.name}
             </Link>

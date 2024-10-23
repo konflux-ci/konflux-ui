@@ -1,4 +1,4 @@
-import { configure, screen, render, act, fireEvent, waitFor } from '@testing-library/react';
+import { screen, render, act, fireEvent, waitFor } from '@testing-library/react';
 import { useField, FieldArray } from 'formik';
 import FormikParamsField from '../FormikParamsField';
 
@@ -9,8 +9,6 @@ jest.mock('formik', () => ({
 
 const useFieldMock = useField as jest.Mock;
 const FieldArrayMock = FieldArray as jest.Mock;
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('FormikParamsField', () => {
   beforeEach(() => {

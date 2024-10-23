@@ -52,7 +52,7 @@ const SecretsListView: React.FC = () => {
     <AppEmptyState
       emptyStateImg={secretEmptyStateIcon}
       title="Easily manage your build and deployment secrets"
-      data-testid="secrets-empty-state"
+      data-test="secrets-empty-state"
     >
       <EmptyStateBody>
         A secret is a sensitive piece of information, such as a crendential, access token, API key

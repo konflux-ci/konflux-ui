@@ -1,4 +1,4 @@
-import { configure, fireEvent, screen, act, waitFor } from '@testing-library/react';
+import { fireEvent, screen, act, waitFor } from '@testing-library/react';
 import { createK8sWatchResourceMock, formikRenderer } from '../../../../../../utils/test-utils';
 import CVEFormContent from '../CVEFormContent';
 
@@ -10,7 +10,6 @@ describe('CVEFormContent', () => {
       [{ metadata: { name: 'p1' } }, { metadata: { name: 'p2' } }, { metadata: { name: 'p3' } }],
       true,
     ]);
-    configure({ testIdAttribute: 'data-test' });
   });
 
   it('should show correct heading ', () => {

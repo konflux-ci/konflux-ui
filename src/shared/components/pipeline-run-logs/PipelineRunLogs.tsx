@@ -149,7 +149,7 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
 
     return (
       <div className={css('pipeline-run-logs', className)}>
-        <div className="pipeline-run-logs__tasklist" data-testid="logs-tasklist">
+        <div className="pipeline-run-logs__tasklist" data-test="logs-tasklist">
           {taskCount > 0 ? (
             <Nav onSelect={(_event, item) => this.onNavSelect(item)} theme="light">
               <NavList className="pipeline-run-logs__nav">
@@ -187,7 +187,7 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
             />
           ) : (
             <div className="pipeline-run-logs__log">
-              <div className="pipeline-run-logs__logtext" data-testid="task-logs-error">
+              <div className="pipeline-run-logs__logtext" data-test="task-logs-error">
                 {waitingForPods && !pipelineRunFinished && `Waiting for ${taskName} task to start `}
                 {!resource && pipelineRunFinished && !obj.status && 'No logs found'}
                 {logDetails && (

@@ -29,7 +29,7 @@ const MenuRenderer: React.FC<React.PropsWithChildren<MenuRendererProps>> = ({
 }) => {
   const menu = (
     <Menu ref={menuRef} containsFlyout onSelect={restProps.onClick}>
-      <MenuContent data-testid="action-menu" translate="no">
+      <MenuContent data-test="action-menu" translate="no">
         <MenuList>
           <ActionMenuContent {...restProps} />
         </MenuList>

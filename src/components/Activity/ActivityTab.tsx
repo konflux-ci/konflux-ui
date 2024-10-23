@@ -62,12 +62,12 @@ export const ActivityTab: React.FC = () => {
         onSelect={(_, k: string) => {
           setActiveTab(k);
         }}
-        data-testid="activities-tabs-id"
+        data-test="activities-tabs-id"
         mountOnEnter
         unmountOnExit
       >
         <Tab
-          data-testid={`activity__tabItem latest-commits`}
+          data-test={`activity__tabItem latest-commits`}
           title={<TabTitleText>Latest commits</TabTitleText>}
           key="latest-commits"
           eventKey="latest-commits"
@@ -76,7 +76,7 @@ export const ActivityTab: React.FC = () => {
           <CommitsListView applicationName={applicationName} />
         </Tab>
         <Tab
-          data-testid={`activity__tabItem pipelineruns`}
+          data-test={`activity__tabItem pipelineruns`}
           title={<TabTitleText>Pipeline runs</TabTitleText>}
           key="pipelineruns"
           eventKey="pipelineruns"

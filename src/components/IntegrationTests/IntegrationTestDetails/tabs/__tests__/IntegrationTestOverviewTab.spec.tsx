@@ -1,4 +1,4 @@
-import { fireEvent, screen, configure } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { IntegrationTestScenarioModel } from '../../../../../models';
 import {
@@ -19,13 +19,9 @@ jest.mock('../../../../modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(),
 }));
 
-configure({ testIdAttribute: 'data-test' });
-
 createUseWorkspaceInfoMock({ namespace: 'test-namepsace', workspace: 'test-ws' });
 
 const watchResourceMock = createK8sWatchResourceMock();
-
-configure({ testIdAttribute: 'data-test' });
 
 const useParamsMock = createUseParamsMock();
 

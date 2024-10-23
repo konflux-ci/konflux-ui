@@ -37,7 +37,7 @@ export const SourceSection = () => {
         placeholder="Enter your source"
         validated={validated}
         isRequired
-        data-testid="enter-source"
+        data-test="enter-source"
         onChange={handleChange}
       />
       {validated === ValidatedOptions.success ? (

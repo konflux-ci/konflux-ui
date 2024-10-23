@@ -30,7 +30,7 @@ export const EnterpriseContractRow: React.FC<
     <Tbody isExpanded={rowExpanded}>
       <Tr>
         <Td
-          data-testid="ec-expand-row"
+          data-test="ec-expand-row"
           expand={{
             rowIndex,
             isExpanded: rowExpanded,
@@ -38,7 +38,7 @@ export const EnterpriseContractRow: React.FC<
           }}
         />
         <Td>{data.title ?? '-'}</Td>
-        <Td data-testid="rule-status">{getRuleStatus(data.status)}</Td>
+        <Td data-test="rule-status">{getRuleStatus(data.status)}</Td>
         <Td>{data.msg ? <Truncate content={data.msg} /> : '-'}</Td>
         <Td>
           <Link to={`/workspaces/${workspace}/applications/${appName}/components`}>

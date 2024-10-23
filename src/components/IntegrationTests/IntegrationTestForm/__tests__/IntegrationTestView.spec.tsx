@@ -1,4 +1,4 @@
-import { configure, fireEvent, RenderResult } from '@testing-library/react';
+import { fireEvent, RenderResult } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useApplications } from '../../../../hooks/useApplications';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../utils/test-utils';
@@ -44,8 +44,6 @@ jest.mock('../../../../utils/rbac', () => ({
 }));
 
 const createIntegrationTestMock = createIntegrationTest as jest.Mock;
-
-configure({ testIdAttribute: 'data-test' });
 
 class MockResizeObserver {
   observe() {

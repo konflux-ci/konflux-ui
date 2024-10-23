@@ -62,7 +62,7 @@ const ActionItem: React.FC<
     icon,
     autoFocus,
     onClick: handleClick,
-    'data-testid': label,
+    'data-test': label,
   };
 
   const extraProps = {

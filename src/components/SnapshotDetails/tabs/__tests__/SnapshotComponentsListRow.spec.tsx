@@ -1,4 +1,4 @@
-import { screen, render, configure } from '@testing-library/react';
+import { screen, render } from '@testing-library/react';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import SnapshotComponentsListRow, {
   SnapshotComponentTableData,
@@ -7,8 +7,6 @@ import SnapshotComponentsListRow, {
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
-
-configure({ testIdAttribute: 'data-test-id' });
 
 const rowData: SnapshotComponentTableData = {
   metadata: { uid: mockComponentsData[1].metadata.uid, name: mockComponentsData[1].metadata.name },

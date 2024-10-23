@@ -49,12 +49,9 @@ const ComponentsListRow: React.FC<
 
   return (
     <>
-      <TableData
-        className={componentsTableColumnClasses.component}
-        data-testId="component-list-item"
-      >
+      <TableData className={componentsTableColumnClasses.component} data-test="component-list-item">
         <Flex direction={{ default: 'column' }}>
-          <FlexItem data-testid="component-list-item-name" style={{ minWidth: '30%' }}>
+          <FlexItem data-test="component-list-item-name" style={{ minWidth: '30%' }}>
             <Link
               to={`/workspaces/${workspace}/applications/${applicationName}/components/${name}`}
             >
@@ -124,7 +121,7 @@ const ComponentsListRow: React.FC<
           <Button
             onClick={buildLogsModal}
             variant="link"
-            data-testid={`view-build-logs-${component.metadata.name}`}
+            data-test={`view-build-logs-${component.metadata.name}`}
             isInline
           >
             View build logs

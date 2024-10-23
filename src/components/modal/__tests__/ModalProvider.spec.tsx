@@ -6,12 +6,12 @@ import { useModalLauncher, ModalProvider } from '../ModalProvider';
 describe('Modal Provider', () => {
   it('should launch modal on button click', async () => {
     const launchMyModal = createModalLauncher(() => <div>My Modal</div>, {
-      'data-testid': 'my-modal',
+      'data-test': 'my-modal',
     });
     const TestComponent = () => {
       const showModal = useModalLauncher();
       return (
-        <Button data-testid="show-modal-button" onClick={() => showModal(launchMyModal())}>
+        <Button data-test="show-modal-button" onClick={() => showModal(launchMyModal())}>
           Show Modal
         </Button>
       );

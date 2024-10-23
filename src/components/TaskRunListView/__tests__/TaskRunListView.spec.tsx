@@ -1,4 +1,4 @@
-import { render, configure, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { testTaskRuns } from '../__data__/mock-TaskRun-data';
 import TaskRunListView from '../TaskRunListView';
@@ -10,8 +10,6 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../../hooks/useSearchParam', () => ({
   useSearchParam: jest.fn(),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 const mockUseSearchParam = useSearchParam as jest.Mock;
 

@@ -137,5 +137,5 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
 
 export const createComponentRelationModal = (props: ComponentRelationProps) =>
   createRawModalLauncher<ComponentRelationProps, Record<string, unknown>>(ComponentRelationModal, {
-    'data-testid': 'component-relation-modal',
+    'data-test': 'component-relation-modal',
   })(props);

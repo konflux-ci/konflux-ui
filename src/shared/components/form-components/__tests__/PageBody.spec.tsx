@@ -1,8 +1,6 @@
-import { configure, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import PageBody from '../PageBody';
 import '@testing-library/jest-dom';
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('FlexForm', () => {
   it('should render children', () => {

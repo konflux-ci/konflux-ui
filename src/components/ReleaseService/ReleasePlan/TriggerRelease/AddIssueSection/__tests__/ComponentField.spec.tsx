@@ -1,8 +1,6 @@
-import { act, fireEvent, screen, configure } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { createK8sWatchResourceMock, formikRenderer } from '../../../../../../utils/test-utils';
 import ComponentField from '../ComponentField';
-
-configure({ testIdAttribute: 'data-test' });
 
 const watchResourceMock = createK8sWatchResourceMock();
 

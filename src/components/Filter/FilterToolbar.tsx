@@ -32,7 +32,7 @@ export const FilterToolbar: React.FC<Props> = ({
   const [filterType, setFilterType] = React.useState(dropdownItems[0]);
 
   return (
-    <Toolbar data-testid="filter-toolbar" usePageInsets>
+    <Toolbar data-test="filter-toolbar" usePageInsets>
       <ToolbarContent className="pf-v5-u-pl-0">
         <ToolbarGroup align={{ default: 'alignLeft' }}>
           <ToolbarItem>

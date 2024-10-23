@@ -33,7 +33,7 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
   return (
     <>
       <div className="commit-side-panel__head">
-        <DrawerHead data-testid="release-side-panel-head">
+        <DrawerHead data-test="release-side-panel-head">
           <span className="commit-side-panel__head-title">
             {release ? workflowNode.getLabel() : 'Release'}
             {release ? <StatusIconWithTextLabel status={workflowNode.getData().status} /> : null}
@@ -45,7 +45,7 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
             <DrawerCloseButton onClick={onClose} />
           </DrawerActions>
         </DrawerHead>
-        <DrawerPanelBody data-testid="release-side-panel-body">
+        <DrawerPanelBody data-test="release-side-panel-body">
           <DescriptionList
             data-test="pipeline-run-details"
             columnModifier={{

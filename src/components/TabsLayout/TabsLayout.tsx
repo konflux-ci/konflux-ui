@@ -48,6 +48,7 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
     (newTab: string) => {
       if (activeTabKey !== newTab) {
         navigate(
+          // maintain traling slash consistency, prevent addition of extra slash
           `${basePath}${basePath[basePath.length - 1] !== '/' ? '/' : ''}${newTab ? `${getRouteFromKey(newTab)}` : ''}`,
         );
       }

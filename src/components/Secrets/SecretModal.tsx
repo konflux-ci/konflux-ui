@@ -58,7 +58,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
           title="Create new build secret"
           description="Keep your data secure with a build-time secret."
           variant={ModalVariant.medium}
-          data-testid="build-secret-modal"
+          data-test="build-secret-modal"
           className="build-secret-modal"
           actions={[
             <Button

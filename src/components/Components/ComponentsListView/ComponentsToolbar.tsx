@@ -103,7 +103,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, 
 
   return (
     <Toolbar
-      data-testid="component-list-toolbar"
+      data-test="component-list-toolbar"
       clearFiltersButtonText="Clear filters"
       clearAllFilters={() => setStatusFiltersParam('')}
     >
@@ -165,7 +165,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, 
         <ToolbarItem>
           <SearchInput
             name="nameInput"
-            data-testid="name-input-filter"
+            data-test="name-input-filter"
             type="search"
             aria-label="name filter"
             placeholder="Filter by name..."

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { screen, fireEvent, act, configure } from '@testing-library/react';
+import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
 import {
   createK8sWatchResourceMock,
@@ -32,8 +32,6 @@ const useComponentsMock = useComponents as jest.Mock;
 const componentMock = useComponent as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
-
-configure({ testIdAttribute: 'data-testid' });
 
 describe('ComponentActivityTab', () => {
   let navigateMock: jest.Mock;

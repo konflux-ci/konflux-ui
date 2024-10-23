@@ -101,7 +101,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
 
 export const buildLogViewerLauncher = createModalLauncher(BuildLogViewer, {
   className: 'build-log-viewer',
-  'data-testid': 'view-build-logs-modal',
+  'data-test': 'view-build-logs-modal',
   variant: ModalVariant.large,
 });
 

@@ -1,4 +1,4 @@
-import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { useApplications } from '../../../hooks/useApplications';
 import { formikRenderer } from '../../../utils/test-utils';
 import { ApplicationDropdown } from '../SecretsForm/ApplicationDropdown';
@@ -10,9 +10,7 @@ jest.mock('../../../hooks/useApplications', () => ({
 const useApplicationsMock = useApplications as jest.Mock;
 
 describe('ApplicationDropdown', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show loading indicator if applications arent loaded', () => {
     useApplicationsMock.mockReturnValue([[], false]);

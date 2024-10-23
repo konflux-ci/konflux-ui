@@ -1,7 +1,5 @@
-import { render, screen, configure, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { AddIssueModal, IssueType } from '../AddIssueModal';
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('AddIssueModal', () => {
   it('should not show modal till Modal launcher button is clicked', () => {

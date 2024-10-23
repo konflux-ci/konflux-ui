@@ -57,7 +57,7 @@ const IntegrationTestSidePanel: React.FC<
   return (
     <>
       <div className="commit-side-panel__head">
-        <DrawerHead data-testid="int-test-side-panel-head">
+        <DrawerHead data-test="int-test-side-panel-head">
           <span className="commit-side-panel__head-title">
             {integrationTestPipeline ? (
               <Link
@@ -79,7 +79,7 @@ const IntegrationTestSidePanel: React.FC<
             <DrawerCloseButton onClick={onClose} />
           </DrawerActions>
         </DrawerHead>
-        <DrawerPanelBody data-testid="int-test-side-panel-body">
+        <DrawerPanelBody data-test="int-test-side-panel-body">
           <DescriptionList
             data-test="pipeline-run-details"
             columnModifier={{

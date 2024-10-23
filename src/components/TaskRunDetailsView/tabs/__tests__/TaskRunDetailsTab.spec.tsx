@@ -1,4 +1,4 @@
-import { configure, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../../utils/test-utils';
 import { testTaskRuns } from '../../../TaskRunListView/__data__/mock-TaskRun-data';
 import TaskRunDetailsTab from '../TaskRunDetailsTab';
@@ -10,8 +10,6 @@ jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
 jest.mock('../../../../hooks/useTektonResults');
 
 jest.mock('../../../topology/factories/VisualizationFactory', () => () => <div />);
-
-configure({ testIdAttribute: 'data-test' });
 
 const watchResourceMock = createK8sWatchResourceMock();
 

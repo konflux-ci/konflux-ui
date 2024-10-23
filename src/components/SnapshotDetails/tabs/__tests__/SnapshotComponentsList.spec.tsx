@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, configure } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { componentCRMocks } from '../../../Components/__data__/mock-data';
 import SnapshotComponentsList from '../SnapshotComponentsList';
 
@@ -40,8 +40,6 @@ jest.mock('../../../../utils/component-utils', () => {
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('SnapshotComponentsList', () => {
   it('should render correct columns and titles', () => {

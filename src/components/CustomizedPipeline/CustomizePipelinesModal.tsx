@@ -11,7 +11,7 @@ export const createCustomizeAllPipelinesModalLauncher = (
   onClose?: () => void,
 ) =>
   createRawModalLauncher(CustomizeAllPipelines, {
-    'data-testid': 'customized-all-pipelines-modal',
+    'data-test': 'customized-all-pipelines-modal',
     variant: ModalVariant.large,
     hasNoBodyWrapper: true,
     onClose,
@@ -19,7 +19,7 @@ export const createCustomizeAllPipelinesModalLauncher = (
 
 export const createCustomizeComponentPipelineModalLauncher = (name: string, namespace: string) =>
   createRawModalLauncher(CustomizeComponentPipeline, {
-    'data-testid': 'customized-pipelines-modal',
+    'data-test': 'customized-pipelines-modal',
     variant: ModalVariant.large,
     hasNoBodyWrapper: true,
   })({ name, namespace });

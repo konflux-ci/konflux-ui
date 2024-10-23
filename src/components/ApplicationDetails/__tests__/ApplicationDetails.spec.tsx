@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { screen, configure } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { useApplication, useApplications } from '../../../hooks/useApplications';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../models';
 import { WatchK8sResource } from '../../../types/k8s';
@@ -40,8 +40,6 @@ jest.mock('../../../utils/rbac', () => ({
 const useParamsMock = useParams as jest.Mock;
 const useApplicationMock = useApplication as jest.Mock;
 const useApplicationsMock = useApplications as jest.Mock;
-
-configure({ testIdAttribute: 'data-test' });
 
 const watchResourceMock = createK8sWatchResourceMock();
 

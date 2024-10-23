@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { configure, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { PipelineRunGroupVersionKind, SnapshotGroupVersionKind } from '../../../models';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { WatchK8sResource } from '../../../types/k8s';
@@ -35,8 +35,6 @@ jest.mock('../../../utils/rbac', () => ({
 const useParamsMock = useParams as jest.Mock;
 
 const watchResourceMock = createK8sWatchResourceMock();
-
-configure({ testIdAttribute: 'data-test' });
 
 const mockSnapshots: IntegrationTestScenarioKind[] = [...MockSnapshots];
 

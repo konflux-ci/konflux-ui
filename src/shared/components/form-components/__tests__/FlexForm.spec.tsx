@@ -6,7 +6,7 @@ describe('FlexForm', () => {
   it('should render children', () => {
     render(
       <FlexForm>
-        <span data-testid="flex-children">children</span>
+        <span data-test="flex-children">children</span>
       </FlexForm>,
     );
     expect(screen.getByTestId('flex-children')).toBeInTheDocument();

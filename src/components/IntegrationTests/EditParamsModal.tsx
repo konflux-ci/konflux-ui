@@ -96,7 +96,7 @@ export const EditParamsModal: React.FC<React.PropsWithChildren<EditParamsModalPr
                     handleSubmit();
                   }}
                   isDisabled={!isValid || isSubmitting}
-                  data-testid="update-resource"
+                  data-test="update-resource"
                 >
                   Save
                 </Button>
@@ -113,7 +113,7 @@ export const EditParamsModal: React.FC<React.PropsWithChildren<EditParamsModalPr
 };
 
 export const createEditParamsModal = createModalLauncher(EditParamsModal, {
-  'data-testid': `edit-its-params`,
+  'data-test': `edit-its-params`,
   variant: ModalVariant.medium,
   title: `Edit parameters`,
 });

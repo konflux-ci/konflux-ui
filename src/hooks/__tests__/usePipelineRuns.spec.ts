@@ -170,6 +170,7 @@ describe('usePipelineRuns', () => {
             workspace: 'test-ws',
           },
           model,
+          { retry: false },
         );
         expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', { selector: { foo: 'bar' } });
       });
@@ -196,6 +197,7 @@ describe('usePipelineRuns', () => {
             workspace: 'test-ws',
           },
           model,
+          { retry: false },
         );
         expect(useTRRunsMock).toHaveBeenCalledWith(null, {
           limit: 1,
@@ -229,6 +231,7 @@ describe('usePipelineRuns', () => {
             workspace: 'test-ws',
           },
           model,
+          { retry: false },
         );
         expect(useTRRunsMock).toHaveBeenCalledWith(null, {
           limit: 10,
@@ -363,6 +366,7 @@ describe('usePipelineRuns', () => {
           workspace: 'test-ws',
         },
         PipelineRunModel,
+        { retry: false },
       );
       expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', {
         limit: 1,
@@ -410,6 +414,7 @@ describe('usePipelineRuns', () => {
           workspace: 'test-ws',
         },
         PipelineRunModel,
+        { retry: false },
       );
       expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', {
         limit: 1,
@@ -454,6 +459,7 @@ describe('usePipelineRuns', () => {
             workspace: 'test-ws',
           },
           PipelineRunModel,
+          { retry: false },
         ],
       ]);
       expect(useTRPipelineRunsMock).toHaveBeenCalledTimes(1);
@@ -517,6 +523,7 @@ describe('usePipelineRuns', () => {
             workspace: 'test-ws',
           },
           model,
+          { retry: false },
         );
         expect(useTRRunsMock).toHaveBeenCalledWith(null, {
           limit: 1,
@@ -537,6 +544,7 @@ describe('usePipelineRuns', () => {
             workspace: 'test-ws',
           },
           model,
+          { retry: false },
         );
         expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', {
           limit: 1,

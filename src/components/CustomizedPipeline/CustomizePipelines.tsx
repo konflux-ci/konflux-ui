@@ -121,7 +121,7 @@ const Row: React.FC<
   return (
     <>
       <Tr
-        data-testid={`component-row ${component.metadata.name}`}
+        data-test={`component-row ${component.metadata.name}`}
         style={
           pacState === PACState.error || pacState === PACState.sample ? { borderBottom: 0 } : {}
         }

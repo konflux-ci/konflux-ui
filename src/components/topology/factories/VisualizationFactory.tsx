@@ -102,7 +102,7 @@ const VisualizationFactory: React.FC<React.PropsWithChildren<VisualizationFactor
     visualization
   ) : (
     <div
-      data-testid="visualization-wrapper"
+      data-test="visualization-wrapper"
       style={{ height: maxSize?.height, width: maxSize?.width }}
     >
       {visualization}

@@ -1,11 +1,9 @@
-import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { formikRenderer } from '../../../../../../utils/test-utils';
 import StatusDropdown from '../StatusDropdown';
 
 describe('StatusDropdown', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show dropdown options', async () => {
     formikRenderer(<StatusDropdown name="status" />);

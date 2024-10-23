@@ -1,11 +1,9 @@
-import { render, configure } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import ReleasesListRow from '../ReleasesListRow';
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 const mockRelease = {
   apiVersion: 'appstudio.redhat.com/v1alpha1',

@@ -63,7 +63,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       </TableData>
       {showVulnerabilities ? (
         <TableData
-          data-testid="vulnerabilities"
+          data-test="vulnerabilities"
           className={pipelineRunTableColumnClasses.vulnerabilities}
         >
           {customData?.error ? (
@@ -108,7 +108,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           '-'
         )}
       </TableData>
-      <TableData data-testid="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
+      <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
     </>

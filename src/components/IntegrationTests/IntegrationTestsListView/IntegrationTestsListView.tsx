@@ -102,7 +102,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
     />
   );
   const DataToolbar = (
-    <Toolbar data-testid="component-list-toolbar" clearAllFilters={onClearFilters}>
+    <Toolbar data-test="component-list-toolbar" clearAllFilters={onClearFilters}>
       <ToolbarContent>
         <ToolbarGroup align={{ default: 'alignLeft' }}>
           <ToolbarItem>

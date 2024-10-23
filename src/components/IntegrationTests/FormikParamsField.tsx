@@ -112,7 +112,6 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
                             <DataListItemRow className="pf-v5-u-pl-0">
                               <DataListToggle
                                 id={p.name}
-                                data-testid={`${p.name}-toggle`}
                                 onClick={() => toggleExpandedState(i)}
                                 isExpanded={expanded[i]}
                                 data-test={`expand-param-${i + 1}`}

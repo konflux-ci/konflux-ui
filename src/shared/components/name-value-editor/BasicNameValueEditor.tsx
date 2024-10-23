@@ -179,10 +179,7 @@ const BasicNameValueEditor: React.FC<React.PropsWithChildren<NameValueEditorProp
               variant="link"
               isInline
             >
-              <PlusCircleIcon
-                data-test-id="pairs-list__add-icon"
-                className="pairs-list__add-icon"
-              />
+              <PlusCircleIcon data-test="pairs-list__add-icon" className="pairs-list__add-icon" />
               {addString}
             </Button>
           </FlexItem>

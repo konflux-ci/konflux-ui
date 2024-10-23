@@ -22,7 +22,7 @@ export const PipelineSection: React.FunctionComponent = () => {
     <DropdownField
       name="pipeline"
       label="Pipeline"
-      data-testid="secret-type-selector"
+      data-test="secret-type-selector"
       items={dropdownItems}
       placeholder={!loaded ? 'Loading pipelines...' : 'Select a Pipeline'}
       isDisabled={!loaded}

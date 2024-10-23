@@ -1,9 +1,7 @@
 import '@testing-library/jest-dom';
-import { screen, render, configure } from '@testing-library/react';
+import { screen, render } from '@testing-library/react';
 import { CustomError } from '../../../../k8s/error';
 import GraphErrorState from '../GraphErrorState';
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('GraphErrorState', () => {
   it('should not render graph error state', () => {

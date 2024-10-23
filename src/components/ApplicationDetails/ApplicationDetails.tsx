@@ -168,6 +168,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
           {
             key: 'releases',
             label: 'Releases',
+            isFilled: true,
           },
         ]}
       />

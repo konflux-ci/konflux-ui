@@ -86,7 +86,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
                 <Button
                   onClick={buildLogsModal}
                   variant="link"
-                  data-testid={`view-build-logs-${component.metadata.name}`}
+                  data-test={`view-build-logs-${component.metadata.name}`}
                   isInline
                 >
                   View build logs

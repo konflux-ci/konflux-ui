@@ -4,7 +4,7 @@ import { Modal, ModalProps as PFModalProps } from '@patternfly/react-core';
 export type ModalProps = Omit<PFModalProps, 'children' | 'ref'>;
 
 type ModalComponentProps = Omit<ModalProps, 'isOpen' | 'appendTo'> & {
-  'data-testid': string;
+  'data-test': string;
 };
 
 type OnModalClose<D = unknown> = (obj?: D) => void;

@@ -1,12 +1,10 @@
-import { render, configure } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { testTaskRuns } from '../__data__/mock-TaskRun-data';
 import TaskRunListRow from '../TaskRunListRow';
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('TaskRunListRow', () => {
   it('should render task info', () => {

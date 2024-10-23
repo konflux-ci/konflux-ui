@@ -31,7 +31,7 @@ const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipel
 
   return relatedPipelineRunsLoaded || !sha ? (
     <Popover
-      data-testid="related-pipelines-popover"
+      data-test="related-pipelines-popover"
       aria-label="Related pipelines"
       headerContent="Related pipelines"
       bodyContent={

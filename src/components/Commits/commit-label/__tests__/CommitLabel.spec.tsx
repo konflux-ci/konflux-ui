@@ -1,9 +1,7 @@
-import { configure, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { GitProvider } from '../../../../shared/utils/git-utils';
 import CommitLabel from '../CommitLabel';
-
-configure({ testIdAttribute: 'data-test' });
 
 const mockNavigate = jest.fn();
 
@@ -18,8 +16,6 @@ jest.mock('react-router-dom', () => {
 const sha = '9135b3ad0a2c16726523b12cf3b8f0365be33566';
 const shaURL =
   'https://github.com/test-owner/test-repo/commit/9135b3ad0a2c16726523b12cf3b8f0365be33566';
-
-configure({ testIdAttribute: 'data-test-id' });
 
 describe('CommitLabel', () => {
   it('should render commit label', () => {

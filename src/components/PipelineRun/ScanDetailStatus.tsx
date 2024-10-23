@@ -31,7 +31,7 @@ export const ScanDetailStatus: React.FC<React.PropsWithChildren<ScanDetailStatus
   condensed,
 }) => (
   <div className="scan-detail-status">
-    <div className="scan-detail-status__severity" data-testid="scan-status-critical-test-id">
+    <div className="scan-detail-status__severity" data-test="scan-status-critical-test-id">
       <span className="scan-detail-status__severity-status">
         <CriticalIcon />
         {!condensed ? 'Critical' : null}
@@ -40,14 +40,14 @@ export const ScanDetailStatus: React.FC<React.PropsWithChildren<ScanDetailStatus
         {scanResults.vulnerabilities.critical}
       </span>
     </div>
-    <div className="scan-detail-status__severity" data-testid="scan-status-high-test-id">
+    <div className="scan-detail-status__severity" data-test="scan-status-high-test-id">
       <span className="scan-detail-status__severity-status">
         <HighIcon />
         {!condensed ? 'High' : null}
       </span>
       <span className="scan-detail-status__severity-count">{scanResults.vulnerabilities.high}</span>
     </div>
-    <div className="scan-detail-status__severity" data-testid="scan-status-medium-test-id">
+    <div className="scan-detail-status__severity" data-test="scan-status-medium-test-id">
       <span className="scan-detail-status__severity-status">
         <MediumIcon />
         {!condensed ? 'Medium' : null}
@@ -56,7 +56,7 @@ export const ScanDetailStatus: React.FC<React.PropsWithChildren<ScanDetailStatus
         {scanResults.vulnerabilities.medium}
       </span>
     </div>
-    <div className="scan-detail-status__severity" data-testid="scan-status-low-test-id">
+    <div className="scan-detail-status__severity" data-test="scan-status-low-test-id">
       <span className="scan-detail-status__severity-status">
         <LowIcon />
         {!condensed ? 'Low' : null}

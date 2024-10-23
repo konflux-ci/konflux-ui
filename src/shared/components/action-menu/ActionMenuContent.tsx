@@ -40,10 +40,10 @@ export const SubMenuContent: React.FC<React.PropsWithChildren<GroupMenuContentPr
   onClick,
 }) => (
   <MenuItem
-    data-testid={option.id}
+    data-test={option.id}
     flyoutMenu={
       <Menu containsFlyout>
-        <MenuContent data-testid="action-items" translate="no">
+        <MenuContent data-test="action-items" translate="no">
           <MenuList>
             <ActionMenuContent
               options={option.children}

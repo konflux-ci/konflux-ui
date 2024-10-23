@@ -61,7 +61,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
   return (
     <>
       <div className="commit-side-panel__head">
-        <DrawerHead data-testid="build-side-panel-head">
+        <DrawerHead data-test="build-side-panel-head">
           <span className="commit-side-panel__head-title">
             <Link
               to={`/workspaces/${workspace}/applications/${workflowData.application}/pipelineruns/${pipelineRun.metadata.name}`}
@@ -77,7 +77,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
             <DrawerCloseButton onClick={onClose} />
           </DrawerActions>
         </DrawerHead>
-        <DrawerPanelBody data-testid="build-side-panel-body">
+        <DrawerPanelBody data-test="build-side-panel-body">
           <DescriptionList
             data-test="pipeline-run-details"
             columnModifier={{

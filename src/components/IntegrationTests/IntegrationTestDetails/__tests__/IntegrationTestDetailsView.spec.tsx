@@ -1,6 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { configure, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { IntegrationTestScenarioModel, PipelineRunModel } from '../../../../models';
 import { IntegrationTestScenarioKind } from '../../../../types/coreBuildService';
 import { K8sModelCommon, WatchK8sResource } from '../../../../types/k8s';
@@ -21,8 +21,6 @@ jest.mock('../../../../utils/rbac', () => ({
 createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
 const watchResourceMock = createK8sWatchResourceMock();
-
-configure({ testIdAttribute: 'data-test' });
 
 const mockIntegrationTests: IntegrationTestScenarioKind[] = [...MockIntegrationTestsWithGit];
 

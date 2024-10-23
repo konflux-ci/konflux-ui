@@ -27,7 +27,7 @@ const Duration: React.FC<
 const PipelineRunNodeTooltip: React.FunctionComponent<
   React.PropsWithChildren<PipelineRunNodeTooltipProps>
 > = ({ label, steps }) => (
-  <div className="pipelinerun-node__tooltip--content" data-testid="pipeline-run-tip">
+  <div className="pipelinerun-node__tooltip--content" data-test="pipeline-run-tip">
     <div className="pipelinerun-node__tooltip--title">{label}</div>
     {steps?.map((step) => (
       <div key={step.name} className="pipelinerun-node__tooltip--step">

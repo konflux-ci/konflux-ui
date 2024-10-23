@@ -9,7 +9,7 @@ export const SecretModalLauncher = (
   onClose?: () => void,
 ) =>
   createRawModalLauncher(SecretForm, {
-    'data-testid': 'create-secret-modal',
+    'data-test': 'create-secret-modal',
     variant: ModalVariant.large,
     hasNoBodyWrapper: true,
     onClose,

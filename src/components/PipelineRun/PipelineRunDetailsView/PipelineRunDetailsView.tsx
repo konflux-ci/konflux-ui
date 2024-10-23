@@ -60,7 +60,7 @@ export const PipelineRunDetailsView: React.FC = () => {
   return (
     <SidePanelHost>
       <DetailsPage
-        data-testid="pipelinerun-details-test-id"
+        data-test="pipelinerun-details-test-id"
         headTitle={pipelineRunName}
         breadcrumbs={[
           ...applicationBreadcrumbs,
@@ -113,6 +113,7 @@ export const PipelineRunDetailsView: React.FC = () => {
           {
             key: 'index',
             label: 'Details',
+            isFilled: true,
           },
           {
             key: 'taskruns',

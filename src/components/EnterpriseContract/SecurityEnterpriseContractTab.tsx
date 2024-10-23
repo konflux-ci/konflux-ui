@@ -209,7 +209,7 @@ export const SecurityEnterpriseContractTab: React.FC<
                       placeholderText="Component"
                       toggleAriaLabel="Component filter menu"
                       aria-label="Component"
-                      data-testid="component-filter-menu"
+                      data-test="component-filter-menu"
                       variant={SelectVariant.checkbox}
                       isOpen={componentFilterExpanded}
                       onToggle={(_, expanded) => setComponentFilterExpanded(expanded)}
@@ -247,7 +247,7 @@ export const SecurityEnterpriseContractTab: React.FC<
                       placeholderText="Status"
                       aria-label="Status"
                       toggleAriaLabel="Status filter menu"
-                      data-testid="status-filter-menu"
+                      data-test="status-filter-menu"
                       variant={SelectVariant.checkbox}
                       isOpen={statusFilterExpanded}
                       onToggle={(_, expanded) => setStatusFilterExpanded(expanded)}
@@ -267,7 +267,7 @@ export const SecurityEnterpriseContractTab: React.FC<
                           key={filter}
                           value={filter}
                           aria-label={filter}
-                          data-testid={`status-filter-${filter}`}
+                          data-test={`status-filter-${filter}`}
                           isChecked={statusFilters.includes(filter)}
                           itemCount={statusFilterObj[filter] ?? 0}
                         >
@@ -299,7 +299,7 @@ export const SecurityEnterpriseContractTab: React.FC<
               <Text component={TextVariants.h3}>Results summary</Text>
             </TextContent>
           </FlexItem>
-          <Flex data-testid="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
+          <Flex data-test="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
             <FlexItem spacer={{ default: 'spacerXl' }}>
               <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
                 {getRuleStatus(ENTERPRISE_CONTRACT_STATUS.violations)}

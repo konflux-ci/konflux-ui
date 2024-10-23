@@ -1,4 +1,4 @@
-import { configure, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { screen, waitFor, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { createK8sUtilMock, formikRenderer } from '../../../utils/test-utils';
 import { EditParamsModal } from '../EditParamsModal';
@@ -13,7 +13,6 @@ const initialValues: IntegrationTestFormValues = {
 };
 
 const patchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
-configure({ testIdAttribute: 'data-test' });
 
 describe('EditParamsModal', () => {
   it('should render correct parameters', async () => {

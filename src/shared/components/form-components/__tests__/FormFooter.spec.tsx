@@ -1,4 +1,4 @@
-import { configure, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import FormFooter from '../FormFooter';
 import '@testing-library/jest-dom';
 
@@ -38,8 +38,6 @@ jest.mock('../../../hooks/useScrollContainer', () => ({
 jest.mock('../../../hooks/useScrollShadows', () => ({
   useScrollShadows: jest.fn().mockReturnValue('none'),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('FormFooter', () => {
   it('should render buttons and alert info message', () => {

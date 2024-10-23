@@ -52,7 +52,7 @@ const CommitVisualization: React.FC<{ commit: Commit }> = ({ commit }) => {
     return <GraphErrorState errors={errors} fullHeight />;
   }
   return (
-    <div ref={nodeRef} className="commit-graph" data-testid="commit-graph">
+    <div ref={nodeRef} className="commit-graph" data-test="commit-graph">
       <VisualizationFactory
         componentFactory={commitComponentFactory}
         layoutFactory={layoutFactory}

@@ -20,7 +20,7 @@ const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Appli
 
   return (
     <>
-      <TableData className={applicationTableColumnClasses.name} data-testid="app-row-test-id">
+      <TableData className={applicationTableColumnClasses.name} data-test="app-row-test-id">
         <Link
           to={`/workspaces/${workspace}/applications/${obj.metadata?.name}`}
           title={displayName}

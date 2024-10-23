@@ -73,11 +73,11 @@ export const ComponentActivityTab: React.FC = () => {
           onSelect={(_, k: string) => {
             setActiveTab(k);
           }}
-          data-testid="activities-tabs-id"
+          data-test="activities-tabs-id"
           unmountOnExit
         >
           <Tab
-            data-testid={`comp__activity__tabItem commits`}
+            data-test={`comp__activity__tabItem commits`}
             title={<TabTitleText>Commits</TabTitleText>}
             key="commits"
             eventKey="latest-commits"
@@ -89,7 +89,7 @@ export const ComponentActivityTab: React.FC = () => {
             />
           </Tab>
           <Tab
-            data-testid={`comp__activity__tabItem pipelineruns`}
+            data-test={`comp__activity__tabItem pipelineruns`}
             title={<TabTitleText>Pipeline runs</TabTitleText>}
             key="pipelineruns"
             eventKey="pipelineruns"

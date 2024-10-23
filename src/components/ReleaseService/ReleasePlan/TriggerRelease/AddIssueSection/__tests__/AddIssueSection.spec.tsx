@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { formikRenderer } from '../../../../../../utils/test-utils';
 import { IssueType } from '../AddIssueModal';
 import { AddIssueSection } from '../AddIssueSection';
@@ -20,9 +20,7 @@ jest.mock('react-router-dom', () => {
 });
 
 describe('AddIssueSection for Bugs', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show correct heading ', () => {
     formikRenderer(<AddIssueSection field="bug" issueType={IssueType.BUG} />);
@@ -138,9 +136,7 @@ describe('AddIssueSection for Bugs', () => {
 });
 
 describe('AddIssueSection for CVEs', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show correct heading ', () => {
     formikRenderer(<AddIssueSection field="cve" issueType={IssueType.CVE} />);

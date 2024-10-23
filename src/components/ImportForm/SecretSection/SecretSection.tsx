@@ -75,7 +75,7 @@ const SecretSection = () => {
         isInline
         type="button"
         variant="link"
-        data-testid="add-secret-button"
+        data-test="add-secret-button"
         icon={<PlusCircleIcon />}
         onClick={() =>
           showModal(SecretModalLauncher([...partnerTaskSecrets, ...values.newSecrets], onSubmit))

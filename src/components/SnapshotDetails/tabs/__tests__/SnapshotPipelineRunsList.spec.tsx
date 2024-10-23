@@ -1,5 +1,5 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, configure, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
@@ -36,8 +36,6 @@ jest.mock('../../../../hooks/useSnapshots', () => ({
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParam: jest.fn(),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 jest.mock('../../../../shared/components/table', () => {
   const actual = jest.requireActual('../../../../shared/components/table');
@@ -86,8 +84,6 @@ const mockUseSearchParam = (name: string) => {
 };
 
 const appName = 'my-test-app';
-
-configure({ testIdAttribute: 'data-test' });
 
 const snapShotPLRs = [
   {

@@ -59,7 +59,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
           popoverAppendTo ? () => document.querySelector('#hacDev-modal-container') : undefined
         }
         className="scan-description-list__popover"
-        data-testid="scan-description-list-popover-test-id"
+        data-test="scan-description-list-popover-test-id"
         bodyContent={
           <div className="scan-description-list__tooltip">
             <div className="scan-description-list__tooltip-title">View logs</div>
@@ -77,7 +77,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
                   className="pf-v5-u-font-weight-normal scan-description-list__tooltip-link"
                 >
                   <span
-                    data-testid={`${
+                    data-test={`${
                       scanTaskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] ||
                       scanTaskRun.metadata.name
                     }-link-test-id`}
@@ -93,7 +93,7 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
         <Button
           variant={ButtonVariant.link}
           className="pf-v5-u-px-0"
-          data-testid="view-logs-popover-trigger-test-id"
+          data-test="view-logs-popover-trigger-test-id"
         >
           View logs
         </Button>

@@ -34,7 +34,7 @@ const SecretTypeSelector: React.FC<React.PropsWithChildren<SecretTypeSelectorPro
       name="type"
       label="Secret type"
       className="secret-type-selector__dropdown"
-      data-testid="secret-type-selector"
+      data-test="secret-type-selector"
       helpText="Tell us the secret type you want to add"
       items={dropdownItems}
       title={title}

@@ -1,4 +1,4 @@
-import { screen, configure, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ComponentKind, NudgeStats } from '../../../../types';
 import { routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
@@ -23,8 +23,6 @@ const mockAllComponents = [
 jest.mock('../../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [mockAllComponents, true, undefined]),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('ComponentNudgesDependencies', () => {
   it('should render empty state when no dependencies', () => {

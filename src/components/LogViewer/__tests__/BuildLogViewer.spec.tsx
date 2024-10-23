@@ -1,4 +1,4 @@
-import { configure, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useTRPipelineRuns } from '../../../hooks/useTektonResults';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
@@ -19,9 +19,7 @@ const watchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 
 describe('BuildLogViewer', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show empty box if pipelineRuns not found', () => {
     watchResourceMock.mockReturnValue([[], true]);
@@ -48,7 +46,6 @@ describe('BuildLogViewer', () => {
   });
 
   it('should render PipelineRunLogs', () => {
-    configure({ testIdAttribute: 'data-testid' });
     watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
 

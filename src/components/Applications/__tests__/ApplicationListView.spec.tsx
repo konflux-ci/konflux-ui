@@ -1,4 +1,4 @@
-import { screen, configure } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { ApplicationKind } from '../../../types';
 import {
   createK8sWatchResourceMock,
@@ -10,8 +10,6 @@ import ApplicationListView from '../ApplicationListView';
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');

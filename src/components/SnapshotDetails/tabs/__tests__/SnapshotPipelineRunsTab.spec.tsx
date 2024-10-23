@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, configure } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
@@ -46,8 +46,6 @@ jest.mock('react-router-dom', () => {
     useParams: jest.fn(),
   };
 });
-
-configure({ testIdAttribute: 'data-test' });
 
 jest.mock('../../../../shared/components/table', () => {
   const actual = jest.requireActual('../../../../shared/components/table');
@@ -97,8 +95,6 @@ const mockUseSearchParam = (name: string) => {
 };
 
 const appName = 'my-test-app';
-
-configure({ testIdAttribute: 'data-test' });
 
 const snapShotPLRs = [
   {

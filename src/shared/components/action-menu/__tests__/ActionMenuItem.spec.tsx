@@ -47,7 +47,7 @@ describe('ActionMenuItem', () => {
         id: 'action-1',
         label: 'Action 1',
       },
-      component: () => <a data-testid="custom-component">Custom Action</a>,
+      component: () => <a data-test="custom-component">Custom Action</a>,
     });
     await waitFor(() => {
       expect(screen.getByTestId('custom-component').textContent).toBe('Custom Action');

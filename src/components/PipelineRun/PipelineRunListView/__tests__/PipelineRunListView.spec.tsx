@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, fireEvent, configure, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 // import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
@@ -45,8 +45,6 @@ jest.mock('react-router-dom', () => {
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParam: jest.fn(),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 jest.mock('../../../../shared/components/table/TableComponent', () => {
   return (props) => {
@@ -178,8 +176,6 @@ const pipelineRuns: PipelineRunKind[] = [
 ];
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-
-configure({ testIdAttribute: 'data-testId' });
 
 describe('Pipeline run List', () => {
   createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });

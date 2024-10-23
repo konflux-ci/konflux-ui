@@ -1,4 +1,4 @@
-import { screen, configure, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { createK8sWatchResourceMock, formikRenderer } from '../../../../utils/test-utils';
 import IntegrationTestSection from '../IntegrationTestSection';
 
@@ -14,8 +14,6 @@ jest.mock('react-i18next', () => ({
 }));
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('IntegrationTestSection', () => {
   beforeEach(() => {

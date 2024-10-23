@@ -1,8 +1,6 @@
-import { configure, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import FormBody from '../FormBody';
 import '@testing-library/jest-dom';
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('FormBody', () => {
   it('should render children', () => {

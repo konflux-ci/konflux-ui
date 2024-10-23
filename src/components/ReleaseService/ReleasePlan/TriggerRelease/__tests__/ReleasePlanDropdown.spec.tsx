@@ -1,4 +1,4 @@
-import { act, configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
 import { formikRenderer } from '../../../../../utils/test-utils';
 import { ReleasePlanDropdown } from '../ReleasePlanDropdown';
@@ -10,9 +10,7 @@ jest.mock('../../../../../hooks/useReleasePlans', () => ({
 const useReleasePlansMock = useReleasePlans as jest.Mock;
 
 describe('ReleasePlanDropdown', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show loading indicator if release plans arent loaded', () => {
     const [releasePlans, loaded] = useReleasePlansMock.mockReturnValue([[], false])();

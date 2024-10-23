@@ -1,10 +1,8 @@
-import { configure, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { routerRenderer } from '../../../utils/test-utils';
 import { MockSnapshots } from '../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import EnvironmentProvisionErrorAlert from '../EnvironmentProvisionErrorAlert';
 import { getEnvironmentProvisionError } from '../utils/snapshot-utils';
-
-configure({ testIdAttribute: 'data-test' });
 
 describe('EnvironmentProvisionErrorAlert', () => {
   it('should return null when no ErrorStatus', () => {

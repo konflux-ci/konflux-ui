@@ -1,11 +1,9 @@
-import { configure, screen, act, fireEvent } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
 import { formikRenderer } from '../../../../../../utils/test-utils';
 import BugFormContent from '../BugFormContent';
 
 describe('BugFormContent', () => {
-  beforeEach(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  beforeEach(() => {});
 
   it('should show correct heading ', () => {
     formikRenderer(<BugFormContent modalToggle={null} />);

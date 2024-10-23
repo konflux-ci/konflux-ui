@@ -228,13 +228,13 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
               <ExternalLink href={prURL}>View all pull requests in Github</ExternalLink>
             </>
           }
-          data-testid="components-unmerged-build-pr"
+          data-test="components-unmerged-build-pr"
         >
           We sent a pull request to your repository containing the default build pipeline for you to
           customize. Merge the pull request to set up a build pipeline for your component.
         </Alert>
       ) : null}
-      <div data-testId="component-list">
+      <div data-test="component-list">
         <Table
           virtualize={false}
           data={filteredComponents}

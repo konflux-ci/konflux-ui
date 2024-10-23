@@ -54,7 +54,7 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <Toolbar data-testid="release-plan-list-toolbar" clearAllFilters={onClearFilters}>
+      <Toolbar data-test="release-plan-list-toolbar" clearAllFilters={onClearFilters}>
         <ToolbarContent>
           <ToolbarGroup align={{ default: 'alignLeft' }}>
             <ToolbarItem>

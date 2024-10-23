@@ -25,7 +25,7 @@ export const ComponentSection = () => {
         name="componentName"
         label="Component name"
         isRequired
-        data-testid="component-name"
+        data-test="component-name"
       />
       {values.source.git.url ? (
         <GitRepoLink

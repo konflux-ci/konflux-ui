@@ -15,9 +15,9 @@ const tipText = {
   [GitProvider.BITBUCKET]: 'Open in BitBucket',
 };
 const providerIcon = {
-  [GitProvider.GITHUB]: <GithubIcon data-test-id="git-hub-icon" />,
-  [GitProvider.GITLAB]: <GitlabIcon data-test-id="git-lab-icon" />,
-  [GitProvider.BITBUCKET]: <BitbucketIcon data-test-id="bit-bucket-icon" />,
+  [GitProvider.GITHUB]: <GithubIcon data-test="git-hub-icon" />,
+  [GitProvider.GITLAB]: <GitlabIcon data-test="git-lab-icon" />,
+  [GitProvider.BITBUCKET]: <BitbucketIcon data-test="bit-bucket-icon" />,
 };
 
 type CommitLabelProps = {
@@ -43,7 +43,7 @@ const CommitLabel: React.FC<React.PropsWithChildren<CommitLabelProps>> = ({
           target="_blank"
           rel="noopener noreferrer"
           className={className}
-          data-test-id={`commit-label-${commitShortName}`}
+          data-test={`commit-label-${commitShortName}`}
         >
           {content}
         </a>
