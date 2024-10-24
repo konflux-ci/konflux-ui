@@ -23,6 +23,9 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             <NavItem isActive={location.pathname.includes('/release')}>
               <NavLink to={`/workspaces/${workspace}/release`}>Releases</NavLink>
             </NavItem>
+            <NavItem isActive={location.pathname.includes('/access')}>
+              <NavLink to={`/workspaces/${workspace}/access`}>User Access</NavLink>
+            </NavItem>
           </NavList>
         </Nav>
       </PageSidebarBody>

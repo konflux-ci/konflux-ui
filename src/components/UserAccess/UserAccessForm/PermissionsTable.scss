@@ -1,0 +1,15 @@
+.permissions-table {
+  border: var(--pf-v5-c-table--border-width--base) solid var(--pf-v5-c-table--BorderColor);
+
+  @media (min-width: 769px) {
+    max-width: 740px;
+  }
+
+  @media (min-width: 992px) {
+    min-width: 740px;
+  }
+
+  @media (min-width: 1200px) {
+    max-width: 60%;
+  }
+}

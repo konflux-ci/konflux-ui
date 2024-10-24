@@ -54,6 +54,12 @@ export function createWorkspaceQueryOptions(
   });
 }
 
+export function invalidateWorkspaceQuery(): Promise<void>;
+export function invalidateWorkspaceQuery(name: string): Promise<void>;
+export async function invalidateWorkspaceQuery(name?: string): Promise<void> {
+  return await queryClient.invalidateQueries({ queryKey: createWorkspaceQueryKey(name) });
+}
+
 export const getNamespaceUsingWorspaceFromQueryCache = async (
   workspace: string,
 ): Promise<string | undefined> => {

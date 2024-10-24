@@ -9,9 +9,9 @@ import {
   Text,
   TextContent,
 } from '@patternfly/react-core';
+import ActionMenu from '../../shared/components/action-menu/ActionMenu';
+import { Action, ActionMenuVariant } from '../../shared/components/action-menu/types';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
-// import ActionMenu from '../../shared/components/action-menu/ActionMenu';
-// import { Action, ActionMenuVariant } from '../../shared/components/action-menu/types';
 
 type PageLayoutProps = {
   title: string;
@@ -19,7 +19,7 @@ type PageLayoutProps = {
   footer?: React.ReactNode;
   description?: React.ReactNode;
   breadcrumbs?: ({ name: string; path: string } | React.ReactElement)[];
-  // actions?: Action[];
+  actions?: Action[];
 };
 
 const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
@@ -28,7 +28,7 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
   footer,
   description,
   breadcrumbs,
-  // actions,
+  actions,
 }) => {
   return (
     <>
@@ -44,11 +44,11 @@ const PageLayout: React.FC<React.PropsWithChildren<PageLayoutProps>> = ({
                 {description && <Text component="p">{description}</Text>}
               </TextContent>
             </FlexItem>
-            {/* {actions && (
+            {actions && (
               <FlexItem align={{ default: 'alignRight' }}>
                 <ActionMenu variant={ActionMenuVariant.PRIMARY} actions={actions} />
               </FlexItem>
-            )} */}
+            )}
           </Flex>
         </PageSection>
       </PageGroup>

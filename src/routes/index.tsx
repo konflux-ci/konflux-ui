@@ -76,6 +76,12 @@ import {
   TaskRunLogsTab,
   TaskrunSecurityEnterpriseContractTab,
 } from '../components/TaskRunDetailsView';
+import {
+  GrantAccessPage,
+  grantAccessPageLoader,
+  UserAccessListPage,
+  userAccessListPageLoader,
+} from '../components/UserAccess';
 import { queryWorkspaces } from '../components/Workspace/utils';
 import { WorkspaceProvider } from '../components/Workspace/workspace-context';
 import { HttpError } from '../k8s/error';
@@ -334,6 +340,24 @@ export const router = createBrowserRouter([
             errorElement: <RouteErrorBoundry />,
           },
         ],
+      },
+      /* User Acess routes */
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/access/grant`,
+        loader: grantAccessPageLoader,
+        element: <GrantAccessPage />,
+        errorElement: <RouteErrorBoundry />,
+      },
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
+        element: <GrantAccessPage />,
+        errorElement: <RouteErrorBoundry />,
+      },
+      {
+        path: `/workspaces/:${RouterParams.workspaceName}/access`,
+        element: <UserAccessListPage />,
+        errorElement: <RouteErrorBoundry />,
+        loader: userAccessListPageLoader,
       },
       {
         path: '*',

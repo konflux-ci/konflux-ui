@@ -10,4 +10,5 @@ export enum RouterParams {
   commitName = 'commitName',
   releasePlanName = 'releasePlanName',
   snapshotName = 'snapshotName',
+  bindingName = 'bindingName',
 }
