@@ -61,6 +61,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
       componentsLoaded ? namespace : null,
+      workspace,
       React.useMemo(
         () => ({
           selector: {

@@ -17,9 +17,9 @@ export type NextPageProps = {
 
 export const useTRPipelineRuns = (
   namespace: string,
+  workspace: string,
   options?: TektonResultsOptions,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const { workspace } = useWorkspaceInfo();
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
     useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, workspace, options));
   const resourceData = React.useMemo(() => {
@@ -39,9 +39,9 @@ export const useTRPipelineRuns = (
 
 export const useTRTaskRuns = (
   namespace: string,
+  workspace: string,
   options?: TektonResultsOptions,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const { workspace } = useWorkspaceInfo();
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
     useInfiniteQuery(createTaskRunTektonResultsQueryOptions(namespace, workspace, options));
   const resourceData = React.useMemo(() => {

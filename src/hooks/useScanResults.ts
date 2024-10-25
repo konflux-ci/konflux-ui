@@ -74,10 +74,11 @@ export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKi
 };
 
 export const useScanResults = (pipelineRunName: string): [ScanResults, boolean] => {
-  const { namespace } = useWorkspaceInfo();
+  const { namespace, workspace } = useWorkspaceInfo();
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
   const [taskRuns, loaded] = useTRTaskRuns(
     pipelineRunName ? namespace : null,
+    workspace,
     React.useMemo(
       () => ({
         filter: OR(
@@ -153,7 +154,7 @@ export const usePLRScanResults = (
 ): [{ [key: string]: unknown }, boolean, string[], unknown] => {
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
   const cacheKey = React.useRef('');
-
+  const { workspace } = useWorkspaceInfo();
   React.useEffect(() => {
     if (pipelineRunNames.length) cacheKey.current = pipelineRunNames.sort().join('|');
   }, [pipelineRunNames]);
@@ -162,6 +163,7 @@ export const usePLRScanResults = (
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
   const [taskRuns, loaded, error] = useTRTaskRuns(
     pipelineRunNames.length > 0 ? namespace : null,
+    workspace,
     React.useMemo(
       () => ({
         filter: OR(

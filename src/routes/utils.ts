@@ -12,3 +12,9 @@ export enum RouterParams {
   snapshotName = 'snapshotName',
   bindingName = 'bindingName',
 }
+
+export enum GithubRedirectRouteParams {
+  ns = 'ns',
+  pipelineRunName = 'pipelineRunName',
+  taskName = 'taskName',
+}

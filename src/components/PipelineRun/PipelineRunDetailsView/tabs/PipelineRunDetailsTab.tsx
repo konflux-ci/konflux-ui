@@ -48,7 +48,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();
   const { namespace } = useWorkspaceInfo();
   const generateSbomUrl = useSbomUrl();
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
+  const [pipelineRun, loaded, error] = usePipelineRun(namespace, workspace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
 
   const snapshotStatusAnnotation =

@@ -53,7 +53,7 @@ describe('useTektonResults', () => {
   ].forEach(({ describeTitle, name, getRunsMock, useTestHook }) => {
     describe(describeTitle, () => {
       it(`should not attempt to get ${name} runs`, () => {
-        renderHook(() => useTestHook(null));
+        renderHook(() => useTestHook(null, null));
         expect(getRunsMock).not.toHaveBeenCalled();
       });
       // [TODO]: Do we need hooks for the new hook using useInfiniteQuery hook?

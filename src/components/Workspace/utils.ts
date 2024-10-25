@@ -27,6 +27,10 @@ export const getDefaultNsForWorkspace = (obj: Workspace) => {
   return obj?.status?.namespaces.find((n) => n.type === 'default');
 };
 
+export const getWorkspaceForNamespace = (workspaces: Workspace[], namespace) => {
+  return workspaces?.find((w) => w.status?.namespaces?.some((ns) => ns.name === namespace));
+};
+
 function fetchWorkspaces(): Promise<Workspace[]>;
 function fetchWorkspaces(name: string): Promise<Workspace>;
 function fetchWorkspaces(name?: string): Promise<Workspace | Workspace[]> {
@@ -69,6 +73,17 @@ export const getNamespaceUsingWorspaceFromQueryCache = async (
       revalidateIfStale: true,
     }),
   )?.name;
+};
+export const getWorkspaceUsingNamespaceFromQueryCache = async (
+  namespace: string,
+): Promise<string | undefined> => {
+  return getWorkspaceForNamespace(
+    await queryClient.ensureQueryData({
+      ...createWorkspaceQueryOptions(),
+      revalidateIfStale: true,
+    }),
+    namespace,
+  )?.metadata?.name;
 };
 
 export const queryWorkspaces = () => {

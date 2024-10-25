@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { ComponentKind } from '../types';
 import {
@@ -51,6 +52,7 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
   }, {} as PacStatesForComponents);
 
 const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForComponents => {
+  const { workspace } = useWorkspaceInfo();
   const [componentPacStates, setComponentPacStates] = React.useState<PacStatesForComponents>(
     getInitialPacStates(components),
   );
@@ -74,6 +76,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRuns(
     neededNames.length ? namespace : null,
+    workspace,
     React.useMemo(
       () => ({
         selector: {

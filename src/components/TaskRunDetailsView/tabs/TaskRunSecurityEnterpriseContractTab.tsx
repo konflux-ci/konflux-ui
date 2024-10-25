@@ -8,8 +8,8 @@ import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
-  const { namespace } = useWorkspaceInfo();
-  const [taskRun] = useTaskRun(namespace, taskRunName);
+  const { namespace, workspace } = useWorkspaceInfo();
+  const [taskRun] = useTaskRun(namespace, workspace, taskRunName);
   const plrName = taskRun.metadata?.labels[TektonResourceLabel.pipelinerun];
 
   return <SecurityEnterpriseContractTab pipelineRun={plrName} />;

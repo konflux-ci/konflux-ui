@@ -15,6 +15,7 @@ import {
   componentDetailsViewLoader,
 } from '../components/Components/ComponentDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
+import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { importPageLoader, ImportForm } from '../components/ImportForm';
 import {
   integrationDetailsPageLoader,
@@ -87,7 +88,7 @@ import { WorkspaceProvider } from '../components/Workspace/workspace-context';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
-import { RouterParams } from './utils';
+import { GithubRedirectRouteParams, RouterParams } from './utils';
 
 export const router = createBrowserRouter([
   {
@@ -358,6 +359,17 @@ export const router = createBrowserRouter([
         element: <UserAccessListPage />,
         errorElement: <RouteErrorBoundry />,
         loader: userAccessListPageLoader,
+      },
+      // '/application-pipeline/ns/:ns',
+      //   '/application-pipeline/ns/:ns/pipelinerun/:pipelineRun',
+      //   '/application-pipeline/ns/:ns/pipelinerun/:pipelineRun/logs',
+      //   '/application-pipeline/ns/:ns/pipelinerun/:pipelineRun/logs/:task',
+      /* Github Redirects */
+      {
+        path: `/ns/:${GithubRedirectRouteParams.ns}/pipelinerun?/:${GithubRedirectRouteParams.pipelineRunName}?/logs?/:${GithubRedirectRouteParams.taskName}?`,
+        element: <GithubRedirect />,
+        loader: githubRedirectLoader,
+        errorElement: <RouteErrorBoundry />,
       },
       {
         path: '*',

@@ -13,8 +13,8 @@ export type TaskRunLogProps = {
 
 const TaskRunLogsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
-  const { namespace } = useWorkspaceInfo();
-  const [taskRun] = useTaskRun(namespace, taskRunName);
+  const { namespace, workspace } = useWorkspaceInfo();
+  const [taskRun] = useTaskRun(namespace, workspace, taskRunName);
   const status = taskRunStatus(taskRun);
 
   return <TaskRunLogs taskRun={taskRun} status={status} namespace={namespace} />;

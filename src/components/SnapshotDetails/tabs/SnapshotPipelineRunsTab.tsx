@@ -11,9 +11,10 @@ import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 
 const SnapshotPipelineRunTab: React.FC = () => {
   const { snapshotName, applicationName } = useParams<RouterParams>();
-  const { namespace } = useWorkspaceInfo();
+  const { namespace, workspace } = useWorkspaceInfo();
   const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRuns(
     namespace,
+    workspace,
     React.useMemo(
       () => ({
         selector: {

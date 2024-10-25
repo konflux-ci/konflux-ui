@@ -32,7 +32,7 @@ export const NotFoundEmptyState: React.FC<React.PropsWithChildren<{ className?: 
         {`Looks like that page doesn't exist. Let's get you back to your applications list.`}
       </EmptyStateBody>
       <EmptyStateFooter>
-        <Button variant={ButtonVariant.primary} onClick={() => navigate('/workspaces')}>
+        <Button variant={ButtonVariant.primary} onClick={() => navigate('/')}>
           Go to applications list
         </Button>
       </EmptyStateFooter>

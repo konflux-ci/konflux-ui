@@ -16,11 +16,12 @@ import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
 
 const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   const { applicationName, integrationTestName } = useParams<RouterParams>();
-  const { namespace } = useWorkspaceInfo();
+  const { namespace, workspace } = useWorkspaceInfo();
 
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage] = usePipelineRuns(
     namespace,
+    workspace,
     React.useMemo(
       () => ({
         selector: {

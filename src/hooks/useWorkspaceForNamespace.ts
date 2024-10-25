@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
+import { getWorkspaceForNamespace } from '../components/Workspace/utils';
 import { Workspace } from '../types';
 
 export const useWorkspaceForNamespace = (namespace: string): Workspace => {
@@ -10,6 +11,6 @@ export const useWorkspaceForNamespace = (namespace: string): Workspace => {
       return undefined;
     }
 
-    return workspaces.find((w) => w.status?.namespaces?.some((ns) => ns.name === namespace));
+    return getWorkspaceForNamespace(workspaces, namespace);
   }, [namespace, workspaces]);
 };
