@@ -2,14 +2,23 @@ import * as React from 'react';
 import { Form, Button, ButtonVariant, ButtonType } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { commonFetch } from '../../k8s';
+import { useSignUpPendingAtom } from './signup-utils';
 
 const SignupButton: React.FC<React.PropsWithChildren<unknown>> = () => {
+  const [, setSignupPending] = useSignUpPendingAtom();
+
   const onSubmit = (_, actions) => {
-    return commonFetch('/registration/api/v1/signup', { method: 'POST' }).catch((e) => {
-      actions.setSubmitting(false);
-      // eslint-disable-next-line no-console
-      console.error('error -----', e);
-    });
+    return commonFetch('/registration/api/v1/signup', { method: 'POST' })
+      .then((res: Response) => {
+        if (res.status === 202) {
+          setSignupPending(true);
+        }
+      })
+      .catch((e) => {
+        actions.setSubmitting(false);
+        // eslint-disable-next-line no-console
+        console.error('error -----', e);
+      });
   };
 
   return (

@@ -83,8 +83,7 @@ import {
   UserAccessListPage,
   userAccessListPageLoader,
 } from '../components/UserAccess';
-import { queryWorkspaces } from '../components/Workspace/utils';
-import { WorkspaceProvider } from '../components/Workspace/workspace-context';
+import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
@@ -93,10 +92,8 @@ import { GithubRedirectRouteParams, RouterParams } from './utils';
 export const router = createBrowserRouter([
   {
     path: '/',
-    loader: async () => {
-      const workspaces = await queryWorkspaces();
-      return { data: workspaces };
-    },
+    loader: workspaceLoader,
+    errorElement: <RouteErrorBoundry />,
     element: (
       <WorkspaceProvider>
         <ModalProvider>
@@ -371,10 +368,10 @@ export const router = createBrowserRouter([
         loader: githubRedirectLoader,
         errorElement: <RouteErrorBoundry />,
       },
-      {
-        path: '*',
-        element: <ErrorEmptyState httpError={HttpError.fromCode(404)} />,
-      },
     ],
+  },
+  {
+    path: '*',
+    element: <ErrorEmptyState httpError={HttpError.fromCode(404)} />,
   },
 ]);
