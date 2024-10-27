@@ -360,10 +360,10 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
         loader: userAccessListPageLoader,
       },
-      // '/application-pipeline/ns/:ns',
-      //   '/application-pipeline/ns/:ns/pipelinerun/:pipelineRun',
-      //   '/application-pipeline/ns/:ns/pipelinerun/:pipelineRun/logs',
-      //   '/application-pipeline/ns/:ns/pipelinerun/:pipelineRun/logs/:task',
+      // '/ns/:ns',
+      //   '/ns/:ns/pipelinerun/:pipelineRun',
+      //   '/ns/:ns/pipelinerun/:pipelineRun/logs',
+      //   '/ns/:ns/pipelinerun/:pipelineRun/logs/:task',
       /* Github Redirects */
       {
         path: `/ns/:${GithubRedirectRouteParams.ns}/pipelinerun?/:${GithubRedirectRouteParams.pipelineRunName}?/logs?/:${GithubRedirectRouteParams.taskName}?`,
