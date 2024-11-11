@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useApplicationPipelineGitHubApp } from '../hooks/useApplicationPipelineGitHubApp';
-import { k8sPatchResource } from '../k8s/k8s-fetch';
+import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel } from '../models';
 import { ComponentKind } from '../types';
 
@@ -85,7 +85,7 @@ export enum BuildRequest {
 }
 
 export const enablePAC = (component: ComponentKind) =>
-  k8sPatchResource({
+  K8sQueryPatchResource({
     model: ComponentModel,
     queryOptions: {
       name: component.metadata.name,
@@ -101,7 +101,7 @@ export const enablePAC = (component: ComponentKind) =>
   });
 
 export const disablePAC = (component: ComponentKind) =>
-  k8sPatchResource({
+  K8sQueryPatchResource({
     model: ComponentModel,
     queryOptions: {
       name: component.metadata.name,
@@ -117,7 +117,7 @@ export const disablePAC = (component: ComponentKind) =>
   });
 
 export const startNewBuild = (component: ComponentKind) =>
-  k8sPatchResource({
+  K8sQueryPatchResource({
     model: ComponentModel,
     queryOptions: {
       name: component.metadata.name,

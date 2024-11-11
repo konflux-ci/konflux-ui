@@ -1,6 +1,6 @@
-import { defaultsDeep, isPlainObject } from 'lodash-es';
-import { K8sStatus } from '../types/k8s';
+import { defaultsDeep } from 'lodash-es';
 import { HttpError, K8sStatusError, TimeoutError } from './error';
+import { isK8sStatus } from './k8s-utils';
 import { applyOverrides } from './object';
 
 type ResponseJsonError = {
@@ -26,45 +26,45 @@ const validateStatus = async (response: Response) => {
   if (!contentType || contentType.indexOf('json') === -1) {
     throw new HttpError(response.statusText, response.status, response);
   }
-
+  const json: ResponseJsonError = await response.json();
   if (response.status === 403) {
-    return response.json().then((json: ResponseJsonError) => {
-      throw new HttpError(
-        json.message || 'Access denied due to cluster policy.',
-        response.status,
-        response,
-        json,
-      );
-    });
+    throw new HttpError(
+      json.message || 'Access denied due to cluster policy.',
+      response.status,
+      response,
+      json,
+    );
   }
 
-  return response.json().then((json: ResponseJsonError) => {
-    const cause = json.details?.causes?.[0];
-    let reason;
-    if (cause) {
-      reason = `Error "${cause.message}" for field "${cause.field}".`;
-    }
-    if (!reason) {
-      reason = json.message;
-    }
-    if (!reason) {
-      reason = json.error;
-    }
-    if (!reason) {
-      reason = response.statusText;
-    }
+  const cause = json.details?.causes?.[0];
+  let reason;
+  if (cause) {
+    reason = `Error "${cause.message}" for field "${cause.field}".`;
+  }
+  if (!reason) {
+    reason = json.message;
+  }
+  if (!reason) {
+    reason = json.error;
+  }
+  if (!reason) {
+    reason = response.statusText;
+  }
 
-    throw new HttpError(reason as string, response.status, response, json);
-  });
+  throw new HttpError(reason as string, response.status, response, json);
 };
 
 export const applyDefaults = <TObject>(obj: TObject, defaults: unknown): TObject =>
   defaultsDeep({}, obj, defaults);
 
 const basicFetch = async (url: string, requestInit: RequestInit = {}): Promise<Response> => {
-  return validateStatus(
-    await fetch(url, applyDefaults<RequestInit>(requestInit, { method: 'GET' })),
-  );
+  try {
+    return validateStatus(
+      await fetch(url, applyDefaults<RequestInit>(requestInit, { method: 'GET' })),
+    );
+  } catch (e) {
+    return Promise.reject(e);
+  }
 };
 
 export type FetchOptionArgs = [
@@ -78,8 +78,9 @@ type ResourceReadArgs = [url: string, ...args: FetchOptionArgs];
 const defaultTimeout = 60_000;
 
 export const commonFetch = async (
-  ...[url, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
+  ...[apiUrl, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<Response> => {
+  const url = `/api/k8s${apiUrl}`;
   const fetchPromise = basicFetch(url, applyDefaults(requestInit, { method: 'GET' }));
 
   if (timeout <= 0) {
@@ -98,7 +99,7 @@ export const commonFetchText = async (
 ): Promise<string> => {
   const response = await commonFetch(
     url,
-    applyDefaults(requestInit, { headers: { Accept: 'text/plain' } }),
+    applyDefaults(requestInit, { headers: { Accept: 'application/json' } }),
     timeout,
   );
 
@@ -107,14 +108,11 @@ export const commonFetchText = async (
   return responseText ?? '';
 };
 
-export const isK8sStatus = (data: unknown): data is K8sStatus =>
-  isPlainObject(data) && (data as K8sStatus).kind === 'Status';
-
 export const commonFetchJSON = async <TResult>(
   ...[url, requestInit = {}, timeout = defaultTimeout, isK8sAPIRequest = false]: ResourceReadArgs
 ): Promise<TResult> => {
   const response = await commonFetch(
-    `/api/k8s${url}`,
+    url,
     applyDefaults(requestInit, { headers: { Accept: 'application/json' } }),
     timeout,
   );

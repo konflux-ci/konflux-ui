@@ -3,7 +3,7 @@ import { WebSocketOptions } from './types';
 export const applyConfigHost = (
   options: WebSocketOptions & { wsPrefix?: string; pathPrefix?: string },
 ): string => {
-  return options.host as string;
+  return options.host;
 };
 
 export const createURL = (options: WebSocketOptions): string => {

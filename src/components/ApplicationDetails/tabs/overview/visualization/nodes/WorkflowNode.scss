@@ -1,0 +1,16 @@
+.workload-node {
+  cursor: pointer;
+  &.m-disabled {
+    > .pf-topology-pipelines__pill-background {
+      fill: var(--pf-v5-global--BackgroundColor--200);
+    }
+    .pf-topology-pipelines__pill-text {
+      fill: var(--pf-v5-global--disabled-color--100);
+    }
+  }
+  &__popover {
+    .pf-v5-c-popover__content, .pf-v5-c-popover__body {
+      padding: 0;
+    }
+  }
+}

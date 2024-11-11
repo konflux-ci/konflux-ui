@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useApplicationPipelineGitHubApp } from '../../hooks/useApplicationPipelineGitHubApp';
-import { k8sPatchResource } from '../../k8s/k8s-fetch';
 import { ComponentModel } from '../../models';
 import { ComponentKind } from '../../types';
 import {
@@ -12,18 +11,15 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
 } from '../component-utils';
+import { createK8sUtilMock } from '../test-utils';
 
 jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
   useApplicationPipelineGitHubApp: jest.fn(),
 }));
 
-jest.mock('../../k8s/k8s-fetch', () => ({
-  k8sPatchResource: jest.fn(),
-}));
-
 const useApplicationPipelineGitHubAppMock = useApplicationPipelineGitHubApp as jest.Mock;
 
-const k8sPatchResourceMock = k8sPatchResource as jest.Mock;
+const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 
 describe('component-utils', () => {
   it('should detect pac enabled state', () => {

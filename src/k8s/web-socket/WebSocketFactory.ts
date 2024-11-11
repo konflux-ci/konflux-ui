@@ -65,7 +65,7 @@ export class WebSocketFactory {
 
     if (this.bufferMax) {
       this.flushCanceler = window.setInterval(
-        this.flushMessageBuffer.bind(this),
+        this.flushMessageBuffer,
         this.options.bufferFlushInterval || 500,
       );
     }
@@ -259,7 +259,7 @@ export class WebSocketFactory {
    *
    * Does nothing when paused or has no messages to push out.
    */
-  flushMessageBuffer(): void {
+  flushMessageBuffer = (): void => {
     if (this.paused || !this.messageBuffer.length) {
       return;
     }
@@ -271,7 +271,7 @@ export class WebSocketFactory {
     }
 
     this.messageBuffer = [];
-  }
+  };
 
   /**
    *  Pauses the web socket event handlers from being invoked.

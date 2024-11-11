@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "/",
   "scripts": {
     "build": "webpack -c ./webpack.prod.config.js",
     "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",
@@ -20,18 +21,28 @@
     "@patternfly/react-styles": "^5.3.1",
     "@patternfly/react-table": "^5.3.4",
     "@patternfly/react-tokens": "^5.3.1",
+    "@patternfly/react-topology": "^5.4.0",
     "@patternfly/react-virtualized-extension": "^5.1.0",
-    "@tanstack/react-query": "^5.51.23",
+    "@tanstack/react-query": "^5.59.0",
     "@tanstack/react-query-devtools": "^5.52.0",
     "classnames": "^2.5.1",
+    "dagre": "^0.8.5",
+    "dayjs": "^1.11.13",
+    "file-saver": "^2.0.5",
     "formik": "^2.4.6",
     "formik-pf": "^0.0.1-alpha11",
     "git-url-parse": "^15.0.0",
+    "jotai": "^2.10.1",
+    "js-base64": "^3.7.7",
     "lodash-es": "^4.17.21",
     "react": "^18.3.1",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^15.0.1",
     "react-router-dom": "^6.25.1",
+    "sanitize-html": "^2.13.0",
+    "showdown": "^2.1.0",
     "yup": "^0.32.11"
   },
   "devDependencies": {
@@ -83,7 +94,8 @@
     "webpack": "^5.93.0",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.0.4",
-    "webpack-merge": "^6.0.1"
+    "webpack-merge": "^6.0.1",
+    "whatwg-fetch": "^3.6.20"
   },
   "sideEffects": [
     "*.css",

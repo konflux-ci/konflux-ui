@@ -51,7 +51,7 @@ export type ComponentKind = K8sResourceCommon & {
     containerImage?: string;
     conditions?: ResourceStatusCondition[];
     devfile?: string;
-    gitops?: { repositoryURL?: string; branch?: string; context?: string };
+    gitops?: { repositoryURL?: string; branch?: string; context?: string; commitID?: string };
     webhook?: string;
     [NudgeStats.NUDGED_BY]?: string[];
   };

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Formik, FormikConfig } from 'formik';
 import { DropdownItemObject } from '../../dropdown/BasicDropdown';
 import DropdownField from '../DropdownField';
@@ -33,8 +33,6 @@ const fieldName: string = 'dropdownValue';
 const initialValues = {
   dropdownValue: items[0].value,
 };
-
-configure({ testIdAttribute: 'data-test' });
 
 afterEach(jest.resetAllMocks);
 

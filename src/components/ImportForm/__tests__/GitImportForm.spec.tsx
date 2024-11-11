@@ -1,18 +1,17 @@
 import { fireEvent, screen } from '@testing-library/react';
-// import { useSecrets } from '../../../hooks/useSecrets';
+import { useSecrets } from '../../../hooks/useSecrets';
 import { routerRenderer } from '../../../utils/test-utils';
 import { GitImportForm } from '../GitImportForm';
 import { usePipelineTemplates } from '../PipelineSection/usePipelineTemplate';
-import '@testing-library/jest-dom';
 import { createResources } from '../submit-utils';
 
 jest.mock('../PipelineSection/usePipelineTemplate', () => ({
   usePipelineTemplates: jest.fn(),
 }));
 
-// jest.mock('../../../hooks/useSecrets', () => ({
-//   useSecrets: jest.fn(),
-// }));
+jest.mock('../../../hooks/useSecrets', () => ({
+  useSecrets: jest.fn(),
+}));
 
 jest.mock('../submit-utils', () => ({
   createResources: jest.fn(),
@@ -25,7 +24,7 @@ jest.mock('../../../hooks/useUIInstance', () => {
 });
 
 const mockUsePipelineTemplate = usePipelineTemplates as jest.Mock;
-// const mockUseSecrets = useSecrets as jest.Mock;
+const mockUseSecrets = useSecrets as jest.Mock;
 const mockCreateResources = createResources as jest.Mock;
 
 describe('GitImportForm', () => {
@@ -37,7 +36,7 @@ describe('GitImportForm', () => {
       },
       true,
     ]);
-    // mockUseSecrets.mockReturnValue([[], true]);
+    mockUseSecrets.mockReturnValue([[], true]);
     mockCreateResources.mockImplementation(jest.fn());
   });
   afterEach(() => {

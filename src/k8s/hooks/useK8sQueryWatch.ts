@@ -15,15 +15,15 @@ export const useK8sQueryWatch = (
   const deepResourceInit = useDeepCompareMemoize(resourceInit);
   const deepOptions = useDeepCompareMemoize(options);
   React.useEffect(() => {
-    const startWatch = async () => {
+    const startWatch = () => {
       if (deepResourceInit && !WS.has(hashedKey)) {
         const websocket = isList
-          ? await watchListResource(deepResourceInit, deepOptions)
+          ? watchListResource(deepResourceInit, deepOptions)
           : watchObjectResource(deepResourceInit, deepOptions);
         WS.set(hashedKey, websocket);
       }
     };
-    // eslint-disable-next-line
+
     startWatch();
     return () => {
       if (deepResourceInit && WS.has(hashedKey)) {

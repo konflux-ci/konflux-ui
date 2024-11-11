@@ -1,30 +1,34 @@
-import { ApplicationKind } from '../../types';
+import { ApplicationKind, ImportSecret } from '../../types';
 import {
   createApplication,
   createComponent,
   createImageRepository,
+  createSecret,
 } from '../../utils/create-utils';
+import {
+  EC_INTEGRATION_TEST_PATH,
+  EC_INTEGRATION_TEST_REVISION,
+  EC_INTEGRATION_TEST_URL,
+} from '../IntegrationTests/IntegrationTestForm/const';
+import { IntegrationTestFormValues } from '../IntegrationTests/IntegrationTestForm/types';
+import { createIntegrationTest } from '../IntegrationTests/IntegrationTestForm/utils/create-utils';
 import { ImportFormValues } from './type';
 
 const BUILD_PIPELINE_ANNOTATION = 'build.appstudio.openshift.io/pipeline';
 
-/**
- * [TODO]: enable secret creation and integration test form creation once the secret form and integration test form utils are moved
- */
-
-// export const createSecrets = async (
-//   secrets: ImportSecret[],
-//   workspace: string,
-//   namespace: string,
-//   dryRun: boolean,
-// ) => {
-//   const results = [];
-//   for (const secret of secrets) {
-//     const sec = await createSecret(secret, workspace, namespace, dryRun);
-//     results.push(sec);
-//   }
-//   return results;
-// };
+export const createSecrets = async (
+  secrets: ImportSecret[],
+  workspace: string,
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const results = [];
+  for (const secret of secrets) {
+    const sec = await createSecret(secret, workspace, namespace, dryRun);
+    results.push(sec);
+  }
+  return results;
+};
 
 export const createResources = async (
   formValues: ImportFormValues,
@@ -37,7 +41,7 @@ export const createResources = async (
     application,
     componentName,
     inAppContext,
-    // importSecrets = [],
+    importSecrets = [],
     pipeline,
     showComponent,
     isPrivateRepo,
@@ -48,17 +52,17 @@ export const createResources = async (
     [BUILD_PIPELINE_ANNOTATION]: JSON.stringify({ name: pipeline, bundle: 'latest' }),
   };
 
-  // const integrationTestValues: IntegrationTestFormValues = {
-  //   name: `${applicationName}-enterprise-contract`,
-  //   url: EC_INTEGRATION_TEST_URL,
-  //   revision: EC_INTEGRATION_TEST_REVISION,
-  //   path: EC_INTEGRATION_TEST_PATH,
-  //   optional: false,
-  // };
+  const integrationTestValues: IntegrationTestFormValues = {
+    name: `${applicationName}-enterprise-contract`,
+    url: EC_INTEGRATION_TEST_URL,
+    revision: EC_INTEGRATION_TEST_REVISION,
+    path: EC_INTEGRATION_TEST_PATH,
+    optional: false,
+  };
 
   if (shouldCreateApplication) {
     await createApplication(application, namespace, workspace, true);
-    // await createIntegrationTest(integrationTestValues, applicationName, namespace, true);
+    await createIntegrationTest(integrationTestValues, applicationName, namespace, true);
   }
   if (showComponent) {
     await createComponent(
@@ -90,12 +94,12 @@ export const createResources = async (
   if (shouldCreateApplication) {
     applicationData = await createApplication(application, namespace, workspace);
     applicationName = applicationData.metadata.name;
-    // await createIntegrationTest(integrationTestValues, applicationName, namespace);
+    await createIntegrationTest(integrationTestValues, applicationName, namespace);
   }
 
   let createdComponent;
   if (showComponent) {
-    // await createSecrets(importSecrets, workspace, namespace, true);
+    await createSecrets(importSecrets, workspace, namespace, true);
 
     createdComponent = await createComponent(
       { componentName, application, source },
@@ -117,7 +121,7 @@ export const createResources = async (
       isPrivate: isPrivateRepo,
       bombinoUrl,
     });
-    // await createSecrets(importSecrets, workspace, namespace, false);
+    await createSecrets(importSecrets, workspace, namespace, false);
   }
 
   return {

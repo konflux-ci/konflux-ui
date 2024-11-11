@@ -4,7 +4,7 @@ import { Modal, ModalProps as PFModalProps } from '@patternfly/react-core';
 export type ModalProps = Omit<PFModalProps, 'children' | 'ref'>;
 
 type ModalComponentProps = Omit<ModalProps, 'isOpen' | 'appendTo'> & {
-  'data-testid': string;
+  'data-test': string;
 };
 
 type OnModalClose<D = unknown> = (obj?: D) => void;
@@ -29,7 +29,7 @@ export const createRawModalLauncher =
     const { onClose, ...restModalProps } = modalProps;
     const handleClose = (event: KeyboardEvent | React.MouseEvent, obj?: unknown) => {
       onClose?.(event);
-      onModalClose(obj as D);
+      onModalClose((obj ?? {}) as D);
     };
 
     return (

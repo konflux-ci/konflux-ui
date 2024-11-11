@@ -4,21 +4,17 @@ import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useBombinoUrl } from '../../hooks/useUIInstance';
 import { AnalyticsProperties, TrackEvents, useTrackEvent } from '../../utils/analytics';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ApplicationSection from './ApplicationSection/ApplicationSection';
 import { ComponentSection } from './ComponentSection/ComponentSection';
 import GitImportActions from './GitImportActions';
 import { PipelineSection } from './PipelineSection/PipelineSection';
-// import SecretSection from './SecretSection/SecretSection';
+import SecretSection from './SecretSection/SecretSection';
 import { createResources } from './submit-utils';
 import { ImportFormValues } from './type';
 import { formValidationSchema } from './validation.utils';
 
 import './GitImportForm.scss';
-
-/**
- * [TODO]: enable Secret section once SecretForm and it's utils are imported
- */
 
 export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {
   const track = useTrackEvent();
@@ -100,7 +96,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                 <>
                   <ComponentSection />
                   <PipelineSection />
-                  {/* <SecretSection /> */}
+                  <SecretSection />
                 </>
               ) : null}
             </PageSection>

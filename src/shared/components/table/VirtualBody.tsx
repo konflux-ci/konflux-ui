@@ -2,16 +2,17 @@ import * as React from 'react';
 import { CellMeasurerCache, CellMeasurer } from 'react-virtualized';
 import { VirtualTableBody } from '@patternfly/react-virtualized-extension';
 import { Scroll } from '@patternfly/react-virtualized-extension/dist/js/components/Virtualized/types';
+import { K8sResourceCommon } from '../../../types/k8s';
 import { TableRow, TableRowProps } from './TableRow';
 
-export type VirtualBodyProps<D = any, C = any> = {
+export type VirtualBodyProps<D = unknown, C = unknown> = {
   customData?: C;
   Row: React.FC<React.PropsWithChildren<RowFunctionArgs>>;
   height: number;
   isScrolling: boolean;
   onChildScroll: (params: Scroll) => void;
   data: D[];
-  columns: any[];
+  columns: unknown[];
   scrollTop: number;
   width: number;
   expand: boolean;
@@ -24,9 +25,9 @@ export type VirtualBodyProps<D = any, C = any> = {
   }) => void;
 };
 
-export type RowFunctionArgs<T = any, C = any> = {
+export type RowFunctionArgs<T = unknown, C = unknown> = {
   obj: T;
-  columns: any[];
+  columns: unknown[];
   customData?: C;
 };
 
@@ -52,7 +53,8 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
   const cellMeasurementCache = new CellMeasurerCache({
     fixedWidth: true,
     minHeight: 44,
-    keyMapper: (rowIndex) => props?.data?.[rowIndex]?.metadata?.uid ?? rowIndex,
+    keyMapper: (rowIndex) =>
+      (props?.data?.[rowIndex] as K8sResourceCommon)?.metadata?.uid ?? rowIndex,
   });
 
   const rowRenderer = ({ index, isVisible, key, style, parent }) => {
@@ -61,12 +63,10 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
       columns,
       customData,
     };
-
     // do not render non visible elements (this excludes overscan)
     if (!isVisible) {
       return null;
     }
-
     const rowProps = getRowProps?.(rowArgs.obj);
     const rowId = rowProps?.id ?? key;
     return (

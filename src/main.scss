@@ -1,3 +1,28 @@
 #root {
   height: 100%;
+
+  //Konflux theme
+  .pf-v5-c-button.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
+    background-color: #fc783d;
+
+    &:hover {
+      background-color: #d36634;
+    }
+  }
+
+  .pf-v5-c-dropdown__toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
+    background-color: #fc783d;
+
+    &:hover {
+      background-color: #d36634;
+    }
+  }
+
+  .pf-v5-c-menu-toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
+    background-color: #fc783d;
+
+    &:hover {
+      background-color: #d36634;
+    }
+  }
 }

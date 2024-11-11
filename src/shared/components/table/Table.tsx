@@ -10,26 +10,32 @@ import './Table.scss';
 
 export type Filter = { key: string; value: string };
 
-export type ComponentProps<D = any> = {
+export type ComponentProps<D = unknown> = {
   data: D[];
   unfilteredData: D[];
   filters: Filter[];
   selected: boolean;
-  match: RouteMatch<any>;
-  kindObj: any;
+  match: RouteMatch<string>;
+  kindObj: unknown;
+};
+
+export type InfiniteLoaderProps = {
+  rowCount?: number | undefined;
+  loadMoreRows: (params: { startIndex: number; stopIndex: number }) => Promise<unknown> | void;
+  isRowLoaded: (params: { index: number }) => boolean;
 };
 
 export type HeaderFunc = (componentProps: ComponentProps) => { title: string; props: ThProps }[];
 
-export type TableProps<D = any, C = any> = Partial<ComponentProps<D>> & {
+export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & {
   customData?: C;
   Header: HeaderFunc;
-  loadError?: string | Object;
+  loadError?: string | object;
   Row?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   'aria-label': string;
   onSelect?: OnSelect;
-  NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<{}>>;
-  EmptyMsg?: React.ComponentType<React.PropsWithChildren<{}>>;
+  NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;
+  EmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;
   Toolbar?: React.ReactNode;
   loaded?: boolean;
   reduxID?: string;
@@ -45,6 +51,8 @@ export type TableProps<D = any, C = any> = Partial<ComponentProps<D>> & {
   getRowProps?: VirtualBodyProps<D>['getRowProps'];
   virtualize?: boolean;
   onRowsRendered?: VirtualBodyProps<D>['onRowsRendered'];
+  isInfiniteLoading?: boolean;
+  infiniteLoaderProps?: InfiniteLoaderProps;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = ({
@@ -60,7 +68,7 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = ({
 }) => (
   <StatusBox
     skeleton={
-      <div className="table-skeleton" data-testId="data-table-skeleton">
+      <div className="table-skeleton" data-test="data-table-skeleton">
         {Toolbar ? <div className="skeleton-overview--head" /> : null}
         <div className="loading-skeleton--table" />
       </div>
