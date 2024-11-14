@@ -14,7 +14,7 @@ const GitOptions: React.FC<React.PropsWithChildren<unknown>> = () => {
           <InputField
             name="source.git.revision"
             label="Git reference"
-            helperText="Optional branch, tag or commit."
+            helperText="Optional branch."
             data-test="git-reference"
           />
 
