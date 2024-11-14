@@ -1,7 +1,7 @@
 import * as React from 'react';
 import isEqual from 'lodash/isEqual';
 
-export const useDeepCompareMemoize = <T = any>(value: T, strinfigy?: boolean): T => {
+export const useDeepCompareMemoize = <T = unknown>(value: T, strinfigy?: boolean): T => {
   const ref = React.useRef<T>();
 
   if (

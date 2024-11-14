@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@patternfly/react-core';
-import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import NoAccessState from '../NoAccessState';
 
 jest.mock('react-router-dom', () => {
@@ -16,11 +16,9 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModels: jest.fn(),
 }));
 
-jest.mock('../../Workspace/workspace-context', () => ({
+jest.mock('../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ workspace: 'test-ws' })),
 }));
-
-configure({ testIdAttribute: 'data-test' });
 
 const useNavigateMock = useNavigate as jest.Mock;
 

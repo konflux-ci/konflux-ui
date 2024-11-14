@@ -7,7 +7,7 @@ describe('Page', () => {
   it('should render children and heading', () => {
     render(
       <PageLayout title="Title 1">
-        <span data-testid="children-text">children</span>
+        <span data-test="children-text">children</span>
       </PageLayout>,
     );
     expect(screen.getByTestId('children-text')).toBeInTheDocument();
@@ -24,7 +24,7 @@ describe('Page', () => {
         ]}
         title="Title 1"
       >
-        <span data-testid="children-text">children</span>
+        <span data-test="children-text">children</span>
       </PageLayout>,
     );
     expect(screen.getByTestId('children-text')).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe('Page', () => {
   it('should render description', () => {
     render(
       <PageLayout description="Description 1" title="Title 1">
-        <span data-testid="children-text">children</span>
+        <span data-test="children-text">children</span>
       </PageLayout>,
     );
     expect(screen.getByTestId('children-text')).toBeInTheDocument();
@@ -46,7 +46,7 @@ describe('Page', () => {
   it('should render footer', () => {
     render(
       <PageLayout description="Description 1" title="Title 1" footer={<span>Footer Text</span>}>
-        <span data-testid="children-text">children</span>
+        <span data-test="children-text">children</span>
       </PageLayout>,
     );
     expect(screen.getByTestId('children-text')).toBeInTheDocument();

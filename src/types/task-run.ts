@@ -17,10 +17,10 @@ import { TaskKind } from '.';
 
 export type TaskRunWorkspace = {
   name: string;
-  volumeClaimTemplate?: any; //PersistentVolumeClaimKind;
+  volumeClaimTemplate?: unknown; //PersistentVolumeClaimKind;
   persistentVolumeClaim?: VolumeTypePVC;
   configMap?: VolumeTypeConfigMaps;
-  emptyDir?: {};
+  emptyDir?: object;
   secret?: VolumeTypeSecret;
   subPath?: string;
 };

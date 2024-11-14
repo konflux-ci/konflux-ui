@@ -26,7 +26,7 @@ export type PipelineTaskResource = {
 
 export type PipelineTaskParam = {
   name: string;
-  value: any;
+  value: unknown;
 };
 
 export type WhenExpression = {

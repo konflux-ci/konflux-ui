@@ -14,7 +14,7 @@ import {
 import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import { css } from '@patternfly/react-styles';
 import { HttpError } from '../../k8s/error';
-import { useWorkspaceInfo } from '../Workspace/workspace-context';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 import '../../shared/components/empty-state/EmptyState.scss';
 

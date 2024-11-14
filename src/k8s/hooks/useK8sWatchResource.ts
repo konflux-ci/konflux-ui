@@ -21,29 +21,27 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   > = {},
 ): UseQueryResult<R> => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
-
   useK8sQueryWatch(
-    resourceInit.watch ? { model, queryOptions: k8sQueryOptions } : null,
-    resourceInit.isList,
+    resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
+    resourceInit?.isList,
     hashKey(createQueryKeys({ model, queryOptions: k8sQueryOptions })),
     options,
   );
-
   // [TODO]: add better typing for the query options
   const getQueryOptions = (): UseQueryOptions<R> => {
-    const queryOptionsTyped = resourceInit.isList
+    const queryOptionsTyped = resourceInit?.isList
       ? queryOptions
       : (queryOptions as Omit<ReactQueryOptions<R>, 'queryKey' | 'queryFn'>);
     return (
-      resourceInit.isList
-        ? createListqueryOptions(
-            { model, queryOptions: k8sQueryOptions, fetchOptions: options },
-            queryOptionsTyped as TQueryOptions<K8sResourceCommon[]>,
-          )
-        : createGetQueryOptions(
-            { model, queryOptions: k8sQueryOptions, fetchOptions: options },
-            queryOptionsTyped as Omit<ReactQueryOptions<K8sResourceCommon>, 'queryKey' | 'queryFn'>,
-          )
+      resourceInit?.isList
+        ? createListqueryOptions({ model, queryOptions: k8sQueryOptions, fetchOptions: options }, {
+            enabled: !!resourceInit,
+            ...queryOptionsTyped,
+          } as TQueryOptions<K8sResourceCommon[]>)
+        : createGetQueryOptions({ model, queryOptions: k8sQueryOptions, fetchOptions: options }, {
+            enabled: !!resourceInit,
+            ...queryOptionsTyped,
+          } as Omit<ReactQueryOptions<K8sResourceCommon>, 'queryKey' | 'queryFn'>)
     ) as UseQueryOptions<R>;
   };
 

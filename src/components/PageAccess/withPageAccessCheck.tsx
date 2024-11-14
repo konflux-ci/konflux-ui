@@ -4,7 +4,7 @@ import PageAccessCheck, { PageAccessCheckProps } from './PageAccessCheck';
 type PageAccessProps = Omit<PageAccessCheckProps, 'children'>;
 
 export const withPageAccessCheck =
-  <P extends {}>(Component: React.ComponentType<React.PropsWithChildren<P>>) =>
+  <P extends object>(Component: React.ComponentType<React.PropsWithChildren<P>>) =>
   (pageAccessProps: PageAccessProps) =>
   (props: P) => (
     <PageAccessCheck {...pageAccessProps}>

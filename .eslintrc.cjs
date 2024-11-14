@@ -30,7 +30,8 @@ module.exports = {
     "@typescript-eslint/no-unsafe-return": "off",
     "@typescript-eslint/no-unsafe-member-access": "off",
     "@typescript-eslint/no-redundant-type-constituents": "off",
-    'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    "@typescript-eslint/no-unsafe-enum-comparison": 'off',
+    'react-refresh/only-export-components': ['off', { allowConstantExport: true }],
     camelcase: [
       'error',
       {

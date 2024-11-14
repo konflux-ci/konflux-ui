@@ -1,0 +1,29 @@
+.scan-description-list {
+  &__popover {
+    .pf-v5-c-popover__content, .pf-v5-c-popover__body {
+      padding: 0;
+    }
+  }
+  &__tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pf-v5-global--spacer--md);
+    text-align: left;
+    padding: var(--pf-v5-global--spacer--md);
+
+    &-title {
+      font-size: var(--pf-v5-global--icon--FontSize--md);
+    }
+
+    &-task {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      column-gap: var(--pf-v5-global--spacer--md);
+      row-gap: var(--pf-v5-global--spacer--sm);
+    }
+
+    &-link {
+      height: fit-content;
+    }
+  }
+}

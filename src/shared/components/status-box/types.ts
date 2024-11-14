@@ -39,17 +39,17 @@ export type DataProps = {
   NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<unknown>>;
   EmptyMsg?: React.ComponentType<React.PropsWithChildren<unknown>>;
   label?: string;
-  unfilteredData?: any;
-  data?: any;
+  unfilteredData?: unknown;
+  data?: unknown;
   children?: React.ReactNode;
 };
 
 export type StatusBoxProps = {
   label?: string;
-  loadError?: any;
+  loadError?: unknown;
   loaded?: boolean;
-  data?: any;
-  unfilteredData?: any;
+  data?: unknown;
+  unfilteredData?: unknown;
   skeleton?: React.ReactNode;
   NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<unknown>>;
   EmptyMsg?: React.ComponentType<React.PropsWithChildren<unknown>>;

@@ -15,7 +15,7 @@ type TektonTaskSteps = {
   args?: string[];
   command?: string[];
   image?: string;
-  computeResources?: {}[] | {};
+  computeResources?: object[] | object;
   env?: { name: string; value: string }[];
   script?: string | string[];
 };
@@ -25,7 +25,7 @@ type TektonTaskStepsV1Beta1 = {
   args?: string[];
   command?: string[];
   image?: string;
-  resources?: {}[] | {};
+  resources?: object[] | object;
   env?: { name: string; value: string }[];
   script?: string | string[];
 };
@@ -38,12 +38,12 @@ export type TaskResult = {
 };
 
 export type TektonTaskSpec = {
-  metadata?: {};
+  metadata?: object;
   description?: string;
   steps: TektonTaskSteps[];
   params?: TektonParam[];
   results?: TaskResult[];
-  volumes?: {};
+  volumes?: object;
   workspaces?: TektonWorkspace[];
 };
 
@@ -56,13 +56,13 @@ type TektonResourceGroup<ResourceType> = {
  * @deprecated
  */
 export type TektonTaskSpecV1Beta1 = {
-  metadata?: {};
+  metadata?: object;
   description?: string;
   steps: TektonTaskStepsV1Beta1[];
   params?: TektonParam[];
   resources?: TektonResourceGroup<TektonResource>;
   results?: TaskResult[];
-  volumes?: {};
+  volumes?: object;
   workspaces?: TektonWorkspace[];
 };
 
@@ -153,9 +153,9 @@ export interface Trigger {
 
 export interface Spec {
   addon: Addon;
-  config: {};
+  config: object;
   dashboard: Dashboard;
-  hub: {};
+  hub: object;
   params: Param[];
   pipeline: Pipeline;
   profile: string;
