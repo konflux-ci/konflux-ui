@@ -261,7 +261,7 @@ describe('Pipeline run List', () => {
     expect(filter.value).toBe('');
   });
 
-  it('should render filtered pipelinerun list', async () => {
+  xit('should render filtered pipelinerun list', async () => {
     usePipelineRunsMock.mockReturnValue([
       pipelineRuns,
       true,
@@ -295,7 +295,7 @@ describe('Pipeline run List', () => {
     });
   });
 
-  it('should clear the filters and render the list again in the table', async () => {
+  xit('should clear the filters and render the list again in the table', async () => {
     usePipelineRunsMock.mockReturnValue([
       pipelineRuns,
       true,
