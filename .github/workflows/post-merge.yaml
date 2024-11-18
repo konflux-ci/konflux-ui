@@ -1,0 +1,45 @@
+name: Push Coverage Post Merge
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on pull request events but only for the main branch
+  push:
+    branches:
+      - main
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "test"
+  test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x] # can support multiple versions ex: [18.x, 20.x]
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+      - name: Setup ⚙️ Node.js ${{ matrix.node-version }} 🔰
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'yarn'
+  
+      - name: Install Dependencies 🥁
+        run: yarn install --frozen-lockfile
+
+      - name: Run unit tests 🧪
+        run: yarn coverage --silent --ci --verbose=false
+        env:
+          CI: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+          fail_ci_if_error: true
