@@ -9,11 +9,11 @@ coverage:
     project:
       default:
         target: auto
-        threshold: 0.2%
+        threshold: 0.2
     patch:
       default:
         target: 80%    # coverage for new/modified code
-        threshold: 1%
+        threshold: 1
 
 ignore:
   - "**/*__data__*/*.ts"
