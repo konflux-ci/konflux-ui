@@ -5,7 +5,6 @@ import {
   AlertActionCloseButton,
   AlertActionLink,
   AlertVariant,
-  Button,
   ButtonVariant,
   EmptyStateBody,
   Flex,
@@ -64,6 +63,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     applicationName,
   );
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
+  const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
 
   const showModal = useModalLauncher();
 
@@ -177,20 +177,22 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
             complete control over them.
           </FlexItem>
           <FlexItem>
-            <Button
+            <ButtonWithAccessTooltip
               className="pf-u-mr-2xl"
               variant={ButtonVariant.secondary}
+              isDisabled={!canPatchComponent}
+              tooltip="You don't have access to edit the build pipeline plans"
               onClick={() =>
                 showModal(createCustomizeAllPipelinesModalLauncher(applicationName, namespace))
               }
             >
               Edit build pipeline plans
-            </Button>
+            </ButtonWithAccessTooltip>
           </FlexItem>
         </Flex>
       </GettingStartedCard>
     ),
-    [applicationName, namespace, showModal],
+    [applicationName, namespace, showModal, canPatchComponent],
   );
 
   return (
