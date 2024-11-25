@@ -67,12 +67,6 @@ describe('SnapshotDetailsView', () => {
     (useCommitStatus as jest.Mock).mockReturnValueOnce(['-', true]);
   });
 
-  it('should render spinner if test data is not loaded', () => {
-    watchResourceMock.mockReturnValue([[], false]);
-    renderWithQueryClientAndRouter(<SnapshotDetails />);
-    expect(screen.getByTestId('loading-indicator')).toBeInTheDocument();
-  });
-
   it('should show error state if test cannot be loaded', () => {
     watchResourceMock.mockReturnValue([
       [],

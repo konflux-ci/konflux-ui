@@ -7,7 +7,6 @@ import { useSnapshot } from '../../hooks/useSnapshots';
 import { HttpError } from '../../k8s/error';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
-import { LoadingBox } from '../../shared/components/status-box/StatusBox';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
@@ -50,7 +49,11 @@ const SnapshotDetailsView: React.FC = () => {
   }
 
   if (!plrLoadError && !plrLoaded) {
-    return <LoadingBox />;
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
   }
 
   if (snapshot?.metadata) {

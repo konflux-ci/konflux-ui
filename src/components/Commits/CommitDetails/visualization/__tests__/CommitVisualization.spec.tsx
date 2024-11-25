@@ -120,6 +120,6 @@ describe('CommitVisualization', () => {
 
     const nodes = graph.querySelectorAll('[data-kind="node"]');
 
-    expect(nodes).toHaveLength(8);
+    expect(nodes).toHaveLength(6);
   });
 });

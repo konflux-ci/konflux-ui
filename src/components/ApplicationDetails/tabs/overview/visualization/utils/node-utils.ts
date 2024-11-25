@@ -114,23 +114,14 @@ export const getLinkDataForElement = (
         : {
             tab: 'integrationtests',
           };
-    case WorkflowNodeType.STATIC_ENVIRONMENT:
-      return {
-        tab: 'deployments',
-        filter:
-          !groupNode && !isDisabled
-            ? { name: 'name', value: label }
-            : { name: 'envType', value: 'default,static' },
-      };
-    case WorkflowNodeType.MANAGED_ENVIRONMENT:
     case WorkflowNodeType.RELEASE:
-      return {
-        tab: 'deployments',
-        filter:
-          !groupNode && !isDisabled
-            ? { name: 'name', value: label }
-            : { name: 'envType', value: 'managed' },
-      };
+      return !groupNode && !isDisabled
+        ? {
+            path: `/workspaces/${workspace}/applications/${
+              element.getData().application
+            }/releases/${label}`,
+          }
+        : { tab: 'releases' };
     default:
       return {
         tab: 'overview',

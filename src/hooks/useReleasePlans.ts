@@ -30,7 +30,6 @@ export const useReleasePlan = (
       namespace,
       workspace,
       name,
-      isList: true,
     },
     ReleasePlanModel,
   );
