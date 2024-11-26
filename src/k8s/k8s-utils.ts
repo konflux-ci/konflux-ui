@@ -237,6 +237,7 @@ export const k8sWatch = (
   const path = getK8sResourceURL(kind, undefined, opts);
   wsOptionsUpdated.path = `/wss/k8s${path}`;
   wsOptionsUpdated.host = 'auto';
+  wsOptionsUpdated.subProtocols = ['base64.binary.k8s.io'];
 
   return new WebSocketFactory(path, wsOptionsUpdated);
 };
