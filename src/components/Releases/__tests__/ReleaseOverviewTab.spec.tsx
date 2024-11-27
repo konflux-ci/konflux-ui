@@ -19,13 +19,18 @@ jest.mock('../../../hooks/useReleases', () => ({
 const watchResourceMock = createK8sWatchResourceMock();
 
 describe('ReleaseOverviewTab', () => {
-  beforeEach(() => {
-    watchResourceMock.mockReturnValue([{ spec: { application: 'test-app' } }, true]);
-  });
+  beforeEach(() => {});
 
   createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
+  it('should render loading indicator', () => {
+    watchResourceMock.mockReturnValue([{ spec: { application: 'test-app' } }, false]);
+    render(<ReleaseOverviewTab />);
+    expect(screen.getByRole('progressbar')).toBeVisible();
+  });
+
   it('should render correct details', () => {
+    watchResourceMock.mockReturnValue([{ spec: { application: 'test-app' } }, true]);
     render(<ReleaseOverviewTab />);
     expect(screen.getByText('Duration')).toBeVisible();
     expect(screen.getByText('10 seconds')).toBeVisible();

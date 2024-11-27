@@ -67,6 +67,12 @@ describe('SnapshotDetailsView', () => {
     (useCommitStatus as jest.Mock).mockReturnValueOnce(['-', true]);
   });
 
+  it('should render loading indicator', () => {
+    watchResourceMock.mockReturnValue([[], false]);
+    renderWithQueryClientAndRouter(<SnapshotDetails />);
+    screen.getByRole('progressbar');
+  });
+
   it('should show error state if test cannot be loaded', () => {
     watchResourceMock.mockReturnValue([
       [],
