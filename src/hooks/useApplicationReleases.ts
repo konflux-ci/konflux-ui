@@ -26,8 +26,11 @@ export const useApplicationReleases = (
   const [snapshots, snapshotsLoaded, snapshotsError] = useApplicationSnapshots(applicationName);
 
   const releasesForApp = React.useMemo(
-    () => releases.filter((r) => snapshots.some((s) => s.metadata.name === r.spec.snapshot)),
-    [releases, snapshots],
+    () =>
+      !releasesLoaded && snapshotsLoaded
+        ? releases.filter((r) => snapshots.some((s) => s.metadata.name === r.spec.snapshot))
+        : [],
+    [releases, releasesLoaded, snapshots, snapshotsLoaded],
   );
 
   return [releasesForApp, !releasesLoaded && snapshotsLoaded, releasesError || snapshotsError];

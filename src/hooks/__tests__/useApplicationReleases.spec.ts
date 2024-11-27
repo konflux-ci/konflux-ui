@@ -15,6 +15,32 @@ const watchResourceMock = createK8sWatchResourceMock();
 const useSnapshotsMock = useApplicationSnapshots as jest.Mock;
 
 describe('useApplicationReleases', () => {
+  it('should return empty array incase release are not loaded', () => {
+    watchResourceMock.mockReturnValue([[], false]);
+    useSnapshotsMock.mockReturnValue([
+      [{ metadata: { name: 'my-snapshot' } }, { metadata: { name: 'my-snapshot-2' } }],
+      true,
+    ]);
+
+    const { result } = renderHook(() => useApplicationReleases('test-app'));
+    const [results, loaded] = result.current;
+    expect(loaded).toEqual(false);
+    expect(results.length).toEqual(0);
+  });
+
+  it('should return empty array incase snapshots are not loaded', () => {
+    watchResourceMock.mockReturnValue([[], true]);
+    useSnapshotsMock.mockReturnValue([
+      [{ metadata: { name: 'my-snapshot' } }, { metadata: { name: 'my-snapshot-2' } }],
+      false,
+    ]);
+
+    const { result } = renderHook(() => useApplicationReleases('test-app'));
+    const [results, loaded] = result.current;
+    expect(loaded).toEqual(false);
+    expect(results.length).toEqual(0);
+  });
+
   it('should only return releases that are in the application', () => {
     watchResourceMock.mockReturnValue([
       [

@@ -1,22 +1,10 @@
 import * as React from 'react';
-import {
-  PipelineRunEventType,
-  PipelineRunLabel,
-  PipelineRunType,
-} from '../../../../consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTestScenarios';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
-import { useReleasePlans } from '../../../../hooks/useReleasePlans';
-import { useReleases } from '../../../../hooks/useReleases';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { Commit, ComponentKind, PipelineRunKind } from '../../../../types';
-import { ReleaseKind, ReleasePlanKind } from '../../../../types/coreBuildService';
-import {
-  conditionsRunStatus,
-  pipelineRunStatus,
-  runStatus,
-} from '../../../../utils/pipeline-utils';
+import { pipelineRunStatus, runStatus } from '../../../../utils/pipeline-utils';
 import { DEFAULT_NODE_HEIGHT } from '../../../topology/const';
 import { getLabelWidth } from '../../../topology/utils';
 import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
@@ -41,7 +29,6 @@ export const useCommitWorkflowData = (
   commit: Commit,
 ): [nodes: CommitWorkflowNodeModel[], loaded: boolean, errors: unknown[]] => {
   const { namespace, workspace } = useWorkspaceInfo();
-  const [mvpFeature] = [false];
 
   const applicationName = commit?.application || '';
   const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
@@ -50,11 +37,6 @@ export const useCommitWorkflowData = (
     workspace,
     applicationName,
   );
-  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(
-    namespace,
-    workspace,
-  );
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace, workspace);
   const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommit(
     namespace,
     workspace,
@@ -81,16 +63,8 @@ export const useCommitWorkflowData = (
     [pipelines, pipelinesLoaded],
   );
 
-  const [snapshots, sloaded, serror] = useSnapshots(namespace, commit.sha);
-
-  const allResourcesLoaded: boolean =
-    componentsLoaded &&
-    integrationTestsLoaded &&
-    pipelinesLoaded &&
-    releasesLoaded &&
-    sloaded &&
-    releasePlansLoaded;
-  const allErrors = [releasePlansError, releasesError, pipelinesError, serror].filter((e) => !!e);
+  const allResourcesLoaded: boolean = componentsLoaded && integrationTestsLoaded && pipelinesLoaded;
+  const allErrors = [pipelinesError].filter((e) => !!e);
 
   const commitComponents = React.useMemo(
     () =>
@@ -203,120 +177,6 @@ export const useCommitWorkflowData = (
       nodes.push(...appTestNodes);
       const appTestNodesWidth = appTestNodes.reduce((max, node) => Math.max(max, node.width), 0);
       appTestNodes.forEach((n) => (n.width = appTestNodesWidth));
-
-      const currentSnapshotName = getLatestResource(
-        snapshots.filter(
-          (s) =>
-            s.metadata.labels[PipelineRunLabel.COMPONENT] === compName &&
-            s.metadata.labels[PipelineRunLabel.TEST_SERVICE_EVENT_TYPE_LABEL] ===
-              PipelineRunEventType.PUSH,
-        ),
-      )?.metadata?.name;
-
-      if (!mvpFeature) {
-        const latestRelease: ReleaseKind = getLatestResource(
-          releases.filter((r) => r.spec.snapshot === currentSnapshotName),
-        );
-
-        const releaseStatus: runStatus =
-          releases.length === 0
-            ? undefined
-            : latestRelease && latestRelease?.status
-              ? conditionsRunStatus(latestRelease.status.conditions)
-              : runStatus.Succeeded;
-
-        const releaseNodes: CommitWorkflowNodeModel[] = releases.length
-          ? releases.map((release) => {
-              const releaseName = release.metadata.name;
-
-              const releaseNode: CommitWorkflowNodeModel = {
-                id: addPrefixToResourceName(compName, releaseName),
-                label: releaseName,
-                type: NodeType.WORKFLOW_NODE,
-                width: getLabelWidth(releaseName),
-                height: DEFAULT_NODE_HEIGHT,
-                data: {
-                  status: releaseStatus,
-                  workflowType: CommitWorkflowNodeType.RELEASE,
-                  resource: release,
-                  application: commit.application,
-                },
-              };
-              return releaseNode;
-            })
-          : [
-              {
-                id: `${name}-release`,
-                label: 'No releases set',
-                type: NodeType.WORKFLOW_NODE,
-                width: getLabelWidth('No releases set'),
-                height: DEFAULT_NODE_HEIGHT,
-                data: {
-                  status: runStatus.Pending,
-                  workflowType: CommitWorkflowNodeType.RELEASE,
-                  application: commit.application,
-                },
-              },
-            ];
-        nodes.push(...releaseNodes);
-        const releaseNodesWidth = releaseNodes.reduce((max, node) => Math.max(max, node.width), 0);
-        releaseNodes.forEach((n) => (n.width = releaseNodesWidth));
-        const releaseNodeIds = releaseNodes.map((n) => n.id);
-
-        const releasePlanStatus: (rp: ReleasePlanKind) => runStatus =
-          releasePlans.length === 0
-            ? undefined
-            : (rp) => {
-                const matchedRelease = getLatestResource(
-                  releases.filter((r) => r.spec.releasePlan === rp.metadata.name),
-                );
-                return matchedRelease
-                  ? pipelineRunStatus(matchedRelease as PipelineRunKind)
-                  : runStatus.Pending;
-              };
-
-        const managedEnvNodes: CommitWorkflowNodeModel[] = releasePlans.length
-          ? releasePlans.map((managedEnv) => {
-              const managedEnvName = managedEnv.metadata.name;
-
-              const managedEnvNode: CommitWorkflowNodeModel = {
-                id: addPrefixToResourceName(compName, managedEnvName),
-                label: managedEnvName,
-                type: NodeType.WORKFLOW_NODE,
-                width: getLabelWidth(managedEnvName),
-                height: DEFAULT_NODE_HEIGHT,
-                runAfterTasks: releaseNodeIds,
-                data: {
-                  status: releasePlanStatus(managedEnv),
-                  workflowType: CommitWorkflowNodeType.MANAGED_ENVIRONMENT,
-                  resource: managedEnv,
-                  application: commit.application,
-                },
-              };
-              return managedEnvNode;
-            })
-          : [
-              {
-                id: `${name}-managed-environments`,
-                label: 'No managed environments set',
-                type: NodeType.WORKFLOW_NODE,
-                width: getLabelWidth('No managed environments set'),
-                height: DEFAULT_NODE_HEIGHT,
-                runAfterTasks: releaseNodeIds,
-                data: {
-                  status: runStatus.Pending,
-                  workflowType: CommitWorkflowNodeType.MANAGED_ENVIRONMENT,
-                  application: commit.application,
-                },
-              },
-            ];
-        nodes.push(...managedEnvNodes);
-        const managedEnvNodesWidth = managedEnvNodes.reduce(
-          (max, node) => Math.max(max, node.width),
-          0,
-        );
-        managedEnvNodes.forEach((n) => (n.width = managedEnvNodesWidth));
-      }
     });
 
     return nodes;
@@ -329,10 +189,6 @@ export const useCommitWorkflowData = (
     buildPipelines,
     testPipelines,
     integrationTests,
-    snapshots,
-    mvpFeature,
-    releases,
-    releasePlans,
   ]);
 
   if (!allResourcesLoaded || workflowNodes.length === 0 || allErrors.length > 0) {
