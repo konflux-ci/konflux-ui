@@ -14,7 +14,6 @@ import { useAppApplicationTestNodes } from './useAppApplicationTestNodes';
 import { useAppBuildNodes } from './useAppBuildNodes';
 import { useAppComponentsNodes } from './useAppComponentsNodes';
 import { useAppReleaseNodes } from './useAppReleaseNodes';
-import { useAppReleasePlanNodes } from './useAppReleasePlanNodes';
 
 export const useAppWorkflowData = (
   applicationName: string,
@@ -63,35 +62,17 @@ export const useAppWorkflowData = (
     applicationIntegrationTestNodes,
   ]);
 
-  const [releaseNodes, releaseGroup, releaseTasks, releasesLoaded, releasesError] =
-    useAppReleaseNodes(
-      namespace,
-      applicationName,
-      expanded ? applicationIntegrationTestTasks : [testsGroup?.id ?? ''],
-      expanded,
-    );
-
-  const [
-    managedEnvironmentNodes,
-    managedEnvironmentGroup,
-    managedEnvironmentsLoaded,
-    managedEnvironmentsError,
-  ] = useAppReleasePlanNodes(namespace, applicationName, releaseTasks, expanded);
+  const [releaseNodes, releaseGroup, , releasesLoaded, releasesError] = useAppReleaseNodes(
+    namespace,
+    applicationName,
+    expanded ? applicationIntegrationTestTasks : [testsGroup?.id ?? ''],
+    expanded,
+  );
 
   const allResourcesLoaded: boolean =
-    componentsLoaded &&
-    buildsLoaded &&
-    applicationTestsLoaded &&
-    releasesLoaded &&
-    managedEnvironmentsLoaded;
+    componentsLoaded && buildsLoaded && applicationTestsLoaded && releasesLoaded;
 
-  const errors = [
-    ...componentsErrors,
-    ...buildsErrors,
-    ...applicationErrors,
-    ...releasesError,
-    ...managedEnvironmentsError,
-  ];
+  const errors = [...componentsErrors, ...buildsErrors, ...applicationErrors, ...releasesError];
 
   if (!allResourcesLoaded || errors.length > 0) {
     return [{ nodes: [], edges: [] }, allResourcesLoaded, errors];
@@ -103,7 +84,6 @@ export const useAppWorkflowData = (
       ...(buildNodes?.length ? buildNodes : [buildGroup]),
       ...applicationIntegrationTestNodes,
       ...(releaseNodes?.length ? releaseNodes : [releaseGroup]),
-      ...(managedEnvironmentNodes?.length ? managedEnvironmentNodes : [managedEnvironmentGroup]),
     ];
     const spacerNodes = getSpacerNodes(resourceNodes, NodeType.SPACER_NODE);
     const nodes = [
@@ -113,13 +93,12 @@ export const useAppWorkflowData = (
       buildGroup,
       testsGroup,
       releaseGroup,
-      managedEnvironmentGroup,
     ];
     const edges = getEdgesFromNodes(nodes, NodeType.SPACER_NODE);
 
     return [{ nodes, edges }, true, errors];
   }
-  const nodes = [componentGroup, buildGroup, testsGroup, releaseGroup, managedEnvironmentGroup];
+  const nodes = [componentGroup, buildGroup, testsGroup, releaseGroup];
   const edges = getEdgesFromNodes(nodes, NodeType.SPACER_NODE);
 
   return [{ nodes, edges }, true, errors];

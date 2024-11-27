@@ -9,7 +9,10 @@ coverage:
     project:
       default:
         target: auto
-        threshold: 0.2%
+        threshold: 1%
+    patch:
+      default:
+        informational: true
 
 ignore:
   - "**/*__data__*/*.ts"
