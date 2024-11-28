@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
+  Bullseye,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
   Flex,
   FlexItem,
+  Spinner,
   Title,
 } from '@patternfly/react-core';
 import { useReleasePlan } from '../../hooks/useReleasePlans';
@@ -35,6 +37,14 @@ const ReleaseOverviewTab: React.FC = () => {
     typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
   );
   const status = useReleaseStatus(release);
+
+  if (!releasePlanLoaded) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
 
   return (
     <>
