@@ -183,6 +183,7 @@ export const conditionsRunStatus = (conditions: Condition[], specStatus?: string
   }
 
   const cancelledCondition = conditions.find((c) => c.reason === 'Cancelled');
+  const stoppingCondition = conditions.find((c) => c.reason === 'StoppedRunningFinally');
   const succeedCondition = conditions.find((c) => c.type === 'Succeeded');
 
   if (!succeedCondition || !succeedCondition.status) {
@@ -197,11 +198,8 @@ export const conditionsRunStatus = (conditions: Condition[], specStatus?: string
         : runStatus.Running;
 
   if (
-    [
-      `${SucceedConditionReason.PipelineRunStopped}`,
-      `${SucceedConditionReason.PipelineRunCancelled}`,
-    ].includes(specStatus) &&
-    !cancelledCondition
+    (specStatus === SucceedConditionReason.PipelineRunCancelled && !cancelledCondition) ||
+    (specStatus === SucceedConditionReason.PipelineRunStopped && stoppingCondition)
   ) {
     return runStatus.Cancelling;
   }
