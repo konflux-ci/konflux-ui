@@ -1,8 +1,10 @@
 import { fireEvent, RenderResult } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useApplications } from '../../../../hooks/useApplications';
+import { useComponents } from '../../../../hooks/useComponents';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { mockApplication } from '../../../ApplicationDetails/__data__/mock-data';
+import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import { WorkspaceContext } from '../../../Workspace/workspace-context';
 import { MockIntegrationTestsWithGit } from '../../IntegrationTestsListView/__data__/mock-integration-tests';
 import IntegrationTestView from '../IntegrationTestView';
@@ -39,11 +41,17 @@ jest.mock('../../../../hooks/useApplications', () => ({
   useApplications: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useComponents', () => ({
+  // Used in ContextsField
+  useComponents: jest.fn(),
+}));
+
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
 const createIntegrationTestMock = createIntegrationTest as jest.Mock;
+const mockUseComponents = useComponents as jest.Mock;
 
 class MockResizeObserver {
   observe() {
@@ -82,6 +90,7 @@ describe('IntegrationTestView', () => {
   beforeEach(() => {
     useApplicationsMock.mockReturnValue([[mockApplication], true]);
     watchResourceMock.mockReturnValue([[], true]);
+    mockUseComponents.mockReturnValue([MockComponents, true]);
   });
   const fillIntegrationTestForm = (wrapper: RenderResult) => {
     fireEvent.input(wrapper.getByLabelText(/Integration test name/), {
