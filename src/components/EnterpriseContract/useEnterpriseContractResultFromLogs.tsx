@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
 import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
+import { getPipelineRunFromTaskRunOwnerRef } from '../../utils/common-utils';
 import { getTaskRunLog } from '../../utils/tekton-results';
 import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import {
@@ -65,10 +66,12 @@ export const useEnterpriseContractResultFromLogs = (
     if (fetchTknLogs) {
       const fetch = async () => {
         try {
+          const pid = getPipelineRunFromTaskRunOwnerRef(taskRun[0])?.uid;
           const logs = await getTaskRunLog(
             workspace,
             taskRun[0].metadata.namespace,
-            taskRun[0].metadata.name,
+            taskRun[0].metadata.uid,
+            pid,
           );
           if (unmount) return;
           const json = extractEcResultsFromTaskRunLogs(logs);
