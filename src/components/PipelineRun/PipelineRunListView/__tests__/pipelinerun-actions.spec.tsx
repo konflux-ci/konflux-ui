@@ -85,6 +85,48 @@ describe('usePipelinerunActions', () => {
     );
   });
 
+  // eslint-disable-next-line @typescript-eslint/require-await
+  it('should contain enabled actions for Gitlab pipeline run event type', async () => {
+    const { result } = renderHook(() =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      usePipelinerunActions({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: 'Push',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any),
+    );
+    const actions = result.current;
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Rerun',
+        disabled: false,
+        disabledTooltip: null,
+      }),
+    );
+
+    expect(actions[1]).toEqual(
+      expect.objectContaining({
+        label: 'Stop',
+        disabled: false,
+        disabledTooltip: undefined,
+      }),
+    );
+
+    expect(actions[2]).toEqual(
+      expect.objectContaining({
+        label: 'Cancel',
+        disabled: false,
+        disabledTooltip: undefined,
+      }),
+    );
+  });
+
   it('should contain disabled actions for Stop and Cancel', () => {
     useAccessReviewForModelMock.mockReturnValueOnce([true, true]);
     const { result } = renderHook(() =>
@@ -122,6 +164,33 @@ describe('usePipelinerunActions', () => {
         },
         status: { conditions: [{ type: 'Succeeded', status: 'True' }] },
       } as unknown as PipelineRunKind),
+    );
+    const actions = result.current;
+
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Rerun',
+        disabled: false,
+        disabledTooltip: null,
+      }),
+    );
+  });
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  it('should contain enabled rerun actions when PAC enabled for Gitlab pipeline run event type', async () => {
+    useAccessReviewForModelMock.mockReturnValueOnce([true, true]);
+    const { result } = renderHook(() =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      usePipelinerunActions({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: 'Push',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: 'True' }] },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any),
     );
     const actions = result.current;
 
