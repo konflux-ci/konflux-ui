@@ -43,7 +43,7 @@ describe('SecretTypeSubForm', () => {
 
   it('should render Secret type sub form and fields', () => {
     expect(screen.getByText('Secret type')).toBeVisible();
-    expect(screen.getByText('Secret name')).toBeVisible();
+    expect(screen.getByText('Select or enter secret name')).toBeVisible();
   });
 
   it('should render subforms correctly for specified targets', async () => {
@@ -57,8 +57,8 @@ describe('SecretTypeSubForm', () => {
   });
 
   it('should render correct variant of name field', () => {
-    expect(screen.getByRole('button', { name: 'Secret name' })).toBeVisible();
-    fireEvent.click(screen.getByRole('button', { name: 'Secret name' }));
+    expect(screen.getByRole('button', { name: 'Select or enter secret name' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Select or enter secret name' }));
     expect(screen.getByText('snyk-secret')).toBeVisible();
   });
 });
