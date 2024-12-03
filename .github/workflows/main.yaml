@@ -6,6 +6,8 @@ on:
   pull_request:
     branches:
       - main
+  merge_group:
+    types: [checks_requested]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:

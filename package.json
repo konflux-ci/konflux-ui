@@ -4,6 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "homepage": "/",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "webpack -c ./webpack.prod.config.js",
     "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",
