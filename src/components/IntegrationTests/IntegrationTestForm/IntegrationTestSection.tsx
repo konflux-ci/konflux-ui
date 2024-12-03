@@ -9,6 +9,7 @@ import {
 import { useField } from 'formik';
 import { CheckboxField, InputField } from 'formik-pf';
 import { RESOURCE_NAME_REGEX_MSG } from '../../../utils/validation-utils';
+import ContextsField from '../ContextsField';
 import FormikParamsField from '../FormikParamsField';
 
 type Props = { isInPage?: boolean; edit?: boolean };
@@ -68,6 +69,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
           data-test="git-path-repo"
           required
         />
+        <ContextsField fieldName="integrationTest.contexts" editing={edit} />
         <FormikParamsField fieldName="integrationTest.params" />
 
         <CheckboxField

@@ -1,4 +1,4 @@
-import { Param } from '../../../types/coreBuildService';
+import { Param, Context } from '../../../types/coreBuildService';
 import { K8sResourceCommon } from '../../../types/k8s';
 
 export type IntegrationTestFormValues = {
@@ -11,6 +11,7 @@ export type IntegrationTestFormValues = {
   environmentName?: string;
   environmentType?: string;
   params?: Param[];
+  contexts?: Context[];
 };
 
 export enum IntegrationTestAnnotations {
