@@ -252,7 +252,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           Header={ComponentsListHeader}
           Row={ComponentsListRow}
           loaded={componentsLoaded && pipelineRunsLoaded}
-          customData={{ componentPACStates }}
           getRowProps={(obj: ComponentKind) => ({
             id: `${obj.metadata.name}-component-list-item`,
             'aria-label': obj.metadata.name,
