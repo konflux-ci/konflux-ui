@@ -12,6 +12,7 @@ export const useReleases = (
       namespace,
       workspace,
       isList: true,
+      watch: true,
     },
     ReleaseModel,
   );
@@ -29,6 +30,7 @@ export const useRelease = (
       namespace,
       workspace,
       name,
+      watch: true,
     },
     ReleaseModel,
   );

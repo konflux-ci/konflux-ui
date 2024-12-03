@@ -2,6 +2,8 @@
 // import { QueryClientProvider } from '@tanstack/react-query';
 // import { act, renderHook as rtlRenderHook } from '@testing-library/react-hooks';
 import { renderHook } from '@testing-library/react-hooks';
+import { PipelineRunModel } from '../../models';
+import { TaskRunKind } from '../../types';
 import {
   // TektonResultsOptions,
   getPipelineRuns,
@@ -180,6 +182,16 @@ describe('useTektonResults', () => {
     });
   });
 
+  const mockTR = {
+    metadata: {
+      name: 'sample-task-run',
+      uid: 'sample-task-run-id',
+      ownerReferences: [
+        { kind: PipelineRunModel.kind, uid: 'sample-pipeline-run-id', name: 'sample-pipeline-run' },
+      ],
+    },
+  } as TaskRunKind;
+
   describe('useTRTaskRunLog', () => {
     it('should not attempt to get task run log', () => {
       renderHook(() => useTRTaskRunLog(null, null));
@@ -188,14 +200,19 @@ describe('useTektonResults', () => {
       renderHook(() => useTRTaskRunLog('test-ns', null));
       expect(getTaskRunLogMock).not.toHaveBeenCalled();
 
-      renderHook(() => useTRTaskRunLog(null, 'sample-task-run'));
+      renderHook(() => useTRTaskRunLog(null, mockTR));
       expect(getTaskRunLogMock).not.toHaveBeenCalled();
     });
 
     it('should return task run log', async () => {
       getTaskRunLogMock.mockReturnValue('sample log');
-      const { result, waitFor } = renderHook(() => useTRTaskRunLog('test-ns', 'sample-task-run'));
-      expect(getTaskRunLogMock).toHaveBeenCalledWith('test-ws', 'test-ns', 'sample-task-run');
+      const { result, waitFor } = renderHook(() => useTRTaskRunLog('test-ns', mockTR));
+      expect(getTaskRunLogMock).toHaveBeenCalledWith(
+        'test-ws',
+        'test-ns',
+        'sample-task-run-id',
+        'sample-pipeline-run-id',
+      );
       expect(result.current).toEqual([null, false, undefined]);
       await waitFor(() => result.current[1]);
       expect(result.current).toEqual(['sample log', true, undefined]);
@@ -206,8 +223,13 @@ describe('useTektonResults', () => {
       getTaskRunLogMock.mockImplementation(() => {
         throw error;
       });
-      const { result } = renderHook(() => useTRTaskRunLog('test-ns', 'sample-task-run'));
-      expect(getTaskRunLogMock).toHaveBeenCalledWith('test-ws', 'test-ns', 'sample-task-run');
+      const { result } = renderHook(() => useTRTaskRunLog('test-ns', mockTR));
+      expect(getTaskRunLogMock).toHaveBeenCalledWith(
+        'test-ws',
+        'test-ns',
+        'sample-task-run-id',
+        'sample-pipeline-run-id',
+      );
       expect(result.current).toEqual([null, false, error]);
     });
   });

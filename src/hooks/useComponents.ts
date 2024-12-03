@@ -38,6 +38,7 @@ export const useComponents = (
   namespace: string,
   workspace: string,
   applicationName: string,
+  watch?: boolean,
 ): [ComponentKind[], boolean, unknown] => {
   const {
     data: components,
@@ -49,6 +50,7 @@ export const useComponents = (
       workspace,
       namespace,
       isList: true,
+      watch,
     },
     ComponentModel,
   );

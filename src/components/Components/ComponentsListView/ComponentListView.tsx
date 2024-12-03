@@ -62,6 +62,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     namespace,
     workspace,
     applicationName,
+    true,
   );
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 

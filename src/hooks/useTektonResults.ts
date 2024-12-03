@@ -2,6 +2,7 @@ import React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunKind, TaskRunKind } from '../types';
+import { getPipelineRunFromTaskRunOwnerRef } from '../utils/common-utils';
 import {
   TektonResultsOptions,
   getTaskRunLog,
@@ -61,16 +62,18 @@ export const useTRTaskRuns = (
 
 export const useTRTaskRunLog = (
   namespace: string,
-  taskRunName: string,
+  taskRun: TaskRunKind,
 ): [string, boolean, unknown] => {
   const { workspace } = useWorkspaceInfo();
   const [result, setResult] = React.useState<[string, boolean, unknown]>([null, false, undefined]);
+  const taskRunUid = taskRun.metadata.uid;
+  const pipelineRunUid = getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid;
   React.useEffect(() => {
     let disposed = false;
-    if (namespace && taskRunName) {
+    if (namespace && taskRunUid) {
       void (async () => {
         try {
-          const log = await getTaskRunLog(workspace, namespace, taskRunName);
+          const log = await getTaskRunLog(workspace, namespace, taskRunUid, pipelineRunUid);
           if (!disposed) {
             setResult([log, true, undefined]);
           }
@@ -84,6 +87,6 @@ export const useTRTaskRunLog = (
     return () => {
       disposed = true;
     };
-  }, [workspace, namespace, taskRunName]);
+  }, [workspace, namespace, taskRunUid, pipelineRunUid]);
   return result;
 };

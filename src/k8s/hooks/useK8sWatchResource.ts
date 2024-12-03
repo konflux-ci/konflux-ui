@@ -12,6 +12,8 @@ import { createGetQueryOptions, createListqueryOptions, createQueryKeys } from '
 import { WebSocketOptions } from '../web-socket/types';
 import { useK8sQueryWatch } from './useK8sQueryWatch';
 
+const POLLING_INTERVAL = 10000;
+
 export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCommon[]>(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
@@ -21,7 +23,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
   > = {},
 ): UseQueryResult<R> => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
-  useK8sQueryWatch(
+  const wsError = useK8sQueryWatch(
     resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
     resourceInit?.isList,
     hashKey(createQueryKeys({ model, queryOptions: k8sQueryOptions })),
@@ -32,16 +34,21 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
     const queryOptionsTyped = resourceInit?.isList
       ? queryOptions
       : (queryOptions as Omit<ReactQueryOptions<R>, 'queryKey' | 'queryFn'>);
+    const baseQueryOptions = {
+      enabled: !!resourceInit,
+      refetchInterval: wsError ? POLLING_INTERVAL : undefined,
+      ...queryOptionsTyped,
+    };
     return (
       resourceInit?.isList
-        ? createListqueryOptions({ model, queryOptions: k8sQueryOptions, fetchOptions: options }, {
-            enabled: !!resourceInit,
-            ...queryOptionsTyped,
-          } as TQueryOptions<K8sResourceCommon[]>)
-        : createGetQueryOptions({ model, queryOptions: k8sQueryOptions, fetchOptions: options }, {
-            enabled: !!resourceInit,
-            ...queryOptionsTyped,
-          } as Omit<ReactQueryOptions<K8sResourceCommon>, 'queryKey' | 'queryFn'>)
+        ? createListqueryOptions(
+            { model, queryOptions: k8sQueryOptions, fetchOptions: options },
+            baseQueryOptions as TQueryOptions<K8sResourceCommon[]>,
+          )
+        : createGetQueryOptions(
+            { model, queryOptions: k8sQueryOptions, fetchOptions: options },
+            baseQueryOptions as Omit<ReactQueryOptions<K8sResourceCommon>, 'queryKey' | 'queryFn'>,
+          )
     ) as UseQueryOptions<R>;
   };
 

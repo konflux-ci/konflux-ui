@@ -16,8 +16,6 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
-// import { ErrorDetailsWithStaticLog } from '../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
-// import { getPLRLogSnippet } from '../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
@@ -27,6 +25,8 @@ import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
+import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
+import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { getCommitSha, getCommitShortName } from '../../../../utils/commits-utils';
 import {
   calculateDuration,
@@ -82,8 +82,8 @@ const PipelineRunDetailsTab: React.FC = () => {
     );
   }
   const results = getPipelineRunStatusResults(pipelineRun);
-  const pipelineRunFailed = {} as { title: string; staticMessage: string }; // (getPLRLogSnippet(pipelineRun, taskRuns) ||
-  //{}) as ErrorDetailsWithStaticLog;
+  const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
+    {}) as ErrorDetailsWithStaticLog;
   const duration = calculateDuration(
     typeof pipelineRun.status?.startTime === 'string' ? pipelineRun.status?.startTime : '',
     typeof pipelineRun.status?.completionTime === 'string'

@@ -19,6 +19,7 @@ export const useApplicationReleases = (
       namespace,
       workspace,
       isList: true,
+      watch: true,
     },
     ReleaseModel,
   );

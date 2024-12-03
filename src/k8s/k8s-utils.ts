@@ -176,7 +176,10 @@ export const getK8sResourceURL = (
     ? pick(queryParams, FILTERED_CREATE_QUERY_PARAMS)
     : queryParams;
   if (queryOptions?.queryParams?.labelSelector) {
-    filteredQueryParams.labelSelector = selectorToString(queryOptions.queryParams.labelSelector);
+    filteredQueryParams.labelSelector =
+      typeof queryOptions.queryParams.labelSelector !== 'string'
+        ? selectorToString(queryOptions.queryParams.labelSelector)
+        : queryOptions.queryParams.labelSelector;
   }
 
   if (filteredQueryParams && !isEmpty(filteredQueryParams)) {
@@ -215,7 +218,8 @@ export const k8sWatch = (
 
   const { labelSelector } = query;
   if (labelSelector) {
-    queryParams.labelSelector = { ...labelSelector };
+    queryParams.labelSelector =
+      typeof labelSelector === 'string' ? labelSelector : { ...labelSelector };
   }
 
   if (query.fieldSelector) {
