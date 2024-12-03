@@ -21,6 +21,7 @@ import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import MetadataList from '../../../MetadataList';
 import { useModalLauncher } from '../../../modal/ModalProvider';
 import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { createEditContextsModal } from '../../EditContextsModal';
 import { createEditParamsModal } from '../../EditParamsModal';
 import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
 import {
@@ -46,6 +47,7 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
   const showModal = useModalLauncher();
 
   const params = integrationTest?.spec?.params;
+  const contexts = integrationTest?.spec?.contexts;
 
   return (
     <>
@@ -141,6 +143,36 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                     );
                   })}
                 </>
+              )}
+              {contexts && (
+                <DescriptionListGroup data-test="its-overview-contexts">
+                  <DescriptionListTerm>
+                    Contexts{' '}
+                    <Tooltip content="Contexts where the integration test can be applied.">
+                      <OutlinedQuestionCircleIcon />
+                    </Tooltip>
+                  </DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {pluralize(contexts.length, 'context')}
+                    <div>
+                      {' '}
+                      <Button
+                        variant={ButtonVariant.link}
+                        className="pf-v5-u-pl-0"
+                        onClick={() =>
+                          showModal(
+                            createEditContextsModal({
+                              intTest: integrationTest,
+                            }),
+                          )
+                        }
+                        data-test="edit-context-button"
+                      >
+                        Edit contexts
+                      </Button>
+                    </div>
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
               )}
               {params && (
                 <DescriptionListGroup data-test="its-overview-params">
