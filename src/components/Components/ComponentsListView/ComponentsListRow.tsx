@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Flex, FlexItem } from '@patternfly/react-core';
-import { PACState } from '../../../hooks/usePACState';
 import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
@@ -10,13 +9,11 @@ import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
-import ComponentPACStateLabel from '../../CustomizedPipeline/ComponentPACStateLabel';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { useBuildLogViewerModal } from '../../LogViewer/BuildLogViewer';
 import PipelineRunStatus from '../../PipelineRun/PipelineRunStatus';
 import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useComponentActions } from '../component-actions';
-import ComponentBuildTrigger from '../ComponentBuildTrigger';
 import { componentsTableColumnClasses } from './ComponentsListHeader';
 
 type ComponentWithLatestBuildPipeline = ComponentKind & {
@@ -30,14 +27,12 @@ export const getContainerImageLink = (url: string) => {
 
 const ComponentsListRow: React.FC<
   RowFunctionArgs<ComponentWithLatestBuildPipeline, PacStatesForComponents>
-> = ({ obj: component, customData }) => {
+> = ({ obj: component }) => {
   const { workspace } = useWorkspaceInfo();
   const applicationName = component.spec.application;
   const name = component.metadata.name;
   const actions = useComponentActions(component, name);
-  const { componentPACStates } = customData;
   const buildLogsModal = useBuildLogViewerModal(component);
-  const pacState = componentPACStates[name] ?? PACState.loading;
 
   const commit = React.useMemo(
     () =>
@@ -83,12 +78,6 @@ const ComponentsListRow: React.FC<
             </FlexItem>
           )}
         </Flex>
-      </TableData>
-      <TableData className={componentsTableColumnClasses.buildPipeline}>
-        <ComponentPACStateLabel component={component} pacState={pacState} enableAction />
-      </TableData>
-      <TableData className={componentsTableColumnClasses.buildTrigger}>
-        <ComponentBuildTrigger pacState={pacState} />
       </TableData>
       <TableData className={componentsTableColumnClasses.latestBuild}>
         <div className="component-list-view__build-completion">
