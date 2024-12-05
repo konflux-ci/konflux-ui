@@ -79,6 +79,24 @@ describe('MultiSelectComponentDropdown', () => {
     expect(button.querySelector('.pf-m-read').innerHTML).toEqual('2');
   });
 
+  it('should select/unselect all item from menu', () => {
+    formikRenderer(
+      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      { multiSelect: '' },
+    );
+    screen.getByText('Choose components to nudge');
+    const button = screen.getByTestId('toggle-component-menu');
+    fireEvent.click(button);
+    expect(button.querySelector('.pf-m-read')).not.toBeInTheDocument();
+    const menu = screen.getAllByRole('menuitem');
+    const selectAllButton = menu[0].querySelector('input');
+    fireEvent.click(selectAllButton);
+    expect(button.querySelector('.pf-m-read')).toBeInTheDocument();
+    expect(button.querySelector('.pf-m-read').innerHTML).toEqual('2');
+    fireEvent.click(selectAllButton);
+    expect(button.querySelector('.pf-m-read')).not.toBeInTheDocument();
+  });
+
   it('should not select disabled menu item', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown

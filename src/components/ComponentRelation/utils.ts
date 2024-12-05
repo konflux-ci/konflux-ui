@@ -1,4 +1,4 @@
-import { union } from 'lodash-es';
+import { differenceBy, union } from 'lodash-es';
 import * as yup from 'yup';
 import { K8sQueryPatchResource } from '../../k8s';
 import { ComponentModel } from '../../models';
@@ -55,12 +55,26 @@ export const transformNudgeData = (data: ComponentRelationValue[]): { [key: stri
   }, {});
 };
 
+export const computeNudgeDataChanges = (
+  initialValues: ComponentRelationValue[],
+  values: ComponentRelationValue[],
+): ComponentRelationValue[] => {
+  // Find the missing relation and set the target to [] to remove it
+  const removedSources = differenceBy(initialValues, values, 'source').map((val) => ({
+    ...val,
+    target: [],
+  }));
+  return [...values, ...removedSources];
+};
+
 export const updateNudgeDependencies = async (
   values: ComponentRelationValue[],
+  initialValues: ComponentRelationValue[],
   namespace: string,
   dryRun?: boolean,
 ) => {
-  const transformedData = transformNudgeData(values);
+  const valueChanges = computeNudgeDataChanges(initialValues, values);
+  const transformedData = transformNudgeData(valueChanges);
   const data = [];
   for (const [componentName, nudgeData] of Object.entries(transformedData)) {
     const result = await K8sQueryPatchResource({

@@ -1,6 +1,9 @@
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { componentCRMocks } from '../../Components/__data__/mock-data';
 import { ComponentRelationModal } from '../ComponentRelationModal';
+import { ComponentRelationNudgeType, ComponentRelationValue } from '../type';
+import { useNudgeData } from '../useNudgeData';
+import { updateNudgeDependencies } from '../utils';
 
 configure({ testIdAttribute: 'id' });
 
@@ -20,7 +23,11 @@ jest.mock('../../../utils/analytics', () => ({
 
 jest.mock('../utils', () => ({
   ...jest.requireActual('../utils'),
-  updateNudgeDependencies: jest.fn(() => Promise.resolve([])),
+  updateNudgeDependencies: jest.fn(),
+}));
+
+jest.mock('../useNudgeData', () => ({
+  useNudgeData: jest.fn(),
 }));
 
 class MockResizeObserver {
@@ -37,9 +44,29 @@ class MockResizeObserver {
   }
 }
 
+const mockComponentRelations: ComponentRelationValue[] = [
+  {
+    source: 'a',
+    nudgeType: ComponentRelationNudgeType.NUDGES,
+    target: ['b'],
+  },
+  {
+    source: 'c',
+    nudgeType: ComponentRelationNudgeType.NUDGES,
+    target: ['d'],
+  },
+];
+
 window.ResizeObserver = MockResizeObserver;
+const useNudgeDataMock = useNudgeData as jest.Mock;
+const updateNudgeDependenciesMock = updateNudgeDependencies as jest.Mock;
 
 describe('ComponentRelationModal', () => {
+  beforeEach(() => {
+    useNudgeDataMock.mockReturnValue([[], true, null]);
+    updateNudgeDependenciesMock.mockResolvedValue(componentCRMocks);
+  });
+
   it('should render modal', () => {
     render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
     screen.getByText('Component relationships');
@@ -48,6 +75,15 @@ describe('ComponentRelationModal', () => {
   it('should render dropdowns', () => {
     render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
     expect(screen.getAllByTestId('toggle-component-menu')).toHaveLength(2);
+  });
+
+  it('should remove a relation', () => {
+    render(<ComponentRelationModal modalProps={{ isOpen: true }} application="apps" />);
+    expect(screen.queryAllByTestId(/remove-relation-\d+/)).toHaveLength(1);
+    fireEvent.click(screen.getByText(`Add another component relationship`));
+    expect(screen.getAllByTestId(/remove-relation-\d+/)).toHaveLength(2);
+    fireEvent.click(screen.getByTestId('remove-relation-0'));
+    expect(screen.queryAllByTestId(/remove-relation-\d+/)).toHaveLength(1);
   });
 
   it('should show cancelation modal when clicked on cancel', () => {
@@ -79,6 +115,37 @@ describe('ComponentRelationModal', () => {
   });
 
   it('should show confirmation modal on relationship save', async () => {
+    useNudgeDataMock.mockReturnValue([mockComponentRelations, true, null]);
+    updateNudgeDependenciesMock.mockResolvedValue(componentCRMocks);
+    let isOpen = true;
+    const onClose = () => {
+      isOpen = false;
+    };
+    const { rerender } = render(
+      <ComponentRelationModal modalProps={{ isOpen, onClose }} application="apps" />,
+    );
+    expect(screen.queryByText('Component relationships')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('nudged-by-0'));
+    const saveButton = screen.getByText('Save relationships');
+    expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
+    fireEvent.click(saveButton);
+    expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
+    await waitFor(() => {
+      expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
+    });
+
+    rerender(<ComponentRelationModal modalProps={{ isOpen, onClose }} application="apps" />);
+    await waitFor(() => {
+      expect(screen.queryByText('Relationships updated!')).toBeInTheDocument();
+    });
+
+    const doneButton = screen.getByText('Done');
+    fireEvent.click(doneButton);
+  });
+
+  it('should display an error on failure', async () => {
+    useNudgeDataMock.mockReturnValue([mockComponentRelations, true, null]);
+    updateNudgeDependenciesMock.mockRejectedValue(new Error('error'));
     let isOpen = true;
     const onClose = () => {
       isOpen = false;
@@ -89,7 +156,6 @@ describe('ComponentRelationModal', () => {
     const saveButton = screen.getByText('Save relationships');
     expect(saveButton.getAttribute('class')).not.toContain('pf-m-disabled');
     fireEvent.click(saveButton);
-    expect(saveButton.getAttribute('class')).toContain('pf-m-in-progress');
-    await waitFor(() => expect(saveButton.getAttribute('class')).not.toContain('pf-m-in-progress'));
+    await waitFor(() => expect(screen.queryByText('Danger alert:')).toBeInTheDocument());
   });
 });

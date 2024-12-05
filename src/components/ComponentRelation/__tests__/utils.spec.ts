@@ -1,5 +1,40 @@
 import { ComponentRelationNudgeType } from '../type';
-import { componentRelationValidationSchema, transformNudgeData } from '../utils';
+import {
+  componentRelationValidationSchema,
+  computeNudgeDataChanges,
+  transformNudgeData,
+} from '../utils';
+
+describe('computeNudgeDataChanges', () => {
+  it('should compute data changes', () => {
+    expect(
+      computeNudgeDataChanges(
+        [{ source: 'a', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['b', 'c'] }],
+        [],
+      ),
+    ).toEqual([{ source: 'a', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] }]);
+    expect(
+      computeNudgeDataChanges(
+        [],
+        [{ source: 'a', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['b', 'c'] }],
+      ),
+    ).toEqual([{ source: 'a', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['b', 'c'] }]);
+    expect(
+      computeNudgeDataChanges(
+        [
+          { source: 'a', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['b'] },
+          { source: 'b', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['c'] },
+          { source: 'c', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['d'] },
+        ],
+        [{ source: 'b', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['c'] }],
+      ),
+    ).toEqual([
+      { source: 'b', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['c'] },
+      { source: 'a', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] },
+      { source: 'c', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] },
+    ]);
+  });
+});
 
 describe('transformNudgeData', () => {
   it('should transform data', () => {
@@ -35,7 +70,10 @@ describe('transformNudgeData', () => {
 describe('componentRelationValidationSchema', () => {
   it('should validate yup schema', async () => {
     const values = {
-      relations: [{ source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] }],
+      relations: [
+        { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] },
+        { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGED_BY, target: ['b', 'c'] },
+      ],
     };
     await expect(componentRelationValidationSchema.validate(values)).resolves.toBe(values);
     await expect(
@@ -51,5 +89,15 @@ describe('componentRelationValidationSchema', () => {
         ],
       }),
     ).rejects.toThrow('2 errors occurred');
+    await expect(
+      componentRelationValidationSchema.validate({
+        relations: [],
+      }),
+    ).rejects.toThrowError();
+    await expect(
+      componentRelationValidationSchema.validate({
+        relations: [{ source: 'adf', target: ['a'] }],
+      }),
+    ).rejects.toThrowError();
   });
 });
