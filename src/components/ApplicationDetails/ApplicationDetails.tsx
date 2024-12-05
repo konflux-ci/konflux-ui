@@ -9,6 +9,7 @@ import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { useComponentRelationAction } from '../ComponentRelation/useComponentRelationAction';
+import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import DetailsPage from '../DetailsPage/DetailsPage';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
@@ -22,6 +23,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   // const track = useTrackEvent();
   const { namespace, workspace } = useWorkspaceInfo();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
+  const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canCreateIntegrationTest] = useAccessReviewForModel(
     IntegrationTestScenarioModel,
     'create',
@@ -77,8 +79,10 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
                 app_name: applicationName,
                 workspace,
               });
-              // showModal(createCustomizeAllPipelinesModalLauncher(applicationName, namespace));
+              showModal(createCustomizeAllPipelinesModalLauncher(applicationName, namespace));
             },
+            disabledTooltip: 'You do not have access to manage build pipelines',
+            isDisabled: !canPatchComponent,
             key: 'manage-build-pipelines',
             label: 'Manage build pipelines',
           },
