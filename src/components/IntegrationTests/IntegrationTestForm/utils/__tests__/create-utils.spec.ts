@@ -14,6 +14,7 @@ import {
   getLabelForParam,
   getURLForParam,
   formatParams,
+  formatContexts,
 } from '../create-utils';
 
 const createResourceMock = createK8sUtilMock('K8sQueryCreateResource');
@@ -239,5 +240,21 @@ describe('Create Utils formatParams', () => {
     ]);
     expect(formattedParams.length).toBe(3);
     expect(formattedParams[0].value).toBe('val1');
+  });
+});
+
+describe('Create Utils formatContexts', () => {
+  it('Should render null if no contexts or empty array []', () => {
+    const formattedContexts = formatContexts([]);
+    expect(formattedContexts).toBeNull();
+  });
+
+  it('Should render 3 contexts ', () => {
+    const formattedContexts = formatContexts([
+      { name: 'apple', description: 'an apple' },
+      { name: 'mango', description: 'a mango' },
+      { name: 'orange', description: 'an orange' },
+    ]);
+    expect(formattedContexts.length).toBe(3);
   });
 });
