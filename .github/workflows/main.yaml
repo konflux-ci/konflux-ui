@@ -31,7 +31,11 @@ jobs:
           cache: 'yarn'
   
       - name: Install Dependencies 🥁
-        run: yarn install --frozen-lockfile
+        run: | 
+        yarn install --frozen-lockfile
+        cd e2e-tests
+        yarn install
+        cd ..
   
       - name: Lint ✅
         run: yarn lint
