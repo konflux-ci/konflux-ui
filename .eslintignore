@@ -3,7 +3,7 @@ static/*
 dist/*
 @types/*
 .eslintrc.cjs
-integration-tests/*
+e2e-tests/*
 commitlint.config.js
 **.config.js
 config/*
