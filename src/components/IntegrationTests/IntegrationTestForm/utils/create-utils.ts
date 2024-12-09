@@ -46,7 +46,11 @@ export const formatParams = (params): Param[] => {
   return newParams.length > 0 ? newParams : null;
 };
 
-export const formatContexts = (contexts = [], setDefault = false): Context[] | null => {
+export type UnformattedContexts = { name: string; description: string }[];
+export const formatContexts = (
+  contexts: UnformattedContexts = [],
+  setDefault: boolean = false,
+): Context[] | null => {
   const defaultContext = {
     name: 'application',
     description: 'execute the integration test in all cases - this would be the default state',
