@@ -34,4 +34,13 @@ describe('useComponentRelationAction', () => {
       `You don't have access to define component relationships`,
     );
   });
+
+  it('should disable action when there is one component in the app', () => {
+    jest.clearAllMocks();
+    // mock one component for the application
+    mockUseComponents.mockReturnValue([[{}], true, undefined]);
+    mockUseAccessReviewModel.mockReturnValue([true]);
+    const { result } = renderHook(() => useComponentRelationAction('application'));
+    expect(result.current().isDisabled).toEqual(true);
+  });
 });
