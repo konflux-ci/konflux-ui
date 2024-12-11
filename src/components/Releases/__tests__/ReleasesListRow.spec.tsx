@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react';
+import { ReleaseCondition } from '../../../types';
 import ReleasesListRow from '../ReleasesListRow';
 
 jest.mock('react-router-dom', () => ({
@@ -21,6 +22,7 @@ const mockRelease = {
       {
         reason: 'Succeeded',
         status: 'True',
+        type: ReleaseCondition.Released,
       },
     ],
   },
