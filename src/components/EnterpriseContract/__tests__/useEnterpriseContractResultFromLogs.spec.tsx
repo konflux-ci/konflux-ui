@@ -43,6 +43,8 @@ describe('useEnterpriseContractResultFromLogs', () => {
     ]);
   });
 
+  afterEach(() => jest.clearAllMocks());
+
   it('should parse valid rules to json', async () => {
     const { result, waitForNextUpdate } = renderHook(() =>
       useEnterpriseContractResultFromLogs('dummy-abcd'),
