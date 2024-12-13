@@ -51,18 +51,23 @@ const mockRecordsList = {
     },
     {
       data: {
-        // {"key":"test2"}
-        value: 'eyJrZXkiOiJ0ZXN0MiJ9',
+        // {"status":{"conditions":[{"status":"Unknown"},{"status":"Failed"}]}}
+        value:
+          'eyJzdGF0dXMiOnsiY29uZGl0aW9ucyI6W3sic3RhdHVzIjoiVW5rbm93biJ9LHsic3RhdHVzIjoiRmFpbGVkIn1dfX0K',
       },
     },
   ],
 } as RecordsList;
 
-const mockResponseCheck = [[{ key: 'test1' }, { key: 'test2' }], mockRecordsList] as [
+const mockResponseCheck = [
+  [{ key: 'test1' }, { status: { conditions: [{ status: 'Unknown' }, { status: 'Failed' }] } }],
+  mockRecordsList,
+] as [unknown[], RecordsList];
+
+const mockPipelineRunReponseCheck = [[{ key: 'test1' }], mockRecordsList] as [
   unknown[],
   RecordsList,
 ];
-
 const mockLogsRecordsList = {
   nextPageToken: null,
   records: [
@@ -551,7 +556,7 @@ describe('tekton-results', () => {
   describe('getPipelineRuns', () => {
     it('should return record list and decoded value', async () => {
       commonFetchJSONMock.mockReturnValue(mockRecordsList);
-      expect(await getPipelineRuns('test-ws', 'test-ns')).toEqual(mockResponseCheck);
+      expect(await getPipelineRuns('test-ws', 'test-ns')).toEqual(mockPipelineRunReponseCheck);
     });
 
     it('should query tekton results with options', async () => {
