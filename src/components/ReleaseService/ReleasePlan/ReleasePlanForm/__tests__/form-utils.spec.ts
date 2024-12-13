@@ -182,7 +182,7 @@ describe('editReleasePlan', () => {
           path: '/',
         },
       },
-      'my-ws',
+      'my-ws-tenant',
     );
 
     expect(result.spec.target).toBe('my-ws-tenant');
