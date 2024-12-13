@@ -61,7 +61,7 @@ describe('RunReleasePipelineSection', () => {
     expect(
       result.getByRole('region', { name: 'Git options for the release pipeline' }),
     ).toBeVisible();
-    expect(result.getByRole('textbox', { name: 'Target workspace' })).toBeVisible();
+    expect(result.getByRole('textbox', { name: 'Target namespace' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Data' })).toBeVisible();
   });
 });
