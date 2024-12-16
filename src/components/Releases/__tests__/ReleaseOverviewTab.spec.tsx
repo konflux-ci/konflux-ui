@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { createK8sWatchResourceMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
-import { mockReleases, mockReleaseWithManagedProcessing } from '../__data__/mock-release-data';
+import { mockReleases } from '../__data__/mock-release-data';
 import ReleaseOverviewTab from '../ReleaseOverviewTab';
 
 jest.mock('react-router-dom', () => ({
@@ -57,7 +57,7 @@ describe('ReleaseOverviewTab', () => {
   });
 
   it('should render correct details if managedProcessing', () => {
-    render(<ReleaseOverviewTab release={mockReleaseWithManagedProcessing} />);
+    render(<ReleaseOverviewTab />);
     expect(screen.getByText('Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
       '/workspaces/target-ws/applications/test-app/pipelineruns/test-pipelinerun',
