@@ -16,6 +16,7 @@ import { IntegrationTestScenarioKind, Context } from '../../types/coreBuildServi
 import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 import ContextsField from './ContextsField';
 import { UnformattedContexts, formatContexts } from './IntegrationTestForm/utils/create-utils';
+import { contextModalValidationSchema } from './utils/validation-utils';
 
 type EditContextsModalProps = ComponentProps & {
   intTest: IntegrationTestScenarioKind;
@@ -74,17 +75,18 @@ export const EditContextsModal: React.FC<React.PropsWithChildren<EditContextsMod
       onSubmit={updateIntegrationTest}
       initialValues={{ contexts: initialContexts, confirm: false }}
       onReset={onReset}
+      validationSchema={contextModalValidationSchema}
     >
       {({ handleSubmit, handleReset, isSubmitting, values }) => {
         const isChanged = values.contexts !== initialContexts;
-        const showConfirmation = isChanged && values.strategy === 'Automatic';
-        const isValid = isChanged && (showConfirmation ? values.confirm : true);
+        const isPopulated = values.contexts.length > 0;
+        const isValid = isChanged && isPopulated;
 
         return (
           <div data-test={'edit-contexts-modal'} onKeyDown={handleKeyDown}>
             <Stack hasGutter>
               <StackItem>
-                <ContextsField fieldName="contexts" editing={true} />
+                <ContextsField fieldName="contexts" />
               </StackItem>
               <StackItem>
                 {error && (
