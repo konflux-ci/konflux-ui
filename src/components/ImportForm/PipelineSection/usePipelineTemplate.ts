@@ -29,6 +29,16 @@ const PIPELINE_DATA = {
       bundle:
         'quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-multi-platform-oci-ta@sha256:269480b2037478c1c8509c5f562b65f0b7f4e8675d5fda68b6bf3d28357962d7',
     },
+    {
+      name: 'maven-zip-build',
+      bundle:
+        'quay.io/konflux-ci/tekton-catalog/pipeline-maven-zip-build:84b3cd21b9cc194838dd310fedcc316ea8a4aab4',
+    },
+    {
+      name: 'maven-zip-build-oci-ta',
+      bundle:
+        'quay.io/konflux-ci/tekton-catalog/pipeline-maven-zip-build-oci-ta:84b3cd21b9cc194838dd310fedcc316ea8a4aab4',
+    },
   ],
 };
 
