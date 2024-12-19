@@ -69,7 +69,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
           data-test="git-path-repo"
           required
         />
-        <ContextsField fieldName="integrationTest.contexts" editing={edit} />
+        <ContextsField fieldName="integrationTest.contexts" />
         <FormikParamsField fieldName="integrationTest.params" />
 
         <CheckboxField
