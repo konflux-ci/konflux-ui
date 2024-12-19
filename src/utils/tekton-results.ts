@@ -286,15 +286,15 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   return value;
 };
 
-const getFilteredPipelineRuns = (
+const getFilteredPipelineRuns = async (
   workspace: string,
   namespace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
-) =>
-  getFilteredRecord<PipelineRunKindV1Beta1>(
+): Promise<[PipelineRunKindV1Beta1[], RecordsList]> => {
+  const [originalPipelineRuns, list] = await getFilteredRecord<PipelineRunKindV1Beta1>(
     workspace,
     namespace,
     [DataType.PipelineRun, DataType.PipelineRun_v1beta1],
@@ -303,6 +303,14 @@ const getFilteredPipelineRuns = (
     nextPageToken,
     cacheKey,
   );
+  // When pipelines are running, the etcd would keep their results.
+  // deleting pipelines frome ectd would make unknown tekton results.
+  // Just to get meaningful test runs, we need to filter 'unknown' out.
+  const filteredPipelineRuns = originalPipelineRuns.filter((pipelinerun) => {
+    return pipelinerun.status?.conditions?.every((c) => c.status !== 'Unknown') ?? true;
+  });
+  return [filteredPipelineRuns, list];
+};
 
 const getFilteredTaskRuns = (
   workspace: string,
