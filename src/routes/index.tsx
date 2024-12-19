@@ -113,7 +113,7 @@ export const router = createBrowserRouter([
         element: <ImportForm />,
       },
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications`,
         loader: applicationPageLoader,
         element: <ApplicationListView />,
         errorElement: <RouteErrorBoundry />,
