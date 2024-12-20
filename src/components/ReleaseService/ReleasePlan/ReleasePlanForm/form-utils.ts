@@ -175,7 +175,7 @@ export const editReleasePlan = async (
       application,
       ...(data ? { data } : {}),
       serviceAccount,
-      target: `${targetWs}-${WORKSPACE_SUFFIX}`,
+      target: `${targetWs}`,
       pipelineRef: {
         resolver: ResolverType.GIT,
         params: [
