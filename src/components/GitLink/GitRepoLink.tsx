@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tooltip, TooltipPosition } from '@patternfly/react-core';
-import { CodeBranchIcon } from '@patternfly/react-icons/dist/js/icons/code-branch-icon';
+import { CodeBranchIcon } from '@patternfly/react-icons/dist/esm/icons/code-branch-icon';
 import gitUrlParse from 'git-url-parse';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { getGitIcon, getGitPath } from '../../utils/git-utils';

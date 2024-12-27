@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Flex, FlexItem, Button, FormGroup, TextInputTypes } from '@patternfly/react-core';
-import { MinusCircleIcon } from '@patternfly/react-icons/dist/js/icons/minus-circle-icon';
-import { PlusCircleIcon } from '@patternfly/react-icons/dist/js/icons/plus-circle-icon';
+import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, FormikValues, useField, useFormikContext } from 'formik';
 import { FileUploadField, InputField } from 'formik-pf';
 import { get, uniqueId } from 'lodash-es';

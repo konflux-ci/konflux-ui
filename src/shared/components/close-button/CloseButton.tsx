@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@patternfly/react-core';
-import { CloseIcon } from '@patternfly/react-icons/dist/js/icons/close-icon';
+import { CloseIcon } from '@patternfly/react-icons/dist/esm/icons/close-icon';
 import classNames from 'classnames';
 import './CloseButton.scss';
 

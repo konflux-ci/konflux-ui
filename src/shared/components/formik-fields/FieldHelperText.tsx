@@ -1,6 +1,6 @@
 import React from 'react';
 import { FormHelperText, HelperText, HelperTextItem } from '@patternfly/react-core';
-import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/js/icons/exclamation-circle-icon';
+import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 
 import './RadioGroupField.scss';
 
