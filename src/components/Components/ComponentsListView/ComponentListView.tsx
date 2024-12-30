@@ -79,23 +79,16 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
   const componentPACStates = usePACStatesForComponents(components);
 
   const componentsWithLatestBuild = React.useMemo(() => {
-    if (!componentsLoaded || componentsError || !pipelineRunsLoaded || pipelineRunsError) {
+    if (!componentsLoaded || componentsError) {
       return [];
     }
     return components.map((c) => ({
       ...c,
-      latestBuildPipelineRun: pipelineRuns.find(
+      latestBuildPipelineRun: pipelineRuns?.find(
         (plr) => plr.metadata?.labels?.[PipelineRunLabel.COMPONENT] === c.metadata.name,
       ),
     }));
-  }, [
-    components,
-    componentsError,
-    componentsLoaded,
-    pipelineRuns,
-    pipelineRunsError,
-    pipelineRunsLoaded,
-  ]);
+  }, [components, componentsError, componentsLoaded, pipelineRuns]);
 
   const statusFilters = React.useMemo(
     () => (statusFiltersParam ? statusFiltersParam.split(',') : []),
@@ -207,6 +200,16 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           that run together form an application.
         </Text>
       </TextContent>
+      {pipelineRunsLoaded && pipelineRunsError ? (
+        <Alert
+          className="pf-v5-u-mt-md"
+          variant={AlertVariant.warning}
+          isInline
+          title="Error while fetching pipeline runs"
+        >
+          {(pipelineRunsError as { message: string })?.message}{' '}
+        </Alert>
+      ) : null}
       {gettingStartedCard}
       {componentsLoaded && pipelineRunsLoaded && pendingCount > 0 && !mergeAlertHidden ? (
         <Alert
@@ -253,7 +256,8 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           aria-label="Components List"
           Header={ComponentsListHeader}
           Row={ComponentsListRow}
-          loaded={componentsLoaded && pipelineRunsLoaded}
+          loaded={componentsLoaded}
+          customData={{ pipelineRunsLoaded }}
           getRowProps={(obj: ComponentKind) => ({
             id: `${obj.metadata.name}-component-list-item`,
             'aria-label': obj.metadata.name,
