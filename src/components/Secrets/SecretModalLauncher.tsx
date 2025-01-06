@@ -1,10 +1,10 @@
 import { ModalVariant } from '@patternfly/react-core';
-import { SecretFormValues } from '../../types';
+import { SecretFormValues, ExistingSecret } from '../../types';
 import { createRawModalLauncher } from '../modal/createModalLauncher';
 import SecretForm from './SecretModal';
 
 export const SecretModalLauncher = (
-  existingSecrets?: string[],
+  existingSecrets?: ExistingSecret[],
   onSubmit?: (values: SecretFormValues) => void,
   onClose?: () => void,
 ) =>
