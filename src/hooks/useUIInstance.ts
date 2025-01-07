@@ -14,7 +14,7 @@ enum EnvironmentShortName {
   prod = 'prod',
 }
 
-export const getEnv = (): ConsoleDotEnvironments => ConsoleDotEnvironments.stage;
+export const getEnv = (): ConsoleDotEnvironments => ConsoleDotEnvironments.prod;
 
 const internalInstance =
   (host: string) => (env: EnvironmentShortName.prod | EnvironmentShortName.stage) =>

@@ -16,7 +16,7 @@ describe('getInternalInstance', () => {
   it('should return correct env for internal instance host', () => {
     mockLocation({ hostname: 'konflux.apps.stone-prod-p01.wcfb.p1.openshiftapps.com' });
     expect(getInternalInstance()).toEqual('prod');
-    mockLocation({ hostname: 'rhtap.apps.rosa.stone-stage-p01.apys.p3.openshiftapps.com' });
+    mockLocation({ hostname: 'rhtap.apps.rosa.stone-stg-p01.apys.p3.openshiftapps.com' });
     expect(getInternalInstance()).toEqual('stage');
     mockLocation({ hostname: 'abcd.com' });
     expect(getInternalInstance()).toEqual(undefined);
@@ -33,7 +33,7 @@ describe('useUIInstance', () => {
 
   it('should return correct env for internal instance', () => {
     mockEnv.mockReturnValue('prod');
-    mockLocation({ hostname: 'rhtap.apps.rosa.stone-stage-p01.apys.p3.openshiftapps.com' });
+    mockLocation({ hostname: 'rhtap.apps.rosa.stone-stg-p01.apys.p3.openshiftapps.com' });
     const { result, rerender } = renderHook(() => useUIInstance());
     expect(result.current).toEqual('stage');
     mockEnv.mockReturnValue('qa');
