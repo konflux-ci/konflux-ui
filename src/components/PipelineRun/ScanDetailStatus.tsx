@@ -4,7 +4,7 @@ import {
   AngleDoubleDownIcon,
   AngleDoubleUpIcon,
   EqualsIcon,
-} from '@patternfly/react-icons/dist/js/icons';
+} from '@patternfly/react-icons/dist/esm/icons';
 import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/dist/js/global_palette_blue_300';
 import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
 import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';

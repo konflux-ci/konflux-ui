@@ -8,7 +8,7 @@ import {
   MastheadToggle,
   PageToggleButton,
 } from '@patternfly/react-core';
-import BarsIcon from '@patternfly/react-icons/dist/js/icons/bars-icon';
+import { BarsIcon } from '@patternfly/react-icons/dist/esm/icons/bars-icon';
 import konfluxLogo from '../assets/konflux.svg';
 import { Header } from '../components/Header/Header';
 

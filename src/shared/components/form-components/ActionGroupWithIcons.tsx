@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActionGroup, Button, ButtonVariant } from '@patternfly/react-core';
-import { CheckIcon } from '@patternfly/react-icons/dist/js/icons/check-icon';
+import { CheckIcon } from '@patternfly/react-icons/dist/esm/icons/check-icon';
 import classnames from 'classnames';
 import { CloseButton } from '../close-button';
 import { ActionGroupWithIconsProps } from './form-component-types';

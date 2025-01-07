@@ -13,7 +13,7 @@ import {
   Tooltip,
   pluralize,
 } from '@patternfly/react-core';
-import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/outlined-question-circle-icon';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { useIntegrationTestScenario } from '../../../../hooks/useIntegrationTestScenarios';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';

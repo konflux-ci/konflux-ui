@@ -12,7 +12,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/js/icons';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';

@@ -111,7 +111,7 @@ module.exports = {
       {
         name: '@patternfly/react-icons',
         message:
-          "Don't use group imports. Use @patternfly/react-icons/dist/js/icons/(kebab-case-name) instead.",
+          "Don't use group imports. Use @patternfly/react-icons/dist/esm/icons/(kebab-case-name) instead.",
       },
       {
         name: 'lodash',

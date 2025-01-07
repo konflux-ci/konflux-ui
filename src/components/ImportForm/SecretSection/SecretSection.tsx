@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextInputTypes, GridItem, Grid, FormSection } from '@patternfly/react-core';
-import { PlusCircleIcon } from '@patternfly/react-icons/dist/js/icons/plus-circle-icon';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { useSecrets } from '../../../hooks/useSecrets';

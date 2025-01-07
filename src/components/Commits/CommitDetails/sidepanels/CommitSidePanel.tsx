@@ -10,7 +10,7 @@ import {
   DrawerHead,
   DrawerPanelBody,
 } from '@patternfly/react-core';
-import { GithubIcon } from '@patternfly/react-icons/dist/js/icons/github-icon';
+import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';

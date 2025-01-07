@@ -1,7 +1,7 @@
-import CheckCircleIcon from '@patternfly/react-icons/dist/js/icons/check-circle-icon';
-import DotCircleIcon from '@patternfly/react-icons/dist/js/icons/dot-circle-icon';
-import ExclamationCircleIcon from '@patternfly/react-icons/dist/js/icons/exclamation-circle-icon';
-import ExclamationTriangleIcon from '@patternfly/react-icons/dist/js/icons/exclamation-triangle-icon';
+import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
+import { DotCircleIcon } from '@patternfly/react-icons/dist/esm/icons/dot-circle-icon';
+import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as yellowColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';

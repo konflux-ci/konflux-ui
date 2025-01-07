@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tooltip } from '@patternfly/react-core';
-import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/outlined-question-circle-icon';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 
 type HelpTooltipProps = {
   content: React.ReactNode;

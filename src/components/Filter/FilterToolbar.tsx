@@ -13,7 +13,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/js/icons';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
 
 type Props = {
   value: string;

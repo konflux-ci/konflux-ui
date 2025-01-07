@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button, Flex, FlexItem } from '@patternfly/react-core';
-import { CompressIcon, DownloadIcon, ExpandIcon } from '@patternfly/react-icons/dist/js/icons';
+import { CompressIcon, DownloadIcon, ExpandIcon } from '@patternfly/react-icons/dist/esm/icons';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
 import { useK8sWatchResource } from '../../../../k8s';

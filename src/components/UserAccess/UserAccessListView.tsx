@@ -15,7 +15,7 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/js/icons';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useSearchParam } from '../../hooks/useSearchParam';
 import { SpaceBindingRequestModel } from '../../models';

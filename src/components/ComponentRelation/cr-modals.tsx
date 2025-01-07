@@ -19,7 +19,7 @@ import {
   ModalVariant,
 } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
-import { PlusCircleIcon } from '@patternfly/react-icons/dist/js/icons/plus-circle-icon';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useFormikContext } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { FormFooter } from '../../shared';
