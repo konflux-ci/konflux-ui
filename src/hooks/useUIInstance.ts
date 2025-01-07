@@ -9,16 +9,24 @@ export enum ConsoleDotEnvironments {
   internalStage = 'stage',
 }
 
-export const getEnv = (): ConsoleDotEnvironments => ConsoleDotEnvironments.prod;
+enum EnvironmentShortName {
+  stage = 'stg',
+  prod = 'prod',
+}
 
-const internalInstance = (host: string) => (env: 'prod' | 'stage') =>
-  new RegExp(`stone-${env}-([A-Za-z0-9]+).([a-z]+).([a-z0-9]+).openshiftapps.com`, 'g').test(host);
+export const getEnv = (): ConsoleDotEnvironments => ConsoleDotEnvironments.stage;
+
+const internalInstance =
+  (host: string) => (env: EnvironmentShortName.prod | EnvironmentShortName.stage) =>
+    new RegExp(`stone-${env}-([A-Za-z0-9]+).([a-z]+).([a-z0-9]+).openshiftapps.com`, 'g').test(
+      host,
+    );
 
 export const getInternalInstance = () => {
   const matchInternalInstance = internalInstance(window.location.hostname);
-  if (matchInternalInstance('prod')) {
+  if (matchInternalInstance(EnvironmentShortName.prod)) {
     return ConsoleDotEnvironments.internalProd;
-  } else if (matchInternalInstance('stage')) {
+  } else if (matchInternalInstance(EnvironmentShortName.stage)) {
     return ConsoleDotEnvironments.internalStage;
   }
   return undefined;
