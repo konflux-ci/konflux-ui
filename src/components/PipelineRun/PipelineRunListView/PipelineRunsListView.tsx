@@ -17,7 +17,7 @@ import {
 } from '@patternfly/react-core/deprecated';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { debounce } from 'lodash-es';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useComponents } from '../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
@@ -33,6 +33,8 @@ import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';
+
+const pipelineRunTypes = [PipelineRunType.BUILD as string, PipelineRunType.TEST as string];
 
 type PipelineRunsListViewProps = {
   applicationName: string;
@@ -50,6 +52,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
+  const [typeFilterExpanded, setTypeFilterExpanded] = React.useState<boolean>(false);
+  const [typeFiltersParam, setTypeFiltersParam] = useSearchParam('type', '');
   const [onLoadName, setOnLoadName] = React.useState(nameFilter);
   React.useEffect(() => {
     if (nameFilter) {
@@ -97,6 +101,10 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const statusFilterObj = React.useMemo(() => {
     return pipelineRuns.reduce((acc, plr) => {
+      if (customFilter && !customFilter(plr)) {
+        return acc;
+      }
+
       const stat = pipelineRunStatus(plr);
       if (statuses.includes(stat)) {
         if (acc[stat] !== undefined) {
@@ -107,22 +115,51 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
       }
       return acc;
     }, {});
-  }, [pipelineRuns]);
+  }, [pipelineRuns, customFilter]);
+
+  const typeFilters = React.useMemo(
+    () => (typeFiltersParam ? typeFiltersParam.split(',') : []),
+    [typeFiltersParam],
+  );
+
+  const setTypeFilters = (filters: string[]) => setTypeFiltersParam(filters.join(','));
+
+  const typeFilterObj = React.useMemo(() => {
+    return pipelineRuns.reduce((acc, plr) => {
+      if (customFilter && !customFilter(plr)) {
+        return acc;
+      }
+
+      const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+
+      if (pipelineRunTypes.includes(runType)) {
+        if (acc[runType] !== undefined) {
+          acc[runType] = acc[runType] + 1;
+        } else {
+          acc[runType] = 1;
+        }
+      }
+      return acc;
+    }, {});
+  }, [pipelineRuns, customFilter]);
 
   const filteredPLRs = React.useMemo(
     () =>
       pipelineRuns
-        .filter(
-          (plr) =>
+        .filter((plr) => {
+          const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+          return (
             (!nameFilter ||
               plr.metadata.name.indexOf(nameFilter) >= 0 ||
               plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(
                 nameFilter.trim().toLowerCase(),
               ) >= 0) &&
-            (!statusFilters.length || statusFilters.includes(pipelineRunStatus(plr))),
-        )
+            (!statusFilters.length || statusFilters.includes(pipelineRunStatus(plr))) &&
+            (!typeFilters.length || typeFilters.includes(runType))
+          );
+        })
         .filter((plr) => !customFilter || customFilter(plr)),
-    [customFilter, nameFilter, pipelineRuns, statusFilters],
+    [customFilter, nameFilter, pipelineRuns, statusFilters, typeFilters],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
@@ -131,6 +168,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     onLoadName.length && setOnLoadName('');
     setNameFilter('');
     setStatusFilters([]);
+    setTypeFilters([]);
   };
   const onNameInput = debounce((n: string) => {
     n.length === 0 && onLoadName.length && setOnLoadName('');
@@ -182,6 +220,41 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
                       value={filter}
                       isChecked={statusFilters.includes(filter)}
                       itemCount={statusFilterObj[filter] ?? 0}
+                    >
+                      {filter}
+                    </SelectOption>
+                  ))}
+                </SelectGroup>,
+              ]}
+            </Select>
+          </ToolbarItem>
+          <ToolbarItem>
+            <Select
+              placeholderText="Type"
+              toggleIcon={<FilterIcon />}
+              toggleAriaLabel="Type filter menu"
+              variant={SelectVariant.checkbox}
+              isOpen={typeFilterExpanded}
+              onToggle={(_, expanded) => setTypeFilterExpanded(expanded)}
+              onSelect={(event, selection) => {
+                const checked = (event.target as HTMLInputElement).checked;
+                setTypeFilters(
+                  checked
+                    ? [...typeFilters, String(selection)]
+                    : typeFilters.filter((value) => value !== selection),
+                );
+              }}
+              selections={typeFilters}
+              isGrouped
+            >
+              {[
+                <SelectGroup label="Type" key="type">
+                  {Object.keys(typeFilterObj).map((filter) => (
+                    <SelectOption
+                      key={filter}
+                      value={filter}
+                      isChecked={typeFilters.includes(filter)}
+                      itemCount={typeFilterObj[filter] ?? 0}
                     >
                       {filter}
                     </SelectOption>

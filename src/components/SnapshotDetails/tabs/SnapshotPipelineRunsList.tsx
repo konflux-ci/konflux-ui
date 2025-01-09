@@ -24,6 +24,8 @@ import { useSearchParam } from '../../../hooks/useSearchParam';
 import { Table } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { PipelineRunKind } from '../../../types';
+import { statuses } from '../../../utils/commits-utils';
+import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -48,9 +50,39 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
 }) => {
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [name, setName] = React.useState('');
+  const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
+  const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
   const [typeFilterExpanded, setTypeFilterExpanded] = React.useState<boolean>(false);
   const [typeFiltersParam, setTypeFiltersParam] = useSearchParam('type', '');
   const [onLoadName, setOnLoadName] = React.useState(nameFilter);
+
+  const statusFilters = React.useMemo(
+    () => (statusFiltersParam ? statusFiltersParam.split(',') : []),
+    [statusFiltersParam],
+  );
+
+  const setStatusFilters = React.useCallback(
+    (filters: string[]) => setStatusFiltersParam(filters.join(',')),
+    [setStatusFiltersParam],
+  );
+
+  const statusFilterObj = React.useMemo(() => {
+    return snapshotPipelineRuns.reduce((acc, plr) => {
+      if (customFilter && !customFilter(plr)) {
+        return acc;
+      }
+
+      const status = pipelineRunStatus(plr);
+      if (statuses.includes(status)) {
+        if (acc[status] !== undefined) {
+          acc[status] = acc[status] + 1;
+        } else {
+          acc[status] = 1;
+        }
+      }
+      return acc;
+    }, {});
+  }, [snapshotPipelineRuns, customFilter]);
 
   const typeFilters = React.useMemo(
     () => (typeFiltersParam ? typeFiltersParam.split(',') : []),
@@ -59,8 +91,12 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
 
   const setTypeFilters = (filters: string[]) => setTypeFiltersParam(filters.join(','));
 
-  const statusFilterObj = React.useMemo(() => {
+  const typeFilterObj = React.useMemo(() => {
     return snapshotPipelineRuns.reduce((acc, plr) => {
+      if (customFilter && !customFilter(plr)) {
+        return acc;
+      }
+
       const runType = plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL];
       if (pipelineRunTypes.includes(runType)) {
         if (acc[runType] !== undefined) {
@@ -71,7 +107,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
       }
       return acc;
     }, {});
-  }, [snapshotPipelineRuns]);
+  }, [snapshotPipelineRuns, customFilter]);
 
   const onClearFilters = () => {
     onLoadName.length && setOnLoadName('');
@@ -90,18 +126,19 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     () =>
       snapshotPipelineRuns
         .filter((plr) => {
-          const runType = plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL];
+          const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
           return (
             (!nameFilter ||
               plr.metadata.name.indexOf(nameFilter) >= 0 ||
               plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(
                 nameFilter.trim().toLowerCase(),
               ) >= 0) &&
+            (!statusFilters.length || statusFilters.includes(pipelineRunStatus(plr))) &&
             (!typeFilters.length || typeFilters.includes(runType))
           );
         })
         .filter((plr) => !customFilter || customFilter(plr)),
-    [customFilter, nameFilter, snapshotPipelineRuns, typeFilters],
+    [customFilter, nameFilter, snapshotPipelineRuns, typeFilters, statusFilters],
   );
 
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : snapshotPipelineRuns);
@@ -121,6 +158,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   if (!snapshotPipelineRuns || snapshotPipelineRuns.length === 0) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
+
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
 
   return (
     <>
@@ -147,6 +186,41 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
             </ToolbarItem>
             <ToolbarItem>
               <Select
+                placeholderText="Status"
+                toggleIcon={<FilterIcon />}
+                toggleAriaLabel="Status filter menu"
+                variant={SelectVariant.checkbox}
+                isOpen={statusFilterExpanded}
+                onToggle={(_, expanded) => setStatusFilterExpanded(expanded)}
+                onSelect={(event, selection) => {
+                  const checked = (event.target as HTMLInputElement).checked;
+                  setStatusFilters(
+                    checked
+                      ? [...statusFilters, String(selection)]
+                      : statusFilters.filter((value) => value !== selection),
+                  );
+                }}
+                selections={statusFilters}
+                isGrouped
+              >
+                {[
+                  <SelectGroup label="Status" key="status">
+                    {Object.keys(statusFilterObj).map((filter) => (
+                      <SelectOption
+                        key={filter}
+                        value={filter}
+                        isChecked={statusFilters.includes(filter)}
+                        itemCount={statusFilterObj[filter] ?? 0}
+                      >
+                        {filter}
+                      </SelectOption>
+                    ))}
+                  </SelectGroup>,
+                ]}
+              </Select>
+            </ToolbarItem>
+            <ToolbarItem>
+              <Select
                 placeholderText="Type"
                 data-test="plr-type-filter"
                 toggleIcon={<FilterIcon />}
@@ -167,12 +241,12 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
               >
                 {[
                   <SelectGroup label="Type" key="type">
-                    {Object.keys(statusFilterObj).map((filter) => (
+                    {Object.keys(typeFilterObj).map((filter) => (
                       <SelectOption
                         key={filter}
                         value={filter}
                         isChecked={typeFilters.includes(filter)}
-                        itemCount={statusFilterObj[filter] ?? 0}
+                        itemCount={typeFilterObj[filter] ?? 0}
                       >
                         {capitalize(filter)}
                       </SelectOption>
@@ -192,6 +266,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
           customData={vulnerabilities}
           Header={PipelineRunListHeaderWithVulnerabilities}
           Row={PipelineRunListRowWithVulnerabilities}
+          EmptyMsg={EmptyMsg}
           loaded
           getRowProps={(obj: PipelineRunKind) => ({
             id: obj.metadata.name,
