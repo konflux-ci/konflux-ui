@@ -52,7 +52,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
           name="integrationTest.url"
           placeholder="Enter your source"
           validated={validated}
-          label="GitHub URL"
+          label="Git URL"
           required
           data-test="git-url-input"
         />

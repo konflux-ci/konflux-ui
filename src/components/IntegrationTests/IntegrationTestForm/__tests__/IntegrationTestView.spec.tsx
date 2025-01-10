@@ -96,7 +96,7 @@ describe('IntegrationTestView', () => {
     fireEvent.input(wrapper.getByLabelText(/Integration test name/), {
       target: { value: 'new-test-name' },
     });
-    fireEvent.input(wrapper.getByLabelText(/GitHub URL/), {
+    fireEvent.input(wrapper.getByLabelText(/Git URL/), {
       target: { value: 'quay.io/kpavic/test-bundle:pipeline' },
     });
     fireEvent.input(wrapper.getByLabelText(/Revision/), {
@@ -115,7 +115,7 @@ describe('IntegrationTestView', () => {
     expect(wrapper).toBeTruthy();
 
     wrapper.getByLabelText(/Integration test name/);
-    wrapper.getByLabelText(/GitHub URL/);
+    wrapper.getByLabelText(/Git URL/);
     wrapper.getByLabelText(/Revision/);
     wrapper.getByLabelText(/Path in repository/);
     wrapper.getByRole('button', { name: 'Add integration test' });
@@ -167,7 +167,7 @@ describe('IntegrationTestView', () => {
     expect(wrapper.getByLabelText(/Integration test name/).getAttribute('value')).toBe(
       'test-app-test-2',
     );
-    expect(wrapper.getByLabelText(/GitHub URL/).getAttribute('value')).toEqual('test-url2');
+    expect(wrapper.getByLabelText(/Git URL/).getAttribute('value')).toEqual('test-url2');
     expect(wrapper.getByLabelText(/Revision/).getAttribute('value')).toEqual('main2');
 
     expect(wrapper.getByLabelText(/Path in repository/).getAttribute('value')).toEqual(

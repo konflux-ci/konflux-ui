@@ -216,7 +216,7 @@ export const getURLForParam = (params: ResolverParam[], paramName: string): stri
 
 export const getLabelForParam = (paramName: string): string => {
   if (paramName === ResolverRefParams.URL) {
-    return 'GitHub URL';
+    return 'Git URL';
   }
   if (paramName === ResolverRefParams.PATH) {
     return 'Path in repository';
