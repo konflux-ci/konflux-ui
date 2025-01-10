@@ -34,7 +34,7 @@ export class IntegrationTestsTabPage {
   ) {
     this.verifySaveChangesIsDisabled();
     UIhelper.inputValueInTextBoxByLabelName('Integration test name', integrationTestName);
-    UIhelper.inputValueInTextBoxByLabelName('GitHub URL', githubURL);
+    UIhelper.inputValueInTextBoxByLabelName('Git URL', githubURL);
     UIhelper.inputValueInTextBoxByLabelName('Revision', revision);
     UIhelper.inputValueInTextBoxByLabelName('Path in repository', pathInRepository);
     if (markOptionalForRelease === 'uncheck') {
@@ -52,7 +52,7 @@ export class IntegrationTestsTabPage {
     this.verifySaveChangesIsDisabled();
 
     if (githubURL) {
-      UIhelper.inputValueInTextBoxByLabelName('GitHub URL', githubURL);
+      UIhelper.inputValueInTextBoxByLabelName('Git URL', githubURL);
     }
 
     if (markOptionalForRelease === 'uncheck')
