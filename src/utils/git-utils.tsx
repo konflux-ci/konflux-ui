@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { BitbucketIcon } from '@patternfly/react-icons/dist/js/icons/bitbucket-icon';
-import { GitAltIcon } from '@patternfly/react-icons/dist/js/icons/git-alt-icon';
-import { GithubIcon } from '@patternfly/react-icons/dist/js/icons/github-icon';
-import { GitlabIcon } from '@patternfly/react-icons/dist/js/icons/gitlab-icon';
+import { BitbucketIcon } from '@patternfly/react-icons/dist/esm/icons/bitbucket-icon';
+import { GitAltIcon } from '@patternfly/react-icons/dist/esm/icons/git-alt-icon';
+import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
+import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 
 export const getGitPath = (
   gitSource: string,

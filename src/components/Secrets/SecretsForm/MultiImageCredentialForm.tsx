@@ -5,8 +5,8 @@ import {
   FormFieldGroupHeader,
   TextInputTypes,
 } from '@patternfly/react-core';
-import { MinusCircleIcon } from '@patternfly/react-icons/dist/js/icons/minus-circle-icon';
-import { PlusCircleIcon } from '@patternfly/react-icons/dist/js/icons/plus-circle-icon';
+import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField } from 'formik';
 import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MenuToggle } from '@patternfly/react-core';
-import { EllipsisVIcon } from '@patternfly/react-icons/dist/js/icons';
+import { EllipsisVIcon } from '@patternfly/react-icons/dist/esm/icons';
 import { ActionMenuVariant } from './types';
 
 type ActionMenuToggleProps = {

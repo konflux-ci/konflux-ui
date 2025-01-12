@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Label, Tooltip } from '@patternfly/react-core';
-import { BitbucketIcon } from '@patternfly/react-icons/dist/js/icons/bitbucket-icon';
-import { GithubIcon } from '@patternfly/react-icons/dist/js/icons/github-icon';
-import { GitlabIcon } from '@patternfly/react-icons/dist/js/icons/gitlab-icon';
+import { BitbucketIcon } from '@patternfly/react-icons/dist/esm/icons/bitbucket-icon';
+import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
+import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import { css } from '@patternfly/react-styles';
 import { GitProvider } from '../../../shared/utils/git-utils';
 import { getCommitShortName } from '../../../utils/commits-utils';

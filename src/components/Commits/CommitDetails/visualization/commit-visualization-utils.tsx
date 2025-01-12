@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { GithubIcon } from '@patternfly/react-icons/dist/js/icons/github-icon';
-import { ServerIcon } from '@patternfly/react-icons/dist/js/icons/server-icon';
+import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
+import { ServerIcon } from '@patternfly/react-icons/dist/esm/icons/server-icon';
 import { EdgeModel, getEdgesFromNodes, getSpacerNodes } from '@patternfly/react-topology';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import {

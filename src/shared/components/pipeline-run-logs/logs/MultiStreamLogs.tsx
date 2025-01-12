@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Button } from '@patternfly/react-core';
-import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/js/icons';
+import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/esm/icons';
 import { TaskRunKind } from '../../../../types';
 import { useScrollDirection, ScrollDirection } from '../../../hooks/scroll';
 import { LoadingInline } from '../../status-box/StatusBox';

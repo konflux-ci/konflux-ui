@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, Flex, FlexItem, TextInput, Tooltip } from '@patternfly/react-core';
-import MinusCircleIcon from '@patternfly/react-icons/dist/js/icons/minus-circle-icon';
-import PlusCircleIcon from '@patternfly/react-icons/dist/js/icons/plus-circle-icon';
+import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import cloneDeep from 'lodash/cloneDeep';
 import { NameValueEditorPair } from './types';
 
