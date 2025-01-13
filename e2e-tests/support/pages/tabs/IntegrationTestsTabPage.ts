@@ -6,7 +6,7 @@ import { integrationTestsTabPO, addIntegrationTestStepPO } from '../../pageObjec
 
 type integrationTableRow = {
   name: string;
-  githubURL: string;
+  gitURL: string;
   optionalForRelease: string;
   revision: string;
 };
@@ -27,14 +27,14 @@ export class IntegrationTestsTabPage {
 
   addIntegrationTest(
     integrationTestName: string,
-    githubURL: string,
+    gitURL: string,
     revision: string,
     pathInRepository: string,
     markOptionalForRelease?: string,
   ) {
     this.verifySaveChangesIsDisabled();
     UIhelper.inputValueInTextBoxByLabelName('Integration test name', integrationTestName);
-    UIhelper.inputValueInTextBoxByLabelName('Git URL', githubURL);
+    UIhelper.inputValueInTextBoxByLabelName('Git URL', gitURL);
     UIhelper.inputValueInTextBoxByLabelName('Revision', revision);
     UIhelper.inputValueInTextBoxByLabelName('Path in repository', pathInRepository);
     if (markOptionalForRelease === 'uncheck') {
@@ -47,12 +47,12 @@ export class IntegrationTestsTabPage {
     Common.waitForLoad();
   }
 
-  editIntegrationTest(githubURL: string, markOptionalForRelease?: string) {
+  editIntegrationTest(gitURL: string, markOptionalForRelease?: string) {
     this.verifyIntegrationNameIsDisabled();
     this.verifySaveChangesIsDisabled();
 
-    if (githubURL) {
-      UIhelper.inputValueInTextBoxByLabelName('Git URL', githubURL);
+    if (gitURL) {
+      UIhelper.inputValueInTextBoxByLabelName('Git URL', gitURL);
     }
 
     if (markOptionalForRelease === 'uncheck')
@@ -78,7 +78,7 @@ export class IntegrationTestsTabPage {
 
   verifyRowInIntegrationTestsTable(rowDetails: integrationTableRow) {
     UIhelper.verifyRowInTable('Integration tests', rowDetails.name, [
-      new RegExp(rowDetails.githubURL),
+      new RegExp(rowDetails.gitURL),
       new RegExp(`^\\s*${rowDetails.optionalForRelease}\\s*$`),
       new RegExp(`^\\s*${rowDetails.revision}\\s*$`),
     ]);
