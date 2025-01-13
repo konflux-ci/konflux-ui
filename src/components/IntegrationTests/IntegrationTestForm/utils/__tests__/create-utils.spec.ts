@@ -56,6 +56,13 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        contexts: [
+          {
+            name: 'application',
+            description:
+              'execute the integration test in all cases - this would be the default state',
+          },
+        ],
       },
       'Test Application',
       'test-ns',

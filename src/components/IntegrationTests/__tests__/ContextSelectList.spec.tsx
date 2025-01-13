@@ -1,7 +1,11 @@
 import { render, fireEvent, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import {
+  getIntegrationTestContextOptionButton,
+  openIntegrationTestContextDropdown,
+} from '../../../utils/test-utils';
 import { ContextSelectList } from '../ContextSelectList';
-import { ContextOption } from '../utils';
+import { ContextOption } from '../utils/creation-utils';
 
 describe('ContextSelectList Component', () => {
   const defaultProps = {
@@ -19,31 +23,33 @@ describe('ContextSelectList Component', () => {
     onInputValueChange: jest.fn(),
     inputValue: '',
     onRemoveAll: jest.fn(),
-    editing: true,
+    error: '',
+  };
+
+  const unselectedContextsProps = {
+    allContexts: [
+      { name: 'application', description: 'Test context application', selected: false },
+      { name: 'component', description: 'Test context component', selected: false },
+      { name: 'group', description: 'Test context group', selected: false },
+    ] as ContextOption[],
+    filteredContexts: [
+      { name: 'application', description: 'Test context application', selected: false },
+      { name: 'component', description: 'Test context component', selected: false },
+      { name: 'group', description: 'Test context group', selected: false },
+    ] as ContextOption[],
+    onSelect: jest.fn(),
+    onInputValueChange: jest.fn(),
+    inputValue: '',
+    onRemoveAll: jest.fn(),
+    error: 'integrationTest.context must contain 1 item.',
   };
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // Ignore this check for the tests.
-  // If not, the test will throw an error.
-  /* eslint-disable @typescript-eslint/require-await */
-  const openDropdown = async () => {
-    const toggleButton = screen.getByTestId('context-dropdown-toggle').childNodes[1];
-    expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
-    await act(async () => {
-      fireEvent.click(toggleButton);
-    });
-    expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
-  };
-
   const getContextOption = (name: string) => {
     return screen.getByTestId(`context-option-${name}`);
-  };
-
-  const getContextOptionButton = (name: string) => {
-    return screen.getByTestId(`context-option-${name}`).childNodes[0];
   };
 
   const getChip = (name: string) => {
@@ -74,6 +80,7 @@ describe('ContextSelectList Component', () => {
   it('calls onSelect when a chip is clicked', async () => {
     render(<ContextSelectList {...defaultProps} />);
     const appChip = getChipButton('application');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.click(appChip);
     });
@@ -83,6 +90,7 @@ describe('ContextSelectList Component', () => {
   it('updates input value on typing', async () => {
     render(<ContextSelectList {...defaultProps} />);
     const input = screen.getByPlaceholderText('Select a context');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.change(input, { target: { value: 'new context' } });
     });
@@ -91,14 +99,15 @@ describe('ContextSelectList Component', () => {
 
   it('opens the dropdown when clicking the toggle', async () => {
     render(<ContextSelectList {...defaultProps} />);
-    await openDropdown();
+    await openIntegrationTestContextDropdown();
     expect(getContextOption('application')).toBeInTheDocument();
   });
 
   it('calls onSelect when a context option is clicked', async () => {
     render(<ContextSelectList {...defaultProps} />);
-    await openDropdown();
-    const groupOption = getContextOptionButton('group');
+    await openIntegrationTestContextDropdown();
+    const groupOption = getIntegrationTestContextOptionButton('group');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.click(groupOption);
     });
@@ -108,14 +117,16 @@ describe('ContextSelectList Component', () => {
   it('calls onRemoveAll when clear button is clicked', async () => {
     render(<ContextSelectList {...defaultProps} />);
     const clearButton = screen.getByTestId('clear-button');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => fireEvent.click(clearButton));
     expect(defaultProps.onRemoveAll).toHaveBeenCalled();
   });
 
   it('closes the dropdown on selecting an item', async () => {
     render(<ContextSelectList {...defaultProps} />);
-    await openDropdown();
-    const componentOption = getContextOptionButton('component');
+    await openIntegrationTestContextDropdown();
+    const componentOption = getIntegrationTestContextOptionButton('component');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => fireEvent.click(componentOption));
     expect(defaultProps.onSelect).toHaveBeenCalledWith('component');
   });
@@ -123,6 +134,7 @@ describe('ContextSelectList Component', () => {
   it('should focus on the next item when ArrowDown is pressed', async () => {
     render(<ContextSelectList {...defaultProps} />);
     const input = screen.getByTestId('multi-typeahead-select-input');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.keyDown(input, { key: 'ArrowDown' });
     });
@@ -139,6 +151,7 @@ describe('ContextSelectList Component', () => {
   it('should focus on the previous item when ArrowUp is pressed', async () => {
     render(<ContextSelectList {...defaultProps} />);
     const input = screen.getByTestId('multi-typeahead-select-input');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.keyDown(input, { key: 'ArrowUp' });
     });
@@ -150,5 +163,12 @@ describe('ContextSelectList Component', () => {
       .forEach((ctx) => {
         expect(getContextOption(ctx.name)).not.toHaveClass('pf-m-focus');
       });
+  });
+
+  /* eslint-disable-next-line @typescript-eslint/require-await */
+  it('should be marked as invalid when no contexts are selected', async () => {
+    render(<ContextSelectList {...unselectedContextsProps} />);
+    const input = screen.getByPlaceholderText('You must select at least one context');
+    expect(input).toBeInTheDocument();
   });
 });
