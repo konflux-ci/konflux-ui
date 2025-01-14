@@ -346,8 +346,8 @@ export const getTaskRuns = (
 export const getTaskRunLog = (
   workspace: string,
   namespace: string,
-  pid: string,
   taskRunID: string,
+  pid: string,
 ): Promise<string> =>
   commonFetchText(
     `${getTRUrlPrefix(workspace)}/${namespace}/results/${pid}/logs/${taskRunID}`,
