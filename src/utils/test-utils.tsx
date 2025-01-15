@@ -2,7 +2,14 @@ import * as React from 'react';
 import * as ReactRouterDom from 'react-router-dom';
 import { Form } from '@patternfly/react-core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RenderOptions, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
+import {
+  RenderOptions,
+  render,
+  screen,
+  waitForElementToBeRemoved,
+  fireEvent,
+  act,
+} from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
@@ -236,3 +243,19 @@ export const WithTestWorkspaceContext =
 
 export const waitForLoadingToFinish = async () =>
   await waitForElementToBeRemoved(() => screen.getByRole('progressbar'));
+
+// Ignore this check for the tests.
+// If not, the test will throw an error.
+/* eslint-disable @typescript-eslint/require-await */
+export const openIntegrationTestContextDropdown = async () => {
+  const toggleButton = screen.getByTestId('context-dropdown-toggle').childNodes[1];
+  expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
+  await act(async () => {
+    fireEvent.click(toggleButton);
+  });
+  expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
+};
+
+export const getIntegrationTestContextOptionButton = (name: string) => {
+  return screen.getByTestId(`context-option-${name}`).childNodes[0];
+};

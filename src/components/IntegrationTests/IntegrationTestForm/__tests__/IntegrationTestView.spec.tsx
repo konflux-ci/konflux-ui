@@ -6,8 +6,11 @@ import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../u
 import { mockApplication } from '../../../ApplicationDetails/__data__/mock-data';
 import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import { WorkspaceContext } from '../../../Workspace/workspace-context';
-import { MockIntegrationTestsWithGit } from '../../IntegrationTestsListView/__data__/mock-integration-tests';
-import IntegrationTestView from '../IntegrationTestView';
+import {
+  MockIntegrationTests,
+  MockIntegrationTestsWithGit,
+} from '../../IntegrationTestsListView/__data__/mock-integration-tests';
+import IntegrationTestView, { getFormContextValues } from '../IntegrationTestView';
 import { createIntegrationTest } from '../utils/create-utils';
 
 jest.mock('../../../../utils/analytics');
@@ -185,5 +188,33 @@ describe('IntegrationTestView', () => {
 
     expect((wrapper.getByText(/Save changes/) as HTMLButtonElement).disabled).toBe(true);
     wrapper.getByLabelText(/Integration test name/).setAttribute('value', 'new value');
+  });
+});
+
+describe('getFormContextValues', () => {
+  it('should return default context when creating an integration test', () => {
+    const result = getFormContextValues(null);
+    expect(result).toEqual([
+      {
+        name: 'application',
+        description: 'execute the integration test in all cases - this would be the default state',
+        selected: true,
+      },
+    ]);
+  });
+
+  it('should return the integration test contexts', () => {
+    const integrationTest = MockIntegrationTests[2];
+    const result = getFormContextValues(integrationTest);
+    expect(result).toEqual([
+      {
+        description: 'Application testing 3',
+        name: 'application',
+      },
+      {
+        description: 'Group testing 3',
+        name: 'group',
+      },
+    ]);
   });
 });

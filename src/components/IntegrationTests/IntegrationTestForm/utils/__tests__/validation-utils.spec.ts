@@ -9,6 +9,12 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          contexts: [
+            {
+              name: 'test',
+              description: 'test description',
+            },
+          ],
         },
       }),
     ).not.toThrow();
@@ -21,6 +27,12 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          contexts: [
+            {
+              name: 'test',
+              description: 'test description',
+            },
+          ],
         },
       }),
     ).rejects.toThrow('Required');
@@ -34,6 +46,12 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          contexts: [
+            {
+              name: 'test',
+              description: 'test description',
+            },
+          ],
         },
       }),
     ).rejects.toThrow(
@@ -49,6 +67,12 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          contexts: [
+            {
+              name: 'test',
+              description: 'test description',
+            },
+          ],
         },
       }),
     ).rejects.toThrow(
@@ -72,6 +96,18 @@ describe('validation-utils', () => {
     await expect(
       integrationTestValidationSchema.validate({
         integrationTest: {
+          url: 'test-url',
+          path: 'test-path',
+        },
+      }),
+    ).rejects.toThrow('Required');
+  });
+
+  it('should fail when contexts is missing', async () => {
+    await expect(
+      integrationTestValidationSchema.validate({
+        integrationTest: {
+          name: 'test-name',
           url: 'test-url',
           path: 'test-path',
         },

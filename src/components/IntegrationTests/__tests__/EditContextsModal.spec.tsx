@@ -1,12 +1,16 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useComponents } from '../../../hooks/useComponents';
 import { k8sPatchResource } from '../../../k8s/k8s-fetch';
-import { formikRenderer } from '../../../utils/test-utils';
+import {
+  formikRenderer,
+  openIntegrationTestContextDropdown,
+  getIntegrationTestContextOptionButton,
+} from '../../../utils/test-utils';
 import { EditContextsModal } from '../EditContextsModal';
 import { IntegrationTestFormValues } from '../IntegrationTestForm/types';
 import { MockIntegrationTests } from '../IntegrationTestsListView/__data__/mock-integration-tests';
-import { contextOptions } from '../utils';
+import { contextOptions } from '../utils/creation-utils';
 
 // Mock external dependencies
 jest.mock('../../../k8s/k8s-fetch', () => ({
@@ -28,7 +32,7 @@ const initialValues: IntegrationTestFormValues = {
   name: intTest.metadata.name,
   url: 'test-url',
   optional: true,
-  contexts: intTest.spec.contexts,
+  contexts: contextOptions,
 };
 
 const setup = () =>
@@ -74,10 +78,30 @@ describe('EditContextsModal', () => {
 
     setup();
     const clearButton = screen.getByTestId('clear-button');
+    const submitButton = screen.getByTestId('update-contexts');
     // Clear all selections
     fireEvent.click(clearButton);
-    // Save button should now be active
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    // Save button should not be active
+    // if no context values are selected.
+    expect(submitButton).toBeDisabled();
+    fireEvent.click(submitButton);
+
+    // The user should not be able to update the contexts.
+    await waitFor(() => {
+      expect(patchResourceMock).toHaveBeenCalledTimes(0);
+    });
+
+    // Select a context
+    await openIntegrationTestContextDropdown();
+    const groupOption = getIntegrationTestContextOptionButton('group');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
+    await act(async () => {
+      fireEvent.click(groupOption);
+    });
+
+    // Submission should be available now
+    expect(submitButton).not.toBeDisabled();
+    fireEvent.click(submitButton);
 
     await waitFor(() => {
       expect(patchResourceMock).toHaveBeenCalledTimes(1);
@@ -85,8 +109,26 @@ describe('EditContextsModal', () => {
 
     expect(patchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        model: {
+          apiGroup: 'appstudio.redhat.com',
+          apiVersion: 'v1beta1',
+          kind: 'IntegrationTestScenario',
+          namespaced: true,
+          plural: 'integrationtestscenarios',
+        },
+        patches: [
+          {
+            op: 'replace',
+            path: '/spec/contexts',
+            value: [
+              {
+                description: 'execute the integration test for a Snapshot of the `group` type',
+                name: 'group',
+              },
+            ],
+          },
+        ],
         queryOptions: { name: 'test-app-test-1', ns: 'test-namespace' },
-        patches: [{ op: 'replace', path: '/spec/contexts', value: null }],
       }),
     );
     expect(onCloseMock).toHaveBeenCalledWith(null, { submitClicked: true });
@@ -96,11 +138,17 @@ describe('EditContextsModal', () => {
     patchResourceMock.mockRejectedValue('Failed to update contexts');
     setup();
 
-    const clearButton = screen.getByTestId('clear-button');
-    // Clear all selections
-    fireEvent.click(clearButton);
+    const submitButton = screen.getByTestId('update-contexts');
+    // Select a context
+    await openIntegrationTestContextDropdown();
+    const groupOption = getIntegrationTestContextOptionButton('group');
+    /* eslint-disable-next-line @typescript-eslint/require-await */
+    await act(async () => {
+      fireEvent.click(groupOption);
+    });
+
     // Click Save button
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    fireEvent.click(submitButton);
 
     // wait for the error message to appear
     await waitFor(() => {
