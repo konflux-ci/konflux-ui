@@ -4,7 +4,12 @@ import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
-import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../types';
+import {
+  AddSecretFormValues,
+  SecretFor,
+  SecretTypeDropdownLabel,
+  SourceSecretType,
+} from '../../types';
 import { ComponentKind, ComponentSpecs } from '../../types/component';
 import {
   createApplication,
@@ -13,7 +18,7 @@ import {
   createSecret,
   addSecret,
 } from '../create-utils';
-import { mockWindowFetch } from '../test-utils';
+import { createK8sUtilMock, mockWindowFetch } from '../test-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(() => Promise.resolve()),
@@ -27,6 +32,8 @@ jest.mock('../../k8s/k8s-fetch', () => ({
 jest.mock('../../components/Secrets/utils/service-account-utils', () => {
   return { linkSecretToServiceAccount: jest.fn() };
 });
+
+const commonFetchMock = createK8sUtilMock('commonFetch');
 
 const createResourceMock = k8sCreateResource as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
@@ -145,6 +152,7 @@ const addSecretFormValues: AddSecretFormValues = {
   },
   labels: [{ key: 'test', value: 'test' }],
 };
+
 describe('Create Utils', () => {
   beforeEach(() => {
     mockWindowFetch();
@@ -426,7 +434,7 @@ describe('Create Utils', () => {
       {
         secretName: 'my-snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
 
       'test-ns',
@@ -452,7 +460,7 @@ describe('Create Utils', () => {
       {
         secretName: 'my-snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
 
       'test-ns',
@@ -478,7 +486,7 @@ describe('Create Utils', () => {
       {
         secretName: 'registry-creds',
         type: SecretTypeDropdownLabel.image,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        image: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
 
       'test-ns',
@@ -496,6 +504,78 @@ describe('Create Utils', () => {
     );
   });
 
+  it('should add correct values for Image pull secret', async () => {
+    commonFetchMock.mockClear();
+    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.image,
+        image: { keyValues: [{ key: 'test', value: 'test-value' }] },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+
+    expect(commonFetchMock).toHaveBeenCalledWith(
+      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+      expect.objectContaining({
+        body: expect.stringContaining('"test":"test-value"'),
+      }),
+    );
+  });
+
+  it('should create a Source secret', async () => {
+    commonFetchMock.mockClear();
+    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.source,
+        source: { authType: SourceSecretType.basic, username: 'test1', password: 'pass-test' },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+
+    expect(commonFetchMock).toHaveBeenCalledWith(
+      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+      expect.objectContaining({
+        body: expect.stringContaining('"type":"kubernetes.io/basic-auth"'),
+      }),
+    );
+  });
+
+  it('should add correct data for Source secret', async () => {
+    commonFetchMock.mockClear();
+    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.source,
+        source: { authType: SourceSecretType.basic, username: 'test1', password: 'pass-test' },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+
+    expect(commonFetchMock).toHaveBeenCalledWith(
+      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+      expect.objectContaining({
+        body: expect.stringContaining('"username":"dGVzdDE=","password":"cGFzcy10ZXN0"'),
+      }),
+    );
+  });
+
   it('should create partner task secret', async () => {
     createResourceMock.mockClear();
     createResourceMock
@@ -507,9 +587,8 @@ describe('Create Utils', () => {
       {
         secretName: 'snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
-
       'test-ns',
       false,
     );
@@ -537,7 +616,6 @@ describe('Create Utils', () => {
     expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
       'test-ns',
-      'test-ws',
     );
   });
 });
