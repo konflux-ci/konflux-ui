@@ -188,6 +188,18 @@ export const getK8sResourceURL = (
   return resourcePath;
 };
 
+/**
+ * returns websocket subprotocol, host with added prefix to path
+ * @param path {String}
+ */
+export const getWebsocketSubProtocolAndPathPrefix = (path) => {
+  return {
+    path: `/wss/k8s${path}`,
+    host: 'auto',
+    subProtocols: ['base64.binary.k8s.io'],
+  };
+};
+
 export const k8sWatch = (
   kind: K8sModelCommon,
   query: {
@@ -239,11 +251,11 @@ export const k8sWatch = (
   }
 
   const path = getK8sResourceURL(kind, undefined, opts);
-  wsOptionsUpdated.path = `/wss/k8s${path}`;
-  wsOptionsUpdated.host = 'auto';
-  wsOptionsUpdated.subProtocols = ['base64.binary.k8s.io'];
 
-  return new WebSocketFactory(path, wsOptionsUpdated);
+  return new WebSocketFactory(path, {
+    ...wsOptionsUpdated,
+    ...getWebsocketSubProtocolAndPathPrefix(path),
+  });
 };
 
 /**
