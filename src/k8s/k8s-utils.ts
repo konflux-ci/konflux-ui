@@ -192,9 +192,9 @@ export const getK8sResourceURL = (
  * returns websocket subprotocol, host with added prefix to path
  * @param path {String}
  */
-export const getWebsocketSubProtocolAndPathPrefix = (path) => {
+export const getWebsocketSubProtocolAndPathPrefix = (path: string) => {
   return {
-    path: `/wss/k8s${path}`,
+    path: path === '' ? undefined : `/wss/k8s${path.startsWith('/') ? path : `/${path}`}`,
     host: 'auto',
     subProtocols: ['base64.binary.k8s.io'],
   };
