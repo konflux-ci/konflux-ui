@@ -4,9 +4,14 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { FieldArray, useField } from 'formik';
 import { useComponents } from '../../../hooks/useComponents';
 import { ComponentKind } from '../../../types';
+import { openIntegrationTestContextDropdown } from '../../../utils/test-utils';
 import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import ContextsField from '../ContextsField';
-import { contextOptions, mapContextsWithSelection, addComponentContexts } from '../utils';
+import {
+  contextOptions,
+  mapContextsWithSelection,
+  addComponentContexts,
+} from '../utils/creation-utils';
 
 // Mock the hooks used in the component
 jest.mock('react-router-dom', () => ({
@@ -46,20 +51,6 @@ describe('ContextsField', () => {
     });
   };
 
-  // Ignore this check for the tests.
-  // If not, the test will throw an error.
-  /* eslint-disable @typescript-eslint/require-await */
-  const openDropdown = async () => {
-    const toggleButton = screen.getByTestId('context-dropdown-toggle').childNodes[1];
-    expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
-
-    await act(async () => {
-      fireEvent.click(toggleButton);
-    });
-
-    expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
-  };
-
   const testContextOption = (name: string) => {
     expect(screen.getByTestId(`context-option-${name}`)).toBeInTheDocument();
   };
@@ -71,7 +62,7 @@ describe('ContextsField', () => {
 
   it('should render custom header if passed', () => {
     mockUseField.mockReturnValue([{}, { value: [] }]);
-    render(<ContextsField fieldName={fieldName} heading="Test Heading" editing={true} />);
+    render(<ContextsField fieldName={fieldName} heading="Test Heading" />);
     expect(screen.getByText('Test Heading')).toBeInTheDocument();
   });
 
@@ -90,11 +81,12 @@ describe('ContextsField', () => {
     };
     mockUseField.mockReturnValue([{}, { value: [selectedContext] }]);
 
-    render(<ContextsField fieldName={fieldName} editing={true} />);
+    render(<ContextsField fieldName={fieldName} />);
 
-    await openDropdown();
+    await openIntegrationTestContextDropdown();
     testContextOption(contextOptions[0].name);
 
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.click(screen.getByTestId(`context-option-${contextOptions[0].name}`).childNodes[0]);
     });
@@ -103,6 +95,7 @@ describe('ContextsField', () => {
     expect(removeMock).toHaveBeenCalledWith(0);
 
     // Simulate selecting another context
+    /* eslint-disable-next-line @typescript-eslint/require-await */
     await act(async () => {
       fireEvent.click(screen.getByTestId(`context-option-${contextOptions[1].name}`).childNodes[0]);
     });
@@ -121,9 +114,9 @@ describe('ContextsField', () => {
     ];
     setupMocks([], mockComponents);
 
-    render(<ContextsField fieldName={fieldName} editing={true} />);
+    render(<ContextsField fieldName={fieldName} />);
 
-    await openDropdown();
+    await openIntegrationTestContextDropdown();
 
     // Names should be visible as a menu option
     ['componentA', 'componentB'].forEach((componentName) => {
@@ -135,15 +128,18 @@ describe('ContextsField', () => {
   });
 
   it('should have applications pre-set as a default context when creating a new integration test', async () => {
-    mockUseField.mockReturnValue([{}, { value: [] }]);
-    render(<ContextsField fieldName={fieldName} heading="Test Heading" editing={false} />);
+    const defaultContext = { ...contextOptions[0], selected: true };
+    // The default context should be coming from the parent components 'initialValues'
+    mockUseField.mockReturnValue([{}, { value: [defaultContext] }]);
+    render(<ContextsField fieldName={fieldName} heading="Test Heading" />);
     const chip = screen.getByTestId('context-chip-application');
     // Check that context option already has a chip
     expect(chip).toBeInTheDocument();
-    // Unselecting the drop down value should not be possible when creating a new integration test.
-    await openDropdown();
+    // Unselecting the drop down value should be possible when creating a new integration test.
+    await openIntegrationTestContextDropdown();
     testContextOption('application');
-    expect(screen.getByTestId('context-option-application').childNodes[0]).toBeDisabled();
+    // The user should be free to unselect the default application context
+    expect(screen.getByTestId('context-option-application').childNodes[0]).not.toBeDisabled();
   });
 });
 

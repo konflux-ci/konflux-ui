@@ -58,4 +58,13 @@ describe('IntegrationTestSection', () => {
 
     screen.queryByTestId('its-param-field');
   });
+
+  it('should render contexts section', () => {
+    formikRenderer(<IntegrationTestSection isInPage />, {
+      source: 'test-source',
+      secret: null,
+    });
+
+    screen.queryByTestId('its-context-field');
+  });
 });

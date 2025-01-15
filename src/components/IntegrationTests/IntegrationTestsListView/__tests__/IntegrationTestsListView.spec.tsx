@@ -45,7 +45,7 @@ describe('IntegrationTestsListView', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     const wrapper = render(<IntegrationTestsListView />);
     expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
-    expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(3);
+    expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(4);
     expect(screen.getByText('test-app-test-1'));
     expect(screen.getByText('test-app-test-2'));
   });
