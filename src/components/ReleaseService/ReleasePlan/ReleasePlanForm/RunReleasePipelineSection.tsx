@@ -13,9 +13,9 @@ const GitOptions: React.FC<{ required?: boolean }> = ({ required = false }) => {
     <>
       <InputField
         name="git.url"
-        label="GitHub URL for the release pipeline"
+        label="Git URL for the release pipeline"
         placeholder="Example, https://github.com/tektoncd/catalog"
-        helperText="The GitHub repository that contains the YAML definition of the pipeline run for your release service."
+        helperText="The Git repository that contains the YAML definition of the pipeline run for your release service."
         required={required}
       />
       <ExpandableSection
