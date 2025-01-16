@@ -419,7 +419,7 @@ export const createImageRepository = (
     apiVersion: `${ImageRepositoryModel.apiGroup}/${ImageRepositoryModel.apiVersion}`,
     kind: ImageRepositoryModel.kind,
     metadata: {
-      name: `imagerepository-for-${application}-${component}`,
+      name: `${application}-${component}`,
       namespace,
       labels: {
         'appstudio.redhat.com/component': component,
