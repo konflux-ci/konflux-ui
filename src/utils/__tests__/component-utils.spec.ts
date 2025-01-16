@@ -100,7 +100,7 @@ describe('component-utils', () => {
     });
   });
 
-  it('should create github URL for component PRs', () => {
+  it('should create git URL for component PRs', () => {
     useApplicationPipelineGitHubAppMock.mockReturnValue({
       name: 'appstudio-staging-ci',
       url: 'https://github.com/apps/appstudio-staging-ci.git',

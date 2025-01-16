@@ -153,7 +153,7 @@ describe('commit-utils', () => {
   });
 
   describe('create github branch/pull request link', () => {
-    it('should return valid github url or null based on commit object', () => {
+    it('should return valid git url or null based on commit object', () => {
       expect(
         createRepoPullRequestURL({
           repoURL: 'https://github.com/a/b',
@@ -185,7 +185,7 @@ describe('commit-utils', () => {
       ).toEqual(null);
     });
 
-    it('should return valid github url or null based on commit object', () => {
+    it('should return valid git url or null based on commit object', () => {
       expect(
         createRepoBranchURL({
           repoURL: 'https://github.com/a/b',
