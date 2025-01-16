@@ -4,7 +4,7 @@ import { Alert } from '@patternfly/react-core';
 import { Base64 } from 'js-base64';
 import { useWorkspaceInfo } from '../../../../components/Workspace/useWorkspaceInfo';
 import { commonFetchText } from '../../../../k8s';
-import { getK8sResourceURL } from '../../../../k8s/k8s-utils';
+import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
 import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { ContainerSpec, PodKind } from '../../types';
@@ -107,9 +107,7 @@ const Logs: React.FC<React.PropsWithChildren<LogsProps>> = ({
           onCompleteRef.current(name);
         });
     } else {
-      const wsOpts = {
-        path: watchURL,
-      };
+      const wsOpts = getWebsocketSubProtocolAndPathPrefix(watchURL);
       ws = new WebSocketFactory(watchURL, wsOpts);
       ws.onMessage((msg) => {
         if (loaded) return;
