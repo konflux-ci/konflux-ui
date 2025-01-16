@@ -65,7 +65,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
           />
           <ApplicationDropdown
             name="application"
-            helpText="The application you want to release to the environments in your target workspace."
+            helpText="The application you want to release to the environments in your target namespace."
             required
           />
           <RunReleasePipelineSection />
