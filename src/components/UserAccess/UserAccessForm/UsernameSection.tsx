@@ -34,11 +34,6 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
       setValidating(true);
       setError('');
 
-      if (!username) {
-        setValidating(false);
-        return;
-      }
-
       try {
         await konfluxUsernameYupValidation.validate(username);
         setValidating(false);

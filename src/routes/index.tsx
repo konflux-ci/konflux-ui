@@ -79,6 +79,8 @@ import {
 import {
   GrantAccessPage,
   grantAccessPageLoader,
+  EditAccessPage,
+  editAccessPageLoader,
   UserAccessListPage,
   userAccessListPageLoader,
 } from '../components/UserAccess';
@@ -345,9 +347,9 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
       },
       {
-        path: `workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
-        element: <GrantAccessPage />,
-        errorElement: <RouteErrorBoundry />,
+        path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
+        loader: editAccessPageLoader,
+        element: <EditAccessPage />,
       },
       {
         path: `workspaces/:${RouterParams.workspaceName}/access`,
