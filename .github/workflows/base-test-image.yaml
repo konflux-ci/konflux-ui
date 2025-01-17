@@ -1,0 +1,21 @@
+name: Build and Push Base Test Image
+
+# trigger manually
+on: workflow_dispatch
+
+jobs:
+  base-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Build and Push Base Image
+        env: 
+          USERNAME=${{ secrets.QUAY_BOT_USERNAME }}
+          TOKEN=${{ secrets.QUAY_BOT_TOKEN }}
+        run: |
+          cd e2e-tests
+          podman login -u="$USERNAME" -p="$TOKEN" quay.io
+          podman build -t quay.io/konflux_ui_qe/konflux-ui-tests-base:latest -f BaseDockerfile
+          podman push quay.io/konflux_ui_qe/konflux-ui-tests-base:latest
