@@ -1,5 +1,13 @@
 import * as yup from 'yup';
 
+export const KONFLUX_USERNAME_REGEX = /^[-_a-z0-9.]{2,45}$/;
+export const KONFLUX_USERNAME_REGEX_MGS =
+  'Must be 2 to 45 characters long and can only contain lowercase letters from a to z, numbers from 0 to 9, underscores( _ ), hyphens( - ), or periods( . ).';
+export const konfluxUsernameYupValidation = yup
+  .string()
+  .matches(KONFLUX_USERNAME_REGEX, KONFLUX_USERNAME_REGEX_MGS)
+  .required('Required');
+
 export const GIT_URL_REGEX =
   /^((((ssh|git|https?:?):\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%]*?:?))$/;
 

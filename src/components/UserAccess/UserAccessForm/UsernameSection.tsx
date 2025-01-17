@@ -9,60 +9,59 @@ import {
   HelperTextItem,
   TextInputGroup,
   TextInputGroupMain,
+  Alert,
+  AlertVariant,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import HelpPopover from '../../../components/HelpPopover';
 import { getFieldId } from '../../../shared/components/formik-fields/field-utils';
 import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
-import { validateUsername } from './form-utils';
-
 import './UsernameSection.scss';
+import { konfluxUsernameYupValidation } from '../../../utils/validation-utils';
 
 type Props = {
   disabled?: boolean;
 };
 
-const usernameRegex = /^[-_a-zA-Z0-9.]{2,45}$/;
-
 export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disabled }) => {
   const [, { value: usernames, error }, { setValue, setError }] = useField<string[]>('usernames');
   const fieldId = getFieldId('usernames', 'input');
   const [username, setUsername] = React.useState('');
-  const [validHelpText, setValidHelpText] = React.useState('');
   const [validating, setValidating] = React.useState(false);
 
   const debouncedValidate = useDebounceCallback(
-    React.useCallback(() => {
+    React.useCallback(async () => {
       setValidating(true);
-      setValidHelpText('');
       setError('');
+
       if (!username) {
         setValidating(false);
         return;
       }
-      if (!usernameRegex.test(username)) {
+
+      try {
+        await konfluxUsernameYupValidation.validate(username);
         setValidating(false);
-        setError('Invalid username format.');
-        return;
-      }
-      void validateUsername(username).then((valid) => {
-        setValidating(false);
-        if (valid) {
-          setError('');
-          setValidHelpText('Validated');
-          if (!usernames.includes(username)) {
-            void setValue([...usernames, username]);
-          }
-          setUsername('');
-        } else {
-          setError('Username not found.');
+        setError('');
+
+        if (!usernames.includes(username)) {
+          void setValue([...usernames, username]);
         }
-      });
+
+        setUsername('');
+      } catch (err) {
+        setValidating(false);
+        setError(err.message as string);
+      }
     }, [setError, setValue, username, usernames]),
   );
 
   return (
     <FormSection title="Add users">
+      <Alert variant={AlertVariant.info} title="Username not validated" isInline>
+        Konflux is not currently validating usernames, so make sure that usernames you enter are
+        accurate.
+      </Alert>
       <FormGroup
         fieldId={fieldId}
         label="Enter usernames"
@@ -84,11 +83,11 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
             value={username}
             onChange={(_, v) => {
               setUsername(v);
-              debouncedValidate();
+              void debouncedValidate();
             }}
           >
             <ChipGroup>
-              {usernames.map((name) => (
+              {usernames?.map((name) => (
                 <Chip
                   closeBtnAriaLabel="Remove"
                   key={name}
@@ -109,10 +108,6 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
             ) : error ? (
               <HelperTextItem variant="error" hasIcon>
                 {error}
-              </HelperTextItem>
-            ) : validHelpText ? (
-              <HelperTextItem variant="success" hasIcon>
-                {validHelpText}
               </HelperTextItem>
             ) : (
               <HelperTextItem>

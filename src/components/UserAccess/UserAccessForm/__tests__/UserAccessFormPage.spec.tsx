@@ -2,7 +2,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import identity from 'lodash-es/identity';
 import { SpaceBindingRequest, Workspace } from '../../../../types';
 import { namespaceRenderer } from '../../../../utils/test-utils';
-import { createSBRs, editSBR, validateUsername } from '../form-utils';
+import { createSBRs, editSBR } from '../form-utils';
 import { UserAccessFormPage } from '../UserAccessFormPage';
 
 jest.mock('react-i18next', () => ({
@@ -29,14 +29,12 @@ jest.mock('react-router-dom', () => ({
 
 jest.mock('../form-utils', () => ({
   ...jest.requireActual('../form-utils'),
-  validateUsername: jest.fn(),
   createSBRs: jest.fn(),
   editSBR: jest.fn(),
 }));
 
 const createSBRsMock = createSBRs as jest.Mock;
 const editSBRsMock = editSBR as jest.Mock;
-const validateUsernameMock = validateUsername as jest.Mock;
 
 describe('UserAccessFormPage', () => {
   // beforeEach(jest.useFakeTimers);
@@ -48,7 +46,6 @@ describe('UserAccessFormPage', () => {
 
   it('should create resources on submit', async () => {
     createSBRsMock.mockResolvedValue({});
-    validateUsernameMock.mockResolvedValue(true);
     namespaceRenderer(<UserAccessFormPage />, 'test-ns', {
       workspace: 'test-ws',
       workspaceResource: {} as Workspace,
@@ -67,8 +64,19 @@ describe('UserAccessFormPage', () => {
     );
   });
 
+  it('should report error when just assign role when granting', async () => {
+    createSBRsMock.mockResolvedValue({});
+    namespaceRenderer(<UserAccessFormPage />, 'test-ns', {
+      workspace: 'test-ws',
+      workspaceResource: {} as Workspace,
+    });
+    expect(screen.getByText('Grant access to namespace, test-ws')).toBeVisible();
+    await act(() => fireEvent.click(screen.getByText('Select role')));
+    await act(() => fireEvent.click(screen.getByText('maintainer')));
+    expect(screen.getByText('Must have at least 1 username.')).toBeVisible();
+  });
+
   it('should create resources for edit when existing sbr is not available', async () => {
-    validateUsernameMock.mockResolvedValue(true);
     namespaceRenderer(<UserAccessFormPage username="myuser" edit />, 'test-ns', {
       workspace: 'test-ws',
       workspaceResource: {} as Workspace,
@@ -88,7 +96,6 @@ describe('UserAccessFormPage', () => {
 
   it('should update resources when existing sbr is provided', async () => {
     editSBRsMock.mockResolvedValue({});
-    validateUsernameMock.mockResolvedValue(true);
     const mockSBR: SpaceBindingRequest = {
       apiVersion: 'appstudio.redhat.com/v1alpha1',
       kind: 'SpaceBindingRequest',
