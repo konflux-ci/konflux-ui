@@ -72,6 +72,7 @@ import {
 import {
   GrantAccessPage,
   grantAccessPageLoader,
+  EditAccessPage,
   UserAccessListPage,
   userAccessListPageLoader,
 } from '../components/UserAccess';
@@ -320,8 +321,9 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
       },
       {
-        path: `workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
-        element: <GrantAccessPage />,
+        // Permission check has been covered in the EditAccessPage itself.
+        path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
+        element: <EditAccessPage />,
         errorElement: <RouteErrorBoundry />,
       },
       {

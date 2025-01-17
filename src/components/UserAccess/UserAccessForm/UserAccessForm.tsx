@@ -4,8 +4,8 @@ import { FormikProps } from 'formik';
 import isEmpty from 'lodash/isEmpty';
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import { FormFooter } from '../../../shared';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useWorkspaceBreadcrumbs } from '../../../utils/breadcrumb-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { UserAccessFormValues } from './form-utils';
 import { RoleSection } from './RoleSection';
 import { UsernameSection } from './UsernameSection';
@@ -24,12 +24,12 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
   handleReset,
 }) => {
   const breadcrumbs = useWorkspaceBreadcrumbs();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   return (
     <PageLayout
       title={
-        edit ? `Edit access to namespace, ${workspace}` : `Grant access to namespace, ${workspace}`
+        edit ? `Edit access to namespace, ${namespace}` : `Grant access to namespace, ${namespace}`
       }
       description={
         edit
