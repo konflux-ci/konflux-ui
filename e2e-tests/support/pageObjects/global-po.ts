@@ -7,19 +7,19 @@ export const alertTitle = '.pf-v5-c-alert__title';
 
 export const consentButton = '[id="truste-consent-button"]';
 
-export const loginPO = {
-  usernameForm: '.pf-c-login__main',
-  username: '#rh-username-verification-form',
-  nextButton: '#login-show-step2',
-  passwordForm: '#login-show-step2',
-  password: '#rh-password-verification-form',
-  loginButton: '#rh-password-verification-submit-button',
-};
-
-export const kcLoginPO = {
+export const stageLoginPO = {
   username: '#username',
   password: '#password',
-  loginButton: '#kc-login',
+  loginButton: '#submit',
+  dex: `button[type="submit"]`,
+  loginWithSso: `a[title="Log in with redhat-sso"]`,
+};
+
+export const localKonfluxLoginPO = {
+  username: '#login',
+  password: '#password',
+  loginButton: '#submit-login',
+  dex: `button[type="submit"]`,
 };
 
 export const waits = {
