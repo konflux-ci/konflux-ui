@@ -9,6 +9,7 @@ import { ApplicationDropdown } from '../../../../components/Secrets/SecretsForm/
 import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import { useWorkspaceBreadcrumbs } from '../../../../utils/breadcrumb-utils';
+import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { ReleasePlanFormValues } from './form-utils';
 import { RunReleasePipelineSection } from './RunReleasePipelineSection';
 
@@ -26,6 +27,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
   edit,
 }) => {
   const breadcrumbs = useWorkspaceBreadcrumbs();
+  const { workspace } = useWorkspaceInfo();
   const [{ value: labels }] = useField<ReleasePlanFormValues['labels']>('labels');
 
   return (
@@ -35,7 +37,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
       breadcrumbs={[
         ...breadcrumbs,
         {
-          path: `/release`,
+          path: `/workspaces/${workspace}/release`,
           name: 'Releases',
         },
         {

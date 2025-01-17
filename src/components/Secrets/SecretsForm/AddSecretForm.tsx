@@ -60,7 +60,7 @@ const AddSecretForm: React.FC = () => {
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
-          breadcrumbs={getAddSecretBreadcrumbs()}
+          breadcrumbs={getAddSecretBreadcrumbs(workspace)}
           title="Add secret"
           description={
             <>
