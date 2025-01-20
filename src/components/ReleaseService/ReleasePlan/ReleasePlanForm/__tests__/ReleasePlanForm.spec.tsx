@@ -4,7 +4,7 @@ import { ReleasePlanForm } from '../ReleasePlanForm';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useLocation: jest.fn(() => ({})),
+  useLocation: () => ({ pathname: '/path/name' }),
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: () => jest.fn(),
 }));
