@@ -106,7 +106,7 @@ export interface Target {
   secretName: string;
 }
 
-export type ExistingSecret = {
+export type BuildTimeSecret = {
   type: SecretType;
   name: string;
   providerUrl: string;
@@ -120,7 +120,7 @@ export type ExistingSecret = {
 };
 
 export type SecretFormValues = ImportSecret & {
-  existingSecrets?: ExistingSecret[];
+  existingSecrets?: BuildTimeSecret[];
 };
 
 export enum SecretTypeDropdownLabel {

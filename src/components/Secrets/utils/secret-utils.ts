@@ -16,7 +16,7 @@ import {
   SecretTypeDisplayLabel,
   SecretTypeDropdownLabel,
   SourceSecretType,
-  ExistingSecret,
+  BuildTimeSecret,
 } from '../../../types';
 
 export type PartnerTask = {
@@ -32,7 +32,7 @@ export type PartnerTask = {
   }[];
 };
 
-export const supportedPartnerTasksSecrets: { [key: string]: ExistingSecret } = {
+export const supportedPartnerTasksSecrets: { [key: string]: BuildTimeSecret } = {
   snyk: {
     type: SecretType.opaque,
     name: 'snyk-secret',
@@ -50,19 +50,19 @@ export const getSupportedPartnerTaskSecrets = () => {
 };
 export const isPartnerTaskAvailable = (
   type: string,
-  arr: { [key: string]: ExistingSecret } = supportedPartnerTasksSecrets,
+  arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
 ) => !!Object.values(arr).find((secret) => secret.type === K8sSecretType[type]);
 
 export const isPartnerTask = (
   secretName: string,
-  arr: { [key: string]: ExistingSecret } = supportedPartnerTasksSecrets,
+  arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
 ) => {
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
 export const getSupportedPartnerTaskKeyValuePairs = (
   secretName?: string,
-  arr: { [key: string]: ExistingSecret } = supportedPartnerTasksSecrets,
+  arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
 ) => {
   const partnerTask = Object.values(arr).find((secret) => secret.name === secretName);
   return partnerTask ? partnerTask.keyValuePairs : [];

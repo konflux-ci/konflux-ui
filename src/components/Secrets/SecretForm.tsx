@@ -9,7 +9,7 @@ import {
   SecretFormValues,
   SecretTypeDropdownLabel,
   K8sSecretType,
-  ExistingSecret,
+  BuildTimeSecret,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import SecretTypeSelector from './SecretTypeSelector';
@@ -20,7 +20,7 @@ import {
 } from './utils/secret-utils';
 
 type SecretFormProps = RawComponentProps & {
-  existingSecrets: ExistingSecret[];
+  existingSecrets: BuildTimeSecret[];
 };
 
 const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existingSecrets }) => {

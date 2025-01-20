@@ -7,7 +7,7 @@ import { Base64 } from 'js-base64';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
-import { ExistingSecret, SecretType } from '../../../types';
+import { BuildTimeSecret, SecretType } from '../../../types';
 import { AccessReviewResources } from '../../../types/rbac';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -26,7 +26,7 @@ const SecretSection = () => {
 
   const [secrets, secretsLoaded] = useSecrets(namespace, workspace);
 
-  const partnerTaskSecrets: ExistingSecret[] =
+  const partnerTaskSecrets: BuildTimeSecret[] =
     secrets && secretsLoaded
       ? secrets?.map((secret) => ({
           type: secret.type as SecretType,
