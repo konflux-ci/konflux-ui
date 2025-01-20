@@ -326,8 +326,8 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
   } else {
     const keyValues =
       values.type === SecretTypeDropdownLabel.opaque
-        ? values.opaque.keyValues
-        : values.image.keyValues;
+        ? values.opaque?.keyValues
+        : values.image?.keyValues;
     data = keyValues?.reduce((acc, s) => {
       acc[s.key] = s.value ? s.value : '';
       return acc;
