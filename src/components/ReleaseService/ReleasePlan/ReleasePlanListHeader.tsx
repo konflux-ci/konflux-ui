@@ -20,7 +20,7 @@ const ReleasePlanListHeader = () => {
       props: { className: releasesPlanTableColumnClasses.application },
     },
     {
-      title: 'Target Workspace',
+      title: 'Target Namespace',
       props: { className: releasesPlanTableColumnClasses.target },
     },
     {

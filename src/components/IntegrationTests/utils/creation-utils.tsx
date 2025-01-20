@@ -1,4 +1,4 @@
-import { ComponentKind } from '../../types';
+import { ComponentKind } from '../../../types';
 
 export interface ContextOption {
   name: string;
@@ -45,6 +45,11 @@ export const contextOptions: ContextOption[] = [
     selected: false,
   },
 ];
+
+export const defaultSelectedContextOption = {
+  ...contextOptions.find((ctx) => ctx.name === 'application'),
+  selected: true,
+};
 
 /**
  * Maps over the provided context options and assigns a `selected` property to each context

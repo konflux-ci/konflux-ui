@@ -13,7 +13,7 @@ export const IntegrationTestListHeader = () => {
       props: { className: integrationListTableColumnClasses.name },
     },
     {
-      title: 'GitHub URL',
+      title: 'Git URL',
       props: { className: integrationListTableColumnClasses.containerImage },
     },
     {

@@ -47,22 +47,8 @@ export const formatParams = (params): Param[] => {
 };
 
 export type UnformattedContexts = { name: string; description: string }[];
-export const formatContexts = (
-  contexts: UnformattedContexts = [],
-  setDefault: boolean = false,
-): Context[] | null => {
-  const defaultContext = {
-    name: 'application',
-    description: 'execute the integration test in all cases - this would be the default state',
-  };
-  const newContextNames = new Set(contexts.map((ctx) => ctx.name));
+export const formatContexts = (contexts: UnformattedContexts = []): Context[] | null => {
   const newContexts = contexts.map(({ name, description }) => ({ name, description }));
-  // Even though this option is preselected in the context option list,
-  // it's not appended to the Formik field array when submitting.
-  // Lets set the default here so we know it will be applied.
-  if (setDefault && !newContextNames.has('application')) {
-    newContexts.push(defaultContext);
-  }
 
   return newContexts.length ? newContexts : null;
 };
@@ -157,7 +143,7 @@ export const createIntegrationTest = (
         ],
       },
       params: formatParams(params),
-      contexts: formatContexts(contexts, true),
+      contexts: formatContexts(contexts),
     },
   };
 
@@ -216,7 +202,7 @@ export const getURLForParam = (params: ResolverParam[], paramName: string): stri
 
 export const getLabelForParam = (paramName: string): string => {
   if (paramName === ResolverRefParams.URL) {
-    return 'GitHub URL';
+    return 'Git URL';
   }
   if (paramName === ResolverRefParams.PATH) {
     return 'Path in repository';
