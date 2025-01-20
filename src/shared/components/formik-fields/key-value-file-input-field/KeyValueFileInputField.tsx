@@ -86,7 +86,7 @@ const KeyValueFileInputField: React.FC<
                 </FlexItem>
                 <FlexItem>
                   <FileUploadField
-                    required
+                    isRequired
                     data-test="file-upload-value"
                     id="value"
                     type="text"

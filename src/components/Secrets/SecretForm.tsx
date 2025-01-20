@@ -76,9 +76,8 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
     [],
   );
 
-
   return (
-    <Form>
+    <Form data-test="secret-form">
       <SecretTypeSelector
         dropdownItems={dropdownItems}
         onChange={(type) => {
@@ -102,6 +101,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
       <SelectInputField
         required
         key={values.type}
+        data-test="secret-name"
         name="secretName"
         label="Select or enter secret name"
         helpText="Unique name of the new secret."
@@ -136,7 +136,6 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
           name={
             currentType === SecretTypeDropdownLabel.opaque ? 'opaque.keyValues' : 'image.keyValues'
           }
-          data-test="secret-key-value-pair"
           entries={defaultKeyValues}
           disableRemoveAction={values.opaque.keyValues.length === 1}
         />

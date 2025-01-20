@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, configure } from '@testing-library/react';
 import { SecretTypeDropdownLabel, SecretType } from '../../../types';
 import { formikRenderer } from '../../../utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
@@ -27,7 +27,9 @@ const testSecret = {
   keyValuePairs: [{ key: 'test_token', value: 'test_value', readOnlyKey: true }],
 };
 
-describe('SecretForm', () => {
+configure({ testIdAttribute: 'data-test' });
+
+describe('SecretModal', () => {
   it('should show secret form in a modal', async () => {
     formikRenderer(
       <SecretModal
@@ -43,6 +45,26 @@ describe('SecretForm', () => {
     });
   });
 
+  it('should show different secret types', async () => {
+    formikRenderer(
+      <SecretModal
+        existingSecrets={[testSecret]}
+        onSubmit={jest.fn()}
+        modalProps={{ isOpen: true, onClose: jest.fn() }}
+      />,
+      initialValues,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId('secret-form')).toBeInTheDocument();
+      expect(screen.getByText('Secret type')).toBeInTheDocument();
+      expect(screen.getByText('Key/value secret')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Key/value secret'));
+    expect(screen.getByText('Image pull secret')).toBeInTheDocument();
+    expect(screen.getByText('Source secret')).toBeInTheDocument();
+  });
+
   it('should render validation message when user click on create button without filling the form', async () => {
     formikRenderer(
       <SecretModal
@@ -52,10 +74,12 @@ describe('SecretForm', () => {
       />,
       initialValues,
     );
+    expect(screen.getByTestId('key-0')).toBeInTheDocument();
+    fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
 
     await waitFor(() => {
       fireEvent.click(screen.getByRole('button', { name: /Create/ }));
-      expect(screen.getAllByText('Required')).toHaveLength(3);
+      expect(screen.getAllByText('Required')).toHaveLength(2);
     });
   });
 
@@ -172,6 +196,7 @@ describe('SecretForm', () => {
       fireEvent.input(screen.getByTestId('file-upload-value').querySelector('textarea'), {
         target: { value: 'Value' },
       });
+      fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
     });
 
     await waitFor(() => {

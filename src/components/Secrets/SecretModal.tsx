@@ -1,12 +1,5 @@
 import * as React from 'react';
-import {
-  Alert,
-  Button,
-  Modal,
-  ModalBoxBody,
-  ModalBoxHeader,
-  ModalVariant,
-} from '@patternfly/react-core';
+import { Button, Modal, ModalBoxBody, ModalVariant } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { ImportSecret, SecretTypeDropdownLabel, SourceSecretType, BuildTimeSecret } from '../../types';
@@ -86,12 +79,6 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
             </Button>,
           ]}
         >
-          <ModalBoxHeader>
-            <Alert
-              isInline
-              title="For now we only support Opaque secret and Image pull secret types, but we’ll be expanding to more types in the future."
-            />
-          </ModalBoxHeader>
           <ModalBoxBody>
             <SecretForm existingSecrets={existingSecrets} />
           </ModalBoxBody>
