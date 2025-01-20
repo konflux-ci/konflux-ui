@@ -3,20 +3,38 @@ import { ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
+import { useAllComponents } from '../../../hooks/useComponents';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
+import { WorkspaceInfoProps } from '../../../types';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
-export const SourceSection = () => {
+export const SourceSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
   const [, { touched, error }] = useField('source.git.url');
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
+  const [allComponents] = useAllComponents(namespace, workspace);
   const validated = touched
     ? touched && !error
       ? ValidatedOptions.success
       : ValidatedOptions.error
     : ValidatedOptions.default;
+
+  const getUniqueComponentName = React.useCallback(
+    (name: string) => {
+      let isNameUnique: boolean = true;
+      for (let i = 0; i < allComponents.length; i++) {
+        if (allComponents[i]?.metadata?.name === name) {
+          isNameUnique = false;
+          break;
+        }
+      }
+      if (isNameUnique) return name;
+      return `${name}-${Math.floor(Math.random() * 100)}`;
+    },
+    [allComponents],
+  );
 
   const handleChange = React.useCallback(
     async (event) => {
@@ -46,11 +64,11 @@ export const SourceSection = () => {
           await setFieldValue('gitURLAnnotation', '');
         }
         if (!touchedValues.componentName) {
-          await setFieldValue('componentName', name);
+          await setFieldValue('componentName', getUniqueComponentName(name));
         }
       }
     },
-    [setFieldValue, touchedValues.componentName, validated],
+    [setFieldValue, touchedValues.componentName, validated, getUniqueComponentName],
   );
 
   return (

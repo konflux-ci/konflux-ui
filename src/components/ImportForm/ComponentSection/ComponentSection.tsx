@@ -1,11 +1,13 @@
 import { FormSection, Text, TextContent, TextVariants } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
+import { WorkspaceInfoProps } from '../../../types';
 import GitRepoLink from '../../GitLink/GitRepoLink';
+import HelpPopover from '../../HelpPopover';
 import { ImportFormValues } from '../type';
 import { SourceSection } from './SourceSection';
 
-export const ComponentSection = () => {
+export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
   const { values } = useFormikContext<ImportFormValues>();
   return (
     <FormSection>
@@ -15,7 +17,7 @@ export const ComponentSection = () => {
           A component is an image built from source code repository.
         </Text>
       </TextContent>
-      <SourceSection />
+      <SourceSection namespace={namespace} workspace={workspace} />
       <InputField
         name="source.git.dockerfileUrl"
         label="Docker file"
@@ -26,6 +28,9 @@ export const ComponentSection = () => {
         label="Component name"
         isRequired
         data-test="component-name"
+        labelIcon={
+          <HelpPopover bodyContent="Component name must be unique. A component is a custom resource within a tenant namespace and so its name must be unique." />
+        }
       />
       {values.source.git.url ? (
         <GitRepoLink
