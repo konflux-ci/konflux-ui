@@ -24,7 +24,7 @@ const EditAccessPage: React.FC<React.PropsWithChildren<unknown>> = () => {
     ? [{ model: SpaceBindingRequestModel, verb: 'update' }]
     : [{ model: SpaceBindingRequestModel, verb: 'create' }];
 
-  useDocumentTitle(`Edit access to workspace, ${workspace} | ${FULL_APPLICATION_TITLE}`);
+  useDocumentTitle(`Edit access to namespace, ${workspace} | ${FULL_APPLICATION_TITLE}`);
 
   const [existingSBR, loaded, loadErr] = useSpaceBindingRequest(
     binding.namespace,
