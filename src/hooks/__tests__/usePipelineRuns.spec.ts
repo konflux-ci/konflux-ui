@@ -23,6 +23,10 @@ import { useTRPipelineRuns, useTRTaskRuns } from '../useTektonResults';
 jest.mock('../useTektonResults');
 jest.mock('../useComponents');
 
+jest.mock('../useApplications', () => ({
+  useApplication: jest.fn().mockReturnValue([{ metadata: { name: 'test' } }, true]),
+}));
+
 jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));

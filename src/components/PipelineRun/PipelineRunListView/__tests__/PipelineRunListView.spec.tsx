@@ -20,6 +20,10 @@ jest.mock('../../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useApplications', () => ({
+  useApplication: jest.fn().mockReturnValue([{ metadata: { name: 'test' } }, true]),
+}));
+
 jest.mock('../../../../hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));

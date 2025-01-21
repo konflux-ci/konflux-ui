@@ -21,6 +21,10 @@ jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
   })),
 }));
 
+jest.mock('../../hooks/useApplications', () => ({
+  useApplication: jest.fn().mockReturnValue([{ metadata: { name: 'test' } }, true]),
+}));
+
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 
