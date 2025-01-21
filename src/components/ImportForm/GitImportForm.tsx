@@ -71,7 +71,14 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
           console.warn('Error while submitting import form:', error);
           track('Git import failed', error as AnalyticsProperties);
           formikHelpers.setSubmitting(false);
-          formikHelpers.setStatus({ submitError: error.message });
+          if (
+            error?.json?.reason === 'AlreadyExists' &&
+            error?.json?.details?.kind === 'components'
+          )
+            formikHelpers.setStatus({
+              submitError: `Component "${error.json?.details?.name}" already exists in this namespace. Edit the name to be unique and try again.`,
+            });
+          else formikHelpers.setStatus({ submitError: error.message });
         });
     },
     [bombinoUrl, namespace, navigate, track, workspace],
