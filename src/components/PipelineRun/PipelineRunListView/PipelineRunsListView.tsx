@@ -46,8 +46,6 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   customFilter,
 }) => {
   const { namespace, workspace } = useWorkspaceInfo();
-  //const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
-  //todo add workspace to useApplication sjochman
   const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);

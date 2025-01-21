@@ -37,7 +37,7 @@ describe('EnvironmentProvisionErrorAlert', () => {
     expect(screen.getByTestId(/env-provision-err-alert/)).toBeInTheDocument();
     expect(screen.getByText('app-sample-go-basic-enterprise-contract')).toBeInTheDocument();
     expect(screen.getByText(/Snapshot failed to deploy/)).toBeInTheDocument();
-    expect(screen.getByText(/19. 9. 2023/)).toBeInTheDocument();
+    expect(screen.getByText(/Sep 19, 2023/)).toBeInTheDocument();
   });
 
   it('should show multiple scenarios for multiple failures', () => {
