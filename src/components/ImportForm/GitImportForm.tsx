@@ -103,7 +103,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
               <ApplicationSection />
               {formikProps.values.showComponent ? (
                 <>
-                  <ComponentSection />
+                  <ComponentSection namespace={namespace} workspace={workspace} />
                   <PipelineSection />
                   <SecretSection />
                 </>
