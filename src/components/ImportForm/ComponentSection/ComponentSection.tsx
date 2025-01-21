@@ -1,11 +1,19 @@
-import { FormSection, Text, TextContent, TextVariants } from '@patternfly/react-core';
+import {
+  FormSection,
+  HelperText,
+  HelperTextItem,
+  Text,
+  TextContent,
+  TextVariants,
+} from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { WorkspaceInfoProps } from '../../../types';
 import GitRepoLink from '../../GitLink/GitRepoLink';
-import HelpPopover from '../../HelpPopover';
 import { ImportFormValues } from '../type';
 import { SourceSection } from './SourceSection';
+
+import './ComponentSection.scss';
 
 export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
   const { values } = useFormikContext<ImportFormValues>();
@@ -28,10 +36,13 @@ export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) =
         label="Component name"
         isRequired
         data-test="component-name"
-        labelIcon={
-          <HelpPopover bodyContent="Component name must be unique. A component is a custom resource within a tenant namespace and so its name must be unique." />
-        }
       />
+      <HelperText>
+        <HelperTextItem>
+          Must be unique within tenant namespace{' '}
+          <span className="component-section-helper-text-namespace-highlighted">{namespace}</span>
+        </HelperTextItem>
+      </HelperText>
       {values.source.git.url ? (
         <GitRepoLink
           url={values.source.git.url}

@@ -23,15 +23,9 @@ export const SourceSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
 
   const getUniqueComponentName = React.useCallback(
     (name: string) => {
-      let isNameUnique: boolean = true;
-      for (let i = 0; i < allComponents.length; i++) {
-        if (allComponents[i]?.metadata?.name === name) {
-          isNameUnique = false;
-          break;
-        }
-      }
-      if (isNameUnique) return name;
-      return `${name}-${Math.floor(Math.random() * 100)}`;
+      return Array.isArray(allComponents) && allComponents.find((c) => c?.metadata?.name === name)
+        ? `${name}-${Math.floor(Math.random() * 100)}`
+        : name;
     },
     [allComponents],
   );
