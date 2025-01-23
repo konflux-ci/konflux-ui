@@ -1,9 +1,15 @@
+import { useQuery } from '@tanstack/react-query';
 import { fireEvent, screen } from '@testing-library/react';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { routerRenderer } from '../../../utils/test-utils';
 import { GitImportForm } from '../GitImportForm';
 import { usePipelineTemplates } from '../PipelineSection/usePipelineTemplate';
 import { createResources } from '../submit-utils';
+
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
+  useQuery: jest.fn(),
+}));
 
 jest.mock('../PipelineSection/usePipelineTemplate', () => ({
   usePipelineTemplates: jest.fn(),
@@ -26,9 +32,19 @@ jest.mock('../../../hooks/useUIInstance', () => {
 const mockUsePipelineTemplate = usePipelineTemplates as jest.Mock;
 const mockUseSecrets = useSecrets as jest.Mock;
 const mockCreateResources = createResources as jest.Mock;
+const mockUseQuery = useQuery as jest.Mock;
 
 describe('GitImportForm', () => {
   beforeEach(() => {
+    mockUseQuery
+      .mockReturnValueOnce({
+        data: undefined,
+        isLoading: true,
+      })
+      .mockReturnValueOnce({
+        data: undefined,
+        isLoading: true,
+      });
     mockUsePipelineTemplate.mockReturnValue([
       {
         defaultPipelineName: 'mock-pipeline',
