@@ -7,26 +7,8 @@ import {
   CommitOverviewTab,
   CommitsPipelineRunTab,
 } from '../components/Commits/CommitDetails';
-import {
-  ComponentActivityTab,
-  ComponentDetailsTab,
-  ComponentDetailsViewLayout,
-  componentDetailsViewLoader,
-} from '../components/Components/ComponentDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
-import {
-  integrationDetailsPageLoader,
-  IntegrationTestDetailsView,
-  IntegrationTestOverviewTab,
-  IntegrationTestPipelineRunTab,
-} from '../components/IntegrationTests/IntegrationTestDetails';
-import {
-  IntegrationTestCreateForm,
-  integrationTestCreateFormLoader,
-  IntegrationTestEditForm,
-  integrationTestEditFormLoader,
-} from '../components/IntegrationTests/IntegrationTestForm';
 import {
   integrationListPageLoader,
   IntegrationTestsListView,
@@ -34,34 +16,12 @@ import {
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
 import {
-  PipelineRunDetailsLayout,
-  PipelineRunDetailsLogsTab,
-  PipelineRunDetailsTab,
-  pipelineRunDetailsViewLoader,
-  PipelineRunSecurityEnterpriseContractTab,
-  PipelineRunTaskRunsTab,
-} from '../components/PipelineRun/PipelineRunDetailsView';
-import {
   ReleaseDetailsLayout,
   releaseDetailsViewLoader,
   ReleaseListViewTab,
   releaseListViewTabLoader,
   ReleaseOverviewTab,
 } from '../components/Releases';
-import {
-  releasePlanAdmissionListLoader,
-  ReleasePlanAdmissionListView,
-  releasePlanCreateFormLoader,
-  ReleasePlanCreateFormPage,
-  releasePlanEditFormLoader,
-  ReleasePlanEditFormPage,
-  releasePlanListLoader,
-  ReleasePlanListView,
-  releasePlanTriggerLoader,
-  ReleaseService,
-  TriggerReleaseFormPage,
-} from '../components/ReleaseService';
-import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
   SnapshotDetailsView,
   snapshotDetailsViewLoader,
@@ -158,54 +118,95 @@ export const router = createBrowserRouter([
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/components/:${RouterParams.componentName}`,
         errorElement: <RouteErrorBoundry />,
-        loader: componentDetailsViewLoader,
-        element: <ComponentDetailsViewLayout />,
+        async lazy() {
+          const { ComponentDetailsViewLayout, componentDetailsViewLoader } = await import(
+            '../components/Components/ComponentDetails'
+          );
+          return { Component: ComponentDetailsViewLayout, loader: componentDetailsViewLoader };
+        },
         children: [
           {
             index: true,
-            element: <ComponentDetailsTab />,
+            async lazy() {
+              const { ComponentDetailsTab } = await import(
+                '../components/Components/ComponentDetails'
+              );
+              return { Component: ComponentDetailsTab };
+            },
           },
           {
             path: `activity/:${RouterParams.activityTab}`,
-            element: <ComponentActivityTab />,
+            async lazy() {
+              const { ComponentActivityTab } = await import(
+                '../components/Components/ComponentDetails'
+              );
+              return { Component: ComponentActivityTab };
+            },
           },
           {
             path: `activity`,
-            element: <ComponentActivityTab />,
+            async lazy() {
+              const { ComponentActivityTab } = await import(
+                '../components/Components/ComponentDetails'
+              );
+              return { Component: ComponentActivityTab };
+            },
           },
         ],
       },
       /* IntegrationTestScenario routes */
       {
         // create form
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
-        loader: integrationTestCreateFormLoader,
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
         errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestCreateForm />,
+        async lazy() {
+          const { IntegrationTestCreateForm, integrationTestCreateFormLoader } = await import(
+            '../components/IntegrationTests/IntegrationTestForm'
+          );
+          return { Component: IntegrationTestCreateForm, loader: integrationTestCreateFormLoader };
+        },
       },
       /* Integration test edit form */
       {
         // edit form
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
-        loader: integrationTestEditFormLoader,
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
         errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestEditForm />,
+        async lazy() {
+          const { IntegrationTestEditForm, integrationTestEditFormLoader } = await import(
+            '../components/IntegrationTests/IntegrationTestForm'
+          );
+          return { Component: IntegrationTestEditForm, loader: integrationTestEditFormLoader };
+        },
       },
       /* Integration tests Details routes */
       {
         // details page
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
-        loader: integrationDetailsPageLoader,
+        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
         errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestDetailsView />,
+        async lazy() {
+          const { IntegrationTestDetailsView, integrationDetailsPageLoader } = await import(
+            '../components/IntegrationTests/IntegrationTestDetails'
+          );
+          return { Component: IntegrationTestDetailsView, loader: integrationDetailsPageLoader };
+        },
         children: [
           {
             index: true,
-            element: <IntegrationTestOverviewTab />,
+            async lazy() {
+              const { IntegrationTestOverviewTab } = await import(
+                '../components/IntegrationTests/IntegrationTestDetails'
+              );
+              return { Component: IntegrationTestOverviewTab };
+            },
           },
           {
             path: 'pipelineruns',
-            element: <IntegrationTestPipelineRunTab />,
+            async lazy() {
+              const { IntegrationTestPipelineRunTab } = await import(
+                '../components/IntegrationTests/IntegrationTestDetails'
+              );
+              return { Component: IntegrationTestPipelineRunTab };
+            },
           },
         ],
       },
@@ -227,13 +228,49 @@ export const router = createBrowserRouter([
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
         errorElement: <RouteErrorBoundry />,
-        loader: pipelineRunDetailsViewLoader,
-        element: <PipelineRunDetailsLayout />,
+        async lazy() {
+          const { PipelineRunDetailsTab, pipelineRunDetailsViewLoader } = await import(
+            '../components/PipelineRun/PipelineRunDetailsView'
+          );
+          return { Component: PipelineRunDetailsTab, loader: pipelineRunDetailsViewLoader };
+        },
         children: [
-          { index: true, element: <PipelineRunDetailsTab /> },
-          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
-          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
-          { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
+          {
+            index: true,
+            async lazy() {
+              const { PipelineRunDetailsTab } = await import(
+                '../components/PipelineRun/PipelineRunDetailsView'
+              );
+              return { Component: PipelineRunDetailsTab };
+            },
+          },
+          {
+            path: 'taskruns',
+            async lazy() {
+              const { PipelineRunTaskRunsTab } = await import(
+                '../components/PipelineRun/PipelineRunDetailsView'
+              );
+              return { Component: PipelineRunTaskRunsTab };
+            },
+          },
+          {
+            path: 'logs',
+            async lazy() {
+              const { PipelineRunDetailsLogsTab } = await import(
+                '../components/PipelineRun/PipelineRunDetailsView'
+              );
+              return { Component: PipelineRunDetailsLogsTab };
+            },
+          },
+          {
+            path: 'security',
+            async lazy() {
+              const { PipelineRunSecurityEnterpriseContractTab } = await import(
+                '../components/PipelineRun/PipelineRunDetailsView'
+              );
+              return { Component: PipelineRunSecurityEnterpriseContractTab };
+            },
+          },
         ],
       },
       /* Task Run details routes */
@@ -260,61 +297,96 @@ export const router = createBrowserRouter([
       },
       /* Secrets create form */
       {
-        path: `workspaces/:workspaceName/secrets/create`,
-        element: <AddSecretForm />,
+        path: `/workspaces/:workspaceName/secrets/create`,
         errorElement: <RouteErrorBoundry />,
+        async lazy() {
+          const { AddSecretForm } = await import('../components/Secrets');
+          return { Component: AddSecretForm };
+        },
       },
       /* Secrets list view */
       {
-        path: `workspaces/:${RouterParams.workspaceName}/secrets`,
-        loader: secretListViewLoader,
-        element: <SecretsListPage />,
+        path: `/workspaces/:${RouterParams.workspaceName}/secrets`,
         errorElement: <RouteErrorBoundry />,
+        async lazy() {
+          const { SecretsListPage, secretListViewLoader } = await import('../components/Secrets');
+          return { loader: secretListViewLoader, Component: SecretsListPage };
+        },
       },
       /* Trigger Release plan */
       {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
-        loader: releasePlanTriggerLoader,
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
         errorElement: <RouteErrorBoundry />,
-        element: <TriggerReleaseFormPage />,
+        async lazy() {
+          const { TriggerReleaseFormPage, releasePlanTriggerLoader } = await import(
+            '../components/ReleaseService'
+          );
+          return { Component: TriggerReleaseFormPage, loader: releasePlanTriggerLoader };
+        },
       },
       /* Create Release plan */
       {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
-        loader: releasePlanEditFormLoader,
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
         errorElement: <RouteErrorBoundry />,
-        element: <ReleasePlanEditFormPage />,
+        async lazy() {
+          const { ReleasePlanEditFormPage, releasePlanEditFormLoader } = await import(
+            '../components/ReleaseService'
+          );
+          return { Component: ReleasePlanEditFormPage, loader: releasePlanEditFormLoader };
+        },
       },
       /* Edit Release plan */
       {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
-        loader: releasePlanCreateFormLoader,
+        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
         errorElement: <RouteErrorBoundry />,
-        element: <ReleasePlanCreateFormPage />,
+        async lazy() {
+          const { ReleasePlanCreateFormPage, releasePlanCreateFormLoader } = await import(
+            '../components/ReleaseService'
+          );
+          return { Component: ReleasePlanCreateFormPage, loader: releasePlanCreateFormLoader };
+        },
       },
       /* Release service list view */
       {
-        path: `workspaces/:${RouterParams.workspaceName}/release`,
-        element: <ReleaseService />,
+        path: `/workspaces/:${RouterParams.workspaceName}/release`,
         errorElement: <RouteErrorBoundry />,
+        async lazy() {
+          const { ReleaseService } = await import('../components/ReleaseService');
+          return { Component: ReleaseService };
+        },
         children: [
           {
             index: true,
-            loader: releasePlanListLoader,
-            element: <ReleasePlanListView />,
             errorElement: <RouteErrorBoundry />,
+            async lazy() {
+              const { ReleasePlanListView, releasePlanListLoader } = await import(
+                '../components/ReleaseService'
+              );
+              return { Component: ReleasePlanListView, loader: releasePlanListLoader };
+            },
           },
           {
             path: 'release-plan',
-            loader: releasePlanListLoader,
-            element: <ReleasePlanListView />,
             errorElement: <RouteErrorBoundry />,
+            async lazy() {
+              const { ReleasePlanListView, releasePlanListLoader } = await import(
+                '../components/ReleaseService'
+              );
+              return { Component: ReleasePlanListView, loader: releasePlanListLoader };
+            },
           },
           {
             path: 'release-plan-admission',
-            loader: releasePlanAdmissionListLoader,
-            element: <ReleasePlanAdmissionListView />,
             errorElement: <RouteErrorBoundry />,
+            async lazy() {
+              const { ReleasePlanAdmissionListView, releasePlanAdmissionListLoader } = await import(
+                '../components/ReleaseService'
+              );
+              return {
+                Component: ReleasePlanAdmissionListView,
+                loader: releasePlanAdmissionListLoader,
+              };
+            },
           },
         ],
       },
