@@ -1,3 +1,4 @@
+import { fireEvent } from '@testing-library/dom';
 import { FormikProps } from 'formik';
 import { createUseWorkspaceInfoMock, formikRenderer } from '../../../../../utils/test-utils';
 import { ReleasePlanForm } from '../ReleasePlanForm';
@@ -34,6 +35,7 @@ describe('ReleasePlanForm', () => {
     expect(result.getByRole('checkbox', { name: 'Standing attribution' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Release plan name' })).toBeVisible();
     const breadcrumbLink = result.getByRole('link', { name: /release/i });
+    fireEvent.click(breadcrumbLink);
     expect(breadcrumbLink).toHaveAttribute('href', '/workspaces/test-ws/release');
   });
 
