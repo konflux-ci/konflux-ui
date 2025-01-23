@@ -28,6 +28,7 @@ export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) =
         label="Component name"
         isRequired
         data-test="component-name"
+        helperText={`Must be unique within tenant namespace "${namespace}"`}
         labelIcon={
           <HelpPopover bodyContent="Component name must be unique. A component is a custom resource within a tenant namespace and so its name must be unique." />
         }
