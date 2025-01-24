@@ -9,12 +9,6 @@ import {
   releaseListViewTabLoader,
   ReleaseOverviewTab,
 } from '../components/Releases';
-import {
-  GrantAccessPage,
-  grantAccessPageLoader,
-  UserAccessListPage,
-  userAccessListPageLoader,
-} from '../components/UserAccess';
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
@@ -467,20 +461,31 @@ export const router = createBrowserRouter([
       /* User Acess routes */
       {
         path: `/workspaces/:${RouterParams.workspaceName}/access/grant`,
-        loader: grantAccessPageLoader,
-        element: <GrantAccessPage />,
         errorElement: <RouteErrorBoundry />,
+        async lazy() {
+          const { GrantAccessPage, grantAccessPageLoader } = await import(
+            '../components/UserAccess'
+          );
+          return { Component: GrantAccessPage, loader: grantAccessPageLoader };
+        },
       },
       {
         path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
-        element: <GrantAccessPage />,
         errorElement: <RouteErrorBoundry />,
+        async lazy() {
+          const { GrantAccessPage } = await import('../components/UserAccess');
+          return { Component: GrantAccessPage };
+        },
       },
       {
         path: `/workspaces/:${RouterParams.workspaceName}/access`,
-        element: <UserAccessListPage />,
         errorElement: <RouteErrorBoundry />,
-        loader: userAccessListPageLoader,
+        async lazy() {
+          const { UserAccessListPage, userAccessListPageLoader } = await import(
+            '../components/UserAccess'
+          );
+          return { Component: UserAccessListPage, loader: userAccessListPageLoader };
+        },
       },
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
