@@ -1,14 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
-import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import { ModalProvider } from '../components/modal/ModalProvider';
-import {
-  ReleaseDetailsLayout,
-  releaseDetailsViewLoader,
-  ReleaseListViewTab,
-  releaseListViewTabLoader,
-  ReleaseOverviewTab,
-} from '../components/Releases';
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
@@ -105,9 +97,13 @@ export const router = createBrowserRouter([
           },
           {
             path: 'releases',
-            loader: releaseListViewTabLoader,
             errorElement: <RouteErrorBoundry />,
-            element: <ReleaseListViewTab />,
+            async lazy() {
+              const { ReleaseListViewTab, releaseListViewTabLoader } = await import(
+                '../components/Releases'
+              );
+              return { Component: ReleaseListViewTab, loader: releaseListViewTabLoader };
+            },
           },
         ],
       },
@@ -211,13 +207,20 @@ export const router = createBrowserRouter([
       {
         // details page
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/releases/:${RouterParams.releaseName}`,
-        loader: releaseDetailsViewLoader,
         errorElement: <RouteErrorBoundry />,
-        element: <ReleaseDetailsLayout />,
+        async lazy() {
+          const { ReleaseDetailsLayout, releaseDetailsViewLoader } = await import(
+            '../components/Releases'
+          );
+          return { Component: ReleaseDetailsLayout, loader: releaseDetailsViewLoader };
+        },
         children: [
           {
             index: true,
-            element: <ReleaseOverviewTab />,
+            async lazy() {
+              const { ReleaseOverviewTab } = await import('../components/Releases');
+              return { Component: ReleaseOverviewTab };
+            },
           },
         ],
       },
@@ -494,9 +497,13 @@ export const router = createBrowserRouter([
       /* Github Redirects */
       {
         path: `/ns/:${GithubRedirectRouteParams.ns}/pipelinerun?/:${GithubRedirectRouteParams.pipelineRunName}?/logs?/:${GithubRedirectRouteParams.taskName}?`,
-        element: <GithubRedirect />,
-        loader: githubRedirectLoader,
         errorElement: <RouteErrorBoundry />,
+        async lazy() {
+          const { GithubRedirect, githubRedirectLoader } = await import(
+            '../components/GithubRedirect'
+          );
+          return { Component: GithubRedirect, loader: githubRedirectLoader };
+        },
       },
     ],
   },
