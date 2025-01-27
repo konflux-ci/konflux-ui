@@ -341,6 +341,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
     () => [...components].sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)),
     [components],
   );
+  const gitlabURL =
+    'https://konflux-ci.dev/docs/how-tos/configuring/creating-secrets/#creating-source-control-secrets';
 
   const [componentState, setComponentState] = React.useState<{ [name: string]: PACState }>({});
 
@@ -394,14 +396,11 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               {singleComponent ? 'Edit build pipeline plan' : 'Manage build pipelines'}
             </Text>
             <Text component={TextVariants.p}>
-              Add some automation by upgrading your default build pipelines to custom build
-              pipelines. Custom build pipelines are pipelines as code, set on your component&apos;s
-              repository. With custom build pipelines, commits to your main branch and pull requests
-              will automatically rebuild. You can always roll back to default.
-            </Text>
-            <Text component={TextVariants.p}>
-              Ready to use custom build pipelines? Make sure you have the GitHub application
-              installed and grant permissions to your repositories.
+              Konflux build pipelines are Pipelines as Code that are committed to your
+              component&apos;s repository. To automatically build on future changes, merge the
+              initial pull request sent to your connected repository. You must provide permission to
+              your repository in the Konflux GitHub application. If you&apos;re using GitLab, you
+              must grant permission by uploading a repository access token.
             </Text>
             <Text component={TextVariants.p}>
               <ExternalLink
@@ -412,7 +411,17 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                   workspace,
                 }}
               >
-                Install GitHub application
+                Learn more about the GitHub application
+              </ExternalLink>
+              <ExternalLink
+                href={gitlabURL}
+                analytics={{
+                  link_name: 'learn-more-gitlab-token',
+                  link_location: 'gitlab-repository-access-token',
+                  workspace,
+                }}
+              >
+                Learn more about GitLab repository access token
               </ExternalLink>
             </Text>
           </TextContent>
