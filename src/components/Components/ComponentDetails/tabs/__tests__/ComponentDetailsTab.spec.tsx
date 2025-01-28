@@ -115,7 +115,7 @@ describe('ComponentDetailTab', () => {
 
   it('should renderWithQueryClientAndRouter Component container image URL when latest build url not found', () => {
     useComponentMock.mockReturnValue([
-      { ...mockComponent, spec: { containerImage: 'test-url', ...mockComponent.spec } },
+      { ...mockComponent, status: { lastPromotedImage: 'test-url', ...mockComponent.status } },
       true,
     ]);
     renderWithQueryClientAndRouter(<ComponentDetailsTab />);

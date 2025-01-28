@@ -28,8 +28,8 @@ describe('ReleasePlanForm', () => {
     expect(result.getByRole('heading', { name: 'Create release plan' })).toBeVisible();
     expect(result.getByRole('button', { name: 'Create' })).toBeVisible();
     expect(result.getByRole('button', { name: 'Create' })).toBeVisible();
-    expect(result.getByRole('radio', { name: 'In this workspace: test-ws' })).toBeVisible();
-    expect(result.getByRole('radio', { name: 'In a target workspace' })).toBeVisible();
+    expect(result.getByRole('radio', { name: 'In this namespace: test-ns' })).toBeVisible();
+    expect(result.getByRole('radio', { name: 'In a target namespace' })).toBeVisible();
     expect(result.getByRole('checkbox', { name: 'Auto release' })).toBeVisible();
     expect(result.getByRole('checkbox', { name: 'Standing attribution' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Release plan name' })).toBeVisible();

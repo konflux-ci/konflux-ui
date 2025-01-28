@@ -45,8 +45,8 @@ const IntegrationTestsEmptyState: React.FC<
         Integration tests run in parallel, validating each new component build with the latest
         version of all other application components.
         <br />
-        To add an integration test, link to a GitHub repository containing code that can test how
-        your application components work together.
+        To add an integration test, link to a Git repository containing code that can test how your
+        application components work together.
       </EmptyStateBody>
       <EmptyStateActions>
         <ButtonWithAccessTooltip
