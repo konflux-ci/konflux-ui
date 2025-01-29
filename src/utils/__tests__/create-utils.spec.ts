@@ -168,7 +168,7 @@ describe('Create Utils', () => {
     mockWindowFetch();
   });
   it('Should call k8s create util with correct model and data for application', async () => {
-    await createApplication('test-application', 'test-ns', 'test-ws');
+    await createApplication('test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ApplicationModel,
@@ -182,7 +182,7 @@ describe('Create Utils', () => {
   });
 
   it('Should call k8s create util with correct model and data for component', async () => {
-    await createComponent(mockComponent, 'test-application', 'test-ns', 'test-ws');
+    await createComponent(mockComponent, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
@@ -196,7 +196,7 @@ describe('Create Utils', () => {
   });
 
   it('Should call k8s create util with correct model and data for component with devfile', async () => {
-    await createComponent(mockComponentWithDevfile, 'test-application', 'test-ns', 'test-ws');
+    await createComponent(mockComponentWithDevfile, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
@@ -214,12 +214,7 @@ describe('Create Utils', () => {
       ...mockComponent,
       targetPort: 8080,
     };
-    await createComponent(
-      mockComponentDataWithTargetPort,
-      'test-application',
-      'test-ns',
-      'test-ws',
-    );
+    await createComponent(mockComponentDataWithTargetPort, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
@@ -243,12 +238,7 @@ describe('Create Utils', () => {
       ...mockComponent,
       targetPort: undefined,
     };
-    await createComponent(
-      mockComponentDataWithoutTargetPort,
-      'test-application',
-      'test-ns',
-      'test-ws',
-    );
+    await createComponent(mockComponentDataWithoutTargetPort, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
@@ -266,7 +256,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       null,
@@ -290,7 +280,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithDevfile,
@@ -313,7 +303,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithoutAnnotation,
@@ -336,7 +326,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithPAC,
@@ -359,7 +349,7 @@ describe('Create Utils', () => {
       mockComponent,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       mockComponentData,
@@ -387,7 +377,7 @@ describe('Create Utils', () => {
       updatedComponentWithoutEnv,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       oldComponentSpecWithEnv,
@@ -423,7 +413,7 @@ describe('Create Utils', () => {
       updatedComponentWithoutEnv,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       oldComponentSpecWithEnv,
@@ -469,7 +459,7 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.opaque,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       true,
     );
@@ -494,7 +484,7 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.opaque,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
@@ -519,7 +509,7 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.image,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
@@ -547,7 +537,7 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.opaque,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
@@ -574,7 +564,6 @@ describe('Create Utils', () => {
     expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
       'test-ns',
-      'test-ws',
     );
   });
 });

@@ -2,7 +2,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
-import { applicationPageLoader, ApplicationListView } from '../components/Applications';
 import {
   CommitDetailsView,
   CommitOverviewTab,
@@ -33,6 +32,7 @@ import {
   IntegrationTestsListView,
 } from '../components/IntegrationTests/IntegrationTestsListView';
 import { ModalProvider } from '../components/modal/ModalProvider';
+import { namespaceLoader, NamespaceProvider } from '../components/Namespace';
 import { Overview } from '../components/Overview/Overview';
 import {
   PipelineRunDetailsLayout,
@@ -85,21 +85,28 @@ import {
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
+import applicationPath from './page-routes/application';
+import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
-import workspaceRoutes from './workspace';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    loader: workspaceLoader,
+    loader: async (params) => {
+      // [TODO]: change this once all pages use the namespace loader.
+      void namespaceLoader(params);
+      return await workspaceLoader(params);
+    },
     errorElement: <RouteErrorBoundry />,
     element: (
-      <WorkspaceProvider>
-        <ModalProvider>
-          <AppRoot />
-        </ModalProvider>
-      </WorkspaceProvider>
+      <NamespaceProvider>
+        <WorkspaceProvider>
+          <ModalProvider>
+            <AppRoot />
+          </ModalProvider>
+        </WorkspaceProvider>
+      </NamespaceProvider>
     ),
     children: [
       {
@@ -107,12 +114,7 @@ export const router = createBrowserRouter([
         element: <Overview />,
       },
       ...workspaceRoutes,
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications`,
-        loader: applicationPageLoader,
-        element: <ApplicationListView />,
-        errorElement: <RouteErrorBoundry />,
-      },
+      ...applicationPath,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,

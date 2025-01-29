@@ -41,7 +41,6 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      'test-ws',
       'url.bombino',
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(2);
@@ -68,7 +67,6 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      'test-ws',
       'url.bombino',
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(2);
@@ -95,7 +93,6 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      'test-ws',
       'url.bombino',
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(0);

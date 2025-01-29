@@ -3,10 +3,7 @@ import { useK8sWatchResource } from '../k8s';
 import { ApplicationGroupVersionKind, ApplicationModel } from '../models';
 import { ApplicationKind } from '../types';
 
-export const useApplications = (
-  namespace: string,
-  workspace: string,
-): [ApplicationKind[], boolean, unknown] => {
+export const useApplications = (namespace: string): [ApplicationKind[], boolean, unknown] => {
   const {
     data: applications,
     isLoading,
@@ -15,7 +12,6 @@ export const useApplications = (
     {
       groupVersionKind: ApplicationGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     ApplicationModel,

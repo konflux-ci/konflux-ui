@@ -34,7 +34,7 @@ type CreatePathOptions = {
   leadingSlash: boolean;
 };
 
-type RouteDefinition<Path extends string> = {
+export type RouteDefinition<Path extends string> = {
   path: Path;
   createPath: (params: ParamObject<ParamsFromPath<Path>>, options?: CreatePathOptions) => string;
   extend: <SubPath extends string>(subpath: SubPath) => RouteDefinition<`${Path}/${SubPath}`>;
