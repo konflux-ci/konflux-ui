@@ -80,11 +80,13 @@ export const RouteErrorBoundry: React.FC<React.PropsWithChildren> = () => {
   }
   if (error instanceof HttpError) {
     const httpError = error as HttpError;
-    <ErrorEmptyState
-      httpError={httpError}
-      title="Unable to load pipeline runs"
-      body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
-    />;
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title="Something went wrong"
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
+    );
   }
 
   const unknownError = error as unknown as Error;
