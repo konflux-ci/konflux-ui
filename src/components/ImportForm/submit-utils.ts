@@ -97,7 +97,10 @@ export const createResources = async (
 
   let createdComponent;
   if (showComponent) {
-    await createSecrets(importSecrets, namespace, true);
+    const secretsToCreate = importSecrets.filter((secret) =>
+      secret.existingSecrets.find((existing) => secret.secretName === existing.name) ? false : true,
+    );
+    await createSecrets(secretsToCreate, namespace, true);
 
     createdComponent = await createComponent(
       { componentName, application, gitProviderAnnotation, source, gitURLAnnotation },
