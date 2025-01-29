@@ -1,6 +1,63 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
+import { ActivityTab } from '../components/Activity';
+import { ApplicationOverviewTab } from '../components/ApplicationDetails';
+import { CommitDetailsView } from '../components/Commits/CommitDetails';
+import {
+  ComponentActivityTab,
+  ComponentDetailsTab,
+} from '../components/Components/ComponentDetails';
+import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
+import {
+  IntegrationTestOverviewTab,
+  IntegrationTestPipelineRunTab,
+} from '../components/IntegrationTests/IntegrationTestDetails';
+import {
+  integrationListPageLoader,
+  IntegrationTestsListView,
+} from '../components/IntegrationTests/IntegrationTestsListView';
 import { ModalProvider } from '../components/modal/ModalProvider';
+import {
+  // PipelineRunDetailsLayout,
+  PipelineRunDetailsLogsTab,
+  PipelineRunDetailsTab,
+  // pipelineRunDetailsViewLoader,
+  PipelineRunSecurityEnterpriseContractTab,
+  PipelineRunTaskRunsTab,
+} from '../components/PipelineRun/PipelineRunDetailsView';
+import {
+  // ReleaseDetailsLayout,
+  // releaseDetailsViewLoader,
+  ReleaseListViewTab,
+  releaseListViewTabLoader,
+  ReleaseOverviewTab,
+} from '../components/Releases';
+import {
+  // releasePlanAdmissionListLoader,
+  // ReleasePlanAdmissionListView,
+  // releasePlanCreateFormLoader,
+  // ReleasePlanCreateFormPage,
+  // releasePlanEditFormLoader,
+  // ReleasePlanEditFormPage,
+  // releasePlanListLoader,
+  // ReleasePlanListView,
+  // releasePlanTriggerLoader,
+  ReleaseService,
+  // TriggerReleaseFormPage,
+} from '../components/ReleaseService';
+import {
+  // SnapshotDetailsView,
+  // snapshotDetailsViewLoader,
+  SnapshotOverviewTab,
+  SnapshotPipelineRunsTab,
+} from '../components/SnapshotDetails';
+import {
+  TaskRunDetailsTab,
+  // TaskRunDetailsViewLayout,
+  // taskRunDetailsViewLoader,
+  TaskRunLogsTab,
+  TaskrunSecurityEnterpriseContractTab,
+} from '../components/TaskRunDetailsView';
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
@@ -51,54 +108,63 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            async lazy() {
-              const { ApplicationOverviewTab } = await import('../components/ApplicationDetails');
-              return { Component: ApplicationOverviewTab };
-            },
+            element: <ApplicationOverviewTab />,
+            // async lazy() {
+            //   const { ApplicationOverviewTab } = await import('../components/ApplicationDetails');
+            //   return { Component: ApplicationOverviewTab };
+            // },
           },
           {
             path: `activity/:${RouterParams.activityTab}`,
-            async lazy() {
-              const { ActivityTab } = await import('../components/Activity');
-              return { Component: ActivityTab };
-            },
+            element: <ActivityTab />,
+            // async lazy() {
+            //   const { ActivityTab } = await import('../components/Activity');
+            //   return { Component: ActivityTab };
+            // },
           },
           {
             path: `activity`,
-            async lazy() {
-              const { ActivityTab } = await import('../components/Activity');
-              return { Component: ActivityTab };
-            },
+            element: <ActivityTab />,
+            // async lazy() {
+            //   const { ActivityTab } = await import('../components/Activity');
+            //   return { Component: ActivityTab };
+            // },
           },
           {
             path: 'components',
+            loader: componentsTabLoader,
             errorElement: <RouteErrorBoundry />,
-            async lazy() {
-              const { ComponentListTab, componentsTabLoader } = await import(
-                '../components/Components/ComponentsListView'
-              );
-              return { Component: ComponentListTab, loader: componentsTabLoader };
-            },
+            element: <ComponentListTab />,
+            // async lazy() {
+            //   const { ComponentListTab, componentsTabLoader } = await import(
+            //     '../components/Components/ComponentsListView'
+            //   );
+            //   return { Component: ComponentListTab, loader: componentsTabLoader };
+            // },
           },
           {
             path: 'integrationtests',
+            loader: integrationListPageLoader,
             errorElement: <RouteErrorBoundry />,
-            async lazy() {
-              const { IntegrationTestsListView, integrationListPageLoader } = await import(
-                '../components/IntegrationTests/IntegrationTestsListView'
-              );
-              return { Component: IntegrationTestsListView, loader: integrationListPageLoader };
-            },
+            element: <IntegrationTestsListView />,
+            // async lazy() {
+            //   const { IntegrationTestsListView, integrationListPageLoader } = await import(
+            //     '../components/IntegrationTests/IntegrationTestsListView'
+            //   );
+            //   return { Component: IntegrationTestsListView, loader: integrationListPageLoader };
+            // },
           },
           {
             path: 'releases',
+            loader: releaseListViewTabLoader,
             errorElement: <RouteErrorBoundry />,
-            async lazy() {
-              const { ReleaseListViewTab, releaseListViewTabLoader } = await import(
-                '../components/Releases'
-              );
-              return { Component: ReleaseListViewTab, loader: releaseListViewTabLoader };
-            },
+            element: <ReleaseListViewTab />,
+            // async lazy() {
+            //   const { ReleaseListViewTab, releaseListViewTabLoader } = await import(
+            //     '../components/Releases'
+            //   );
+            //   return { Component: ReleaseListViewTab, loader: releaseListViewTabLoader };
+            // },
           },
         ],
       },
@@ -115,30 +181,33 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            async lazy() {
-              const { ComponentDetailsTab } = await import(
-                '../components/Components/ComponentDetails'
-              );
-              return { Component: ComponentDetailsTab };
-            },
+            element: <ComponentDetailsTab />,
+            // async lazy() {
+            //   const { ComponentDetailsTab } = await import(
+            //     '../components/Components/ComponentDetails'
+            //   );
+            //   return { Component: ComponentDetailsTab };
+            // },
           },
           {
             path: `activity/:${RouterParams.activityTab}`,
-            async lazy() {
-              const { ComponentActivityTab } = await import(
-                '../components/Components/ComponentDetails'
-              );
-              return { Component: ComponentActivityTab };
-            },
+            element: <ComponentActivityTab />,
+            // async lazy() {
+            //   const { ComponentActivityTab } = await import(
+            //     '../components/Components/ComponentDetails'
+            //   );
+            //   return { Component: ComponentActivityTab };
+            // },
           },
           {
             path: `activity`,
-            async lazy() {
-              const { ComponentActivityTab } = await import(
-                '../components/Components/ComponentDetails'
-              );
-              return { Component: ComponentActivityTab };
-            },
+            element: <ComponentActivityTab />,
+            // async lazy() {
+            //   const { ComponentActivityTab } = await import(
+            //     '../components/Components/ComponentDetails'
+            //   );
+            //   return { Component: ComponentActivityTab };
+            // },
           },
         ],
       },
@@ -180,21 +249,23 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            async lazy() {
-              const { IntegrationTestOverviewTab } = await import(
-                '../components/IntegrationTests/IntegrationTestDetails'
-              );
-              return { Component: IntegrationTestOverviewTab };
-            },
+            element: <IntegrationTestOverviewTab />,
+            // async lazy() {
+            //   const { IntegrationTestOverviewTab } = await import(
+            //     '../components/IntegrationTests/IntegrationTestDetails'
+            //   );
+            //   return { Component: IntegrationTestOverviewTab };
+            // },
           },
           {
             path: 'pipelineruns',
-            async lazy() {
-              const { IntegrationTestPipelineRunTab } = await import(
-                '../components/IntegrationTests/IntegrationTestDetails'
-              );
-              return { Component: IntegrationTestPipelineRunTab };
-            },
+            element: <IntegrationTestPipelineRunTab />,
+            // async lazy() {
+            //   const { IntegrationTestPipelineRunTab } = await import(
+            //     '../components/IntegrationTests/IntegrationTestDetails'
+            //   );
+            //   return { Component: IntegrationTestPipelineRunTab };
+            // },
           },
         ],
       },
@@ -212,10 +283,11 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
-            async lazy() {
-              const { ReleaseOverviewTab } = await import('../components/Releases');
-              return { Component: ReleaseOverviewTab };
-            },
+            element: <ReleaseOverviewTab />,
+            // async lazy() {
+            //   const { ReleaseOverviewTab } = await import('../components/Releases');
+            //   return { Component: ReleaseOverviewTab };
+            // },
           },
         ],
       },
@@ -223,55 +295,63 @@ export const router = createBrowserRouter([
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
         errorElement: <RouteErrorBoundry />,
+        // loader: pipelineRunDetailsViewLoader,
+        // element: <PipelineRunDetailsLayout />,
         async lazy() {
-          const { PipelineRunDetailsTab, pipelineRunDetailsViewLoader } = await import(
+          const { PipelineRunDetailsLayout, pipelineRunDetailsViewLoader } = await import(
             '../components/PipelineRun/PipelineRunDetailsView'
           );
-          return { Component: PipelineRunDetailsTab, loader: pipelineRunDetailsViewLoader };
+          return { Component: PipelineRunDetailsLayout, loader: pipelineRunDetailsViewLoader };
         },
         children: [
-          {
-            index: true,
-            async lazy() {
-              const { PipelineRunDetailsTab } = await import(
-                '../components/PipelineRun/PipelineRunDetailsView'
-              );
-              return { Component: PipelineRunDetailsTab };
-            },
-          },
-          {
-            path: 'taskruns',
-            async lazy() {
-              const { PipelineRunTaskRunsTab } = await import(
-                '../components/PipelineRun/PipelineRunDetailsView'
-              );
-              return { Component: PipelineRunTaskRunsTab };
-            },
-          },
-          {
-            path: 'logs',
-            async lazy() {
-              const { PipelineRunDetailsLogsTab } = await import(
-                '../components/PipelineRun/PipelineRunDetailsView'
-              );
-              return { Component: PipelineRunDetailsLogsTab };
-            },
-          },
-          {
-            path: 'security',
-            async lazy() {
-              const { PipelineRunSecurityEnterpriseContractTab } = await import(
-                '../components/PipelineRun/PipelineRunDetailsView'
-              );
-              return { Component: PipelineRunSecurityEnterpriseContractTab };
-            },
-          },
+          { index: true, element: <PipelineRunDetailsTab /> },
+          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
+          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
+          { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
+          // {
+          //   index: true,
+          //   async lazy() {
+          //     const { PipelineRunDetailsTab } = await import(
+          //       '../components/PipelineRun/PipelineRunDetailsView'
+          //     );
+          //     return { Component: PipelineRunDetailsTab };
+          //   },
+          // },
+          // {
+          //   path: 'taskruns',
+          //   async lazy() {
+          //     const { PipelineRunTaskRunsTab } = await import(
+          //       '../components/PipelineRun/PipelineRunDetailsView'
+          //     );
+          //     return { Component: PipelineRunTaskRunsTab };
+          //   },
+          // },
+          // {
+          //   path: 'logs',
+          //   async lazy() {
+          //     const { PipelineRunDetailsLogsTab } = await import(
+          //       '../components/PipelineRun/PipelineRunDetailsView'
+          //     );
+          //     return { Component: PipelineRunDetailsLogsTab };
+          //   },
+          // },
+          // {
+          //   path: 'security',
+          //   async lazy() {
+          //     const { PipelineRunSecurityEnterpriseContractTab } = await import(
+          //       '../components/PipelineRun/PipelineRunDetailsView'
+          //     );
+          //     return { Component: PipelineRunSecurityEnterpriseContractTab };
+          //   },
+          // },
         ],
       },
       /* Task Run details routes */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
         errorElement: <RouteErrorBoundry />,
+        // loader: taskRunDetailsViewLoader,
+        // element: <TaskRunDetailsViewLayout />,
         async lazy() {
           const { TaskRunDetailsViewLayout, taskRunDetailsViewLoader } = await import(
             '../components/TaskRunDetailsView'
@@ -279,44 +359,42 @@ export const router = createBrowserRouter([
           return { Component: TaskRunDetailsViewLayout, loader: taskRunDetailsViewLoader };
         },
         children: [
-          {
-            index: true,
-            async lazy() {
-              const { TaskRunDetailsTab } = await import('../components/TaskRunDetailsView');
-              return { Component: TaskRunDetailsTab };
-            },
-          },
-          {
-            path: 'logs',
-            async lazy() {
-              const { TaskRunLogsTab } = await import('../components/TaskRunDetailsView');
-              return { Component: TaskRunLogsTab };
-            },
-          },
-          {
-            path: 'security',
-            async lazy() {
-              const { TaskrunSecurityEnterpriseContractTab } = await import(
-                '../components/TaskRunDetailsView'
-              );
-              return { Component: TaskrunSecurityEnterpriseContractTab };
-            },
-          },
+          { index: true, element: <TaskRunDetailsTab /> },
+          { path: 'logs', element: <TaskRunLogsTab /> },
+          { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
+          // {
+          //   index: true,
+          //   async lazy() {
+          //     const { TaskRunDetailsTab } = await import('../components/TaskRunDetailsView');
+          //     return { Component: TaskRunDetailsTab };
+          //   },
+          // },
+          // {
+          //   path: 'logs',
+          //   async lazy() {
+          //     const { TaskRunLogsTab } = await import('../components/TaskRunDetailsView');
+          //     return { Component: TaskRunLogsTab };
+          //   },
+          // },
+          // {
+          //   path: 'security',
+          //   async lazy() {
+          //     const { TaskrunSecurityEnterpriseContractTab } = await import(
+          //       '../components/TaskRunDetailsView'
+          //     );
+          //     return { Component: TaskrunSecurityEnterpriseContractTab };
+          //   },
+          // },
         ],
       },
       /* Commit list view */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
         errorElement: <RouteErrorBoundry />,
-        // element: <CommitDetailsView />,
-        async lazy() {
-          const { CommitDetailsView } = await import('../components/Commits/CommitDetails');
-          return { Component: CommitDetailsView };
-        },
+        element: <CommitDetailsView />,
         children: [
           {
             index: true,
-            // element: <CommitOverviewTab />
             async lazy() {
               const { CommitOverviewTab } = await import('../components/Commits/CommitDetails');
               return { Component: CommitOverviewTab };
@@ -324,7 +402,6 @@ export const router = createBrowserRouter([
           },
           {
             path: 'pipelineruns',
-            // element: <CommitsPipelineRunTab />
             async lazy() {
               const { CommitsPipelineRunTab } = await import('../components/Commits/CommitDetails');
               return { Component: CommitsPipelineRunTab };
@@ -386,11 +463,12 @@ export const router = createBrowserRouter([
       /* Release service list view */
       {
         path: `/workspaces/:${RouterParams.workspaceName}/release`,
+        element: <ReleaseService />,
         errorElement: <RouteErrorBoundry />,
-        async lazy() {
-          const { ReleaseService } = await import('../components/ReleaseService');
-          return { Component: ReleaseService };
-        },
+        // async lazy() {
+        //   const { ReleaseService } = await import('../components/ReleaseService');
+        //   return { Component: ReleaseService };
+        // },
         children: [
           {
             index: true,
@@ -430,6 +508,8 @@ export const router = createBrowserRouter([
       /* Snapshot Details view */
       {
         path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
+        // loader: snapshotDetailsViewLoader,
+        // element: <SnapshotDetailsView />,
         errorElement: <RouteErrorBoundry />,
         async lazy() {
           const { SnapshotDetailsView, snapshotDetailsViewLoader } = await import(
@@ -440,19 +520,21 @@ export const router = createBrowserRouter([
         children: [
           {
             index: true,
+            element: <SnapshotOverviewTab />,
             errorElement: <RouteErrorBoundry />,
-            async lazy() {
-              const { SnapshotOverviewTab } = await import('../components/SnapshotDetails');
-              return { Component: SnapshotOverviewTab };
-            },
+            // async lazy() {
+            //   const { SnapshotOverviewTab } = await import('../components/SnapshotDetails');
+            //   return { Component: SnapshotOverviewTab };
+            // },
           },
           {
             path: 'pipelineruns',
+            element: <SnapshotPipelineRunsTab />,
             errorElement: <RouteErrorBoundry />,
-            async lazy() {
-              const { SnapshotPipelineRunsTab } = await import('../components/SnapshotDetails');
-              return { Component: SnapshotPipelineRunsTab };
-            },
+            // async lazy() {
+            //   const { SnapshotPipelineRunsTab } = await import('../components/SnapshotDetails');
+            //   return { Component: SnapshotPipelineRunsTab };
+            // },
           },
         ],
       },
