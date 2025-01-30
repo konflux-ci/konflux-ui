@@ -65,4 +65,12 @@ describe('ComponentSection', () => {
       expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe('gitlab.com'),
     );
   });
+
+  it('should render helper text for component name', () => {
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+      source: { git: { url: '' } },
+    });
+
+    expect(screen.getByText('Must be unique within tenant namespace')).toBeInTheDocument();
+  });
 });
