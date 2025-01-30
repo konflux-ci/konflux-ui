@@ -259,9 +259,9 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = () => {
+export const getAddSecretBreadcrumbs = (workspace) => {
   return [
-    { path: '/secrets', name: 'Secrets' },
+    { path: `/workspaces/${workspace}/secrets`, name: 'Secrets' },
     { path: '#', name: 'Add secret' },
   ];
 };
