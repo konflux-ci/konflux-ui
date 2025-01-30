@@ -1,4 +1,4 @@
-import { ImportSecret } from '../../types';
+import { SecretFormValues, BuildTimeSecret } from '../../types';
 
 export type ImportFormValues = {
   application: string;
@@ -17,6 +17,6 @@ export type ImportFormValues = {
     };
   };
   pipeline: string;
-  importSecrets?: ImportSecret[];
-  newSecrets?: string[];
+  importSecrets?: SecretFormValues[];
+  newSecrets?: BuildTimeSecret[];
 };
