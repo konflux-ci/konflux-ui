@@ -2,7 +2,6 @@ import React from 'react';
 import { LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
 import { useNamespace } from '../components/Namespace/useNamespaceInfo';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../components/Workspace/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
 import { SelfSubjectAccessReviewModel } from '../models/rbac';
@@ -168,7 +167,7 @@ export const useAccessReviews = (
 export const useAccessReviewForModels = (
   accessReviewResources: AccessReviewResources,
 ): [boolean, boolean] => {
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   const resourceAttributes: AccessReviewResourceAttributesArray = accessReviewResources.map(
     ({ model, verb }) => ({

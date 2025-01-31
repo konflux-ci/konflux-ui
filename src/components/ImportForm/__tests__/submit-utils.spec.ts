@@ -12,6 +12,7 @@ jest.mock('../../../utils/create-utils', () => ({
   createApplication: jest.fn(),
   createComponent: jest.fn(),
   createImageRepository: jest.fn(),
+  createSecret: jest.fn(),
 }));
 
 jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () => ({

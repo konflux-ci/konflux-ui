@@ -24,6 +24,11 @@ jest.mock('../src/components/Workspace/useWorkspaceInfo', () => ({
   ...jest.requireActual('../src/components/Workspace/useWorkspaceInfo'),
 }));
 
+jest.mock('../src/components/Namespace/useNamespaceInfo', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/components/Namespace/useNamespaceInfo'),
+}));
+
 afterAll(() => {
   jest.clearAllMocks();
 });

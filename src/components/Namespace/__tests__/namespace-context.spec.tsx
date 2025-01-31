@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
-import { createReactRouterMock } from '../../../utils/test-utils';
+import { screen, waitFor, render } from '@testing-library/react';
+import { createReactRouterMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
 import { NamespaceProvider, NamespaceContext } from '../namespace-context';
 
 jest.mock('react-router-dom', () => ({
@@ -10,22 +10,25 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
 }));
 
-jest.mock('./utils', () => ({
+jest.mock('../utils', () => ({
   getLastUsedNamespace: jest.fn(),
   setLastUsedNamespace: jest.fn(),
   createNamespaceQueryOptions: jest.fn(),
 }));
 
+const useWorkspaceInfoMock = createUseWorkspaceInfoMock({ namespace: 'test-ns' });
+
 const TestConsumer = () => {
   const context = React.useContext(NamespaceContext);
   return (
     <div>
-      <span data-testid="namespace">{context.namespace}</span>
-      <span data-testid="loaded">{context.namespacesLoaded.toString()}</span>
-      <span data-testid="last-used">{context.lastUsedNamespace}</span>
+      <span data-test="namespace">{context.namespace}</span>
+      <span data-test="loaded">{context.namespacesLoaded.toString()}</span>
+      <span data-test="last-used">{context.lastUsedNamespace}</span>
     </div>
   );
 };
@@ -35,7 +38,7 @@ const useParamsMock = createReactRouterMock('useParams');
 
 describe('NamespaceProvider', () => {
   const mockNavigate = jest.fn();
-  const mockSetLastUsedNamespace = jest.requireMock('./utils').setLastUsedNamespace;
+  const mockSetLastUsedNamespace = jest.requireMock('../utils').setLastUsedNamespace;
 
   beforeEach(() => {
     useNavigateMock.mockReturnValue(mockNavigate);
@@ -57,6 +60,7 @@ describe('NamespaceProvider', () => {
   });
 
   it('should provide namespace context when loaded', async () => {
+    useWorkspaceInfoMock.mockReturnValue({ namespace: 'default-ns' });
     const mockNamespaces = [{ metadata: { name: 'default-ns' } }];
     (useQuery as jest.Mock)
       .mockReturnValueOnce({ data: mockNamespaces, isLoading: false })
@@ -93,7 +97,7 @@ describe('NamespaceProvider', () => {
   });
 
   it('should navigate to home namespace on error button click', async () => {
-    const mockNamespaces = [{ metadata: { name: 'home-ns' } }];
+    const mockNamespaces = [{ metadata: { name: 'test-ns' } }];
     const error = new Error('Namespace error');
     (useQuery as jest.Mock)
       .mockReturnValueOnce({ data: mockNamespaces, isLoading: false })
@@ -106,9 +110,9 @@ describe('NamespaceProvider', () => {
     );
 
     await waitFor(() => {
-      screen.getByRole('button', { name: /Go to home-ns namespace/i }).click();
-      expect(mockSetLastUsedNamespace).toHaveBeenCalledWith('home-ns');
-      expect(mockNavigate).toHaveBeenCalledWith('/namespaces/home-ns/applications');
+      screen.getByRole('button', { name: /Go to test-ns namespace/i }).click();
+      expect(mockSetLastUsedNamespace).toHaveBeenCalledWith('test-ns');
+      expect(mockNavigate).toHaveBeenCalledWith('/workspaces/test-ns/applications');
     });
   });
 });

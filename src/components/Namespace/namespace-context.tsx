@@ -26,6 +26,7 @@ export const NamespaceContext = React.createContext<NamespaceContextData>({
 });
 
 export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  // use this so both workspace and namespace API uses the same active namespace
   const { namespace: ns } = useWorkspaceInfo();
   const { data: namespaces, isLoading: namespaceLoading } = useQuery(createNamespaceQueryOptions());
   const params = useParams<RouterParams>();
@@ -54,7 +55,7 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
   if (error) {
     return (
       <ErrorEmptyState
-        title={`Unable to access namespace ${activeNamespaceName}`}
+        title={`Unable to access namespace ${activeNamespaceName ?? ''}`}
         body={error.message}
       >
         {homeNamespace ? (

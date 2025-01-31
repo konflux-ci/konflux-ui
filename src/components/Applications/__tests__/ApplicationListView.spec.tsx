@@ -5,7 +5,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ApplicationKind } from '../../../types';
 import {
   createK8sWatchResourceMock,
-  createUseWorkspaceInfoMock,
+  createUseNamespaceMock,
   renderWithQueryClient,
 } from '../../../utils/test-utils';
 import ApplicationListRow from '../ApplicationListRow';
@@ -119,7 +119,7 @@ const applications: ApplicationKind[] = [
 
 const useSearchParamsMock = useSearchParams as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
-createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+createUseNamespaceMock('test-ns');
 
 const ApplicationList = ApplicationListView;
 
@@ -140,7 +140,7 @@ describe('Application List', () => {
     screen.getByText('Easily onboard your applications');
     const button = screen.getByText('Create application');
     expect(button).toBeInTheDocument();
-    expect(button.closest('a').href).toBe('http://localhost/workspaces/test-ws/import');
+    expect(button.closest('a').href).toBe('http://localhost/workspaces/test-ns/import');
   });
 
   it('should render empty state with no card', () => {
