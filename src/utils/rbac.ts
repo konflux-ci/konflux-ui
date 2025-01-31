@@ -1,6 +1,7 @@
 import React from 'react';
 import { LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
+import { useNamespace } from '../components/Namespace/useNamespaceInfo';
 import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../components/Workspace/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
@@ -112,7 +113,7 @@ export const useAccessReviewForModel = (
   model: K8sModelCommon,
   verb: K8sVerb,
 ): [boolean, boolean] => {
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   return useAccessReview({ group: model.apiGroup, resource: model.plural, namespace, verb });
 };
 

@@ -1,15 +1,8 @@
 import { applicationPageLoader, ApplicationListView } from '../../components/Applications';
+import { APPLICATION_LIST_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
-import { RouterParams } from '../utils';
-import { WORKSPACE_PATH } from './workspace';
 
-export const APPLICATION_LIST_PATH = WORKSPACE_PATH.extend(`applications`);
-
-export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
-  `:${RouterParams.applicationName}`,
-);
-
-const applicationPath = [
+const applicationRoutes = [
   {
     path: APPLICATION_LIST_PATH.path,
     loader: applicationPageLoader,
@@ -18,4 +11,4 @@ const applicationPath = [
   },
 ];
 
-export default applicationPath;
+export default applicationRoutes;

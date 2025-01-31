@@ -6,6 +6,7 @@ import { APPLICATION_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { NamespaceKind } from '../../types';
+import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { createNamespaceQueryOptions, getLastUsedNamespace, setLastUsedNamespace } from './utils';
 
 export type NamespaceContextData = {
@@ -25,13 +26,14 @@ export const NamespaceContext = React.createContext<NamespaceContextData>({
 });
 
 export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const { namespace: ns } = useWorkspaceInfo();
   const { data: namespaces, isLoading: namespaceLoading } = useQuery(createNamespaceQueryOptions());
   const params = useParams<RouterParams>();
   const navigate = useNavigate();
 
   const homeNamespace = React.useMemo(
-    () => (!namespaceLoading ? namespaces[0] : null),
-    [namespaces, namespaceLoading],
+    () => (!namespaceLoading ? namespaces.find((n) => n.metadata.name === ns) : null),
+    [namespaces, namespaceLoading, ns],
   );
 
   const activeNamespaceName: string =

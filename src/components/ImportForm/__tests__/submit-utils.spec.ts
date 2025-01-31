@@ -116,7 +116,6 @@ describe('Submit Utils: createResources', () => {
         ],
       },
       'test-ws-tenant',
-      'test-ws',
       'url.bombino',
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(0);

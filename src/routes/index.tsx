@@ -85,7 +85,7 @@ import {
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
-import applicationPath from './page-routes/application';
+import applicationRoutes from './page-routes/application';
 import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
@@ -100,21 +100,22 @@ export const router = createBrowserRouter([
     },
     errorElement: <RouteErrorBoundry />,
     element: (
-      <NamespaceProvider>
-        <WorkspaceProvider>
+      <WorkspaceProvider>
+        <NamespaceProvider>
           <ModalProvider>
             <AppRoot />
           </ModalProvider>
-        </WorkspaceProvider>
-      </NamespaceProvider>
+        </NamespaceProvider>
+      </WorkspaceProvider>
     ),
     children: [
       {
         index: true,
         element: <Overview />,
       },
+      ...applicationRoutes,
       ...workspaceRoutes,
-      ...applicationPath,
+
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
