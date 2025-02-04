@@ -24,6 +24,7 @@ import { PACState } from '../../../hooks/usePACState';
 import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
+import { IMPORT_PATH } from '../../../routes/paths';
 import { Table } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -130,7 +131,12 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       <ButtonWithAccessTooltip
         variant="primary"
         component={(props) => (
-          <Link {...props} to={`/workspaces/${workspace}/import?application=${applicationName}`} />
+          <Link
+            {...props}
+            to={`${IMPORT_PATH.createPath({
+              workspaceName: namespace,
+            })}?application=${applicationName}`}
+          />
         )}
         isDisabled={!canCreateComponent}
         tooltip="You don't have access to add a component"
