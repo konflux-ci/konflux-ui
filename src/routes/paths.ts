@@ -18,6 +18,12 @@ export const COMPONENT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('components')
 
 export const COMPONENT_DETAILS_PATH = COMPONENT_LIST_PATH.extend(`:${RouterParams.componentName}`);
 
+export const COMPONENT_ACTIVITY_PATH = COMPONENT_DETAILS_PATH.extend('activity');
+
+export const COMPONENT_ACTIVITY_DETAIL_PATH = COMPONENT_ACTIVITY_PATH.extend(
+  `:${RouterParams.activityTab}`,
+);
+
 export const COMMIT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('commit');
 
 export const COMMIT_DETAILS_PATH = COMMIT_LIST_PATH.extend(`:${RouterParams.commitSha}`);

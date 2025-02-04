@@ -4,19 +4,20 @@ import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
+import { COMPONENT_ACTIVITY_DETAIL_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
 import CommitsListView from '../../../Commits/CommitsListPage/CommitsListView';
 import { DetailsSection } from '../../../DetailsPage';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 
 export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
 export const ComponentActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
   const { activityTab, workspaceName, componentName } = params;
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [component] = useComponent(namespace, workspaceName, componentName);
   const applicationName = component.spec.application;
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
@@ -26,7 +27,12 @@ export const ComponentActivityTab: React.FC = () => {
 
   const getActivityTabRoute = React.useCallback(
     (tab: string) =>
-      `/workspaces/${workspaceName}/applications/${applicationName}/components/${componentName}/activity/${tab}`,
+      COMPONENT_ACTIVITY_DETAIL_PATH.createPath({
+        workspaceName,
+        applicationName,
+        componentName,
+        activityTab: tab,
+      }),
     [applicationName, componentName, workspaceName],
   );
 
