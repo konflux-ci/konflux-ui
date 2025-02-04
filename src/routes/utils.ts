@@ -15,6 +15,7 @@ export const RouterParams = {
   taskRunName: 'taskRunName',
   componentName: 'componentName',
   commitName: 'commitName',
+  commitSha: 'commitSha',
   releasePlanName: 'releasePlanName',
   snapshotName: 'snapshotName',
   bindingName: 'bindingName',
