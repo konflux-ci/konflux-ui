@@ -52,7 +52,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
           name="integrationTest.url"
           placeholder="Enter your source"
           validated={validated}
-          label="GitHub URL"
+          label="Git URL"
           required
           data-test="git-url-input"
         />
@@ -69,7 +69,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
           data-test="git-path-repo"
           required
         />
-        <ContextsField fieldName="integrationTest.contexts" editing={edit} />
+        <ContextsField fieldName="integrationTest.contexts" />
         <FormikParamsField fieldName="integrationTest.params" />
 
         <CheckboxField

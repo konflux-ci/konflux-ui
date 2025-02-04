@@ -106,8 +106,21 @@ export interface Target {
   secretName: string;
 }
 
+export type BuildTimeSecret = {
+  type: SecretType;
+  name: string;
+  providerUrl: string;
+  tokenKeyName: string;
+  keyValuePairs: {
+    key: string;
+    value: string;
+    readOnlyKey?: boolean;
+    readOnlyValue?: boolean;
+  }[];
+};
+
 export type SecretFormValues = ImportSecret & {
-  existingSecrets?: string[];
+  existingSecrets?: BuildTimeSecret[];
 };
 
 export enum SecretTypeDropdownLabel {

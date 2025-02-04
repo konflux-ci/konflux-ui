@@ -51,6 +51,33 @@ export const MockIntegrationTests = [
       pipeline: 'pipeline-2',
     },
   },
+  {
+    apiVersion: 'appstudio.redhat.com/v1alpha1',
+    kind: 'IntegrationTestScenario',
+    metadata: {
+      annotations: {
+        'app.kubernetes.io/display-name': 'Test 3',
+      },
+      name: 'test-app-test-3',
+      namespace: 'test-namespace',
+      uid: 'ed722704-74bc-4152-b27b-bee29cc7bfd3',
+    },
+    spec: {
+      application: 'test-app',
+      bundle: 'https://quay.io/test-rep/test-bundle:test-3',
+      contexts: [
+        {
+          description: 'Application testing 3',
+          name: 'application',
+        },
+        {
+          description: 'Group testing 3',
+          name: 'group',
+        },
+      ],
+      pipeline: 'pipeline-3',
+    },
+  },
 ];
 
 export const MockIntegrationTestsWithBundles: IntegrationTestScenarioKind[] = [

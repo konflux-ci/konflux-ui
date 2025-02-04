@@ -19,9 +19,7 @@ describe('RunReleasePipelineSection', () => {
     expect(
       result.queryByRole('button', { name: 'Git options for the release pipeline' }),
     ).toBeNull();
-    expect(
-      result.queryByRole('textbox', { name: 'GitHub URL for the release pipeline' }),
-    ).toBeNull();
+    expect(result.queryByRole('textbox', { name: 'Git URL for the release pipeline' })).toBeNull();
     expect(result.queryByRole('textbox', { name: 'Revision' })).toBeNull();
     expect(result.queryByRole('textbox', { name: 'Path in repository' })).toBeNull();
     expect(
@@ -36,9 +34,7 @@ describe('RunReleasePipelineSection', () => {
     expect(
       result.getByRole('button', { name: 'Git options for the release pipeline' }),
     ).toBeVisible();
-    expect(
-      result.getByRole('textbox', { name: 'GitHub URL for the release pipeline' }),
-    ).toBeVisible();
+    expect(result.getByRole('textbox', { name: 'Git URL for the release pipeline' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Revision' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Path in repository' })).toBeVisible();
     expect(
@@ -53,15 +49,13 @@ describe('RunReleasePipelineSection', () => {
     expect(
       result.getByRole('button', { name: 'Git options for the release pipeline' }),
     ).toBeVisible();
-    expect(
-      result.getByRole('textbox', { name: 'GitHub URL for the release pipeline' }),
-    ).toBeVisible();
+    expect(result.getByRole('textbox', { name: 'Git URL for the release pipeline' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Revision' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Path in repository' })).toBeVisible();
     expect(
       result.getByRole('region', { name: 'Git options for the release pipeline' }),
     ).toBeVisible();
-    expect(result.getByRole('textbox', { name: 'Target workspace' })).toBeVisible();
+    expect(result.getByRole('textbox', { name: 'Target namespace' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Data' })).toBeVisible();
   });
 });

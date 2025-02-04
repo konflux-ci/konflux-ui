@@ -13,9 +13,9 @@ const GitOptions: React.FC<{ required?: boolean }> = ({ required = false }) => {
     <>
       <InputField
         name="git.url"
-        label="GitHub URL for the release pipeline"
+        label="Git URL for the release pipeline"
         placeholder="Example, https://github.com/tektoncd/catalog"
-        helperText="The GitHub repository that contains the YAML definition of the pipeline run for your release service."
+        helperText="The Git repository that contains the YAML definition of the pipeline run for your release service."
         required={required}
       />
       <ExpandableSection
@@ -48,7 +48,7 @@ const GitOptions: React.FC<{ required?: boolean }> = ({ required = false }) => {
 export const RunReleasePipelineSection: React.FC = () => {
   const [{ value: pipelineLocation }] =
     useField<ReleasePipelineLocation>('releasePipelineLocation');
-  const { workspace } = useWorkspaceInfo();
+  const { namespace } = useWorkspaceInfo();
 
   return (
     <>
@@ -58,9 +58,9 @@ export const RunReleasePipelineSection: React.FC = () => {
         options={[
           {
             value: ReleasePipelineLocation.current,
-            label: `In this workspace: ${workspace}`,
+            label: `In this namespace: ${namespace}`,
           },
-          { value: ReleasePipelineLocation.target, label: 'In a target workspace' },
+          { value: ReleasePipelineLocation.target, label: 'In a target namespace' },
         ]}
         required
       />
@@ -110,12 +110,12 @@ export const RunReleasePipelineSection: React.FC = () => {
         <>
           <InputField
             name="target"
-            label="Target workspace"
-            helperText="Type the workspace name that you would like the selected application to be released to"
+            label="Target namespace"
+            helperText="Type the namespace name that you would like the selected application to be released to."
             labelIcon={
               <HelpPopover
-                headerContent="Target workspace"
-                bodyContent="Your application will be released to the environments in this workspace."
+                headerContent="Target namespace"
+                bodyContent="Your application will be released to the environments in this namespace."
               />
             }
             required

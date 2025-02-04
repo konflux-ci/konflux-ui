@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { RouteMatch } from 'react-router-dom';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { TableGridBreakpoint, OnSelect, ThProps } from '@patternfly/react-table';
 import { StatusBox } from '../status-box/StatusBox';
 import TableComponent from './TableComponent';
 import { RowFunctionArgs, VirtualBodyProps } from './VirtualBody';
 
-// import '../catalog/utils/skeleton-screen.scss';
 import './Table.scss';
 
 export type Filter = { key: string; value: string };
@@ -68,10 +68,9 @@ const Table: React.FC<React.PropsWithChildren<TableProps>> = ({
 }) => (
   <StatusBox
     skeleton={
-      <div className="table-skeleton" data-test="data-table-skeleton">
-        {Toolbar ? <div className="skeleton-overview--head" /> : null}
-        <div className="loading-skeleton--table" />
-      </div>
+      <Bullseye data-test="data-table-skeleton">
+        <Spinner />
+      </Bullseye>
     }
     data={data}
     loaded={loaded}

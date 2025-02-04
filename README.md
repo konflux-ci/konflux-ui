@@ -4,6 +4,10 @@ UI for [Konflux](https://github.com/konflux-ci/konflux-ci)
 
 ### Installing
 
+**Prerequisites:**
+- Node.js version >= 20
+- Yarn version 1.22
+
 A step by step series of examples that tell you how to get a development environment running:
 
 1. Clone the repository

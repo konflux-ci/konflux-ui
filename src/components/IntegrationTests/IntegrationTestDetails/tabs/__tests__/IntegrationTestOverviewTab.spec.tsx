@@ -59,7 +59,7 @@ describe('IntegrationTestOverviewTab', () => {
     routerRenderer(<IntegrationTestOverviewTab />);
     screen.getByText('test-app-test-1'); // name
     screen.getByText('test-namespace'); // namespace
-    screen.getByText('GitHub URL'); // url
+    screen.getByText('Git URL'); // url
     screen.getByText('Path in repository'); // Path in Repo
     screen.getByText('Revision'); // revision
     screen.getByText('Optional'); // optional for release

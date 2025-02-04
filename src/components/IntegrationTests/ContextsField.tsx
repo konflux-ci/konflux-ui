@@ -11,19 +11,18 @@ import {
   contextOptions,
   mapContextsWithSelection,
   addComponentContexts,
-} from './utils';
+} from './utils/creation-utils';
 
 interface IntegrationTestContextProps {
   heading?: React.ReactNode;
   fieldName: string;
-  editing: boolean;
 }
 
-const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldName, editing }) => {
+const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldName }) => {
   const { namespace, workspace } = useWorkspaceInfo();
   const { applicationName } = useParams();
   const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
-  const [, { value: contexts }] = useField(fieldName);
+  const [, { value: contexts, error }] = useField(fieldName);
   const fieldId = getFieldId(fieldName, 'dropdown');
   const [inputValue, setInputValue] = React.useState('');
 
@@ -31,20 +30,13 @@ const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldNa
   const selectedContextNames: string[] = (contexts ?? []).map((c: ContextOption) => c.name);
   // All the context options available to the user.
   const allContexts = React.useMemo(() => {
-    let initialSelectedContexts = mapContextsWithSelection(selectedContextNames, contextOptions);
-    // If this is a new integration test, ensure that 'application' is selected by default
-    if (!editing && !selectedContextNames.includes('application')) {
-      initialSelectedContexts = initialSelectedContexts.map((ctx) => {
-        return ctx.name === 'application' ? { ...ctx, selected: true } : ctx;
-      });
-    }
-
+    const initialSelectedContexts = mapContextsWithSelection(selectedContextNames, contextOptions);
     // If we have components and they are loaded, add to context option list.
     // Else, return the base context list.
     return componentsLoaded && components
       ? addComponentContexts(initialSelectedContexts, selectedContextNames, components)
       : initialSelectedContexts;
-  }, [componentsLoaded, components, selectedContextNames, editing]);
+  }, [componentsLoaded, components, selectedContextNames]);
 
   // This holds the contexts that are filtered using the user input value.
   const filteredContexts = React.useMemo(() => {
@@ -101,7 +93,7 @@ const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldNa
               inputValue={inputValue}
               onInputValueChange={setInputValue}
               onRemoveAll={() => handleRemoveAll(arrayHelpers)}
-              editing={editing}
+              error={error}
             />
           )}
         />

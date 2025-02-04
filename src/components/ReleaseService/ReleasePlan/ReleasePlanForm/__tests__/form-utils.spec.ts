@@ -5,6 +5,7 @@ import { mockReleasePlan } from '../../__data__/release-plan.mock';
 import {
   createReleasePlan,
   editReleasePlan,
+  getReleasePlanFormBreadcrumbs,
   ReleasePipelineLocation,
   releasePlanFormParams,
 } from '../form-utils';
@@ -18,7 +19,7 @@ describe('createReleasePlan', () => {
     k8sUpdateMock.mockImplementation((obj) => obj.resource);
   });
 
-  it('should use active workspace for current release pipeline location', async () => {
+  it('should use active namespace for current release pipeline location', async () => {
     const result = await createReleasePlan(
       {
         name: 'test-plan',
@@ -32,8 +33,8 @@ describe('createReleasePlan', () => {
           path: '/',
         },
       },
-      'test-ns',
-      'test-ws',
+      'test-ns-tenant',
+      'test-ws-tenant',
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -43,7 +44,7 @@ describe('createReleasePlan', () => {
             'release.appstudio.openshift.io/standing-attribution': 'false',
           },
           name: 'test-plan',
-          namespace: 'test-ns',
+          namespace: 'test-ns-tenant',
         },
         spec: {
           application: 'test-app',
@@ -64,7 +65,7 @@ describe('createReleasePlan', () => {
             ],
             resolver: 'git',
           },
-          target: 'test-ws-tenant',
+          target: 'test-ns-tenant',
         },
       }),
     );
@@ -75,7 +76,7 @@ describe('createReleasePlan', () => {
       {
         name: 'test-plan',
         application: 'test-app',
-        target: 'target-ws',
+        target: 'target-ws-tenant',
         releasePipelineLocation: ReleasePipelineLocation.target,
         labels: [],
         params: [],
@@ -85,8 +86,8 @@ describe('createReleasePlan', () => {
           path: '/',
         },
       },
-      'test-ns',
-      'test-ws',
+      'test-ns-tenant',
+      'test-ws-tenant',
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -131,8 +132,8 @@ describe('createReleasePlan', () => {
           path: '/',
         },
       },
-      'test-ns',
-      'test-ws',
+      'test-ns-tenant',
+      'test-ws-tenant',
     );
     expect(result.metadata.labels).toEqual({
       'release.appstudio.openshift.io/auto-release': 'true',
@@ -154,8 +155,8 @@ describe('createReleasePlan', () => {
           path: '/',
         },
       },
-      'test-ns',
-      'test-ws',
+      'test-ns-tenant',
+      'test-ws-tenant',
     );
     expect(result.metadata.labels).toEqual({
       'release.appstudio.openshift.io/auto-release': 'true',
@@ -182,7 +183,7 @@ describe('editReleasePlan', () => {
           path: '/',
         },
       },
-      'my-ws',
+      'my-ws-tenant',
     );
 
     expect(result.spec.target).toBe('my-ws-tenant');
@@ -205,5 +206,43 @@ describe('releasePlanFormParams', () => {
     } as ReleasePlanKind);
 
     expect(result).toEqual([{ name: 'test-key', value: 'test-val' }]);
+  });
+});
+
+describe('getReleasePlanFormBreadcrumbs', () => {
+  it('should return the correct breadcrumbs for creating a release plan', () => {
+    const workspace = 'testWorkspace';
+    const edit = false;
+
+    const breadcrumbs = getReleasePlanFormBreadcrumbs([], workspace, edit);
+
+    expect(breadcrumbs).toEqual([
+      {
+        path: `/workspaces/${workspace}/release`,
+        name: 'Releases',
+      },
+      {
+        path: '#',
+        name: 'Create release plan',
+      },
+    ]);
+  });
+
+  it('should return the correct breadcrumbs for editing a release plan', () => {
+    const workspace = 'testWorkspace';
+    const edit = true;
+
+    const breadcrumbs = getReleasePlanFormBreadcrumbs([], workspace, edit);
+
+    expect(breadcrumbs).toEqual([
+      {
+        path: `/workspaces/${workspace}/release`,
+        name: 'Releases',
+      },
+      {
+        path: '#',
+        name: 'Edit release plan',
+      },
+    ]);
   });
 });

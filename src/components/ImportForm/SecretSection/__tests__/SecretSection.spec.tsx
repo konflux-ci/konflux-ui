@@ -1,4 +1,5 @@
 import { screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { useSecrets } from '../../../../hooks/useSecrets';
 import { useAccessReviewForModels } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock, formikRenderer } from '../../../../utils/test-utils';
 import SecretSection from '../SecretSection';
@@ -7,16 +8,54 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModels: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useSecrets', () => ({
+  useSecrets: jest.fn(),
+}));
+
 const watchResourceMock = createK8sWatchResourceMock();
 const accessReviewMock = useAccessReviewForModels as jest.Mock;
+const useSecretsMock = useSecrets as jest.Mock;
 
 describe('SecretSection', () => {
   beforeEach(() => {
     watchResourceMock.mockReturnValue([[], true]);
     accessReviewMock.mockReturnValue([true, true]);
+    useSecretsMock.mockReturnValue([
+      [
+        {
+          metadata: {
+            name: 'snyk-secret',
+            namespace: 'test-ws',
+          },
+          data: {
+            'snyk-token': 'c255ay1zZWNyZXQ=',
+          },
+          type: 'Opaque',
+          apiVersion: 'v1',
+          kind: 'Secret',
+        },
+      ],
+      true,
+    ]);
   });
 
   it('should render secret section', () => {
+    formikRenderer(<SecretSection />, {});
+
+    screen.getByText('Build time secret');
+    screen.getByTestId('add-secret-button');
+  });
+
+  it('should render secret section, secret do not load yet', () => {
+    useSecretsMock.mockReturnValue([[], false]);
+    formikRenderer(<SecretSection />, {});
+
+    screen.getByText('Build time secret');
+    screen.getByTestId('add-secret-button');
+  });
+
+  it('should render secret section with empty list of secrets', () => {
+    useSecretsMock.mockReturnValue([[], true]);
     formikRenderer(<SecretSection />, {});
 
     screen.getByText('Build time secret');

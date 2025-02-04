@@ -19,6 +19,7 @@ import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmpt
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { ComponentKind } from '../../../../types';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
+import { getLastestImage } from '../../../../utils/component-utils';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
 import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
@@ -43,7 +44,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const [taskRuns, taskRunsLoaded] = useTaskRuns(namespace, pipelineRun?.metadata?.name);
   const buildLogsModal = useBuildLogViewerModal(component);
 
-  const containerImage = component.spec.containerImage;
+  const containerImage = getLastestImage(component);
 
   if (error) {
     const httpError = HttpError.fromCode((error as { code: number }).code);

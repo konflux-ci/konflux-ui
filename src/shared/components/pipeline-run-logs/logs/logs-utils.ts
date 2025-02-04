@@ -154,8 +154,8 @@ export const getDownloadAllLogsCallback = (
         allLogs += await getTaskRunLog(
           workspace,
           namespace,
-          pipelineRunUID,
           taskRun?.metadata?.uid,
+          pipelineRunUID,
         ).then((log) => `${tasks[currTask].name.toUpperCase()}\n\n${log}\n\n`);
       }
     }

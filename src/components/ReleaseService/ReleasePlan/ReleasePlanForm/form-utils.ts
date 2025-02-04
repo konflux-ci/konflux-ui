@@ -15,8 +15,6 @@ export enum ReleasePipelineLocation {
   target,
 }
 
-const WORKSPACE_SUFFIX = 'tenant';
-
 export type ReleasePlanFormValues = {
   name: string;
   application: string;
@@ -88,7 +86,7 @@ export const createReleasePlan = async (
     autoRelease,
     standingAttribution,
   } = values;
-  const targetWs = releasePipelineLocation === ReleasePipelineLocation.current ? workspace : target;
+  const targetNs = releasePipelineLocation === ReleasePipelineLocation.current ? namespace : target;
   const labels = labelPairs
     .filter((l) => !!l.key)
     .reduce((acc, o) => ({ ...acc, [o.key]: o.value }), {} as Record<string, string>);
@@ -110,7 +108,7 @@ export const createReleasePlan = async (
       application,
       ...(data ? { data } : {}),
       serviceAccount,
-      target: `${targetWs}-${WORKSPACE_SUFFIX}`,
+      target: `${targetNs}`,
       pipelineRef: {
         resolver: ResolverType.GIT,
         params: [
@@ -152,7 +150,7 @@ export const editReleasePlan = async (
     autoRelease,
     standingAttribution,
   } = values;
-  const targetWs = releasePipelineLocation === ReleasePipelineLocation.current ? workspace : target;
+  const targetNs = releasePipelineLocation === ReleasePipelineLocation.current ? workspace : target;
   const labels = labelPairs
     .filter((l) => !!l.key)
     .reduce((acc, o) => ({ ...acc, [o.key]: o.value }), {} as Record<string, string>);
@@ -175,7 +173,7 @@ export const editReleasePlan = async (
       application,
       ...(data ? { data } : {}),
       serviceAccount,
-      target: `${targetWs}-${WORKSPACE_SUFFIX}`,
+      target: `${targetNs}`,
       pipelineRef: {
         resolver: ResolverType.GIT,
         params: [
@@ -197,4 +195,18 @@ export const editReleasePlan = async (
     },
     resource,
   });
+};
+
+export const getReleasePlanFormBreadcrumbs = (breadcrumbs, workspace, edit) => {
+  return [
+    ...breadcrumbs,
+    {
+      path: `/workspaces/${workspace}/release`,
+      name: 'Releases',
+    },
+    {
+      path: '#',
+      name: edit ? 'Edit release plan' : 'Create release plan',
+    },
+  ];
 };

@@ -1,10 +1,11 @@
+import { fireEvent } from '@testing-library/dom';
 import { FormikProps } from 'formik';
 import { createUseWorkspaceInfoMock, formikRenderer } from '../../../../../utils/test-utils';
 import { ReleasePlanForm } from '../ReleasePlanForm';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useLocation: jest.fn(() => ({})),
+  useLocation: () => ({ pathname: '/path/name' }),
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: () => jest.fn(),
 }));
@@ -28,11 +29,14 @@ describe('ReleasePlanForm', () => {
     expect(result.getByRole('heading', { name: 'Create release plan' })).toBeVisible();
     expect(result.getByRole('button', { name: 'Create' })).toBeVisible();
     expect(result.getByRole('button', { name: 'Create' })).toBeVisible();
-    expect(result.getByRole('radio', { name: 'In this workspace: test-ws' })).toBeVisible();
-    expect(result.getByRole('radio', { name: 'In a target workspace' })).toBeVisible();
+    expect(result.getByRole('radio', { name: 'In this namespace: test-ns' })).toBeVisible();
+    expect(result.getByRole('radio', { name: 'In a target namespace' })).toBeVisible();
     expect(result.getByRole('checkbox', { name: 'Auto release' })).toBeVisible();
     expect(result.getByRole('checkbox', { name: 'Standing attribution' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Release plan name' })).toBeVisible();
+    const breadcrumbLink = result.getByRole('link', { name: /release/i });
+    fireEvent.click(breadcrumbLink);
+    expect(breadcrumbLink).toHaveAttribute('href', '/workspaces/test-ws/release');
   });
 
   it('should show edit form if edit flag is provided', () => {

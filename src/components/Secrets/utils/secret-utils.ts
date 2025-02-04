@@ -16,6 +16,7 @@ import {
   SecretTypeDisplayLabel,
   SecretTypeDropdownLabel,
   SourceSecretType,
+  BuildTimeSecret,
 } from '../../../types';
 
 export type PartnerTask = {
@@ -27,16 +28,17 @@ export type PartnerTask = {
     key: string;
     value: string;
     readOnlyKey?: boolean;
+    readOnlyValue?: boolean;
   }[];
 };
 
-export const supportedPartnerTasksSecrets: { [key: string]: PartnerTask } = {
+export const supportedPartnerTasksSecrets: { [key: string]: BuildTimeSecret } = {
   snyk: {
     type: SecretType.opaque,
     name: 'snyk-secret',
     providerUrl: 'https://snyk.io/',
     tokenKeyName: 'snyk_token',
-    keyValuePairs: [{ key: 'snyk_token', value: '', readOnlyKey: true }],
+    keyValuePairs: [{ key: 'snyk_token', value: '', readOnlyKey: true, readOnlyValue: false }],
   },
 };
 
@@ -46,19 +48,23 @@ export const getSupportedPartnerTaskSecrets = () => {
     value: secret.name,
   }));
 };
-export const isPartnerTaskAvailable = (type: string) =>
-  !!Object.values(supportedPartnerTasksSecrets).find(
-    (secret) => secret.type === K8sSecretType[type],
-  );
+export const isPartnerTaskAvailable = (
+  type: string,
+  arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
+) => !!Object.values(arr).find((secret) => secret.type === K8sSecretType[type]);
 
-export const isPartnerTask = (secretName: string) => {
-  return !!Object.values(supportedPartnerTasksSecrets).find((secret) => secret.name === secretName);
+export const isPartnerTask = (
+  secretName: string,
+  arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
+) => {
+  return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
-export const getSupportedPartnerTaskKeyValuePairs = (secretName?: string) => {
-  const partnerTask = Object.values(supportedPartnerTasksSecrets).find(
-    (secret) => secret.name === secretName,
-  );
+export const getSupportedPartnerTaskKeyValuePairs = (
+  secretName?: string,
+  arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
+) => {
+  const partnerTask = Object.values(arr).find((secret) => secret.name === secretName);
   return partnerTask ? partnerTask.keyValuePairs : [];
 };
 
@@ -253,9 +259,9 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = () => {
+export const getAddSecretBreadcrumbs = (workspace) => {
   return [
-    { path: '/secrets', name: 'Secrets' },
+    { path: `/workspaces/${workspace}/secrets`, name: 'Secrets' },
     { path: '#', name: 'Add secret' },
   ];
 };

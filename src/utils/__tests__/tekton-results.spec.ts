@@ -580,7 +580,7 @@ describe('tekton-results', () => {
     it('should return the latest component build task run', async () => {
       commonFetchJSONMock.mockReturnValueOnce(mockLogsRecordsList);
       commonFetchTextMock.mockReturnValueOnce(Promise.resolve(mockLogResponse));
-      expect(await getTaskRunLog('test-ws', 'test-ns', 'pipelinerun-uid', 'test-id')).toEqual(
+      expect(await getTaskRunLog('test-ws', 'test-ns', 'test-id', 'pipelinerun-uid')).toEqual(
         'sample log',
       );
       expect(commonFetchTextMock.mock.calls).toEqual([

@@ -206,7 +206,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }
   return (
-    <div>
+    <>
       <Table
         data={filteredPLRs}
         unfilteredData={pipelineRuns}
@@ -239,7 +239,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           </Bullseye>
         </Stack>
       ) : null}
-    </div>
+    </>
   );
 };
 

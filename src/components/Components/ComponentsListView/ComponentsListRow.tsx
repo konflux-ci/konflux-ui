@@ -7,6 +7,7 @@ import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
+import { getLastestImage } from '../../../utils/component-utils';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import GitRepoLink from '../../GitLink/GitRepoLink';
@@ -33,6 +34,7 @@ const ComponentsListRow: React.FC<
   const name = component.metadata.name;
   const actions = useComponentActions(component, name);
   const buildLogsModal = useBuildLogViewerModal(component);
+  const latestImage = getLastestImage(component);
 
   const commit = React.useMemo(
     () =>
@@ -66,14 +68,14 @@ const ComponentsListRow: React.FC<
               />
             </FlexItem>
           )}
-          {component.spec.containerImage && (
+          {latestImage && (
             <FlexItem>
               <ExternalLink
                 /** by default patternfly button disable text selection on Button component
                     this enables it on <a /> tag */
                 style={{ userSelect: 'auto' }}
-                href={getContainerImageLink(component.spec.containerImage)}
-                text={component.spec.containerImage}
+                href={getContainerImageLink(latestImage)}
+                text={latestImage}
               />
             </FlexItem>
           )}
