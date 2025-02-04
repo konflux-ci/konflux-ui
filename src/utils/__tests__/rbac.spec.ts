@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react-hooks';
 import { k8sCreateResource } from '../../k8s/k8s-fetch';
 import { IntegrationTestScenarioModel } from '../../models';
 import { AccessReviewResources } from '../../types';
+import { mockUseNamespaceHook } from '../../unit-test-utils/mock-namespace';
 import {
   checkAccess,
   useAccessReview,
@@ -9,7 +10,6 @@ import {
   useAccessReviewForModels,
   useAccessReviews,
 } from '../rbac';
-import { createUseNamespaceMock } from '../test-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(),
@@ -17,7 +17,7 @@ jest.mock('../../k8s/k8s-fetch', () => ({
 }));
 
 const createResourceMock = k8sCreateResource as jest.Mock;
-const useNamespaceMock = createUseNamespaceMock('test-ns');
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 describe('checkAccess', () => {
   beforeEach(() => {

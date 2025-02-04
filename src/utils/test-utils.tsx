@@ -12,7 +12,6 @@ import {
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
 import * as NamespaceUtils from '../components/Namespace/namespace-context';
-import * as NamespaceHook from '../components/Namespace/useNamespaceInfo';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
 import * as k8s from '../k8s';
@@ -229,18 +228,6 @@ export const createUseWorkspaceInfoMock = (
   const mockFn = jest.fn().mockReturnValue(initialValue);
 
   jest.spyOn(WorkspaceHook, 'useWorkspaceInfo').mockImplementation(mockFn);
-
-  beforeEach(() => {
-    mockFn.mockReturnValue(initialValue);
-  });
-
-  return mockFn;
-};
-
-export const createUseNamespaceMock = (initialValue: string): jest.Mock => {
-  const mockFn = jest.fn().mockReturnValue(initialValue);
-
-  jest.spyOn(NamespaceHook, 'useNamespace').mockImplementation(mockFn);
 
   beforeEach(() => {
     mockFn.mockReturnValue(initialValue);

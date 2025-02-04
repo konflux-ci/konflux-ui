@@ -1,8 +1,9 @@
 import { act, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useApplications } from '../../../../hooks/useApplications';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
-import { createUseNamespaceMock, routerRenderer } from '../../../../utils/test-utils';
+import { routerRenderer } from '../../../../utils/test-utils';
 import { mockApplication } from '../../__data__/mock-data';
 import { ApplicationSwitcher } from '../ApplicationSwitcher';
 
@@ -29,8 +30,6 @@ jest.mock('../../../../hooks/useApplications', () => ({
 }));
 const useApplicationsMock = useApplications as jest.Mock;
 
-createUseNamespaceMock('test-ns');
-
 const app1 = {
   ...mockApplication,
   metadata: { ...mockApplication.metadata, name: 'test-app-1', uuid: '1' },
@@ -48,6 +47,8 @@ const app3 = {
 };
 
 describe('ContextSwitcher', () => {
+  mockUseNamespaceHook('test-ns');
+
   beforeEach(() => {
     useApplicationsMock.mockReturnValue([[app1, app2, app3], true]);
     useAccessReviewForModelMock.mockReturnValue([true, true]);
