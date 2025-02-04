@@ -7,6 +7,7 @@ import pipelineImg from '../../../assets/Pipeline.svg';
 import { useComponent } from '../../../hooks/useComponents';
 import { HttpError } from '../../../k8s/error';
 import { ComponentGroupVersionKind, ComponentModel } from '../../../models';
+import { COMPONENT_LIST_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
@@ -112,11 +113,18 @@ const ComponentDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/components`,
+            path: COMPONENT_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+            }),
             name: 'components',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/components/${componentName}`,
+            path: COMPONENT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              componentName,
+            }),
             name: component.spec.componentName,
           },
         ]}
@@ -128,7 +136,11 @@ const ComponentDetailsView: React.FC = () => {
           </Text>
         }
         actions={actions}
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/components/${componentName}`}
+        baseURL={COMPONENT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          componentName,
+        })}
         tabs={[
           {
             key: 'index',

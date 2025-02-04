@@ -15,7 +15,7 @@ import ComponentLatestBuild from './ComponentLatestBuild';
 
 const ComponentDetailsTab: React.FC = () => {
   const { componentName } = useParams<RouterParams>();
-  const { workspace, namespace } = useWorkspaceInfo();
+  const { namespace, workspace } = useWorkspaceInfo();
   const track = useTrackEvent();
   const showModal = useModalLauncher();
   const [component] = useComponent(namespace, workspace, componentName);
