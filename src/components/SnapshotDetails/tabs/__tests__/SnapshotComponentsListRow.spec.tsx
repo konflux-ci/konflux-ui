@@ -35,4 +35,19 @@ describe('SnapshotComponentsListRow', () => {
     const githubLink = screen.queryByTestId('snapshot-component-git-url');
     expect(githubLink).toBeNull();
   });
+
+  it('should list Revision correctly ', () => {
+    render(
+      <SnapshotComponentsListRow
+        columns={null}
+        obj={{
+          ...rowData,
+          source: { git: { ...rowData?.source?.git, revision: 'test-revision' } },
+        }}
+      />,
+    );
+    const revisionLink = screen.queryByTestId('snapshot-component-revision');
+    expect(revisionLink).toBeInTheDocument();
+    expect(screen.getByText('test-revision')).toBeInTheDocument();
+  });
 });
