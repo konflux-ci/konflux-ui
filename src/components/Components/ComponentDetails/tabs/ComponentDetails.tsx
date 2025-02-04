@@ -14,7 +14,7 @@ import { ComponentKind } from '../../../../types';
 import { getLastestImage } from '../../../../utils/component-utils';
 import { getPipelineRunStatusResults } from '../../../../utils/pipeline-utils';
 import GitRepoLink from '../../../GitLink/GitRepoLink';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 
 type ComponentDetailsProps = {
   component: ComponentKind;
@@ -25,7 +25,7 @@ const RESULT_NAME = 'IMAGE_URL';
 const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>> = ({
   component,
 }) => {
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [latestPushBuildPLR, pipelineRunLoaded, error] = useLatestPushBuildPipelineRunForComponent(
     namespace,
     component.metadata.name,
