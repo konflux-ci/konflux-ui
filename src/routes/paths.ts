@@ -17,3 +17,7 @@ export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
 export const COMPONENT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('components');
 
 export const COMPONENT_DETAILS_PATH = COMPONENT_LIST_PATH.extend(`:${RouterParams.componentName}`);
+
+export const COMMIT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('commit');
+
+export const COMMIT_DETAILS_PATH = COMMIT_LIST_PATH.extend(`:${RouterParams.commitSha}`);
