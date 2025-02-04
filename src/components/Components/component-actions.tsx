@@ -7,10 +7,10 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeComponentPipelineModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { componentDeleteModal } from '../modal/resource-modals';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../Namespace/useNamespaceInfo';
 
 export const useComponentActions = (component: ComponentKind, name: string): Action[] => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const showModal = useModalLauncher();
   const applicationName = component?.spec.application;
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
@@ -38,7 +38,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
           link_location: 'component-list',
           component_name: name,
           app_name: applicationName,
-          workspace,
+          workspace: namespace,
         },
       },
       {
@@ -52,7 +52,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
           link_location: 'component-actions',
           component_name: name,
           app_name: applicationName,
-          workspace,
+          workspace: namespace,
         },
       },
     ];
@@ -72,7 +72,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
     component,
     name,
     showModal,
-    workspace,
+    namespace,
   ]);
 
   return actions;
