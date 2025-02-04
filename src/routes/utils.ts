@@ -46,7 +46,7 @@ export function buildRoute<Path extends string>(path: Path): RouteDefinition<Pat
     createPath: (
       params: ParamObject<ParamsFromPath<Path>>,
       options: CreatePathOptions = { leadingSlash: true },
-    ) => {
+    ): string => {
       const leadingSlash = options?.leadingSlash;
       const generatedPath = Object.entries(params).reduce(
         (acc, [key, value]) => acc.replace(`:${key}`, value),
