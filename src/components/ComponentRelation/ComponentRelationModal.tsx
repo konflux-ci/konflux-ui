@@ -44,7 +44,7 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
     [allComponents, allCompsError, allCompsLoaded],
   );
   const componentNames: string[] = React.useMemo(() => {
-    return cnLoaded && !cnError ? components.map((c) => c.metadata.name).sort() : [];
+    return cnLoaded && !cnError ? components.map((c) => c.metadata.name) : [];
   }, [cnError, cnLoaded, components]);
 
   const onSaveRelationships = React.useCallback(() => {
