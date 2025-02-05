@@ -1,5 +1,5 @@
 import { curry } from 'lodash-es';
-import { PipelineRunLabel } from '../consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { k8sQueryGetResource } from '../k8s';
 import { getQueryClient } from '../k8s/query/core';
 import { PipelineRunModel, TaskRunModel } from '../models';
@@ -60,3 +60,5 @@ const QueryRun = curry(
 
 export const QueryPipelineRun = QueryRun(getPipelineRuns, PipelineRunModel);
 export const QueryTaskRun = QueryRun(getTaskRuns, TaskRunModel);
+
+export const pipelineRunTypes = [PipelineRunType.BUILD as string, PipelineRunType.TEST as string];
