@@ -46,8 +46,24 @@ describe('SnapshotComponentsListRow', () => {
         }}
       />,
     );
-    const revisionLink = screen.queryByTestId('snapshot-component-revision');
-    expect(revisionLink).toBeInTheDocument();
     expect(screen.getByText('test-revision')).toBeInTheDocument();
+  });
+
+  it('should list Revision as a link ', () => {
+    render(
+      <SnapshotComponentsListRow
+        columns={null}
+        obj={{
+          ...rowData,
+          source: { git: { ...rowData?.source?.git, revision: 'test-revision' } },
+        }}
+      />,
+    );
+    const revisionLink = screen.getByText('test-revision');
+    expect(revisionLink).toBeInTheDocument();
+    expect(revisionLink).toHaveAttribute(
+      'href',
+      `/workspaces//applications/${rowData?.application}/commit/test-revision`,
+    );
   });
 });
