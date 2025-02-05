@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Formik } from 'formik';
-import { IntegrationTestScenarioKind, Context } from '../../../types/coreBuildService';
+import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useTrackEvent, TrackEvents } from '../../../utils/analytics';
 import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { defaultSelectedContextOption } from '../utils/creation-utils';
 import IntegrationTestForm from './IntegrationTestForm';
 import { IntegrationTestFormValues, IntegrationTestLabels } from './types';
 import {
@@ -16,6 +17,29 @@ import { integrationTestValidationSchema } from './utils/validation-utils';
 type IntegrationTestViewProps = {
   applicationName: string;
   integrationTest?: IntegrationTestScenarioKind;
+};
+
+interface FormContext {
+  name: string;
+  description: string;
+  selected?: boolean;
+}
+
+export const getFormContextValues = (
+  integrateTest: IntegrationTestScenarioKind | null | undefined,
+): FormContext[] => {
+  const contexts = integrateTest?.spec?.contexts;
+  // NOTE: If this is a new integration test,
+  // have the 'application' context selected by default.
+  if (!integrateTest) {
+    return [defaultSelectedContextOption];
+  } else if (!contexts?.length) {
+    return [];
+  }
+
+  return contexts.map((context) => {
+    return context.name ? { name: context.name, description: context.description } : context;
+  });
 };
 
 const IntegrationTestView: React.FunctionComponent<
@@ -52,19 +76,6 @@ const IntegrationTestView: React.FunctionComponent<
     return formParams;
   };
 
-  interface FormContext {
-    name: string;
-    description: string;
-  }
-
-  const getFormContextValues = (contexts: Context[] | null | undefined): FormContext[] => {
-    if (!contexts?.length) return [];
-
-    return contexts.map((context) => {
-      return context.name ? { name: context.name, description: context.description } : context;
-    });
-  };
-
   const initialValues = {
     integrationTest: {
       name: integrationTest?.metadata.name ?? '',
@@ -72,7 +83,7 @@ const IntegrationTestView: React.FunctionComponent<
       revision: revision?.value ?? '',
       path: path?.value ?? '',
       params: getFormParamValues(integrationTest?.spec?.params),
-      contexts: getFormContextValues(integrationTest?.spec?.contexts),
+      contexts: getFormContextValues(integrationTest),
       optional:
         integrationTest?.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true' ?? false,
     },

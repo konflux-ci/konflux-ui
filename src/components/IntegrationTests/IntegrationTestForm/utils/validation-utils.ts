@@ -12,5 +12,15 @@ export const integrationTestValidationSchema = yup.object({
       .string()
       .required('Required')
       .max(2000, 'Please enter a path that is less than 2000 characters.'),
+    contexts: yup
+      .array()
+      .of(
+        yup.object().shape({
+          name: yup.string(),
+          description: yup.string(),
+        }),
+      )
+      .required('Required')
+      .min(1),
   }),
 });

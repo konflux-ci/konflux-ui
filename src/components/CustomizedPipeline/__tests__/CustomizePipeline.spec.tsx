@@ -239,11 +239,14 @@ describe('CustomizePipeline', () => {
       <CustomizePipeline
         components={[
           {
+            spec: {
+              application: 'my-component-test',
+            },
             metadata: {
               name: 'my-component-test',
             },
-            spec: {
-              containerImage: 'quay.io/org/test:latest',
+            status: {
+              lastPromotedImage: 'quay.io/org/test:latest',
             },
           } as ComponentKind,
         ]}

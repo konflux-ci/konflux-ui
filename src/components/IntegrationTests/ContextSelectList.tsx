@@ -13,7 +13,7 @@ import {
   Button,
 } from '@patternfly/react-core';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
-import { ContextOption } from './utils';
+import { ContextOption } from './utils/creation-utils';
 
 type ContextSelectListProps = {
   allContexts: ContextOption[];
@@ -22,7 +22,7 @@ type ContextSelectListProps = {
   inputValue: string;
   onInputValueChange: (value: string) => void;
   onRemoveAll: () => void;
-  editing: boolean;
+  error?: string;
 };
 
 export const ContextSelectList: React.FC<ContextSelectListProps> = ({
@@ -32,7 +32,7 @@ export const ContextSelectList: React.FC<ContextSelectListProps> = ({
   onRemoveAll,
   inputValue,
   onInputValueChange,
-  editing,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedItemIndex, setFocusedItemIndex] = useState<number | null>(null);
@@ -144,6 +144,7 @@ export const ContextSelectList: React.FC<ContextSelectListProps> = ({
       isExpanded={isOpen}
       style={{ minWidth: '750px' } as React.CSSProperties}
       data-test="context-dropdown-toggle"
+      status={error ? 'danger' : 'success'}
     >
       <TextInputGroup isPlain>
         <TextInputGroupMain
@@ -155,7 +156,7 @@ export const ContextSelectList: React.FC<ContextSelectListProps> = ({
           id="multi-typeahead-select-input"
           autoComplete="off"
           innerRef={textInputRef}
-          placeholder="Select a context"
+          placeholder={error ? 'You must select at least one context' : 'Select a context'}
           {...(activeItemId && { 'aria-activedescendant': activeItemId })}
           role="combobox"
           isExpanded={isOpen}
@@ -204,7 +205,6 @@ export const ContextSelectList: React.FC<ContextSelectListProps> = ({
             isSelected={ctx.selected}
             description={ctx.description}
             ref={null}
-            isDisabled={!editing && ctx.name === 'application'}
             data-test={`context-option-${ctx.name}`}
           >
             {ctx.name}
