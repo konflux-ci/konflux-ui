@@ -23,12 +23,7 @@ import { ComponentModel } from '../../models';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
-import {
-  enablePAC,
-  disablePAC,
-  useComponentBuildStatus,
-  getLastestImage,
-} from '../../utils/component-utils';
+import { enablePAC, useComponentBuildStatus, getLastestImage } from '../../utils/component-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import AnalyticsButton from '../AnalyticsButton/AnalyticsButton';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
