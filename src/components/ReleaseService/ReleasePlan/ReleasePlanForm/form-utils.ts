@@ -196,3 +196,17 @@ export const editReleasePlan = async (
     resource,
   });
 };
+
+export const getReleasePlanFormBreadcrumbs = (breadcrumbs, workspace, edit) => {
+  return [
+    ...breadcrumbs,
+    {
+      path: `/workspaces/${workspace}/release`,
+      name: 'Releases',
+    },
+    {
+      path: '#',
+      name: edit ? 'Edit release plan' : 'Create release plan',
+    },
+  ];
+};
