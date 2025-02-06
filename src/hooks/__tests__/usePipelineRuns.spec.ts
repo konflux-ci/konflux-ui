@@ -6,7 +6,7 @@ import {
   TaskRunGroupVersionKind,
   TaskRunModel,
 } from '../../models';
-import { createK8sWatchResourceMock } from '../../utils/test-utils';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useComponents } from '../useComponents';
 import {
   useLatestBuildPipelineRunForComponent,
@@ -23,9 +23,7 @@ import { useTRPipelineRuns, useTRTaskRuns } from '../useTektonResults';
 jest.mock('../useTektonResults');
 jest.mock('../useComponents');
 
-jest.mock('../useApplications', () => ({
-  useApplication: jest.fn().mockReturnValue([{ metadata: { name: 'test' } }, true]),
-}));
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
