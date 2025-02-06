@@ -6,9 +6,7 @@ import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 
-jest.mock('../useApplications', () => ({
-  useApplication: jest.fn().mockReturnValue([{ metadata: { name: 'test' } }, true]),
-}));
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
