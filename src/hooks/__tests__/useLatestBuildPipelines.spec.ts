@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
-import { createK8sWatchResourceMock } from '../../utils/test-utils';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useLatestBuildPipelines } from '../useLatestBuildPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 

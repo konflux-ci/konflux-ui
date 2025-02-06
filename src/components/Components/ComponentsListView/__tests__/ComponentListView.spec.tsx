@@ -5,6 +5,7 @@ import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../..
 import {
   createK8sWatchResourceMock,
   createUseWorkspaceInfoMock,
+  createUseApplicationMock,
 } from '../../../../utils/test-utils';
 import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
