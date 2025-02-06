@@ -26,9 +26,7 @@ describe('useBuildPipelines', () => {
       undefined,
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
-    const { result } = renderHook(() =>
-      useBuildPipelines('test-ns', 'test-pipelinerun', null, false),
-    );
+    const { result } = renderHook(() => useBuildPipelines('test-ns', 'test-pipelinerun', null));
 
     const [pipelineRuns, loaded] = result.current;
     expect(loaded).toBe(true);

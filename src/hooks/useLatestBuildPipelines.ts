@@ -25,7 +25,7 @@ export const useLatestBuildPipelines = (
   );
 
   const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
-    applicationLoaded && neededNames?.length ? namespace : null,
+    applicationLoaded ? namespace : null,
     workspace,
     React.useMemo(
       () => ({

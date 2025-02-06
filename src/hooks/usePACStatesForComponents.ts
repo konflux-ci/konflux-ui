@@ -77,7 +77,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
   );
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRuns(
-    applicationLoaded && neededNames.length ? namespace : null,
+    applicationLoaded ? namespace : null,
     workspace,
     React.useMemo(
       () => ({
