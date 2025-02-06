@@ -25,7 +25,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const { namespace, workspace } = useWorkspaceInfo();
   const {
     filterPLRs,
-    filterState: { nameFilter },
+    filterState: { nameFilter, typeFilters, statusFilters },
     filterToolbar,
     onClearFilters,
   } = usePipelineRunsFilter();
@@ -69,6 +69,8 @@ const CommitsPipelineRunTab: React.FC = () => {
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
+  const isFiltered = nameFilter.length > 0 || typeFilters.length > 0 || statusFilters.length > 0;
+
   return (
     <>
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg">
@@ -81,10 +83,14 @@ const CommitsPipelineRunTab: React.FC = () => {
           data={filteredPLRs}
           aria-label="Pipelinerun List"
           Header={PipelineRunListHeaderWithVulnerabilities}
-          Toolbar={filterToolbar(statusFilterObj, typeFilterObj)}
+          Toolbar={
+            !isFiltered && pipelineRuns.length === 0
+              ? null
+              : filterToolbar(statusFilterObj, typeFilterObj)
+          }
           loaded={isFetchingNextPage || loaded}
           customData={vulnerabilities}
-          EmptyMsg={EmptyMsg}
+          EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
           NoDataEmptyMsg={NoDataEmptyMsg}
           Row={PipelineRunListRowWithVulnerabilities}
           getRowProps={(obj: PipelineRunKind) => ({

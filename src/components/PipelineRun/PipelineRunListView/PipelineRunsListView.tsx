@@ -34,7 +34,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
   const {
     filterPLRs,
-    filterState: { nameFilter, onLoadName },
+    filterState: { nameFilter, onLoadName, typeFilters, statusFilters },
     filterToolbar,
     onClearFilters,
   } = usePipelineRunsFilter();
@@ -104,14 +104,19 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }
 
+  const isFiltered = nameFilter.length > 0 || typeFilters.length > 0 || statusFilters.length > 0;
+
   return (
     <>
       <Table
         data={filteredPLRs}
         unfilteredData={pipelineRuns}
-        NoDataEmptyMsg={NoDataEmptyMsg}
-        EmptyMsg={EmptyMsg}
-        Toolbar={filterToolbar(statusFilterObj, typeFilterObj)}
+        EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
+        Toolbar={
+          !isFiltered && pipelineRuns.length === 0
+            ? null
+            : filterToolbar(statusFilterObj, typeFilterObj)
+        }
         aria-label="Pipeline run List"
         customData={vulnerabilities}
         Header={PipelineRunListHeaderWithVulnerabilities}

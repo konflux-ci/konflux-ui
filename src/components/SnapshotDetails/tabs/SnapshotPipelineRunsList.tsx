@@ -32,7 +32,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
 }) => {
   const {
     filterPLRs,
-    filterState: { nameFilter },
+    filterState: { nameFilter, typeFilters, statusFilters },
     filterToolbar,
     onClearFilters,
   } = usePipelineRunsFilter();
@@ -84,6 +84,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
 
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
+  const isFiltered = nameFilter.length > 0 || typeFilters.length > 0 || statusFilters.length > 0;
 
   return (
     <>
@@ -94,35 +95,35 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
       >
         Pipeline runs
       </Title>
-      {filteredPLRs.length > 0 ? (
-        <Table
-          key={`${snapshotPipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
-          data={filteredPLRs}
-          aria-label="Pipeline run List"
-          Toolbar={filterToolbar(statusFilterObj, typeFilterObj)}
-          customData={vulnerabilities}
-          Header={PipelineRunListHeaderWithVulnerabilities}
-          Row={PipelineRunListRowWithVulnerabilities}
-          EmptyMsg={EmptyMsg}
-          NoDataEmptyMsg={NoDataEmptyMsg}
-          loaded
-          getRowProps={(obj: PipelineRunKind) => ({
-            id: obj.metadata.name,
-          })}
-          isInfiniteLoading
-          infiniteLoaderProps={{
-            isRowLoaded: (args) => {
-              return !!filteredPLRs[args.index];
-            },
-            loadMoreRows: () => {
-              nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && getNextPage?.();
-            },
-            rowCount: nextPageProps.hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
-          }}
-        />
-      ) : (
-        <FilteredEmptyState onClearFilters={onClearFilters} />
-      )}
+
+      <Table
+        key={`${snapshotPipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
+        data={filteredPLRs}
+        aria-label="Pipeline run List"
+        Toolbar={
+          !isFiltered && snapshotPipelineRuns.length === 0
+            ? null
+            : filterToolbar(statusFilterObj, typeFilterObj)
+        }
+        customData={vulnerabilities}
+        Header={PipelineRunListHeaderWithVulnerabilities}
+        Row={PipelineRunListRowWithVulnerabilities}
+        EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
+        loaded
+        getRowProps={(obj: PipelineRunKind) => ({
+          id: obj.metadata.name,
+        })}
+        isInfiniteLoading
+        infiniteLoaderProps={{
+          isRowLoaded: (args) => {
+            return !!filteredPLRs[args.index];
+          },
+          loadMoreRows: () => {
+            nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && getNextPage?.();
+          },
+          rowCount: nextPageProps.hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
+        }}
+      />
     </>
   );
 };
