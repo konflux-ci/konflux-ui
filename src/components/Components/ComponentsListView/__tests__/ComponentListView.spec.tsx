@@ -26,9 +26,7 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../../../hooks/useApplications', () => ({
-  useApplication: jest.fn().mockReturnValue([{ metadata: { name: 'test' } }, true]),
-}));
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');

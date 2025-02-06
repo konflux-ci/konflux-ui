@@ -1,10 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { act, fireEvent, screen } from '@testing-library/react';
-import {
-  createK8sWatchResourceMock,
-  routerRenderer,
-  createUseApplicationMock,
-} from '../../../utils/test-utils';
+import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
 import { ACTIVITY_SECONDARY_TAB_KEY, ActivityTab } from '../ActivityTab';
 
 jest.mock('react-router-dom', () => {
@@ -14,18 +10,6 @@ jest.mock('react-router-dom', () => {
     useNavigate: jest.fn(),
     useParams: jest.fn(),
   };
-});
-
-const mockUseApplication = createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
-
-describe('useApplication hook', () => {
-  beforeEach(() => {
-    mockUseApplication.mockReturnValue([{ metadata: { name: 'test' } }, true]);
-  });
-  it('should return application', () => {
-    const result = mockUseApplication();
-    expect(result).toEqual([{ metadata: { name: 'test' } }, true]);
-  });
 });
 
 jest.mock('../../Workspace/useWorkspaceInfo', () => ({
