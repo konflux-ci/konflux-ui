@@ -61,4 +61,4 @@ const QueryRun = curry(
 export const QueryPipelineRun = QueryRun(getPipelineRuns, PipelineRunModel);
 export const QueryTaskRun = QueryRun(getTaskRuns, TaskRunModel);
 
-export const pipelineRunTypes = [PipelineRunType.BUILD as string, PipelineRunType.TEST as string];
+export const pipelineRunTypes = Object.values(PipelineRunType).map((type) => type as string);

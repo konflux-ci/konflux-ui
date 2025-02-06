@@ -12,6 +12,7 @@ export const createFilterObj = (
     }
 
     const key = keyExtractor(item);
+
     if (validKeys.includes(key)) {
       if (acc[key] !== undefined) {
         acc[key] = acc[key] + 1;
