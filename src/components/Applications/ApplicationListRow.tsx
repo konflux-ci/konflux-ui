@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { pluralize, Skeleton } from '@patternfly/react-core';
 import { useComponents } from '../../hooks/useComponents';
+import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { ApplicationKind } from '../../types';
@@ -22,7 +23,10 @@ const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Appli
     <>
       <TableData className={applicationTableColumnClasses.name} data-test="app-row-test-id">
         <Link
-          to={`/workspaces/${workspace}/applications/${obj.metadata?.name}`}
+          to={APPLICATION_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata.name,
+          })}
           title={displayName}
         >
           {displayName}
