@@ -14,6 +14,7 @@ import { FormikValues, Formik } from 'formik';
 import * as NamespaceUtils from '../components/Namespace/namespace-context';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
+import * as ApplicationHook from '../hooks/useApplications';
 import * as k8s from '../k8s';
 
 export function createTestQueryClient() {
@@ -228,6 +229,20 @@ export const createUseWorkspaceInfoMock = (
   const mockFn = jest.fn().mockReturnValue(initialValue);
 
   jest.spyOn(WorkspaceHook, 'useWorkspaceInfo').mockImplementation(mockFn);
+
+  beforeEach(() => {
+    mockFn.mockReturnValue(initialValue);
+  });
+
+  return mockFn;
+};
+
+export const createUseApplicationMock = (
+  initialValue: [Record<string, string>, boolean] = [{}, false],
+): jest.Mock => {
+  const mockFn = jest.fn().mockReturnValue(initialValue);
+
+  jest.spyOn(ApplicationHook, 'useApplication').mockImplementation(mockFn);
 
   beforeEach(() => {
     mockFn.mockReturnValue(initialValue);
