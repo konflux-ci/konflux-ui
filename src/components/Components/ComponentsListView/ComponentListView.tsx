@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import {
   Alert,
   AlertActionCloseButton,
@@ -25,6 +25,7 @@ import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents'
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
 import { IMPORT_PATH } from '../../../routes/paths';
+import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -36,7 +37,7 @@ import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { createCustomizeAllPipelinesModalLauncher } from '../../CustomizedPipeline/CustomizePipelinesModal';
 import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import ComponentsListHeader from './ComponentsListHeader';
 import ComponentsListRow from './ComponentsListRow';
 import ComponentsToolbar, { pipelineRunStatusFilterId } from './ComponentsToolbar';
@@ -52,7 +53,8 @@ type ComponentListViewProps = {
 const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps>> = ({
   applicationName,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
+  const { workspaceName } = useParams<RouterParams>();
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
@@ -60,7 +62,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 
   const [components, componentsLoaded, componentsError] = useComponents(
     namespace,
-    workspace,
+    workspaceName,
     applicationName,
     true,
   );
@@ -144,7 +146,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           link_name: 'add-component',
           link_location: 'components-list-empty-state',
           app_name: applicationName,
-          workspace,
+          workspace: workspaceName,
         }}
       >
         Add component
