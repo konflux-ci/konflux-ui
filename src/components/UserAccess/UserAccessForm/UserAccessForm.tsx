@@ -29,12 +29,12 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
   return (
     <PageLayout
       title={
-        edit ? `Edit access to workspace, ${workspace}` : `Grant access to workspace, ${workspace}`
+        edit ? `Edit access to namespace, ${workspace}` : `Grant access to namespace, ${workspace}`
       }
       description={
         edit
           ? 'Change permissions for this user by adding a role or removing a current role.'
-          : 'Invite users to collaborate with you by granting them access to your workspace.'
+          : 'Invite users to collaborate with you by granting them access to your namespace.'
       }
       breadcrumbs={[
         ...breadcrumbs,

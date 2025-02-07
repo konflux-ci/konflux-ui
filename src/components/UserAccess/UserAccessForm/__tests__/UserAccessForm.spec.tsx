@@ -27,10 +27,10 @@ describe('UserAccessForm', () => {
     const values = { usernames: [], role: null };
     const props = { values } as FormikProps<UserAccessFormValues>;
     formikRenderer(<UserAccessForm {...props} />, values);
-    expect(screen.getByText('Grant access to workspace, test-ws')).toBeVisible();
+    expect(screen.getByText('Grant access to namespace, test-ws')).toBeVisible();
     expect(
       screen.getByText(
-        'Invite users to collaborate with you by granting them access to your workspace.',
+        'Invite users to collaborate with you by granting them access to your namespace.',
       ),
     ).toBeVisible();
     expect(screen.getByRole('button', { name: 'Grant access' })).toBeVisible();
@@ -41,7 +41,7 @@ describe('UserAccessForm', () => {
     const values = { usernames: [], role: null };
     const props = { values } as FormikProps<UserAccessFormValues>;
     formikRenderer(<UserAccessForm {...props} edit />, values);
-    expect(screen.getByText('Edit access to workspace, test-ws')).toBeVisible();
+    expect(screen.getByText('Edit access to namespace, test-ws')).toBeVisible();
     expect(
       screen.getByText(
         'Change permissions for this user by adding a role or removing a current role.',
