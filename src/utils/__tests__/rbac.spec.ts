@@ -1,8 +1,8 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { useWorkspaceInfo } from '../../components/Workspace/useWorkspaceInfo';
 import { k8sCreateResource } from '../../k8s/k8s-fetch';
 import { IntegrationTestScenarioModel } from '../../models';
 import { AccessReviewResources } from '../../types';
+import { mockUseNamespaceHook } from '../../unit-test-utils/mock-namespace';
 import {
   checkAccess,
   useAccessReview,
@@ -16,12 +16,8 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   getActiveWorkspace: jest.fn(() => 'test-ws'),
 }));
 
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns' })),
-}));
-
 const createResourceMock = k8sCreateResource as jest.Mock;
-const useWorkspaceInfoMock = useWorkspaceInfo as jest.Mock;
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 describe('checkAccess', () => {
   beforeEach(() => {
@@ -245,7 +241,7 @@ describe('useAccessReviewForModels', () => {
   });
 
   it('should return values only when namespace is set', async () => {
-    useWorkspaceInfoMock.mockReturnValue({ namespace: 'test-ns' });
+    useNamespaceMock.mockReturnValue('test-ns');
     const accessReviewResources: AccessReviewResources = [
       { model: IntegrationTestScenarioModel, verb: 'update' },
     ];
@@ -258,7 +254,7 @@ describe('useAccessReviewForModels', () => {
   });
 
   it('should not create access review object when a namespace is not set', () => {
-    useWorkspaceInfoMock.mockReturnValue({ namespace: '' });
+    useNamespaceMock.mockReturnValue('');
     const accessReviewResources: AccessReviewResources = [
       { model: IntegrationTestScenarioModel, verb: 'update' },
     ];

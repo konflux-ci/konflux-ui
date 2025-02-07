@@ -18,13 +18,12 @@ const BUILD_PIPELINE_ANNOTATION = 'build.appstudio.openshift.io/pipeline';
 
 export const createSecrets = async (
   secrets: ImportSecret[],
-  workspace: string,
   namespace: string,
   dryRun: boolean,
 ) => {
   const results = [];
   for (const secret of secrets) {
-    const sec = await createSecret(secret, workspace, namespace, dryRun);
+    const sec = await createSecret(secret, namespace, dryRun);
     results.push(sec);
   }
   return results;
@@ -33,7 +32,6 @@ export const createSecrets = async (
 export const createResources = async (
   formValues: ImportFormValues,
   namespace: string,
-  workspace: string,
   bombinoUrl: string,
 ) => {
   const {
@@ -63,7 +61,7 @@ export const createResources = async (
   };
 
   if (shouldCreateApplication) {
-    await createApplication(application, namespace, workspace, true);
+    await createApplication(application, namespace, true);
     await createIntegrationTest(integrationTestValues, applicationName, namespace, true);
   }
   if (showComponent) {
@@ -71,7 +69,6 @@ export const createResources = async (
       { componentName, application, source, gitProviderAnnotation, gitURLAnnotation },
       applicationName,
       namespace,
-      workspace,
       '',
       true,
       undefined,
@@ -84,7 +81,6 @@ export const createResources = async (
         application,
         component: componentName,
         namespace,
-        workspace,
         isPrivate: isPrivateRepo,
         bombinoUrl,
       },
@@ -94,7 +90,7 @@ export const createResources = async (
 
   let applicationData: ApplicationKind;
   if (shouldCreateApplication) {
-    applicationData = await createApplication(application, namespace, workspace);
+    applicationData = await createApplication(application, namespace);
     applicationName = applicationData.metadata.name;
     await createIntegrationTest(integrationTestValues, applicationName, namespace);
   }
@@ -104,13 +100,12 @@ export const createResources = async (
     const secretsToCreate = importSecrets.filter((secret) =>
       secret.existingSecrets.find((existing) => secret.secretName === existing.name) ? false : true,
     );
-    await createSecrets(secretsToCreate, workspace, namespace, true);
+    await createSecrets(secretsToCreate, namespace, true);
 
     createdComponent = await createComponent(
       { componentName, application, gitProviderAnnotation, source, gitURLAnnotation },
       applicationName,
       namespace,
-      workspace,
       '',
       false,
       undefined,
@@ -122,11 +117,10 @@ export const createResources = async (
       application,
       component: componentName,
       namespace,
-      workspace,
       isPrivate: isPrivateRepo,
       bombinoUrl,
     });
-    await createSecrets(secretsToCreate, workspace, namespace, false);
+    await createSecrets(importSecrets, namespace, false);
   }
 
   return {

@@ -12,8 +12,8 @@ import { AccessReviewResources } from '../../../types/rbac';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { useModalLauncher } from '../../modal/ModalProvider';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { SecretModalLauncher } from '../../Secrets/SecretModalLauncher';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { ImportFormValues } from '../type';
 
 const accessReviewResources: AccessReviewResources = [{ model: SecretModel, verb: 'create' }];
@@ -22,9 +22,9 @@ const SecretSection = () => {
   const [canCreateSecret] = useAccessReviewForModels(accessReviewResources);
   const showModal = useModalLauncher();
   const { values, setFieldValue } = useFormikContext<ImportFormValues>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
-  const [secrets, secretsLoaded] = useSecrets(namespace, workspace);
+  const [secrets, secretsLoaded] = useSecrets(namespace);
 
   const partnerTaskSecrets: BuildTimeSecret[] =
     secrets && secretsLoaded

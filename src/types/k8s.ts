@@ -157,7 +157,7 @@ export type K8sResourceKindReference = GroupVersionKind;
 export type WatchK8sResource = {
   groupVersionKind: K8sGroupVersionKind;
   name?: string;
-  workspace: string;
+  workspace?: string;
   namespace: string;
   isList?: boolean;
   selector?: Selector;

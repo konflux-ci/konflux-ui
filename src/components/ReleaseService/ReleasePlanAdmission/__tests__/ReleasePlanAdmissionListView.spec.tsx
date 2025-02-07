@@ -1,5 +1,6 @@
 import { render, waitFor } from '@testing-library/react';
 import { useReleasePlanAdmissions } from '../../../../hooks/useReleasePlanAdmissions';
+import { mockAccessReviewUtil } from '../../../../unit-test-utils/mock-access-review';
 import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { mockReleasePlanAdmission } from '../__data__/release-plan-admission.mock';
 import ReleasePlanAdmissionListView from '../ReleasePlanAdmissionListView';
@@ -20,6 +21,7 @@ const mockReleasePlanHook = useReleasePlanAdmissions as jest.Mock;
 
 describe('ReleasePlanAdmissionListView', () => {
   createUseWorkspaceInfoMock({ namespace: 'abcd', workpsace: 'test-ws' });
+  mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
 
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);

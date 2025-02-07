@@ -3,11 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ApplicationKind } from '../../../types';
-import {
-  createK8sWatchResourceMock,
-  createUseWorkspaceInfoMock,
-  renderWithQueryClient,
-} from '../../../utils/test-utils';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
+import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../utils/test-utils';
 import ApplicationListRow from '../ApplicationListRow';
 import ApplicationListView from '../ApplicationListView';
 
@@ -119,11 +116,12 @@ const applications: ApplicationKind[] = [
 
 const useSearchParamsMock = useSearchParams as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
-createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
 const ApplicationList = ApplicationListView;
 
 describe('Application List', () => {
+  mockUseNamespaceHook('test-ns');
+
   beforeEach(() => {
     useSearchParamsMock.mockImplementation(() => React.useState(new URLSearchParams()));
   });
@@ -140,7 +138,7 @@ describe('Application List', () => {
     screen.getByText('Easily onboard your applications');
     const button = screen.getByText('Create application');
     expect(button).toBeInTheDocument();
-    expect(button.closest('a').href).toBe('http://localhost/workspaces/test-ws/import');
+    expect(button.closest('a').href).toBe('http://localhost/workspaces/test-ns/import');
   });
 
   it('should render empty state with no card', () => {

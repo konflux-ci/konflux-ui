@@ -1,6 +1,7 @@
 import { act, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useApplications } from '../../../../hooks/useApplications';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { routerRenderer } from '../../../../utils/test-utils';
 import { mockApplication } from '../../__data__/mock-data';
@@ -8,10 +9,6 @@ import { ApplicationSwitcher } from '../ApplicationSwitcher';
 
 jest.mock('../../../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
-}));
-
-jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ workspace: 'test-ws' })),
 }));
 
 jest.mock('../../../../utils/rbac', () => ({
@@ -50,6 +47,8 @@ const app3 = {
 };
 
 describe('ContextSwitcher', () => {
+  mockUseNamespaceHook('test-ns');
+
   beforeEach(() => {
     useApplicationsMock.mockReturnValue([[app1, app2, app3], true]);
     useAccessReviewForModelMock.mockReturnValue([true, true]);
@@ -94,7 +93,7 @@ describe('ContextSwitcher', () => {
 
     expect(screen.getByText('Test Application 2')).toBeVisible();
     act(() => screen.getByText('Test Application 2').click());
-    expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ws/applications/test-app-2');
+    expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ns/applications/test-app-2');
     expect(screen.queryByText('Test Application 2')).toBeNull();
     switcher.unmount();
   });

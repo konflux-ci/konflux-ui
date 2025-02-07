@@ -24,3 +24,4 @@ export * from './workspace';
 export * from './space-binding-request';
 export * from './config-map';
 export * from './image-repository';
+export * from './namespace';
