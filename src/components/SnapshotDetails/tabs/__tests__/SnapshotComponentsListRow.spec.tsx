@@ -60,7 +60,6 @@ describe('SnapshotComponentsListRow', () => {
       />,
     );
     const revisionLink = screen.getByText('test-revision');
-    expect(revisionLink).toBeInTheDocument();
     expect(revisionLink).toHaveAttribute(
       'href',
       `/workspaces//applications/${rowData?.application}/commit/test-revision`,
