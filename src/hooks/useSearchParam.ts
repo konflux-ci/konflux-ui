@@ -45,3 +45,54 @@ export const useSearchParam = (
 
   return [value, set, unset];
 };
+
+export const useSearchParamBatch = (): [
+  (names?: string[]) => Record<string, string>,
+  (newValues: Record<string, string>) => void,
+  (names?: string[]) => void,
+] => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const values = React.useCallback(
+    (names?: string[]) => {
+      const result: Record<string, string> = {};
+
+      searchParams.forEach((value, name) => {
+        if (!names || names.includes(name)) {
+          result[name] = value;
+        }
+      });
+
+      return result;
+    },
+    [searchParams],
+  );
+
+  const batchSet = React.useCallback(
+    (newValues: Record<string, string>) => {
+      const newSearchParams = new URLSearchParams(searchParams);
+      Object.entries(newValues).forEach(([name, newValue]) => {
+        if (newSearchParams.get(name) !== newValue) {
+          newSearchParams.set(name, newValue);
+        }
+      });
+      setSearchParams(newSearchParams);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const batchUnset = React.useCallback(
+    (names?: string[]) => {
+      const newSearchParams = new URLSearchParams(searchParams);
+      searchParams.forEach((_, name) => {
+        if (!names || names.includes(name)) {
+          newSearchParams.delete(name);
+        }
+      });
+      setSearchParams(newSearchParams);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  return [values, batchSet, batchUnset];
+};
