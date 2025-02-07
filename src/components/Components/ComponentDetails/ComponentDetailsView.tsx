@@ -18,19 +18,19 @@ import { DetailsPage } from '../../DetailsPage';
 import { Action } from '../../DetailsPage/types';
 import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { useComponentActions } from '../component-actions';
 import './ComponentDetailsView.scss';
 
 export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal';
 
 const ComponentDetailsView: React.FC = () => {
-  const { componentName, applicationName } = useParams<RouterParams>();
+  const { componentName, applicationName, workspaceName } = useParams<RouterParams>();
   const navigate = useNavigate();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const showModal = useModalLauncher();
-  const [component, loaded, componentError] = useComponent(namespace, workspace, componentName);
+  const [component, loaded, componentError] = useComponent(namespace, workspaceName, componentName);
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
 
   const componentActions = useComponentActions(loaded ? component : undefined, componentName);
@@ -114,14 +114,14 @@ const ComponentDetailsView: React.FC = () => {
           ...applicationBreadcrumbs,
           {
             path: COMPONENT_LIST_PATH.createPath({
-              workspaceName: namespace,
+              workspaceName,
               applicationName,
             }),
             name: 'components',
           },
           {
             path: COMPONENT_DETAILS_PATH.createPath({
-              workspaceName: namespace,
+              workspaceName,
               applicationName,
               componentName,
             }),
@@ -137,7 +137,7 @@ const ComponentDetailsView: React.FC = () => {
         }
         actions={actions}
         baseURL={COMPONENT_DETAILS_PATH.createPath({
-          workspaceName: namespace,
+          workspaceName,
           applicationName,
           componentName,
         })}
