@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Button, Flex, FlexItem, Skeleton } from '@patternfly/react-core';
 import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents';
 import { COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '../../../routes/paths';
+import { RouterParams } from '../../../routes/utils';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -13,7 +14,6 @@ import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { useBuildLogViewerModal } from '../../LogViewer/BuildLogViewer';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import PipelineRunStatus from '../../PipelineRun/PipelineRunStatus';
 import { useComponentActions } from '../component-actions';
 import { componentsTableColumnClasses } from './ComponentsListHeader';
@@ -30,7 +30,7 @@ export const getContainerImageLink = (url: string) => {
 const ComponentsListRow: React.FC<
   RowFunctionArgs<ComponentWithLatestBuildPipeline, PacStatesForComponents>
 > = ({ obj: component, customData }) => {
-  const namespace = useNamespace();
+  const { workspaceName } = useParams<RouterParams>();
   const applicationName = component.spec.application;
   const name = component.metadata.name;
   const actions = useComponentActions(component, name);
@@ -52,7 +52,7 @@ const ComponentsListRow: React.FC<
           <FlexItem data-test="component-list-item-name" style={{ minWidth: '30%' }}>
             <Link
               to={COMPONENT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
+                workspaceName,
                 applicationName,
                 componentName: name,
               })}
@@ -98,7 +98,7 @@ const ComponentsListRow: React.FC<
               <>
                 <Link
                   to={COMMIT_DETAILS_PATH.createPath({
-                    workspaceName: namespace,
+                    workspaceName,
                     applicationName: commit.application,
                     commitSha: commit.sha,
                   })}
