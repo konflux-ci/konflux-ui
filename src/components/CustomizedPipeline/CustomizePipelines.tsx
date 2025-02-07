@@ -34,7 +34,6 @@ import ComponentPACStateLabel from './ComponentPACStateLabel';
 
 type Props = RawComponentProps & {
   components: ComponentKind[];
-  singleComponent?: boolean;
 };
 
 const Row: React.FC<
@@ -245,7 +244,6 @@ const Row: React.FC<
 const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
   components,
   onClose,
-  singleComponent,
   modalProps,
 }) => {
   const track = useTrackEvent();
@@ -303,9 +301,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
             <Text component={TextVariants.p}>
               <img style={{ width: 100 }} src={completed ? successIconUrl : sendIconUrl} />
             </Text>
-            <Text component={TextVariants.h2}>
-              {singleComponent ? 'Edit build pipeline plan' : 'Manage build pipeline'}
-            </Text>
+            <Text component={TextVariants.h2}>{'Manage build pipeline'}</Text>
             <Text component={TextVariants.p}>
               Konflux build pipelines are Pipelines as Code that are committed to your
               component&apos;s repository. To automatically build on future changes, merge the
