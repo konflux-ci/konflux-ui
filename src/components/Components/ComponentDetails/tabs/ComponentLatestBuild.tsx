@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import {
   Alert,
   DescriptionList,
@@ -16,6 +16,7 @@ import { useLatestSuccessfulBuildPipelineRunForComponent } from '../../../../hoo
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { HttpError } from '../../../../k8s/error';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
+import { RouterParams } from '../../../../routes/utils';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { ComponentKind } from '../../../../types';
@@ -34,6 +35,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   component,
 }) => {
   const namespace = useNamespace();
+  const { workspaceName } = useParams<RouterParams>();
   const [pipelineRun, pipelineRunLoaded, error] = useLatestSuccessfulBuildPipelineRunForComponent(
     namespace,
     component.metadata.name,
@@ -103,7 +105,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
                 <>
                   <Link
                     to={COMMIT_DETAILS_PATH.createPath({
-                      workspaceName: namespace,
+                      workspaceName,
                       applicationName: commit.application,
                       commitSha: commit.sha,
                     })}
