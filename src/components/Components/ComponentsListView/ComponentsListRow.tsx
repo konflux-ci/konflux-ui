@@ -100,7 +100,7 @@ const ComponentsListRow: React.FC<
                   to={COMMIT_DETAILS_PATH.createPath({
                     workspaceName,
                     applicationName: commit.application,
-                    commitSha: commit.sha,
+                    commitName: commit.sha,
                   })}
                 >
                   {commit.isPullRequest ? `#${commit.pullRequestNumber}` : ''} {commit.shaTitle}

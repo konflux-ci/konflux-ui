@@ -107,7 +107,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
                     to={COMMIT_DETAILS_PATH.createPath({
                       workspaceName,
                       applicationName: commit.application,
-                      commitSha: commit.sha,
+                      commitName: commit.sha,
                     })}
                   >
                     {commit.isPullRequest ? `#${commit.pullRequestNumber}` : ''} {commit.shaTitle}
