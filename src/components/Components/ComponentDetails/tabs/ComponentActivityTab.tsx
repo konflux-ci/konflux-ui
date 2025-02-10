@@ -16,7 +16,7 @@ export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
 export const ComponentActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
-  const { activityTab, workspaceName, componentName } = params;
+  const { activityTab, componentName } = params;
   const namespace = useNamespace();
   const [component] = useComponent(namespace, componentName);
   const applicationName = component.spec.application;
@@ -28,12 +28,12 @@ export const ComponentActivityTab: React.FC = () => {
   const getActivityTabRoute = React.useCallback(
     (tab: string) =>
       COMPONENT_ACTIVITY_DETAIL_PATH.createPath({
-        workspaceName,
+        workspaceName: namespace,
         applicationName,
         componentName,
         activityTab: tab,
       }),
-    [applicationName, componentName, workspaceName],
+    [applicationName, componentName, namespace],
   );
 
   const navigate = useNavigate();

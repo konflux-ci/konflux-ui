@@ -25,7 +25,7 @@ import './ComponentDetailsView.scss';
 export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal';
 
 const ComponentDetailsView: React.FC = () => {
-  const { componentName, applicationName, workspaceName } = useParams<RouterParams>();
+  const { componentName, applicationName } = useParams<RouterParams>();
   const navigate = useNavigate();
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
@@ -114,14 +114,14 @@ const ComponentDetailsView: React.FC = () => {
           ...applicationBreadcrumbs,
           {
             path: COMPONENT_LIST_PATH.createPath({
-              workspaceName,
+              workspaceName: namespace,
               applicationName,
             }),
             name: 'components',
           },
           {
             path: COMPONENT_DETAILS_PATH.createPath({
-              workspaceName,
+              workspaceName: namespace,
               applicationName,
               componentName,
             }),
@@ -137,7 +137,7 @@ const ComponentDetailsView: React.FC = () => {
         }
         actions={actions}
         baseURL={COMPONENT_DETAILS_PATH.createPath({
-          workspaceName,
+          workspaceName: namespace,
           applicationName,
           componentName,
         })}
