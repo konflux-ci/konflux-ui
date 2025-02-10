@@ -6,6 +6,7 @@ import { useComponents } from '../../../../hooks/useComponents';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
+import { PipelineRunStatus } from '../../../../types';
 import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -99,7 +100,14 @@ const snapShotPLRs = [
       },
     },
     spec: null,
-    status: null,
+    status: {
+      conditions: [
+        {
+          status: 'True',
+          type: 'Succeeded',
+        },
+      ],
+    } as PipelineRunStatus,
   },
   {
     apiVersion: mockPipelineRuns[0].apiVersion,
@@ -263,6 +271,183 @@ describe('SnapshotPipelinerunsTab', () => {
       expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
       expect(screen.queryByText('go-sample-vvs')).not.toBeInTheDocument();
     });
+  });
+
+  it('should render filtered pipelinerun list by name', async () => {
+    usePLRVulnerabilitiesMock.mockReturnValue({
+      vulnerabilities: {},
+      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
+    });
+    const r = render(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+
+    fireEvent.change(filter, {
+      target: { value: 'python-sample-942fq' },
+    });
+
+    expect(filter.value).toBe('python-sample-942fq');
+
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
+      expect(screen.queryByText('go-sample-s2f4f')).not.toBeInTheDocument();
+      expect(screen.queryByText('go-sample-vvs')).not.toBeInTheDocument();
+    });
+
+    // clean up for next tests
+    fireEvent.change(filter, {
+      target: { value: '' },
+    });
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    expect(filter.value).toBe('');
+  });
+
+  it('should render filtered pipelinerun list by status', async () => {
+    usePLRVulnerabilitiesMock.mockReturnValue({
+      vulnerabilities: {},
+      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
+    });
+    const r = render(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+    fireEvent.click(statusFilter);
+    expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
+
+    const succeededOption = screen.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+    fireEvent.click(succeededOption);
+
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    expect(succeededOption).toBeChecked();
+    await waitFor(() => {
+      expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
+      expect(screen.queryByText('go-sample-s2f4f')).not.toBeInTheDocument();
+      expect(screen.queryByText('go-sample-vvs')).not.toBeInTheDocument();
+    });
+
+    // clean up for other tests
+    expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(succeededOption);
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    expect(succeededOption).not.toBeChecked();
+  });
+
+  it('should render filtered pipelinerun list by type', async () => {
+    usePLRVulnerabilitiesMock.mockReturnValue({
+      vulnerabilities: {},
+      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
+    });
+    const r = render(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+
+    const typeFilter = screen.getByRole('button', {
+      name: /type filter menu/i,
+    });
+    fireEvent.click(typeFilter);
+    expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
+
+    const buildOption = screen.getByLabelText(/build/i, {
+      selector: 'input',
+    });
+    fireEvent.click(buildOption);
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    expect(buildOption).toBeChecked();
+
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    await waitFor(() => {
+      expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
+      expect(screen.queryByText('go-sample-s2f4f')).not.toBeInTheDocument();
+      expect(screen.queryByText('go-sample-vvs')).not.toBeInTheDocument();
+    });
+
+    // clean up for other tests
+    expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(buildOption);
+    r.rerender(
+      <SnapshotPipelineRunsList
+        applicationName={appName}
+        getNextPage={null}
+        snapshotPipelineRuns={snapShotPLRs}
+        loaded={true}
+        nextPageProps={{ hasNextPage: true }}
+      />,
+    );
+    expect(buildOption).not.toBeChecked();
   });
 
   it('should clear the filters and render the list again in the table', async () => {
