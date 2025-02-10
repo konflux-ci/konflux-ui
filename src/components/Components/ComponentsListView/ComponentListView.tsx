@@ -146,7 +146,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           link_name: 'add-component',
           link_location: 'components-list-empty-state',
           app_name: applicationName,
-          workspace: workspaceName,
+          namespace,
         }}
       >
         Add component

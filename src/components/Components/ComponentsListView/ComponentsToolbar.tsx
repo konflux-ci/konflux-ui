@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   SearchInput,
   Toolbar,
@@ -19,11 +19,11 @@ import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
 import { IMPORT_PATH } from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 
 export const FAILED_STATUS_FILTER_ID = 'failed';
 export const SUCCESS_STATUS_FILTER_ID = 'success';
@@ -69,7 +69,7 @@ type ComponentsToolbarProps = {
 };
 
 const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, components }) => {
-  const { workspaceName } = useParams<RouterParams>();
+  const namespace = useNamespace();
   const [statusFilterIsExpanded, setStatusFilterIsExpanded] = React.useState(false);
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
@@ -181,7 +181,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, 
               <Link
                 {...p}
                 data-test="add-component-button"
-                to={`${IMPORT_PATH.createPath({ workspaceName })}?application=${applicationName}`}
+                to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
               />
             )}
             isDisabled={!canCreateComponent}
@@ -189,7 +189,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, 
             analytics={{
               link_name: 'add-component',
               app_name: applicationName,
-              workspace: workspaceName,
+              namespace,
             }}
           >
             Add component
