@@ -15,17 +15,17 @@ import ComponentLatestBuild from './ComponentLatestBuild';
 
 const ComponentDetailsTab: React.FC = () => {
   const namespace = useNamespace();
-  const { componentName, workspaceName } = useParams<RouterParams>();
+  const { componentName } = useParams<RouterParams>();
   const track = useTrackEvent();
   const showModal = useModalLauncher();
-  const [component] = useComponent(namespace, workspaceName, componentName);
+  const [component] = useComponent(namespace, componentName);
   const customizePipeline = () => {
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipeline',
       link_location: 'component-list-label',
       component_name: component.metadata.name,
       app_name: component.spec.application,
-      workspace: workspaceName,
+      namespace,
     });
     showModal(
       createCustomizeComponentPipelineModalLauncher(

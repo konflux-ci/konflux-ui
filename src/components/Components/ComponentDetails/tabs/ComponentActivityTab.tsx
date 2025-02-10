@@ -18,7 +18,7 @@ export const ComponentActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
   const { activityTab, workspaceName, componentName } = params;
   const namespace = useNamespace();
-  const [component] = useComponent(namespace, workspaceName, componentName);
+  const [component] = useComponent(namespace, componentName);
   const applicationName = component.spec.application;
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
     `${component ? `${component.spec.componentName}_` : ''}${ACTIVITY_SECONDARY_TAB_KEY}`,

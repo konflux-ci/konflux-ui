@@ -30,7 +30,7 @@ const ComponentDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const showModal = useModalLauncher();
-  const [component, loaded, componentError] = useComponent(namespace, workspaceName, componentName);
+  const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
 
   const componentActions = useComponentActions(loaded ? component : undefined, componentName);
