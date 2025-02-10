@@ -23,7 +23,7 @@ import {
   getSecretObject,
   addSecret,
 } from '../create-utils';
-import { createK8sUtilMock, mockWindowFetch } from '../test-utils';
+import { mockWindowFetch } from '../test-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(() => Promise.resolve()),
@@ -38,15 +38,8 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
   return { linkSecretToServiceAccount: jest.fn() };
 });
 
-const commonFetchMock = createK8sUtilMock('commonFetch');
-
 const createResourceMock = k8sCreateResource as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
-
-jest.mock('../../components/ApplicationThumbnail', () => {
-  const actual = jest.requireActual('../../components/ApplicationThumbnail');
-  return { ...actual, getRandomSvgNumber: () => 7 };
-});
 
 describe('Create Utils', () => {
   beforeEach(() => {
@@ -400,8 +393,8 @@ describe('Create Utils', () => {
   });
 
   it('should add correct values for Image pull secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
@@ -413,19 +406,20 @@ describe('Create Utils', () => {
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"test":"test-value"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ stringData: { test: 'test-value' } }),
       }),
     );
   });
 
   it('should create a Source secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
@@ -437,19 +431,20 @@ describe('Create Utils', () => {
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"kubernetes.io/basic-auth"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/basic-auth' }),
       }),
     );
   });
 
   it('should add correct data for Source secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
@@ -461,12 +456,15 @@ describe('Create Utils', () => {
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"username":"dGVzdDE=","password":"cGFzcy10ZXN0"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({
+          stringData: { password: 'cGFzcy10ZXN0', username: 'dGVzdDE=' },
+        }),
       }),
     );
   });
@@ -492,7 +490,7 @@ describe('Create Utils', () => {
   });
   it('should add secret', async () => {
     createResourceMock.mockClear();
-    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    await addSecret(addSecretFormValues, 'test-ns');
     expect(createResourceMock).toHaveBeenCalled();
 
     expect(createResourceMock).toHaveBeenCalledWith(
@@ -506,7 +504,7 @@ describe('Create Utils', () => {
 
   it('should call linkToServiceAccount For image pull secrets', async () => {
     linkSecretToServiceAccountMock.mockClear();
-    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    await addSecret(addSecretFormValues, 'test-ns');
     expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
     expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),

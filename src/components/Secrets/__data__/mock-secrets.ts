@@ -11,7 +11,6 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
 } from '../../../types';
-import { THUMBNAIL_ANNOTATION } from '../../ApplicationThumbnail';
 
 export const mockApplicationRequestData = {
   apiVersion: `${ApplicationModel.apiGroup}/${ApplicationModel.apiVersion}`,
@@ -19,9 +18,6 @@ export const mockApplicationRequestData = {
   metadata: {
     name: 'test-application',
     namespace: 'test-ns',
-    annotations: {
-      [THUMBNAIL_ANNOTATION]: '7',
-    },
   },
   spec: {
     displayName: 'test-application',
