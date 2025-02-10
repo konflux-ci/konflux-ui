@@ -34,6 +34,11 @@ jest.mock('../src/utils/rbac', () => ({
   ...jest.requireActual('../src/utils/rbac'),
 }));
 
+jest.mock('../src/hooks/useApplications', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/hooks/useApplications'),
+}));
+
 afterAll(() => {
   jest.clearAllMocks();
 });

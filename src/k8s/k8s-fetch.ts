@@ -73,11 +73,13 @@ export const k8sListResource = <TResource extends K8sResourceCommon>({
     true,
   ).then((result) => ({
     ...result,
-    items: result.items.map((i) => ({
-      ...i,
-      apiVersion: result.apiVersion,
-      kind: model.kind,
-    })),
+    items: result.items
+      ? result.items.map((i) => ({
+          ...i,
+          apiVersion: result.apiVersion,
+          kind: model.kind,
+        }))
+      : [],
   }));
 
 export const K8sListResourceItems = <TResource extends K8sResourceCommon>(

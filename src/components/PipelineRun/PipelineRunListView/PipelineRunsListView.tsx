@@ -18,7 +18,7 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { debounce } from 'lodash-es';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useComponents } from '../../../hooks/useComponents';
+import { useApplication } from '../../../hooks/useApplications';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { useSearchParam } from '../../../hooks/useSearchParam';
@@ -46,7 +46,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   customFilter,
 }) => {
   const { namespace, workspace } = useWorkspaceInfo();
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
@@ -60,29 +60,25 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
-      componentsLoaded ? namespace : null,
+      applicationLoaded ? namespace : null,
       workspace,
       React.useMemo(
         () => ({
           selector: {
+            filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
+              ...(!onLoadName &&
+                componentName && {
+                  [PipelineRunLabel.COMPONENT]: componentName,
+                }),
             },
-            ...(!onLoadName && {
-              matchExpressions: [
-                {
-                  key: `${PipelineRunLabel.COMPONENT}`,
-                  operator: 'In',
-                  values: componentName
-                    ? [componentName]
-                    : components?.map((c) => c.metadata?.name),
-                },
-              ],
+            ...(onLoadName && {
+              filterByName: onLoadName.trim().toLowerCase(),
             }),
-            ...(onLoadName && { filterByName: onLoadName.trim().toLowerCase() }),
           },
         }),
-        [applicationName, componentName, components, onLoadName],
+        [applicationName, componentName, application, onLoadName],
       ),
     );
   const statusFilters = React.useMemo(

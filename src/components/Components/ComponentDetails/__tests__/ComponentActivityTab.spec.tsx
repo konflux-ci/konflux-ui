@@ -3,6 +3,7 @@ import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
 import {
   createK8sWatchResourceMock,
+  createUseApplicationMock,
   createUseWorkspaceInfoMock,
   routerRenderer,
 } from '../../../../utils/test-utils';
@@ -26,6 +27,8 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
   useComponent: jest.fn(),
 }));
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const watchResourceMock = createK8sWatchResourceMock();
 const useComponentsMock = useComponents as jest.Mock;

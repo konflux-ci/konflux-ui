@@ -5,6 +5,7 @@ import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../..
 import {
   createK8sWatchResourceMock,
   createUseWorkspaceInfoMock,
+  createUseApplicationMock,
 } from '../../../../utils/test-utils';
 import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
@@ -25,6 +26,8 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');

@@ -1,10 +1,12 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
-import { createK8sWatchResourceMock } from '../../utils/test-utils';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useLatestBuildPipelines } from '../useLatestBuildPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
