@@ -11,6 +11,7 @@ import {
   act,
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
+import * as NamespaceUtils from '../components/Namespace/namespace-context';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
 import * as k8s from '../k8s';
@@ -61,7 +62,18 @@ export const namespaceRenderer = (
           ...contextValues,
         }}
       >
-        {children}
+        <NamespaceUtils.NamespaceContext.Provider
+          value={{
+            namespace,
+            lastUsedNamespace: 'test-ws',
+            namespaceResource: undefined,
+            namespaces: [],
+            namespacesLoaded: false,
+            ...contextValues,
+          }}
+        >
+          {children}
+        </NamespaceUtils.NamespaceContext.Provider>
       </WorkspaceUtils.WorkspaceContext.Provider>
     ),
     ...options,
@@ -239,6 +251,22 @@ export const WithTestWorkspaceContext =
     >
       {children}
     </WorkspaceUtils.WorkspaceContext.Provider>
+  );
+
+export const WithTestNamespaceContext =
+  (children, data?: WorkspaceUtils.WorkspaceContextData) => () => (
+    <NamespaceUtils.NamespaceContext.Provider
+      value={{
+        namespace: 'test-ws',
+        lastUsedNamespace: 'test-ws',
+        namespaceResource: undefined,
+        namespaces: [],
+        namespacesLoaded: false,
+        ...data,
+      }}
+    >
+      {children}
+    </NamespaceUtils.NamespaceContext.Provider>
   );
 
 export const waitForLoadingToFinish = async () =>

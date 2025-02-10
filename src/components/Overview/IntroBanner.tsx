@@ -13,14 +13,15 @@ import {
 } from '@patternfly/react-core';
 import { useApplications } from '../../hooks/useApplications';
 import { ApplicationModel, ComponentModel } from '../../models';
+import { APPLICATION_LIST_PATH, IMPORT_PATH } from '../../routes/paths';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { AccessReviewResources } from '../../types';
 import { useAccessReviewForModels } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import { useNamespace } from '../Namespace/useNamespaceInfo';
 import { SignupStatus } from '../SignUp/signup-utils';
 import SignupButton from '../SignUp/SignupButton';
 import { useSignupStatus } from '../SignUp/useSignupStatus';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 import './IntroBanner.scss';
 
@@ -30,14 +31,13 @@ const accessReviewResources: AccessReviewResources = [
 ];
 
 const IntroBanner: React.FC = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreate] = useAccessReviewForModels(accessReviewResources);
 
   const signupStatus = useSignupStatus();
 
   const [applications, applicationsLoaded] = useApplications(
     signupStatus === SignupStatus.SignedUp && namespace ? namespace : null,
-    workspace,
   );
   return (
     <Grid className="intro-banner">
@@ -59,7 +59,9 @@ const IntroBanner: React.FC = () => {
               <>
                 <ButtonWithAccessTooltip
                   className="intro-banner__cta"
-                  component={(props) => <Link {...props} to={`/workspaces/${workspace}/import`} />}
+                  component={(props) => (
+                    <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+                  )}
                   variant="primary"
                   data-test="create-application"
                   isDisabled={!canCreate}
@@ -75,7 +77,10 @@ const IntroBanner: React.FC = () => {
                   <Button
                     className="intro-banner__cta"
                     component={(props) => (
-                      <Link {...props} to={`/workspaces/${workspace}/applications`} />
+                      <Link
+                        {...props}
+                        to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
+                      />
                     )}
                     variant="secondary"
                     data-test="view-my-applications"

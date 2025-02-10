@@ -48,7 +48,7 @@ const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
       />
       <EmptyStateBody>
         {body ||
-          `Ask the administrator or the owner of the ${workspace} workspace for access permissions.`}
+          `Ask the administrator or the owner of the ${workspace} namespace for access permissions.`}
       </EmptyStateBody>
       <EmptyStateFooter>
         {children || (
