@@ -5,7 +5,7 @@ import { useComponents } from '../../../../hooks/useComponents';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
-import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
@@ -29,6 +29,8 @@ jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
 jest.mock('../../commit-status', () => ({
   useCommitStatus: () => ['-', true],
 }));
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('../../../../shared/components/table/TableComponent', () => {
   return (props) => {

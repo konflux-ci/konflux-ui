@@ -7,7 +7,7 @@ import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind } from '../../../../types';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
+import { createUseWorkspaceInfoMock, createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
@@ -19,6 +19,8 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(),
 }));
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('../../../../hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
