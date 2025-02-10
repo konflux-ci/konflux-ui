@@ -352,7 +352,6 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
 
 export const createSecretResource = async (
   values: AddSecretFormValues,
-  workspace: string,
   namespace: string,
   dryRun: boolean,
 ) => {
@@ -374,7 +373,7 @@ export const createSecretResource = async (
   };
   // if image pull secret, link to service account
   if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-    await linkSecretToServiceAccount(secretResource, namespace, workspace);
+    await linkSecretToServiceAccount(secretResource, namespace);
   }
 
   return await K8sQueryCreateResource({
@@ -384,12 +383,8 @@ export const createSecretResource = async (
   });
 };
 
-export const addSecret = async (
-  values: AddSecretFormValues,
-  workspace: string,
-  namespace: string,
-) => {
-  return await createSecretResource(values, workspace, namespace, false);
+export const addSecret = async (values: AddSecretFormValues, namespace: string) => {
+  return await createSecretResource(values, namespace, false);
 };
 
 export const createSecret = async (secret: ImportSecret, namespace: string, dryRun: boolean) => {

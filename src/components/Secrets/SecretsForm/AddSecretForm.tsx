@@ -45,7 +45,7 @@ const AddSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        addSecret(values, workspace, namespace)
+        addSecret(values, namespace)
           .then(() => {
             navigate(`/workspaces/${workspace}/secrets`);
           })
