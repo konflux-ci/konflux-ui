@@ -8,7 +8,7 @@ import {
   ComponentBuildState,
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
-import { createK8sWatchResourceMock } from '../../utils/test-utils';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { PACState } from '../usePACState';
 import usePACStatesForComponents from '../usePACStatesForComponents';
 
@@ -20,6 +20,8 @@ jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
     url: 'https://github.com/test-app',
   })),
 }));
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
