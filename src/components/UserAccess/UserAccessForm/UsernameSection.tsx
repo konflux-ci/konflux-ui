@@ -70,7 +70,7 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
           <HelpPopover
             aria-label="Usernames in Konflux"
             headerContent="Usernames in Konflux"
-            bodyContent="Your username is the name of your default workspace. To find a list of your workspaces, navigate to the Applications pane and select the options icon in the breadcrumb navigation."
+            bodyContent="Your username is the name of your default namespace. To find a list of your namespaces, navigate to the Applications pane and select the options icon in the breadcrumb navigation."
           />
         }
         isRequired

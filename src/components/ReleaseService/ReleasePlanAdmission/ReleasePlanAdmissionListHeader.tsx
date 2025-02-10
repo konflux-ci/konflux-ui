@@ -17,7 +17,7 @@ const ReleasePlanAdmissionListHeader = () => {
       props: { className: releasesPlanAdmissionTableColumnClasses.application },
     },
     {
-      title: 'Source Workspace',
+      title: 'Source Namespace',
       props: { className: releasesPlanAdmissionTableColumnClasses.source },
     },
     {

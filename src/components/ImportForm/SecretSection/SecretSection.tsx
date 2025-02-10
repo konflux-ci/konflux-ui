@@ -59,7 +59,7 @@ const SecretSection = () => {
         label="Build time secret"
         addLabel="Add secret"
         placeholder="Secret"
-        helpText="Keep your data secure by defining a build time secret. Secrets are stored at a workspace level so applications within workspace will have access to these secrets."
+        helpText="Keep your data secure by defining a build time secret. Secrets are stored at a namespace level so applications within namespace will have access to these secrets."
         noFooter
         isReadOnly
         onChange={(v) =>

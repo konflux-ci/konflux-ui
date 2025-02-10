@@ -1,6 +1,5 @@
 import { isEqual, isNumber } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import { getRandomSvgNumber, THUMBNAIL_ANNOTATION } from '../components/ApplicationThumbnail';
 import {
   getAnnotationForSecret,
   getLabelsForSecret,
@@ -61,9 +60,6 @@ export const createApplication = (
     metadata: {
       name: application,
       namespace,
-      annotations: {
-        [THUMBNAIL_ANNOTATION]: getRandomSvgNumber().toString(),
-      },
     },
     spec: {
       displayName: application,

@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Flex, FlexItem, FormSection } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
-import { ApplicationThumbnail } from '../../ApplicationThumbnail';
 import { ImportFormValues } from '../type';
 
 const ApplicationSection: React.FunctionComponent<React.PropsWithChildren<unknown>> = () => {
@@ -12,9 +11,6 @@ const ApplicationSection: React.FunctionComponent<React.PropsWithChildren<unknow
 
   return (
     <Flex>
-      <FlexItem>
-        <ApplicationThumbnail annotationValue={0} />
-      </FlexItem>
       <FlexItem flex={{ default: 'flex_1' }}>
         <FormSection>
           <InputField

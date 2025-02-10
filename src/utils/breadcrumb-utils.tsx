@@ -10,7 +10,7 @@ export const useWorkspaceBreadcrumbs = () => {
 
   return [
     <BreadcrumbItem key="workspace-label" component="div">
-      <span>Workspaces</span>
+      <span>Namespaces</span>
     </BreadcrumbItem>,
     <BreadcrumbItem key="workspace-link" to="#" component="div" showDivider>
       <Link className="pf-v5-c-breadcrumb__link" to={`/workspaces/${workspace}/applications`}>

@@ -43,14 +43,14 @@ const UserAccessEmptyState: React.FC<
       title="Grant user access"
     >
       <EmptyStateBody>
-        See a list of all the users that have access to your workspace.
+        See a list of all the users that have access to your namespace.
       </EmptyStateBody>
       <EmptyStateActions>
         <ButtonWithAccessTooltip
           variant="primary"
           component={(props) => <Link {...props} to={`/workspaces/${workspace}/access/grant`} />}
           isDisabled={!canCreateSBR}
-          tooltip="You cannot grant access in this workspace"
+          tooltip="You cannot grant access in this namespace"
           analytics={{
             link_name: 'grant-access',
             workspace,
@@ -120,7 +120,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
                   <Link {...props} to={`/workspaces/${workspace}/access/grant`} />
                 )}
                 isDisabled={!canCreateSBR}
-                tooltip="You cannot grant access in this workspace"
+                tooltip="You cannot grant access in this namespace"
                 analytics={{
                   link_name: 'grant-access',
                   workspace,

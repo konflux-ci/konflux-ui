@@ -16,7 +16,7 @@ export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => 
         data-test="release-service-test-id"
         title="Releases"
         headTitle="Releases"
-        description="Manage all your releases in this workspace."
+        description="Manage all your releases in this namespace."
         actions={[
           {
             key: 'create-release-plan',

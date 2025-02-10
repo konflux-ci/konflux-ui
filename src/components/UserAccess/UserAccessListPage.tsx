@@ -20,7 +20,7 @@ const UserAccessPage: React.FunctionComponent = () => {
   return (
     <PageLayout
       title="User access"
-      description="Invite users to collaborate with you by granting them access to your workspace."
+      description="Invite users to collaborate with you by granting them access to your namespace."
       breadcrumbs={[
         ...breadcrumbs,
         {
@@ -33,7 +33,7 @@ const UserAccessPage: React.FunctionComponent = () => {
           id: 'grant-access',
           label: 'Grant access',
           disabled: !canCreateSBR,
-          disabledTooltip: 'You cannot grant access in this workspace',
+          disabledTooltip: 'You cannot grant access in this namespace',
           cta: {
             href: `/workspaces/${workspace}/access/grant`,
           },

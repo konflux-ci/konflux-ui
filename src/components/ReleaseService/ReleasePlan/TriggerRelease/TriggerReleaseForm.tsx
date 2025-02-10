@@ -76,14 +76,14 @@ export const TriggerReleaseForm: React.FC<Props> = ({
         <Form style={{ maxWidth: '70%' }}>
           <ReleasePlanDropdown
             name="releasePlan"
-            helpText="The release you want to release to the environments in your target workspace."
+            helpText="The release you want to release to the environments in your target namespace."
             releasePlans={releasePlans}
             loaded={loaded}
             required
           />
           <SnapshotDropdown
             name="snapshot"
-            helpText="The release you want to release to the environments in your target workspace."
+            helpText="The release you want to release to the environments in your target namespace."
             required
             applicationName={applicationName}
           />

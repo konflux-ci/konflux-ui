@@ -36,7 +36,7 @@ describe('NoAccessState', () => {
     screen.getByTestId('no-access-state');
     screen.getByText(`Let's get you access`);
     screen.getByText(
-      `Ask the administrator or the owner of the test-ws workspace for access permissions.`,
+      `Ask the administrator or the owner of the test-ws namespace for access permissions.`,
     );
     screen.getByText('Go to Overview page');
   });
