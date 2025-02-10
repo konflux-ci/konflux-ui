@@ -238,7 +238,7 @@ export const createUseWorkspaceInfoMock = (
 };
 
 export const createUseApplicationMock = (
-  initialValue: [Record<string, string>, boolean] = [{}, false],
+  initialValue: [{ metadata: { name: string } }, boolean] = [{ metadata: { name: '' } }, false],
 ): jest.Mock => {
   const mockFn = jest.fn().mockReturnValue(initialValue);
 
