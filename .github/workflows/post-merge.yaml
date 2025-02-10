@@ -43,3 +43,5 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
           fail_ci_if_error: true
+
+      # - name: Build E2E Test Image (if tests changed)

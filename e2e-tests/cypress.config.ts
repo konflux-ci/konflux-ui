@@ -133,16 +133,16 @@ export default defineConfig({
       });
 
       const defaultValues: { [key: string]: string | boolean } = {
-        KONFLUX_BASE_URL: 'https://prod.foo.redhat.com:1337/preview/application-pipeline',
-        USERNAME: '',
-        PASSWORD: '',
+        KONFLUX_BASE_URL: 'https://localhost:9443',
+        USERNAME: 'user2@konflux.dev',
+        PASSWORD: 'password',
         GH_USERNAME: 'hac-test',
         GH_PASSWORD: '',
         GH_TOKEN: '',
         GH_SETUP_KEY: '',
         KUBECONFIG: '~/.kube/appstudio-config',
         CLEAN_NAMESPACE: 'false',
-        PR_CHECK: false,
+        PR_CHECK: '',
         PERIODIC_RUN: false,
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
@@ -161,8 +161,11 @@ export default defineConfig({
       }
 
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
-      config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
-
+      if (config.env.PR_CHECK === true) {
+        config.env.HAC_NAMESPACE = `user-ns1`;
+      } else {
+        config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
+      }
       if (
         config.env.PR_CHECK === true &&
         config.reporterOptions.reportportalAgentJsCypressReporterOptions
