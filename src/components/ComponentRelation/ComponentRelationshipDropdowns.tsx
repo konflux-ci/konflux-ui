@@ -9,7 +9,7 @@ import {
   MenuItem,
   MenuList,
   MenuToggle,
-  TextInput,
+  SearchInput,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten } from 'lodash-es';
@@ -143,7 +143,7 @@ export const MultiSelectComponentsDropdown: React.FC<MultiSelectComponentsDropdo
       onSelect={handleSelect}
       badgeValue={selectedComponents.length || null}
     >
-      <TextInput
+      <SearchInput
         type="text"
         value={searchQuery}
         onChange={(_, searchValue) => setSearchQuery(searchValue)}
@@ -230,7 +230,7 @@ export const SingleSelectComponentDropdown: React.FC<SingleSelectComponentDropdo
       onSelect={handleSelect}
       closeOnSelect
     >
-      <TextInput
+      <SearchInput
         type="text"
         value={searchQuery}
         onChange={(_, searchValue) => setSearchQuery(searchValue)}
