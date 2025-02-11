@@ -65,4 +65,16 @@ describe('SnapshotComponentsListRow', () => {
       `/workspaces//applications/${rowData?.application}/commit/test-revision`,
     );
   });
+  it('should show hyphen when revision is not available ', () => {
+    render(
+      <SnapshotComponentsListRow
+        columns={null}
+        obj={{
+          ...rowData,
+          source: { git: { ...rowData?.source?.git, revision: null } },
+        }}
+      />,
+    );
+    expect(screen.getByText('-')).toBeInTheDocument();
+  });
 });

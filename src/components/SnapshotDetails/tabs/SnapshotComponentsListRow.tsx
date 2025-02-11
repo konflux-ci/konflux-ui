@@ -36,12 +36,16 @@ const SnapshotComponentsListRow: React.FC<
         </TableData>
       )}
       <TableData className={commitsTableColumnClasses.revision}>
-        <Link
-          to={`/workspaces/${workspace}/applications/${obj.application}/commit/${obj.source?.git?.revision}`}
-          data-test="snapshot-component-revision"
-        >
-          {obj.source?.git?.revision}
-        </Link>
+        {obj.source?.git?.revision ? (
+          <Link
+            to={`/workspaces/${workspace}/applications/${obj.application}/commit/${obj.source?.git?.revision}`}
+            data-test="snapshot-component-revision"
+          >
+            {obj.source?.git?.revision}
+          </Link>
+        ) : (
+          '-'
+        )}
       </TableData>
     </>
   );
