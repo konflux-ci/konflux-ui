@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { useIsUserSignedUp } from '../components/SignUp/useSignupStatus';
 
 export type AuthContextType = {
   user: { email: string | null };
@@ -38,9 +37,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     };
     void checkAuthStatus();
   }, []);
-
-  // make call to registeration api to determine if user is signed up or not
-  useIsUserSignedUp();
 
   const signOut = async () => {
     await fetch('/oauth2/sign_out');
