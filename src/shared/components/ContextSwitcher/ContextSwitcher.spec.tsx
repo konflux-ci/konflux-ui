@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useLocalStorage } from '../../../hooks/useLocalStorage';
 import { ContextSwitcher } from './ContextSwitcher';
 
-jest.mock('../../hooks/useLocalStorage', () => ({
+jest.mock('../../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
 }));
 

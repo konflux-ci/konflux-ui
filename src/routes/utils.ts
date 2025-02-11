@@ -1,4 +1,11 @@
 export const RouterParams = {
+  /**
+   * @deprecated
+   * Existing usages are permitted for backward compatibility;
+   * however, please avoid adding new references
+   *
+   * use [useNamespace](../shared/providers/Namespace)
+   */
   workspaceName: 'workspaceName',
   applicationName: 'applicationName',
   integrationTestName: 'integrationTestName',

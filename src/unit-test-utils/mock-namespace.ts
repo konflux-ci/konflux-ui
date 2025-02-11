@@ -1,4 +1,4 @@
-import * as NamespaceHook from '../components/Namespace/useNamespaceInfo';
+import * as NamespaceHook from '../shared/providers/Namespace/useNamespaceInfo';
 import { createJestMockFunction } from './common';
 import type { JestMockedFunction, MockFunctionKeys } from './type';
 

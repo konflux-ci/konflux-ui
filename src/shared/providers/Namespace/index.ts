@@ -7,3 +7,4 @@ export const namespaceLoader: LoaderFunction = async () => {
 };
 
 export { NamespaceProvider } from './namespace-context';
+export * from './useNamespaceInfo';
