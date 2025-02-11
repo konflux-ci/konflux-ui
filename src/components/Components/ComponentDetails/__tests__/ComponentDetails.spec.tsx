@@ -4,7 +4,7 @@ import { useComponent } from '../../../../hooks/useComponents';
 import { PACState } from '../../../../hooks/usePACState';
 import {
   createK8sWatchResourceMock,
-  createUseWorkspaceInfoMock,
+  createUseNamespaceMock,
   renderWithQueryClientAndRouter,
   WithTestWorkspaceContext,
 } from '../../../../utils/test-utils';
@@ -63,7 +63,7 @@ describe('ComponentDetailsView', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
 
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  createUseNamespaceMock('test-ns');
 
   beforeEach(() => {
     useComponentMock.mockReturnValue([mockComponent, true]);
@@ -108,7 +108,7 @@ describe('ComponentDetailsView', () => {
 
     await act(() => fireEvent.click(activityTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/applications/test-application/components/human-resources/activity',
+      '/workspaces/test-ns/applications/test-application/components/human-resources/activity',
     );
   });
 });
