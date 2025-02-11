@@ -49,10 +49,6 @@ export const secretFormValidationSchema = yup.object({
     is: SecretTypeDropdownLabel.source,
     then: yup.object({
       authType: yup.string(),
-      username: yup.string().when('authType', {
-        is: SourceSecretType.basic,
-        then: yup.string().required('Required'),
-      }),
       password: yup.string().when('authType', {
         is: SourceSecretType.basic,
         then: yup.string().required('Required'),
