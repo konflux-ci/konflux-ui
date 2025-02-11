@@ -1,5 +1,4 @@
 import { omit } from 'lodash-es';
-import { THUMBNAIL_ANNOTATION } from '../../components/ApplicationThumbnail';
 import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
@@ -32,20 +31,12 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
 const createResourceMock = k8sCreateResource as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
 
-jest.mock('../../components/ApplicationThumbnail', () => {
-  const actual = jest.requireActual('../../components/ApplicationThumbnail');
-  return { ...actual, getRandomSvgNumber: () => 7 };
-});
-
 const mockApplicationRequestData = {
   apiVersion: `${ApplicationModel.apiGroup}/${ApplicationModel.apiVersion}`,
   kind: ApplicationModel.kind,
   metadata: {
     name: 'test-application',
     namespace: 'test-ns',
-    annotations: {
-      [THUMBNAIL_ANNOTATION]: '7',
-    },
   },
   spec: {
     displayName: 'test-application',

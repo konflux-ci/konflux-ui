@@ -40,7 +40,7 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
           </TextContent>
         </StackItem>
         <StackItem>
-          <InputField data-test="cve-issue-id" label="CVE ID" name="id" required />
+          <InputField data-test="cve-issue-id" label="CVE ID" name="key" required />
         </StackItem>
         <StackItem>
           <ComponentField name="components" />
