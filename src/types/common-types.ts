@@ -8,5 +8,4 @@ export type ResourceStatusCondition = {
 
 export type WorkspaceInfoProps = {
   namespace: string;
-  workspace: string;
 };

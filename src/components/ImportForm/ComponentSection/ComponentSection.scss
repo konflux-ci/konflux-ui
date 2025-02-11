@@ -1,3 +1,7 @@
-.component-section-helper-text-namespace-highlighted{
-font-weight: 800;
-}
+.component-section {
+    &__component-name {
+    &__helper-text {
+    font-weight: var(--pf-v5-global--FontWeight--bold);
+    }
+    }
+    }

@@ -3,32 +3,31 @@ import { ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
-import { useAllComponents } from '../../../hooks/useComponents';
+import { v4 as uuidv4 } from 'uuid';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
-import { WorkspaceInfoProps } from '../../../types';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
-export const SourceSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
+export const SourceSection = () => {
   const [, { touched, error }] = useField('source.git.url');
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
-  const [allComponents] = useAllComponents(namespace, workspace);
   const validated = touched
     ? touched && !error
       ? ValidatedOptions.success
       : ValidatedOptions.error
     : ValidatedOptions.default;
 
-  const getUniqueComponentName = React.useCallback(
-    (name: string) => {
-      return Array.isArray(allComponents) && allComponents.find((c) => c?.metadata?.name === name)
-        ? `${name}-${Math.floor(Math.random() * 100)}`
-        : name;
-    },
-    [allComponents],
-  );
+  function generateRandomString(): string {
+    let uniqueName: string;
+    do {
+      uniqueName = uuidv4()
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 5);
+    } while (!/^[a-z][a-z0-9-]*[a-z0-9]$/.test(uniqueName));
+    return uniqueName;
+  }
 
   const handleChange = React.useCallback(
     async (event) => {
@@ -48,21 +47,18 @@ export const SourceSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
         }
 
         let parsed: GitUrlParse.GitUrl;
-        let name: string;
         try {
           parsed = GitUrlParse(event.target?.value ?? '');
           await setFieldValue('gitURLAnnotation', parsed?.resource);
-          name = parsed.name;
         } catch {
-          name = '';
           await setFieldValue('gitURLAnnotation', '');
         }
         if (!touchedValues.componentName) {
-          await setFieldValue('componentName', getUniqueComponentName(name));
+          await setFieldValue('componentName', generateRandomString());
         }
       }
     },
-    [setFieldValue, touchedValues.componentName, validated, getUniqueComponentName],
+    [setFieldValue, touchedValues.componentName, validated],
   );
 
   return (

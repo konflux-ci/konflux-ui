@@ -8,7 +8,7 @@ configure({ testIdAttribute: 'data-test' });
 
 describe('ComponentSection', () => {
   it('should render component section', () => {
-    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     screen.getByPlaceholderText('Enter your source');
@@ -16,7 +16,7 @@ describe('ComponentSection', () => {
   });
 
   it('should render git options if source url is valid', async () => {
-    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -28,7 +28,7 @@ describe('ComponentSection', () => {
   });
 
   it('should expand git options if source url is others', async () => {
-    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -40,7 +40,7 @@ describe('ComponentSection', () => {
   });
 
   it('should show advanced Annotation section', async () => {
-    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -52,7 +52,7 @@ describe('ComponentSection', () => {
   });
 
   it('should populate annotation fields', async () => {
-    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -67,7 +67,7 @@ describe('ComponentSection', () => {
   });
 
   it('should render helper text for component name', () => {
-    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
 

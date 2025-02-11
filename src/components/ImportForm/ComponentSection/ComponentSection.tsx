@@ -8,15 +8,16 @@ import {
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
-import { WorkspaceInfoProps } from '../../../types';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { ImportFormValues } from '../type';
 import { SourceSection } from './SourceSection';
 
 import './ComponentSection.scss';
 
-export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) => {
+export const ComponentSection = () => {
   const { values } = useFormikContext<ImportFormValues>();
+  const namespace = useNamespace();
   return (
     <FormSection>
       <TextContent>
@@ -25,7 +26,7 @@ export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) =
           A component is an image built from source code repository.
         </Text>
       </TextContent>
-      <SourceSection namespace={namespace} workspace={workspace} />
+      <SourceSection />
       <InputField
         name="source.git.dockerfileUrl"
         label="Docker file"
@@ -40,7 +41,7 @@ export const ComponentSection = ({ namespace, workspace }: WorkspaceInfoProps) =
       <HelperText>
         <HelperTextItem>
           Must be unique within tenant namespace{' '}
-          <span className="component-section-helper-text-namespace-highlighted">{namespace}</span>
+          <span className="component-section__component-name__helper-text">{namespace}</span>
         </HelperTextItem>
       </HelperText>
       {values.source.git.url ? (
