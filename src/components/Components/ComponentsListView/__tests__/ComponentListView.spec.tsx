@@ -4,8 +4,8 @@ import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../../models';
 import {
   createK8sWatchResourceMock,
-  createUseWorkspaceInfoMock,
   createUseApplicationMock,
+  createUseNamespaceMock,
 } from '../../../../utils/test-utils';
 import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
@@ -94,7 +94,7 @@ describe('ComponentListViewPage', () => {
     paramValues = {};
   });
 
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  createUseNamespaceMock('test-ns');
 
   it('should render skeleton if data is not loaded', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false]);
@@ -107,7 +107,7 @@ describe('ComponentListViewPage', () => {
     const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toBe(
-      'http://localhost/workspaces/test-ws/import?application=test-app',
+      'http://localhost/workspaces/test-ns/import?application=test-app',
     );
   });
 

@@ -240,6 +240,18 @@ export const createUseWorkspaceInfoMock = (
   return mockFn;
 };
 
+export const createUseNamespaceMock = (initialValue: string = ''): jest.Mock => {
+  const mockFn = jest.fn().mockReturnValue(initialValue);
+
+  jest.spyOn(NamespaceHook, 'useNamespace').mockImplementation(mockFn);
+
+  beforeEach(() => {
+    mockFn.mockReturnValue(initialValue);
+  });
+
+  return mockFn;
+};
+
 export const createUseApplicationMock = (
   initialValue: [{ metadata: { name: string } }, boolean] = [{ metadata: { name: '' } }, false],
 ): jest.Mock => {
