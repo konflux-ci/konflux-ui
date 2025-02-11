@@ -9,12 +9,10 @@ import {
   Title,
   Text,
   Button,
-  Alert,
 } from '@patternfly/react-core';
 import { useApplications } from '../../hooks/useApplications';
 import { ApplicationModel, ComponentModel } from '../../models';
 import { APPLICATION_LIST_PATH, IMPORT_PATH } from '../../routes/paths';
-import ExternalLink from '../../shared/components/links/ExternalLink';
 import { AccessReviewResources } from '../../types';
 import { useAccessReviewForModels } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
@@ -48,66 +46,38 @@ const IntroBanner: React.FC = () => {
             </Text>
           </CardBody>
           <CardBody>
-            {
-              <>
-                <ButtonWithAccessTooltip
-                  className="intro-banner__cta"
-                  component={(props) => (
-                    <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
-                  )}
-                  variant="primary"
-                  data-test="create-application"
-                  isDisabled={!canCreate}
-                  tooltip="You don't have access to create an application"
-                  size="lg"
-                  analytics={{
-                    link_name: 'create-application',
-                  }}
-                >
-                  Create application
-                </ButtonWithAccessTooltip>
-                {applicationsLoaded && applications?.length > 0 ? (
-                  <Button
-                    className="intro-banner__cta"
-                    component={(props) => (
-                      <Link
-                        {...props}
-                        to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
-                      />
-                    )}
-                    variant="secondary"
-                    data-test="view-my-applications"
-                    size="lg"
-                  >
-                    View my applications
-                  </Button>
-                ) : undefined}
-              </>
-            }
-            {
-              <Alert
-                variant="info"
-                isInline
-                title="We have received your request. While you are waiting, please join our Slack channel."
+            <ButtonWithAccessTooltip
+              className="intro-banner__cta"
+              component={(props) => (
+                <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+              )}
+              variant="primary"
+              data-test="create-application"
+              isDisabled={!canCreate}
+              tooltip="You don't have access to create an application"
+              size="lg"
+              analytics={{
+                link_name: 'create-application',
+              }}
+            >
+              Create application
+            </ButtonWithAccessTooltip>
+            {applicationsLoaded && applications?.length > 0 ? (
+              <Button
+                className="intro-banner__cta"
+                component={(props) => (
+                  <Link
+                    {...props}
+                    to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
+                  />
+                )}
+                variant="secondary"
+                data-test="view-my-applications"
+                size="lg"
               >
-                <p>
-                  We are working hard to get you early access. After we approve your request, we
-                  will send you an email notification with information about how you can access and
-                  start using the service.
-                </p>
-                <p>
-                  Join the internal Red Hat Slack workspace here:{' '}
-                  <ExternalLink href="https://redhat-internal.slack.com/" hideIcon>
-                    https://redhat-internal.slack.com/
-                  </ExternalLink>
-                  , and then join our{' '}
-                  <ExternalLink href="https://app.slack.com/client/E030G10V24F/C04PZ7H0VA8">
-                    #konflux-users
-                  </ExternalLink>{' '}
-                  channel.
-                </p>
-              </Alert>
-            }
+                View my applications
+              </Button>
+            ) : undefined}
           </CardBody>
         </Card>
       </GridItem>
