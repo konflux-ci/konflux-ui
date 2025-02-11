@@ -4,7 +4,7 @@ import { Bullseye, FormGroup, Spinner } from '@patternfly/react-core';
 import { FieldArray, useField, FieldArrayRenderProps } from 'formik';
 import { getFieldId } from '../../../src/shared/components/formik-fields/field-utils';
 import { useComponents } from '../../hooks/useComponents';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../Namespace/useNamespaceInfo';
 import { ContextSelectList } from './ContextSelectList';
 import {
   ContextOption,
@@ -19,9 +19,10 @@ interface IntegrationTestContextProps {
 }
 
 const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldName }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  //const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { applicationName } = useParams();
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [, { value: contexts, error }] = useField(fieldName);
   const fieldId = getFieldId(fieldName, 'dropdown');
   const [inputValue, setInputValue] = React.useState('');

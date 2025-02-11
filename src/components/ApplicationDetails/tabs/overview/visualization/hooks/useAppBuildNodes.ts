@@ -4,7 +4,6 @@ import { useComponents } from '../../../../../../hooks/useComponents';
 import { useLatestBuildPipelines } from '../../../../../../hooks/useLatestBuildPipelines';
 import { PipelineRunKind } from '../../../../../../types';
 import { runStatus } from '../../../../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
@@ -26,12 +25,7 @@ export const useAppBuildNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const { workspace } = useWorkspaceInfo();
-  const [components, componentsLoaded, componentsError] = useComponents(
-    namespace,
-    workspace,
-    applicationName,
-  );
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
   const componentNames = React.useMemo(
     () => componentsLoaded && components?.map((c) => c.metadata.name),
     [componentsLoaded, components],

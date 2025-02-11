@@ -1,11 +1,13 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ComponentKind, NudgeStats } from '../../../../types';
-import { routerRenderer } from '../../../../utils/test-utils';
+import { createUseNamespaceMock, routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
 
 jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
   useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
+
+createUseNamespaceMock('test-ns');
 
 const mockComponent = {
   metadata: { name: 'component' },
@@ -70,7 +72,7 @@ describe('ComponentNudgesDependencies', () => {
     const links = screen.queryAllByTestId('nudges-cmp-link');
     expect(links.length).toBe(3);
     expect(links[0].getAttribute('href')).toBe(
-      '/workspaces/test-ws/applications/app1/components/cmp1',
+      '/workspaces/test-ns/applications/app1/components/cmp1',
     );
   });
 });
@@ -121,7 +123,7 @@ describe('ComponentNudgesDependencies nudged by', () => {
     const links = screen.queryAllByTestId('nudged-by-cmp-link');
     expect(links.length).toBe(2);
     expect(links[1].getAttribute('href')).toBe(
-      '/workspaces/test-ws/applications/app2/components/cmp2',
+      '/workspaces/test-ns/applications/app2/components/cmp2',
     );
   });
 });

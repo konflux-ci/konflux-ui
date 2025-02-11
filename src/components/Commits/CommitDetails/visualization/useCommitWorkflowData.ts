@@ -5,9 +5,9 @@ import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTes
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
 import { Commit, ComponentKind, PipelineRunKind } from '../../../../types';
 import { pipelineRunStatus, runStatus } from '../../../../utils/pipeline-utils';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import { DEFAULT_NODE_HEIGHT } from '../../../topology/const';
 import { getLabelWidth } from '../../../topology/utils';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import {
   CommitWorkflowNodeModel,
   CommitWorkflowNodeType,
@@ -28,18 +28,17 @@ export const getLatestResource = (resources = []) =>
 export const useCommitWorkflowData = (
   commit: Commit,
 ): [nodes: CommitWorkflowNodeModel[], loaded: boolean, errors: unknown[]] => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  //const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   const applicationName = commit?.application || '';
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
     namespace,
-    workspace,
     applicationName,
   );
   const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     commit.sha,
   );

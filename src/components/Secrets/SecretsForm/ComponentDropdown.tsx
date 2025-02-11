@@ -3,17 +3,18 @@ import { useField } from 'formik';
 import { useComponents } from '../../../hooks/useComponents';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
 import { TargetDropdownDefaults } from '../../../types';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 
 type ComponentDropdownProps = Omit<React.ComponentProps<typeof DropdownField>, 'items' | 'label'>;
 
 export const ComponentDropdown: React.FC<React.PropsWithChildren<ComponentDropdownProps>> = (
   props,
 ) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  //const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [{ value: application }] = useField<string>('targets.application');
   const [, , { setValue, setTouched }] = useField<string>(props.name);
-  const [components, loaded] = useComponents(namespace, workspace, application);
+  const [components, loaded] = useComponents(namespace, application);
 
   const dropdownItems = React.useMemo(
     () => [

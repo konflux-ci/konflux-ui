@@ -10,11 +10,11 @@ import {
 } from '@patternfly/react-core';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
+import { IMPORT_PATH } from '../../routes/paths';
 import { ComponentKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import CustomizePipeline from './CustomizePipelines';
 
 type Props = RawComponentProps & {
@@ -30,8 +30,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
-  const { workspace } = useWorkspaceInfo();
-  const [components, loaded] = useComponents(namespace, workspace, applicationName);
+  const [components, loaded] = useComponents(namespace, applicationName);
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const filteredComponents = React.useMemo(
     () => (loaded ? (filter ? components.filter(filter) : components) : []),
@@ -60,7 +59,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
               component={(props) => (
                 <Link
                   {...props}
-                  to={`/workspaces/${workspace}/import?application=${applicationName}`}
+                  to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
                 />
               )}
               isDisabled={!canCreateComponent}
@@ -69,7 +68,6 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
                 link_name: 'add-component',
                 link_location: 'manage-build-pipelines',
                 app_name: applicationName,
-                workspace,
               }}
             >
               Add component

@@ -40,7 +40,6 @@ export const useIntegrationTestScenario = (
 
 export const useIntegrationTestScenarios = (
   namespace: string,
-  workspace: string,
   applicationName: string,
 ): [IntegrationTestScenarioKind[], boolean, unknown] => {
   const {
@@ -51,7 +50,6 @@ export const useIntegrationTestScenarios = (
     {
       groupVersionKind: IntegrationTestScenarioGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     IntegrationTestScenarioModel,
