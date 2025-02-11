@@ -19,8 +19,8 @@ type AddIssueModalProps = ComponentProps & {
 };
 
 const IssueFormSchema = yup.object({
-  key: yup.string().required('Required'),
-  url: yup.string().matches(URL_REGEX, URL_ERROR_MSG),
+  id: yup.string().required('Required'),
+  source: yup.string().matches(URL_REGEX, URL_ERROR_MSG),
 });
 
 export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>> = ({
@@ -60,9 +60,9 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
           onSubmit={setValues}
           initialValues={
             isBug
-              ? { key: '', url: '', summary: '', uploadDate: dateFormat(new Date()) }
+              ? { id: '', source: '', uploadDate: dateFormat(new Date()) }
               : {
-                  key: '',
+                  id: '',
                   components: [],
                 }
           }

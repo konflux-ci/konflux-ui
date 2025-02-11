@@ -11,14 +11,14 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
-import { InputField, TextAreaField } from 'formik-pf';
+import { InputField } from 'formik-pf';
 import { isEmpty } from 'lodash-es';
 import StatusDropdown from './StatusDropdown';
 import UploadDate from './UploadDate';
 
 type BugFormValues = {
-  issueKey: string;
-  url: string;
+  id: string;
+  source: string;
   uploadDate: string;
   status: string;
 };
@@ -40,19 +40,16 @@ const BugFormContent: React.FC<BugFormContentProps> = ({ modalToggle }) => {
           </TextContent>
         </StackItem>
         <StackItem>
-          <InputField data-test="bug-issue-key" label="Bug issue key" name="key" required />
+          <InputField data-test="bug-issue-id" label="Bug issue id" name="id" isRequired />
         </StackItem>
         <StackItem>
-          <InputField data-test="bug-url" label="URL" name="url" required />
+          <InputField data-test="bug-source" label="Source" name="source" isRequired />
         </StackItem>
         <StackItem>
           <UploadDate name="uploadDate" label="Last updated" />
         </StackItem>
         <StackItem>
           <StatusDropdown name="status" />
-        </StackItem>
-        <StackItem>
-          <TextAreaField name="summary" label="Summary" />
         </StackItem>
         <StackItem>
           <Button
