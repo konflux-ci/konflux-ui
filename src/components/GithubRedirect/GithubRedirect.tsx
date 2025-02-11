@@ -12,7 +12,7 @@ const GithubRedirect: React.FC = () => {
   const { ns, pipelineRunName, taskName } = useParams<GithubRedirectRouteParams>();
   const workspace = useWorkspaceForNamespace(ns);
   const isLogsTabSelected = pathname.includes('/logs');
-  const [pr, loaded, error] = usePipelineRun(ns, workspace.metadata.name, pipelineRunName);
+  const [pr, loaded, error] = usePipelineRun(ns, pipelineRunName);
 
   const application =
     loaded && !error ? pr.metadata.labels[PipelineRunLabel.APPLICATION] : undefined;

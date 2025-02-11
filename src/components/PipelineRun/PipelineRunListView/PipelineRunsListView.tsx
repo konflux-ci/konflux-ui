@@ -29,7 +29,7 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';
@@ -45,8 +45,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   componentName,
   customFilter,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
+  const namespace = useNamespace();
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
@@ -61,7 +61,6 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
       applicationLoaded ? namespace : null,
-      workspace,
       React.useMemo(
         () => ({
           selector: {

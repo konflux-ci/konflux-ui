@@ -8,16 +8,16 @@ import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { PipelineRunKind } from '../../../../types';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRunsForCommit(namespace, workspace, applicationName, commitName);
+    usePipelineRunsForCommit(namespace, applicationName, commitName);
 
   const vulnerabilities = usePLRVulnerabilities(pipelineRuns);
 

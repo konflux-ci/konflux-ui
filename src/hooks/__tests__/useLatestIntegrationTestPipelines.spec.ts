@@ -16,7 +16,7 @@ describe('useLatestIntegrationTestPipelines', () => {
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     const { result } = renderHook(() =>
-      useLatestIntegrationTestPipelines('test-ns', 'test-ws', 'test-pipelinerun', testNames),
+      useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
     );
 
     expect(result.current).toEqual([[], false, undefined]);
@@ -35,7 +35,7 @@ describe('useLatestIntegrationTestPipelines', () => {
       return [[testPipelineRuns[DataState.RUNNING]], true, undefined];
     });
     const { result } = renderHook(() =>
-      useLatestIntegrationTestPipelines('test-ns', 'test-ws', 'test-pipelinerun', testNames),
+      useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
     );
 
     const [pipelineRuns, loaded] = result.current;
@@ -53,9 +53,7 @@ describe('useLatestIntegrationTestPipelines', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
 
-    renderHook(() =>
-      useLatestIntegrationTestPipelines('test-ns', 'test-ws', 'test-pipelinerun', testNames2),
-    );
+    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2));
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });
