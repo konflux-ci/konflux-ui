@@ -8,13 +8,15 @@ configure({ testIdAttribute: 'data-test' });
 
 describe('ComponentSection', () => {
   it('should render component section', () => {
-    formikRenderer(<ComponentSection />, { source: { git: { url: '' } } });
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+      source: { git: { url: '' } },
+    });
     screen.getByPlaceholderText('Enter your source');
     expect(screen.queryByTestId('git-reference')).not.toBeInTheDocument();
   });
 
   it('should render git options if source url is valid', async () => {
-    formikRenderer(<ComponentSection />, {
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -26,7 +28,7 @@ describe('ComponentSection', () => {
   });
 
   it('should expand git options if source url is others', async () => {
-    formikRenderer(<ComponentSection />, {
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -38,7 +40,7 @@ describe('ComponentSection', () => {
   });
 
   it('should show advanced Annotation section', async () => {
-    formikRenderer(<ComponentSection />, {
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -50,7 +52,7 @@ describe('ComponentSection', () => {
   });
 
   it('should populate annotation fields', async () => {
-    formikRenderer(<ComponentSection />, {
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -62,5 +64,13 @@ describe('ComponentSection', () => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe('gitlab.com'),
     );
+  });
+
+  it('should render helper text for component name', () => {
+    formikRenderer(<ComponentSection namespace="test-ns" workspace="test-ws" />, {
+      source: { git: { url: '' } },
+    });
+
+    expect(screen.getByText('Must be unique within tenant namespace')).toBeInTheDocument();
   });
 });
