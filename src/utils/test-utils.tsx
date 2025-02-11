@@ -308,3 +308,15 @@ export const openIntegrationTestContextDropdown = async () => {
 export const getIntegrationTestContextOptionButton = (name: string) => {
   return screen.getByTestId(`context-option-${name}`).childNodes[0];
 };
+
+export const createUseNamespaceMock = (namespace: string = 'test-ns'): jest.Mock => {
+  const mockFn = jest.fn().mockReturnValue(namespace);
+
+  jest.spyOn(NameSpaceUtils, 'useNamespace').mockImplementation(mockFn);
+
+  beforeEach(() => {
+    mockFn.mockReturnValue(namespace);
+  });
+
+  return mockFn;
+};

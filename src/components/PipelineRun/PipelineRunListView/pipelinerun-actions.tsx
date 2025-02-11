@@ -47,7 +47,6 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
 
   const [component, componentLoaded, componentError] = useComponent(
     namespace,
-    workspace,
     pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT],
   );
 

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useComponent } from '../../hooks/useComponents';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import CustomizePipeline from './CustomizePipelines';
 
 type Props = RawComponentProps & {
@@ -15,8 +14,8 @@ const CustomizeComponentPipeline: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
-  const { workspace } = useWorkspaceInfo();
-  const [watchedComponent, loaded] = useComponent(namespace, workspace, name, true);
+  //const { workspace } = useWorkspaceInfo();
+  const [watchedComponent, loaded] = useComponent(namespace, name, true);
   if (loaded && watchedComponent) {
     return (
       <CustomizePipeline
