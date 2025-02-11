@@ -1,8 +1,7 @@
 import { queryOptions as _createQueryOptions, UseQueryOptions } from '@tanstack/react-query';
-import { K8sGetResource, K8sListResourceItems } from '../../k8s/k8s-fetch';
-import { queryClient } from '../../k8s/query/core';
-import { NamespaceModel } from '../../models';
-import { NamespaceKind } from '../../types';
+import { K8sGetResource, K8sListResourceItems, queryClient } from '../../../k8s';
+import { NamespaceModel } from '../../../models';
+import { NamespaceKind } from '../../../types';
 
 const LOCAL_STORAGE_NAMESPACE_KEY = 'lastUsedNamespace';
 

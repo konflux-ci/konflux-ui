@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { screen, waitFor, render } from '@testing-library/react';
-import { createReactRouterMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
+import { createReactRouterMock, createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { NamespaceProvider, NamespaceContext } from '../namespace-context';
 
 jest.mock('react-router-dom', () => ({

@@ -32,7 +32,6 @@ import {
   IntegrationTestsListView,
 } from '../components/IntegrationTests/IntegrationTestsListView';
 import { ModalProvider } from '../components/modal/ModalProvider';
-import { namespaceLoader, NamespaceProvider } from '../components/Namespace';
 import { Overview } from '../components/Overview/Overview';
 import {
   PipelineRunDetailsLayout,
@@ -85,6 +84,7 @@ import {
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
+import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';

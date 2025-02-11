@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Button, Spinner } from '@patternfly/react-core';
 import { useQuery } from '@tanstack/react-query';
-import { APPLICATION_LIST_PATH } from '../../routes/paths';
-import { RouterParams } from '../../routes/utils';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
-import { NamespaceKind } from '../../types';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
+import { useWorkspaceInfo } from '../../../components/Workspace/useWorkspaceInfo';
+import { APPLICATION_LIST_PATH } from '../../../routes/paths';
+import { RouterParams } from '../../../routes/utils';
+import { NamespaceKind } from '../../../types';
+import ErrorEmptyState from '../../components/empty-state/ErrorEmptyState';
 import { createNamespaceQueryOptions, getLastUsedNamespace, setLastUsedNamespace } from './utils';
 
 export type NamespaceContextData = {
