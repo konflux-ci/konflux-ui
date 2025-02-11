@@ -29,7 +29,7 @@ const ComponentDetailsView: React.FC = () => {
   const { namespace, workspace } = useWorkspaceInfo();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const showModal = useModalLauncher();
-  const [component, loaded, componentError] = useComponent(namespace, workspace, componentName);
+  const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
 
   const componentActions = useComponentActions(loaded ? component : undefined, componentName);

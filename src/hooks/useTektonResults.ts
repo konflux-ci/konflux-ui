@@ -18,11 +18,10 @@ export type NextPageProps = {
 
 export const useTRPipelineRuns = (
   namespace: string,
-  workspace: string,
   options?: TektonResultsOptions,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
-    useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, workspace, options));
+    useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, options));
   const resourceData = React.useMemo(() => {
     return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
   }, [data]);
@@ -40,11 +39,10 @@ export const useTRPipelineRuns = (
 
 export const useTRTaskRuns = (
   namespace: string,
-  workspace: string,
   options?: TektonResultsOptions,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
-    useInfiniteQuery(createTaskRunTektonResultsQueryOptions(namespace, workspace, options));
+    useInfiniteQuery(createTaskRunTektonResultsQueryOptions(namespace, options));
   const resourceData = React.useMemo(() => {
     return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
   }, [data]);
