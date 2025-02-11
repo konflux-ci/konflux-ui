@@ -35,4 +35,46 @@ describe('SnapshotComponentsListRow', () => {
     const githubLink = screen.queryByTestId('snapshot-component-git-url');
     expect(githubLink).toBeNull();
   });
+
+  it('should list Revision correctly ', () => {
+    render(
+      <SnapshotComponentsListRow
+        columns={null}
+        obj={{
+          ...rowData,
+          source: { git: { ...rowData?.source?.git, revision: 'test-revision' } },
+        }}
+      />,
+    );
+    expect(screen.getByText('test-revision')).toBeInTheDocument();
+  });
+
+  it('should list Revision as a link ', () => {
+    render(
+      <SnapshotComponentsListRow
+        columns={null}
+        obj={{
+          ...rowData,
+          source: { git: { ...rowData?.source?.git, revision: 'test-revision' } },
+        }}
+      />,
+    );
+    const revisionLink = screen.getByText('test-revision');
+    expect(revisionLink).toHaveAttribute(
+      'href',
+      `/workspaces//applications/${rowData?.application}/commit/test-revision`,
+    );
+  });
+  it('should show hyphen when revision is not available ', () => {
+    render(
+      <SnapshotComponentsListRow
+        columns={null}
+        obj={{
+          ...rowData,
+          source: { git: { ...rowData?.source?.git, revision: null } },
+        }}
+      />,
+    );
+    expect(screen.getByText('-')).toBeInTheDocument();
+  });
 });
