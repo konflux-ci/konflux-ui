@@ -4,7 +4,7 @@ codecov:
 coverage:
   precision: 2
   round: down
-  range: "70...100"
+  range: "60...80"
   status:
     project:
       default:
@@ -13,6 +13,7 @@ coverage:
     patch:
       default:
         informational: true
+        target: 80%
 
 ignore:
   - "**/*__data__*/*.ts"
