@@ -14,7 +14,6 @@ const CustomizeComponentPipeline: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
-  //const { workspace } = useWorkspaceInfo();
   const [watchedComponent, loaded] = useComponent(namespace, name, true);
   if (loaded && watchedComponent) {
     return (
