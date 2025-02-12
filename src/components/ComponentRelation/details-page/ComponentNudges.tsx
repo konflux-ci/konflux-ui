@@ -4,7 +4,7 @@ import { Button, Text } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
-import { IMPORT_PATH } from '../../../routes/paths';
+import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { ComponentKind } from '../../../types';
 import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { ComponentRelationStatusIcon } from './ComponentRelationStatusIcon';
@@ -84,7 +84,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
                   component={(props) => (
                     <Link
                       {...props}
-                      to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}/applications/${comp?.spec?.application}/`}
+                      to={`${APPLICATION_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName: comp?.spec?.application })}/`}
                       target="_blank"
                     />
                   )}
