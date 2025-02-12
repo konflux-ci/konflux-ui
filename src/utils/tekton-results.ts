@@ -234,8 +234,8 @@ export const createTektonResultsUrl = (
   }).toString()}`;
 
 export const getFilteredRecord = async <R extends K8sResourceCommon>(
-  namespace: string,
   workspace: string,
+  namespace: string,
   dataTypes: DataType[],
   filter?: string,
   options?: TektonResultsOptions,
@@ -243,8 +243,8 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   cacheKey?: string,
 ): Promise<[R[], RecordsList, boolean?]> => {
   const url = createTektonResultsUrl(
-    namespace,
     workspace,
+    namespace,
     dataTypes,
     filter,
     options,
@@ -301,16 +301,16 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
 };
 
 const getFilteredPipelineRuns = (
-  namespace: string,
   workspace: string,
+  namespace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
 ) =>
   getFilteredRecord<PipelineRunKindV1Beta1>(
-    namespace,
     workspace,
+    namespace,
     [DataType.PipelineRun, DataType.PipelineRun_v1beta1],
     filter,
     options,
@@ -319,16 +319,16 @@ const getFilteredPipelineRuns = (
   );
 
 const getFilteredTaskRuns = (
-  namespace: string,
   workspace: string,
+  namespace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
 ) =>
   getFilteredRecord<TaskRunKindV1Beta1>(
-    namespace,
     workspace,
+    namespace,
     [DataType.TaskRun, DataType.TaskRun_v1beta1],
     filter,
     options,
@@ -337,13 +337,13 @@ const getFilteredTaskRuns = (
   );
 
 export const getPipelineRuns = (
-  namespace: string,
   workspace: string,
+  namespace: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   // supply a cacheKey only if the PipelineRun is complete and response will never change in the future
   cacheKey?: string,
-) => getFilteredPipelineRuns(namespace, workspace, '', options, nextPageToken, cacheKey);
+) => getFilteredPipelineRuns(workspace, namespace, '', options, nextPageToken, cacheKey);
 
 export const getTaskRuns = (
   workspace: string,
