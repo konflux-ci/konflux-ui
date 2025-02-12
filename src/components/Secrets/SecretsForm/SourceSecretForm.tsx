@@ -26,18 +26,13 @@ export const SourceSecretForm: React.FC<React.PropsWithChildren<unknown>> = () =
       <InputField name="source.repo" label="Repository" helperText="Repository for the secret" />
       {type === SourceSecretType.basic ? (
         <>
-          <InputField
-            name="source.username"
-            label="Username"
-            helperText="For Git authentication"
-            required
-          />
+          <InputField name="source.username" label="Username" helperText="For Git authentication" />
           <InputField
             name="source.password"
             label="Password"
             type={TextInputTypes.password}
             helperText="For Git authentication"
-            required
+            isRequired
           />
         </>
       ) : (
