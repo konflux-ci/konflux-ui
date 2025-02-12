@@ -8,24 +8,24 @@ import ComponentNudgesDependencies from '../../../ComponentRelation/details-page
 import { createCustomizeComponentPipelineModalLauncher } from '../../../CustomizedPipeline/CustomizePipelinesModal';
 import { DetailsSection } from '../../../DetailsPage';
 import { useModalLauncher } from '../../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import ComponentBuildSettings from './ComponentBuildSettings';
 import ComponentDetails from './ComponentDetails';
 import ComponentLatestBuild from './ComponentLatestBuild';
 
 const ComponentDetailsTab: React.FC = () => {
+  const namespace = useNamespace();
   const { componentName } = useParams<RouterParams>();
-  const { workspace, namespace } = useWorkspaceInfo();
   const track = useTrackEvent();
   const showModal = useModalLauncher();
-  const [component] = useComponent(namespace, workspace, componentName);
+  const [component] = useComponent(namespace, componentName);
   const customizePipeline = () => {
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipeline',
       link_location: 'component-list-label',
       component_name: component.metadata.name,
       app_name: component.spec.application,
-      workspace,
+      namespace,
     });
     showModal(
       createCustomizeComponentPipelineModalLauncher(

@@ -6,7 +6,6 @@ import { ComponentKind } from '../types';
 
 export const useComponent = (
   namespace: string,
-  workspace: string,
   componentName: string,
   watch?: boolean,
 ): [ComponentKind, boolean, unknown] => {
@@ -18,7 +17,6 @@ export const useComponent = (
     componentName
       ? {
           groupVersionKind: ComponentGroupVersionKind,
-          workspace,
           namespace,
           name: componentName,
           watch,
