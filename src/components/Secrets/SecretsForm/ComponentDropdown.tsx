@@ -10,7 +10,6 @@ type ComponentDropdownProps = Omit<React.ComponentProps<typeof DropdownField>, '
 export const ComponentDropdown: React.FC<React.PropsWithChildren<ComponentDropdownProps>> = (
   props,
 ) => {
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [{ value: application }] = useField<string>('targets.application');
   const [, , { setValue, setTouched }] = useField<string>(props.name);

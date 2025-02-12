@@ -4,6 +4,7 @@ import { Button, Text } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
+import { IMPORT_PATH } from '../../../routes/paths';
 import { ComponentKind } from '../../../types';
 import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { ComponentRelationStatusIcon } from './ComponentRelationStatusIcon';
@@ -26,7 +27,6 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
   radioChecked,
   component,
 }) => {
-  //const { workspace, namespace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [components, loaded, error] = useAllComponents(namespace);
 
@@ -84,7 +84,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
                   component={(props) => (
                     <Link
                       {...props}
-                      to={`/workspaces/${namespace}/applications/${comp?.spec?.application}/`}
+                      to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}/applications/${comp?.spec?.application}/`}
                       target="_blank"
                     />
                   )}

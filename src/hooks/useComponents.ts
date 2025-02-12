@@ -73,7 +73,6 @@ export const useSortedComponents = (
   applicationName: string,
   namespace?: string,
 ): [ComponentKind[], boolean, unknown] => {
-  //const { namespace: ns, workspace } = useWorkspaceInfo();
   const ns = useNamespace();
   const [cmps, loaded, error] = useComponents(namespace ?? ns, applicationName);
 

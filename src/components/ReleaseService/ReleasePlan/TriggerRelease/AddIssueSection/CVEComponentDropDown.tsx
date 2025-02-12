@@ -13,7 +13,6 @@ type CVEComponentDropDownProps = Omit<
 export const CVEComponentDropDown: React.FC<React.PropsWithChildren<CVEComponentDropDownProps>> = ({
   name,
 }) => {
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [, , { setValue, setTouched }] = useField<string>(name);
   const [components, componentsLoaded] = useAllComponents(namespace);

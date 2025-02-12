@@ -26,7 +26,6 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
   const [showCancelModal, setShowCancelModal] = React.useState<boolean>(false);
   const [showSubmissionModal, setShowSubmissionModal] = React.useState<boolean>(false);
   const [nudgeData, loaded, error] = useNudgeData(application);
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [components, cnLoaded, cnError] = useComponents(namespace, application);
   const [allComponents, allCompsLoaded, allCompsError] = useAllComponents(namespace);
