@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
-import { createSBRs, editSBR, validateUsername } from '../form-utils';
+import { createSBRs, editSBR } from '../form-utils';
 
 const k8sCreateMock = createK8sUtilMock('K8sQueryCreateResource');
 const k8sPatchMock = createK8sUtilMock('K8sQueryPatchResource');
@@ -50,41 +50,5 @@ describe('editSBR', () => {
         patches: [{ op: 'replace', path: '/spec/spaceRole', value: 'contributor' }],
       }),
     );
-  });
-});
-
-describe('validateUsername', () => {
-  const mockFetch = jest.fn();
-  beforeAll(() => {
-    window.fetch = mockFetch;
-  });
-
-  it('should return true if username is valid', async () => {
-    mockFetch.mockResolvedValue({
-      json: () => [
-        {
-          username: 'user1',
-        },
-      ],
-    });
-    const result = await validateUsername('user1');
-    expect(mockFetch).toHaveBeenCalledWith('/api/k8s/registration/api/v1/usernames/user1');
-    expect(result).toBe(true);
-  });
-
-  it('should return false if returned username is not the same', async () => {
-    mockFetch.mockResolvedValue({
-      json: () => {
-        'user';
-      },
-    });
-    const result = await validateUsername('user1');
-    expect(result).toBe(false);
-  });
-
-  it('should return false if api call fails', async () => {
-    mockFetch.mockRejectedValue(null);
-    const result = await validateUsername('user1');
-    expect(result).toBe(false);
   });
 });

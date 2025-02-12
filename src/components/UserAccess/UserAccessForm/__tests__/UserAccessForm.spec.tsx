@@ -51,4 +51,11 @@ describe('UserAccessForm', () => {
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     expect(screen.getByRole('searchbox')).toBeDisabled();
   });
+
+  it('should report error when selecting role for empty username', () => {
+    const values = { usernames: [], role: 'admin' };
+    const props = { values } as FormikProps<UserAccessFormValues>;
+    formikRenderer(<UserAccessForm {...props} />, values);
+    expect(screen.getByText('Username not validated')).toBeVisible();
+  });
 });
