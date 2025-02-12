@@ -6,15 +6,16 @@ import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { ApplicationKind } from '../../types';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../Namespace/useNamespaceInfo';
 import { useApplicationActions } from './application-actions';
 import { applicationTableColumnClasses } from './ApplicationListHeader';
 
 const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<ApplicationKind>>> = ({
   obj,
 }) => {
-  const { workspace, namespace } = useWorkspaceInfo();
-  const [components, loaded] = useComponents(namespace, workspace, obj.metadata?.name);
+  //const { workspace, namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
+  const [components, loaded] = useComponents(namespace, obj.metadata?.name);
   const actions = useApplicationActions(obj);
 
   const displayName = obj.spec.displayName || obj.metadata?.name;

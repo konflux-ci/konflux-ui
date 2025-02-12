@@ -74,7 +74,6 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   const navigate = useNavigate();
   const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
     namespace,
-    workspace,
     applicationName,
   );
   const [nameFilter, setNameFilter] = useSearchParam('name', '');

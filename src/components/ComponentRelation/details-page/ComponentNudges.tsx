@@ -4,8 +4,9 @@ import { Button, Text } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
+import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { ComponentKind } from '../../../types';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { ComponentRelationStatusIcon } from './ComponentRelationStatusIcon';
 
 import './ComponentNudges.scss';
@@ -26,8 +27,8 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
   radioChecked,
   component,
 }) => {
-  const { workspace, namespace } = useWorkspaceInfo();
-  const [components, loaded, error] = useAllComponents(namespace, workspace);
+  const namespace = useNamespace();
+  const [components, loaded, error] = useAllComponents(namespace);
 
   const emptyState = (
     <div data-test="nudges-empty-state" className="component-nudges__empty-state">
@@ -63,7 +64,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
         {relatedComponents.map((comp, i) => (
           <li key={i} data-test="nudges-connector">
             <Link
-              to={`/workspaces/${workspace}/applications/${comp.spec?.application}/components/${comp.metadata.name}`}
+              to={`/workspaces/${namespace}/applications/${comp.spec?.application}/components/${comp.metadata.name}`}
               data-test={isNudges ? 'nudges-cmp-link' : 'nudged-by-cmp-link'}
             >
               {comp.metadata.name}
@@ -83,7 +84,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
                   component={(props) => (
                     <Link
                       {...props}
-                      to={`/workspaces/${workspace}/applications/${comp?.spec?.application}/`}
+                      to={`${APPLICATION_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName: comp?.spec?.application })}/`}
                       target="_blank"
                     />
                   )}

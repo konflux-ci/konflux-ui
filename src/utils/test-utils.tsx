@@ -12,6 +12,7 @@ import {
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
 import * as NamespaceUtils from '../components/Namespace/namespace-context';
+import * as NameSpaceUtils from '../components/Namespace/useNamespaceInfo';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
 import * as ApplicationHook from '../hooks/useApplications';
@@ -301,4 +302,16 @@ export const openIntegrationTestContextDropdown = async () => {
 
 export const getIntegrationTestContextOptionButton = (name: string) => {
   return screen.getByTestId(`context-option-${name}`).childNodes[0];
+};
+
+export const createUseNamespaceMock = (namespace: string = 'test-ns'): jest.Mock => {
+  const mockFn = jest.fn().mockReturnValue(namespace);
+
+  jest.spyOn(NameSpaceUtils, 'useNamespace').mockImplementation(mockFn);
+
+  beforeEach(() => {
+    mockFn.mockReturnValue(namespace);
+  });
+
+  return mockFn;
 };

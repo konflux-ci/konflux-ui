@@ -234,8 +234,8 @@ export const createTektonResultsUrl = (
   }).toString()}`;
 
 export const getFilteredRecord = async <R extends K8sResourceCommon>(
-  workspace: string,
   namespace: string,
+  workspace: string,
   dataTypes: DataType[],
   filter?: string,
   options?: TektonResultsOptions,
@@ -243,8 +243,8 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   cacheKey?: string,
 ): Promise<[R[], RecordsList, boolean?]> => {
   const url = createTektonResultsUrl(
-    workspace,
     namespace,
+    workspace,
     dataTypes,
     filter,
     options,
@@ -301,16 +301,16 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
 };
 
 const getFilteredPipelineRuns = (
-  workspace: string,
   namespace: string,
+  workspace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
 ) =>
   getFilteredRecord<PipelineRunKindV1Beta1>(
-    workspace,
     namespace,
+    workspace,
     [DataType.PipelineRun, DataType.PipelineRun_v1beta1],
     filter,
     options,
@@ -319,16 +319,16 @@ const getFilteredPipelineRuns = (
   );
 
 const getFilteredTaskRuns = (
-  workspace: string,
   namespace: string,
+  workspace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
 ) =>
   getFilteredRecord<TaskRunKindV1Beta1>(
-    workspace,
     namespace,
+    workspace,
     [DataType.TaskRun, DataType.TaskRun_v1beta1],
     filter,
     options,
@@ -337,13 +337,13 @@ const getFilteredTaskRuns = (
   );
 
 export const getPipelineRuns = (
-  workspace: string,
   namespace: string,
+  workspace: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   // supply a cacheKey only if the PipelineRun is complete and response will never change in the future
   cacheKey?: string,
-) => getFilteredPipelineRuns(workspace, namespace, '', options, nextPageToken, cacheKey);
+) => getFilteredPipelineRuns(namespace, workspace, '', options, nextPageToken, cacheKey);
 
 export const getTaskRuns = (
   workspace: string,
@@ -369,14 +369,12 @@ export const getTaskRunLog = (
 
 export const createTektonResultsQueryKeys = (
   model: K8sModelCommon,
-  workspace: string,
   selector: Selector,
   filter: string,
 ) => {
   const selectorFilter = selectorToFilter(selector);
   return [
     'tekton-results',
-    workspace,
     { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
     ...(selectorFilter ? [selectorFilter] : []),
     ...(filter ? [filter] : []),
@@ -384,17 +382,11 @@ export const createTektonResultsQueryKeys = (
 };
 
 export const createTektonResultQueryOptions = curry(
-  (
-    fetchFn,
-    model: K8sModelCommon,
-    namespace: string,
-    workspace: string,
-    options: TektonResultsOptions,
-  ) => {
+  (fetchFn, model: K8sModelCommon, namespace: string, options: TektonResultsOptions) => {
     return {
-      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
+      queryKey: createTektonResultsQueryKeys(model, options?.selector, options?.filter),
       queryFn: async ({ pageParam }) => {
-        const trData = await fetchFn(workspace, namespace, options, pageParam as string);
+        const trData = await fetchFn(namespace, options, pageParam as string);
         return { data: trData[0], nextPage: trData[1].nextPageToken };
       },
       enabled: !!namespace,

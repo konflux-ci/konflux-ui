@@ -18,7 +18,7 @@ const ComponentDetailsTab: React.FC = () => {
   const { workspace, namespace } = useWorkspaceInfo();
   const track = useTrackEvent();
   const showModal = useModalLauncher();
-  const [component] = useComponent(namespace, workspace, componentName);
+  const [component] = useComponent(namespace, componentName);
   const customizePipeline = () => {
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipeline',

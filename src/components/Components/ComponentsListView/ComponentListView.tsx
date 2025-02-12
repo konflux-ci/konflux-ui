@@ -59,7 +59,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 
   const [components, componentsLoaded, componentsError] = useComponents(
     namespace,
-    workspace,
     applicationName,
     true,
   );

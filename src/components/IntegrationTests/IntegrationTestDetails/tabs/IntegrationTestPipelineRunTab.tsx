@@ -8,20 +8,18 @@ import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { PipelineRunKind } from '../../../../types';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
 
 const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   const { applicationName, integrationTestName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
-
+  const namespace = useNamespace();
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage] = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {

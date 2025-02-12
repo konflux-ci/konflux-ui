@@ -4,12 +4,12 @@ import { useTaskRun } from '../../../hooks/usePipelineRuns';
 import { RouterParams } from '../../../routes/utils';
 import { TektonResourceLabel } from '../../../types';
 import { SecurityEnterpriseContractTab } from '../../EnterpriseContract/SecurityEnterpriseContractTab';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../Namespace/useNamespaceInfo';
 
 export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [taskRun] = useTaskRun(namespace, workspace, taskRunName);
+  const namespace = useNamespace();
+  const [taskRun] = useTaskRun(namespace, taskRunName);
   const plrName = taskRun.metadata?.labels[TektonResourceLabel.pipelinerun];
 
   return <SecurityEnterpriseContractTab pipelineRun={plrName} />;

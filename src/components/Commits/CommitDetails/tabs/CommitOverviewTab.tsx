@@ -25,8 +25,8 @@ import {
   createRepoPullRequestURL,
 } from '../../../../utils/commits-utils';
 import { runStatus } from '../../../../utils/pipeline-utils';
+import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { useCommitStatus } from '../../commit-status';
 import CommitVisualization from '../../CommitDetails/visualization/CommitVisualization';
@@ -35,10 +35,9 @@ import './CommitsOverviewTab.scss';
 
 const CommitOverviewTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     commitName,
   );
