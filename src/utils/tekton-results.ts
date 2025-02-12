@@ -210,15 +210,14 @@ const InFlightStore: { [key: string]: boolean } = {};
 const getTRUrlPrefix = (workspace: string): string => URL_PREFIX.replace(_WORKSPACE_, workspace);
 
 export const createTektonResultsUrl = (
+  workspace: string,
   namespace: string,
   dataTypes: DataType[],
   filter?: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
 ): string =>
-  //todo sjochman change workspace
-  `${getTRUrlPrefix('test-ws')}/${namespace}/results/-/records?${new URLSearchParams({
-    //`${getTRUrlPrefix(workspace)}/${namespace}/results/-/records?${new URLSearchParams({
+  `${getTRUrlPrefix(workspace)}/${namespace}/results/-/records?${new URLSearchParams({
     // default sort should always be by `create_time desc`
     ['order_by']: 'create_time desc',
     ['page_size']: `${Math.max(
@@ -236,13 +235,21 @@ export const createTektonResultsUrl = (
 
 export const getFilteredRecord = async <R extends K8sResourceCommon>(
   namespace: string,
+  workspace: string,
   dataTypes: DataType[],
   filter?: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
 ): Promise<[R[], RecordsList, boolean?]> => {
-  const url = createTektonResultsUrl(namespace, dataTypes, filter, options, nextPageToken);
+  const url = createTektonResultsUrl(
+    namespace,
+    workspace,
+    dataTypes,
+    filter,
+    options,
+    nextPageToken,
+  );
 
   if (cacheKey) {
     const result = CACHE[cacheKey];
@@ -295,6 +302,7 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
 
 const getFilteredPipelineRuns = (
   namespace: string,
+  workspace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
@@ -302,6 +310,7 @@ const getFilteredPipelineRuns = (
 ) =>
   getFilteredRecord<PipelineRunKindV1Beta1>(
     namespace,
+    workspace,
     [DataType.PipelineRun, DataType.PipelineRun_v1beta1],
     filter,
     options,
@@ -311,6 +320,7 @@ const getFilteredPipelineRuns = (
 
 const getFilteredTaskRuns = (
   namespace: string,
+  workspace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
@@ -318,6 +328,7 @@ const getFilteredTaskRuns = (
 ) =>
   getFilteredRecord<TaskRunKindV1Beta1>(
     namespace,
+    workspace,
     [DataType.TaskRun, DataType.TaskRun_v1beta1],
     filter,
     options,
@@ -327,19 +338,21 @@ const getFilteredTaskRuns = (
 
 export const getPipelineRuns = (
   namespace: string,
+  workspace: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   // supply a cacheKey only if the PipelineRun is complete and response will never change in the future
   cacheKey?: string,
-) => getFilteredPipelineRuns(namespace, '', options, nextPageToken, cacheKey);
+) => getFilteredPipelineRuns(namespace, workspace, '', options, nextPageToken, cacheKey);
 
 export const getTaskRuns = (
+  workspace: string,
   namespace: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   // supply a cacheKey only if the TaskRun is complete and response will never change in the future
   cacheKey?: string,
-) => getFilteredTaskRuns(namespace, '', options, nextPageToken, cacheKey);
+) => getFilteredTaskRuns(workspace, namespace, '', options, nextPageToken, cacheKey);
 
 // const getLog = (workspace: string, taskRunPath: string) =>
 //   commonFetchText(`${getTRUrlPrefix(workspace)}/${taskRunPath.replace('/records/', '/logs/')}`);

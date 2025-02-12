@@ -28,7 +28,6 @@ export const getLatestResource = (resources = []) =>
 export const useCommitWorkflowData = (
   commit: Commit,
 ): [nodes: CommitWorkflowNodeModel[], loaded: boolean, errors: unknown[]] => {
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
 
   const applicationName = commit?.application || '';
