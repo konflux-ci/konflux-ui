@@ -51,17 +51,71 @@ const mockRecordsList = {
     },
     {
       data: {
-        // {"key":"test2"}
-        value: 'eyJrZXkiOiJ0ZXN0MiJ9',
+        // {"status":{"conditions":[{"status":"Unknown","type":"Succeeded","reason":"Running"}]}}
+        value:
+          'eyJzdGF0dXMiOnsiY29uZGl0aW9ucyI6W3sic3RhdHVzIjoiVW5rbm93biIsInR5cGUiOiJTdWNjZWVkZWQiLCJyZWFzb24iOiJSdW5uaW5nIn1dfX0=',
+      },
+    },
+    {
+      data: {
+        // I have no seen status shown as Running in tekton records.
+        // We add the test here to ensure when the status is not 'Unknown', we will not filter it out.
+        // {"status":{"conditions":[{"status":"Running","type":"Succeeded","reason":"Running"}]}}
+        value:
+          'eyJzdGF0dXMiOnsiY29uZGl0aW9ucyI6W3sic3RhdHVzIjoiUnVubmluZyIsInR5cGUiOiJTdWNjZWVkZWQiLCJyZWFzb24iOiJSdW5uaW5nIn1dfX0=',
+      },
+    },
+    // The following two records are the regular records we would get in the tekton records.
+    {
+      data: {
+        // {"status":{"conditions":[{"status":"True","type":"Succeeded","reason":"Succeeded"}]}}
+        value:
+          'eyJzdGF0dXMiOnsiY29uZGl0aW9ucyI6W3sic3RhdHVzIjoiVHJ1ZSIsInR5cGUiOiJTdWNjZWVkZWQiLCJyZWFzb24iOiJTdWNjZWVkZWQifV19fQ==',
+      },
+    },
+    {
+      data: {
+        // {"status":{"conditions":[{"status":"False","type":"Succeeded","reason":"Failed"}]}}
+        value:
+          'eyJzdGF0dXMiOnsiY29uZGl0aW9ucyI6W3sic3RhdHVzIjoiRmFsc2UiLCJ0eXBlIjoiU3VjY2VlZGVkIiwicmVhc29uIjoiRmFpbGVkIn1dfX0=',
       },
     },
   ],
 } as RecordsList;
 
-const mockResponseCheck = [[{ key: 'test1' }, { key: 'test2' }], mockRecordsList] as [
-  unknown[],
-  RecordsList,
+const mockResponseList = [
+  { key: 'test1' },
+  {
+    status: {
+      conditions: [{ status: 'Unknown', reason: 'Running', type: 'Succeeded' }],
+    },
+  },
+  {
+    status: {
+      conditions: [{ status: 'Running', reason: 'Running', type: 'Succeeded' }],
+    },
+  },
+  {
+    status: {
+      conditions: [{ status: 'True', reason: 'Succeeded', type: 'Succeeded' }],
+    },
+  },
+  {
+    status: {
+      conditions: [{ status: 'False', reason: 'Failed', type: 'Succeeded' }],
+    },
+  },
 ];
+
+const mockResponseCheck = [mockResponseList, mockRecordsList] as [unknown[], RecordsList];
+
+const mockPipelineRunReponseCheck = [
+  // The pipelinerun should filter the Unknown ones out.
+  mockResponseList.filter(
+    (record) => !record?.status?.conditions?.some((condition) => condition.status === 'Unknown'),
+  ),
+  mockRecordsList,
+] as [unknown[], RecordsList];
 
 const mockLogsRecordsList = {
   nextPageToken: null,
@@ -565,7 +619,7 @@ describe('tekton-results', () => {
   describe('getPipelineRuns', () => {
     it('should return record list and decoded value', async () => {
       commonFetchJSONMock.mockReturnValue(mockRecordsList);
-      expect(await getPipelineRuns('test-ws', 'test-ns')).toEqual(mockResponseCheck);
+      expect(await getPipelineRuns('test-ws', 'test-ns')).toEqual(mockPipelineRunReponseCheck);
     });
 
     it('should query tekton results with options', async () => {
