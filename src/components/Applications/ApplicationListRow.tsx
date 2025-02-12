@@ -13,7 +13,6 @@ import { applicationTableColumnClasses } from './ApplicationListHeader';
 const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<ApplicationKind>>> = ({
   obj,
 }) => {
-  //const { workspace, namespace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [components, loaded] = useComponents(namespace, obj.metadata?.name);
   const actions = useApplicationActions(obj);
