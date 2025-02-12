@@ -2,20 +2,22 @@ import React from 'react';
 import { ExpandableSection, FormSection } from '@patternfly/react-core';
 import { useField } from 'formik';
 import HelpPopover from '../../../components/HelpPopover';
+import { useRoleMap } from '../../../hooks/useRole';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
-import { WorkspaceRole } from '../../../types';
+import { NamespaceRole } from '../../../types';
 import { PermissionsTable } from './PermissionsTable';
-
 import './RoleSection.scss';
 
-const dropdownItems = [
-  { key: 'contributor', value: 'contributor' },
-  { key: 'maintainer', value: 'maintainer' },
-  { key: 'admin', value: 'admin' },
-];
-
 export const RoleSection: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const [{ value: role }] = useField<WorkspaceRole>('role');
+  const [{ value: role }] = useField<NamespaceRole>('role');
+  const [roleMap, roleMapLoading] = useRoleMap();
+
+  const dropdownItems = [
+    ...Object.entries(roleMap).map(([key, value]) => ({
+      key,
+      value,
+    })),
+  ];
 
   return (
     <>
@@ -23,7 +25,7 @@ export const RoleSection: React.FC<React.PropsWithChildren<unknown>> = () => {
         <DropdownField
           className="role-section"
           name="role"
-          placeholder="Select role"
+          placeholder={roleMapLoading ? 'Loading...' : 'Select role'}
           label="Select a role to assign to all of the users you added."
           helpText="Provides access to all permissions except the ability to add or delete certain resources. To view a full list of permissions, refer to the following table."
           data-test="role-input"
@@ -34,6 +36,7 @@ export const RoleSection: React.FC<React.PropsWithChildren<unknown>> = () => {
               bodyContent="At this time we do not offer custom roles. You can only assign the default roles."
             />
           }
+          isDisabled={roleMapLoading}
           items={dropdownItems}
           validateOnChange
           required

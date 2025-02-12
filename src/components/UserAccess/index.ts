@@ -1,4 +1,4 @@
-import { SpaceBindingRequestModel } from '../../models';
+import { RoleBindingModel, SpaceBindingRequestModel } from '../../models';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
 
 export const userAccessListPageLoader = createLoaderWithAccessCheck(() => null, {
@@ -9,6 +9,12 @@ export const userAccessListPageLoader = createLoaderWithAccessCheck(() => null, 
 export const grantAccessPageLoader = createLoaderWithAccessCheck(() => null, {
   model: SpaceBindingRequestModel,
   verb: 'create',
+});
+
+// We delete and create roles which looks like 'patch'.
+export const editAccessPageLoader = createLoaderWithAccessCheck(() => null, {
+  model: RoleBindingModel,
+  verb: 'patch',
 });
 
 export { default as UserAccessListPage } from './UserAccessListPage';

@@ -2,7 +2,7 @@ import React from 'react';
 import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
-import { SpaceBindingRequestModel } from '../../models';
+import { RoleBindingModel } from '../../models';
 import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import PageLayout from '../PageLayout/PageLayout';
@@ -13,7 +13,7 @@ const UserAccessPage: React.FunctionComponent = () => {
   const breadcrumbs = useWorkspaceBreadcrumbs();
   const { workspace } = useWorkspaceInfo();
 
-  const [canCreateSBR] = useAccessReviewForModel(SpaceBindingRequestModel, 'create');
+  const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
 
   useDocumentTitle(`User access | ${FULL_APPLICATION_TITLE}`);
 
@@ -32,7 +32,7 @@ const UserAccessPage: React.FunctionComponent = () => {
         {
           id: 'grant-access',
           label: 'Grant access',
-          disabled: !canCreateSBR,
+          disabled: !canCreateRB,
           disabledTooltip: 'You cannot grant access in this namespace',
           cta: {
             href: `/workspaces/${workspace}/access/grant`,

@@ -1,100 +1,111 @@
-import '@testing-library/jest-dom';
-import { renderHook } from '@testing-library/react-hooks';
+import { mockRoleBinding, mockRoleBindingWithoutUser } from '../../../__data__/rolebinding-data';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { createUseWorkspaceInfoMock } from '../../../utils/test-utils';
-import { useSBRActions } from '../user-access-actions';
+import { useModalLauncher } from '../../modal/ModalProvider';
+import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useRBActions } from '../user-access-actions';
 
+// Mock the dependencies
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(),
 }));
 
-const accessReviewMock = useAccessReviewForModel as jest.Mock;
+jest.mock('../../Workspace/useWorkspaceInfo', () => ({
+  useWorkspaceInfo: jest.fn(),
+}));
 
-describe('useSBRActions', () => {
-  createUseWorkspaceInfoMock({ workspace: 'test-ws' });
+jest.mock('../../modal/ModalProvider', () => ({
+  useModalLauncher: jest.fn(),
+}));
+
+describe('useRBActions', () => {
+  const mockWorkspace = 'test-workspace';
 
   beforeEach(() => {
-    accessReviewMock.mockReturnValue([true, true]);
+    // Reset mock functions before each test
+    (useAccessReviewForModel as jest.Mock).mockClear();
+    (useWorkspaceInfo as jest.Mock).mockClear();
+    (useModalLauncher as jest.Mock).mockClear();
   });
 
-  it('should return enabled actions', () => {
-    const { result } = renderHook(() =>
-      useSBRActions({
-        availableActions: ['update', 'delete'],
-        masterUserRecord: 'my-user',
-        role: 'admin',
-        bindingRequest: { name: 'my-sbr', namespace: 'my-ns' },
-      }),
-    );
-    const actions = result.current;
+  it('should return Edit and Revoke actions when the user has permissions', () => {
+    (useAccessReviewForModel as jest.Mock).mockReturnValue([true, true]);
+    (useWorkspaceInfo as jest.Mock).mockReturnValue({ workspace: mockWorkspace });
+    (useModalLauncher as jest.Mock).mockReturnValue(jest.fn());
 
-    expect(actions[0]).toEqual(
-      expect.objectContaining({
+    const actions = useRBActions(mockRoleBinding);
+
+    expect(actions).toEqual([
+      {
         label: 'Edit access',
+        id: 'edit-access-user1',
         disabled: false,
+        disabledTooltip: "You don't have permission to edit access",
         cta: {
-          href: '/workspaces/test-ws/access/edit/my-user',
+          href: `/workspaces/${mockWorkspace}/access/edit/user1`,
         },
-      }),
-    );
-
-    expect(actions[1]).toEqual(
-      expect.objectContaining({
+      },
+      {
         label: 'Revoke access',
+        id: 'revoke-access-user1',
         disabled: false,
-      }),
-    );
+        disabledTooltip: "You don't have permission to revoke access",
+        cta: expect.any(Function),
+      },
+    ]);
   });
 
-  it('should return disabled actions due to access', () => {
-    accessReviewMock.mockReturnValue([false, true]);
-    const { result } = renderHook(() =>
-      useSBRActions({
-        availableActions: [],
-        masterUserRecord: 'my-user',
-        role: 'admin',
-        bindingRequest: { name: 'my-sbr', namespace: 'my-ns' },
-      }),
-    );
-    const actions = result.current;
+  it('should disable Edit and Revoke actions if the user does not have permissions', () => {
+    // Mocking the hooks with no permissions
+    (useAccessReviewForModel as jest.Mock).mockReturnValue([false, false]);
+    (useWorkspaceInfo as jest.Mock).mockReturnValue({ workspace: mockWorkspace });
+    (useModalLauncher as jest.Mock).mockReturnValue(jest.fn());
 
-    expect(actions[0]).toEqual(
-      expect.objectContaining({
+    const actions = useRBActions(mockRoleBinding);
+
+    expect(actions).toEqual([
+      {
         label: 'Edit access',
+        id: 'edit-access-user1',
         disabled: true,
         disabledTooltip: "You don't have permission to edit access",
-      }),
-    );
-    expect(actions[1]).toEqual(
-      expect.objectContaining({
+        cta: {
+          href: `/workspaces/${mockWorkspace}/access/edit/user1`,
+        },
+      },
+      {
         label: 'Revoke access',
+        id: 'revoke-access-user1',
         disabled: true,
         disabledTooltip: "You don't have permission to revoke access",
-      }),
-    );
+        cta: expect.any(Function),
+      },
+    ]);
   });
 
-  it('should return disabled actions if binding request is not provided', () => {
-    const { result } = renderHook(() =>
-      useSBRActions({
-        availableActions: ['update', 'delete'],
-        masterUserRecord: 'my-user',
-        role: 'admin',
-      }),
-    );
-    const actions = result.current;
+  it('should disable actions if no user is found in the subjects array', () => {
+    (useAccessReviewForModel as jest.Mock).mockReturnValue([true, true]);
+    (useWorkspaceInfo as jest.Mock).mockReturnValue({ workspace: mockWorkspace });
+    (useModalLauncher as jest.Mock).mockReturnValue(jest.fn());
 
-    expect(actions[0]).toEqual(
-      expect.objectContaining({
+    const actions = useRBActions(mockRoleBindingWithoutUser);
+
+    expect(actions).toEqual([
+      {
         label: 'Edit access',
+        id: 'edit-access-undefined',
         disabled: true,
-      }),
-    );
-    expect(actions[1]).toEqual(
-      expect.objectContaining({
+        disabledTooltip: "You don't have permission to edit access",
+        cta: {
+          href: '/workspaces/test-workspace/access/edit/undefined',
+        },
+      },
+      {
         label: 'Revoke access',
+        id: 'revoke-access-undefined',
         disabled: true,
-      }),
-    );
+        disabledTooltip: "You don't have permission to revoke access",
+        cta: expect.any(Function),
+      },
+    ]);
   });
 });

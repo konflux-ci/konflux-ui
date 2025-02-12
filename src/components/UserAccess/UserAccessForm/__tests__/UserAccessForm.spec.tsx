@@ -1,8 +1,14 @@
 import { screen } from '@testing-library/react';
 import { FormikProps } from 'formik';
+import { defaultKonfluxRoleMap } from '../../../../__data__/role-data';
+import { useRoleMap } from '../../../../hooks/useRole';
 import { createUseWorkspaceInfoMock, formikRenderer } from '../../../../utils/test-utils';
 import { UserAccessFormValues } from '../form-utils';
 import { UserAccessForm } from '../UserAccessForm';
+
+jest.mock('../../../../hooks/useRole', () => ({
+  useRoleMap: jest.fn(),
+}));
 
 jest.mock('../../../../utils/breadcrumb-utils', () => ({
   useWorkspaceBreadcrumbs: jest.fn(() => []),
@@ -21,6 +27,10 @@ jest.mock('react-router-dom', () => {
 });
 
 describe('UserAccessForm', () => {
+  beforeEach(() => {
+    const mockUseRoleMap = useRoleMap as jest.Mock;
+    mockUseRoleMap.mockReturnValue([defaultKonfluxRoleMap, false, null]);
+  });
   createUseWorkspaceInfoMock({ workspace: 'test-ws' });
 
   it('should show create form', () => {
@@ -50,5 +60,12 @@ describe('UserAccessForm', () => {
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     expect(screen.getByRole('searchbox')).toBeDisabled();
+  });
+
+  it('should report error when selecting role for empty username', () => {
+    const values = { usernames: [], role: 'admin' };
+    const props = { values } as FormikProps<UserAccessFormValues>;
+    formikRenderer(<UserAccessForm {...props} />, values);
+    expect(screen.getByText('Username not validated')).toBeVisible();
   });
 });
