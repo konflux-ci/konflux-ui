@@ -127,4 +127,5 @@ const KeyValueFileInputField: React.FC<
   );
 };
 
+export const InternalKeyValueFileInputField = KeyValueFileInputField;
 export default KeyValueFileInputField;

@@ -1,4 +1,7 @@
 import { configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import KeyValueFileInputField, {
+  InternalKeyValueFileInputField,
+} from '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import { formikRenderer } from '../../../utils/test-utils';
 import {
   existingSecrets,
@@ -9,7 +12,27 @@ import SecretForm from '../SecretForm';
 
 configure({ testIdAttribute: 'data-test' });
 
+jest.mock(
+  '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',
+  () => {
+    return {
+      __esModule: true,
+      ...jest.requireActual(
+        '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',
+      ),
+      default: jest.fn(),
+    };
+  },
+);
+
+const mockKeyValueFileInputField = KeyValueFileInputField as jest.Mock;
+
 describe('SecretForm', () => {
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <InternalKeyValueFileInputField {...props} />
+    ));
+  });
   it('should show correct fields based on selected auth type', async () => {
     formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
     await waitFor(() => {
@@ -110,5 +133,41 @@ describe('SecretForm SourceSecret', () => {
         'password-changed',
       );
     });
+  });
+});
+
+describe('SecretForm KeyValueFileInputField', () => {
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <>
+        <div data-test="key-value-input" {...props} />
+      </>
+    ));
+  });
+  it('should render KeyValueFileInput', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+    await waitFor(() => {
+      expect(screen.getByTestId('key-value-input')).toBeInTheDocument();
+    });
+  });
+
+  it('should render KeyValueFileInput with correct props', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+    await waitFor(() => {
+      expect(screen.getByTestId('key-value-input').getAttribute('name')).toBe('image.keyValues');
+    });
+  });
+
+  it('should have called mockKeyValueFileInputField', () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+    expect(mockKeyValueFileInputField).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        disableRemoveAction: true,
+        entries: [{ key: '', readOnlyKey: false, value: '' }],
+        name: 'image.keyValues',
+        required: true,
+      }),
+      {},
+    );
   });
 });
