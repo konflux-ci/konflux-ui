@@ -5,7 +5,6 @@ import { useNamespace } from '../Namespace/useNamespaceInfo';
 import { ComponentRelationNudgeType, ComponentRelationValue } from './type';
 
 export const useNudgeData = (application: string): [ComponentRelationValue[], boolean, unknown] => {
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [components, loaded, error] = useComponents(namespace, application);
   const [allComponents, allLoaded, allErrors] = useAllComponents(namespace);

@@ -19,7 +19,6 @@ interface IntegrationTestContextProps {
 }
 
 const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldName }) => {
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const { applicationName } = useParams();
   const [components, componentsLoaded] = useComponents(namespace, applicationName);

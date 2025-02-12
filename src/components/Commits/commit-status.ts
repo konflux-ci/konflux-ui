@@ -11,7 +11,6 @@ export const useCommitStatus = (
   const namespace = useNamespace();
 
   const [pipelineRuns, loaded, error] = usePipelineRunsForCommit(namespace, application, commit);
-  //const [pipelineRuns, loaded, error] = usePipelineRunsForCommit(namespace, application, commit);
 
   const plrsForCommit = React.useMemo(
     () =>

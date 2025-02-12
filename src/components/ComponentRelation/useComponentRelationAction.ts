@@ -7,7 +7,6 @@ import { createComponentRelationModal } from './ComponentRelationModal';
 
 export const useComponentRelationAction = (application: string) => {
   const showModal = useModalLauncher();
-  //const { namespace, workspace } = useWorkspaceInfo();
   const namespace = useNamespace();
   const [components, loaded, error] = useComponents(namespace, application);
   const [canUpdateComponent] = useAccessReviewForModel(ComponentModel, 'patch');
