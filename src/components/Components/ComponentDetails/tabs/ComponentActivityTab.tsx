@@ -4,7 +4,7 @@ import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
-import { COMPONENT_ACTIVITY_DETAIL_PATH } from '../../../../routes/paths';
+import { COMPONENT_ACTIVITY_CHILD_TAB_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
@@ -27,7 +27,7 @@ export const ComponentActivityTab: React.FC = () => {
 
   const getActivityTabRoute = React.useCallback(
     (tab: string) =>
-      COMPONENT_ACTIVITY_DETAIL_PATH.createPath({
+      COMPONENT_ACTIVITY_CHILD_TAB_PATH.createPath({
         workspaceName: namespace,
         applicationName,
         componentName,

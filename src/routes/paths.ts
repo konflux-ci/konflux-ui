@@ -20,7 +20,7 @@ export const COMPONENT_DETAILS_PATH = COMPONENT_LIST_PATH.extend(`:${RouterParam
 
 export const COMPONENT_ACTIVITY_PATH = COMPONENT_DETAILS_PATH.extend('activity');
 
-export const COMPONENT_ACTIVITY_DETAIL_PATH = COMPONENT_ACTIVITY_PATH.extend(
+export const COMPONENT_ACTIVITY_CHILD_TAB_PATH = COMPONENT_ACTIVITY_PATH.extend(
   `:${RouterParams.activityTab}`,
 );
 
