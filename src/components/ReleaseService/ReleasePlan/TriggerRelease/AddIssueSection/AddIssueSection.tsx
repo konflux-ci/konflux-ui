@@ -29,9 +29,9 @@ interface AddIssueSectionProps {
 }
 
 export interface IssueObject {
-  key: string;
+  id: string;
   summary: string;
-  url?: string;
+  source?: string;
   components?: { name: string; packages: string[] }[];
   uploadDate?: string;
   status?: string;
@@ -69,7 +69,7 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
     () =>
       issues && Array.isArray(issues)
         ? issues?.filter(
-            (bug) => !nameFilter || bug.key.toLowerCase().indexOf(nameFilter.toLowerCase()) >= 0,
+            (bug) => !nameFilter || bug.id.toLowerCase().indexOf(nameFilter.toLowerCase()) >= 0,
           )
         : [],
     [issues, nameFilter],
@@ -170,9 +170,9 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
                 {Array.isArray(filteredIssues) && filteredIssues.length > 0 && (
                   <Tbody data-test="issue-table-body">
                     {filteredIssues.map((issue, i) => (
-                      <Tr key={issue.key}>
+                      <Tr key={issue.id}>
                         <Td className={issueTableColumnClass.issueKey} data-test="issue-key">
-                          {issue.key ?? '-'}
+                          {issue.id ?? '-'}
                         </Td>
                         <Td
                           className={
@@ -180,7 +180,7 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
                           }
                           data-test="issue-url"
                         >
-                          <Truncate content={issue.url} />
+                          <Truncate content={issue.source} />
                         </Td>
                         {!isBug && (
                           <Td className={issueTableColumnClass.components}>
