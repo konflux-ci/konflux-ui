@@ -18,12 +18,12 @@ import { HttpError } from '../../../../k8s/error';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
 import { getLastestImage } from '../../../../utils/component-utils';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
 import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
-import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 
 type ComponentLatestBuildProps = {

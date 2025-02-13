@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { ComponentModel } from '../../models';
 import { Action } from '../../shared/components/action-menu/types';
+import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../types';
 import { startNewBuild } from '../../utils/component-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeComponentPipelineModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { componentDeleteModal } from '../modal/resource-modals';
-import { useNamespace } from '../Namespace/useNamespaceInfo';
 
 export const useComponentActions = (component: ComponentKind, name: string): Action[] => {
   const namespace = useNamespace();

@@ -19,11 +19,11 @@ import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
 import { IMPORT_PATH } from '../../../routes/paths';
+import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 
 export const FAILED_STATUS_FILTER_ID = 'failed';
 export const SUCCESS_STATUS_FILTER_ID = 'success';

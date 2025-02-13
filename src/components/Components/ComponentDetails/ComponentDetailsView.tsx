@@ -10,6 +10,7 @@ import { ComponentGroupVersionKind, ComponentModel } from '../../../models';
 import { COMPONENT_LIST_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -18,7 +19,6 @@ import { DetailsPage } from '../../DetailsPage';
 import { Action } from '../../DetailsPage/types';
 import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { useComponentActions } from '../component-actions';
 import './ComponentDetailsView.scss';
 

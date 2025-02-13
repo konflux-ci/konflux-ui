@@ -10,11 +10,11 @@ import {
 import yamlParser from 'js-yaml';
 import { useLatestPushBuildPipelineRunForComponent } from '../../../../hooks/usePipelineRuns';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
 import { getLastestImage } from '../../../../utils/component-utils';
 import { getPipelineRunStatusResults } from '../../../../utils/pipeline-utils';
 import GitRepoLink from '../../../GitLink/GitRepoLink';
-import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 
 type ComponentDetailsProps = {
   component: ComponentKind;

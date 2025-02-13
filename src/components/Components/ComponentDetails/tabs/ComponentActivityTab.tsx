@@ -6,11 +6,11 @@ import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { COMPONENT_ACTIVITY_CHILD_TAB_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
+import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
 import CommitsListView from '../../../Commits/CommitsListPage/CommitsListView';
 import { DetailsSection } from '../../../DetailsPage';
-import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 
 export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 

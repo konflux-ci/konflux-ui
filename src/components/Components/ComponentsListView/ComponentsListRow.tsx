@@ -6,6 +6,7 @@ import { COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '../../../routes/pat
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
 import { getLastestImage } from '../../../utils/component-utils';
@@ -13,7 +14,6 @@ import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { useBuildLogViewerModal } from '../../LogViewer/BuildLogViewer';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import PipelineRunStatus from '../../PipelineRun/PipelineRunStatus';
 import { useComponentActions } from '../component-actions';
 import { componentsTableColumnClasses } from './ComponentsListHeader';
