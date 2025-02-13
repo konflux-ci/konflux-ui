@@ -38,7 +38,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
           link_location: 'component-list',
           component_name: name,
           app_name: applicationName,
-          workspace: namespace,
+          namespace,
         },
       },
       {
@@ -52,7 +52,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
           link_location: 'component-actions',
           component_name: name,
           app_name: applicationName,
-          workspace: namespace,
+          namespace,
         },
       },
     ];
