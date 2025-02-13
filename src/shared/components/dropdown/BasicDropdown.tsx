@@ -58,7 +58,14 @@ const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
     isOpen: boolean,
   ) => setDropdownOpen(isOpen);
   const onSelect = (event: React.SyntheticEvent<HTMLDivElement>) => {
-    onChange && onChange(event.currentTarget.textContent);
+    // When the dropdown has the description, the currentTarget.textContent
+    // would contain main + description. And we just need the main value.
+    const targetClassName = 'pf-v5-c-dropdown__menu-item-main';
+    const targetText =
+      event.currentTarget.querySelector(`.${targetClassName}`)?.textContent ||
+      event.currentTarget.textContent;
+
+    onChange && onChange(targetText);
     setDropdownOpen(false);
   };
 
