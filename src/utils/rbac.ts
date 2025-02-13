@@ -1,10 +1,10 @@
 import React from 'react';
 import { LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
-import { useNamespace } from '../components/Namespace/useNamespaceInfo';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../components/Workspace/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
 import { SelfSubjectAccessReviewModel } from '../models/rbac';
+import { useNamespace } from '../shared/providers/Namespace';
 import { K8sModelCommon, K8sVerb } from '../types/k8s';
 import {
   AccessReviewResource,

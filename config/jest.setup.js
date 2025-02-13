@@ -24,9 +24,9 @@ jest.mock('../src/components/Workspace/useWorkspaceInfo', () => ({
   ...jest.requireActual('../src/components/Workspace/useWorkspaceInfo'),
 }));
 
-jest.mock('../src/components/Namespace/useNamespaceInfo', () => ({
+jest.mock('../src/shared/providers/Namespace/useNamespaceInfo', () => ({
   __esModule: true,
-  ...jest.requireActual('../src/components/Namespace/useNamespaceInfo'),
+  ...jest.requireActual('../src/shared/providers/Namespace/useNamespaceInfo'),
 }));
 
 jest.mock('../src/utils/rbac', () => ({

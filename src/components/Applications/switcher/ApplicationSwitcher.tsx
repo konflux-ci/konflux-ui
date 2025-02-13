@@ -8,10 +8,10 @@ import {
   APPLICATION_LIST_PATH,
   IMPORT_PATH,
 } from '../../../routes/paths';
+import { ContextMenuItem, ContextSwitcher } from '../../../shared/components';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { ContextMenuItem, ContextSwitcher } from '../../ContextSwitcher';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 
 export const ApplicationSwitcher: React.FC<
   React.PropsWithChildren<{ selectedApplication?: string }>

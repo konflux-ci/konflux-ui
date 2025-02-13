@@ -14,7 +14,7 @@ import {
 import { Dropdown, DropdownToggle } from '@patternfly/react-core/deprecated';
 import { EllipsisHIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-h-icon';
 import '././ContextSwitcher.scss';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useLocalStorage } from '../../../hooks/useLocalStorage';
 import { ContextMenuListItem, filteredItems, findItemByKey } from './context-switcher-utils';
 
 const LOCAL_STORAGE_KEY = 'context-switcher';
