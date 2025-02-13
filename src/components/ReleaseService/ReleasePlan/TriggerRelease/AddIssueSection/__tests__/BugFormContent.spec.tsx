@@ -15,24 +15,19 @@ describe('BugFormContent', () => {
   it('should show correct input fields ', () => {
     formikRenderer(<BugFormContent modalToggle={null} />);
 
-    expect(screen.getByRole('textbox', { name: 'Bug issue key' })).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Summary' })).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'URL' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Bug issue id' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Source' })).toBeVisible();
   });
 
   it('should show correct values', () => {
     formikRenderer(<BugFormContent modalToggle={null} />, {
-      key: 'RHTAP-120',
-      url: 'url1',
-      summary: 'summary',
+      id: 'RHTAP-120',
+      source: 'url1',
     });
-    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Bug issue key' }).value).toBe(
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Bug issue id' }).value).toBe(
       'RHTAP-120',
     );
-    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'URL' }).value).toBe('url1');
-    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Summary' }).value).toBe(
-      'summary',
-    );
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Source' }).value).toBe('url1');
   });
 
   it('should have disabled Submit button when url and key not there', () => {
@@ -42,11 +37,11 @@ describe('BugFormContent', () => {
 
   it('should have disabled Submit button and error text when url is invalid', async () => {
     formikRenderer(<BugFormContent modalToggle={null} />);
-    const key = screen.getByTestId('bug-issue-key');
-    const url = screen.getByTestId('bug-url');
+    const id = screen.getByTestId('bug-issue-id');
+    const source = screen.getByTestId('bug-source');
 
-    await act(() => fireEvent.change(key, { value: 'ISSUE-420' }));
-    await act(() => fireEvent.change(url, { value: 'invalid' }));
+    await act(() => fireEvent.change(id, { value: 'ISSUE-420' }));
+    await act(() => fireEvent.change(source, { value: 'invalid' }));
     expect(screen.getByTestId('add-bug-btn')).toBeDisabled();
   });
 });

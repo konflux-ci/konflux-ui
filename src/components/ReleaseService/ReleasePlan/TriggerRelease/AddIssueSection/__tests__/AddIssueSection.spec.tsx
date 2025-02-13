@@ -41,9 +41,9 @@ describe('AddIssueSection for Bugs', () => {
   it('should render correct bug list ', () => {
     formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
       bugs: [
-        { key: 'bug-nodejs', url: 'url1' },
-        { key: 'bug-java', url: 'url2' },
-        { key: 'bug-python', url: 'url3' },
+        { id: 'bug-nodejs', url: 'http://url1.com' },
+        { id: 'bug-java', url: 'http://url2.com' },
+        { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
     expect(screen.getByText('bug-nodejs')).toBeInTheDocument();
@@ -54,9 +54,9 @@ describe('AddIssueSection for Bugs', () => {
   it('should have no search filter onLoad ', () => {
     formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
       bugs: [
-        { key: 'bug-nodejs', url: 'url1' },
-        { key: 'bug-java', url: 'url2' },
-        { key: 'bug-python', url: 'url3' },
+        { id: 'bug-nodejs', url: 'http://url1.com' },
+        { id: 'bug-java', url: 'http://url2.com' },
+        { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
     const inputFilter = screen
@@ -68,9 +68,9 @@ describe('AddIssueSection for Bugs', () => {
   it('should filter bug list ', async () => {
     formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
       bugs: [
-        { key: 'bug-nodejs', url: 'url1' },
-        { key: 'bug-java', url: 'url2' },
-        { key: 'bug-python', url: 'url3' },
+        { id: 'bug-nodejs', url: 'http://url1.com' },
+        { id: 'bug-java', url: 'http://url2.com' },
+        { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
     const tableBody = screen.getByTestId('issue-table-body');
@@ -96,9 +96,9 @@ describe('AddIssueSection for Bugs', () => {
   it('should show filteredEmptyState ', async () => {
     formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
       bugs: [
-        { key: 'bug-nodejs', url: 'url1' },
-        { key: 'bug-java', url: 'url2' },
-        { key: 'bug-python', url: 'url3' },
+        { id: 'bug-nodejs', url: 'http://url1.com' },
+        { id: 'bug-java', url: 'http://url2.com' },
+        { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
     const inputFilter = screen
@@ -116,9 +116,9 @@ describe('AddIssueSection for Bugs', () => {
   it('should filter bug list ', async () => {
     formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
       bugs: [
-        { key: 'bug-nodejs', url: 'url1' },
-        { key: 'bug-java', url: 'url2' },
-        { key: 'bug-python', url: 'url3' },
+        { id: 'bug-nodejs', url: 'http://url1.com' },
+        { id: 'bug-java', url: 'http://url2.com' },
+        { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
     const tableBody = screen.getByTestId('issue-table-body');
@@ -158,9 +158,9 @@ describe('AddIssueSection for CVEs', () => {
   it('should render correct cve list ', () => {
     formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
       cves: [
-        { key: 'cve-nodejs', url: 'url1' },
-        { key: 'cve-java', url: 'url2' },
-        { key: 'cve-python', url: 'url3' },
+        { id: 'cve-nodejs', url: 'http://url1.com' },
+        { id: 'cve-java', url: 'http://url2.com' },
+        { id: 'cve-python', url: 'http://url3.com' },
       ],
     });
     expect(screen.getByText('cve-nodejs')).toBeInTheDocument();
@@ -179,9 +179,9 @@ describe('AddIssueSection for CVEs', () => {
   it('should filter cves list ', async () => {
     formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
       cves: [
-        { key: 'cve-nodejs', url: 'url1' },
-        { key: 'cve-java', url: 'url2' },
-        { key: 'cve-python', url: 'url3' },
+        { id: 'cve-nodejs', url: 'http://url1.com' },
+        { id: 'cve-java', url: 'http://url2.com' },
+        { id: 'cve-python', url: 'http://url3.com' },
       ],
     });
     const tableBody = screen.getByTestId('issue-table-body');
