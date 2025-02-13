@@ -11,11 +11,11 @@ import {
   act,
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
-import * as NamespaceUtils from '../components/Namespace/namespace-context';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as WorkspaceUtils from '../components/Workspace/workspace-context';
 import * as ApplicationHook from '../hooks/useApplications';
 import * as k8s from '../k8s';
+import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
 
 export function createTestQueryClient() {
   return new QueryClient({
@@ -223,6 +223,9 @@ export const createReactRouterMock = (name): jest.Mock => {
   return mockFn;
 };
 
+/**
+ * @deprecated use [namespace-mock](../unit-test-utils/mock-namespace.ts)
+ */
 export const createUseWorkspaceInfoMock = (
   initialValue: Record<string, string> = {},
 ): jest.Mock => {
@@ -251,6 +254,9 @@ export const createUseApplicationMock = (
   return mockFn;
 };
 
+/**
+ * @deprecated use {@link WithTestNamespaceContext}
+ */
 export const WithTestWorkspaceContext =
   (children, data?: WorkspaceUtils.WorkspaceContextData) => () => (
     <WorkspaceUtils.WorkspaceContext.Provider
@@ -269,7 +275,7 @@ export const WithTestWorkspaceContext =
   );
 
 export const WithTestNamespaceContext =
-  (children, data?: WorkspaceUtils.WorkspaceContextData) => () => (
+  (children, data?: NamespaceUtils.NamespaceContextData) => () => (
     <NamespaceUtils.NamespaceContext.Provider
       value={{
         namespace: 'test-ws',
