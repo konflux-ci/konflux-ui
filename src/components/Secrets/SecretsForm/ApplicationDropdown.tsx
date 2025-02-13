@@ -2,7 +2,7 @@ import React from 'react';
 import { useField } from 'formik';
 import { useApplications } from '../../../hooks/useApplications';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
+import { useNamespace } from '../../../shared/providers/Namespace';
 
 type ApplicationDropdownProps = Omit<
   React.ComponentProps<typeof DropdownField>,

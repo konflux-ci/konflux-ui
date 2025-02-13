@@ -7,12 +7,12 @@ import { Base64 } from 'js-base64';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { BuildTimeSecret, SecretType } from '../../../types';
 import { AccessReviewResources } from '../../../types/rbac';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { SecretModalLauncher } from '../../Secrets/SecretModalLauncher';
 import { ImportFormValues } from '../type';
 
