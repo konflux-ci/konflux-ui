@@ -8,11 +8,15 @@ import {
   MenuGroup,
   MenuItem,
   MenuList,
+  MenuSearch,
+  MenuSearchInput,
   MenuToggle,
   SearchInput,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten } from 'lodash-es';
+
+import './ComponentRelationshipDropdowns.scss';
 
 type SelectComponentsDropdownProps = {
   children: React.ReactNode | React.ReactNode[];
@@ -143,14 +147,21 @@ export const MultiSelectComponentsDropdown: React.FC<MultiSelectComponentsDropdo
       onSelect={handleSelect}
       badgeValue={selectedComponents.length || null}
     >
-      <SearchInput
-        type="text"
-        value={searchQuery}
-        onChange={(_, searchValue) => setSearchQuery(searchValue)}
-        placeholder="Search components..."
-        aria-label="Search components"
-      />
-      <MenuGroup>
+      <Menu>
+        <MenuSearch>
+          <MenuSearchInput>
+            <SearchInput
+              type="text"
+              value={searchQuery}
+              onChange={(_, searchValue) => setSearchQuery(searchValue)}
+              placeholder="Search components..."
+              aria-label="Search components"
+            />
+          </MenuSearchInput>
+        </MenuSearch>
+      </Menu>
+      <Divider component="li" />
+      <MenuGroup className="menugroup">
         <MenuList>
           <MenuItem hasCheckbox itemId="select-all" isSelected={selectAll}>
             Select all
@@ -230,13 +241,20 @@ export const SingleSelectComponentDropdown: React.FC<SingleSelectComponentDropdo
       onSelect={handleSelect}
       closeOnSelect
     >
-      <SearchInput
-        type="text"
-        value={searchQuery}
-        onChange={(_, searchValue) => setSearchQuery(searchValue)}
-        placeholder="Search components..."
-        aria-label="Search components"
-      />
+      <Menu>
+        <MenuSearch>
+          <MenuSearchInput>
+            <SearchInput
+              type="text"
+              value={searchQuery}
+              onChange={(_, searchValue) => setSearchQuery(searchValue)}
+              placeholder="Search components..."
+              aria-label="Search components"
+            />
+          </MenuSearchInput>
+        </MenuSearch>
+      </Menu>
+      <Divider component="li" />
       <MenuList>
         {filteredComponents.map((component) => (
           <MenuItem
