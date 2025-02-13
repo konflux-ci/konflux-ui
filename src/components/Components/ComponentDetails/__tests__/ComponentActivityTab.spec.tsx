@@ -1,10 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import {
   createK8sWatchResourceMock,
   createUseApplicationMock,
-  createUseNamespaceMock,
   routerRenderer,
 } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
@@ -39,7 +39,7 @@ const useParamsMock = useParams as jest.Mock;
 describe('ComponentActivityTab', () => {
   let navigateMock: jest.Mock;
 
-  createUseNamespaceMock('test-ns');
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     watchResourceMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);

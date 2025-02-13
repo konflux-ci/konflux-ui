@@ -2,9 +2,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent } from '../../../../hooks/useComponents';
 import { PACState } from '../../../../hooks/usePACState';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import {
   createK8sWatchResourceMock,
-  createUseNamespaceMock,
   renderWithQueryClientAndRouter,
   WithTestWorkspaceContext,
 } from '../../../../utils/test-utils';
@@ -63,7 +63,7 @@ describe('ComponentDetailsView', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
 
-  createUseNamespaceMock('test-ns');
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useComponentMock.mockReturnValue([mockComponent, true]);

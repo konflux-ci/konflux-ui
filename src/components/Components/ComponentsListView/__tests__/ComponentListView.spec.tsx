@@ -2,11 +2,8 @@ import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import { PACState } from '../../../../hooks/usePACState';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../../models';
-import {
-  createK8sWatchResourceMock,
-  createUseApplicationMock,
-  createUseNamespaceMock,
-} from '../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../../../utils/test-utils';
 import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
 import ComponentListView from '../ComponentListView';
@@ -94,7 +91,7 @@ describe('ComponentListViewPage', () => {
     paramValues = {};
   });
 
-  createUseNamespaceMock('test-ns');
+  mockUseNamespaceHook('test-ns');
 
   it('should render skeleton if data is not loaded', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false]);
