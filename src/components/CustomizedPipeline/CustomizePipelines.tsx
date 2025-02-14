@@ -295,7 +295,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
       <ModalBoxBody>
         <>
           <TextContent
-            className="pf-v5-u-text-align-center pf-v5-u-pt-lg"
+            className="pf-v5-u-pt-lg"
             style={{ visibility: allLoading ? 'hidden' : undefined, textAlign: 'center' }}
           >
             <Text component={TextVariants.p}>
