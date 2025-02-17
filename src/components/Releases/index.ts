@@ -1,15 +1,15 @@
 import { k8sQueryGetResource, K8sQueryListResourceItems } from '../../k8s';
 import { ReleaseModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
+import { getLastUsedNamespace } from '../../shared/providers/Namespace/utils';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
-import { getNamespaceUsingWorspaceFromQueryCache } from '../Workspace/utils';
 
 export const releaseListViewTabLoader = createLoaderWithAccessCheck(
-  async ({ params }) => {
-    const ns = await getNamespaceUsingWorspaceFromQueryCache(params[RouterParams.workspaceName]);
+  async () => {
+    const ns = getLastUsedNamespace();
     return K8sQueryListResourceItems({
       model: ReleaseModel,
-      queryOptions: { ns, ws: params[RouterParams.workspaceName] },
+      queryOptions: { ns },
     });
   },
   { model: ReleaseModel, verb: 'list' },
@@ -17,12 +17,11 @@ export const releaseListViewTabLoader = createLoaderWithAccessCheck(
 
 export const releaseDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
-    const ns = await getNamespaceUsingWorspaceFromQueryCache(params[RouterParams.workspaceName]);
+    const ns = getLastUsedNamespace();
     return k8sQueryGetResource({
       model: ReleaseModel,
       queryOptions: {
         ns,
-        ws: params[RouterParams.workspaceName],
         name: params[RouterParams.releaseName],
       },
     });
