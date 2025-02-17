@@ -3,9 +3,9 @@ import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelineru
 import { useComponents } from '../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTestScenarios';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import { Commit, ComponentKind, PipelineRunKind } from '../../../../types';
 import { pipelineRunStatus, runStatus } from '../../../../utils/pipeline-utils';
-import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import { DEFAULT_NODE_HEIGHT } from '../../../topology/const';
 import { getLabelWidth } from '../../../topology/utils';
 import {

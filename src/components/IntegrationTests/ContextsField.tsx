@@ -4,7 +4,7 @@ import { Bullseye, FormGroup, Spinner } from '@patternfly/react-core';
 import { FieldArray, useField, FieldArrayRenderProps } from 'formik';
 import { getFieldId } from '../../../src/shared/components/formik-fields/field-utils';
 import { useComponents } from '../../hooks/useComponents';
-import { useNamespace } from '../Namespace/useNamespaceInfo';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ContextSelectList } from './ContextSelectList';
 import {
   ContextOption,

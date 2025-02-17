@@ -19,13 +19,13 @@ import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import {
   createCommitObjectFromPLR,
   createRepoBranchURL,
   createRepoPullRequestURL,
 } from '../../../../utils/commits-utils';
 import { runStatus } from '../../../../utils/pipeline-utils';
-import { useNamespace } from '../../../Namespace/useNamespaceInfo';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { useCommitStatus } from '../../commit-status';

@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useNamespace } from '../components/Namespace/useNamespaceInfo';
 import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
+import { useNamespace } from '../shared/providers/Namespace';
 import { ComponentKind } from '../types';
 
 export const useComponent = (

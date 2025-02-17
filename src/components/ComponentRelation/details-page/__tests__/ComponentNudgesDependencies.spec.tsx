@@ -1,13 +1,10 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ComponentKind, NudgeStats } from '../../../../types';
-import { createUseNamespaceMock, routerRenderer } from '../../../../utils/test-utils';
+import { mockNamespaceHooks } from '../../../../unit-test-utils/mock-namespace';
+import { routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
 
-jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
-createUseNamespaceMock('test-ns');
+mockNamespaceHooks('useNamespace', 'test-ns');
 
 const mockComponent = {
   metadata: { name: 'component' },

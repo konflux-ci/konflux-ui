@@ -5,8 +5,8 @@ import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/exte
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
 import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { ComponentKind } from '../../../types';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import { ComponentRelationStatusIcon } from './ComponentRelationStatusIcon';
 
 import './ComponentNudges.scss';
@@ -64,7 +64,12 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
         {relatedComponents.map((comp, i) => (
           <li key={i} data-test="nudges-connector">
             <Link
-              to={`/workspaces/${namespace}/applications/${comp.spec?.application}/components/${comp.metadata.name}`}
+              //TODO: Fix this link
+              //to={`/workspaces/${namespace}/applications/${comp.spec?.application}/components/${comp.metadata.name}`}
+              to={APPLICATION_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: comp.spec?.application,
+              })}
               data-test={isNudges ? 'nudges-cmp-link' : 'nudged-by-cmp-link'}
             >
               {comp.metadata.name}

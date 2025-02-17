@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Formik, FormikHelpers } from 'formik';
 import { useAllComponents, useComponents } from '../../hooks/useComponents';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind } from '../../types';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { RawComponentProps, createRawModalLauncher } from '../modal/createModalLauncher';
-import { useNamespace } from '../Namespace/useNamespaceInfo';
 import {
   ConfirmCancelationComponentRelationModal,
   ConfirmSubmissionComponentRelationModal,

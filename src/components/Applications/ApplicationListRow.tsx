@@ -5,8 +5,8 @@ import { useComponents } from '../../hooks/useComponents';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
+import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ApplicationKind } from '../../types';
-import { useNamespace } from '../Namespace/useNamespaceInfo';
 import { useApplicationActions } from './application-actions';
 import { applicationTableColumnClasses } from './ApplicationListHeader';
 

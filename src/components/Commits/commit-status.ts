@@ -1,8 +1,8 @@
 import React from 'react';
 import { usePipelineRunsForCommit } from '../../hooks/usePipelineRuns';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { statuses } from '../../utils/commits-utils';
 import { pipelineRunStatus } from '../../utils/pipeline-utils';
-import { useNamespace } from '../Namespace/useNamespaceInfo';
 
 export const useCommitStatus = (
   application: string,

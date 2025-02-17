@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { difference, merge, uniq } from 'lodash-es';
-import { useNamespace } from '../components/Namespace/useNamespaceInfo';
 import { PipelineRunLabel } from '../consts/pipelinerun';
+import { useNamespace } from '../shared/providers/Namespace';
 import { TektonResourceLabel, TaskRunKind, TektonResultsRun, PipelineRunKind } from '../types';
 import { isTaskV1Beta1 } from '../utils/pipeline-utils';
 import { OR } from '../utils/tekton-results';

@@ -2,9 +2,9 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { useTaskRun } from '../../../hooks/usePipelineRuns';
 import { RouterParams } from '../../../routes/utils';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { TaskRunKind } from '../../../types';
 import { taskRunStatus } from '../../../utils/pipeline-utils';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import TaskRunLogs from '../../TaskRuns/TaskRunLogs';
 
 export type TaskRunLogProps = {

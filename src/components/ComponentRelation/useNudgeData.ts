@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useAllComponents, useComponents } from '../../hooks/useComponents';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind, NudgeStats } from '../../types';
-import { useNamespace } from '../Namespace/useNamespaceInfo';
 import { ComponentRelationNudgeType, ComponentRelationValue } from './type';
 
 export const useNudgeData = (application: string): [ComponentRelationValue[], boolean, unknown] => {

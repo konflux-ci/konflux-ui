@@ -2,8 +2,8 @@ import React from 'react';
 import { useField } from 'formik';
 import { useComponents } from '../../../hooks/useComponents';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { TargetDropdownDefaults } from '../../../types';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 
 type ComponentDropdownProps = Omit<React.ComponentProps<typeof DropdownField>, 'items' | 'label'>;
 
