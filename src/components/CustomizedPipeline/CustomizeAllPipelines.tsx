@@ -59,7 +59,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
               component={(props) => (
                 <Link
                   {...props}
-                  to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+                  to={APPLICATION_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName })}
                 />
               )}
               isDisabled={!canCreateComponent}
