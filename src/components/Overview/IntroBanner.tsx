@@ -19,9 +19,6 @@ import { useNamespace } from '../../shared/providers/Namespace';
 import { AccessReviewResources } from '../../types';
 import { useAccessReviewForModels } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-import { SignupStatus } from '../SignUp/signup-utils';
-import SignupButton from '../SignUp/SignupButton';
-import { useSignupStatus } from '../SignUp/useSignupStatus';
 
 import './IntroBanner.scss';
 
@@ -34,11 +31,7 @@ const IntroBanner: React.FC = () => {
   const namespace = useNamespace();
   const [canCreate] = useAccessReviewForModels(accessReviewResources);
 
-  const signupStatus = useSignupStatus();
-
-  const [applications, applicationsLoaded] = useApplications(
-    signupStatus === SignupStatus.SignedUp && namespace ? namespace : null,
-  );
+  const [applications, applicationsLoaded] = useApplications(namespace ? namespace : null);
   return (
     <Grid className="intro-banner">
       <GridItem span={8}>
@@ -55,7 +48,7 @@ const IntroBanner: React.FC = () => {
             </Text>
           </CardBody>
           <CardBody>
-            {signupStatus === SignupStatus.SignedUp && (
+            {
               <>
                 <ButtonWithAccessTooltip
                   className="intro-banner__cta"
@@ -90,8 +83,8 @@ const IntroBanner: React.FC = () => {
                   </Button>
                 ) : undefined}
               </>
-            )}
-            {signupStatus === SignupStatus.PendingApproval && (
+            }
+            {
               <Alert
                 variant="info"
                 isInline
@@ -114,8 +107,7 @@ const IntroBanner: React.FC = () => {
                   channel.
                 </p>
               </Alert>
-            )}
-            {signupStatus === SignupStatus.NotSignedUp && <SignupButton />}
+            }
           </CardBody>
         </Card>
       </GridItem>
