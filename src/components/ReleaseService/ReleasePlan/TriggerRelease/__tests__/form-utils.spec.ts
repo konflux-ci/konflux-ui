@@ -19,7 +19,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
     expect(result.spec).toEqual(
       expect.objectContaining({
@@ -41,7 +40,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
     expect(result.spec.data.releaseNotes).toEqual(
       expect.objectContaining({
@@ -69,7 +67,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
 
     const advisoryIssues = result.spec.data.releaseNotes.fixed;
@@ -106,7 +103,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
 
     const advisoryCVE = result.spec.data.releaseNotes.cves;

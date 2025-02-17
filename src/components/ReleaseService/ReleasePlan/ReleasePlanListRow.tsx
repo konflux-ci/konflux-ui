@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { Label, capitalize } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleasePlanKind, ReleasePlanLabel } from '../../../types/coreBuildService';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useReleasePlanActions } from './releaseplan-actions';
 import { releasesPlanTableColumnClasses } from './ReleasePlanListHeader';
 
@@ -14,13 +15,16 @@ const ReleasePlanListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Relea
   obj,
 }) => {
   const actions = useReleasePlanActions(obj);
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   return (
     <>
       <TableData className={releasesPlanTableColumnClasses.name}>{obj.metadata.name}</TableData>
       <TableData className={releasesPlanTableColumnClasses.application}>
         <Link
-          to={`/workspaces/${workspace}/applications/${obj.spec.application}`}
+          to={APPLICATION_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.spec.application,
+          })}
           title={obj.spec.application}
         >
           {obj.spec.application}

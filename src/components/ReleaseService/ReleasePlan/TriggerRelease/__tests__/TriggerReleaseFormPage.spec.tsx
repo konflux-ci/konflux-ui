@@ -48,9 +48,7 @@ describe('TriggerReleaseFormPage', () => {
       true,
     ]);
     triggerReleasePlanMock.mockResolvedValue({ metadata: { name: 'newRelease' }, spec: {} });
-    namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns', {
-      workspace: 'test-ws',
-    });
+    namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns');
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Submit' })));
 
@@ -66,20 +64,17 @@ describe('TriggerReleaseFormPage', () => {
         topic: '',
       }),
       'test-ns',
-      'test-ws',
     );
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/applications/app1/releases/newRelease',
+      '/workspaces/test-ns/applications/app1/releases/newRelease',
     );
   });
 
   it('should navigate to release list on reset', async () => {
-    namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns', {
-      workspace: 'test-ws',
-    });
+    namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns');
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Reset' })));
 
-    expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ws/release');
+    expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ns/release');
   });
 });

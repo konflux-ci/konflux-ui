@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ReleasePlanModel } from '../../models';
+import { RELEASEPLAN_CREATE_PATH } from '../../routes/paths';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const breadcrumbs = useWorkspaceBreadcrumbs();
   const [canCreateReleasePlan] = useAccessReviewForModel(ReleasePlanModel, 'create');
   return (
@@ -23,7 +24,7 @@ export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => 
             id: 'create-release-plan',
             label: 'Create release plan',
             component: (
-              <Link to={`/workspaces/${workspace}/release/release-plan/create`}>
+              <Link to={RELEASEPLAN_CREATE_PATH.createPath({ workspaceName: namespace })}>
                 Create release plan
               </Link>
             ),
