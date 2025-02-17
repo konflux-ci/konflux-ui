@@ -10,7 +10,7 @@ import {
 } from '@patternfly/react-core';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
-import { IMPORT_PATH } from '../../routes/paths';
+import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { ComponentKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
@@ -59,7 +59,10 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
               component={(props) => (
                 <Link
                   {...props}
-                  to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+                  to={APPLICATION_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName,
+                  })}
                 />
               )}
               isDisabled={!canCreateComponent}
