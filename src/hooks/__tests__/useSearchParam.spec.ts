@@ -183,4 +183,15 @@ describe('useSearchParamBatch', () => {
     expect(params.has('foo')).toBe(false);
     expect(params.has('eek')).toBe(true);
   });
+
+  it('should unset search param when set to empty', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [, batchSet] = result.current;
+    params.set('test', 'bar');
+    params.set('foo', 'baz');
+
+    batchSet({ test: '', foo: 'qux' });
+    expect(params.has('test')).toBe(false);
+    expect(params.get('foo')).toBe('qux');
+  });
 });

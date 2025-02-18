@@ -107,7 +107,12 @@ export const useSearchParamBatch = (
       const newSearchParams = new URLSearchParams(searchParams);
       Object.entries(newValues).forEach(([name, newValue]) => {
         if (managedParams.includes(name) && newSearchParams.get(name) !== newValue) {
-          newSearchParams.set(name, newValue);
+          // Unset the search param if the new value is empty
+          if (!newValue) {
+            newSearchParams.delete(name);
+          } else {
+            newSearchParams.set(name, newValue);
+          }
         }
       });
 
