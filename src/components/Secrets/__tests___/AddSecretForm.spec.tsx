@@ -110,7 +110,7 @@ describe('AddSecretForm', () => {
     });
   });
 
-  it('should validate and show message for username not entered', async () => {
+  it('should validate and show message for password not entered', async () => {
     useApplicationsMock.mockReturnValue([[], false]);
 
     render(<AddSecretForm />);
@@ -120,8 +120,8 @@ describe('AddSecretForm', () => {
 
     fireEvent.click(screen.getByTestId('dropdown-toggle'));
     fireEvent.click(screen.getByText('Source secret'));
-    fireEvent.input(screen.getByTestId('secret-source-username'), { target: { value: '' } });
-    fireEvent.blur(screen.getByTestId('secret-source-username'));
+    fireEvent.input(screen.getByTestId('secret-source-password'), { target: { value: '' } });
+    fireEvent.blur(screen.getByTestId('secret-source-password'));
 
     await waitFor(() => {
       screen.getByText('Required');

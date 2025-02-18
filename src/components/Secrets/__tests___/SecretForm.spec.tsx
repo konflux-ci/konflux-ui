@@ -1,4 +1,4 @@
-import { configure, fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import KeyValueFileInputField, {
   InternalKeyValueFileInputField,
 } from '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
@@ -9,8 +9,6 @@ import {
   secretFormValuesForSourceSecret,
 } from '../__data__/mock-secrets';
 import SecretForm from '../SecretForm';
-
-configure({ testIdAttribute: 'data-test' });
 
 jest.mock(
   '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField',

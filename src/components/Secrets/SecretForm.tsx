@@ -42,6 +42,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
       .filter((secret) => secret.type !== K8sSecretType[SecretTypeDropdownLabel.image])
       .map((secret) => ({ value: secret.name, lable: secret.name }));
   }, [currentType, existingSecrets]);
+
   const optionsValues = useMemo(() => {
     return existingSecrets
       .filter((secret) => secret.type === K8sSecretType[currentType])
@@ -119,7 +120,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
         }}
         onSelect={(_, value: string) => {
           if (isPartnerTask(value, optionsValues)) {
-            void setFieldValue('keyValues', [
+            void setFieldValue('opaque.keyValues', [
               ...values.opaque.keyValues.filter(
                 (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
               ),
