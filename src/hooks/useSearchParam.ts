@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useDeepCompareMemoize } from '../shared';
 
 /**
  * Manage search param state reactively with react-router.
@@ -58,7 +59,7 @@ export const useSearchParamBatch = (
   (newValues: Record<string, string>) => void,
   (params?: string | string[]) => void,
 ] => {
-  const [managedParams] = React.useState(names);
+  const managedParams = useDeepCompareMemoize(names);
   const [searchParams, setSearchParams] = useSearchParams();
 
   /**
