@@ -1,8 +1,7 @@
 import { omit } from 'lodash-es';
-import { THUMBNAIL_ANNOTATION } from '../../components/ApplicationThumbnail';
 import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
-import { commonFetch } from '../../k8s/fetch';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
+import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../types';
@@ -15,14 +14,6 @@ import {
   addSecret,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
-
-jest.mock('../../k8s/fetch', () => {
-  const actual = jest.requireActual('../../k8s/fetch');
-  return {
-    ...actual,
-    commonFetch: jest.fn(),
-  };
-});
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(() => Promise.resolve()),
@@ -38,13 +29,7 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
 });
 
 const createResourceMock = k8sCreateResource as jest.Mock;
-const commonFetchMock = commonFetch as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
-
-jest.mock('../../components/ApplicationThumbnail', () => {
-  const actual = jest.requireActual('../../components/ApplicationThumbnail');
-  return { ...actual, getRandomSvgNumber: () => 7 };
-});
 
 const mockApplicationRequestData = {
   apiVersion: `${ApplicationModel.apiGroup}/${ApplicationModel.apiVersion}`,
@@ -52,9 +37,6 @@ const mockApplicationRequestData = {
   metadata: {
     name: 'test-application',
     namespace: 'test-ns',
-    annotations: {
-      [THUMBNAIL_ANNOTATION]: '7',
-    },
   },
   spec: {
     displayName: 'test-application',
@@ -168,42 +150,39 @@ describe('Create Utils', () => {
     mockWindowFetch();
   });
   it('Should call k8s create util with correct model and data for application', async () => {
-    await createApplication('test-application', 'test-ns', 'test-ws');
+    await createApplication('test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ApplicationModel,
       queryOptions: {
         name: 'test-application',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockApplicationRequestData,
     });
   });
 
   it('Should call k8s create util with correct model and data for component', async () => {
-    await createComponent(mockComponent, 'test-application', 'test-ns', 'test-ws');
+    await createComponent(mockComponent, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentData,
     });
   });
 
   it('Should call k8s create util with correct model and data for component with devfile', async () => {
-    await createComponent(mockComponentWithDevfile, 'test-application', 'test-ns', 'test-ws');
+    await createComponent(mockComponentWithDevfile, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithDevfile,
     });
@@ -214,19 +193,13 @@ describe('Create Utils', () => {
       ...mockComponent,
       targetPort: 8080,
     };
-    await createComponent(
-      mockComponentDataWithTargetPort,
-      'test-application',
-      'test-ns',
-      'test-ws',
-    );
+    await createComponent(mockComponentDataWithTargetPort, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: {
         ...mockComponentData,
@@ -243,19 +216,13 @@ describe('Create Utils', () => {
       ...mockComponent,
       targetPort: undefined,
     };
-    await createComponent(
-      mockComponentDataWithoutTargetPort,
-      'test-application',
-      'test-ns',
-      'test-ws',
-    );
+    await createComponent(mockComponentDataWithoutTargetPort, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentData,
     });
@@ -266,7 +233,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       null,
@@ -279,7 +246,6 @@ describe('Create Utils', () => {
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithPAC,
     });
@@ -290,7 +256,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithDevfile,
@@ -302,7 +268,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithDevfile,
     });
@@ -313,7 +278,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithoutAnnotation,
@@ -325,7 +290,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithoutAnnotation,
     });
@@ -336,7 +300,6 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
       undefined,
       false,
       mockComponentDataWithPAC,
@@ -348,7 +311,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithPAC,
     });
@@ -359,7 +321,7 @@ describe('Create Utils', () => {
       mockComponent,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       mockComponentData,
@@ -387,7 +349,7 @@ describe('Create Utils', () => {
       updatedComponentWithoutEnv,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       oldComponentSpecWithEnv,
@@ -397,7 +359,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: expect.objectContaining({
         spec: expect.objectContaining({ env: undefined }),
@@ -423,7 +384,7 @@ describe('Create Utils', () => {
       updatedComponentWithoutEnv,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       oldComponentSpecWithEnv,
@@ -433,7 +394,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: expect.objectContaining({
         spec: expect.objectContaining({
@@ -461,7 +421,6 @@ describe('Create Utils', () => {
 
   it('should call the create secret api with dryRun query string params', async () => {
     createResourceMock.mockClear().mockImplementationOnce((props) => Promise.resolve(props));
-    commonFetchMock.mockClear().mockImplementation((props) => Promise.resolve(props));
 
     await createSecret(
       {
@@ -469,24 +428,25 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.opaque,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       true,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets?dryRun=All',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"kind":"Secret"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns', queryParams: { dryRun: 'All' } },
+        resource: expect.objectContaining({ type: 'Opaque' }),
       }),
     );
   });
 
   it('should create a key/value secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
@@ -494,24 +454,25 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.opaque,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"Opaque"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'Opaque' }),
       }),
     );
   });
 
   it('should create a Image pull secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
@@ -519,23 +480,24 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.image,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"kubernetes.io/dockerconfigjson"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/dockerconfigjson' }),
       }),
     );
   });
 
   it('should create partner task secret', async () => {
-    commonFetchMock.mockClear();
+    createResourceMock.mockClear();
     createResourceMock
       .mockClear()
       .mockImplementationOnce((props) => Promise.resolve(props))
@@ -547,22 +509,23 @@ describe('Create Utils', () => {
         type: SecretTypeDropdownLabel.opaque,
         keyValues: [{ key: 'token', value: 'my-token-data' }],
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalled();
+    expect(createResourceMock).toHaveBeenCalled();
   });
   it('should add secret', async () => {
-    commonFetchMock.mockClear();
+    createResourceMock.mockClear();
     await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
-    expect(commonFetchMock).toHaveBeenCalled();
+    expect(createResourceMock).toHaveBeenCalled();
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"kubernetes.io/dockerconfigjson"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/dockerconfigjson' }),
       }),
     );
   });

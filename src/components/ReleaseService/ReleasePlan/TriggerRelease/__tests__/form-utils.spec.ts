@@ -62,9 +62,9 @@ describe('triggerReleasePlan', () => {
         topic: 'topic of release',
         references: 'references',
         issues: [
-          { id: 'RHTAP-5560', summary: 'summary1', url: 'test-url' },
-          { id: 'RHTAP-5561', summary: 'summary2', url: 'test-url2' },
-          { id: 'RHTAP-5562', summary: 'summary3', url: 'test-url2' },
+          { id: 'RHTAP-5560', summary: 'summary1', source: 'test-url' },
+          { id: 'RHTAP-5561', summary: 'summary2', source: 'test-url2' },
+          { id: 'RHTAP-5562', summary: 'summary3', source: 'test-url2' },
         ],
         labels: [],
       },

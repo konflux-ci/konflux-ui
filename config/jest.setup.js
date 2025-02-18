@@ -24,6 +24,21 @@ jest.mock('../src/components/Workspace/useWorkspaceInfo', () => ({
   ...jest.requireActual('../src/components/Workspace/useWorkspaceInfo'),
 }));
 
+jest.mock('../src/shared/providers/Namespace/useNamespaceInfo', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/shared/providers/Namespace/useNamespaceInfo'),
+}));
+
+jest.mock('../src/utils/rbac', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/utils/rbac'),
+}));
+
+jest.mock('../src/hooks/useApplications', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/hooks/useApplications'),
+}));
+
 afterAll(() => {
   jest.clearAllMocks();
 });

@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useBombinoUrl } from '../../hooks/useUIInstance';
+import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { AnalyticsProperties, TrackEvents, useTrackEvent } from '../../utils/analytics';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ApplicationSection from './ApplicationSection/ApplicationSection';
 import { ComponentSection } from './ComponentSection/ComponentSection';
 import GitImportActions from './GitImportActions';
@@ -19,7 +20,7 @@ import './GitImportForm.scss';
 export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {
   const track = useTrackEvent();
   const navigate = useNavigate();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const bombinoUrl = useBombinoUrl();
   const initialValues: ImportFormValues = {
     application: applicationName || '',
@@ -41,15 +42,15 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
 
   const handleSubmit = React.useCallback(
     (values: ImportFormValues, formikHelpers: FormikHelpers<ImportFormValues>) => {
-      track(TrackEvents.ButtonClicked, { link_name: 'import-submit', workspace });
+      track(TrackEvents.ButtonClicked, { link_name: 'import-submit', namespace });
 
-      createResources(values, namespace, workspace, bombinoUrl)
+      createResources(values, namespace, bombinoUrl)
         .then(({ applicationName: appName, application, component }) => {
           if (application) {
             track('Application Create', {
               app_name: appName,
               app_id: application.metadata.uid,
-              id: workspace,
+              id: namespace,
             });
           }
 
@@ -57,14 +58,19 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
             track('Component Create', {
               component_name: component.metadata.name,
               component_id: component.metadata.uid,
-              workspace,
+              namespace,
               git_url: component.spec.source.git.url,
               git_reference: component.spec.source.git.revision,
               context_dir: component.spec.source.git.context,
             });
           }
 
-          navigate(`/workspaces/${workspace}/applications/${appName}`);
+          navigate(
+            APPLICATION_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: appName,
+            }),
+          );
         })
         .catch((error) => {
           // eslint-disable-next-line no-console
@@ -74,13 +80,13 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
           formikHelpers.setStatus({ submitError: error.message });
         });
     },
-    [bombinoUrl, namespace, navigate, track, workspace],
+    [bombinoUrl, namespace, navigate, track],
   );
 
   const handleReset = React.useCallback(() => {
-    track(TrackEvents.ButtonClicked, { link_name: 'import-leave', workspace });
+    track(TrackEvents.ButtonClicked, { link_name: 'import-leave', namespace });
     navigate(-1);
-  }, [navigate, track, workspace]);
+  }, [navigate, track, namespace]);
 
   return (
     <Formik<ImportFormValues>

@@ -2,7 +2,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
-import { applicationPageLoader, ApplicationListView } from '../components/Applications';
 import {
   CommitDetailsView,
   CommitOverviewTab,
@@ -16,7 +15,6 @@ import {
 } from '../components/Components/ComponentDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
-import { importPageLoader, ImportForm } from '../components/ImportForm';
 import {
   integrationDetailsPageLoader,
   IntegrationTestDetailsView,
@@ -86,19 +84,28 @@ import {
 import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
+import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
+import applicationRoutes from './page-routes/application';
+import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    loader: workspaceLoader,
+    loader: async (params) => {
+      // [TODO]: change this once all pages use the namespace loader.
+      void namespaceLoader(params);
+      return await workspaceLoader(params);
+    },
     errorElement: <RouteErrorBoundry />,
     element: (
       <WorkspaceProvider>
-        <ModalProvider>
-          <AppRoot />
-        </ModalProvider>
+        <NamespaceProvider>
+          <ModalProvider>
+            <AppRoot />
+          </ModalProvider>
+        </NamespaceProvider>
       </WorkspaceProvider>
     ),
     children: [
@@ -106,21 +113,12 @@ export const router = createBrowserRouter([
         index: true,
         element: <Overview />,
       },
-      {
-        path: `/workspaces/:${RouterParams.workspaceName}/import`,
-        loader: importPageLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ImportForm />,
-      },
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications`,
-        loader: applicationPageLoader,
-        element: <ApplicationListView />,
-        errorElement: <RouteErrorBoundry />,
-      },
+      ...applicationRoutes,
+      ...workspaceRoutes,
+
       /* Application details */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
         element: <ApplicationDetails />,
         errorElement: <RouteErrorBoundry />,
         children: [
@@ -158,7 +156,7 @@ export const router = createBrowserRouter([
       },
       /* Component details route */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/components/:${RouterParams.componentName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/components/:${RouterParams.componentName}`,
         errorElement: <RouteErrorBoundry />,
         loader: componentDetailsViewLoader,
         element: <ComponentDetailsViewLayout />,
@@ -180,7 +178,7 @@ export const router = createBrowserRouter([
       /* IntegrationTestScenario routes */
       {
         // create form
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
         loader: integrationTestCreateFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestCreateForm />,
@@ -188,7 +186,7 @@ export const router = createBrowserRouter([
       /* Integration test edit form */
       {
         // edit form
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
         loader: integrationTestEditFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestEditForm />,
@@ -196,7 +194,7 @@ export const router = createBrowserRouter([
       /* Integration tests Details routes */
       {
         // details page
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
         loader: integrationDetailsPageLoader,
         errorElement: <RouteErrorBoundry />,
         element: <IntegrationTestDetailsView />,
@@ -214,7 +212,7 @@ export const router = createBrowserRouter([
       /* Release routes */
       {
         // details page
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/releases/:${RouterParams.releaseName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/releases/:${RouterParams.releaseName}`,
         loader: releaseDetailsViewLoader,
         errorElement: <RouteErrorBoundry />,
         element: <ReleaseDetailsLayout />,
@@ -227,7 +225,7 @@ export const router = createBrowserRouter([
       },
       /* Pipeline Run details routes */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
         errorElement: <RouteErrorBoundry />,
         loader: pipelineRunDetailsViewLoader,
         element: <PipelineRunDetailsLayout />,
@@ -240,7 +238,7 @@ export const router = createBrowserRouter([
       },
       /* Task Run details routes */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
         errorElement: <RouteErrorBoundry />,
         loader: taskRunDetailsViewLoader,
         element: <TaskRunDetailsViewLayout />,
@@ -252,7 +250,7 @@ export const router = createBrowserRouter([
       },
       /* Commit list view */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
         errorElement: <RouteErrorBoundry />,
         element: <CommitDetailsView />,
         children: [
@@ -262,41 +260,41 @@ export const router = createBrowserRouter([
       },
       /* Secrets create form */
       {
-        path: `/workspaces/:workspaceName/secrets/create`,
+        path: `workspaces/:workspaceName/secrets/create`,
         element: <AddSecretForm />,
         errorElement: <RouteErrorBoundry />,
       },
       /* Secrets list view */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/secrets`,
+        path: `workspaces/:${RouterParams.workspaceName}/secrets`,
         loader: secretListViewLoader,
         element: <SecretsListPage />,
         errorElement: <RouteErrorBoundry />,
       },
       /* Trigger Release plan */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
         loader: releasePlanTriggerLoader,
         errorElement: <RouteErrorBoundry />,
         element: <TriggerReleaseFormPage />,
       },
       /* Create Release plan */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
         loader: releasePlanEditFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <ReleasePlanEditFormPage />,
       },
       /* Edit Release plan */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
+        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
         loader: releasePlanCreateFormLoader,
         errorElement: <RouteErrorBoundry />,
         element: <ReleasePlanCreateFormPage />,
       },
       /* Release service list view */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/release`,
+        path: `workspaces/:${RouterParams.workspaceName}/release`,
         element: <ReleaseService />,
         errorElement: <RouteErrorBoundry />,
         children: [
@@ -322,7 +320,7 @@ export const router = createBrowserRouter([
       },
       /* Snapshot Details view */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
         loader: snapshotDetailsViewLoader,
         element: <SnapshotDetailsView />,
         errorElement: <RouteErrorBoundry />,
@@ -341,18 +339,18 @@ export const router = createBrowserRouter([
       },
       /* User Acess routes */
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/access/grant`,
+        path: `workspaces/:${RouterParams.workspaceName}/access/grant`,
         loader: grantAccessPageLoader,
         element: <GrantAccessPage />,
         errorElement: <RouteErrorBoundry />,
       },
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
+        path: `workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
         element: <GrantAccessPage />,
         errorElement: <RouteErrorBoundry />,
       },
       {
-        path: `/workspaces/:${RouterParams.workspaceName}/access`,
+        path: `workspaces/:${RouterParams.workspaceName}/access`,
         element: <UserAccessListPage />,
         errorElement: <RouteErrorBoundry />,
         loader: userAccessListPageLoader,

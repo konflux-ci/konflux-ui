@@ -15,15 +15,15 @@ import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import SecretsList from './SecretsList';
 
 const SecretsListView: React.FC = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
-  const [secrets, secretsLoaded] = useSecrets(namespace, workspace);
+  const [secrets, secretsLoaded] = useSecrets(namespace);
   const [nameFilter, setNameFilter, unsetNameFilter] = useSearchParam('name', '');
   const [canCreateRemoteSecret] = useAccessReviewForModel(SecretModel, 'create');
 
@@ -35,18 +35,18 @@ const SecretsListView: React.FC = () => {
   const createSecretButton = React.useMemo(() => {
     return (
       <ButtonWithAccessTooltip
-        component={(props) => <Link {...props} to={`/workspaces/${workspace}/secrets/create`} />}
+        component={(props) => <Link {...props} to={`/workspaces/${namespace}/secrets/create`} />}
         isDisabled={!canCreateRemoteSecret}
         tooltip="You don't have access to create a secret"
         analytics={{
           link_name: 'add-secret',
-          workspace,
+          namespace,
         }}
       >
         Add secret
       </ButtonWithAccessTooltip>
     );
-  }, [canCreateRemoteSecret, workspace]);
+  }, [canCreateRemoteSecret, namespace]);
 
   const emptyState = (
     <AppEmptyState

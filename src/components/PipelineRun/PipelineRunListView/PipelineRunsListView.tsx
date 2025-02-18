@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useComponents } from '../../../hooks/useComponents';
+import { useApplication } from '../../../hooks/useApplications';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { HttpError } from '../../../k8s/error';
@@ -32,7 +32,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   customFilter,
 }) => {
   const { namespace, workspace } = useWorkspaceInfo();
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
   const {
     nameFilter,
     setNameFilter,
@@ -45,29 +45,25 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
-      componentsLoaded ? namespace : null,
+      applicationLoaded ? namespace : null,
       workspace,
       React.useMemo(
         () => ({
           selector: {
+            filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
+              ...(!nameFilter &&
+                componentName && {
+                  [PipelineRunLabel.COMPONENT]: componentName,
+                }),
             },
-            ...(!nameFilter && {
-              matchExpressions: [
-                {
-                  key: `${PipelineRunLabel.COMPONENT}`,
-                  operator: 'In',
-                  values: componentName
-                    ? [componentName]
-                    : components?.map((c) => c.metadata?.name),
-                },
-              ],
+            ...(nameFilter && {
+              filterByName: nameFilter.trim().toLowerCase(),
             }),
-            ...(nameFilter && { filterByName: nameFilter.trim().toLowerCase() }),
           },
         }),
-        [applicationName, componentName, components, nameFilter],
+        [applicationName, componentName, application, nameFilter],
       ),
     );
 

@@ -53,7 +53,7 @@ describe('UserAccessFormPage', () => {
       workspace: 'test-ws',
       workspaceResource: {} as Workspace,
     });
-    expect(screen.getByText('Grant access to workspace, test-ws')).toBeVisible();
+    expect(screen.getByText('Grant access to namespace, test-ws')).toBeVisible();
     await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user1' } }));
     // act(() => jest.runAllTimers());
     await act(() => fireEvent.click(screen.getByText('Select role')));
@@ -73,7 +73,7 @@ describe('UserAccessFormPage', () => {
       workspace: 'test-ws',
       workspaceResource: {} as Workspace,
     });
-    expect(screen.getByText('Edit access to workspace, test-ws')).toBeVisible();
+    expect(screen.getByText('Edit access to namespace, test-ws')).toBeVisible();
     expect(screen.getByRole('searchbox')).toBeDisabled();
     await act(() => fireEvent.click(screen.getByText('Select role')));
     await act(() => fireEvent.click(screen.getByText('maintainer')));
