@@ -3,7 +3,6 @@ import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useComponents } from '../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
-import { usePipelineRunsFilter } from '../../../hooks/usePipelineRunsFilter';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { HttpError } from '../../../k8s/error';
 import { Table } from '../../../shared';
@@ -13,7 +12,9 @@ import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
+import PipelineRunsFilterToolbar from '../../Filter/PipelineRunsFilterToolbar';
 import { createFilterObj } from '../../Filter/utils/pipelineruns-filter-utils';
+import { PipelineRunsFilterContext } from '../../Filter/utils/PipelineRunsFilterContext';
 import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
@@ -33,11 +34,14 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const { namespace, workspace } = useWorkspaceInfo();
   const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
   const {
-    filterPLRs,
-    filterState: { nameFilter, onLoadName, typeFilters, statusFilters },
-    filterToolbar,
-    onClearFilters,
-  } = usePipelineRunsFilter();
+    nameFilter,
+    setNameFilter,
+    statusFilter,
+    setStatusFilter,
+    typeFilter,
+    setTypeFilter,
+    clearAllFilters,
+  } = React.useContext(PipelineRunsFilterContext);
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
@@ -49,7 +53,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
             },
-            ...(!onLoadName && {
+            ...(!nameFilter && {
               matchExpressions: [
                 {
                   key: `${PipelineRunLabel.COMPONENT}`,
@@ -60,10 +64,10 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
                 },
               ],
             }),
-            ...(onLoadName && { filterByName: onLoadName.trim().toLowerCase() }),
+            ...(nameFilter && { filterByName: nameFilter.trim().toLowerCase() }),
           },
         }),
-        [applicationName, componentName, components, onLoadName],
+        [applicationName, componentName, components, nameFilter],
       ),
     );
 
@@ -84,13 +88,27 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   );
 
   const filteredPLRs = React.useMemo(
-    () => filterPLRs(pipelineRuns).filter((plr) => !customFilter || customFilter(plr)),
-    [filterPLRs, pipelineRuns, customFilter],
+    () =>
+      pipelineRuns
+        .filter((plr) => {
+          const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+          return (
+            (!nameFilter ||
+              plr.metadata.name.indexOf(nameFilter) >= 0 ||
+              plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(
+                nameFilter.trim().toLowerCase(),
+              ) >= 0) &&
+            (!statusFilter.length || statusFilter.includes(pipelineRunStatus(plr))) &&
+            (!typeFilter.length || typeFilter.includes(runType))
+          );
+        })
+        .filter((plr) => !customFilter || customFilter(plr)),
+    [pipelineRuns, customFilter, nameFilter, statusFilter, typeFilter],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={clearAllFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
@@ -104,7 +122,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }
 
-  const isFiltered = nameFilter.length > 0 || typeFilters.length > 0 || statusFilters.length > 0;
+  const isFiltered = nameFilter.length > 0 || typeFilter.length > 0 || statusFilter.length > 0;
 
   return (
     <>
@@ -113,9 +131,19 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         unfilteredData={pipelineRuns}
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         Toolbar={
-          !isFiltered && pipelineRuns.length === 0
-            ? null
-            : filterToolbar(statusFilterObj, typeFilterObj)
+          !isFiltered && pipelineRuns.length === 0 ? null : (
+            <PipelineRunsFilterToolbar
+              nameFilter={nameFilter}
+              setNameFilter={setNameFilter}
+              statusFilters={statusFilter}
+              setStatusFilters={setStatusFilter}
+              typeFilters={typeFilter}
+              setTypeFilters={setTypeFilter}
+              clearAllFilters={clearAllFilters}
+              statusOptions={statusFilterObj}
+              typeOptions={typeFilterObj}
+            />
+          )
         }
         aria-label="Pipeline run List"
         customData={vulnerabilities}
