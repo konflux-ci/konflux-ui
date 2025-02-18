@@ -1,10 +1,14 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ContextMenuItem, ContextSwitcher } from '../ContextSwitcher';
+import { ContextMenuItem, ContextSwitcher } from '../../shared/components';
 import { useWorkspaceInfo } from './useWorkspaceInfo';
 import { createWorkspaceQueryOptions } from './utils';
 
+/**
+ *
+ * @deprecated
+ */
 export const WorkspaceSwitcher: React.FC<
   React.PropsWithChildren<{ selectedWorkspace?: string }>
 > = () => {

@@ -13,6 +13,9 @@ import {
   setLastUsedWorkspace,
 } from './utils';
 
+/**
+ * @deprecated in favor of [Namespace](../../shared/providers/Namespace/namespace-context.ts)
+ */
 export type WorkspaceContextData = {
   namespace: string;
   workspace: string;
@@ -22,6 +25,9 @@ export type WorkspaceContextData = {
   workspaces: Workspace[];
 };
 
+/**
+ * @deprecated in favor of [Namespace](../../shared/providers/Namespace/namespace-context.ts)
+ */
 export const WorkspaceContext = React.createContext<WorkspaceContextData>({
   namespace: '',
   workspace: '',
@@ -31,6 +37,9 @@ export const WorkspaceContext = React.createContext<WorkspaceContextData>({
   lastUsedWorkspace: getLastUsedWorkspace(),
 });
 
+/**
+ * @deprecated in favor of [Namespace](../../shared/providers/Namespace/namespace-context.ts)
+ */
 export const WorkspaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { data: workspaces, isLoading: workspaceLoading } = useQuery(createWorkspaceQueryOptions());
   const params = useParams<RouterParams>();

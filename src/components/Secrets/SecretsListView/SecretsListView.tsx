@@ -15,9 +15,9 @@ import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useNamespace } from '../../Namespace/useNamespaceInfo';
 import SecretsList from './SecretsList';
 
 const SecretsListView: React.FC = () => {
