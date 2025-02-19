@@ -18,11 +18,12 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
+import { IMPORT_PATH } from '../../../routes/paths';
+import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const FAILED_STATUS_FILTER_ID = 'failed';
 export const SUCCESS_STATUS_FILTER_ID = 'success';
@@ -68,7 +69,7 @@ type ComponentsToolbarProps = {
 };
 
 const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, components }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [statusFilterIsExpanded, setStatusFilterIsExpanded] = React.useState(false);
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
@@ -180,7 +181,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, 
               <Link
                 {...p}
                 data-test="add-component-button"
-                to={`/workspaces/${workspace}/import?application=${applicationName}`}
+                to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
               />
             )}
             isDisabled={!canCreateComponent}
@@ -188,7 +189,7 @@ const ComponentsToolbar: React.FC<ComponentsToolbarProps> = ({ applicationName, 
             analytics={{
               link_name: 'add-component',
               app_name: applicationName,
-              workspace,
+              namespace,
             }}
           >
             Add component

@@ -7,12 +7,6 @@ import {
   CommitOverviewTab,
   CommitsPipelineRunTab,
 } from '../components/Commits/CommitDetails';
-import {
-  ComponentActivityTab,
-  ComponentDetailsTab,
-  ComponentDetailsViewLayout,
-  componentDetailsViewLoader,
-} from '../components/Components/ComponentDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import {
@@ -86,6 +80,7 @@ import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
+import componentRoutes from './page-routes/components';
 import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
@@ -115,6 +110,7 @@ export const router = createBrowserRouter([
       },
       ...applicationRoutes,
       ...workspaceRoutes,
+      ...componentRoutes,
 
       /* Application details */
       {
@@ -151,27 +147,6 @@ export const router = createBrowserRouter([
             loader: releaseListViewTabLoader,
             errorElement: <RouteErrorBoundry />,
             element: <ReleaseListViewTab />,
-          },
-        ],
-      },
-      /* Component details route */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/components/:${RouterParams.componentName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: componentDetailsViewLoader,
-        element: <ComponentDetailsViewLayout />,
-        children: [
-          {
-            index: true,
-            element: <ComponentDetailsTab />,
-          },
-          {
-            path: `activity/:${RouterParams.activityTab}`,
-            element: <ComponentActivityTab />,
-          },
-          {
-            path: `activity`,
-            element: <ComponentActivityTab />,
           },
         ],
       },
