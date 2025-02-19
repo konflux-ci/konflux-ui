@@ -121,12 +121,23 @@ export type BuildTimeSecret = {
   name: string;
   providerUrl: string;
   tokenKeyName: string;
-  keyValuePairs: {
-    key: string;
-    value: string;
-    readOnlyKey?: boolean;
-    readOnlyValue?: boolean;
-  }[];
+  source?: Source;
+  opaque?: {
+    keyValuePairs: {
+      key: string;
+      value: string;
+      readOnlyKey?: boolean;
+      readOnlyValue?: boolean;
+    }[];
+  };
+  image?: {
+    keyValuePairs: {
+      key: string;
+      value: string;
+      readOnlyKey?: boolean;
+      readOnlyValue?: boolean;
+    }[];
+  };
 };
 
 export type SecretFormValues = ImportSecret & {

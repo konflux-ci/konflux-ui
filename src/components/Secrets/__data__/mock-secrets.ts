@@ -133,7 +133,7 @@ export const existingSecrets: BuildTimeSecret[] = [
     name: 'secret-test',
     providerUrl: '',
     tokenKeyName: '',
-    keyValuePairs: [{ key: 'key1', value: 'value1' }],
+    opaque: { keyValuePairs: [{ key: 'key1', value: 'value1' }] },
   },
 ];
 

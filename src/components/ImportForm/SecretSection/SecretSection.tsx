@@ -33,6 +33,7 @@ const SecretSection = () => {
           name: secret.metadata.name,
           providerUrl: '',
           tokenKeyName: secret.metadata.name,
+
           keyValuePairs: Object.keys(secret.data).map((key) => ({
             key,
             value: Base64.decode(secret.data[key]),
