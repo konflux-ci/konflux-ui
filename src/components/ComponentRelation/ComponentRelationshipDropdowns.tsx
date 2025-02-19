@@ -147,19 +147,17 @@ export const MultiSelectComponentsDropdown: React.FC<MultiSelectComponentsDropdo
       onSelect={handleSelect}
       badgeValue={selectedComponents.length || null}
     >
-      <Menu>
-        <MenuSearch>
-          <MenuSearchInput>
-            <SearchInput
-              type="text"
-              value={searchQuery}
-              onChange={(_, searchValue) => setSearchQuery(searchValue)}
-              placeholder="Search components..."
-              aria-label="Search components"
-            />
-          </MenuSearchInput>
-        </MenuSearch>
-      </Menu>
+      <MenuSearch>
+        <MenuSearchInput>
+          <SearchInput
+            type="text"
+            value={searchQuery}
+            onChange={(_, searchValue) => setSearchQuery(searchValue)}
+            placeholder="Search components..."
+            aria-label="Search components"
+          />
+        </MenuSearchInput>
+      </MenuSearch>
       <Divider component="li" />
       <MenuGroup className="menugroup">
         <MenuList>
@@ -241,19 +239,17 @@ export const SingleSelectComponentDropdown: React.FC<SingleSelectComponentDropdo
       onSelect={handleSelect}
       closeOnSelect
     >
-      <Menu>
-        <MenuSearch>
-          <MenuSearchInput>
-            <SearchInput
-              type="text"
-              value={searchQuery}
-              onChange={(_, searchValue) => setSearchQuery(searchValue)}
-              placeholder="Search components..."
-              aria-label="Search components"
-            />
-          </MenuSearchInput>
-        </MenuSearch>
-      </Menu>
+      <MenuSearch>
+        <MenuSearchInput>
+          <SearchInput
+            type="text"
+            value={searchQuery}
+            onChange={(_, searchValue) => setSearchQuery(searchValue)}
+            placeholder="Search components..."
+            aria-label="Search components"
+          />
+        </MenuSearchInput>
+      </MenuSearch>
       <Divider component="li" />
       <MenuList>
         {filteredComponents.map((component) => (
