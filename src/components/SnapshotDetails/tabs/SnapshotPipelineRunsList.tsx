@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRunsFilter } from '../../../hooks/usePipelineRunsFilter';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { Table } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -9,7 +8,9 @@ import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
-import { createFilterObj } from '../../Filter/utils/pipelineruns-filter-utils';
+import PipelineRunsFilterToolbar from '../../Filter/PipelineRunsFilterToolbar';
+import { createFilterObj, filterPipelineRuns } from '../../Filter/utils/pipelineruns-filter-utils';
+import { PipelineRunsFilterContext } from '../../Filter/utils/PipelineRunsFilterContext';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -30,12 +31,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   nextPageProps,
   customFilter,
 }) => {
-  const {
-    filterPLRs,
-    filterState: { nameFilter, typeFilters, statusFilters },
-    filterToolbar,
-    onClearFilters,
-  } = usePipelineRunsFilter();
+  const { filters, dispatchFilters } = React.useContext(PipelineRunsFilterContext);
+  const { nameFilter, statusFilter, typeFilter } = filters;
 
   const statusFilterObj = React.useMemo(
     () =>
@@ -59,9 +56,9 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     [snapshotPipelineRuns, customFilter],
   );
 
-  const filteredPLRs = React.useMemo(
-    () => filterPLRs(snapshotPipelineRuns).filter((plr) => !customFilter || customFilter(plr)),
-    [customFilter, snapshotPipelineRuns, filterPLRs],
+  const filteredPLRs: PipelineRunKind[] = React.useMemo(
+    () => filterPipelineRuns(snapshotPipelineRuns, filters, customFilter),
+    [snapshotPipelineRuns, filters, customFilter],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : snapshotPipelineRuns);
@@ -82,9 +79,11 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
+  const EmptyMsg = () => (
+    <FilteredEmptyState onClearFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })} />
+  );
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
-  const isFiltered = nameFilter.length > 0 || typeFilters.length > 0 || statusFilters.length > 0;
+  const isFiltered = nameFilter.length > 0 || typeFilter.length > 0 || statusFilter.length > 0;
 
   return (
     <>
@@ -95,15 +94,19 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
       >
         Pipeline runs
       </Title>
-
       <Table
         key={`${snapshotPipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
         data={filteredPLRs}
         aria-label="Pipeline run List"
         Toolbar={
-          !isFiltered && snapshotPipelineRuns.length === 0
-            ? null
-            : filterToolbar(statusFilterObj, typeFilterObj)
+          !isFiltered && snapshotPipelineRuns.length === 0 ? null : (
+            <PipelineRunsFilterToolbar
+              filters={filters}
+              dispatchFilters={dispatchFilters}
+              typeOptions={typeFilterObj}
+              statusOptions={statusFilterObj}
+            />
+          )
         }
         customData={vulnerabilities}
         Header={PipelineRunListHeaderWithVulnerabilities}

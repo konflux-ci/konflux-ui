@@ -13,7 +13,7 @@ import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunsFilterToolbar from '../../Filter/PipelineRunsFilterToolbar';
-import { createFilterObj } from '../../Filter/utils/pipelineruns-filter-utils';
+import { createFilterObj, filterPipelineRuns } from '../../Filter/utils/pipelineruns-filter-utils';
 import { PipelineRunsFilterContext } from '../../Filter/utils/PipelineRunsFilterContext';
 import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
@@ -33,15 +33,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 }) => {
   const { namespace, workspace } = useWorkspaceInfo();
   const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
-  const {
-    nameFilter,
-    setNameFilter,
-    statusFilter,
-    setStatusFilter,
-    typeFilter,
-    setTypeFilter,
-    clearAllFilters,
-  } = React.useContext(PipelineRunsFilterContext);
+  const { filters, dispatchFilters } = React.useContext(PipelineRunsFilterContext);
+  const { nameFilter, statusFilter, typeFilter } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
@@ -53,17 +46,13 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
             filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
-              ...(!nameFilter &&
-                componentName && {
-                  [PipelineRunLabel.COMPONENT]: componentName,
-                }),
+              ...(componentName && {
+                [PipelineRunLabel.COMPONENT]: componentName,
+              }),
             },
-            ...(nameFilter && {
-              filterByName: nameFilter.trim().toLowerCase(),
-            }),
           },
         }),
-        [applicationName, componentName, application, nameFilter],
+        [applicationName, componentName, application],
       ),
     );
 
@@ -84,27 +73,15 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   );
 
   const filteredPLRs = React.useMemo(
-    () =>
-      pipelineRuns
-        .filter((plr) => {
-          const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
-          return (
-            (!nameFilter ||
-              plr.metadata.name.indexOf(nameFilter) >= 0 ||
-              plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(
-                nameFilter.trim().toLowerCase(),
-              ) >= 0) &&
-            (!statusFilter.length || statusFilter.includes(pipelineRunStatus(plr))) &&
-            (!typeFilter.length || typeFilter.includes(runType))
-          );
-        })
-        .filter((plr) => !customFilter || customFilter(plr)),
-    [pipelineRuns, customFilter, nameFilter, statusFilter, typeFilter],
+    () => filterPipelineRuns(pipelineRuns, filters, customFilter),
+    [pipelineRuns, filters, customFilter],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={clearAllFilters} />;
+  const EmptyMsg = () => (
+    <FilteredEmptyState onClearFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })} />
+  );
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
@@ -129,15 +106,10 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         Toolbar={
           !isFiltered && pipelineRuns.length === 0 ? null : (
             <PipelineRunsFilterToolbar
-              nameFilter={nameFilter}
-              setNameFilter={setNameFilter}
-              statusFilters={statusFilter}
-              setStatusFilters={setStatusFilter}
-              typeFilters={typeFilter}
-              setTypeFilters={setTypeFilter}
-              clearAllFilters={clearAllFilters}
-              statusOptions={statusFilterObj}
+              filters={filters}
+              dispatchFilters={dispatchFilters}
               typeOptions={typeFilterObj}
+              statusOptions={statusFilterObj}
             />
           )
         }

@@ -1,3 +1,4 @@
+import { Dispatch } from 'react';
 import {
   SearchInput,
   Toolbar,
@@ -7,36 +8,35 @@ import {
 } from '@patternfly/react-core';
 import { debounce } from 'lodash-es';
 import { MultiSelect } from './generic/MultiSelect';
+import {
+  PipelineRunsFilterAction,
+  PipelineRunsFilterState,
+} from './utils/pipelineruns-filter-utils';
 
 type PipelineRunsFilterToolbarProps = {
-  nameFilter: string;
-  setNameFilter: (name: string) => void;
-  statusFilters: string[];
-  setStatusFilters: (filters: string[]) => void;
-  statusOptions: { [key: string]: number };
-  typeFilters: string[];
-  setTypeFilters: (filters: string[]) => void;
+  filters: PipelineRunsFilterState;
+  dispatchFilters: Dispatch<PipelineRunsFilterAction>;
   typeOptions: { [key: string]: number };
-  clearAllFilters: () => void;
+  statusOptions: { [key: string]: number };
 };
 
 const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
-  nameFilter,
-  setNameFilter,
-  statusFilters,
-  setStatusFilters,
-  statusOptions,
-  typeFilters,
-  setTypeFilters,
+  filters,
+  dispatchFilters,
   typeOptions,
-  clearAllFilters,
+  statusOptions,
 }: PipelineRunsFilterToolbarProps) => {
+  const { nameFilter, statusFilter, typeFilter } = filters;
+
   const onNameInput = debounce((n: string) => {
-    setNameFilter(n);
+    dispatchFilters({ type: 'SET_NAME', payload: n });
   }, 600);
 
   return (
-    <Toolbar data-test="pipelinerun-list-toolbar" clearAllFilters={clearAllFilters}>
+    <Toolbar
+      data-test="pipelinerun-list-toolbar"
+      clearAllFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })}
+    >
       <ToolbarContent>
         <ToolbarGroup align={{ default: 'alignLeft' }}>
           <ToolbarItem className="pf-v5-u-ml-0">
@@ -54,8 +54,10 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
             <MultiSelect
               label="Status"
               filterKey="status"
-              values={statusFilters}
-              setValues={setStatusFilters}
+              values={statusFilter}
+              setValues={(newFilters) =>
+                dispatchFilters({ type: 'SET_STATUS', payload: newFilters })
+              }
               options={statusOptions}
             />
           </ToolbarItem>
@@ -63,8 +65,8 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
             <MultiSelect
               label="Type"
               filterKey="type"
-              values={typeFilters}
-              setValues={setTypeFilters}
+              values={typeFilter}
+              setValues={(newFilters) => dispatchFilters({ type: 'SET_TYPE', payload: newFilters })}
               options={typeOptions}
             />
           </ToolbarItem>

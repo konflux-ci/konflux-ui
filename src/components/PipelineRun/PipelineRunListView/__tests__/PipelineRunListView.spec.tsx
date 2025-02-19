@@ -333,9 +333,10 @@ describe('Pipeline run List', () => {
 
     fireEvent.click(succeededOption);
 
-    r.rerender(<PipelineRunsListView applicationName={appName} />);
-
-    expect(succeededOption).toBeChecked();
+    // r.rerender(<PipelineRunsListView applicationName={appName} />);
+    await waitFor(() => {
+      expect(succeededOption).toBeChecked();
+    });
 
     await waitFor(() => {
       expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();

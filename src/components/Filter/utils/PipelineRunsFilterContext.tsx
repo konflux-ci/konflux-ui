@@ -1,92 +1,78 @@
-import {
-  createContext,
-  FC,
-  PropsWithChildren,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, Dispatch, useEffect, useReducer } from 'react';
 import { useSearchParamBatch } from '../../../hooks/useSearchParam';
+import { PipelineRunsFilterAction, PipelineRunsFilterState } from './pipelineruns-filter-utils';
 
 export type PipelineRunsFilterContextType = {
-  nameFilter: string;
-  setNameFilter: (name: string) => void;
-  statusFilter: string[];
-  setStatusFilter: (filters: string[]) => void;
-  typeFilter: string[];
-  setTypeFilter: (filters: string[]) => void;
-  clearAllFilters: () => void;
+  filters: PipelineRunsFilterState;
+  dispatchFilters: Dispatch<PipelineRunsFilterAction>;
 };
 
 export const PipelineRunsFilterContext = createContext<PipelineRunsFilterContextType>({
-  nameFilter: '',
-  setNameFilter: () => {},
-  statusFilter: [],
-  setStatusFilter: () => {},
-  typeFilter: [],
-  setTypeFilter: () => {},
-  clearAllFilters: () => {},
+  filters: { nameFilter: '', statusFilter: [], typeFilter: [] },
+  dispatchFilters: () => null,
 });
 
-export const PipelineRunsFilterContextProvider: FC<PropsWithChildren> = ({ children }) => {
+export const PipelineRunsFilterContextProvider = ({ children }) => {
   const [getValues, batchSet, batchUnset] = useSearchParamBatch(['name', 'status', 'type']);
-  const [nameFilterString, setNameFilterString] = useState('');
-  const [statusFilterString, setStatusFilterString] = useState<string>('');
-  const [typeFilterString, setTypeFilterString] = useState<string>('');
 
-  const setNameFilter = useCallback(
-    (name: string) => {
-      batchSet({ name });
-    },
-    [batchSet],
-  );
+  const reducer = (
+    state: PipelineRunsFilterState,
+    action: PipelineRunsFilterAction,
+  ): PipelineRunsFilterState => {
+    let [type, payload] = [action.type, action.payload];
+    if (payload === undefined) {
+      payload = '';
+    }
 
-  const statusFilter = useMemo(
-    () => (statusFilterString ? statusFilterString.split(',') : []),
-    [statusFilterString],
-  );
+    switch (type) {
+      case 'SET_NAME':
+        batchSet({ name: payload as string });
 
-  const setStatusFilter = useCallback(
-    (filters: string[]) => {
-      batchSet({ status: filters.join(',') });
-    },
-    [batchSet],
-  );
+        return { ...state, nameFilter: payload as string };
+      case 'SET_STATUS':
+        if (typeof payload === 'string') {
+          payload = [payload];
+        }
 
-  const typeFilter = useMemo(
-    () => (typeFilterString ? typeFilterString.split(',') : []),
-    [typeFilterString],
-  );
+        batchSet({ status: payload.join(',') });
 
-  const setTypeFilter = useCallback(
-    (filters: string[]) => {
-      batchSet({ type: filters.join(',') });
-    },
-    [batchSet],
-  );
+        return { ...state, statusFilter: payload };
+      case 'SET_TYPE':
+        if (typeof payload === 'string') {
+          payload = [payload];
+        }
+
+        batchSet({ type: payload.join(',') });
+
+        return { ...state, typeFilter: payload };
+      case 'CLEAR_ALL_FILTERS':
+        batchUnset(['name', 'status', 'type']);
+
+        return { nameFilter: '', statusFilter: [], typeFilter: [] };
+      default:
+        return state;
+    }
+  };
+
+  const [filters, dispatchFilters] = useReducer(reducer, {
+    nameFilter: '',
+    statusFilter: [],
+    typeFilter: [],
+  });
 
   useEffect(() => {
     const values = getValues();
-    setNameFilterString(values.name || '');
-    setStatusFilterString(values.status || '');
-    setTypeFilterString(values.type || '');
-  }, [getValues]);
 
-  const clearAllFilters = () => {
-    batchUnset(['name', 'status', 'type']);
-  };
+    dispatchFilters({ type: 'SET_NAME', payload: values.name || '' });
+    dispatchFilters({ type: 'SET_STATUS', payload: values.status ? values.status.split(',') : [] });
+    dispatchFilters({ type: 'SET_TYPE', payload: values.type ? values.type.split(',') : [] });
+  }, [getValues]);
 
   return (
     <PipelineRunsFilterContext.Provider
       value={{
-        nameFilter: nameFilterString,
-        setNameFilter,
-        statusFilter,
-        setStatusFilter,
-        typeFilter,
-        setTypeFilter,
-        clearAllFilters,
+        filters,
+        dispatchFilters,
       }}
     >
       {children}

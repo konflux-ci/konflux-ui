@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
-import { usePipelineRunsFilter } from '../../../../hooks/usePipelineRunsFilter';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
@@ -14,7 +13,12 @@ import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../../utils/pipelinerun-utils';
-import { createFilterObj } from '../../../Filter/utils/pipelineruns-filter-utils';
+import PipelineRunsFilterToolbar from '../../../Filter/PipelineRunsFilterToolbar';
+import {
+  createFilterObj,
+  filterPipelineRuns,
+} from '../../../Filter/utils/pipelineruns-filter-utils';
+import { PipelineRunsFilterContext } from '../../../Filter/utils/PipelineRunsFilterContext';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -23,14 +27,10 @@ import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const { namespace, workspace } = useWorkspaceInfo();
-  const {
-    filterPLRs,
-    filterState: { nameFilter, typeFilters, statusFilters },
-    filterToolbar,
-    onClearFilters,
-  } = usePipelineRunsFilter();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsForCommit(namespace, workspace, applicationName, commitName);
+  const { filters, dispatchFilters } = React.useContext(PipelineRunsFilterContext);
+  const { nameFilter, statusFilter, typeFilter } = filters;
 
   const statusFilterObj = React.useMemo(
     () => createFilterObj(pipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
@@ -47,7 +47,10 @@ const CommitsPipelineRunTab: React.FC = () => {
     [pipelineRuns],
   );
 
-  const filteredPLRs = React.useMemo(() => filterPLRs(pipelineRuns), [filterPLRs, pipelineRuns]);
+  const filteredPLRs = React.useMemo(
+    () => filterPipelineRuns(pipelineRuns, filters),
+    [pipelineRuns, filters],
+  );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
 
@@ -66,10 +69,12 @@ const CommitsPipelineRunTab: React.FC = () => {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
+  const EmptyMsg = () => (
+    <FilteredEmptyState onClearFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })} />
+  );
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
-  const isFiltered = nameFilter.length > 0 || typeFilters.length > 0 || statusFilters.length > 0;
+  const isFiltered = nameFilter.length > 0 || typeFilter.length > 0 || statusFilter.length > 0;
 
   return (
     <>
@@ -84,9 +89,14 @@ const CommitsPipelineRunTab: React.FC = () => {
           aria-label="Pipelinerun List"
           Header={PipelineRunListHeaderWithVulnerabilities}
           Toolbar={
-            !isFiltered && pipelineRuns.length === 0
-              ? null
-              : filterToolbar(statusFilterObj, typeFilterObj)
+            !isFiltered && pipelineRuns.length === 0 ? null : (
+              <PipelineRunsFilterToolbar
+                filters={filters}
+                dispatchFilters={dispatchFilters}
+                typeOptions={typeFilterObj}
+                statusOptions={statusFilterObj}
+              />
+            )
           }
           loaded={isFetchingNextPage || loaded}
           customData={vulnerabilities}
