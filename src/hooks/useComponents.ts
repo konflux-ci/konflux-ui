@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
+import { useNamespace } from '../shared/providers/Namespace';
 import { ComponentKind } from '../types';
 
 export const useComponent = (
@@ -34,7 +34,6 @@ export const useComponent = (
 
 export const useComponents = (
   namespace: string,
-  workspace: string,
   applicationName: string,
   watch?: boolean,
 ): [ComponentKind[], boolean, unknown] => {
@@ -45,7 +44,6 @@ export const useComponents = (
   } = useK8sWatchResource<ComponentKind[]>(
     {
       groupVersionKind: ComponentGroupVersionKind,
-      workspace,
       namespace,
       isList: true,
       watch,
@@ -75,8 +73,8 @@ export const useSortedComponents = (
   applicationName: string,
   namespace?: string,
 ): [ComponentKind[], boolean, unknown] => {
-  const { namespace: ns, workspace } = useWorkspaceInfo();
-  const [cmps, loaded, error] = useComponents(namespace ?? ns, workspace, applicationName);
+  const ns = useNamespace();
+  const [cmps, loaded, error] = useComponents(namespace ?? ns, applicationName);
 
   const components = React.useMemo(() => {
     return loaded && !error ? sortComponentsByCreation(cmps) : [];
@@ -85,10 +83,7 @@ export const useSortedComponents = (
   return [components, loaded, error];
 };
 
-export const useAllComponents = (
-  namespace: string,
-  workspace: string,
-): [ComponentKind[], boolean, unknown] => {
+export const useAllComponents = (namespace: string): [ComponentKind[], boolean, unknown] => {
   const {
     data: components,
     isLoading: componentsLoaded,
@@ -96,7 +91,6 @@ export const useAllComponents = (
   } = useK8sWatchResource<ComponentKind[]>(
     {
       groupVersionKind: ComponentGroupVersionKind,
-      workspace,
       namespace,
       isList: true,
     },
