@@ -115,8 +115,8 @@ describe('Commit Pipelinerun List', () => {
     screen.getByText('Name');
     screen.getByText('Started');
     screen.getByText('Duration');
-    screen.getByText('Status');
-    screen.getByText('Type');
+    screen.getAllByText('Status');
+    screen.getAllByText('Type');
   });
 
   it('should render both Build and Test pipelineruns in the pipelinerun list', () => {
