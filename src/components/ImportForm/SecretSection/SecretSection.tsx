@@ -8,7 +8,7 @@ import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { BuildTimeSecret, SecretType } from '../../../types';
+import { BuildTimeSecret, SecretType, SecretTypeDropdownLabel } from '../../../types';
 import { AccessReviewResources } from '../../../types/rbac';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -28,19 +28,27 @@ const SecretSection = () => {
 
   const partnerTaskSecrets: BuildTimeSecret[] =
     secrets && secretsLoaded
-      ? secrets?.map((secret) => ({
-          type: secret.type as SecretType,
-          name: secret.metadata.name,
-          providerUrl: '',
-          tokenKeyName: secret.metadata.name,
-
-          keyValuePairs: Object.keys(secret.data).map((key) => ({
+      ? secrets?.map((secret) => {
+          const keyValuePairs = Object.keys(secret.data).map((key) => ({
             key,
             value: Base64.decode(secret.data[key]),
             readOnlyKey: true,
             readOnlyValue: true,
-          })),
-        }))
+          }));
+
+          return {
+            type: secret.type as SecretType,
+            name: secret.metadata.name,
+            providerUrl: '',
+            tokenKeyName: secret.metadata.name,
+            opaque: [SecretType.dockercfg, SecretType.dockerconfigjson, SecretType.opaque].includes(
+              secret.type as SecretType,
+            )
+              ? { keyValuePairs }
+              : null,
+            image: secret.type === SecretTypeDropdownLabel.image ? { keyValuePairs } : null,
+          };
+        })
       : [];
 
   const onSubmit = React.useCallback(
