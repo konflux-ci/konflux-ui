@@ -83,4 +83,19 @@ describe('Whats Next Section', () => {
     });
     expect(mockOnClick).toHaveBeenCalled();
   });
+
+  it('it should close the card when clicked on close button', () => {
+    render(<WhatsNextSection whatsNextItems={[mockWhatsNextItems[0]]} />);
+    expect(screen.getByText('React router action')).toBeInTheDocument();
+    expect(screen.getByText('Take me to router link')).toBeInTheDocument();
+
+    act(() => {
+      const trigger = screen.getByTestId('close-button');
+      fireEvent.click(trigger);
+    });
+
+    expect(mockOnClick).toHaveBeenCalled();
+    expect(screen.queryByText('React router action')).not.toBeInTheDocument();
+    expect(screen.queryByText('Take me to router link')).not.toBeInTheDocument();
+  });
 });
