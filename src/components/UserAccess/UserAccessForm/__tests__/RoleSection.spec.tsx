@@ -23,7 +23,7 @@ describe('RoleSection', () => {
     formikRenderer(<RoleSection />, { role: '' });
     expect(screen.getByText('Loading...')).toBeVisible();
     const dropdownButton = screen.getByTestId('dropdown-toggle');
-    expect(dropdownButton).toBeDisabled();
+    expect(dropdownButton).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should not render permissions if role is not selected', () => {
