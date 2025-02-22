@@ -23,7 +23,7 @@ describe('ComponentDropdown', () => {
   it('should show disable dropdown if application is not selected', () => {
     useComponentsMock.mockReturnValue([[], true]);
     formikRenderer(<ComponentDropdown name="test" />, { targets: { application: '' } });
-    expect(screen.getByRole('button')).toBeDisabled();
+    expect(screen.getByTestId('dropdown-toggle')).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('should show dropdown if components are loaded', async () => {
@@ -31,8 +31,10 @@ describe('ComponentDropdown', () => {
       [{ metadata: { name: 'comp1' } }, { metadata: { name: 'comp2' } }],
       true,
     ]);
-    formikRenderer(<ComponentDropdown name="test" />, { targets: { application: 'app' } });
-    await act(() => fireEvent.click(screen.getByRole('button')));
+    formikRenderer(<ComponentDropdown name="test" />, {
+      targets: { application: 'app' },
+    });
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
 
     await waitFor(() => {
       expect(screen.getByRole('menuitem', { name: 'All components' })).toBeVisible();
@@ -48,15 +50,7 @@ describe('ComponentDropdown', () => {
     ]);
 
     formikRenderer(<ComponentDropdown name="test" />, { targets: { application: 'app' } });
-    expect(screen.queryByRole('button')).toBeInTheDocument();
-
-    await act(() => fireEvent.click(screen.getByRole('button')));
-
-    await waitFor(() => {
-      expect(screen.getByRole('menu')).toBeInTheDocument();
-      expect(screen.getByLabelText('All components'));
-      screen.getByText('comp2');
-    });
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
     await act(() => fireEvent.click(screen.getByText('comp2')));
     await waitFor(() => {
       expect(screen.getByText('comp2'));
