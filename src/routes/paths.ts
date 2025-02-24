@@ -27,3 +27,25 @@ export const COMPONENT_ACTIVITY_CHILD_TAB_PATH = COMPONENT_ACTIVITY_PATH.extend(
 export const COMMIT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('commit');
 
 export const COMMIT_DETAILS_PATH = COMMIT_LIST_PATH.extend(`:${RouterParams.commitName}`);
+
+// Integration test paths
+
+export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend('integrationtests');
+
+export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
+  `:${RouterParams.integrationTestName}`,
+);
+
+export const INTEGRATION_TEST_ADD_PATH = INTEGRATION_TEST_LIST_PATH.extend('add');
+
+export const INTEGRATION_TEST_EDIT_PATH = INTEGRATION_TEST_DETAILS_PATH.extend('edit');
+
+// Pipeline paths
+
+export const PIPELINE_RUNS_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
+
+export const PIPELINE_RUNS_DETAILS_PATH = PIPELINE_RUNS_LIST_PATH.extend(
+  `:${RouterParams.pipelineRunName}`,
+);
+
+export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
