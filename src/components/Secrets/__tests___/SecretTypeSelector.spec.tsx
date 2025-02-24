@@ -38,7 +38,8 @@ describe('SecretForm', () => {
       initialValues,
     );
 
-    const dropdown = screen.getByRole('button', { name: 'Key/value secret' });
+    const dropdown = screen.getByTestId('dropdown-toggle');
+    expect(dropdown.textContent).toBe('Key/value secret');
 
     act(() => {
       fireEvent.click(dropdown);
