@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
+import { INTEGRATION_TEST_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
+import { useNamespaceInfo } from '../../../shared/providers/Namespace';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { IntegrationTestLabels } from '../IntegrationTestForm/types';
 import { ResolverRefParams, getURLForParam } from '../IntegrationTestForm/utils/create-utils';
 import { integrationListTableColumnClasses } from './IntegrationTestListHeader';
@@ -15,7 +16,7 @@ const IntegrationTestListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<IntegrationTestScenarioKind>>
 > = ({ obj }) => {
   const actions = useIntegrationTestActions(obj);
-  const { workspace } = useWorkspaceInfo();
+  const { namespace } = useNamespaceInfo();
   return (
     <>
       <TableData
@@ -23,7 +24,11 @@ const IntegrationTestListRow: React.FC<
         data-test="integration-tests__row-name"
       >
         <Link
-          to={`/workspaces/${workspace}/applications/${obj.spec.application}/integrationtests/${obj.metadata.name}`}
+          to={INTEGRATION_TEST_DETAILS_PATH.createPath({
+            applicationName: obj.spec?.application,
+            integrationTestName: obj.metadata?.name,
+            workspaceName: namespace,
+          })}
         >
           {obj.metadata.name}
         </Link>
