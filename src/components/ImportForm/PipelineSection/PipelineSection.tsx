@@ -1,22 +1,28 @@
 import * as React from 'react';
 import { useFormikContext } from 'formik';
+import { useBuildPipelineConfig } from '../../../hooks/useBuildPipelineConfig';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
 import { ImportFormValues } from '../type';
-import { usePipelineTemplates } from './usePipelineTemplate';
 
 export const PipelineSection: React.FunctionComponent = () => {
   const { values, setFieldValue } = useFormikContext<ImportFormValues>();
-  const [template, loaded] = usePipelineTemplates();
+  const [pipelineTemplate, loaded] = useBuildPipelineConfig();
 
   React.useEffect(() => {
-    if (loaded && template?.defaultPipelineName && values.pipeline === '') {
-      void setFieldValue('pipeline', template.defaultPipelineName);
+    if (loaded && pipelineTemplate?.defaultPipelineName && values?.pipeline === '') {
+      void setFieldValue('pipeline', pipelineTemplate?.defaultPipelineName);
     }
-  }, [loaded, setFieldValue, template?.defaultPipelineName, values.pipeline]);
+  }, [loaded, setFieldValue, pipelineTemplate?.defaultPipelineName, values?.pipeline]);
 
   const dropdownItems = React.useMemo(() => {
-    return loaded ? template.pipelines.map((t) => ({ key: t.name, value: t.name })) : [];
-  }, [loaded, template?.pipelines]);
+    return loaded
+      ? pipelineTemplate?.pipelines.map((t) => ({
+          key: t.name,
+          value: t.name,
+          description: t?.description,
+        }))
+      : [];
+  }, [loaded, pipelineTemplate?.pipelines]);
 
   return (
     <DropdownField

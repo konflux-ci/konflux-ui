@@ -1,5 +1,12 @@
 import * as yup from 'yup';
 
+export const KONFLUX_USERNAME_REGEX = /^[-_a-zA-Z0-9@.]{2,45}$/;
+export const KONFLUX_USERNAME_REGEX_MGS =
+  'Must be 2 to 45 characters long and can only contain letters from a to Z, numbers from 0 to 9, underscores( _ ), hyphens( - ), periods( . ), or @ symbol.';
+export const konfluxUsernameYupValidation = yup
+  .string()
+  .matches(KONFLUX_USERNAME_REGEX, KONFLUX_USERNAME_REGEX_MGS);
+
 export const GIT_URL_REGEX =
   /^((((ssh|git|https?:?):\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%]*?:?))$/;
 

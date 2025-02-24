@@ -52,6 +52,31 @@ describe('SingleSelectComponentDropdown', () => {
     expect(disabledItem).toHaveLength(1);
     expect(disabledItem[0].querySelector('.pf-v5-c-menu__item-text').innerHTML).toEqual('b');
   });
+
+  it('should render items in sorted order', () => {
+    formikRenderer(
+      <SingleSelectComponentDropdown name="singleSelect" componentNames={['b', 'a', 'c']} />,
+      {
+        singleSelect: '',
+      },
+    );
+    fireEvent.click(screen.getByTestId('toggle-component-menu'));
+    const menuItems = screen.getAllByRole('menuitem').map((item) => item.textContent);
+    expect(menuItems).toEqual(['a', 'b', 'c']);
+  });
+
+  it('should filter components based on search input', () => {
+    formikRenderer(
+      <SingleSelectComponentDropdown name="singleSelect" componentNames={['test1', 'test2']} />,
+      {
+        singleSelect: '',
+      },
+    );
+    fireEvent.click(screen.getByTestId('toggle-component-menu'));
+    const searchInput = screen.getByPlaceholderText('Search components...');
+    fireEvent.change(searchInput, { target: { value: '1' } });
+    expect(screen.getByText('test1')).toBeInTheDocument();
+  });
 });
 
 describe('MultiSelectComponentDropdown', () => {
@@ -117,5 +142,34 @@ describe('MultiSelectComponentDropdown', () => {
     expect(button.querySelector('.pf-m-read').innerHTML).toEqual('1');
     const disabledItem = screen.getAllByRole('menu')[1].querySelectorAll('.pf-m-disabled');
     expect(disabledItem).toHaveLength(1);
+  });
+
+  it('should render grouped components in sorted order', () => {
+    formikRenderer(
+      <MultiSelectComponentsDropdown
+        groupedComponents={{ Group1: ['aa', 'ab', 'ac'] }}
+        name="multiSelect"
+      />,
+      { multiSelect: [] },
+    );
+    fireEvent.click(screen.getByTestId('toggle-component-menu'));
+    const menuItems = screen.getAllByRole('menuitem').map((item) => item.textContent);
+    expect(menuItems).toEqual(['Select all', 'aa', 'ab', 'ac']);
+  });
+
+  it('should filter grouped components based on search input', () => {
+    formikRenderer(
+      <MultiSelectComponentsDropdown
+        groupedComponents={{ Group1: ['test1', 'example', 'sample'] }}
+        name="multiSelect"
+      />,
+      { multiSelect: [] },
+    );
+    fireEvent.click(screen.getByTestId('toggle-component-menu'));
+    const searchInput = screen.getByPlaceholderText('Search components...');
+    fireEvent.change(searchInput, { target: { value: 'exa' } });
+    expect(screen.getByText('example')).toBeInTheDocument();
+    expect(screen.queryByText('test1')).not.toBeInTheDocument();
+    expect(screen.queryByText('sample')).not.toBeInTheDocument();
   });
 });

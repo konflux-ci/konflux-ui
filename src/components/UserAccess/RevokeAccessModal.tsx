@@ -13,18 +13,17 @@ import {
   ModalVariant,
 } from '@patternfly/react-core';
 import { K8sQueryDeleteResource } from '../../k8s';
-import { SpaceBindingRequestModel } from '../../models';
-import { WorkspaceBinding } from '../../types';
+import { RoleBindingModel } from '../../models';
+import { RoleBinding } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { invalidateWorkspaceQuery } from '../Workspace/utils';
 
 type Props = RawComponentProps & {
-  sbr: WorkspaceBinding['bindingRequest'];
+  rb: RoleBinding;
   username: string;
 };
 
 export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
-  sbr,
+  rb,
   username,
   onClose,
   modalProps,
@@ -34,23 +33,24 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
   const handleSubmit = React.useCallback(
     async (e) => {
       e.preventDefault();
-      setSubmitting(false);
+      // We need to set submitting as true, this ensure the 'Revoke' button cannot be
+      // reclicked during the resource is deleting.
+      setSubmitting(true);
       setError(null);
       try {
         await K8sQueryDeleteResource({
-          model: SpaceBindingRequestModel,
+          model: RoleBindingModel,
           queryOptions: {
-            name: sbr.name,
-            ns: sbr.namespace,
+            name: rb.metadata.name,
+            ns: rb.metadata.namespace,
           },
         });
-        await invalidateWorkspaceQuery();
         onClose(null, { submitClicked: true });
       } catch (err) {
         setError((err as { message: string }).message || (err.toString() as string));
       }
     },
-    [onClose, sbr],
+    [onClose, rb],
   );
 
   return (
@@ -59,7 +59,7 @@ export const RevokeAccessModal: React.FC<React.PropsWithChildren<Props>> = ({
         <StackItem>
           <TextContent>
             <Text data-test="description">
-              The user <strong>{username}</strong> will lose access to this workspace and all of its
+              The user <strong>{username}</strong> will lose access to this namespace and all of its
               applications, environments, and any other dependent items.
             </Text>
             <Text>You can always grant the user access later.</Text>

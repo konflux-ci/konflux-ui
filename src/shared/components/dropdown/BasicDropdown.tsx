@@ -57,8 +57,21 @@ const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
       | React.MouseEvent<HTMLButtonElement>,
     isOpen: boolean,
   ) => setDropdownOpen(isOpen);
+  // We enjoys the DropDown from the following file
+  // node_modules/@patternfly/react-core/src/deprecated/components/Dropdown/Dropdown.tsx
+  // The onSelect of it just supports event.
+  // If we enjoy (event: React.SyntheticEvent, value: string), we would
+  // meet error: Type '(event: React.SyntheticEvent, value: string) => void'
+  // is not assignable to type '(event?: SyntheticEvent<HTMLDivElement, Event>) => void'.
   const onSelect = (event: React.SyntheticEvent<HTMLDivElement>) => {
-    onChange && onChange(event.currentTarget.textContent);
+    // When the dropdown has the description, the currentTarget.textContent
+    // would contain main + description. And we just need the main value.
+    const targetClassName = 'pf-v5-c-dropdown__menu-item-main';
+    const targetText =
+      event.currentTarget.querySelector(`.${targetClassName}`)?.textContent ||
+      event.currentTarget.textContent;
+
+    onChange && onChange(targetText);
     setDropdownOpen(false);
   };
 

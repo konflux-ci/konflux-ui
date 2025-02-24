@@ -277,7 +277,7 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
           records: list.records.slice(0, options.limit),
         };
       }
-      return [list.records.map((result) => decodeValueJson(result.data.value)), list];
+      return [list?.records.map((result) => decodeValueJson(result.data.value)), list];
     } catch (e) {
       // return an empty response if we get a 404 error
       if (e?.code === 404) {
@@ -300,15 +300,15 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   return value;
 };
 
-const getFilteredPipelineRuns = (
+const getFilteredPipelineRuns = async (
   workspace: string,
   namespace: string,
   filter: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   cacheKey?: string,
-) =>
-  getFilteredRecord<PipelineRunKindV1Beta1>(
+): Promise<[PipelineRunKindV1Beta1[], RecordsList]> => {
+  const [originalPipelineRuns, list] = await getFilteredRecord<PipelineRunKindV1Beta1>(
     workspace,
     namespace,
     [DataType.PipelineRun, DataType.PipelineRun_v1beta1],
@@ -317,6 +317,29 @@ const getFilteredPipelineRuns = (
     nextPageToken,
     cacheKey,
   );
+
+  /*
+  When pipelineruns are running, the etcd would keep their results.
+  While the tekton record would keep the conditions as:
+  "conditions": [
+    {
+      "type": "Unknown",
+      "reason": "Succeeded",
+      "status": "Running",
+    ...
+  Deleting pipelines from etcd makes the tekton record would be never updated as others.
+  So for those tekton results, it is useless to users and we need to filter them out.
+  Otherwise, these jobs would be always shown as 'Running' and bring unexpected troubles.
+  */
+  const filteredPipelineRuns = originalPipelineRuns?.filter((pipelinerun) => {
+    return (
+      pipelinerun?.status?.conditions?.every(
+        (c) => !(c.status === 'Unknown' && c.type === 'Succeeded' && c.reason === 'Running'),
+      ) ?? true
+    );
+  });
+  return [filteredPipelineRuns, list];
+};
 
 const getFilteredTaskRuns = (
   workspace: string,

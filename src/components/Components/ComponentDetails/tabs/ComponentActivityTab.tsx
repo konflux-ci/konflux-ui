@@ -4,20 +4,21 @@ import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
+import { COMPONENT_ACTIVITY_CHILD_TAB_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
+import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
 import CommitsListView from '../../../Commits/CommitsListPage/CommitsListView';
 import { DetailsSection } from '../../../DetailsPage';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
 export const ComponentActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
-  const { activityTab, workspaceName, componentName } = params;
-  const { namespace } = useWorkspaceInfo();
-  const [component] = useComponent(namespace, workspaceName, componentName);
+  const { activityTab, componentName } = params;
+  const namespace = useNamespace();
+  const [component] = useComponent(namespace, componentName);
   const applicationName = component.spec.application;
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
     `${component ? `${component.spec.componentName}_` : ''}${ACTIVITY_SECONDARY_TAB_KEY}`,
@@ -26,8 +27,13 @@ export const ComponentActivityTab: React.FC = () => {
 
   const getActivityTabRoute = React.useCallback(
     (tab: string) =>
-      `/workspaces/${workspaceName}/applications/${applicationName}/components/${componentName}/activity/${tab}`,
-    [applicationName, componentName, workspaceName],
+      COMPONENT_ACTIVITY_CHILD_TAB_PATH.createPath({
+        workspaceName: namespace,
+        applicationName,
+        componentName,
+        activityTab: tab,
+      }),
+    [applicationName, componentName, namespace],
   );
 
   const navigate = useNavigate();

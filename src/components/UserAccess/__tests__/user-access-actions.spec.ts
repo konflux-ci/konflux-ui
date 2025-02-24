@@ -1,100 +1,86 @@
-import '@testing-library/jest-dom';
-import { renderHook } from '@testing-library/react-hooks';
+import { mockRoleBinding, mockRoleBindingWithoutUser } from '../../../__data__/rolebinding-data';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { createUseWorkspaceInfoMock } from '../../../utils/test-utils';
-import { useSBRActions } from '../user-access-actions';
+import { useRBActions } from '../user-access-actions';
 
+// Mock the dependencies
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(),
 }));
 
-const accessReviewMock = useAccessReviewForModel as jest.Mock;
+// Removing the below mock would get the error:
+// TypeError: Cannot read properties of null (reading 'useContext')
+jest.mock('../../modal/ModalProvider', () => ({
+  useModalLauncher: jest.fn(),
+}));
 
-describe('useSBRActions', () => {
-  createUseWorkspaceInfoMock({ workspace: 'test-ws' });
+describe('useRBActions', () => {
+  const mockNamespace = 'test-ns';
+  const useNamespaceMock = mockUseNamespaceHook(mockNamespace);
+  const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
+  useNamespaceMock.mockReturnValue(mockNamespace);
+
+  const editPermissionItem = {
+    label: 'Edit access',
+    id: 'edit-access-user1',
+    disabled: false,
+    disabledTooltip: "You don't have permission to edit access",
+    cta: {
+      href: `/workspaces/${mockNamespace}/access/edit/user1`,
+    },
+  };
+  const deletePermissionItem = {
+    label: 'Revoke access',
+    id: 'revoke-access-user1',
+    disabled: false,
+    disabledTooltip: "You don't have permission to revoke access",
+    cta: expect.any(Function),
+  };
 
   beforeEach(() => {
-    accessReviewMock.mockReturnValue([true, true]);
+    useAccessReviewForModelMock.mockClear();
   });
 
-  it('should return enabled actions', () => {
-    const { result } = renderHook(() =>
-      useSBRActions({
-        availableActions: ['update', 'delete'],
-        masterUserRecord: 'my-user',
-        role: 'admin',
-        bindingRequest: { name: 'my-sbr', namespace: 'my-ns' },
-      }),
-    );
-    const actions = result.current;
+  it('should return Edit and Revoke actions when the user has permissions', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
 
-    expect(actions[0]).toEqual(
-      expect.objectContaining({
-        label: 'Edit access',
-        disabled: false,
+    const actions = useRBActions(mockRoleBinding);
+    const permissionItems = [editPermissionItem, deletePermissionItem];
+    expect(actions).toEqual(permissionItems);
+  });
+
+  it('should disable Edit and Revoke actions if the user does not have permissions', () => {
+    // Mocking the hooks with no permissions
+    useAccessReviewForModelMock.mockReturnValue([false, false]);
+
+    const actions = useRBActions(mockRoleBinding);
+    editPermissionItem.disabled = true;
+    deletePermissionItem.disabled = true;
+    const permissionItems = [editPermissionItem, deletePermissionItem];
+    expect(actions).toEqual(permissionItems);
+  });
+
+  it('should disable actions if no user is found in the subjects array', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+
+    const actions = useRBActions(mockRoleBindingWithoutUser);
+
+    const permissionItems = [
+      {
+        ...editPermissionItem,
+        disabled: true,
+        id: 'edit-access-undefined',
         cta: {
-          href: '/workspaces/test-ws/access/edit/my-user',
+          ...editPermissionItem.cta,
+          href: `/workspaces/${mockNamespace}/access/edit/undefined`,
         },
-      }),
-    );
-
-    expect(actions[1]).toEqual(
-      expect.objectContaining({
-        label: 'Revoke access',
-        disabled: false,
-      }),
-    );
-  });
-
-  it('should return disabled actions due to access', () => {
-    accessReviewMock.mockReturnValue([false, true]);
-    const { result } = renderHook(() =>
-      useSBRActions({
-        availableActions: [],
-        masterUserRecord: 'my-user',
-        role: 'admin',
-        bindingRequest: { name: 'my-sbr', namespace: 'my-ns' },
-      }),
-    );
-    const actions = result.current;
-
-    expect(actions[0]).toEqual(
-      expect.objectContaining({
-        label: 'Edit access',
+      },
+      {
+        ...deletePermissionItem,
         disabled: true,
-        disabledTooltip: "You don't have permission to edit access",
-      }),
-    );
-    expect(actions[1]).toEqual(
-      expect.objectContaining({
-        label: 'Revoke access',
-        disabled: true,
-        disabledTooltip: "You don't have permission to revoke access",
-      }),
-    );
-  });
-
-  it('should return disabled actions if binding request is not provided', () => {
-    const { result } = renderHook(() =>
-      useSBRActions({
-        availableActions: ['update', 'delete'],
-        masterUserRecord: 'my-user',
-        role: 'admin',
-      }),
-    );
-    const actions = result.current;
-
-    expect(actions[0]).toEqual(
-      expect.objectContaining({
-        label: 'Edit access',
-        disabled: true,
-      }),
-    );
-    expect(actions[1]).toEqual(
-      expect.objectContaining({
-        label: 'Revoke access',
-        disabled: true,
-      }),
-    );
+        id: 'revoke-access-undefined',
+      },
+    ];
+    expect(actions).toEqual(permissionItems);
   });
 });
