@@ -128,6 +128,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                         <Link
                           {...props}
                           to={IMPORT_PATH.createPath({ workspaceName: namespace })}
+                          state={{ isApplication: true }}
                         />
                       )}
                       isDisabled={!(canCreateApplication && canCreateComponent)}
