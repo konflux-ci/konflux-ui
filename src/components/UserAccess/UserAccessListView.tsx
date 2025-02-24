@@ -17,24 +17,25 @@ import {
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
+import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { useSearchParam } from '../../hooks/useSearchParam';
-import { SpaceBindingRequestModel } from '../../models';
+import { RoleBindingModel } from '../../models';
 import { Table } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
-import { WorkspaceBinding } from '../../types';
+import { useNamespace } from '../../shared/providers/Namespace';
+import { RoleBinding } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
-import { SBRListHeader } from './SBRListHeader';
-import { SBRListRow } from './SBRListRow';
+import { RBListHeader } from './RBListHeader';
+import { RBListRow } from './RBListRow';
 
 const UserAccessEmptyState: React.FC<
   React.PropsWithChildren<{
-    canCreateSBR: boolean;
+    canCreateRB: boolean;
   }>
-> = ({ canCreateSBR }) => {
-  const { workspace } = useWorkspaceInfo();
+> = ({ canCreateRB }) => {
+  const namespace = useNamespace();
 
   return (
     <AppEmptyState
@@ -48,12 +49,12 @@ const UserAccessEmptyState: React.FC<
       <EmptyStateActions>
         <ButtonWithAccessTooltip
           variant="primary"
-          component={(props) => <Link {...props} to={`/workspaces/${workspace}/access/grant`} />}
-          isDisabled={!canCreateSBR}
+          component={(props) => <Link {...props} to={`/workspaces/${namespace}/access/grant`} />}
+          isDisabled={!canCreateRB}
           tooltip="You cannot grant access in this namespace"
           analytics={{
             link_name: 'grant-access',
-            workspace,
+            namespace,
           }}
         >
           Grant access
@@ -64,28 +65,30 @@ const UserAccessEmptyState: React.FC<
 };
 
 export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const { workspace, workspaceResource } = useWorkspaceInfo();
-  const [canCreateSBR] = useAccessReviewForModel(SpaceBindingRequestModel, 'create');
+  const namespace = useNamespace();
+  const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
   const [usernameFilter, setUsernameFilter, clearFilters] = useSearchParam('name', '');
+  const [roleBindings, loaded] = useRoleBindings(namespace);
 
-  const filteredSBRs = React.useMemo(
+  const filterRBs = React.useMemo(
     () =>
-      workspaceResource?.status?.bindings?.filter((binding) =>
-        binding.masterUserRecord.includes(usernameFilter.toLowerCase()),
+      roleBindings.filter((rb) =>
+        rb.subjects.some((subject) =>
+          subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
+        ),
       ),
-    [usernameFilter, workspaceResource],
+    [roleBindings, usernameFilter],
   );
-
-  if (!workspaceResource) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
     );
-  }
 
-  if (!workspaceResource.status?.bindings?.length) {
-    return <UserAccessEmptyState canCreateSBR={canCreateSBR} />;
+    if (!filterRBs) {
+      return <UserAccessEmptyState canCreateRB={canCreateRB} />;
+    }
   }
 
   return (
@@ -117,13 +120,13 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
               <ButtonWithAccessTooltip
                 variant="primary"
                 component={(props) => (
-                  <Link {...props} to={`/workspaces/${workspace}/access/grant`} />
+                  <Link {...props} to={`/workspaces/${namespace}/access/grant`} />
                 )}
-                isDisabled={!canCreateSBR}
+                isDisabled={!canCreateRB}
                 tooltip="You cannot grant access in this namespace"
                 analytics={{
                   link_name: 'grant-access',
-                  workspace,
+                  namespace,
                 }}
               >
                 Grant access
@@ -133,15 +136,15 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         </ToolbarContent>
       </Toolbar>
       <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
-      {filteredSBRs.length ? (
+      {filterRBs.length ? (
         <Table
-          data={filteredSBRs}
+          data={filterRBs}
           aria-label="User access list"
-          Header={SBRListHeader}
-          Row={SBRListRow}
+          Header={RBListHeader}
+          Row={RBListRow}
           loaded
-          getRowProps={(obj: WorkspaceBinding) => ({
-            id: obj.masterUserRecord,
+          getRowProps={(obj: RoleBinding) => ({
+            id: obj.metadata.name,
           })}
         />
       ) : (

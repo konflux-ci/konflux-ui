@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
 import { mockLocation } from '../../utils/test-utils';
-import { useSearchParam } from '../useSearchParam';
+import { useSearchParam, useSearchParamBatch } from '../useSearchParam';
 
 mockLocation();
 
@@ -107,5 +107,91 @@ describe('useSearchParam', () => {
     rerender({ defaultValue: 'bar' });
     [value] = result.current;
     expect(value).toBe('foo');
+  });
+});
+
+describe('useSearchParamBatch', () => {
+  let params: URLSearchParams;
+  beforeEach(() => {
+    params = new URLSearchParams();
+    useSearchParamsMock.mockImplementation(() => [
+      params,
+      (newParams: URLSearchParams) => {
+        params = newParams;
+        window.location.search = `?${newParams.toString()}`;
+      },
+    ]);
+  });
+
+  it('should set multiple URL search params', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [, batchSet] = result.current;
+    expect(params.get('test')).toBeNull();
+    expect(params.get('foo')).toBeNull();
+    expect(params.get('eek')).toBeNull();
+
+    const newValues: Record<string, string> = { test: 'bar', foo: 'baz', eek: 'qux' };
+
+    batchSet(newValues);
+    expect(params.get('test')).toBe('bar');
+    expect(params.get('foo')).toBe('baz');
+    expect(params.get('eek')).toBeNull();
+  });
+
+  it('should get specified URL search params', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [values] = result.current;
+    params.set('test', 'bar');
+    params.set('foo', 'baz');
+
+    expect(values('test')).toMatchObject({ test: 'bar' });
+    expect(values(['test', 'foo'])).toMatchObject({ test: 'bar', foo: 'baz' });
+  });
+
+  it('should get all URL search params', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [values] = result.current;
+    params.set('test', 'bar');
+    params.set('foo', 'baz');
+    params.set('eek', 'qux');
+
+    expect(values()).toMatchObject({ test: 'bar', foo: 'baz' });
+  });
+
+  it('should unset specified URL search params', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [, , batchUnset] = result.current;
+    params.set('test', 'bar');
+    params.set('foo', 'baz');
+    params.set('eek', 'qux');
+
+    batchUnset(['test']);
+    expect(params.has('test')).toBe(false);
+    expect(params.has('foo')).toBe(true);
+    expect(params.has('eek')).toBe(true);
+  });
+
+  it('should unset all URL search params', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [, , batchUnset] = result.current;
+    params.set('test', 'bar');
+    params.set('foo', 'baz');
+    params.set('eek', 'qux');
+
+    batchUnset();
+    expect(params.has('test')).toBe(false);
+    expect(params.has('foo')).toBe(false);
+    expect(params.has('eek')).toBe(true);
+  });
+
+  it('should unset search param when set to empty', () => {
+    const { result } = renderHook(() => useSearchParamBatch(['test', 'foo']));
+    const [, batchSet] = result.current;
+    params.set('test', 'bar');
+    params.set('foo', 'baz');
+
+    batchSet({ test: '', foo: 'qux' });
+    expect(params.has('test')).toBe(false);
+    expect(params.get('foo')).toBe('qux');
   });
 });
