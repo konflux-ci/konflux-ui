@@ -8,9 +8,9 @@ import {
   SplitItem,
   Title,
 } from '@patternfly/react-core';
+import { CloseButton } from '../../shared';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-
 import './WhatsNextSection.scss';
 
 export type WhatsNextItem = {
@@ -35,15 +35,37 @@ type WhatsNextSectionProps = {
   whatsNextItems: WhatsNextItem[];
 };
 
+const DISMISSED_CARD_STORAGE_KEY = 'dismissedCards';
+
 const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNextSectionProps>> = ({
   whatsNextItems,
 }) => {
+  const [whatsNextData, setWhatsNextData] = React.useState(whatsNextItems);
+
+  const handleCardDismissal = (title: string) => {
+    setWhatsNextData((prev) => prev.filter((item) => item.title !== title));
+    let dismissedCards: string[] = [];
+    if (localStorage.getItem(DISMISSED_CARD_STORAGE_KEY) !== null)
+      dismissedCards = JSON.parse(localStorage.getItem(DISMISSED_CARD_STORAGE_KEY));
+    localStorage.setItem(DISMISSED_CARD_STORAGE_KEY, JSON.stringify([title, ...dismissedCards]));
+  };
+
+  React.useEffect(() => {
+    let dismissedCards: string[] = [];
+    if (localStorage.getItem(DISMISSED_CARD_STORAGE_KEY) !== null)
+      dismissedCards = JSON.parse(localStorage.getItem(DISMISSED_CARD_STORAGE_KEY));
+    const list: WhatsNextItem[] = whatsNextItems.filter(
+      (item) => !dismissedCards.includes(item.title),
+    );
+    setWhatsNextData(list);
+  }, [whatsNextItems]);
+
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
       <Title size="lg" headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        What&apos;s next?
+        {whatsNextData?.length > 0 && "What's next?"}
       </Title>
-      {whatsNextItems.map((item) => (
+      {whatsNextData.map((item) => (
         <Card className="whats-next-card" key={item.title} isFlat>
           <SplitItem>
             <img src={item.icon} alt={item.title} className="whats-next-card__icon" />
@@ -78,6 +100,12 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
                 Learn more
               </ExternalLink>
             )}
+            <CloseButton
+              dataTestID="close-button"
+              onClick={() => {
+                handleCardDismissal(item.title);
+              }}
+            />
           </SplitItem>
         </Card>
       ))}
