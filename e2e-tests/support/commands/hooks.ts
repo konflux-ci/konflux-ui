@@ -17,7 +17,7 @@ before(() => {
   );
 
   if (Cypress.env('PR_CHECK') || Cypress.env('PERIODIC_RUN')) {
-    Login.prCheckLogin();
+    Login.localKonfluxLogin();
   } else {
     Login.login();
   }

@@ -26,5 +26,4 @@ Cypress.on('uncaught:exception', (err) => {
 const logOptions = {
   enableExtendedCollector: true,
 };
-require('cypress-terminal-report/src/installLogsCollector')(logOptions);
 initPerfMeasuring('cypress/perfstats.json');

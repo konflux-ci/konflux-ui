@@ -15,6 +15,8 @@ else
 fi
 
 npx cypress run $args
+EXIT_CODE=$?
+echo "Tests exited with code $EXIT_CODE. Archiving artifacts."
 
 if [ -d "/e2e/cypress" ]; then
   cp -a /e2e/cypress/* /tmp/artifacts
@@ -23,3 +25,4 @@ if [ -d "/e2e/cypress" ]; then
 else
   cp -a /tmp/e2e/cypress/* /tmp/artifacts
 fi
+exit $EXIT_CODE
