@@ -42,10 +42,10 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
 
   const handleCardDismissal = (title: string) => {
     setWhatsNextData((prev) => prev.filter((item) => item.title !== title));
-    let dimissedCards: string[] = [];
+    let dismissedCards: string[] = [];
     if (localStorage.getItem('dismissedCards') !== null)
-      dimissedCards = JSON.parse(localStorage.getItem('dismissedCards'));
-    localStorage.setItem('dismissedCards', JSON.stringify([title, ...dimissedCards]));
+      dismissedCards = JSON.parse(localStorage.getItem('dismissedCards'));
+    localStorage.setItem('dismissedCards', JSON.stringify([title, ...dismissedCards]));
   };
 
   React.useEffect(() => {
