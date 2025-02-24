@@ -35,6 +35,8 @@ type WhatsNextSectionProps = {
   whatsNextItems: WhatsNextItem[];
 };
 
+const DISMISSED_CARD_STORAGE_KEY = 'dismissedCards';
+
 const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNextSectionProps>> = ({
   whatsNextItems,
 }) => {
@@ -43,22 +45,19 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
   const handleCardDismissal = (title: string) => {
     setWhatsNextData((prev) => prev.filter((item) => item.title !== title));
     let dismissedCards: string[] = [];
-    if (localStorage.getItem('dismissedCards') !== null)
-      dismissedCards = JSON.parse(localStorage.getItem('dismissedCards'));
-    localStorage.setItem('dismissedCards', JSON.stringify([title, ...dismissedCards]));
+    if (localStorage.getItem(DISMISSED_CARD_STORAGE_KEY) !== null)
+      dismissedCards = JSON.parse(localStorage.getItem(DISMISSED_CARD_STORAGE_KEY));
+    localStorage.setItem(DISMISSED_CARD_STORAGE_KEY, JSON.stringify([title, ...dismissedCards]));
   };
 
   React.useEffect(() => {
     let dismissedCards: string[] = [];
-    if (localStorage.getItem('dismissedCards') !== null)
-      dismissedCards = JSON.parse(localStorage.getItem('dismissedCards'));
-    if (dismissedCards.length === 0) setWhatsNextData(whatsNextItems);
-    else {
-      const list = whatsNextItems.filter((item) => {
-        return !dismissedCards.find((title) => title === item.title);
-      });
-      setWhatsNextData(list);
-    }
+    if (localStorage.getItem(DISMISSED_CARD_STORAGE_KEY) !== null)
+      dismissedCards = JSON.parse(localStorage.getItem(DISMISSED_CARD_STORAGE_KEY));
+    const list: WhatsNextItem[] = whatsNextItems.filter(
+      (item) => !dismissedCards.includes(item.title),
+    );
+    setWhatsNextData(list);
   }, [whatsNextItems]);
 
   return (
