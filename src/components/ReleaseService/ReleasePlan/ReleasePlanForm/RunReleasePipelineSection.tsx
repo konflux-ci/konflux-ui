@@ -3,8 +3,8 @@ import { ExpandableSection, FormSection, List, ListItem } from '@patternfly/reac
 import { useField } from 'formik';
 import { InputField, RadioGroupField, TextAreaField } from 'formik-pf';
 import HelpPopover from '../../../../components/HelpPopover';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import FormikParamsField from '../../../IntegrationTests/FormikParamsField';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { ReleasePipelineLocation } from './form-utils';
 
 const GitOptions: React.FC<{ required?: boolean }> = ({ required = false }) => {
@@ -48,7 +48,7 @@ const GitOptions: React.FC<{ required?: boolean }> = ({ required = false }) => {
 export const RunReleasePipelineSection: React.FC = () => {
   const [{ value: pipelineLocation }] =
     useField<ReleasePipelineLocation>('releasePipelineLocation');
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   return (
     <>

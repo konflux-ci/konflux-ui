@@ -1,6 +1,7 @@
 import { fireEvent } from '@testing-library/dom';
 import { FormikProps } from 'formik';
-import { createUseWorkspaceInfoMock, formikRenderer } from '../../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
+import { formikRenderer } from '../../../../../utils/test-utils';
 import { ReleasePlanForm } from '../ReleasePlanForm';
 
 jest.mock('react-router-dom', () => ({
@@ -18,8 +19,9 @@ jest.mock('../../../../../shared/hooks/useScrollShadows', () => ({
   useScrollShadows: jest.fn().mockReturnValue('none'),
 }));
 
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 describe('ReleasePlanForm', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  useNamespaceMock.mockReturnValue('test-ns');
 
   it('should show create form if edit flag is not provided', () => {
     const values = {};
@@ -36,7 +38,7 @@ describe('ReleasePlanForm', () => {
     expect(result.getByRole('textbox', { name: 'Release plan name' })).toBeVisible();
     const breadcrumbLink = result.getByRole('link', { name: /release/i });
     fireEvent.click(breadcrumbLink);
-    expect(breadcrumbLink).toHaveAttribute('href', '/workspaces/test-ws/release');
+    expect(breadcrumbLink).toHaveAttribute('href', '/workspaces/test-ns/release');
   });
 
   it('should show edit form if edit flag is provided', () => {

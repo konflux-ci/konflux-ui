@@ -3,19 +3,23 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import { useRelease } from '../../hooks/useReleases';
 import { HttpError } from '../../k8s/error';
+import {
+  APPLICATION_RELEASE_DETAILS_PATH,
+  APPLICATION_RELEASE_LIST_PATH,
+} from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const ReleaseDetailsView: React.FC = () => {
   const { applicationName, releaseName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [release, loaded, error] = useRelease(namespace, workspace, releaseName);
+  const [release, loaded, error] = useRelease(namespace, releaseName);
 
   if (error) {
     const httpError = HttpError.fromCode((error as { code: number }).code);
@@ -42,11 +46,18 @@ const ReleaseDetailsView: React.FC = () => {
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/releases`,
+          path: APPLICATION_RELEASE_LIST_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+          }),
           name: 'Releases',
         },
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/releases/${releaseName}`,
+          path: APPLICATION_RELEASE_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            releaseName,
+          }),
           name: release.metadata.name,
         },
       ]}
@@ -55,7 +66,11 @@ const ReleaseDetailsView: React.FC = () => {
           <b data-test="release-name">{release.metadata.name}</b>
         </Text>
       }
-      baseURL={`/workspaces/${workspace}/applications/${applicationName}/releases/${releaseName}`}
+      baseURL={APPLICATION_RELEASE_DETAILS_PATH.createPath({
+        workspaceName: namespace,
+        applicationName,
+        releaseName,
+      })}
       tabs={[
         {
           key: 'index',

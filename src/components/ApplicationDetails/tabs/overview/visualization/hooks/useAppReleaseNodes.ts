@@ -5,7 +5,6 @@ import { Condition } from '../../../../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../../../../types/coreBuildService';
 import { K8sResourceCommon } from '../../../../../../types/k8s';
 import { conditionsRunStatus, runStatus } from '../../../../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
@@ -51,12 +50,8 @@ export const useAppReleaseNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const { workspace } = useWorkspaceInfo();
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace, workspace);
-  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(
-    namespace,
-    workspace,
-  );
+  const [releases, releasesLoaded, releasesError] = useReleases(namespace);
+  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
   const allLoaded = releasesLoaded && releasePlansLoaded;
   const allErrors = [releasesError, releasePlansError].filter((e) => !!e);
 

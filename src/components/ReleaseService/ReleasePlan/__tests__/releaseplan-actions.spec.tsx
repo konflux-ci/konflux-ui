@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
 import { ReleasePlanKind } from '../../../../types/coreBuildService';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { useReleasePlanActions } from '../releaseplan-actions';
 
 jest.mock('../../../../utils/rbac', () => ({
@@ -20,16 +20,16 @@ jest.mock('react-router-dom', () => {
 
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 describe('useReleasePlanActions', () => {
   let navigateMock: jest.Mock;
-
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
   beforeEach(() => {
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
     useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should contain trigger actions', () => {
@@ -46,7 +46,7 @@ describe('useReleasePlanActions', () => {
       expect.objectContaining({
         label: 'Trigger release plan',
         cta: {
-          href: `/workspaces/test-ws/release/release-plan/trigger/test-release-plan`,
+          href: `/workspaces/test-ns/release/release-plan/trigger/test-release-plan`,
         },
       }),
     );
@@ -65,7 +65,7 @@ describe('useReleasePlanActions', () => {
       expect.objectContaining({
         label: 'Edit release plan',
         cta: {
-          href: `/workspaces/test-ws/release/release-plan/edit/test-release-plan`,
+          href: `/workspaces/test-ns/release/release-plan/edit/test-release-plan`,
         },
       }),
     );

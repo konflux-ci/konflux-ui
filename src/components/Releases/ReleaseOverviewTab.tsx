@@ -14,30 +14,33 @@ import {
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
-import { useWorkspaceResource } from '../../hooks/useWorkspaceResource';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types/release';
 import { calculateDuration } from '../../utils/pipeline-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const getPipelineRunFromRelease = (release: ReleaseKind): string => {
   // backward compatibility until https://issues.redhat.com/browse/RELEASE-1109 is released.
   return release.status?.processing?.pipelineRun ?? release.status?.managedProcessing?.pipelineRun;
 };
 
+const getNamespaceAndPRName = (
+  pipelineRunObj: string,
+): [namespace?: string, pipelineRun?: string] => {
+  return pipelineRunObj
+    ? (pipelineRunObj.split('/').slice(0, 2) as [string?, string?])
+    : [undefined, undefined];
+};
+
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [release] = useRelease(workspace, namespace, releaseName);
-  const [pipelineRun, prWorkspace] = useWorkspaceResource(getPipelineRunFromRelease(release));
-  const [releasePlan, releasePlanLoaded] = useReleasePlan(
-    namespace,
-    workspace,
-    release.spec.releasePlan,
-  );
+  const namespace = useNamespace();
+  const [release] = useRelease(namespace, releaseName);
+  const [prNamespace, pipelineRun] = getNamespaceAndPRName(getPipelineRunFromRelease(release));
+  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release.spec.releasePlan);
   const duration = calculateDuration(
     typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
     typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
@@ -121,7 +124,7 @@ const ReleaseOverviewTab: React.FC = () => {
                   <DescriptionListTerm>Snapshot</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Link
-                      to={`/workspaces/${workspace}/applications/${releasePlan.spec.application}/snapshots/${release.spec.snapshot}`}
+                      to={`/workspaces/${namespace}/applications/${releasePlan.spec.application}/snapshots/${release.spec.snapshot}`}
                     >
                       {release.spec.snapshot}
                     </Link>
@@ -137,9 +140,9 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Pipeline Run</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {pipelineRun && prWorkspace && releasePlanLoaded ? (
+                  {pipelineRun && prNamespace && releasePlanLoaded ? (
                     <Link
-                      to={`/workspaces/${prWorkspace}/applications/${releasePlan.spec.application}/pipelineruns/${pipelineRun}`}
+                      to={`/workspaces/${prNamespace}/applications/${releasePlan.spec.application}/pipelineruns/${pipelineRun}`}
                     >
                       {pipelineRun}
                     </Link>

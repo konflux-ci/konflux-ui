@@ -3,7 +3,6 @@ import { screen } from '@testing-library/react';
 import {
   createK8sWatchResourceMock,
   createUseParamsMock,
-  createUseWorkspaceInfoMock,
   renderWithQueryClientAndRouter,
 } from '../../../utils/test-utils';
 import ReleaseDetailsView from '../ReleaseDetailsView';
@@ -26,8 +25,6 @@ const watchResourceMock = createK8sWatchResourceMock();
 
 describe('ReleaseDetailsView', () => {
   createUseParamsMock({ applicationName: 'my-app', releaseName: 'test-release' });
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
-
   it('should render spinner if release data is not loaded', () => {
     watchResourceMock.mockReturnValue([[], false]);
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
