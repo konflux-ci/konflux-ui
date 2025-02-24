@@ -49,13 +49,13 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
   };
 
   React.useEffect(() => {
-    let dimissedCards: string[] = [];
+    let dismissedCards: string[] = [];
     if (localStorage.getItem('dismissedCards') !== null)
-      dimissedCards = JSON.parse(localStorage.getItem('dismissedCards'));
-    if (dimissedCards.length === 0) setWhatsNextData(whatsNextItems);
+      dismissedCards = JSON.parse(localStorage.getItem('dismissedCards'));
+    if (dismissedCards.length === 0) setWhatsNextData(whatsNextItems);
     else {
       const list = whatsNextItems.filter((item) => {
-        return !dimissedCards.find((title) => title === item.title);
+        return !dismissedCards.find((title) => title === item.title);
       });
       setWhatsNextData(list);
     }
