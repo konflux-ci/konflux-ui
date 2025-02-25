@@ -55,9 +55,10 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
     track(TrackEvents.ButtonClicked, {
       link_name: 'component-relationship-modal-leave',
       app_name: application,
+      namespace,
     });
     setShowCancelModal(true);
-  }, [application, track]);
+  }, [application, track, namespace]);
 
   const initialValues: ComponentRelationFormikValue = React.useMemo(() => {
     return {
@@ -92,6 +93,7 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
             track('Component relationship updated', {
               component_name: c.metadata.name,
               app_name: application,
+              namespace,
             });
           });
           onSaveRelationships();

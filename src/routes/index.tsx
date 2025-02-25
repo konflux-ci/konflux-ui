@@ -55,7 +55,6 @@ import {
   ReleaseService,
   TriggerReleaseFormPage,
 } from '../components/ReleaseService';
-import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
   SnapshotDetailsView,
   snapshotDetailsViewLoader,
@@ -81,6 +80,7 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import componentRoutes from './page-routes/components';
+import secretRoutes from './page-routes/secrets';
 import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
@@ -111,6 +111,7 @@ export const router = createBrowserRouter([
       ...applicationRoutes,
       ...workspaceRoutes,
       ...componentRoutes,
+      ...secretRoutes,
 
       /* Application details */
       {
@@ -232,19 +233,6 @@ export const router = createBrowserRouter([
           { index: true, element: <CommitOverviewTab /> },
           { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
         ],
-      },
-      /* Secrets create form */
-      {
-        path: `workspaces/:workspaceName/secrets/create`,
-        element: <AddSecretForm />,
-        errorElement: <RouteErrorBoundry />,
-      },
-      /* Secrets list view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/secrets`,
-        loader: secretListViewLoader,
-        element: <SecretsListPage />,
-        errorElement: <RouteErrorBoundry />,
       },
       /* Trigger Release plan */
       {
