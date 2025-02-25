@@ -17,14 +17,19 @@ import { ElementModel, GraphElement } from '@patternfly/react-topology';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
+import {
+  COMPONENT_DETAILS_PATH,
+  INTEGRATION_TEST_DETAILS_PATH,
+  PIPELINE_RUNS_LOG_PATH,
+} from '../../../../routes/paths';
 import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
+import { useNamespaceInfo } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { calculateDuration } from '../../../../utils/pipeline-utils';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
 
 export interface IntegrationTestSidePanelBodyProps {
@@ -35,7 +40,7 @@ export interface IntegrationTestSidePanelBodyProps {
 const IntegrationTestSidePanel: React.FC<
   React.PropsWithChildren<IntegrationTestSidePanelBodyProps>
 > = ({ workflowNode, onClose }) => {
-  const { workspace, namespace } = useWorkspaceInfo();
+  const { namespace } = useNamespaceInfo();
   const workflowData = workflowNode.getData();
   const integrationTestPipeline = workflowData.resource as PipelineRunKind;
   const [taskRuns] = useTaskRuns(namespace, integrationTestPipeline?.metadata.name);
@@ -61,9 +66,10 @@ const IntegrationTestSidePanel: React.FC<
           <span className="commit-side-panel__head-title">
             {integrationTestPipeline ? (
               <Link
-                to={`/workspaces/${workspace}/applications/${
-                  workflowData.application
-                }/integrationtests/${workflowNode.getLabel()}`}
+                to={INTEGRATION_TEST_DETAILS_PATH.createPath({
+                  applicationName: workflowData.application,
+                  integrationTestName: workflowNode.getLabel(),
+                })}
               >
                 {workflowNode.getLabel()}
               </Link>
@@ -122,11 +128,12 @@ const IntegrationTestSidePanel: React.FC<
                 {integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                   integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                     <Link
-                      to={`/workspaces/${workspace}/applications/${
-                        integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION]
-                      }/components/${
-                        integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT]
-                      }`}
+                      to={COMPONENT_DETAILS_PATH.createPath({
+                        applicationName:
+                          integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION],
+                        componentName:
+                          integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT],
+                      })}
                     >
                       {integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT]}
                     </Link>
@@ -171,7 +178,10 @@ const IntegrationTestSidePanel: React.FC<
                       component={(props) => (
                         <Link
                           {...props}
-                          to={`/workspaces/${workspace}/applications/${workflowData.application}/pipelineruns/${integrationTestPipeline.metadata?.name}/logs`}
+                          to={PIPELINE_RUNS_LOG_PATH.createPath({
+                            applicationName: workflowData.application,
+                            pipelineRunName: integrationTestPipeline.metadata?.name,
+                          })}
                         />
                       )}
                     >

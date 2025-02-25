@@ -6,7 +6,6 @@ import { filterDeletedResources } from '../utils/resource-utils';
 
 export const useIntegrationTestScenario = (
   namespace: string,
-  workspace: string,
   applicationName: string,
   testName: string,
 ): [IntegrationTestScenarioKind, boolean, unknown] => {
@@ -19,7 +18,6 @@ export const useIntegrationTestScenario = (
       groupVersionKind: IntegrationTestScenarioGroupVersionKind,
       name: testName,
       namespace,
-      workspace,
     },
     IntegrationTestScenarioModel,
   );
@@ -40,7 +38,6 @@ export const useIntegrationTestScenario = (
 
 export const useIntegrationTestScenarios = (
   namespace: string,
-  workspace: string,
   applicationName: string,
 ): [IntegrationTestScenarioKind[], boolean, unknown] => {
   const {
@@ -51,7 +48,6 @@ export const useIntegrationTestScenarios = (
     {
       groupVersionKind: IntegrationTestScenarioGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     IntegrationTestScenarioModel,
