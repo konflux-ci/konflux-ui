@@ -38,7 +38,9 @@ export const supportedPartnerTasksSecrets: { [key: string]: BuildTimeSecret } = 
     name: 'snyk-secret',
     providerUrl: 'https://snyk.io/',
     tokenKeyName: 'snyk_token',
-    keyValuePairs: [{ key: 'snyk_token', value: '', readOnlyKey: true, readOnlyValue: false }],
+    opaque: {
+      keyValuePairs: [{ key: 'snyk_token', value: '', readOnlyKey: true, readOnlyValue: false }],
+    },
   },
 };
 
@@ -65,7 +67,7 @@ export const getSupportedPartnerTaskKeyValuePairs = (
   arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
 ) => {
   const partnerTask = Object.values(arr).find((secret) => secret.name === secretName);
-  return partnerTask ? partnerTask.keyValuePairs : [];
+  return partnerTask ? partnerTask.opaque.keyValuePairs : [];
 };
 
 export const typeToLabel = (type: string) => {

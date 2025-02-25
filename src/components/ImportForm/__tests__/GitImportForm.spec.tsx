@@ -1,18 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { fireEvent, screen } from '@testing-library/react';
+import { useBuildPipelineConfig } from '../../../hooks/useBuildPipelineConfig';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { routerRenderer } from '../../../utils/test-utils';
 import { GitImportForm } from '../GitImportForm';
-import { usePipelineTemplates } from '../PipelineSection/usePipelineTemplate';
 import { createResources } from '../submit-utils';
 
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
   useQuery: jest.fn(),
-}));
-
-jest.mock('../PipelineSection/usePipelineTemplate', () => ({
-  usePipelineTemplates: jest.fn(),
 }));
 
 jest.mock('../../../hooks/useSecrets', () => ({
@@ -29,7 +25,11 @@ jest.mock('../../../hooks/useUIInstance', () => {
   };
 });
 
-const mockUsePipelineTemplate = usePipelineTemplates as jest.Mock;
+jest.mock('../../../hooks/useBuildPipelineConfig', () => ({
+  useBuildPipelineConfig: jest.fn(),
+}));
+
+const mockUseBuildPipelineConfig = useBuildPipelineConfig as jest.Mock;
 const mockUseSecrets = useSecrets as jest.Mock;
 const mockCreateResources = createResources as jest.Mock;
 const mockUseQuery = useQuery as jest.Mock;
@@ -45,7 +45,7 @@ describe('GitImportForm', () => {
         data: undefined,
         isLoading: true,
       });
-    mockUsePipelineTemplate.mockReturnValue([
+    mockUseBuildPipelineConfig.mockReturnValue([
       {
         defaultPipelineName: 'mock-pipeline',
         pipelines: [{ name: 'mock-pipeline', bundle: 'latest' }],

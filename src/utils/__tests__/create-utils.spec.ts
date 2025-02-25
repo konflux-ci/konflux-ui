@@ -1,16 +1,26 @@
-import { omit } from 'lodash-es';
+import {
+  addSecretFormValues,
+  mockApplicationRequestData,
+  mockComponent,
+  mockComponentData,
+  mockComponentDataWithDevfile,
+  mockComponentDataWithoutAnnotation,
+  mockComponentDataWithPAC,
+  mockComponentWithDevfile,
+  secretFormValues,
+} from '../../components/Secrets/__data__/mock-secrets';
 import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
-import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../types';
-import { ComponentKind, ComponentSpecs } from '../../types/component';
+import { SecretTypeDropdownLabel, SourceSecretType } from '../../types';
 import {
   createApplication,
   createComponent,
   sanitizeName,
   createSecret,
+  getSecretObject,
   addSecret,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
@@ -31,120 +41,6 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
 const createResourceMock = k8sCreateResource as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
 
-const mockApplicationRequestData = {
-  apiVersion: `${ApplicationModel.apiGroup}/${ApplicationModel.apiVersion}`,
-  kind: ApplicationModel.kind,
-  metadata: {
-    name: 'test-application',
-    namespace: 'test-ns',
-  },
-  spec: {
-    displayName: 'test-application',
-  },
-};
-
-const mockComponent: ComponentSpecs = {
-  componentName: 'Test Component',
-  application: 'test-application',
-  source: {
-    git: {
-      url: 'http://github.com/test-repo',
-    },
-  },
-};
-
-const mockComponentWithDevfile = {
-  ...mockComponent,
-  source: {
-    git: {
-      ...mockComponent.source.git,
-      devfileUrl: 'https://registry.devfile.io/sample-devfile',
-    },
-  },
-};
-
-const mockComponentData: ComponentKind = {
-  apiVersion: `${ComponentModel.apiGroup}/${ComponentModel.apiVersion}`,
-  kind: ComponentModel.kind,
-  metadata: {
-    name: 'test-component',
-    namespace: 'test-ns',
-    annotations: {
-      'build.appstudio.openshift.io/request': 'configure-pac',
-    },
-  },
-  spec: {
-    componentName: mockComponent.componentName,
-    application: 'test-application',
-    source: {
-      git: { url: mockComponent.source.git.url },
-    },
-    containerImage: undefined,
-    env: undefined,
-    replicas: undefined,
-    resources: undefined,
-    secret: undefined,
-  },
-};
-
-const mockComponentDataWithDevfile: ComponentKind = {
-  ...mockComponentData,
-  spec: {
-    ...mockComponentData.spec,
-    source: {
-      git: {
-        url: mockComponent.source.git.url,
-        devfileUrl: 'https://registry.devfile.io/sample-devfile',
-      },
-    },
-  },
-};
-
-const mockComponentDataWithoutAnnotation = omit(
-  mockComponentDataWithDevfile,
-  'metadata.annotations',
-);
-
-const mockComponentDataWithPAC = {
-  ...mockComponentDataWithDevfile,
-  metadata: {
-    ...mockComponentDataWithDevfile.metadata,
-    annotations: {
-      'build.appstudio.openshift.io/request': 'configure-pac',
-    },
-  },
-};
-
-const addSecretFormValues: AddSecretFormValues = {
-  type: 'Image pull secret',
-  name: 'test',
-  secretFor: SecretFor.Build,
-  opaque: {
-    keyValues: [
-      {
-        key: 'test',
-        value: 'dGVzdA==',
-      },
-    ],
-  },
-  image: {
-    authType: 'Image registry credentials',
-    registryCreds: [
-      {
-        registry: 'test.io',
-        username: 'test',
-        password: 'test',
-        email: 'test@test.com',
-      },
-    ],
-  },
-  source: {
-    authType: 'Basic authentication',
-    username: 'test',
-    password: 'test',
-  },
-  labels: [{ key: 'test', value: 'test' }],
-};
 describe('Create Utils', () => {
   beforeEach(() => {
     mockWindowFetch();
@@ -426,7 +322,7 @@ describe('Create Utils', () => {
       {
         secretName: 'my-snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
 
       'test-ns',
@@ -452,7 +348,7 @@ describe('Create Utils', () => {
       {
         secretName: 'my-snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
 
       'test-ns',
@@ -478,7 +374,7 @@ describe('Create Utils', () => {
       {
         secretName: 'registry-creds',
         type: SecretTypeDropdownLabel.image,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        image: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
 
       'test-ns',
@@ -496,6 +392,83 @@ describe('Create Utils', () => {
     );
   });
 
+  it('should add correct values for Image pull secret', async () => {
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.image,
+        image: { keyValues: [{ key: 'test', value: 'test-value' }] },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ stringData: { test: 'test-value' } }),
+      }),
+    );
+  });
+
+  it('should create a Source secret', async () => {
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.source,
+        source: { authType: SourceSecretType.basic, username: 'test1', password: 'pass-test' },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/basic-auth' }),
+      }),
+    );
+  });
+
+  it('should add correct data for Source secret', async () => {
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.source,
+        source: { authType: SourceSecretType.basic, username: 'test1', password: 'pass-test' },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({
+          stringData: { password: 'cGFzcy10ZXN0', username: 'dGVzdDE=' },
+        }),
+      }),
+    );
+  });
+
   it('should create partner task secret', async () => {
     createResourceMock.mockClear();
     createResourceMock
@@ -507,9 +480,8 @@ describe('Create Utils', () => {
       {
         secretName: 'snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
-
       'test-ns',
       false,
     );
@@ -518,7 +490,7 @@ describe('Create Utils', () => {
   });
   it('should add secret', async () => {
     createResourceMock.mockClear();
-    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    await addSecret(addSecretFormValues, 'test-ns');
     expect(createResourceMock).toHaveBeenCalled();
 
     expect(createResourceMock).toHaveBeenCalledWith(
@@ -532,12 +504,27 @@ describe('Create Utils', () => {
 
   it('should call linkToServiceAccount For image pull secrets', async () => {
     linkSecretToServiceAccountMock.mockClear();
-    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    await addSecret(addSecretFormValues, 'test-ns');
     expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
     expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
       'test-ns',
-      'test-ws',
     );
+  });
+});
+
+describe('create-utils getSecretObject', () => {
+  beforeEach(() => {
+    mockWindowFetch();
+  });
+
+  it('should create a secret object', () => {
+    const obj = getSecretObject(secretFormValues, 'test-ns');
+    expect(obj.kind).toBe(SecretModel.kind);
+  });
+
+  it('should create a correct fields', () => {
+    const obj = getSecretObject(secretFormValues, 'test-ns');
+    expect(obj.stringData).toEqual({ test: 'dGVzdA==' });
   });
 });

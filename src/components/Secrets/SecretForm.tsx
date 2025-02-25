@@ -12,6 +12,7 @@ import {
   BuildTimeSecret,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
+import { SourceSecretForm } from './SecretsForm/SourceSecretForm';
 import SecretTypeSelector from './SecretTypeSelector';
 import {
   supportedPartnerTasksSecrets,
@@ -41,6 +42,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
       .filter((secret) => secret.type !== K8sSecretType[SecretTypeDropdownLabel.image])
       .map((secret) => ({ value: secret.name, lable: secret.name }));
   }, [currentType, existingSecrets]);
+
   const optionsValues = useMemo(() => {
     return existingSecrets
       .filter((secret) => secret.type === K8sSecretType[currentType])
@@ -55,13 +57,13 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
   }, [currentType, existingSecrets]);
 
   const clearKeyValues = () => {
-    const newKeyValues = values.keyValues.filter((kv) => !kv.readOnlyKey);
+    const newKeyValues = values.opaque.keyValues.filter((kv) => !kv.readOnlyKey);
     void setFieldValue('keyValues', [...(newKeyValues.length ? newKeyValues : defaultKeyValues)]);
   };
 
   const resetKeyValues = () => {
     options = [];
-    const newKeyValues = values.keyValues.filter(
+    const newKeyValues = values.opaque.keyValues.filter(
       (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
     );
     void setFieldValue('keyValues', [...newKeyValues, ...defaultImageKeyValues]);
@@ -69,14 +71,14 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
 
   const dropdownItems: DropdownItemObject[] = Object.entries(SecretTypeDropdownLabel).reduce(
     (acc, [key, value]) => {
-      value !== SecretTypeDropdownLabel.source && acc.push({ key, value });
+      acc.push({ key, value });
       return acc;
     },
     [],
   );
 
   return (
-    <Form>
+    <Form data-test="secret-form">
       <SecretTypeSelector
         dropdownItems={dropdownItems}
         onChange={(type) => {
@@ -86,6 +88,12 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
             values.secretName &&
               isPartnerTask(values.secretName, optionsValues) &&
               void setFieldValue('secretName', '');
+          }
+          if (type === SecretTypeDropdownLabel.source) {
+            resetKeyValues();
+            values.secretName &&
+              isPartnerTask(values.secretName) &&
+              void setFieldValue('secretName', '');
           } else {
             clearKeyValues();
           }
@@ -94,6 +102,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
       <SelectInputField
         required
         key={values.type}
+        data-test="secret-name"
         name="secretName"
         label="Select or enter secret name"
         helpText="Unique name of the new secret."
@@ -111,20 +120,27 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
         }}
         onSelect={(_, value: string) => {
           if (isPartnerTask(value, optionsValues)) {
-            void setFieldValue('keyValues', [
-              ...values.keyValues.filter((kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value)),
+            void setFieldValue('opaque.keyValues', [
+              ...values.opaque.keyValues.filter(
+                (kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value),
+              ),
               ...getSupportedPartnerTaskKeyValuePairs(value, optionsValues),
             ]);
           }
           void setFieldValue('secretName', value);
         }}
       />
-      <KeyValueFileInputField
-        name="keyValues"
-        data-test="secret-key-value-pair"
-        entries={defaultKeyValues}
-        disableRemoveAction={values.keyValues.length === 1}
-      />
+      {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
+      {currentType !== SecretTypeDropdownLabel.source && (
+        <KeyValueFileInputField
+          required
+          name={
+            currentType === SecretTypeDropdownLabel.opaque ? 'opaque.keyValues' : 'image.keyValues'
+          }
+          entries={defaultKeyValues}
+          disableRemoveAction={values.opaque.keyValues.length === 1}
+        />
+      )}
     </Form>
   );
 };
