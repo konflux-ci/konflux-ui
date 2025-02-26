@@ -2,8 +2,8 @@ import React from 'react';
 import { useField } from 'formik';
 import { useAllComponents } from '../../../../../hooks/useComponents';
 import DropdownField from '../../../../../shared/components/formik-fields/DropdownField';
+import { useNamespace } from '../../../../../shared/providers/Namespace';
 import { TargetDropdownDefaults } from '../../../../../types';
-import { useWorkspaceInfo } from '../../../../Workspace/useWorkspaceInfo';
 
 type CVEComponentDropDownProps = Omit<
   React.ComponentProps<typeof DropdownField>,
@@ -13,9 +13,9 @@ type CVEComponentDropDownProps = Omit<
 export const CVEComponentDropDown: React.FC<React.PropsWithChildren<CVEComponentDropDownProps>> = ({
   name,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [, , { setValue, setTouched }] = useField<string>(name);
-  const [components, componentsLoaded] = useAllComponents(namespace, workspace);
+  const [components, componentsLoaded] = useAllComponents(namespace);
 
   const dropdownItems = React.useMemo(
     () => [
