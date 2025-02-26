@@ -8,6 +8,7 @@ import { useNamespace } from '../../shared/providers/Namespace';
 import { AnalyticsProperties, TrackEvents, useTrackEvent } from '../../utils/analytics';
 import ApplicationSection from './ApplicationSection/ApplicationSection';
 import { ComponentSection } from './ComponentSection/ComponentSection';
+import { getErrorMessage } from './error-utils';
 import GitImportActions from './GitImportActions';
 import { PipelineSection } from './PipelineSection/PipelineSection';
 import SecretSection from './SecretSection/SecretSection';
@@ -77,7 +78,8 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
           console.warn('Error while submitting import form:', error);
           track('Git import failed', error as AnalyticsProperties);
           formikHelpers.setSubmitting(false);
-          formikHelpers.setStatus({ submitError: error.message });
+          const errorMessage = getErrorMessage(error);
+          formikHelpers.setStatus({ submitError: errorMessage });
         });
     },
     [bombinoUrl, namespace, navigate, track],
