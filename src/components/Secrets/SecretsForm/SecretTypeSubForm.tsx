@@ -116,6 +116,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
       {isPartnerTaskAvailable(currentTypeRef.current) ? (
         <SelectInputField
           name="name"
+          data-test="secret-name"
           label="Select or enter secret name"
           toggleAriaLabel="Select or enter secret name"
           helpText="Unique name of the new secret"
@@ -144,6 +145,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
       ) : (
         <InputField
           name="name"
+          data-test="secret-name"
           label="Secret name"
           helperText="Unique name of the new secret"
           placeholder="Enter name"

@@ -120,7 +120,7 @@ export const createResources = async (
       isPrivate: isPrivateRepo,
       bombinoUrl,
     });
-    await createSecrets(importSecrets, namespace, false);
+    await createSecrets(secretsToCreate, namespace, false);
   }
 
   return {

@@ -1,13 +1,9 @@
 import { fireEvent, screen } from '@testing-library/react';
+import { useBuildPipelineConfig } from '../../../hooks/useBuildPipelineConfig';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { routerRenderer } from '../../../utils/test-utils';
 import { GitImportForm } from '../GitImportForm';
-import { usePipelineTemplates } from '../PipelineSection/usePipelineTemplate';
 import { createResources } from '../submit-utils';
-
-jest.mock('../PipelineSection/usePipelineTemplate', () => ({
-  usePipelineTemplates: jest.fn(),
-}));
 
 jest.mock('../../../hooks/useSecrets', () => ({
   useSecrets: jest.fn(),
@@ -23,13 +19,17 @@ jest.mock('../../../hooks/useUIInstance', () => {
   };
 });
 
-const mockUsePipelineTemplate = usePipelineTemplates as jest.Mock;
+jest.mock('../../../hooks/useBuildPipelineConfig', () => ({
+  useBuildPipelineConfig: jest.fn(),
+}));
+
+const mockUseBuildPipelineConfig = useBuildPipelineConfig as jest.Mock;
 const mockUseSecrets = useSecrets as jest.Mock;
 const mockCreateResources = createResources as jest.Mock;
 
 describe('GitImportForm', () => {
   beforeEach(() => {
-    mockUsePipelineTemplate.mockReturnValue([
+    mockUseBuildPipelineConfig.mockReturnValue([
       {
         defaultPipelineName: 'mock-pipeline',
         pipelines: [{ name: 'mock-pipeline', bundle: 'latest' }],

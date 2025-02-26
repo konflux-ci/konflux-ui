@@ -1,58 +1,83 @@
 import * as yup from 'yup';
-import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../../k8s';
-import { SpaceBindingRequestGroupVersionKind, SpaceBindingRequestModel } from '../../../models';
-import { SpaceBindingRequest, WorkspaceRole } from '../../../types';
+import { RoleMap } from '../../../hooks/useRole';
+import {
+  K8sQueryCreateResource,
+  K8sQueryDeleteResource,
+  K8sQueryListResourceItems,
+} from '../../../k8s';
+import { RoleBindingGroupVersionKind, RoleBindingModel } from '../../../models';
+import { RoleBinding, NamespaceRole } from '../../../types';
 
 export type UserAccessFormValues = {
   usernames: string[];
-  role: WorkspaceRole;
-};
-
-export const validateUsername = async (username: string) => {
-  try {
-    const res = await fetch(`/api/k8s/registration/api/v1/usernames/${username}`);
-    const [data]: [{ username: string }] = await res.json();
-    return data.username === username;
-  } catch {
-    return false;
-  }
+  role: NamespaceRole;
+  roleMap: RoleMap;
 };
 
 export const userAccessFormSchema = yup.object({
-  usernames: yup
-    .array()
-    .of(yup.string())
-    .min(1, 'Must have at least 1 username.')
-    .required('Required.'),
+  usernames: yup.array().min(1, 'Must have at least 1 username.').required('Required.'),
   role: yup
     .string()
-    .matches(/contributor|maintainer|admin/, 'Invalid role.')
+    .matches(/Contributor|Maintainer|Admin/, 'Invalid role.')
     .required('Required.'),
 });
 
-export const createSBRs = async (
+export const getRBs = (namespace: string): Promise<RoleBinding[]> => {
+  return K8sQueryListResourceItems({
+    model: RoleBindingModel,
+    queryOptions: {
+      ns: namespace,
+    },
+  });
+};
+
+export const sanitizeUsername = (username: string) => {
+  let sanitized = username.toLowerCase();
+  sanitized = sanitized.replace(/[^a-z0-9-]/g, '-');
+  // Remove leading and trailing hyphens
+  sanitized = sanitized.replace(/^-+|-+$/g, '');
+  return sanitized;
+};
+
+/**
+ * Create role-bindings to shared konflux cluster roles
+ */
+export const createRBs = async (
   values: UserAccessFormValues,
   namespace: string,
   dryRun?: boolean,
-): Promise<SpaceBindingRequest[]> => {
-  const { usernames, role } = values;
-  const objs: SpaceBindingRequest[] = usernames.map((username) => ({
-    apiVersion: `${SpaceBindingRequestGroupVersionKind.group}/${SpaceBindingRequestGroupVersionKind.version}`,
-    kind: SpaceBindingRequestGroupVersionKind.kind,
+): Promise<RoleBinding[]> => {
+  const { usernames, role, roleMap } = values;
+  const konfluxRoles = Object.keys(roleMap?.roleMap);
+  const roleRefName = konfluxRoles.find((konfluxRole) => konfluxRole.includes(role.toLowerCase()));
+  const objs: RoleBinding[] = usernames.map((username) => ({
+    apiVersion: `${RoleBindingGroupVersionKind.group}/${RoleBindingGroupVersionKind.version}`,
+    kind: RoleBindingGroupVersionKind.kind,
     metadata: {
-      generateName: `${username}-`,
+      // To sanitize the username and ensure every user just has one role
+      // in the namespace.
+      name: `${sanitizeUsername(username)}`,
       namespace,
     },
-    spec: {
-      masterUserRecord: username,
-      spaceRole: role,
+    roleRef: {
+      apiGroup: RoleBindingGroupVersionKind.group,
+      name: roleRefName,
+      kind: roleMap?.roleKind,
     },
+    subjects: [
+      {
+        kind: 'User',
+        apiGroup: RoleBindingGroupVersionKind.group,
+        name: username,
+        namespace,
+      },
+    ],
   }));
 
   return Promise.all(
     objs.map((obj) =>
       K8sQueryCreateResource({
-        model: SpaceBindingRequestModel,
+        model: RoleBindingModel,
         queryOptions: {
           ns: namespace,
           ...(dryRun && { queryParams: { dryRun: 'All' } }),
@@ -63,32 +88,60 @@ export const createSBRs = async (
   );
 };
 
-/**
- * Only updates one SBR, but returning array to
- * keep it consistent with `createSBRs()`
- */
-export const editSBR = async (
-  values: UserAccessFormValues,
-  sbr: SpaceBindingRequest,
-  dryRun?: boolean,
-): Promise<SpaceBindingRequest[]> => {
-  const { role } = values;
+export const deleteRB = async (roleBinding: RoleBinding, dryRun?: boolean): Promise<void> => {
+  const queryOptions = {
+    model: RoleBindingModel,
+    queryOptions: {
+      name: roleBinding.metadata.name,
+      ns: roleBinding.metadata.namespace,
+      ...(dryRun && { queryParams: { dryRun: 'All' } }),
+    },
+  };
 
-  return Promise.all([
-    K8sQueryPatchResource({
-      model: SpaceBindingRequestModel,
-      queryOptions: {
-        name: sbr.metadata.name,
-        ns: sbr.metadata.namespace,
-        ...(dryRun && { queryParams: { dryRun: 'All' } }),
-      },
-      patches: [
-        {
-          op: 'replace',
-          path: '/spec/spaceRole',
-          value: role,
-        },
-      ],
-    }),
-  ]) as Promise<SpaceBindingRequest[]>;
+  // K8sQueryDeleteResource enjoys the k8sDeleteResource to delete resources.
+  // However, based on the design of k8sDeleteResource, 'dryRun' just affect the
+  // query parameter but would not affect commonFetchJSON.delete.
+  // That is to say, with 'true' dryRun, the resource would be also deleted.
+  // If so, we have to skip the redeletion when dryRun is false.
+  // To do: let us improve the function when the K8sQueryDeleteResource
+  // works well with dryRun.
+  dryRun ? await K8sQueryDeleteResource(queryOptions) : void 0;
+};
+
+/**
+ * The resource "rolebindings" in API group "rbac.authorization.k8s.io" does not
+ * support patch roleRef. And if you try to patch the rolebinding by kubctl directly,
+ * you would get the error 'cannot change roleRef'.
+ * In this case, we need to create one with the new role then delete the
+ * obsoleted one.
+ *
+ * Only updates one RB, but returning array to keep it consistent with `createRBs()`.
+ */
+export const editRB = async (
+  values: UserAccessFormValues,
+  roleBinding: RoleBinding,
+  dryRun?: boolean,
+): Promise<RoleBinding[]> => {
+  const usernames = roleBinding.subjects.map((subject) => subject.name);
+  const { role, roleMap } = values;
+
+  // We need to delete the role binding before we create the new one.
+  const existingRBs = await getRBs(roleBinding.metadata.namespace);
+
+  const roleBindingExists = existingRBs.some(
+    (binding) => binding.metadata.name === roleBinding.metadata.name,
+  );
+
+  if (roleBindingExists) {
+    await deleteRB(roleBinding, dryRun);
+  }
+
+  // Create new role bindings after we delete roles
+  const newRoleBindings = await createRBs(
+    { usernames, role, roleMap },
+    roleBinding.metadata.namespace,
+    dryRun,
+  );
+
+  return newRoleBindings;
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import { WorkspaceRole } from '../../../types';
+import { NamespaceRole } from '../../../types';
 
 import './PermissionsTable.scss';
 
@@ -13,8 +13,8 @@ enum Permission {
 }
 
 // roles and permissions ADR: https://github.com/redhat-appstudio/book/blob/main/ADR/0011-roles-and-permissions.md
-const permissions: Record<WorkspaceRole, Record<string, Permission[]>> = {
-  contributor: {
+const permissions: Record<NamespaceRole, Record<string, Permission[]>> = {
+  Contributor: {
     Application: [Permission.Read],
     Component: [Permission.Read],
     Environment: [Permission.Read],
@@ -31,7 +31,7 @@ const permissions: Record<WorkspaceRole, Record<string, Permission[]>> = {
     'Build Service': [Permission.Read],
     Configs: [Permission.Read],
   },
-  maintainer: {
+  Maintainer: {
     Application: [Permission.Create, Permission.Read, Permission.Update],
     Component: [Permission.Create, Permission.Read, Permission.Update],
     Environment: [Permission.Read],
@@ -53,7 +53,7 @@ const permissions: Record<WorkspaceRole, Record<string, Permission[]>> = {
     'Build Service': [Permission.Create, Permission.Read],
     Configs: [Permission.Read],
   },
-  admin: {
+  Admin: {
     Application: [Permission.Everything],
     Component: [Permission.Everything],
     Environment: [Permission.Everything],
@@ -71,11 +71,11 @@ const permissions: Record<WorkspaceRole, Record<string, Permission[]>> = {
     Configs: [Permission.Everything],
     Secrets: [Permission.Everything],
     'Exec to pods': [Permission.Create],
-    'Space Binding Request': [Permission.Everything],
+    'Role Binding': [Permission.Everything],
   },
 };
 
-export const PermissionsTable = React.memo<{ role: WorkspaceRole }>(({ role }) => {
+export const PermissionsTable = React.memo<{ role: NamespaceRole }>(({ role }) => {
   const rolePermissions = permissions[role];
 
   return (

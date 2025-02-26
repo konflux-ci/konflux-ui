@@ -1,25 +1,27 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
-import { SpaceBindingRequest } from '../../../types';
+import { useRoleMap } from '../../../hooks/useRole';
+import { useNamespace } from '../../../shared/providers/Namespace';
+import { NamespaceRole, RoleBinding } from '../../../types';
 import { TrackEvents, useTrackEvent } from '../../../utils/analytics';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { invalidateWorkspaceQuery } from '../../Workspace/utils';
-import { createSBRs, editSBR, userAccessFormSchema, UserAccessFormValues } from './form-utils';
+import { createRBs, editRB, userAccessFormSchema, UserAccessFormValues } from './form-utils';
 import { UserAccessForm } from './UserAccessForm';
-
 type Props = {
-  existingSbr?: SpaceBindingRequest;
+  existingRb?: RoleBinding;
   username?: string;
   edit?: boolean;
 };
 
 export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
-  existingSbr,
+  existingRb,
   edit,
   username,
 }) => {
-  const { workspace, namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
+  const [roleMap, loaded] = useRoleMap();
   const track = useTrackEvent();
   const navigate = useNavigate();
 
@@ -36,19 +38,17 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
         : {
             link_name: 'grant-access-submit',
           }),
-      workspace,
+      namespace,
     });
     try {
-      await (existingSbr
-        ? editSBR(values, existingSbr, true)
-        : createSBRs(values, namespace, true));
-      await (existingSbr ? editSBR(values, existingSbr) : createSBRs(values, namespace));
+      await (existingRb ? editRB(values, existingRb, true) : createRBs(values, namespace, true));
+      await (existingRb ? editRB(values, existingRb) : createRBs(values, namespace));
       track(edit ? 'Access Edited' : 'Access Created', {
         usernames: values.usernames,
-        workspace,
+        namespace,
       });
       await invalidateWorkspaceQuery();
-      navigate(`/workspace/${workspace}/access`);
+      navigate(`/workspaces/${namespace}/access`);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn('Error while submitting access form:', error);
@@ -67,14 +67,23 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
         : {
             link_name: 'grant-access-leave',
           }),
-      workspace,
+      namespace,
     });
-    navigate(`/workspace/${workspace}/access`);
+    navigate(`/workspaces/${namespace}/access`);
   };
 
+  if (!loaded) {
+    return (
+      <Bullseye>
+        <Spinner data-test="spinner" />
+      </Bullseye>
+    );
+  }
+
   const initialValues: UserAccessFormValues = {
-    usernames: existingSbr ? [existingSbr.spec.masterUserRecord] : edit ? [username] : [],
-    role: existingSbr?.spec?.spaceRole,
+    usernames: existingRb ? existingRb.subjects.map((sub) => sub.name) : [],
+    role: roleMap?.roleMap[existingRb?.roleRef.name] as NamespaceRole,
+    roleMap,
   };
 
   return (

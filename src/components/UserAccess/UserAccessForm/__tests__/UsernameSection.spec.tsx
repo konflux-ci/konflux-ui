@@ -1,92 +1,86 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { formikRenderer } from '../../../../utils/test-utils';
-import { validateUsername } from '../form-utils';
+import { KONFLUX_USERNAME_REGEX_MGS } from '../../../../utils/validation-utils';
 import { UsernameSection } from '../UsernameSection';
 
-jest.mock('../form-utils', () => ({
-  validateUsername: jest.fn(),
-}));
+const testValidUsernameInput = async (inputValue: string) => {
+  act(() => {
+    const inputElement = screen.getByRole('searchbox');
+    fireEvent.change(inputElement, { target: { value: inputValue } });
+    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter', charCode: 13 });
+  });
 
-const validateMock = validateUsername as jest.Mock;
+  await waitFor(() => {
+    expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
+    expect(screen.getByText(inputValue)).toBeVisible();
+  });
+};
+
+const testInvalidUsernameInput = async (inputValue: string, expectedError: string | null) => {
+  await act(() =>
+    fireEvent.input(screen.getByRole('searchbox'), { target: { value: inputValue } }),
+  );
+
+  if (expectedError) {
+    await waitFor(() => {
+      expect(screen.getByText(expectedError)).toBeVisible();
+    });
+  } else {
+    await waitFor(() => {
+      expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
+      expect(screen.getByText(inputValue)).toBeVisible();
+    });
+  }
+};
 
 describe('UsernameSection', () => {
   it('should show usernames field', () => {
     formikRenderer(<UsernameSection />, { usernames: [] });
+    expect(
+      screen.getByText(
+        'Konflux is not currently validating usernames, so make sure that usernames you enter are accurate.',
+      ),
+    ).toBeVisible();
     expect(screen.getByText('Add users')).toBeVisible();
     expect(screen.getByText('Enter usernames')).toBeVisible();
     expect(screen.getByRole('searchbox')).toBeVisible();
   });
 
   it('should add username chip when entered', async () => {
-    validateMock.mockResolvedValue(true);
     formikRenderer(<UsernameSection />, { usernames: [] });
-    await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user1' } }));
-    await waitFor(() =>
-      expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible(),
-    );
-    expect(screen.getByText('user1')).toBeVisible();
-
+    await testValidUsernameInput('user1');
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove user1' })));
     expect(screen.queryByText('user1')).not.toBeInTheDocument();
-
-    validateMock.mockResolvedValue(true);
-    await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user2' } }));
-    await waitFor(() => expect(screen.getByText('user2')).toBeVisible());
-    expect(screen.getByText('user2')).toBeVisible();
+    await testValidUsernameInput('user2');
   });
 
   it('should show correct field status while entering', async () => {
-    validateMock.mockResolvedValue(false);
     formikRenderer(<UsernameSection />, { usernames: [] });
     expect(
       screen.getByText('Provide Konflux usernames for the users you want to invite.'),
     ).toBeVisible();
-    await act(() =>
-      fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user!@#' } }),
-    );
-    await waitFor(() => expect(screen.getByText('Invalid username format.')).toBeVisible());
-
-    await act(() =>
-      fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'myuser' } }),
-    );
-    await waitFor(() => expect(screen.getByText('Username not found.')).toBeVisible());
-
-    validateMock.mockResolvedValue(true);
-    await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user1' } }));
-    await waitFor(() => expect(screen.getByText('Validated')).toBeVisible());
-    await waitFor(() =>
-      expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible(),
-    );
-    expect(screen.getByText('user1')).toBeVisible();
+    await testInvalidUsernameInput('user!@#', 'Username not validated');
+    await testValidUsernameInput('myuser');
   });
 
   it('should not add username again if entry already exists', async () => {
-    validateMock.mockResolvedValue(true);
     formikRenderer(<UsernameSection />, { usernames: [] });
-    await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user1' } }));
-    await waitFor(() =>
-      expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible(),
-    );
-    expect(screen.getByText('user1')).toBeVisible();
+    await testValidUsernameInput('user1');
 
-    await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user1' } }));
+    const inputElement = screen.getByRole('searchbox');
+    fireEvent.change(inputElement, { target: { value: 'user1' } });
+    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter', charCode: 13 });
     expect(screen.getAllByText('user1')).toHaveLength(1);
   });
 
   it('should validate username format', async () => {
-    validateMock.mockResolvedValue(true);
     formikRenderer(<UsernameSection />, { usernames: [] });
-    await act(() =>
-      fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user-12.3' } }),
+    await testValidUsernameInput('user-12_@3');
+    await testInvalidUsernameInput('user1!@#', KONFLUX_USERNAME_REGEX_MGS);
+    await testInvalidUsernameInput('1', KONFLUX_USERNAME_REGEX_MGS);
+    await testInvalidUsernameInput(
+      '11111111111111111111111111111111111111111111111',
+      KONFLUX_USERNAME_REGEX_MGS,
     );
-    await waitFor(() => expect(screen.getByText('Validated')).toBeVisible());
-
-    await act(() =>
-      fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'user1!@#' } }),
-    );
-    await waitFor(() => expect(screen.getByText('Invalid username format.')).toBeVisible());
-
-    await act(() => fireEvent.input(screen.getByRole('searchbox'), { target: { value: '1test' } }));
-    await waitFor(() => expect(screen.getByText('Validated')).toBeVisible());
   });
 });

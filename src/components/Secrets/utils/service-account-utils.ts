@@ -3,17 +3,13 @@ import { K8sQueryPatchResource, K8sGetResource } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
 import { SecretKind, ServiceAccountKind } from '../../../types';
 
-export const linkSecretToServiceAccount = async (
-  secret: SecretKind,
-  namespace: string,
-  workspace: string,
-) => {
+export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
   if (!secret || (!namespace && !secret.metadata?.namespace)) {
     return;
   }
   const serviceAccount = await K8sGetResource<ServiceAccountKind>({
     model: ServiceAccountModel,
-    queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace, ws: workspace },
+    queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace },
   });
 
   const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
@@ -31,7 +27,6 @@ export const linkSecretToServiceAccount = async (
     queryOptions: {
       name: PIPELINE_SERVICE_ACCOUNT,
       ns: namespace,
-      ws: workspace,
     },
     patches: [
       {
