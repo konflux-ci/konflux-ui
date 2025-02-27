@@ -27,7 +27,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
   component,
 }) => {
   const { workspace, namespace } = useWorkspaceInfo();
-  const [components, loaded, error] = useAllComponents(namespace, workspace);
+  const [components, loaded, error] = useAllComponents(namespace);
 
   const emptyState = (
     <div data-test="nudges-empty-state" className="component-nudges__empty-state">
