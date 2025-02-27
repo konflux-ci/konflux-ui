@@ -18,6 +18,7 @@ import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly
 import sendIconUrl from '../../assets/send.svg';
 import successIconUrl from '../../assets/success.svg';
 import { useApplicationPipelineGitHubApp } from '../../hooks/useApplicationPipelineGitHubApp';
+import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { PACState } from '../../hooks/usePACState';
 import { ComponentModel } from '../../models';
 import ExternalLink from '../../shared/components/links/ExternalLink';
@@ -248,6 +249,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
 }) => {
   const track = useTrackEvent();
   const { workspace } = useWorkspaceInfo();
+  const [konfluxInfo] = useKonfluxPublicInfo();
+  const applicationUrl = konfluxInfo?.integrations?.github?.application_url || '';
   const sortedComponents = React.useMemo(
     () => [...components].sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)),
     [components],
@@ -314,7 +317,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
             <Text component={TextVariants.p}>
               <ExternalLink
                 style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                href={'https://pipelinesascode.com/docs/install/github_apps/#manual-setup'}
+                href={applicationUrl}
                 analytics={{
                   link_name: 'install-github-app',
                   link_location: 'manage-builds-pipelines',
