@@ -49,6 +49,7 @@ export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
 );
 
 export const RELEASEPLAN_CREATE_PATH = RELEASEPLAN_PATH.extend(`create`);
+
 // Integration test paths
 
 export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend('integrationtests');

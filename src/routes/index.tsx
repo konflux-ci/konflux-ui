@@ -10,18 +10,6 @@ import {
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import {
-  integrationDetailsPageLoader,
-  IntegrationTestDetailsView,
-  IntegrationTestOverviewTab,
-  IntegrationTestPipelineRunTab,
-} from '../components/IntegrationTests/IntegrationTestDetails';
-import {
-  IntegrationTestCreateForm,
-  integrationTestCreateFormLoader,
-  IntegrationTestEditForm,
-  integrationTestEditFormLoader,
-} from '../components/IntegrationTests/IntegrationTestForm';
-import {
   integrationListPageLoader,
   IntegrationTestsListView,
 } from '../components/IntegrationTests/IntegrationTestsListView';
@@ -63,6 +51,7 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import componentRoutes from './page-routes/components';
+import integrationTestRoutes from './page-routes/integration-test';
 import releaseRoutes from './page-routes/release';
 import releaseServiceRoutes from './page-routes/release-service';
 import workspaceRoutes from './page-routes/workspace';
@@ -97,6 +86,7 @@ export const router = createBrowserRouter([
       ...componentRoutes,
       ...releaseRoutes,
       ...releaseServiceRoutes,
+      ...integrationTestRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -132,40 +122,6 @@ export const router = createBrowserRouter([
             loader: releaseListViewTabLoader,
             errorElement: <RouteErrorBoundry />,
             element: <ReleaseListViewTab />,
-          },
-        ],
-      },
-      /* IntegrationTestScenario routes */
-      {
-        // create form
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/add`,
-        loader: integrationTestCreateFormLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestCreateForm />,
-      },
-      /* Integration test edit form */
-      {
-        // edit form
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}/edit`,
-        loader: integrationTestEditFormLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestEditForm />,
-      },
-      /* Integration tests Details routes */
-      {
-        // details page
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/integrationtests/:${RouterParams.integrationTestName}`,
-        loader: integrationDetailsPageLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestDetailsView />,
-        children: [
-          {
-            index: true,
-            element: <IntegrationTestOverviewTab />,
-          },
-          {
-            path: 'pipelineruns',
-            element: <IntegrationTestPipelineRunTab />,
           },
         ],
       },
