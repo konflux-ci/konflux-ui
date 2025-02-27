@@ -4,7 +4,6 @@ import { useIntegrationTestScenarios } from '../../../../../../hooks/useIntegrat
 import { useLatestIntegrationTestPipelines } from '../../../../../../hooks/useLatestIntegrationTestPipelines';
 import { IntegrationTestScenarioKind } from '../../../../../../types/coreBuildService';
 import { pipelineRunStatus, runStatus } from '../../../../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import { emptyPipelineNode, resourceToPipelineNode } from '../utils/node-utils';
 import { updateParallelNodeWidths } from '../utils/visualization-utils';
@@ -21,10 +20,8 @@ export const useAppApplicationTestNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const { workspace } = useWorkspaceInfo();
   const [integrationTests, testsLoaded, testsError] = useIntegrationTestScenarios(
     namespace,
-    workspace,
     applicationName,
   );
 
@@ -34,7 +31,7 @@ export const useAppApplicationTestNodes = (
   );
 
   const [testPipelines, testPipelinesLoaded, testPipelinesError] =
-    useLatestIntegrationTestPipelines(namespace, workspace, applicationName, integrationTestNames);
+    useLatestIntegrationTestPipelines(namespace, applicationName, integrationTestNames);
 
   const allLoaded = testsLoaded && testPipelinesLoaded;
   const allErrors = [testsError, testPipelinesError].filter((e) => !!e);
