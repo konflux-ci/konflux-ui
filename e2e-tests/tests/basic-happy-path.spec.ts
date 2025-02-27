@@ -24,9 +24,6 @@ describe('Basic Happy Path', () => {
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
   const piplinerunlogsTasks = ['init', 'clone-repository', 'build-container', 'show-sbom'];
-  const quarkusDeplomentBody = 'Congratulations, you have created a new Quarkus cloud application';
-  // this is default option and should be the fastest one
-  // const pipeline = 'docker-build-oci-ta';
   const pipeline = 'docker-build';
 
   before(function () {
