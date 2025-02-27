@@ -1,0 +1,141 @@
+name: PR Check Test
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  check-org-membership:
+    runs-on: ubuntu-latest
+    outputs:
+      org-member: ${{ steps.org-check.outputs.org-member }}
+    steps:
+      - name: Check if PR author is a member of the organization
+        continue-on-error: true
+        id: org-check
+        run: |
+          ORG="${{ github.repository_owner }}"
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          if ! gh api /orgs/$ORG/members/$AUTHOR; then
+            echo '### ❌ PR author is not a member of GitHub organization' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "org-member=true" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+
+  e2e-test:
+    if: ${{ (needs.check-org-membership.outputs.org-member == 'true') || (github.event.pull_request.user.login == 'renovate[bot]') || contains(github.event.pull_request.labels.*.name, 'ok-to-test') }}
+    needs: check-org-membership
+    runs-on: ubuntu-latest    
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+          docker-images: false
+
+      # konflux-ci is cloned to /home/runner/work/konflux-ui/konflux-ui
+      # as it have to be at home folder to use helm/kind-action@v1 action
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: 'konflux-ci/konflux-ci'
+          ref: 'main'
+
+      - name: Disable AppArmor
+        # works around a change in ubuntu 24.04 that restricts Linux namespace access
+        # for unprivileged users
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+      - name: Create k8s Kind Cluster
+        uses: helm/kind-action@v1
+        with:
+          config: kind-config.yaml
+      
+      - name: Show version information
+        run: |
+          kubectl version
+          kind version
+
+      - name: List namespaces
+        run: |
+          kubectl get namespace
+
+      - name: Deploying Dependencies
+        run: |
+          ./deploy-deps.sh
+
+      - name: List namespaces
+        run: |
+          kubectl get namespace
+
+      - name: Wait for the dependencies to be ready
+        run: |
+          ./wait-for-all.sh
+
+      - name: WORKAROUND - Set up tkn cli for the following task
+        uses: tektoncd/actions/setup-tektoncd-cli@main
+        with:
+          version: latest
+
+      - name: WORKAROUND - Remove clair-scan task from docker-pipeline
+        run: |
+          ./test/e2e/customize-docker-pipeline.sh
+
+      - name: Deploying Konflux
+        run: |
+          ./deploy-konflux.sh
+
+      - name: List namespaces
+        run: |
+          kubectl get namespace
+
+      - name: Deploy test resources
+        run: |
+          ./deploy-test-resources.sh
+
+      - name: Prepare resources for E2E tests
+        # Sets secrets, deploys image controller and setup smee.
+        env:
+          APP_ID: ${{ secrets.GH_APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+          QUAY_ORG: ${{ secrets.QUAY_TEST_ORG }}
+          QUAY_TOKEN: ${{ secrets.QUAY_TOKEN_TEST }}
+          SMEE_CHANNEL: ${{ secrets.SMEE_URL }}
+        run: |
+          ./test/e2e/prepare-e2e.sh
+
+      # konflux-ui repo is cloned to /home/runner/work/konflux-ui/konflux-ui/konflux-ui
+      - name: Checkout Konflux-UI Repository
+        uses: actions/checkout@v4
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+          path: 'konflux-ui'
+
+      - name: Install Konflux-UI and run tests
+        env:
+          CYPRESS_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TARGET_BRANCH: ${{ github.base_ref }}
+          PR_NUMBER: ${{ github.event.number }}
+          HEAD_SHA: "${{ github.event.pull_request.head.sha }}"
+          CYPRESS_USERNAME: "${{ secrets.CYPRESS_USERNAME }}"
+          CYPRESS_PASSWORD: "${{ secrets.CYPRESS_PASSWORD }}"
+        run: | 
+          ./konflux-ui/pr_check.sh
+      
+      - name: Generate error logs
+        if: ${{ !cancelled() }}
+        run: |
+          ./generate-err-logs.sh
+          cp -r konflux-ui/artifacts logs
+
+      - name: Archive logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs
+          path: logs
