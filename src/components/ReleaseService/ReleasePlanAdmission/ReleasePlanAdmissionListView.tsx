@@ -20,16 +20,16 @@ import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ReleasePlanAdmissionModel } from '../../../models/release-plan-admission';
 import { Table } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleasePlanAdmissionKind } from '../../../types/release-plan-admission';
 import { withPageAccessCheck } from '../../PageAccess/withPageAccessCheck';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { ReleaseServiceEmptyState } from '../ReleaseServiceEmptyState';
 import ReleasePlanAdmissionListHeader from './ReleasePlanAdmissionListHeader';
 import ReleasePlanAdmissionListRow from './ReleasePlanAdmissionListRow';
 
 const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [releasePlanAdmission, loaded] = useReleasePlanAdmissions(namespace, workspace);
+  const namespace = useNamespace();
+  const [releasePlanAdmission, loaded] = useReleasePlanAdmissions(namespace);
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const onClearFilters = () => setNameFilter('');
 

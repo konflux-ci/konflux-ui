@@ -3,7 +3,7 @@ import '@testing-library/jest-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useApplicationReleases } from '../../../hooks/useApplicationReleases';
-import { createUseParamsMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
+import { createUseParamsMock } from '../../../utils/test-utils';
 import { mockReleases } from '../__data__/mock-release-data';
 import ReleasesListRow from '../ReleasesListRow';
 import ReleasesListView from '../ReleasesListView';
@@ -60,7 +60,6 @@ const useMockReleases = useApplicationReleases as jest.Mock;
 
 describe('ReleasesListView', () => {
   createUseParamsMock({ applicationName: 'test-app' });
-  createUseWorkspaceInfoMock({ workspace: 'test-ws' });
 
   it('should render progress indicator while loading', async () => {
     useMockReleases.mockReturnValue([[], false]);

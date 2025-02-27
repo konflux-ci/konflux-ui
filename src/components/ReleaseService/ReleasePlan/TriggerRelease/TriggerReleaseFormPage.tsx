@@ -2,9 +2,10 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Formik, FormikHelpers } from 'formik';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
+import { APPLICATION_RELEASE_DETAILS_PATH, RELEASE_SERVICE_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import { useTrackEvent, TrackEvents } from '../../../../utils/analytics';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { TriggerReleaseFormValues, createRelease, triggerReleaseFormSchema } from './form-utils';
 import { TriggerReleaseForm } from './TriggerReleaseForm';
 
@@ -12,8 +13,8 @@ export const TriggerReleaseFormPage: React.FC = () => {
   const { releasePlanName } = useParams<RouterParams>();
   const navigate = useNavigate();
   const track = useTrackEvent();
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [releasePlans] = useReleasePlans(namespace, workspace);
+  const namespace = useNamespace();
+  const [releasePlans] = useReleasePlans(namespace);
 
   const handleSubmit = async (
     values: TriggerReleaseFormValues,
@@ -21,24 +22,28 @@ export const TriggerReleaseFormPage: React.FC = () => {
   ) => {
     track(TrackEvents.ButtonClicked, {
       link_name: 'trigger-release-plan-submit',
-      workspace,
+      namespace,
     });
 
     try {
-      const newRelease = await createRelease(values, namespace, workspace);
+      const newRelease = await createRelease(values, namespace);
       track('Release plan triggered', {
         // eslint-disable-next-line camelcase
         release_plan_name: newRelease.metadata.name,
         // eslint-disable-next-line camelcase
         target_snapshot: newRelease.spec.snapshot,
         releasePlan: newRelease.spec.releasePlan,
-        workspace,
+        namespace,
       });
       const applicationName = releasePlans.filter(
         (rp) => rp.metadata.name === values.releasePlan,
       )?.[0]?.spec?.application;
       navigate(
-        `/workspaces/${workspace}/applications/${applicationName}/releases/${newRelease.metadata?.name}`,
+        APPLICATION_RELEASE_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          releaseName: newRelease.metadata?.name,
+        }),
       );
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -51,10 +56,10 @@ export const TriggerReleaseFormPage: React.FC = () => {
   const handleReset = () => {
     track(TrackEvents.ButtonClicked, {
       link_name: 'trigger-release-plan-leave',
-      workspace,
+      namespace,
     });
 
-    navigate(`/workspaces/${workspace}/release`);
+    navigate(RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }));
   };
 
   const initialValues: TriggerReleaseFormValues = {
