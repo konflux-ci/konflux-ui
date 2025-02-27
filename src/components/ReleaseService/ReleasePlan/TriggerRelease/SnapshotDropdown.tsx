@@ -3,7 +3,7 @@ import { useField, useFormikContext } from 'formik';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import DropdownField from '../../../../shared/components/formik-fields/DropdownField';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 
 type SnapshotDropdownProps = Omit<
   React.ComponentProps<typeof DropdownField>,
@@ -14,8 +14,8 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
   props,
 ) => {
   const { setErrors } = useFormikContext();
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [snapshots, loaded, error] = useSnapshots(namespace, workspace);
+  const namespace = useNamespace();
+  const [snapshots, loaded, error] = useSnapshots(namespace);
   const [, , { setValue }] = useField<string>(props.name);
 
   const filteredSnapshots = React.useMemo(
