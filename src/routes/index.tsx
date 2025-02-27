@@ -36,7 +36,6 @@ import {
   PipelineRunTaskRunsTab,
 } from '../components/PipelineRun/PipelineRunDetailsView';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
-import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
   SnapshotDetailsView,
   snapshotDetailsViewLoader,
