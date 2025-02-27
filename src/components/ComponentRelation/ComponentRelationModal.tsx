@@ -26,7 +26,11 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
   const [showCancelModal, setShowCancelModal] = React.useState<boolean>(false);
   const [showSubmissionModal, setShowSubmissionModal] = React.useState<boolean>(false);
   const [nudgeData, loaded, error] = useNudgeData(application);
+<<<<<<< HEAD
   const namespace = useNamespace();
+=======
+  const { namespace, workspace } = useWorkspaceInfo();
+>>>>>>> eec657e (fix(KFLUXUI-295): remove workspace dependency from Application pages)
   const [components, cnLoaded, cnError] = useComponents(namespace, application);
   const [allComponents, allCompsLoaded, allCompsError] = useAllComponents(namespace);
   const groupedComponents = React.useMemo(
