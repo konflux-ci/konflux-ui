@@ -26,7 +26,7 @@ import { SnapshotComponentTableData } from './SnapshotComponentsListRow';
 const SnapshotOverviewTab: React.FC = () => {
   const { snapshotName } = useParams<RouterParams>();
   const { workspace, namespace } = useWorkspaceInfo();
-  const [snapshot, loaded, loadErr] = useSnapshot(namespace, workspace, snapshotName);
+  const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
     () => loaded && !loadErr && snapshot?.metadata?.labels[SnapshotLabels.BUILD_PIPELINE_LABEL],
