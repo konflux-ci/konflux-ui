@@ -134,7 +134,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       cta: () => pipelineRunCancel(pipelineRun),
       id: 'pipelinerun-cancel',
       label: 'Cancel',
-      tooltip: 'Interrupt any executing non finally tasks, then execute "finally" tasks',
+      tooltip: 'Interrupt any executing non "finally" tasks, then execute "finally" tasks',
       disabled: !(pipelineRunStatus(pipelineRun) === runStatus.Running) || !canPatchPipelineRun,
       disabledTooltip: !canPatchPipelineRun
         ? "You don't have access to cancel this pipeline"
