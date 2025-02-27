@@ -7,13 +7,11 @@ import { ReleasePlanAdmissionKind } from '../types/release-plan-admission';
 
 export const useReleasePlanAdmissions = (
   namespace: string,
-  workspace: string,
 ): [ReleasePlanAdmissionKind[], boolean, unknown] => {
   const { data, isLoading, error } = useK8sWatchResource<ReleasePlanAdmissionKind[]>(
     {
       groupVersionKind: ReleasePlanAdmissionGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     ReleasePlanAdmissionModel,

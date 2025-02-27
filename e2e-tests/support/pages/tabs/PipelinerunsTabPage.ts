@@ -78,8 +78,10 @@ export class DetailsTab {
     UIhelper.clickTab('Details');
   }
 
+  // Build pipeline in PR check GH actions lasts 15 mins at minimum.
+  // Setting timeout to 30 minutes (same as Konflux E2E tests).
   static waitUntilStatusIsNotRunning() {
-    cy.get(pipelinerunsTabPO.statusPO, { timeout: 1000000 })
+    cy.get(pipelinerunsTabPO.statusPO, { timeout: 1800000 })
       .should('not.have.text', 'Pending')
       .and('not.have.text', 'Running');
   }

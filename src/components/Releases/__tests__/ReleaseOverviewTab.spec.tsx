@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { createK8sWatchResourceMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
+import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import { mockReleases } from '../__data__/mock-release-data';
 import ReleaseOverviewTab from '../ReleaseOverviewTab';
 
@@ -8,20 +9,17 @@ jest.mock('react-router-dom', () => ({
   useParams: () => ({ releaseName: 'test-release' }),
 }));
 
-jest.mock('../../../hooks/useWorkspaceResource', () => ({
-  useWorkspaceResource: jest.fn(() => ['test-pipelinerun', 'target-ws']),
-}));
-
 jest.mock('../../../hooks/useReleases', () => ({
   useRelease: jest.fn(() => [mockReleases[0], true]),
 }));
 
+const useNamespaceMock = mockUseNamespaceHook('my-ns');
 const watchResourceMock = createK8sWatchResourceMock();
 
 describe('ReleaseOverviewTab', () => {
-  beforeEach(() => {});
-
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  beforeEach(() => {
+    useNamespaceMock.mockReturnValue('my-ns');
+  });
 
   it('should render loading indicator', () => {
     watchResourceMock.mockReturnValue([{ spec: { application: 'test-app' } }, false]);
@@ -52,7 +50,7 @@ describe('ReleaseOverviewTab', () => {
 
     expect(screen.getByText('Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
-      '/workspaces/target-ws/applications/test-app/pipelineruns/test-pipelinerun',
+      `/workspaces/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );
   });
 
@@ -60,7 +58,7 @@ describe('ReleaseOverviewTab', () => {
     render(<ReleaseOverviewTab />);
     expect(screen.getByText('Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
-      '/workspaces/target-ws/applications/test-app/pipelineruns/test-pipelinerun',
+      `/workspaces/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );
   });
 });
