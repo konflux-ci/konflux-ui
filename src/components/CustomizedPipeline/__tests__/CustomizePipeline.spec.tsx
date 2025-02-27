@@ -12,6 +12,10 @@ import CustomizePipeline from '../CustomizePipelines';
 
 jest.mock('../../../utils/analytics');
 
+jest.mock('../../../hooks/useKonfluxPublicInfo', () => ({
+  useKonfluxPublicInfo: jest.fn(() => []),
+}));
+
 jest.mock('../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(() => [[], true]),
 }));
