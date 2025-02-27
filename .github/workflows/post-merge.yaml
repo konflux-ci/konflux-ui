@@ -43,3 +43,22 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
           fail_ci_if_error: true
+
+  push-test-image:
+    runs-on: ubuntu-latest
+    steps:      
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Build E2E Test Image
+        env:
+          QUAY_BOT_TOKEN: ${{ secrets.QUAY_BOT_TOKEN }}
+          QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
+        run: |
+          podman login -u="$QUAY_BOT_USERNAME" -p="$QUAY_BOT_TOKEN" quay.io
+          TEST_IMAGE="quay.io/konflux_ui_qe/konflux-ui-tests:latest"
+
+          cd e2e-tests
+          podman build -t ${TEST_IMAGE} -f Containerfile
+          echo "Image ${TEST_IMAGE} successfully built. Pushing the image."
+          podman push ${TEST_IMAGE}

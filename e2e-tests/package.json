@@ -9,7 +9,6 @@
     "cy:open": "cypress open"
   },
   "devDependencies": {
-    "@reportportal/agent-js-cypress": "^5.1.2",
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^17.0.13",
     "axe-core": "^4.4.2",
