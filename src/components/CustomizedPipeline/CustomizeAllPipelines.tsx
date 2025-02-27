@@ -71,6 +71,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
                 link_name: 'add-component',
                 link_location: 'manage-build-pipelines',
                 app_name: applicationName,
+                namespace,
               }}
             >
               Add component
