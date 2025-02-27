@@ -33,8 +33,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 }) => {
   const { namespace, workspace } = useWorkspaceInfo();
   const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
-  const { filters, dispatchFilters } = React.useContext(PipelineRunsFilterContext);
-  const { nameFilter, statusFilter, typeFilter } = filters;
+  const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
+  const { name, status, type } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
@@ -77,11 +77,9 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     [pipelineRuns, filters, customFilter],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
 
-  const EmptyMsg = () => (
-    <FilteredEmptyState onClearFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })} />
-  );
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
@@ -95,7 +93,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }
 
-  const isFiltered = nameFilter.length > 0 || typeFilter.length > 0 || statusFilter.length > 0;
+  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>
@@ -107,7 +105,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           !isFiltered && pipelineRuns.length === 0 ? null : (
             <PipelineRunsFilterToolbar
               filters={filters}
-              dispatchFilters={dispatchFilters}
+              setFilters={setFilters}
+              onClearFilters={onClearFilters}
               typeOptions={typeFilterObj}
               statusOptions={statusFilterObj}
             />

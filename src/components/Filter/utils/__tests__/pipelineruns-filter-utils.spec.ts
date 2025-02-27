@@ -99,9 +99,9 @@ describe('pipelineruns-filter-utils', () => {
   describe('filterPipelineRuns', () => {
     it('should filter pipeline runs by name', () => {
       const filters = {
-        nameFilter: 'basic-node-js-first',
-        statusFilter: [],
-        typeFilter: [],
+        name: 'basic-node-js-first',
+        status: [],
+        type: [],
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result.length).toBe(1);
@@ -110,9 +110,9 @@ describe('pipelineruns-filter-utils', () => {
 
     it('should filter pipeline runs by status', () => {
       const filters = {
-        nameFilter: '',
-        statusFilter: ['Succeeded'],
-        typeFilter: [],
+        name: '',
+        status: ['Succeeded'],
+        type: [],
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result.length).toBe(1);
@@ -121,9 +121,9 @@ describe('pipelineruns-filter-utils', () => {
 
     it('should filter pipeline runs by type', () => {
       const filters = {
-        nameFilter: '',
-        statusFilter: [],
-        typeFilter: ['build'],
+        name: '',
+        status: [],
+        type: ['build'],
       };
       const expectedNames = ['basic-node-js-second', 'basic-node-js-third'];
 
@@ -135,9 +135,9 @@ describe('pipelineruns-filter-utils', () => {
 
     it('should filter pipeline runs by custom filter', () => {
       const filters = {
-        nameFilter: '',
-        statusFilter: [],
-        typeFilter: [],
+        name: '',
+        status: [],
+        type: [],
       };
       const expectedNames = ['basic-node-js-first', 'basic-node-js-third'];
       const customFilter = (plr: PipelineRunKind) =>

@@ -31,8 +31,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   nextPageProps,
   customFilter,
 }) => {
-  const { filters, dispatchFilters } = React.useContext(PipelineRunsFilterContext);
-  const { nameFilter, statusFilter, typeFilter } = filters;
+  const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
+  const { name, status, type } = filters;
 
   const statusFilterObj = React.useMemo(
     () =>
@@ -61,7 +61,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     [snapshotPipelineRuns, filters, customFilter],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : snapshotPipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : snapshotPipelineRuns);
 
   if (!loaded) {
     return (
@@ -71,7 +71,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     );
   }
 
-  if (!nameFilter && snapshotPipelineRuns.length === 0) {
+  if (!name && snapshotPipelineRuns.length === 0) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
@@ -79,11 +79,9 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
-  const EmptyMsg = () => (
-    <FilteredEmptyState onClearFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })} />
-  );
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
-  const isFiltered = nameFilter.length > 0 || typeFilter.length > 0 || statusFilter.length > 0;
+  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>
@@ -102,7 +100,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
           !isFiltered && snapshotPipelineRuns.length === 0 ? null : (
             <PipelineRunsFilterToolbar
               filters={filters}
-              dispatchFilters={dispatchFilters}
+              setFilters={setFilters}
+              onClearFilters={onClearFilters}
               typeOptions={typeFilterObj}
               statusOptions={statusFilterObj}
             />

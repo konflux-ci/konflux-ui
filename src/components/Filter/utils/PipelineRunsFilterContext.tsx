@@ -1,78 +1,54 @@
-import { createContext, Dispatch, useEffect, useReducer } from 'react';
+import { createContext, useCallback, useMemo } from 'react';
 import { useSearchParamBatch } from '../../../hooks/useSearchParam';
-import { PipelineRunsFilterAction, PipelineRunsFilterState } from './pipelineruns-filter-utils';
+import { PipelineRunsFilterState } from './pipelineruns-filter-utils';
 
 export type PipelineRunsFilterContextType = {
   filters: PipelineRunsFilterState;
-  dispatchFilters: Dispatch<PipelineRunsFilterAction>;
+  setFilters: (newFilters: PipelineRunsFilterState) => void;
+  onClearFilters: () => void;
 };
 
 export const PipelineRunsFilterContext = createContext<PipelineRunsFilterContextType>({
-  filters: { nameFilter: '', statusFilter: [], typeFilter: [] },
-  dispatchFilters: () => null,
+  filters: { name: '', status: [], type: [] },
+  setFilters: () => null,
+  onClearFilters: () => null,
 });
 
 export const PipelineRunsFilterContextProvider = ({ children }) => {
   const [getValues, batchSet, batchUnset] = useSearchParamBatch(['name', 'status', 'type']);
+  const { name } = getValues('name');
+  const { status } = getValues('status');
+  const { type } = getValues('type');
 
-  const reducer = (
-    state: PipelineRunsFilterState,
-    action: PipelineRunsFilterAction,
-  ): PipelineRunsFilterState => {
-    let [type, payload] = [action.type, action.payload];
-    if (payload === undefined) {
-      payload = '';
-    }
+  const nameFilter = name ?? '';
+  const typeFilter = useMemo(() => {
+    return type ? type.split(',') : [];
+  }, [type]);
 
-    switch (type) {
-      case 'SET_NAME':
-        batchSet({ name: payload as string });
+  const statusFilter = useMemo(() => (status ? status.split(',') : []), [status]);
 
-        return { ...state, nameFilter: payload as string };
-      case 'SET_STATUS':
-        if (typeof payload === 'string') {
-          payload = [payload];
-        }
+  const setFilters = useCallback(
+    (newFilter: Record<string, string | string[]>) => {
+      const formatedFilter = Object.fromEntries(
+        Object.entries(newFilter).map(([key, value]) => {
+          if (Array.isArray(value)) {
+            return [key, value.join(',')];
+          }
 
-        batchSet({ status: payload.join(',') });
-
-        return { ...state, statusFilter: payload };
-      case 'SET_TYPE':
-        if (typeof payload === 'string') {
-          payload = [payload];
-        }
-
-        batchSet({ type: payload.join(',') });
-
-        return { ...state, typeFilter: payload };
-      case 'CLEAR_ALL_FILTERS':
-        batchUnset(['name', 'status', 'type']);
-
-        return { nameFilter: '', statusFilter: [], typeFilter: [] };
-      default:
-        return state;
-    }
-  };
-
-  const [filters, dispatchFilters] = useReducer(reducer, {
-    nameFilter: '',
-    statusFilter: [],
-    typeFilter: [],
-  });
-
-  useEffect(() => {
-    const values = getValues();
-
-    dispatchFilters({ type: 'SET_NAME', payload: values.name || '' });
-    dispatchFilters({ type: 'SET_STATUS', payload: values.status ? values.status.split(',') : [] });
-    dispatchFilters({ type: 'SET_TYPE', payload: values.type ? values.type.split(',') : [] });
-  }, [getValues]);
+          return [key, value];
+        }),
+      );
+      batchSet(formatedFilter);
+    },
+    [batchSet],
+  );
 
   return (
     <PipelineRunsFilterContext.Provider
       value={{
-        filters,
-        dispatchFilters,
+        filters: { name: nameFilter, status: statusFilter, type: typeFilter },
+        setFilters,
+        onClearFilters: batchUnset,
       }}
     >
       {children}

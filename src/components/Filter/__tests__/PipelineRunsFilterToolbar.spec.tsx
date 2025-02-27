@@ -8,11 +8,12 @@ describe('PipelineRunsFilterToolbar', () => {
     render(
       <PipelineRunsFilterToolbar
         filters={{
-          nameFilter: '',
-          statusFilter: [],
-          typeFilter: [],
+          name: '',
+          status: [],
+          type: [],
         }}
-        dispatchFilters={jest.fn()}
+        setFilters={jest.fn()}
+        onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
       />,
@@ -25,43 +26,45 @@ describe('PipelineRunsFilterToolbar', () => {
   });
 
   it('it should update name filter', async () => {
-    const dispatchFilters = jest.fn();
+    const setFilters = jest.fn();
 
     render(
       <PipelineRunsFilterToolbar
         filters={{
-          nameFilter: '',
-          statusFilter: [],
-          typeFilter: [],
+          name: '',
+          status: [],
+          type: [],
         }}
-        dispatchFilters={dispatchFilters}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
       />,
     );
 
-    const nameFilter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    const name = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
     await act(() =>
-      fireEvent.change(nameFilter, {
+      fireEvent.change(name, {
         target: { value: 'test' },
       }),
     );
-    expect(nameFilter.value).toBe('test');
-    expect(dispatchFilters.mock.calls).toHaveLength(1);
-    expect(dispatchFilters.mock.calls[0][0]).toStrictEqual({ type: 'SET_NAME', payload: 'test' });
+    expect(name.value).toBe('test');
+    expect(setFilters.mock.calls).toHaveLength(1);
+    expect(setFilters.mock.calls[0][0]).toStrictEqual({ name: 'test', status: [], type: [] });
   });
 
   it('it should update status filter', () => {
-    const dispatchFilters = jest.fn();
+    const setFilters = jest.fn();
 
     render(
       <PipelineRunsFilterToolbar
         filters={{
-          nameFilter: '',
-          statusFilter: [],
-          typeFilter: [],
+          name: '',
+          status: [],
+          type: [],
         }}
-        dispatchFilters={dispatchFilters}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
       />,
@@ -79,24 +82,26 @@ describe('PipelineRunsFilterToolbar', () => {
 
     fireEvent.click(succeededOption);
 
-    expect(dispatchFilters.mock.calls).toHaveLength(1);
-    expect(dispatchFilters.mock.calls[0][0]).toStrictEqual({
-      type: 'SET_STATUS',
-      payload: ['Succeeded'],
+    expect(setFilters.mock.calls).toHaveLength(1);
+    expect(setFilters.mock.calls[0][0]).toStrictEqual({
+      name: '',
+      status: ['Succeeded'],
+      type: [],
     });
   });
 
   it('it should update type filter', () => {
-    const dispatchFilters = jest.fn();
+    const setFilters = jest.fn();
 
     render(
       <PipelineRunsFilterToolbar
         filters={{
-          nameFilter: '',
-          statusFilter: [],
-          typeFilter: [],
+          name: '',
+          status: [],
+          type: [],
         }}
-        dispatchFilters={dispatchFilters}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
       />,
@@ -114,10 +119,11 @@ describe('PipelineRunsFilterToolbar', () => {
 
     fireEvent.click(buildOption);
 
-    expect(dispatchFilters.mock.calls).toHaveLength(1);
-    expect(dispatchFilters.mock.calls[0][0]).toStrictEqual({
-      type: 'SET_TYPE',
-      payload: ['build'],
+    expect(setFilters.mock.calls).toHaveLength(1);
+    expect(setFilters.mock.calls[0][0]).toStrictEqual({
+      name: '',
+      status: [],
+      type: ['build'],
     });
   });
 });

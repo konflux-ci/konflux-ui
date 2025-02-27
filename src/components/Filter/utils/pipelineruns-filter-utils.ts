@@ -3,9 +3,9 @@ import { PipelineRunKind } from '../../../types';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 
 export type PipelineRunsFilterState = {
-  nameFilter?: string;
-  statusFilter?: string[];
-  typeFilter?: string[];
+  name: string;
+  status: string[];
+  type: string[];
 };
 
 export type PipelineRunsFilterAction = {
@@ -18,19 +18,18 @@ export const filterPipelineRuns = (
   filters: PipelineRunsFilterState,
   customFilter?: (plr: PipelineRunKind) => boolean,
 ): PipelineRunKind[] => {
-  const { nameFilter, statusFilter, typeFilter } = filters;
+  const { name, status, type } = filters;
 
   return pipelineRuns
     .filter((plr) => {
       const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
       return (
-        (!nameFilter ||
-          plr.metadata.name.indexOf(nameFilter) >= 0 ||
-          plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(
-            nameFilter.trim().toLowerCase(),
-          ) >= 0) &&
-        (!statusFilter.length || statusFilter.includes(pipelineRunStatus(plr))) &&
-        (!typeFilter.length || typeFilter.includes(runType))
+        (!name ||
+          plr.metadata.name.indexOf(name) >= 0 ||
+          plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(name.trim().toLowerCase()) >=
+            0) &&
+        (!status.length || status.includes(pipelineRunStatus(plr))) &&
+        (!type.length || type.includes(runType))
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));

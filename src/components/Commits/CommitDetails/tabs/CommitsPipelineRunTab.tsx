@@ -29,8 +29,8 @@ const CommitsPipelineRunTab: React.FC = () => {
   const { namespace, workspace } = useWorkspaceInfo();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsForCommit(namespace, workspace, applicationName, commitName);
-  const { filters, dispatchFilters } = React.useContext(PipelineRunsFilterContext);
-  const { nameFilter, statusFilter, typeFilter } = filters;
+  const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
+  const { name, status, type } = filters;
 
   const statusFilterObj = React.useMemo(
     () => createFilterObj(pipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
@@ -52,7 +52,7 @@ const CommitsPipelineRunTab: React.FC = () => {
     [pipelineRuns, filters],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : pipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
 
   if (error) {
     const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
@@ -69,12 +69,10 @@ const CommitsPipelineRunTab: React.FC = () => {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
-  const EmptyMsg = () => (
-    <FilteredEmptyState onClearFilters={() => dispatchFilters({ type: 'CLEAR_ALL_FILTERS' })} />
-  );
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
-  const isFiltered = nameFilter.length > 0 || typeFilter.length > 0 || statusFilter.length > 0;
+  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>
@@ -92,7 +90,8 @@ const CommitsPipelineRunTab: React.FC = () => {
             !isFiltered && pipelineRuns.length === 0 ? null : (
               <PipelineRunsFilterToolbar
                 filters={filters}
-                dispatchFilters={dispatchFilters}
+                setFilters={setFilters}
+                onClearFilters={onClearFilters}
                 typeOptions={typeFilterObj}
                 statusOptions={statusFilterObj}
               />
