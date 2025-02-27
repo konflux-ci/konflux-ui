@@ -71,14 +71,14 @@ export const MultiImageCredentialForm: React.FC<
                 name={`${name}.${idx.toString()}.username`}
                 label="Username"
                 helperText="For image registry authentication"
-                required
+                isRequired
               />
               <InputField
                 name={`${name}.${idx.toString()}.password`}
                 label="Password"
                 type={TextInputTypes.password}
                 helperText="For image registry authentication"
-                required
+                isRequired
               />
               <InputField
                 name={`${name}.${idx.toString()}.email`}

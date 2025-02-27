@@ -101,18 +101,20 @@ describe('Submit Utils: createResources', () => {
                 type: SecretType.opaque,
                 providerUrl: '',
                 tokenKeyName: 'secret',
-                keyValuePairs: [
-                  {
-                    key: 'secret',
-                    value: 'value',
-                    readOnlyKey: true,
-                  },
-                ],
+                opaque: {
+                  keyValuePairs: [
+                    {
+                      key: 'secret',
+                      value: 'value',
+                      readOnlyKey: true,
+                    },
+                  ],
+                },
               },
             ],
             type: 'Opaque',
             secretName: 'secret',
-            keyValues: [{ key: 'secret', value: 'test-value', readOnlyKey: true }],
+            opaque: { keyValues: [{ key: 'secret', value: 'test-value', readOnlyKey: true }] },
           },
         ],
       },

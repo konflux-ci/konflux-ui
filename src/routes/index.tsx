@@ -7,12 +7,6 @@ import {
   CommitOverviewTab,
   CommitsPipelineRunTab,
 } from '../components/Commits/CommitDetails';
-import {
-  ComponentActivityTab,
-  ComponentDetailsTab,
-  ComponentDetailsViewLayout,
-  componentDetailsViewLoader,
-} from '../components/Components/ComponentDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { PipelineRunsFilterContextProvider } from '../components/Filter/utils/PipelineRunsFilterContext';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
@@ -42,26 +36,7 @@ import {
   PipelineRunSecurityEnterpriseContractTab,
   PipelineRunTaskRunsTab,
 } from '../components/PipelineRun/PipelineRunDetailsView';
-import {
-  ReleaseDetailsLayout,
-  releaseDetailsViewLoader,
-  ReleaseListViewTab,
-  releaseListViewTabLoader,
-  ReleaseOverviewTab,
-} from '../components/Releases';
-import {
-  releasePlanAdmissionListLoader,
-  ReleasePlanAdmissionListView,
-  releasePlanCreateFormLoader,
-  ReleasePlanCreateFormPage,
-  releasePlanEditFormLoader,
-  ReleasePlanEditFormPage,
-  releasePlanListLoader,
-  ReleasePlanListView,
-  releasePlanTriggerLoader,
-  ReleaseService,
-  TriggerReleaseFormPage,
-} from '../components/ReleaseService';
+import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
 import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
 import {
   SnapshotDetailsView,
@@ -79,6 +54,7 @@ import {
 import {
   GrantAccessPage,
   grantAccessPageLoader,
+  EditAccessPage,
   UserAccessListPage,
   userAccessListPageLoader,
 } from '../components/UserAccess';
@@ -87,6 +63,9 @@ import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
+import componentRoutes from './page-routes/components';
+import releaseRoutes from './page-routes/release';
+import releaseServiceRoutes from './page-routes/release-service';
 import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
@@ -116,7 +95,9 @@ export const router = createBrowserRouter([
       },
       ...applicationRoutes,
       ...workspaceRoutes,
-
+      ...componentRoutes,
+      ...releaseRoutes,
+      ...releaseServiceRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -155,27 +136,6 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      /* Component details route */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/components/:${RouterParams.componentName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: componentDetailsViewLoader,
-        element: <ComponentDetailsViewLayout />,
-        children: [
-          {
-            index: true,
-            element: <ComponentDetailsTab />,
-          },
-          {
-            path: `activity/:${RouterParams.activityTab}`,
-            element: <ComponentActivityTab />,
-          },
-          {
-            path: `activity`,
-            element: <ComponentActivityTab />,
-          },
-        ],
-      },
       /* IntegrationTestScenario routes */
       {
         // create form
@@ -207,20 +167,6 @@ export const router = createBrowserRouter([
           {
             path: 'pipelineruns',
             element: <IntegrationTestPipelineRunTab />,
-          },
-        ],
-      },
-      /* Release routes */
-      {
-        // details page
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/releases/:${RouterParams.releaseName}`,
-        loader: releaseDetailsViewLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ReleaseDetailsLayout />,
-        children: [
-          {
-            index: true,
-            element: <ReleaseOverviewTab />,
           },
         ],
       },
@@ -280,52 +226,7 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
       },
       /* Trigger Release plan */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
-        loader: releasePlanTriggerLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <TriggerReleaseFormPage />,
-      },
-      /* Create Release plan */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
-        loader: releasePlanEditFormLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ReleasePlanEditFormPage />,
-      },
-      /* Edit Release plan */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
-        loader: releasePlanCreateFormLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ReleasePlanCreateFormPage />,
-      },
-      /* Release service list view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release`,
-        element: <ReleaseService />,
-        errorElement: <RouteErrorBoundry />,
-        children: [
-          {
-            index: true,
-            loader: releasePlanListLoader,
-            element: <ReleasePlanListView />,
-            errorElement: <RouteErrorBoundry />,
-          },
-          {
-            path: 'release-plan',
-            loader: releasePlanListLoader,
-            element: <ReleasePlanListView />,
-            errorElement: <RouteErrorBoundry />,
-          },
-          {
-            path: 'release-plan-admission',
-            loader: releasePlanAdmissionListLoader,
-            element: <ReleasePlanAdmissionListView />,
-            errorElement: <RouteErrorBoundry />,
-          },
-        ],
-      },
+
       /* Snapshot Details view */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
@@ -353,8 +254,9 @@ export const router = createBrowserRouter([
         errorElement: <RouteErrorBoundry />,
       },
       {
-        path: `workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
-        element: <GrantAccessPage />,
+        // Permission check has been covered in the EditAccessPage itself.
+        path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
+        element: <EditAccessPage />,
         errorElement: <RouteErrorBoundry />,
       },
       {

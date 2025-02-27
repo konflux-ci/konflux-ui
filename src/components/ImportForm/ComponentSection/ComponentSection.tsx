@@ -1,12 +1,23 @@
-import { FormSection, Text, TextContent, TextVariants } from '@patternfly/react-core';
+import {
+  FormSection,
+  HelperText,
+  HelperTextItem,
+  Text,
+  TextContent,
+  TextVariants,
+} from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { ImportFormValues } from '../type';
 import { SourceSection } from './SourceSection';
 
+import './ComponentSection.scss';
+
 export const ComponentSection = () => {
   const { values } = useFormikContext<ImportFormValues>();
+  const namespace = useNamespace();
   return (
     <FormSection>
       <TextContent>
@@ -27,6 +38,12 @@ export const ComponentSection = () => {
         isRequired
         data-test="component-name"
       />
+      <HelperText>
+        <HelperTextItem>
+          Must be unique within tenant namespace{' '}
+          <span className="component-section__component-name__helper-text">{namespace}</span>
+        </HelperTextItem>
+      </HelperText>
       {values.source.git.url ? (
         <GitRepoLink
           url={values.source.git.url}

@@ -32,3 +32,11 @@ export const mockReleasePlan = {
     target: 'rorai-tenant',
   },
 } as ReleasePlanKind;
+
+export const mockEditedReleasePlan = {
+  ...mockReleasePlan,
+  spec: {
+    ...mockReleasePlan.spec,
+    target: 'my-tenant',
+  },
+};

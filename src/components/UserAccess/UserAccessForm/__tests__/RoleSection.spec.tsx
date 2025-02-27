@@ -1,8 +1,31 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, act, waitFor } from '@testing-library/react';
+import { defaultKonfluxRoleMap } from '../../../../__data__/role-data';
+import { useRoleMap } from '../../../../hooks/useRole';
 import { formikRenderer } from '../../../../utils/test-utils';
 import { RoleSection } from '../RoleSection';
 
+jest.mock('../../../../hooks/useRole', () => ({
+  useRoleMap: jest.fn(),
+}));
+
 describe('RoleSection', () => {
+  const mockUseRoleMap = useRoleMap as jest.Mock;
+  beforeEach(() => {
+    mockUseRoleMap.mockReturnValue([defaultKonfluxRoleMap, true, null]);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should show loading if rolemap is not ready', () => {
+    mockUseRoleMap.mockReturnValue([defaultKonfluxRoleMap, false, null]);
+    formikRenderer(<RoleSection />, { role: '' });
+    expect(screen.getByText('Loading...')).toBeVisible();
+    const dropdownButton = screen.getByTestId('dropdown-toggle');
+    expect(dropdownButton).toBeDisabled();
+  });
+
   it('should not render permissions if role is not selected', () => {
     formikRenderer(<RoleSection />, { role: '' });
     expect(screen.getByText('Select role')).toBeVisible();
@@ -12,17 +35,31 @@ describe('RoleSection', () => {
     expect(screen.queryByText('Show list of permissions')).toBeNull();
   });
 
-  it('should render permissions if role is selected', () => {
+  it('should render permissions if role is selected', async () => {
     formikRenderer(<RoleSection />, { role: '' });
-    fireEvent.click(screen.getByText('Select role'));
-    expect(screen.getByText('contributor')).toBeVisible();
-    expect(screen.getByText('maintainer')).toBeVisible();
-    expect(screen.getByText('admin')).toBeVisible();
-    fireEvent.click(screen.getByText('maintainer'));
-    expect(screen.getByText('Show list of permissions for the maintainer')).toBeVisible();
+    act(() => {
+      fireEvent.click(screen.getByText('Select role'));
+    });
+    await waitFor(() => {
+      expect(screen.getByText('Contributor')).toBeVisible();
+      expect(screen.getByText('Maintainer')).toBeVisible();
+      expect(screen.getByText('Admin')).toBeVisible();
+    });
+    act(() => {
+      fireEvent.click(screen.getByText('Maintainer'));
+    });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Maintainer'));
+      expect(screen.getByText('Show list of permissions for the Maintainer')).toBeVisible();
+    });
 
-    fireEvent.click(screen.getByText('maintainer'));
-    fireEvent.click(screen.getByText('admin'));
-    expect(screen.getByText('Show list of permissions for the admin')).toBeVisible();
+    act(() => {
+      fireEvent.click(screen.getByText('Contributor'));
+      fireEvent.click(screen.getByText('Admin'));
+    });
+    await waitFor(() => {
+      fireEvent.click(screen.getByText('Admin'));
+      expect(screen.getByText('Show list of permissions for the Admin')).toBeVisible();
+    });
   });
 });
