@@ -29,7 +29,6 @@ const SnapshotDetailsView: React.FC = () => {
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
     snapshot?.metadata?.namespace,
-    workspace,
     buildPipelineName,
   );
 

@@ -18,4 +18,4 @@ export const mockNamespaceHooks = <T extends MockFunctionKeys<NamespaceHook>>(
 };
 
 export const mockUseNamespaceHook = (initialValue: ReturnType<NamespaceHook['useNamespace']>) =>
-  mockNamespaceHooks('useNamespace', initialValue);
+  mockNamespaceHooks('useNamespaceX', initialValue);

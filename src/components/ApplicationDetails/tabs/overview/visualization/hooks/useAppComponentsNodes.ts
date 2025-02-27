@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useComponents } from '../../../../../../hooks/useComponents';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
@@ -21,12 +20,7 @@ export const useAppComponentsNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const { workspace } = useWorkspaceInfo();
-  const [components, componentsLoaded, componentsError] = useComponents(
-    namespace,
-    workspace,
-    applicationName,
-  );
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
 
   const componentNodes: WorkflowNodeModel<WorkflowNodeModelData>[] = React.useMemo(() => {
     const nodes = components.length

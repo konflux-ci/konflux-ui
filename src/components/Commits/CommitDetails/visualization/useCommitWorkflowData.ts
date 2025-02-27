@@ -31,7 +31,7 @@ export const useCommitWorkflowData = (
   const { namespace, workspace } = useWorkspaceInfo();
 
   const applicationName = commit?.application || '';
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
     namespace,
     workspace,
@@ -39,7 +39,6 @@ export const useCommitWorkflowData = (
   );
   const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     commit.sha,
   );

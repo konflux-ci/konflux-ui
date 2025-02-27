@@ -6,7 +6,7 @@ import { ComponentRelationNudgeType, ComponentRelationValue } from './type';
 
 export const useNudgeData = (application: string): [ComponentRelationValue[], boolean, unknown] => {
   const { namespace, workspace } = useWorkspaceInfo();
-  const [components, loaded, error] = useComponents(namespace, workspace, application);
+  const [components, loaded, error] = useComponents(namespace, application);
   const [allComponents, allLoaded, allErrors] = useAllComponents(namespace, workspace);
   const nudgeData: ComponentRelationValue[] = React.useMemo(() => {
     return loaded && !error && allLoaded && !allErrors

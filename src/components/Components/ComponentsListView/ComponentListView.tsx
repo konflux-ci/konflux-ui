@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Alert,
   AlertActionCloseButton,
@@ -25,7 +25,6 @@ import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents'
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
 import { IMPORT_PATH } from '../../../routes/paths';
-import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -54,7 +53,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
   applicationName,
 }) => {
   const namespace = useNamespace();
-  const { workspaceName } = useParams<RouterParams>();
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
@@ -62,7 +60,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 
   const [components, componentsLoaded, componentsError] = useComponents(
     namespace,
-    workspaceName,
     applicationName,
     true,
   );

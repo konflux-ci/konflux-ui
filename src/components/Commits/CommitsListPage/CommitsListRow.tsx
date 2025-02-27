@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -7,7 +8,6 @@ import { Commit } from '../../../types';
 import { createRepoBranchURL, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
 import { CommitIcon } from '../CommitIcon';
@@ -17,7 +17,6 @@ import './CommitsListRow.scss';
 
 const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>> = ({ obj }) => {
   const actions = useCommitActions(obj);
-  const { workspace } = useWorkspaceInfo();
   const status = pipelineRunStatus(obj.pipelineRuns[0]);
 
   const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
@@ -25,9 +24,15 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
     <>
       <TableData className={commitsTableColumnClasses.name}>
         <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
-        <Link to={`/workspaces/${workspace}/applications/${obj.application}/commit/${obj.sha}`}>
+        <Link
+          to={COMMIT_DETAILS_PATH.createPath({
+            applicationName: obj.application,
+            commitName: obj.sha,
+          })}
+        >
           {prNumber} {obj.shaTitle}
         </Link>
+
         {obj.shaURL && (
           <>
             {' '}
@@ -48,9 +53,10 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
             ? obj.components.map((c) => (
                 <Link
                   key={c}
-                  to={`/workspaces/${workspace}/applications/${
-                    obj.application
-                  }/components/${c.trim()}`}
+                  to={COMPONENT_DETAILS_PATH.createPath({
+                    applicationName: obj.application,
+                    componentName: c.trim(),
+                  })}
                 >
                   {c.trim()}
                 </Link>
