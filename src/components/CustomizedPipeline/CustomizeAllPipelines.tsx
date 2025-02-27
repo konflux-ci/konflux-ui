@@ -31,7 +31,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
   modalProps,
 }) => {
   const { workspace } = useWorkspaceInfo();
-  const [components, loaded] = useComponents(namespace, workspace, applicationName);
+  const [components, loaded] = useComponents(namespace, applicationName);
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const filteredComponents = React.useMemo(
     () => (loaded ? (filter ? components.filter(filter) : components) : []),

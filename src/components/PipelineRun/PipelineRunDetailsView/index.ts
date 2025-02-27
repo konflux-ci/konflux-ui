@@ -7,11 +7,7 @@ import { getNamespaceUsingWorspaceFromQueryCache } from '../../Workspace/utils';
 export const pipelineRunDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = await getNamespaceUsingWorspaceFromQueryCache(params[RouterParams.workspaceName]);
-    return QueryPipelineRun(
-      ns,
-      params[RouterParams.workspaceName],
-      params[RouterParams.pipelineRunName],
-    );
+    return QueryPipelineRun(ns, params[RouterParams.pipelineRunName]);
   },
   [
     { model: PipelineRunModel, verb: 'list' },

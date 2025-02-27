@@ -5,16 +5,15 @@ import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { RouterParams } from '../../../routes/utils';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 
 const SnapshotPipelineRunTab: React.FC = () => {
   const { snapshotName, applicationName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {

@@ -8,12 +8,12 @@ import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunLogs } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 
 const PipelineRunLogsTab: React.FC = () => {
   const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();
-  const { namespace } = useWorkspaceInfo();
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, workspace, pipelineRunName);
+  const namespace = useNamespace();
+  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
   const [activeTask, setActiveTask, unSetActiveTask] = useSearchParam('task', undefined);
 

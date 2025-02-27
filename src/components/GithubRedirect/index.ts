@@ -20,7 +20,6 @@ export const githubRedirectLoader: LoaderFunction = async ({ params }) => {
   if (!workspace || !params[GithubRedirectRouteParams.pipelineRunName]) return null;
   return QueryPipelineRun(
     params[GithubRedirectRouteParams.ns],
-    workspace,
     params[GithubRedirectRouteParams.pipelineRunName],
   );
 };
