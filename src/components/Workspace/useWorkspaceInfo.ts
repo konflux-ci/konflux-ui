@@ -1,5 +1,5 @@
 // remove eslint disable once migration to namespace is done
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 import { useNamespace } from '../../shared/providers/Namespace';
 
 /**
