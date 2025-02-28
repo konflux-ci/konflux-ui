@@ -8,6 +8,7 @@ import {
   CommitsPipelineRunTab,
 } from '../components/Commits/CommitDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
+import { PipelineRunsFilterContextProvider } from '../components/Filter/utils/PipelineRunsFilterContext';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import {
   integrationDetailsPageLoader,
@@ -202,7 +203,14 @@ export const router = createBrowserRouter([
         element: <CommitDetailsView />,
         children: [
           { index: true, element: <CommitOverviewTab /> },
-          { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
+          {
+            path: 'pipelineruns',
+            element: (
+              <PipelineRunsFilterContextProvider>
+                <CommitsPipelineRunTab />
+              </PipelineRunsFilterContextProvider>
+            ),
+          },
         ],
       },
       /* Trigger Release plan */
