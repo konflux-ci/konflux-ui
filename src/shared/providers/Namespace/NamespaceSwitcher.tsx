@@ -35,7 +35,11 @@ export const NamespaceSwitcher: React.FC<
       selectedItem={{ key: selectedItem?.metadata.name, name: selectedItem?.metadata.name }}
       onSelect={onSelect}
       footer={<></>}
-      toggle={(props) => <MenuToggle {...props}>Namespace: {namespace}</MenuToggle>}
+      toggle={(props) => (
+        <MenuToggle style={{ paddingInlineStart: 0 }} variant="plainText" {...props}>
+          Namespace: {namespace}
+        </MenuToggle>
+      )}
     />
   ) : null;
 };
