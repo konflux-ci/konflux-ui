@@ -22,7 +22,6 @@ const useRuns = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
   model: K8sModelCommon,
   namespace: string,
-  workspace,
   options?: {
     selector?: Selector;
     limit?: number;
@@ -41,14 +40,13 @@ const useRuns = <Kind extends K8sResourceCommon>(
       ? {
           groupVersionKind,
           namespace,
-          workspace,
           isList,
           selector: optionsMemo?.selector,
           name: optionsMemo?.name,
           watch: true,
         }
       : null;
-  }, [namespace, groupVersionKind, workspace, isList, optionsMemo?.selector, optionsMemo?.name]);
+  }, [namespace, groupVersionKind, isList, optionsMemo?.selector, optionsMemo?.name]);
   const {
     data: resources,
     isLoading,
