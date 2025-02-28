@@ -36,8 +36,11 @@ const usePACState = (component: ComponentKind) => {
   const buildStatus = useComponentBuildStatus(component);
   const configurationTime = buildStatus?.pac?.['configuration-time'];
 
+  const namespace = component.metadata.namespace;
+
   const [pipelineBuildRuns, pipelineBuildRunsLoaded] = usePipelineRuns(
     !isSample && pacProvision ? component.metadata.namespace : null,
+    namespace,
     React.useMemo(
       () => ({
         selector: {
