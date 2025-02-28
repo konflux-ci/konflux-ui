@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Formik, FormikHelpers } from 'formik';
 import { useAllComponents, useComponents } from '../../hooks/useComponents';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind } from '../../types';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { RawComponentProps, createRawModalLauncher } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import {
   ConfirmCancelationComponentRelationModal,
   ConfirmSubmissionComponentRelationModal,
@@ -26,9 +26,9 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
   const [showCancelModal, setShowCancelModal] = React.useState<boolean>(false);
   const [showSubmissionModal, setShowSubmissionModal] = React.useState<boolean>(false);
   const [nudgeData, loaded, error] = useNudgeData(application);
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [components, cnLoaded, cnError] = useComponents(namespace, workspace, application);
-  const [allComponents, allCompsLoaded, allCompsError] = useAllComponents(namespace, workspace);
+  const namespace = useNamespace();
+  const [components, cnLoaded, cnError] = useComponents(namespace, application);
+  const [allComponents, allCompsLoaded, allCompsError] = useAllComponents(namespace);
   const groupedComponents = React.useMemo(
     () =>
       allCompsLoaded && !allCompsError
@@ -55,10 +55,10 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
     track(TrackEvents.ButtonClicked, {
       link_name: 'component-relationship-modal-leave',
       app_name: application,
-      workspace,
+      namespace,
     });
     setShowCancelModal(true);
-  }, [application, track, workspace]);
+  }, [application, track, namespace]);
 
   const initialValues: ComponentRelationFormikValue = React.useMemo(() => {
     return {
@@ -77,7 +77,6 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
       track(TrackEvents.ButtonClicked, {
         link_name: 'component-relationship-modal-submit',
         app_name: application,
-        workspace,
       });
       try {
         await updateNudgeDependencies(values.relations, initialValues.relations, namespace, true);
@@ -94,7 +93,7 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
             track('Component relationship updated', {
               component_name: c.metadata.name,
               app_name: application,
-              workspace,
+              namespace,
             });
           });
           onSaveRelationships();
@@ -107,7 +106,7 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
           helpers.setStatus({ submitError: e?.message });
         });
     },
-    [application, namespace, onSaveRelationships, track, workspace, initialValues],
+    [application, namespace, onSaveRelationships, track, initialValues],
   );
 
   if (showSubmissionModal && !showCancelModal) {

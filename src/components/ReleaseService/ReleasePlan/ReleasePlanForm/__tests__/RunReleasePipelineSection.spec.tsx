@@ -1,4 +1,4 @@
-import { createUseWorkspaceInfoMock, formikRenderer } from '../../../../../utils/test-utils';
+import { formikRenderer } from '../../../../../utils/test-utils';
 import { ReleasePipelineLocation } from '../form-utils';
 import { RunReleasePipelineSection } from '../RunReleasePipelineSection';
 
@@ -11,8 +11,6 @@ jest.mock('../../../../../shared/hooks/useScrollShadows', () => ({
 }));
 
 describe('RunReleasePipelineSection', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
-
   it('should not show target fields if location is not selected', () => {
     const values = {};
     const result = formikRenderer(<RunReleasePipelineSection />, values);

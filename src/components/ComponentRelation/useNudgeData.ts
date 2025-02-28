@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useAllComponents, useComponents } from '../../hooks/useComponents';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind, NudgeStats } from '../../types';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { ComponentRelationNudgeType, ComponentRelationValue } from './type';
 
 export const useNudgeData = (application: string): [ComponentRelationValue[], boolean, unknown] => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [components, loaded, error] = useComponents(namespace, workspace, application);
-  const [allComponents, allLoaded, allErrors] = useAllComponents(namespace, workspace);
+  const namespace = useNamespace();
+  const [components, loaded, error] = useComponents(namespace, application);
+  const [allComponents, allLoaded, allErrors] = useAllComponents(namespace);
   const nudgeData: ComponentRelationValue[] = React.useMemo(() => {
     return loaded && !error && allLoaded && !allErrors
       ? components.reduce((acc, val: ComponentKind) => {

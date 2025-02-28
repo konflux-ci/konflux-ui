@@ -1,8 +1,6 @@
 import { defineConfig } from 'cypress';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
-const { mergeLaunches } = require('@reportportal/agent-js-cypress/lib/mergeLaunches');
-const registerReportPortalPlugin = require('@reportportal/agent-js-cypress/lib/plugin');
 const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
 function deleteLaunchFiles() {
   const getLaunchTempFiles = () => {
@@ -27,19 +25,9 @@ export default defineConfig({
   viewportHeight: 1080,
   reporter: 'cypress-multi-reporters',
   reporterOptions: {
-    reporterEnabled:
-      'cypress-mochawesome-reporter, spec, mocha-junit-reporter, @reportportal/agent-js-cypress',
+    reporterEnabled: 'cypress-mochawesome-reporter, spec, mocha-junit-reporter',
     mochaJunitReporterReporterOptions: {
       mochaFile: 'cypress/junit-[hash].xml',
-    },
-    reportportalAgentJsCypressReporterOptions: {
-      endpoint: 'https://reportportal-appstudio-qe.apps.ocp-c1.prod.psi.redhat.com/api/v1',
-      token: 'xxx',
-      launch: 'hac-dev-pr-check',
-      project: 'hac-dev',
-      description: 'Konflux UI e2e test suite',
-      debug: true,
-      isLaunchMergeRequired: true,
     },
     cypressMochawesomeReporterReporterOptions: {
       charts: true,
@@ -94,55 +82,17 @@ export default defineConfig({
         },
       });
 
-      on('before:run', async (details) => {
-        // cypress-mochawesome-reporter
-        await beforeRunHook(details);
-      });
-
-      // workaround for report portal runs not finishing
-      on('after:run', async () => {
-        // cypress-mochawesome-reporter
-        await afterRunHook();
-
-        if (config.env.PR_CHECK === true) {
-          let retries = 10;
-          console.log('Wait for reportportal agent to finish...');
-          while (glob.sync('rplaunchinprogress*.tmp').length > 0) {
-            if (retries < 1) {
-              console.log('reportportal agent timed out after 20s');
-              return;
-            }
-            retries--;
-            await new Promise((res) => setTimeout(res, 2000));
-          }
-          console.log('reportportal agent finished');
-
-          if (
-            config.reporterOptions.reportportalAgentJsCypressReporterOptions.isLaunchMergeRequired
-          ) {
-            try {
-              console.log('Merging launches...');
-              await mergeLaunches(config.reporterOptions.reportportalAgentJsCypressReporterOptions);
-              console.log('Launches successfully merged!');
-              deleteLaunchFiles();
-            } catch (mergeError: unknown) {
-              console.error(mergeError);
-            }
-          }
-        }
-      });
-
       const defaultValues: { [key: string]: string | boolean } = {
-        KONFLUX_BASE_URL: 'https://prod.foo.redhat.com:1337/preview/application-pipeline',
-        USERNAME: '',
-        PASSWORD: '',
+        KONFLUX_BASE_URL: 'https://localhost:8080',
+        USERNAME: 'user2@konflux.dev',
+        PASSWORD: 'password',
         GH_USERNAME: 'hac-test',
         GH_PASSWORD: '',
         GH_TOKEN: '',
         GH_SETUP_KEY: '',
         KUBECONFIG: '~/.kube/appstudio-config',
         CLEAN_NAMESPACE: 'false',
-        PR_CHECK: false,
+        PR_CHECK: '',
         PERIODIC_RUN: false,
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
@@ -161,24 +111,12 @@ export default defineConfig({
       }
 
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
-      config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
-
-      if (
-        config.env.PR_CHECK === true &&
-        config.reporterOptions.reportportalAgentJsCypressReporterOptions
-      ) {
-        config.reporterOptions.reportportalAgentJsCypressReporterOptions.token =
-          config.env.RP_TOKEN;
-        config.reporterOptions.reportportalAgentJsCypressReporterOptions.description = `${config.env.GH_PR_TITLE}\n${config.env.GH_PR_LINK}`;
-        registerReportPortalPlugin(on, config);
+      if (config.env.PR_CHECK === true) {
+        config.env.HAC_NAMESPACE = `user-ns1`;
       } else {
-        const reporters = (config.reporterOptions.reporterEnabled as string)
-          .split(',')
-          .filter((value) => {
-            return !value.includes('@reportportal/agent-js-cypress');
-          });
-        config.reporterOptions.reporterEnabled = reporters.join(',');
+        config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
       }
+
       require('cypress-high-resolution')(on, config);
       return config;
     },

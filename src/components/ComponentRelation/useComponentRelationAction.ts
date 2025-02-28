@@ -1,14 +1,14 @@
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { useModalLauncher } from '../modal/ModalProvider';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { createComponentRelationModal } from './ComponentRelationModal';
 
 export const useComponentRelationAction = (application: string) => {
   const showModal = useModalLauncher();
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [components, loaded, error] = useComponents(namespace, workspace, application);
+  const namespace = useNamespace();
+  const [components, loaded, error] = useComponents(namespace, application);
   const [canUpdateComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   return () => ({
     key: 'component-relation-modal',

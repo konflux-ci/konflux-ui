@@ -13,7 +13,7 @@ export const useLatestIntegrationTestPipelines = (
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestTestPipelines, setLatestTestPipelines] = React.useState<PipelineRunKind[]>([]);
 
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),

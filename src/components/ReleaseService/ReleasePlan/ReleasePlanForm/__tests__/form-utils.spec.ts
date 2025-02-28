@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { ReleasePlanKind } from '../../../../../types/coreBuildService';
 import { createK8sUtilMock } from '../../../../../utils/test-utils';
-import { mockReleasePlan } from '../../__data__/release-plan.mock';
+import { mockEditedReleasePlan, mockReleasePlan } from '../../__data__/release-plan.mock';
 import {
   createReleasePlan,
   editReleasePlan,
@@ -34,7 +34,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -87,7 +86,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -133,7 +131,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result.metadata.labels).toEqual({
       'release.appstudio.openshift.io/auto-release': 'true',
@@ -156,7 +153,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result.metadata.labels).toEqual({
       'release.appstudio.openshift.io/auto-release': 'true',
@@ -167,6 +163,7 @@ describe('createReleasePlan', () => {
 
 describe('editReleasePlan', () => {
   it('should update to use the active workspace for current release location', async () => {
+    k8sUpdateMock.mockReturnValue(mockEditedReleasePlan);
     const result = await editReleasePlan(
       mockReleasePlan,
       {
@@ -183,10 +180,10 @@ describe('editReleasePlan', () => {
           path: '/',
         },
       },
-      'my-ws-tenant',
+      mockEditedReleasePlan.spec.target,
     );
 
-    expect(result.spec.target).toBe('my-ws-tenant');
+    expect(result.spec.target).toBe(mockEditedReleasePlan.spec.target);
   });
 });
 
@@ -210,15 +207,15 @@ describe('releasePlanFormParams', () => {
 });
 
 describe('getReleasePlanFormBreadcrumbs', () => {
+  const namespace = 'test-ns';
   it('should return the correct breadcrumbs for creating a release plan', () => {
-    const workspace = 'testWorkspace';
     const edit = false;
 
-    const breadcrumbs = getReleasePlanFormBreadcrumbs([], workspace, edit);
+    const breadcrumbs = getReleasePlanFormBreadcrumbs([], namespace, edit);
 
     expect(breadcrumbs).toEqual([
       {
-        path: `/workspaces/${workspace}/release`,
+        path: `/workspaces/${namespace}/release`,
         name: 'Releases',
       },
       {
@@ -229,14 +226,13 @@ describe('getReleasePlanFormBreadcrumbs', () => {
   });
 
   it('should return the correct breadcrumbs for editing a release plan', () => {
-    const workspace = 'testWorkspace';
     const edit = true;
 
-    const breadcrumbs = getReleasePlanFormBreadcrumbs([], workspace, edit);
+    const breadcrumbs = getReleasePlanFormBreadcrumbs([], namespace, edit);
 
     expect(breadcrumbs).toEqual([
       {
-        path: `/workspaces/${workspace}/release`,
+        path: `/workspaces/${namespace}/release`,
         name: 'Releases',
       },
       {

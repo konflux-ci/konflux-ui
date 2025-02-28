@@ -35,27 +35,7 @@ import {
   PipelineRunSecurityEnterpriseContractTab,
   PipelineRunTaskRunsTab,
 } from '../components/PipelineRun/PipelineRunDetailsView';
-import {
-  ReleaseDetailsLayout,
-  releaseDetailsViewLoader,
-  ReleaseListViewTab,
-  releaseListViewTabLoader,
-  ReleaseOverviewTab,
-} from '../components/Releases';
-import {
-  releasePlanAdmissionListLoader,
-  ReleasePlanAdmissionListView,
-  releasePlanCreateFormLoader,
-  ReleasePlanCreateFormPage,
-  releasePlanEditFormLoader,
-  ReleasePlanEditFormPage,
-  releasePlanListLoader,
-  ReleasePlanListView,
-  releasePlanTriggerLoader,
-  ReleaseService,
-  TriggerReleaseFormPage,
-} from '../components/ReleaseService';
-import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../components/Secrets';
+import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
 import {
   SnapshotDetailsView,
   snapshotDetailsViewLoader,
@@ -82,6 +62,9 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import componentRoutes from './page-routes/components';
+import releaseRoutes from './page-routes/release';
+import releaseServiceRoutes from './page-routes/release-service';
+import secretRoutes from './page-routes/secrets';
 import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
@@ -112,7 +95,9 @@ export const router = createBrowserRouter([
       ...applicationRoutes,
       ...workspaceRoutes,
       ...componentRoutes,
-
+      ...releaseRoutes,
+      ...releaseServiceRoutes,
+      ...secretRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -185,20 +170,6 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      /* Release routes */
-      {
-        // details page
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/releases/:${RouterParams.releaseName}`,
-        loader: releaseDetailsViewLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ReleaseDetailsLayout />,
-        children: [
-          {
-            index: true,
-            element: <ReleaseOverviewTab />,
-          },
-        ],
-      },
       /* Pipeline Run details routes */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
@@ -234,66 +205,8 @@ export const router = createBrowserRouter([
           { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
         ],
       },
-      /* Secrets create form */
-      {
-        path: `workspaces/:workspaceName/secrets/create`,
-        element: <AddSecretForm />,
-        errorElement: <RouteErrorBoundry />,
-      },
-      /* Secrets list view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/secrets`,
-        loader: secretListViewLoader,
-        element: <SecretsListPage />,
-        errorElement: <RouteErrorBoundry />,
-      },
       /* Trigger Release plan */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/trigger/:${RouterParams.releasePlanName}`,
-        loader: releasePlanTriggerLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <TriggerReleaseFormPage />,
-      },
-      /* Create Release plan */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/edit/:${RouterParams.releasePlanName}`,
-        loader: releasePlanEditFormLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ReleasePlanEditFormPage />,
-      },
-      /* Edit Release plan */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release/release-plan/create`,
-        loader: releasePlanCreateFormLoader,
-        errorElement: <RouteErrorBoundry />,
-        element: <ReleasePlanCreateFormPage />,
-      },
-      /* Release service list view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/release`,
-        element: <ReleaseService />,
-        errorElement: <RouteErrorBoundry />,
-        children: [
-          {
-            index: true,
-            loader: releasePlanListLoader,
-            element: <ReleasePlanListView />,
-            errorElement: <RouteErrorBoundry />,
-          },
-          {
-            path: 'release-plan',
-            loader: releasePlanListLoader,
-            element: <ReleasePlanListView />,
-            errorElement: <RouteErrorBoundry />,
-          },
-          {
-            path: 'release-plan-admission',
-            loader: releasePlanAdmissionListLoader,
-            element: <ReleasePlanAdmissionListView />,
-            errorElement: <RouteErrorBoundry />,
-          },
-        ],
-      },
+
       /* Snapshot Details view */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
