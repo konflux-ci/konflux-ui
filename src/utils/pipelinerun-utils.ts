@@ -44,7 +44,7 @@ const QueryRun = curry(
       if (e.code === 404) {
         return await getQueryClient()
           .ensureInfiniteQueryData({
-            ...createTektonResultQueryOptions(fetchFn, model, namespace, workspace, {
+            ...createTektonResultQueryOptions(fetchFn, model, namespace, {
               filter: EQ('data.metadata.name', name),
             }),
             retry: false,

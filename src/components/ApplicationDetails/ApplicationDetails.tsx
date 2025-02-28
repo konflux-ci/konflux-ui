@@ -36,7 +36,6 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
 
   const [application, applicationLoaded, applicationError] = useApplication(
     namespace,
-    workspace,
     applicationName,
   );
   const track = useTrackEvent();

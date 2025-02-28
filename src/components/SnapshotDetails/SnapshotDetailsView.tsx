@@ -30,8 +30,6 @@ const SnapshotDetailsView: React.FC = () => {
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
     snapshot?.metadata?.namespace,
-    // Temporary until pipeline runs are migrated
-    namespace,
     buildPipelineName,
   );
 

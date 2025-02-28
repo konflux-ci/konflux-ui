@@ -93,7 +93,7 @@ describe('CommitsListView', () => {
     const addButton = screen.queryByText('Add component');
     expect(addButton).toBeInTheDocument();
     expect(addButton.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=purple-mermaid-app`,
+      `http://localhost/workspaces/test-ns/import?application=purple-mermaid-app`,
     );
   });
 

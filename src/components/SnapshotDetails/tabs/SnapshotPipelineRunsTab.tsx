@@ -14,8 +14,6 @@ const SnapshotPipelineRunTab: React.FC = () => {
   const namespace = useNamespace();
   const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRuns(
     namespace,
-    // Temporary until pipeline runs are migrated
-    namespace,
     React.useMemo(
       () => ({
         selector: {
