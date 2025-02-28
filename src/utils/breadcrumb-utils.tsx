@@ -26,10 +26,8 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
   const applicationName = params.applicationName || appDisplayName;
 
   const { workspace } = useWorkspaceInfo();
-  const workspaceBreadcrumbs = useWorkspaceBreadcrumbs();
 
   return [
-    ...workspaceBreadcrumbs,
     <BreadcrumbItem key="app-link" component="div" showDivider>
       {applicationName ? (
         <Link

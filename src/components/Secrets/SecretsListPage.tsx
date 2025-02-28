@@ -3,13 +3,10 @@ import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-cor
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import ExternalLink from '../../shared/components/links/ExternalLink';
-import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
 import PageLayout from '../PageLayout/PageLayout';
 import SecretsListView from './SecretsListView/SecretsListView';
 
 const SecretsListPage: React.FC = () => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
-
   useDocumentTitle(`Secrets | ${FULL_APPLICATION_TITLE}`);
   return (
     <PageLayout
@@ -24,13 +21,6 @@ const SecretsListPage: React.FC = () => {
           </ExternalLink>
         </>
       }
-      breadcrumbs={[
-        ...breadcrumbs,
-        {
-          path: '#',
-          name: 'Secrets',
-        },
-      ]}
     >
       <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
 

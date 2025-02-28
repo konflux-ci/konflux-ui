@@ -17,7 +17,7 @@ export const AppRoot: React.FC = () => {
       }
     >
       {namespace ? (
-        <PageSection variant="light" hasShadowBottom>
+        <PageSection variant="light" style={{ paddingBlock: 0 }} hasShadowBottom>
           <NamespaceSwitcher />
         </PageSection>
       ) : null}
