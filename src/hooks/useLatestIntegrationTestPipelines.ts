@@ -30,7 +30,6 @@ export const useLatestIntegrationTestPipelines = (
 
   const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRuns(
     !componentsLoaded || !neededNames.length ? null : namespace,
-    null,
     React.useMemo(
       () => ({
         selector: {
