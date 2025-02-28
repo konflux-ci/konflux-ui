@@ -20,7 +20,7 @@ const SnapshotDetailsView: React.FC = () => {
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [snapshot, loaded, loadErr] = useSnapshot(namespace, workspace, snapshotName);
+  const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
     () => loaded && !loadErr && snapshot?.metadata?.labels[SnapshotLabels.BUILD_PIPELINE_LABEL],

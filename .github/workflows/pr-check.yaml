@@ -14,9 +14,12 @@ jobs:
           PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
           
           if gh api "/orgs/$ORG/members/$PR_AUTHOR"; then
-            echo "PR author is a member of $ORG GitHub organization, skipping further checks"
+            echo "PR author is a member of $ORG GitHub organization, running tests."
             exit 0
           fi
+
+          echo "PR author is NOT a member of $ORG GitHub organization, skipping further checks."
+          exit 1
         env:
           GITHUB_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
 
@@ -113,7 +116,7 @@ jobs:
 
       - name: Install Konflux-UI and run tests
         env:
-          CYPRESS_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
           TARGET_BRANCH: ${{ github.base_ref }}
           PR_NUMBER: ${{ github.event.number }}
           HEAD_SHA: "${{ github.event.pull_request.head.sha }}"
