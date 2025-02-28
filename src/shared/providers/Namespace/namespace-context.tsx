@@ -41,7 +41,11 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
     data: namespaceResource,
     isLoading: activeNamespaceLoading,
     error,
-  } = useQuery({ ...createNamespaceQueryOptions(activeNamespaceName), retry: false });
+  } = useQuery({
+    ...createNamespaceQueryOptions(activeNamespaceName),
+    retry: false,
+    enabled: !activeNamespaceName,
+  });
 
   React.useEffect(() => {
     if (!error && getLastUsedNamespace() !== activeNamespaceName) {
