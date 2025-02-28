@@ -17,6 +17,7 @@ import {
   getTaskRunLog,
   nameFilter,
   selectorToFilter,
+  createTektonRecordUrl,
 } from '../tekton-results';
 import { createK8sUtilMock } from '../test-utils';
 
@@ -411,6 +412,19 @@ describe('tekton-results', () => {
           },
         ]),
       ).toStrictEqual('data.metadata.labels["test"] < 5');
+    });
+  });
+
+  describe('createTektonRecordUrl', () => {
+    it('should create record URL', () => {
+      expect(
+        createTektonRecordUrl(
+          'test-ns',
+          'wlin-tenant/results/e364dc3d-3877-4623-ab87-2509bd72824e/records/e364dc3d-3877-4623-ab87-2509bd72824e',
+        ),
+      ).toEqual(
+        '/plugins/tekton-results/workspaces/test-ns/apis/results.tekton.dev/v1alpha2/parents/wlin-tenant/results/e364dc3d-3877-4623-ab87-2509bd72824e/records/e364dc3d-3877-4623-ab87-2509bd72824e',
+      );
     });
   });
 

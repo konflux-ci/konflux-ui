@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
@@ -24,7 +24,14 @@ export const PipelineRunDetailsView: React.FC = () => {
   const { namespace, workspace } = useWorkspaceInfo();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, workspace, pipelineRunName);
+  const recordPath = useLocation().state?.recordpath as string;
+
+  const [pipelineRun, loaded, error] = usePipelineRun(
+    namespace,
+    workspace,
+    pipelineRunName,
+    recordPath,
+  );
   const { cta, isDisabled, disabledTooltip, key, label } = usePipelinererunAction(pipelineRun);
 
   const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');

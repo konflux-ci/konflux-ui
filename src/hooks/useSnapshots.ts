@@ -6,7 +6,6 @@ import { Snapshot } from '../types/coreBuildService';
 
 export const useSnapshots = (
   namespace: string,
-  workspace: string,
   commit?: string,
 ): [Snapshot[], boolean, unknown] => {
   const {
@@ -17,7 +16,6 @@ export const useSnapshots = (
     {
       groupVersionKind: SnapshotGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     SnapshotModel,
