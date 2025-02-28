@@ -35,7 +35,16 @@ const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps
           component={(props) => (
             <Link
               {...props}
-              to={`${IMPORT_PATH_WITH_QUERY.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+              //to={`/workspaces/${workspace}/import?application=${applicationName}`}
+              ////todo sjochman
+              //to={IMPORT_PATH_WITH_QUERY.createPath({
+              //  workspaceName: namespace,
+              //  applicationName: applicationName,
+              //})}
+              to={IMPORT_PATH_WITH_QUERY.createPath({
+                workspaceName: namespace,
+                //applicationName: applicationName,
+              })}
             />
           )}
           variant="secondary"
