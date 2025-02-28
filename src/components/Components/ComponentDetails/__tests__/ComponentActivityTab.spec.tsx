@@ -1,7 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import {
   createK8sWatchResourceMock,
   createUseApplicationMock,
@@ -10,6 +9,7 @@ import {
 import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
 import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import { ComponentActivityTab } from '../tabs/ComponentActivityTab';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 
 jest.mock('../../../../hooks/useTektonResults');
 
