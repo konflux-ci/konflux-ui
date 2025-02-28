@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Button, Spinner } from '@patternfly/react-core';
 import { useQuery } from '@tanstack/react-query';
-import { useWorkspaceInfo } from '../../../components/Workspace/useWorkspaceInfo';
 import { APPLICATION_LIST_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { NamespaceKind } from '../../../types';
@@ -26,19 +25,17 @@ export const NamespaceContext = React.createContext<NamespaceContextData>({
 });
 
 export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  // use this so both workspace and namespace API uses the same active namespace
-  const { namespace: ns } = useWorkspaceInfo();
   const { data: namespaces, isLoading: namespaceLoading } = useQuery(createNamespaceQueryOptions());
   const params = useParams<RouterParams>();
   const navigate = useNavigate();
 
-  const homeNamespace = React.useMemo(
-    () => (!namespaceLoading ? namespaces.find((n) => n.metadata.name === ns) : null),
-    [namespaces, namespaceLoading, ns],
-  );
+  const activeNamespaceName: string = params.workspaceName ?? getLastUsedNamespace();
 
-  const activeNamespaceName: string =
-    params.workspaceName ?? getLastUsedNamespace() ?? homeNamespace?.metadata?.name;
+  const homeNamespace = React.useMemo(
+    () =>
+      !namespaceLoading ? namespaces.find((n) => n.metadata.name === activeNamespaceName) : null,
+    [namespaces, namespaceLoading, activeNamespaceName],
+  );
 
   const {
     data: namespaceResource,

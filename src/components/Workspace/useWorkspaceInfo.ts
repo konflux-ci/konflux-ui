@@ -1,12 +1,13 @@
-import { useContext } from 'react';
 // remove eslint disable once migration to namespace is done
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { useNamespace } from '../../shared/providers/Namespace';
-import { WorkspaceContext } from './workspace-context';
+import { useNamespace } from '../../shared/providers/Namespace';
 
 /**
  * @deprecated Migrate to Namespaces
  * use {@link useNamespace}
  *
  */
-export const useWorkspaceInfo = () => useContext(WorkspaceContext);
+export const useWorkspaceInfo = () => {
+  const namespace = useNamespace();
+  return { workspace: namespace, namespace };
+};

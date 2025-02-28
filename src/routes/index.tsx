@@ -57,7 +57,6 @@ import {
   UserAccessListPage,
   userAccessListPageLoader,
 } from '../components/UserAccess';
-import { workspaceLoader, WorkspaceProvider } from '../components/Workspace';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
@@ -73,19 +72,15 @@ export const router = createBrowserRouter([
   {
     path: '/',
     loader: async (params) => {
-      // [TODO]: change this once all pages use the namespace loader.
-      void namespaceLoader(params);
-      return await workspaceLoader(params);
+      return await namespaceLoader(params);
     },
     errorElement: <RouteErrorBoundry />,
     element: (
-      <WorkspaceProvider>
-        <NamespaceProvider>
-          <ModalProvider>
-            <AppRoot />
-          </ModalProvider>
-        </NamespaceProvider>
-      </WorkspaceProvider>
+      <NamespaceProvider>
+        <ModalProvider>
+          <AppRoot />
+        </ModalProvider>
+      </NamespaceProvider>
     ),
     children: [
       {
