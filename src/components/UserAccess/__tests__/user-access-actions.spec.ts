@@ -1,7 +1,7 @@
 import { mockRoleBinding, mockRoleBindingWithoutUser } from '../../../__data__/rolebinding-data';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { useRBActions } from '../user-access-actions';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 
 // Mock the dependencies
 jest.mock('../../../utils/rbac', () => ({
