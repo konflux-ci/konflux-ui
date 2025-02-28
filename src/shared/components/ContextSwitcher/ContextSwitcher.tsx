@@ -10,8 +10,10 @@ import {
   TabTitleText,
   TextInput,
   MenuSearchInput,
+  Dropdown,
+  MenuToggleProps,
 } from '@patternfly/react-core';
-import { Dropdown, DropdownToggle } from '@patternfly/react-core/deprecated';
+import { DropdownToggle } from '@patternfly/react-core/deprecated';
 import { EllipsisHIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-h-icon';
 import '././ContextSwitcher.scss';
 import { useLocalStorage } from '../../../hooks/useLocalStorage';
@@ -42,6 +44,7 @@ type ContextSwitcherProps = {
   onSelect?: (item: ContextMenuItem) => void;
   resourceType?: string;
   footer?: React.ReactNode;
+  toggle?: (props: MenuToggleProps) => React.ReactElement;
 };
 
 export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherProps>> = ({
@@ -51,6 +54,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
   resourceType = 'resource',
   maxRecentItems = 5,
   footer,
+  toggle,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState('');
@@ -150,20 +154,27 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     }
   };
 
+  const defaultToggle = (defaultToggleRef: React.RefObject<HTMLButtonElement>) => (
+    <DropdownToggle
+      ref={defaultToggleRef}
+      id="toggle-context-switcher"
+      className="context-switcher__dropdown"
+      aria-label="toggle context switcher menu"
+      onToggle={(_event, val) => setIsOpen(val)}
+      toggleIndicator={null}
+      isPlain
+    >
+      <EllipsisHIcon />
+    </DropdownToggle>
+  );
+
   return (
     <Dropdown
       className="context-switcher"
-      toggle={
-        <DropdownToggle
-          id="toggle-context-switcher"
-          className="context-switcher__dropdown"
-          aria-label="toggle context switcher menu"
-          onToggle={(_event, val) => setIsOpen(val)}
-          toggleIndicator={null}
-          isPlain
-        >
-          <EllipsisHIcon />
-        </DropdownToggle>
+      toggle={(ref: React.RefObject<HTMLButtonElement>) =>
+        toggle
+          ? toggle({ innerRef: ref, onClick: () => setIsOpen(!isOpen), isExpanded: isOpen })
+          : defaultToggle(ref)
       }
       isOpen={isOpen}
       isPlain

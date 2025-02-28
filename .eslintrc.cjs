@@ -25,12 +25,12 @@ module.exports = {
   },
   plugins: ['prettier', 'react-refresh'],
   rules: {
-    "@typescript-eslint/no-misused-promises": "off",
-    "@typescript-eslint/no-unsafe-call": "off",
-    "@typescript-eslint/no-unsafe-return": "off",
-    "@typescript-eslint/no-unsafe-member-access": "off",
-    "@typescript-eslint/no-redundant-type-constituents": "off",
-    "@typescript-eslint/no-unsafe-enum-comparison": 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-redundant-type-constituents': 'off',
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off',
     'react-refresh/only-export-components': ['off', { allowConstantExport: true }],
     camelcase: [
       'error',
@@ -118,7 +118,7 @@ module.exports = {
         message: "Don't use group imports. Use lodash/(funcName) instead.",
       },
     ],
-    "@typescript-eslint/no-unsafe-assignment": "off",
+    '@typescript-eslint/no-unsafe-assignment': 'off',
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': ['error'],
     'no-underscore-dangle': 0,
@@ -143,6 +143,13 @@ module.exports = {
   settings: {
     'import/extensions': ['.js', '.jsx'],
     'import/resolver': {
+      alias: {
+        map: [
+          ['@', './src'],
+          ['@routes', './src/routes'],
+        ],
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+      },
       node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
     },
     react: {

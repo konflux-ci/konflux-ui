@@ -40,5 +40,9 @@ export default {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '...'],
     modules: ['src', 'node_modules'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@routes': path.resolve(__dirname, 'src/routes'),
+    },
   },
 };

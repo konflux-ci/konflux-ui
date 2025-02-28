@@ -63,9 +63,9 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import componentRoutes from './page-routes/components';
+import workspaceRoutes from './page-routes/namespace';
 import releaseRoutes from './page-routes/release';
 import releaseServiceRoutes from './page-routes/release-service';
-import workspaceRoutes from './page-routes/workspace';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
 
@@ -92,8 +92,8 @@ export const router = createBrowserRouter([
         index: true,
         element: <Overview />,
       },
-      ...applicationRoutes,
       ...workspaceRoutes,
+      ...applicationRoutes,
       ...componentRoutes,
       ...releaseRoutes,
       ...releaseServiceRoutes,

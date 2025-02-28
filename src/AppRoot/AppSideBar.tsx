@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly/react-core';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
+import { APPLICATION_LIST_PATH, NAMESPACE_LIST_PATH } from '@routes/paths';
+import { useNamespace } from '../shared/providers/Namespace';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const location = useLocation();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   return (
     <PageSidebar isSidebarOpen={isOpen}>
       <PageSidebarBody>
@@ -14,17 +15,22 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             <NavItem isActive={location.pathname === '/'}>
               <NavLink to="/">Overview</NavLink>
             </NavItem>
+            <NavItem isActive={location.pathname.includes('workspaces')}>
+              <NavLink to={NAMESPACE_LIST_PATH.createPath({} as never)}>Namespaces</NavLink>
+            </NavItem>
             <NavItem isActive={location.pathname.includes('applications')}>
-              <NavLink to={`/workspaces/${workspace}/applications`}>Applications</NavLink>
+              <NavLink to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}>
+                Applications
+              </NavLink>
             </NavItem>
             <NavItem isActive={location.pathname.includes('/secrets')}>
-              <NavLink to={`/workspaces/${workspace}/secrets`}>Secrets</NavLink>
+              <NavLink to={`/workspaces/${namespace}/secrets`}>Secrets</NavLink>
             </NavItem>
             <NavItem isActive={location.pathname.includes('/release')}>
-              <NavLink to={`/workspaces/${workspace}/release`}>Releases</NavLink>
+              <NavLink to={`/workspaces/${namespace}/release`}>Releases</NavLink>
             </NavItem>
             <NavItem isActive={location.pathname.includes('/access')}>
-              <NavLink to={`/workspaces/${workspace}/access`}>User Access</NavLink>
+              <NavLink to={`/workspaces/${namespace}/access`}>User Access</NavLink>
             </NavItem>
           </NavList>
         </Nav>
