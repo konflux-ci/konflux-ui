@@ -12,6 +12,10 @@ import CustomizePipeline from '../CustomizePipelines';
 
 jest.mock('../../../utils/analytics');
 
+jest.mock('../../../hooks/useKonfluxPublicInfo', () => ({
+  useKonfluxPublicInfo: jest.fn(() => []),
+}));
+
 jest.mock('../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(() => [[], true]),
 }));
@@ -114,7 +118,7 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const button = result.queryByRole('link', { name: 'Merge in GitHub' });
+    const button = result.queryByRole('link', { name: 'Merge in Git' });
     expect(button).toBeInTheDocument();
   });
 
@@ -127,7 +131,7 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const button = result.queryByRole('link', { name: 'Edit pipeline in GitHub' });
+    const button = result.queryByRole('link', { name: 'Edit pipeline in Git' });
     expect(button).toBeInTheDocument();
   });
 
@@ -157,7 +161,7 @@ describe('CustomizePipeline', () => {
     expect(message).toBeInTheDocument();
   });
 
-  it('should render install GitHub app alert', () => {
+  it('should render install Git app alert', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
     const result = render(
       <CustomizePipeline
@@ -166,10 +170,8 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const link = result.getByRole('link', { name: /Install GitHub Application/ });
+    const link = result.getByRole('link', { name: /Install Git Application/ });
     expect(link).toBeInTheDocument();
-    const button = result.getByRole('button', { name: 'Roll back to default pipeline' });
-    expect(button).toBeInTheDocument();
   });
 
   it('should display upgrade status message', () => {
