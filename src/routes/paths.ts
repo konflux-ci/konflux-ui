@@ -10,6 +10,10 @@ export const IMPORT_PATH = WORKSPACE_PATH.extend('import');
 
 export const APPLICATION_LIST_PATH = WORKSPACE_PATH.extend(`applications`);
 
+export const SECRET_LIST_PATH = WORKSPACE_PATH.extend(`secrets`);
+
+export const SECRET_CREATE_PATH = SECRET_LIST_PATH.extend('create');
+
 export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
   `:${RouterParams.applicationName}`,
 );
