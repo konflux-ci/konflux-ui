@@ -19,6 +19,9 @@ const TaskRunListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<TaskRunKi
       <TableData className={taskRunTableColumnClasses.name}>
         <Link
           to={`/workspaces/${workspace}/applications/${applicationName}/taskruns/${obj.metadata?.name}`}
+          state={{
+            recordpath: obj?.metadata?.annotations?.[PipelineRunLabel.PIPELINE_TEKTON_RECORD],
+          }}
         >
           {obj.metadata.name}
         </Link>

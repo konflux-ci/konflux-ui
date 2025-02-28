@@ -336,8 +336,8 @@ export const taskName = (taskrun: TaskRunKind) =>
 
 export const getPipelineRunStatusResults = (pipelineRun: PipelineRunKind) => {
   return isPipelineV1Beta1(pipelineRun)
-    ? pipelineRun.status?.pipelineResults
-    : pipelineRun.status?.results;
+    ? pipelineRun?.status?.pipelineResults
+    : pipelineRun?.status?.results;
 };
 
 const getPipelineRunStatusResultForKey = curry(

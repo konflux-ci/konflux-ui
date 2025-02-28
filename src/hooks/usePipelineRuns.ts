@@ -28,6 +28,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
     selector?: Selector;
     limit?: number;
     name?: string;
+    recordPath?: string;
   },
 ): [Kind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const etcdRunsRef = React.useRef<Kind[]>([]);
@@ -175,6 +176,7 @@ export const usePipelineRuns = (
   options?: {
     selector?: Selector;
     limit?: number;
+    recordPath?: string;
   },
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
   useRuns<PipelineRunKind>(
@@ -191,6 +193,7 @@ export const useTaskRuns = (
   options?: {
     selector?: Selector;
     limit?: number;
+    recordPath?: string;
   },
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
   useRuns<TaskRunKind>(TaskRunGroupVersionKind, TaskRunModel, namespace, workspace, options);
@@ -320,6 +323,7 @@ export const usePipelineRun = (
   namespace: string,
   workspace: string,
   pipelineRunName: string,
+  recordPath?: string,
 ): [PipelineRunKind, boolean, unknown] => {
   const result = usePipelineRuns(
     namespace,
@@ -328,8 +332,9 @@ export const usePipelineRun = (
       () => ({
         name: pipelineRunName,
         limit: 1,
+        recordPath,
       }),
-      [pipelineRunName],
+      [pipelineRunName, recordPath],
     ),
   ) as unknown as [PipelineRunKind[], boolean, unknown];
 
@@ -343,6 +348,7 @@ export const useTaskRun = (
   namespace: string,
   workspace: string,
   taskRunName: string,
+  recordPath?: string,
 ): [TaskRunKind, boolean, unknown] => {
   const result = useTaskRuns(
     namespace,
@@ -351,8 +357,9 @@ export const useTaskRun = (
       () => ({
         name: taskRunName,
         limit: 1,
+        recordPath,
       }),
-      [taskRunName],
+      [taskRunName, recordPath],
     ),
   ) as unknown as [TaskRunKind[], boolean, unknown];
 

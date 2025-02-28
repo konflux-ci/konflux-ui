@@ -51,6 +51,7 @@ export type TektonResultsOptions = {
   // limit cannot be used in conjuction with pageSize and takes precedence
   limit?: number;
   filter?: string;
+  recordPath?: string;
 };
 
 const throw404 = () => {
@@ -209,6 +210,9 @@ const InFlightStore: { [key: string]: boolean } = {};
 
 const getTRUrlPrefix = (workspace: string): string => URL_PREFIX.replace(_WORKSPACE_, workspace);
 
+export const createTektonRecordUrl = (namespace: string, recordPath: string): string =>
+  `${getTRUrlPrefix(namespace)}/${recordPath}`;
+
 export const createTektonResultsUrl = (
   workspace: string,
   namespace: string,
@@ -242,14 +246,9 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   nextPageToken?: string,
   cacheKey?: string,
 ): Promise<[R[], RecordsList, boolean?]> => {
-  const url = createTektonResultsUrl(
-    workspace,
-    namespace,
-    dataTypes,
-    filter,
-    options,
-    nextPageToken,
-  );
+  const url = options?.recordPath
+    ? createTektonRecordUrl(namespace, options.recordPath)
+    : createTektonResultsUrl(workspace, namespace, dataTypes, filter, options, nextPageToken);
 
   if (cacheKey) {
     const result = CACHE[cacheKey];
@@ -270,7 +269,15 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   InFlightStore[cacheKey] = true;
   const value = await (async (): Promise<[R[], RecordsList]> => {
     try {
-      let list: RecordsList = await commonFetchJSON(url);
+      const originResult: Record | RecordsList = await commonFetchJSON(url);
+      let list: RecordsList;
+      if (!Object.keys(originResult).includes('records')) {
+        list = {
+          records: [originResult as Record],
+        };
+      } else {
+        list = originResult as RecordsList;
+      }
       if (options?.limit >= 0) {
         list = {
           nextPageToken: null,
@@ -395,6 +402,7 @@ export const createTektonResultsQueryKeys = (
   workspace: string,
   selector: Selector,
   filter: string,
+  recordPath?: string,
 ) => {
   const selectorFilter = selectorToFilter(selector);
   return [
@@ -403,6 +411,7 @@ export const createTektonResultsQueryKeys = (
     { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
     ...(selectorFilter ? [selectorFilter] : []),
     ...(filter ? [filter] : []),
+    recordPath,
   ];
 };
 
@@ -415,7 +424,13 @@ export const createTektonResultQueryOptions = curry(
     options: TektonResultsOptions,
   ) => {
     return {
-      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
+      queryKey: createTektonResultsQueryKeys(
+        model,
+        workspace,
+        options?.selector,
+        options?.filter,
+        options?.recordPath,
+      ),
       queryFn: async ({ pageParam }) => {
         const trData = await fetchFn(workspace, namespace, options, pageParam as string);
         return { data: trData[0], nextPage: trData[1].nextPageToken };

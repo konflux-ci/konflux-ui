@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useMemo } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import {
   Button,
   CodeBlock,
@@ -48,11 +49,20 @@ const PipelineRunDetailsTab: React.FC = () => {
   const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();
   const { namespace } = useWorkspaceInfo();
   const generateSbomUrl = useSbomUrl();
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, workspace, pipelineRunName);
+
+  const recordPath = useLocation().state?.recordpath as string;
+  const [pipelineRun, loaded, error] = usePipelineRun(
+    namespace,
+    workspace,
+    pipelineRunName,
+    recordPath,
+  );
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
 
-  const snapshotStatusAnnotation =
-    pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
+  const snapshotStatusAnnotation = useMemo(() => {
+    return pipelineRun?.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, pipelineRun]);
 
   const snapshotCreationStatus = React.useMemo(() => {
     try {

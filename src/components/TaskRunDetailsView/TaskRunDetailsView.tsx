@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { useTaskRun } from '../../hooks/usePipelineRuns';
@@ -20,7 +20,9 @@ export const TaskRunDetailsView: React.FC = () => {
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const params = useParams();
   const navigate = useNavigate();
-  const [taskRun, loaded, error] = useTaskRun(namespace, workspace, taskRunName);
+  const recordPath = useLocation()?.state?.recordpath as string;
+
+  const [taskRun, loaded, error] = useTaskRun(namespace, workspace, taskRunName, recordPath);
 
   const trStatus = React.useMemo(
     () => loaded && taskRun && taskRunStatus(taskRun),
