@@ -1,8 +1,8 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ComponentKind, NudgeStats } from '../../../../types';
-import { mockNamespaceHooks } from '../../../../unit-test-utils/mock-namespace';
 import { routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
+import { mockNamespaceHooks } from '../../../../unit-test-utils/mock-namespace';
 
 const mockComponent = {
   metadata: { name: 'component' },
