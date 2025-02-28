@@ -34,6 +34,8 @@ export enum PipelineRunLabel {
 
   BUILD_IMAGE_ANNOTATION = 'build.appstudio.openshift.io/image',
   BUILD_SERVICE_REPO_ANNOTATION = 'build.appstudio.openshift.io/repo',
+
+  PIPELINE_TEKTON_RECORD = 'results.tekton.dev/record',
 }
 
 export enum SnapshotLabels {

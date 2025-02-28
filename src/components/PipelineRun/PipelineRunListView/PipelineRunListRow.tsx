@@ -52,6 +52,9 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         <Link
           to={`/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${obj.metadata?.name}`}
           title={obj.metadata?.name}
+          state={{
+            recordpath: obj?.metadata?.annotations?.[PipelineRunLabel.PIPELINE_TEKTON_RECORD],
+          }}
         >
           {obj.metadata?.name}
         </Link>
