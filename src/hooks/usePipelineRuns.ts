@@ -265,7 +265,7 @@ export const usePipelineRunsForCommit = (
   commit: string,
   limit?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
 
   const componentNames = React.useMemo(
