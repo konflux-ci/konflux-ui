@@ -27,8 +27,8 @@ export const ComponentRelationModal: React.FC<ComponentRelationModalProps> = ({
   const [showSubmissionModal, setShowSubmissionModal] = React.useState<boolean>(false);
   const [nudgeData, loaded, error] = useNudgeData(application);
   const namespace = useNamespace();
-  const [components, cnLoaded, cnError] = useComponents(namespace, application);
   const [allComponents, allCompsLoaded, allCompsError] = useAllComponents(namespace);
+  const [components, cnLoaded, cnError] = useComponents(namespace, application);
   const groupedComponents = React.useMemo(
     () =>
       allCompsLoaded && !allCompsError

@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom';
 import { EmptyStateBody, EmptyStateActions } from '@patternfly/react-core';
 import emptyStateImgUrl from '../../assets/Commit.svg';
 import { ComponentModel } from '../../models';
+import { IMPORT_PATH_WITH_QUERY } from '../../routes/paths';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 type CommitsEmptyStateProps = {
   applicationName: string;
@@ -15,7 +16,7 @@ type CommitsEmptyStateProps = {
 const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps>> = ({
   applicationName,
 }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 
   return (
@@ -34,7 +35,16 @@ const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps
           component={(props) => (
             <Link
               {...props}
-              to={`/workspaces/${workspace}/import?application=${applicationName}`}
+              //to={`/workspaces/${workspace}/import?application=${applicationName}`}
+              ////todo sjochman
+              //to={IMPORT_PATH_WITH_QUERY.createPath({
+              //  workspaceName: namespace,
+              //  applicationName: applicationName,
+              //})}
+              to={IMPORT_PATH_WITH_QUERY.createPath({
+                workspaceName: namespace,
+                //applicationName: applicationName,
+              })}
             />
           )}
           variant="secondary"
@@ -44,7 +54,6 @@ const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps
             link_name: 'add-component',
             link_location: 'commits-empty-state',
             app_name: applicationName,
-            workspace,
           }}
         >
           Add component
