@@ -22,7 +22,6 @@ import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ApplicationKind } from '../../types';
-import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import PageLayout from '../PageLayout/PageLayout';
@@ -31,7 +30,6 @@ import ApplicationListRow from './ApplicationListRow';
 
 const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
-  const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
@@ -69,7 +67,6 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   return (
     <>
       <PageLayout
-        breadcrumbs={applicationBreadcrumbs}
         title="Applications"
         description="An application is 1 or more components running together for building and releasing."
       >

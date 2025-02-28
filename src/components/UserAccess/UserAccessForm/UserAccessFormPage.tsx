@@ -6,7 +6,6 @@ import { useRoleMap } from '../../../hooks/useRole';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { NamespaceRole, RoleBinding } from '../../../types';
 import { TrackEvents, useTrackEvent } from '../../../utils/analytics';
-import { invalidateWorkspaceQuery } from '../../Workspace/utils';
 import { createRBs, editRB, userAccessFormSchema, UserAccessFormValues } from './form-utils';
 import { UserAccessForm } from './UserAccessForm';
 type Props = {
@@ -47,7 +46,6 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
         usernames: values.usernames,
         namespace,
       });
-      await invalidateWorkspaceQuery();
       navigate(`/workspaces/${namespace}/access`);
     } catch (error) {
       // eslint-disable-next-line no-console

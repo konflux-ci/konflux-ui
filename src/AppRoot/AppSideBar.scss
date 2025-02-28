@@ -1,0 +1,8 @@
+.app-side-bar {
+  &__nav-item {
+    &--disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+  }
+}

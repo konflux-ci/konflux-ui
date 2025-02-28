@@ -9,7 +9,6 @@ import { RELEASE_SERVICE_PATH } from '../../../../routes/paths';
 import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import { useNamespace } from '../../../../shared/providers/Namespace';
-import { useWorkspaceBreadcrumbs } from '../../../../utils/breadcrumb-utils';
 import { IssueType } from './AddIssueSection/AddIssueModal';
 import { AddIssueSection } from './AddIssueSection/AddIssueSection';
 import { TriggerReleaseFormValues } from './form-utils';
@@ -35,7 +34,6 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   errors,
   status,
 }) => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
   const namespace = useNamespace();
   const [{ value: labels }] = useField<TriggerReleaseFormValues['labels']>('labels');
   const [releasePlans, loaded] = useReleasePlans(namespace);
@@ -52,7 +50,6 @@ export const TriggerReleaseForm: React.FC<Props> = ({
       title="Trigger release plan"
       description="A release plan schedules when to send your code to production."
       breadcrumbs={[
-        ...breadcrumbs,
         {
           path: RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }),
           name: 'Releases',

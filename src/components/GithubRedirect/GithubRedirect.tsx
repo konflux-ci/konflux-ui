@@ -2,7 +2,6 @@ import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { Bullseye, Flex, HelperText, HelperTextItem, Spinner } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
-import { useWorkspaceForNamespace } from '../../hooks/useWorkspaceForNamespace';
 import { HttpError } from '../../k8s/error';
 import { GithubRedirectRouteParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
@@ -10,22 +9,17 @@ import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState
 const GithubRedirect: React.FC = () => {
   const { pathname } = useLocation();
   const { ns, pipelineRunName, taskName } = useParams<GithubRedirectRouteParams>();
-  const workspace = useWorkspaceForNamespace(ns);
   const isLogsTabSelected = pathname.includes('/logs');
-  const [pr, loaded, error] = usePipelineRun(ns, workspace.metadata.name, pipelineRunName);
+  const [pr, loaded, error] = usePipelineRun(ns, ns, pipelineRunName);
 
   const application =
     loaded && !error ? pr.metadata.labels[PipelineRunLabel.APPLICATION] : undefined;
 
-  const navigateUrl = `${
-    workspace
-      ? `/workspaces/${workspace.metadata.name}${
-          application && !error
-            ? `/applications/${application}${pipelineRunName ? `/pipelineruns/${pipelineRunName}` : ''}${
-                isLogsTabSelected ? `/logs` : ''
-              }${taskName ? `?task=${taskName}` : ''}`
-            : ''
-        }`
+  const navigateUrl = `/workspaces/${ns}${
+    application && !error
+      ? `/applications/${application}${pipelineRunName ? `/pipelineruns/${pipelineRunName}` : ''}${
+          isLogsTabSelected ? `/logs` : ''
+        }${taskName ? `?task=${taskName}` : ''}`
       : ''
   }`;
 

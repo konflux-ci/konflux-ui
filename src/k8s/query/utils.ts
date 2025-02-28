@@ -22,7 +22,7 @@ export const createQueryKeys = ({
     ? [queryOptions?.queryParams?.labelSelector]
     : [];
   return [
-    queryOptions?.ws,
+    queryOptions?.ns,
     {
       group: model?.apiGroup ?? 'core',
       version: model?.apiVersion,

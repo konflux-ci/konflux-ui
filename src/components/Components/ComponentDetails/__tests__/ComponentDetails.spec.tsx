@@ -6,7 +6,7 @@ import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace
 import {
   createK8sWatchResourceMock,
   renderWithQueryClientAndRouter,
-  WithTestWorkspaceContext,
+  WithTestNamespaceContext,
 } from '../../../../utils/test-utils';
 import { useModalLauncher } from '../../../modal/ModalProvider';
 import { mockApplication } from '../../__data__/mock-data';
@@ -57,7 +57,7 @@ const useComponentMock = useComponent as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 
-const ComponentDetailsViewWrapper = WithTestWorkspaceContext(<ComponentDetailsView />);
+const ComponentDetailsViewWrapper = WithTestNamespaceContext(<ComponentDetailsView />);
 
 describe('ComponentDetailsView', () => {
   let navigateMock: jest.Mock;

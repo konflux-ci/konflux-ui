@@ -11,10 +11,6 @@ jest.mock('../../../../hooks/useRole', () => ({
   useRoleMap: jest.fn(),
 }));
 
-jest.mock('../../../../utils/breadcrumb-utils', () => ({
-  useWorkspaceBreadcrumbs: jest.fn(() => []),
-}));
-
 jest.mock('../../../../shared/hooks/useScrollShadows', () => ({
   useScrollShadows: jest.fn().mockReturnValue('none'),
 }));
