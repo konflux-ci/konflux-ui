@@ -16,7 +16,6 @@ const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipel
 
   const [pipelineRuns, relatedPipelineRunsLoaded] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     sha,
   );

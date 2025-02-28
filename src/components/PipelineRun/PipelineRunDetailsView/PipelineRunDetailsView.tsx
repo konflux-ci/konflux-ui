@@ -24,7 +24,7 @@ export const PipelineRunDetailsView: React.FC = () => {
   const { namespace, workspace } = useWorkspaceInfo();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, workspace, pipelineRunName);
+  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
   const { cta, isDisabled, disabledTooltip, key, label } = usePipelinererunAction(pipelineRun);
 
   const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');
