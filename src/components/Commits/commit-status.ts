@@ -1,21 +1,16 @@
 import React from 'react';
 import { usePipelineRunsForCommit } from '../../hooks/usePipelineRuns';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { statuses } from '../../utils/commits-utils';
 import { pipelineRunStatus } from '../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const useCommitStatus = (
   application: string,
   commit: string,
 ): [string, boolean, unknown] => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
-  const [pipelineRuns, loaded, error] = usePipelineRunsForCommit(
-    namespace,
-    workspace,
-    application,
-    commit,
-  );
+  const [pipelineRuns, loaded, error] = usePipelineRunsForCommit(namespace, application, commit);
 
   const plrsForCommit = React.useMemo(
     () =>

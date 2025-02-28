@@ -39,7 +39,6 @@ export const useCommitWorkflowData = (
   );
   const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     commit.sha,
   );

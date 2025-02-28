@@ -13,7 +13,7 @@ import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 const PipelineRunLogsTab: React.FC = () => {
   const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();
   const { namespace } = useWorkspaceInfo();
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, workspace, pipelineRunName);
+  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
   const [activeTask, setActiveTask, unSetActiveTask] = useSearchParam('task', undefined);
 

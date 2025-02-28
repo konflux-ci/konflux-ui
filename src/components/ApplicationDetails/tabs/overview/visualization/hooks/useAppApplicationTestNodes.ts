@@ -34,7 +34,7 @@ export const useAppApplicationTestNodes = (
   );
 
   const [testPipelines, testPipelinesLoaded, testPipelinesError] =
-    useLatestIntegrationTestPipelines(namespace, workspace, applicationName, integrationTestNames);
+    useLatestIntegrationTestPipelines(namespace, applicationName, integrationTestNames);
 
   const allLoaded = testsLoaded && testPipelinesLoaded;
   const allErrors = [testsError, testPipelinesError].filter((e) => !!e);
