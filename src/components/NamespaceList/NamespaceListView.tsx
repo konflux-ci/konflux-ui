@@ -11,7 +11,7 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { debounce } from 'lodash-es';
-import emptyStateImgUrl from '../../assets/Application.svg';
+import emptyStateImgUrl from '../../assets/namespace.svg';
 import { useSearchParam } from '../../hooks/useSearchParam';
 import { ExternalLink, Table } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -69,18 +69,17 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
           variant={PageSectionVariants.light}
           isFilled
         >
-          {!namespaces || namespaces.length === 0 ? (
+          {!namespaces || namespaces.length > 0 ? (
             <AppEmptyState
               className="pf-v5-u-mx-lg"
               isXl
               emptyStateImg={emptyStateImgUrl}
-              title="Easily onboard your applications"
+              title="No namespaces found"
             >
               <EmptyStateBody>
-                Automate the building, testing, and deploying of your applications with just a few
-                clicks.
+                Manage your application on your own and share with your team using namespaces.
                 <br />
-                To get started, create an application.
+                To create a namespace using GitOps, follow the instruction.
               </EmptyStateBody>
               <NamespaceCreateButton />
             </AppEmptyState>
