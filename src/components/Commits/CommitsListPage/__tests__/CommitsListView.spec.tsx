@@ -10,6 +10,7 @@ import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
 import CommitsListView from '../CommitsListView';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 
 jest.mock('../../../../hooks/useTektonResults');
 
@@ -64,6 +65,7 @@ jest.mock('../../../../hooks/useComponents', () => ({
 const watchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
@@ -71,6 +73,7 @@ describe('CommitsListView', () => {
   beforeEach(() => {
     watchResourceMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
     useComponentsMock.mockReturnValue([MockComponents, true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render error state when there is an API error', () => {
@@ -90,7 +93,7 @@ describe('CommitsListView', () => {
     const addButton = screen.queryByText('Add component');
     expect(addButton).toBeInTheDocument();
     expect(addButton.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=purple-mermaid-app`,
+      `http://localhost/workspaces/test-ns/import?application=purple-mermaid-app`,
     );
   });
 

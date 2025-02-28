@@ -36,7 +36,7 @@ import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 const TaskRunDetailsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const { namespace, workspace } = useWorkspaceInfo();
-  const [taskRun, , error] = useTaskRun(namespace, workspace, taskRunName);
+  const [taskRun, , error] = useTaskRun(namespace, taskRunName);
   const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
   const results = isTaskV1Beta1(taskRun) ? taskRun.status?.taskResults : taskRun.status?.results;
   const duration = calculateDuration(

@@ -1,11 +1,11 @@
 import { act, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useApplications } from '../../../../hooks/useApplications';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { routerRenderer } from '../../../../utils/test-utils';
 import { mockApplication } from '../../__data__/mock-data';
 import { ApplicationSwitcher } from '../ApplicationSwitcher';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 
 jest.mock('../../../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
