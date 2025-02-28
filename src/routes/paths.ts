@@ -8,7 +8,7 @@ export const WORKSPACE_PATH: RouteDefinition<WorkspacePath> = buildRoute(
 
 export const IMPORT_PATH = WORKSPACE_PATH.extend('import');
 
-export const IMPORT_PATH_WITH_QUERY = WORKSPACE_PATH.extend(`import?application=:applicationName`);
+export const IMPORT_PATH_WITH_QUERY = WORKSPACE_PATH.extend('import');
 
 export const APPLICATION_LIST_PATH = WORKSPACE_PATH.extend(`applications`);
 

@@ -1,10 +1,8 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ComponentKind, NudgeStats } from '../../../../types';
-import { mockNamespaceHooks } from '../../../../unit-test-utils/mock-namespace';
 import { routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
-
-mockNamespaceHooks('useNamespace', 'test-ns');
+import { mockNamespaceHooks } from '../../../../unit-test-utils/mock-namespace';
 
 const mockComponent = {
   metadata: { name: 'component' },
@@ -22,6 +20,8 @@ const mockAllComponents = [
 jest.mock('../../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [mockAllComponents, true, undefined]),
 }));
+
+mockNamespaceHooks('useNamespace', 'test-ns');
 
 describe('ComponentNudgesDependencies', () => {
   it('should render empty state when no dependencies', () => {
