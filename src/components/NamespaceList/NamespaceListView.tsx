@@ -69,7 +69,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
           variant={PageSectionVariants.light}
           isFilled
         >
-          {!namespaces || namespaces.length > 0 ? (
+          {!namespaces || namespaces.length === 0 ? (
             <AppEmptyState
               className="pf-v5-u-mx-lg"
               isXl

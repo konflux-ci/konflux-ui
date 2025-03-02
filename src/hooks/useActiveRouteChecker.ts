@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { matchPath, useLocation } from 'react-router-dom';
 
 export function useActiveRouteChecker() {
@@ -9,9 +10,12 @@ export function useActiveRouteChecker() {
    * @param options Options for matching. If exact is true, only an exact match is considered active.
    * @returns True if the pattern is active, false otherwise.
    */
-  return (pattern, options?: { exact?: boolean }): boolean => {
-    // Using React Router's matchPath to test the pattern against the current pathname.
-    const match = matchPath({ path: pattern, end: options?.exact ?? false }, location.pathname);
-    return Boolean(match);
-  };
+  return React.useCallback(
+    (pattern, options?: { exact?: boolean }): boolean => {
+      // Using React Router's matchPath to test the pattern against the current pathname.
+      const match = matchPath({ path: pattern, end: options?.exact ?? false }, location.pathname);
+      return Boolean(match);
+    },
+    [location.pathname],
+  );
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
+import { defer, LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
 import { getNamespaceUsingWorspaceFromQueryCache } from '../components/Workspace/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
@@ -191,5 +191,5 @@ export const createLoaderWithAccessCheck =
         throw new Response('Access check Denied', { status: 403 });
       }
     }
-    return { accessCheck: allowed, data: await loader(args) };
+    return defer({ accessCheck: allowed, data: loader(args) });
   };
