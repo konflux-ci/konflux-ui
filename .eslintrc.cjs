@@ -68,6 +68,8 @@ module.exports = {
     eqeqeq: [2, 'allow-null'],
     'guard-for-in': 2,
     'import/no-duplicates': ['error'],
+    // "import/no-unresolved": "off",
+    // "import/extensions": "off",
 
     // Sort imports into groups
     'import/order': [
@@ -141,16 +143,21 @@ module.exports = {
     'rulesdir/forbid-pf-relative-imports': 'off', // We don't need this rule after https://github.com/patternfly/patternfly-react/pull/9298.
   },
   settings: {
-    'import/extensions': ['.js', '.jsx'],
+    'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
+    },
     'import/resolver': {
       alias: {
         map: [
-          ['@', './src'],
+          ['~', './src'],
           ['@routes', './src/routes'],
         ],
-        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
       },
-      node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
     },
     react: {
       version: 'detect',
