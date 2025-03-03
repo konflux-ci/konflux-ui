@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
+import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import { mockReleases } from '../__data__/mock-release-data';
 import ReleaseOverviewTab from '../ReleaseOverviewTab';
 
