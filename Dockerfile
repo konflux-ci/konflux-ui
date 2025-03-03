@@ -16,7 +16,7 @@ COPY .swcrc .swcrc
 RUN yarn install
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:31e5b607c2f7e80477c909530cec406707429a6e24f08a9925df94ec5be4df0b
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:9d691cf9d357a9010d73b3e4487508d7803083a8370187562dad22b8183981d9
 
 COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
 
