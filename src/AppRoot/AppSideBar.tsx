@@ -7,6 +7,7 @@ import {
   NAMESPACE_LIST_PATH,
   RELEASE_SERVICE_PATH,
   SECRET_LIST_PATH,
+  USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
@@ -81,7 +82,11 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
               isActive={isActive(`/workspaces/${namespace}/access`)}
             >
-              <NavLink to={namespace ? `/workspaces/${namespace}/access` : null}>
+              <NavLink
+                to={
+                  namespace ? USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }) : null
+                }
+              >
                 User Access
               </NavLink>
             </NavItem>

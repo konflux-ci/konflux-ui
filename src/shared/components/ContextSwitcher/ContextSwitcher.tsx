@@ -195,7 +195,6 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
           onGetMenuHeight={setHeight}
           containsDrilldown
           isScrollable
-          // isPlain
         >
           <MenuSearch>
             <MenuSearchInput>
