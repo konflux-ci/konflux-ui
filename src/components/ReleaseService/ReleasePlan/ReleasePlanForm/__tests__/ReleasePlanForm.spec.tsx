@@ -1,8 +1,8 @@
 import { fireEvent } from '@testing-library/dom';
 import { FormikProps } from 'formik';
+import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
 import { formikRenderer } from '../../../../../utils/test-utils';
 import { ReleasePlanForm } from '../ReleasePlanForm';
-import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
