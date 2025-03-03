@@ -4,13 +4,13 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useComponents } from '../../../../hooks/useComponents';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
 import CommitsListView from '../CommitsListView';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 
 jest.mock('../../../../hooks/useTektonResults');
 
