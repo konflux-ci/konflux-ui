@@ -1,9 +1,9 @@
-import * as NamespaceHook from '../shared/providers/Namespace/useNamespaceInfo';
+import * as NamespaceHookImport from '../shared/providers/Namespace/useNamespaceInfo';
 import { createJestMockFunction } from './common';
 import type { JestMockedFunction, MockFunctionKeys } from './type';
 
 type NamespaceHook = {
-  [K in MockFunctionKeys<typeof NamespaceHook>]: (typeof NamespaceHook)[K];
+  [K in MockFunctionKeys<typeof NamespaceHookImport>]: (typeof NamespaceHookImport)[K];
 };
 
 export const mockNamespaceHooks = <T extends MockFunctionKeys<NamespaceHook>>(
@@ -12,7 +12,7 @@ export const mockNamespaceHooks = <T extends MockFunctionKeys<NamespaceHook>>(
 ): JestMockedFunction<NamespaceHook[T]> => {
   const mockFn = createJestMockFunction<NamespaceHook[T]>().mockReturnValue(initialValue);
 
-  jest.spyOn(NamespaceHook, name).mockImplementation(mockFn);
+  jest.spyOn(NamespaceHookImport, name).mockImplementation(mockFn);
 
   return mockFn;
 };
