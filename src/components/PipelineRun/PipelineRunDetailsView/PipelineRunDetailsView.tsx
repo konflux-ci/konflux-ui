@@ -5,8 +5,10 @@ import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
 import { PipelineRunModel } from '../../../models';
+import { ACTIVITY_PLR_PATH, PIPELINERUN_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 // import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
 import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
@@ -16,12 +18,11 @@ import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
 import SidePanelHost from '../../SidePanel/SidePanelHost';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';
 
 export const PipelineRunDetailsView: React.FC = () => {
   const { pipelineRunName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
   const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
@@ -65,11 +66,15 @@ export const PipelineRunDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/activity/pipelineruns`,
+            path: ACTIVITY_PLR_PATH.createPath({ applicationName, workspaceName: namespace }),
             name: 'Pipeline runs',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${pipelineRunName}`,
+            path: PIPELINERUN_DETAILS_PATH.createPath({
+              applicationName,
+              workspaceName: namespace,
+              pipelineRunName,
+            }),
             name: pipelineRunName,
           },
         ]}
@@ -108,7 +113,11 @@ export const PipelineRunDetailsView: React.FC = () => {
             onClick: () => pipelineRunCancel(pipelineRun),
           },
         ]}
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${pipelineRunName}`}
+        baseURL={PIPELINERUN_DETAILS_PATH.createPath({
+          applicationName,
+          workspaceName: namespace,
+          pipelineRunName,
+        })}
         tabs={[
           {
             key: 'index',

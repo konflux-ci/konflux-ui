@@ -11,7 +11,11 @@ export const useLatestBuildPipelines = (
 ): [PipelineRunKind[], boolean, unknown] => {
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestBuilds, setLatestBuilds] = React.useState<PipelineRunKind[]>([]);
+<<<<<<< HEAD
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
+=======
+  const [application, applicationLoaded] = useApplication(namespace, null, applicationName);
+>>>>>>> 3fa7a80... feat(taskrun): remove workspace dependency from taskruns
 
   React.useEffect(() => {
     setFoundNames([]);
