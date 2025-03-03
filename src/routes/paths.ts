@@ -105,7 +105,22 @@ export const PIPELINERUN_DETAILS_PATH = PIPELINERUN_LIST_PATH.extend(
   `:${RouterParams.pipelineRunName}`,
 );
 
+export const PIPELINERUN_LOGS_PATH = PIPELINERUN_DETAILS_PATH.extend(`logs`);
+
 export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`);
 
 export const ACTIVITY_LIST_PATH = APPLICATION_DETAILS_PATH.extend('activity');
 export const ACTIVITY_PLR_PATH = ACTIVITY_LIST_PATH.extend('pipelineruns');
+export const ACTIVITY_COMMIT_PATH = ACTIVITY_LIST_PATH.extend('latest-commits');
+
+export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`integrationTest`);
+
+export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
+  `:${RouterParams.integrationTestName}`,
+);
+
+// Snapshot routes
+
+export const SNAPSHOT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('snapshots');
+
+export const SNAPSHOT_DETAILS_PATH = SNAPSHOT_LIST_PATH.extend(`:${RouterParams.snapshotName}`);

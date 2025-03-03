@@ -58,7 +58,11 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
   const { name: prBotName } = useApplicationPipelineGitHubApp();
   const namespace = components?.[0]?.metadata.namespace;
   const applicationName = components?.[0]?.spec.application;
+<<<<<<< HEAD
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
+=======
+  const [application, applicationLoaded] = useApplication(namespace, null, applicationName);
+>>>>>>> 3fa7a80... feat(taskrun): remove workspace dependency from taskruns
 
   React.useEffect(() => {
     setComponentPacStates(() => getInitialPacStates(components));

@@ -1,15 +1,15 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
-import { SNAPSHOT_DETAILS_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { SnapshotLabels } from '../../consts/pipelinerun';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { HttpError } from '../../k8s/error';
+import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
