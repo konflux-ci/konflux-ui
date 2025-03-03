@@ -79,3 +79,23 @@ export const PLR_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
 export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.pipelineRunName}`);
 
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
+// TaskRun routes
+
+export const TASKRUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('taskruns');
+
+export const TASKRUN_DETAILS_PATH = TASKRUN_LIST_PATH.extend(`:${RouterParams.taskRunName}`);
+
+export const TASKRUN_LOGS_PATH = TASKRUN_DETAILS_PATH.extend('logs');
+
+// Pipelinerun routes
+
+export const PIPELINERUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineRuns');
+
+export const PIPELINERUN_DETAILS_PATH = PIPELINERUN_LIST_PATH.extend(
+  `:${RouterParams.pipelineRunName}`,
+);
+
+export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`);
+
+export const ACTIVITY_LIST_PATH = APPLICATION_DETAILS_PATH.extend('activity');
+export const ACTIVITY_PLR_PATH = ACTIVITY_LIST_PATH.extend('pipelineruns');

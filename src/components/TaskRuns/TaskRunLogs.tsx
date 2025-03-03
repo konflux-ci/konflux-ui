@@ -3,7 +3,6 @@ import { PodGroupVersionKind } from '../../models/pod';
 import LogsWrapperComponent from '../../shared/components/pipeline-run-logs/logs/LogsWrapperComponent';
 import { TaskRunKind } from '../../types';
 import { runStatus } from '../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 type Props = {
   taskRun: TaskRunKind;
@@ -13,7 +12,6 @@ type Props = {
 
 const TaskRunLogs: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, namespace, status }) => {
   const podName = taskRun?.status?.podName;
-  const { workspace } = useWorkspaceInfo();
 
   if (!podName) {
     if (status === runStatus.Skipped) {
@@ -32,7 +30,6 @@ const TaskRunLogs: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, namesp
         name: podName,
         groupVersionKind: PodGroupVersionKind,
         namespace,
-        workspace,
         isList: false,
       }}
     />

@@ -18,13 +18,6 @@ import {
   SnapshotPipelineRunsTab,
 } from '../components/SnapshotDetails';
 import {
-  TaskRunDetailsTab,
-  TaskRunDetailsViewLayout,
-  taskRunDetailsViewLoader,
-  TaskRunLogsTab,
-  TaskrunSecurityEnterpriseContractTab,
-} from '../components/TaskRunDetailsView';
-import {
   GrantAccessPage,
   grantAccessPageLoader,
   EditAccessPage,
@@ -43,6 +36,7 @@ import pipelineRoutes from './page-routes/pipeline';
 import releaseRoutes from './page-routes/release';
 import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
+import taskRunRoutes from './page-routes/taskrun';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
 
@@ -74,6 +68,7 @@ export const router = createBrowserRouter([
       ...integrationTestRoutes,
       ...commitRoutes,
       ...pipelineRoutes,
+      ...taskRunRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -112,6 +107,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
+<<<<<<< HEAD
       /* Task Run details routes */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
@@ -122,6 +118,29 @@ export const router = createBrowserRouter([
           { index: true, element: <TaskRunDetailsTab /> },
           { path: 'logs', element: <TaskRunLogsTab /> },
           { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
+=======
+      /* Pipeline Run details routes */
+      {
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
+        errorElement: <RouteErrorBoundry />,
+        loader: pipelineRunDetailsViewLoader,
+        element: <PipelineRunDetailsLayout />,
+        children: [
+          { index: true, element: <PipelineRunDetailsTab /> },
+          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
+          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
+          { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
+        ],
+      },
+      /* Commit list view */
+      {
+        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
+        errorElement: <RouteErrorBoundry />,
+        element: <CommitDetailsView />,
+        children: [
+          { index: true, element: <CommitOverviewTab /> },
+          { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
+>>>>>>> e55ef5a... feat(taskrun): remove workspace dependency
         ],
       },
       /* Trigger Release plan */
