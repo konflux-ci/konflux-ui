@@ -48,7 +48,7 @@ export const useApplication = (
     if (
       !isLoading &&
       !error &&
-      (application as unknown as ApplicationKind).metadata?.deletionTimestamp
+      (application as unknown as ApplicationKind)?.metadata?.deletionTimestamp
     ) {
       return [null, !isLoading, { code: 404 }];
     }
