@@ -21,7 +21,8 @@ export const AppHeader: React.FC<{ isSideBarOpen: boolean; onSideBarOpen: () => 
       <MastheadToggle>
         <PageToggleButton
           variant="plain"
-          aria-label=""
+          aria-label="Sidebar toggle"
+          data-test="sidebar-toggle"
           onSidebarToggle={onSideBarOpen}
           isSidebarOpen={isSideBarOpen}
         >

@@ -19,7 +19,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const namespace = useNamespace();
   const disabled = !namespace;
   return (
-    <PageSidebar isSidebarOpen={isOpen}>
+    <PageSidebar data-test="sidebar" isSidebarOpen={isOpen}>
       <PageSidebarBody>
         <Nav>
           <NavList>
