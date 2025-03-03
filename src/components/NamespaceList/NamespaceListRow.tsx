@@ -52,7 +52,7 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
       </TableData>
       <TableData className={namespaceTableColumnClasses.applications}>
         {loaded ? (
-          pluralize(applications.length, 'Component')
+          pluralize(applications.length, 'Application')
         ) : (
           <Skeleton width="50%" screenreaderText="Loading component count" />
         )}
