@@ -12,13 +12,6 @@ import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
 import {
-  TaskRunDetailsTab,
-  TaskRunDetailsViewLayout,
-  taskRunDetailsViewLoader,
-  TaskRunLogsTab,
-  TaskrunSecurityEnterpriseContractTab,
-} from '../components/TaskRunDetailsView';
-import {
   GrantAccessPage,
   grantAccessPageLoader,
   EditAccessPage,
@@ -38,6 +31,7 @@ import releaseRoutes from './page-routes/release';
 import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
 import snapshotRoutes from './page-routes/snapshots';
+import taskRunRoutes from './page-routes/taskrun';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
 
@@ -70,6 +64,7 @@ export const router = createBrowserRouter([
       ...snapshotRoutes,
       ...commitRoutes,
       ...pipelineRoutes,
+      ...taskRunRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -106,18 +101,6 @@ export const router = createBrowserRouter([
             errorElement: <RouteErrorBoundry />,
             element: <ReleaseListViewTab />,
           },
-        ],
-      },
-      /* Task Run details routes */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: taskRunDetailsViewLoader,
-        element: <TaskRunDetailsViewLayout />,
-        children: [
-          { index: true, element: <TaskRunDetailsTab /> },
-          { path: 'logs', element: <TaskRunLogsTab /> },
-          { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
         ],
       },
       /* User Acess routes */

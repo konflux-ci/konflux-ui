@@ -15,11 +15,18 @@ import {
 } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useTaskRun } from '../../../hooks/usePipelineRuns';
+import {
+  APPLICATION_DETAILS_PATH,
+  COMPONENT_DETAILS_PATH,
+  PIPELINERUN_DETAILS_PATH,
+  TASKRUN_LOGS_PATH,
+} from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { SyncMarkdownView } from '../../../shared/components/markdown-view/MarkdownView';
 import { ErrorDetailsWithStaticLog } from '../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getTRLogSnippet } from '../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../../types';
 import {
   calculateDuration,
@@ -31,11 +38,9 @@ import MetadataList from '../../MetadataList';
 import RunResultsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
 import ScanDescriptionListGroup from '../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithText } from '../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
-
 const TaskRunDetailsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [taskRun, , error] = useTaskRun(namespace, taskRunName);
   const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
   const results = isTaskV1Beta1(taskRun) ? taskRun.status?.taskResults : taskRun.status?.results;
@@ -156,7 +161,11 @@ const TaskRunDetailsTab: React.FC = () => {
                           component={(props) => (
                             <Link
                               {...props}
-                              to={`/workspaces/${workspace}/applications/${applicationName}/taskRuns/${taskRun.metadata.name}/logs`}
+                              to={TASKRUN_LOGS_PATH.createPath({
+                                taskRunName,
+                                workspaceName: namespace,
+                                applicationName,
+                              })}
                             />
                           )}
                         >
@@ -171,7 +180,11 @@ const TaskRunDetailsTab: React.FC = () => {
                   <DescriptionListDescription>
                     {plrName ? (
                       <Link
-                        to={`/workspaces/${workspace}/applications/${applicationName}/pipelineRuns/${plrName}`}
+                        to={PIPELINERUN_DETAILS_PATH.createPath({
+                          applicationName,
+                          workspaceName: namespace,
+                          pipelineRunName: plrName,
+                        })}
                       >
                         {plrName}
                       </Link>
@@ -184,7 +197,12 @@ const TaskRunDetailsTab: React.FC = () => {
                   <DescriptionListTerm>Application</DescriptionListTerm>
                   <DescriptionListDescription>
                     {applicationName ? (
-                      <Link to={`/workspaces/${workspace}/applications/${applicationName}`}>
+                      <Link
+                        to={APPLICATION_DETAILS_PATH.createPath({
+                          applicationName,
+                          workspaceName: namespace,
+                        })}
+                      >
                         {taskRun.metadata?.labels[PipelineRunLabel.APPLICATION]}
                       </Link>
                     ) : (
@@ -198,9 +216,11 @@ const TaskRunDetailsTab: React.FC = () => {
                     {taskRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                       applicationName ? (
                         <Link
-                          to={`/workspaces/${workspace}/applications/${applicationName}/components/${
-                            taskRun.metadata.labels[PipelineRunLabel.COMPONENT]
-                          }`}
+                          to={COMPONENT_DETAILS_PATH.createPath({
+                            workspaceName: namespace,
+                            applicationName,
+                            componentName: taskRun.metadata.labels[PipelineRunLabel.COMPONENT],
+                          })}
                         >
                           {taskRun.metadata.labels[PipelineRunLabel.COMPONENT]}
                         </Link>
