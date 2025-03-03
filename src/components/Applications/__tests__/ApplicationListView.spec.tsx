@@ -3,10 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ApplicationKind } from '../../../types';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../utils/test-utils';
 import ApplicationListRow from '../ApplicationListRow';
 import ApplicationListView from '../ApplicationListView';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
