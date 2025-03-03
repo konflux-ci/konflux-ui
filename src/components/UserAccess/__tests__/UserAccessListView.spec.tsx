@@ -5,10 +5,10 @@ import { mockRoleBinding, mockRoleBindings } from '../../../__data__/rolebinding
 import { useRoleMap } from '../../../hooks/useRole';
 import { useRoleBindings } from '../../../hooks/useRoleBindings';
 import { useSearchParam } from '../../../hooks/useSearchParam';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { RBListRow } from '../RBListRow';
 import { UserAccessListView } from '../UserAccessListView';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
