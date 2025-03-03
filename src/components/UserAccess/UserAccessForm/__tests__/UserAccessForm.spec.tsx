@@ -2,10 +2,10 @@ import { screen } from '@testing-library/react';
 import { FormikProps } from 'formik';
 import { defaultKonfluxRoleMap } from '../../../../__data__/role-data';
 import { useRoleMap } from '../../../../hooks/useRole';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { formikRenderer } from '../../../../utils/test-utils';
 import { UserAccessFormValues } from '../form-utils';
 import { UserAccessForm } from '../UserAccessForm';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 
 jest.mock('../../../../hooks/useRole', () => ({
   useRoleMap: jest.fn(),
