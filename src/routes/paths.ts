@@ -58,3 +58,23 @@ export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
 export const RELEASEPLAN_CREATE_PATH = RELEASEPLAN_PATH.extend(`create`);
 
 export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
+// TaskRun routes
+
+export const TASKRUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('taskruns');
+
+export const TASKRUN_DETAILS_PATH = TASKRUN_LIST_PATH.extend(`:${RouterParams.taskRunName}`);
+
+export const TASKRUN_LOGS_PATH = TASKRUN_DETAILS_PATH.extend('logs');
+
+// Pipelinerun routes
+
+export const PIPELINERUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineRuns');
+
+export const PIPELINERUN_DETAILS_PATH = PIPELINERUN_LIST_PATH.extend(
+  `:${RouterParams.pipelineRunName}`,
+);
+
+export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`);
+
+export const ACTIVITY_LIST_PATH = APPLICATION_DETAILS_PATH.extend('activity');
+export const ACTIVITY_PLR_PATH = ACTIVITY_LIST_PATH.extend('pipelineruns');
