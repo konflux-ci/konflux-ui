@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { difference, merge, uniq } from 'lodash-es';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { useNamespace } from '../shared/providers/Namespace';
 import { TektonResourceLabel, TaskRunKind, TektonResultsRun, PipelineRunKind } from '../types';
@@ -158,7 +157,7 @@ export const usePLRScanResults = (
     if (pipelineRunNames.length) cacheKey.current = pipelineRunNames.sort().join('|');
   }, [pipelineRunNames]);
 
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
   const [taskRuns, loaded, error] = useTRTaskRuns(
     pipelineRunNames.length > 0 ? namespace : null,

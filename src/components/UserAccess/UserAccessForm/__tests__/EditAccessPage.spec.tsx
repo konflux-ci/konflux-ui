@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { mockRoleBinding } from '../../../../__data__/rolebinding-data';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock, createReactRouterMock } from '../../../../utils/test-utils';
 import EditAccessPage from '../EditAccessPage';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 
 const mockUseNavigate = createReactRouterMock('useNavigate');
 const mockUseParams = createReactRouterMock('useParams');
