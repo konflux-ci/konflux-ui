@@ -53,15 +53,4 @@ describe('AppRoot', () => {
 
     expect(screen.queryByTestId('namespace-switcher')).not.toBeInTheDocument();
   });
-
-  it('should render child components via Outlet', () => {
-    routerRenderer(
-      <>
-        <AppRoot />
-        <div data-test="child-component">Child Component</div>
-      </>,
-    );
-
-    expect(screen.getByTestId('child-component')).toBeInTheDocument();
-  });
 });

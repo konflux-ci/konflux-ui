@@ -7,7 +7,7 @@ import { RowFunctionArgs, TableData } from '../../shared';
 import { NamespaceKind } from '../../types';
 import { namespaceTableColumnClasses } from './NamespaceListHeader';
 
-const NamespaceButton: React.FC<{ namespace: string }> = React.memo(({ namespace }) => {
+export const NamespaceButton: React.FC<{ namespace: string }> = React.memo(({ namespace }) => {
   const fetcher = useFetcher();
   const hoverTimeout = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -18,7 +18,7 @@ const NamespaceButton: React.FC<{ namespace: string }> = React.memo(({ namespace
   const handleMouseEnter = React.useCallback(() => {
     hoverTimeout.current = setTimeout(() => {
       fetcher.load(path);
-    }, 500);
+    }, 300);
   }, [fetcher, path]);
 
   const handleMouseLeave = React.useCallback(() => {
@@ -54,7 +54,7 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
         {loaded ? (
           pluralize(applications.length, 'Application')
         ) : (
-          <Skeleton width="50%" screenreaderText="Loading component count" />
+          <Skeleton width="50%" screenreaderText="Loading application count" />
         )}
       </TableData>
       <TableData className={namespaceTableColumnClasses.actions}>

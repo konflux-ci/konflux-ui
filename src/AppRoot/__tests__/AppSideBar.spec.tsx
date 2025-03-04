@@ -38,6 +38,11 @@ describe('AppSideBar', () => {
     (useNamespace as jest.Mock).mockReturnValue(null);
 
     routerRenderer(<AppSideBar isOpen={true} />);
+
+    expect(screen.getByText('Namespaces').closest('li')).not.toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
+
     expect(screen.getByText('Applications').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
@@ -81,7 +86,8 @@ describe('AppSideBar', () => {
     (useNamespace as jest.Mock).mockReturnValue(null);
 
     routerRenderer(<AppSideBar isOpen={true} />);
-    screen.debug();
+
+    expect(screen.getByText('Namespaces')).toHaveAttribute('href', '/workspaces');
     expect(screen.getByText('Applications')).toHaveAttribute('href', '/');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
