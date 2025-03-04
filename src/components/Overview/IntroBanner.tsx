@@ -10,26 +10,11 @@ import {
   Text,
   Button,
 } from '@patternfly/react-core';
-import { useApplications } from '../../hooks/useApplications';
-import { ApplicationModel, ComponentModel } from '../../models';
-import { APPLICATION_LIST_PATH, IMPORT_PATH } from '../../routes/paths';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { AccessReviewResources } from '../../types';
-import { useAccessReviewForModels } from '../../utils/rbac';
-import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import { NAMESPACE_LIST_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
-const accessReviewResources: AccessReviewResources = [
-  { model: ApplicationModel, verb: 'create' },
-  { model: ComponentModel, verb: 'create' },
-];
-
 const IntroBanner: React.FC = () => {
-  const namespace = useNamespace();
-  const [canCreate] = useAccessReviewForModels(accessReviewResources);
-
-  const [applications, applicationsLoaded] = useApplications(namespace ? namespace : null);
   return (
     <Grid className="intro-banner">
       <GridItem span={8}>
@@ -46,38 +31,17 @@ const IntroBanner: React.FC = () => {
             </Text>
           </CardBody>
           <CardBody>
-            <ButtonWithAccessTooltip
+            <Button
               className="intro-banner__cta"
               component={(props) => (
-                <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+                <Link {...props} to={NAMESPACE_LIST_PATH.createPath({} as never)} />
               )}
-              variant="primary"
-              data-test="create-application"
-              isDisabled={!canCreate}
-              tooltip="You don't have access to create an application"
+              variant="secondary"
+              data-test="view-my-applications"
               size="lg"
-              analytics={{
-                link_name: 'create-application',
-              }}
             >
-              Create application
-            </ButtonWithAccessTooltip>
-            {applicationsLoaded && applications?.length > 0 ? (
-              <Button
-                className="intro-banner__cta"
-                component={(props) => (
-                  <Link
-                    {...props}
-                    to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
-                  />
-                )}
-                variant="secondary"
-                data-test="view-my-applications"
-                size="lg"
-              >
-                View my applications
-              </Button>
-            ) : undefined}
+              View my namespaces
+            </Button>
           </CardBody>
         </Card>
       </GridItem>

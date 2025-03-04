@@ -2,11 +2,10 @@ import { TaskRunModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { QueryTaskRun } from '../../utils/pipelinerun-utils';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
-import { getNamespaceUsingWorspaceFromQueryCache } from '../Workspace/utils';
 
 export const taskRunDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
-    const ns = await getNamespaceUsingWorspaceFromQueryCache(params[RouterParams.workspaceName]);
+    const ns = params[RouterParams.workspaceName];
     return QueryTaskRun(ns, params[RouterParams.workspaceName], params[RouterParams.taskRunName]);
   },
   { model: TaskRunModel, verb: 'list' },

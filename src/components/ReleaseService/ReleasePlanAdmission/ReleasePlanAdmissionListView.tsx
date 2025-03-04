@@ -34,8 +34,9 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
   const onClearFilters = () => setNameFilter('');
 
   const filteredReleasePlanAdmission = React.useMemo(
-    () => releasePlanAdmission.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1),
-    [releasePlanAdmission, nameFilter],
+    () =>
+      loaded ? releasePlanAdmission.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1) : [],
+    [loaded, releasePlanAdmission, nameFilter],
   );
 
   useDocumentTitle(`Release Plan Admission | ${FULL_APPLICATION_TITLE}`);

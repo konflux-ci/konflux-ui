@@ -1,10 +1,11 @@
 import { buildRoute, type RouteDefinition, RouterParams } from './utils';
 
-type WorkspacePath = `workspaces/:${typeof RouterParams.workspaceName}`;
+type NamespacePath = 'workspaces';
 
-export const WORKSPACE_PATH: RouteDefinition<WorkspacePath> = buildRoute(
-  `workspaces/:${RouterParams.workspaceName}`,
-);
+/* Namespace/Workspace Paths */
+export const NAMESPACE_LIST_PATH: RouteDefinition<NamespacePath> = buildRoute('workspaces');
+
+export const WORKSPACE_PATH = NAMESPACE_LIST_PATH.extend(`:${RouterParams.workspaceName}`);
 
 export const IMPORT_PATH = WORKSPACE_PATH.extend('import');
 
@@ -53,3 +54,5 @@ export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
 );
 
 export const RELEASEPLAN_CREATE_PATH = RELEASEPLAN_PATH.extend(`create`);
+
+export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
