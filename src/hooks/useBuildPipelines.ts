@@ -14,11 +14,7 @@ export const useBuildPipelines = (
   componentNames?: string[],
   limit?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage] => {
-<<<<<<< HEAD
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
-=======
-  const [application, applicationLoaded] = useApplication(namespace, null, applicationName);
->>>>>>> 3fa7a80... feat(taskrun): remove workspace dependency from taskruns
   const [pipelineRuns, loaded, plrError, getNextPage] = usePipelineRuns(
     !applicationLoaded && includeComponents && !componentNames?.length ? null : namespace,
     React.useMemo(
