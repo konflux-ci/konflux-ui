@@ -85,8 +85,16 @@ export const environmentsPagePO = {
   envCardConnectionLabel: 'div[class="pf-v5-c-card__title"] span[class="pf-v5-c-label__content"]',
 };
 
-export const getStartedPagePO = {
-  createAppButton: '[data-test="create-application"]',
+export const getAppStartedPagePO = {
+  createAppButton: 'a[class="pf-v5-c-button pf-m-primary"]',
+};
+
+export const getNamespacesPagePo = {
+  goToNamespacesLink: '[data-test="view-my-applications"]',
+};
+
+export const goToApplicationsPagePo = {
+  goToApplicationsPagePo: '[title="Go to this namespace"]',
 };
 
 export const componentDetailsPO = {
