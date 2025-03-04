@@ -46,11 +46,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   customFilter,
 }) => {
   const namespace = useNamespace();
-<<<<<<< HEAD
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
-=======
-  const [application, applicationLoaded] = useApplication(namespace, null, applicationName);
->>>>>>> 3fa7a80... feat(taskrun): remove workspace dependency from taskruns
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
