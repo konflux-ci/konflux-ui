@@ -4,19 +4,19 @@ import { Button, Popover, Skeleton } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { PipelineRunGroupVersionKind } from '../../../models';
+import { PIPELINERUN_DETAILS_PATH } from '../../../routes/paths';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { getCommitSha } from '../../../utils/commits-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipelineRun }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   const sha = getCommitSha(pipelineRun);
   const applicationName: string = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
 
   const [pipelineRuns, relatedPipelineRunsLoaded] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     sha,
   );
@@ -40,7 +40,11 @@ const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipel
           : relatedPipelineRuns?.map((relatedPipelineRun: PipelineRunKind) => (
               <div key={relatedPipelineRun?.metadata?.uid}>
                 <Link
-                  to={`/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${relatedPipelineRun.metadata?.name}`}
+                  to={PIPELINERUN_DETAILS_PATH.createPath({
+                    applicationName,
+                    workspaceName: namespace,
+                    pipelineRunName: pipelineRun.metadata?.name,
+                  })}
                   title={relatedPipelineRun.metadata?.name}
                 >
                   {relatedPipelineRun.metadata?.name}

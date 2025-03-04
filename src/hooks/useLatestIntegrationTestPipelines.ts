@@ -6,7 +6,6 @@ import { usePipelineRuns } from './usePipelineRuns';
 
 export const useLatestIntegrationTestPipelines = (
   namespace: string,
-  workspace: string,
   applicationName: string,
   integrationTestNames: string[],
 ): [PipelineRunKind[], boolean, unknown] => {
@@ -31,7 +30,6 @@ export const useLatestIntegrationTestPipelines = (
 
   const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRuns(
     !componentsLoaded || !neededNames.length ? null : namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {
