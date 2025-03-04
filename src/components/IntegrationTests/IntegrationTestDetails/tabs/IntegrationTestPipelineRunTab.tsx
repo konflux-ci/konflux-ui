@@ -7,7 +7,7 @@ import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
-import { useNamespaceInfo } from '../../../../shared/providers/Namespace';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
@@ -16,7 +16,7 @@ import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
 
 const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   const { applicationName, integrationTestName } = useParams<RouterParams>();
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
 
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage] = usePipelineRuns(

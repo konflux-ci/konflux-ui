@@ -19,7 +19,7 @@ import { APPLICATION_DETAILS_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { useNamespaceInfo } from '../../../../shared/providers/Namespace';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import MetadataList from '../../../MetadataList';
 import { useModalLauncher } from '../../../modal/ModalProvider';
 import { createEditContextsModal } from '../../EditContextsModal';
@@ -32,7 +32,7 @@ import {
 } from '../../IntegrationTestForm/utils/create-utils';
 
 const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
   const { integrationTestName, applicationName } = useParams<RouterParams>();
 
   const [integrationTest] = useIntegrationTestScenario(

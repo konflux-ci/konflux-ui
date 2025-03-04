@@ -23,7 +23,7 @@ import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -65,7 +65,7 @@ const IntegrationTestsEmptyState: React.FC<
 
 const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   const { applicationName } = useParams<RouterParams>();
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
   const [canCreateIntegrationTest] = useAccessReviewForModel(
     IntegrationTestScenarioModel,
     'create',

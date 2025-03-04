@@ -19,7 +19,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('../../../../shared/providers/Namespace', () => ({
-  useNamespaceInfo: jest.fn(() => ({ namespace: 'test-ns' })),
+  useNamespace: jest.fn(() => 'test-ns'),
 }));
 
 jest.mock('../../../../utils/rbac', () => ({

@@ -5,12 +5,12 @@ import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestSce
 import { HttpError } from '../../../k8s/error';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import IntegrationTestView from './IntegrationTestView';
 
 export const IntegrationTestEditForm: React.FC = () => {
   const { applicationName, integrationTestName } = useParams<RouterParams>();
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
   const [integrationTest, loaded, error] = useIntegrationTestScenario(
     namespace,
     applicationName,

@@ -11,7 +11,7 @@ import {
 } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
@@ -19,7 +19,7 @@ import { useModalLauncher } from '../../modal/ModalProvider';
 import { integrationTestDeleteModalAndNavigate } from '../IntegrationTestsListView/useIntegrationTestActions';
 
 const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
   const { integrationTestName, applicationName } = useParams<RouterParams>();
 
   const showModal = useModalLauncher();

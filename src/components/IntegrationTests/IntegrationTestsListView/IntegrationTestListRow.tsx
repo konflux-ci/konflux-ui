@@ -5,7 +5,7 @@ import { INTEGRATION_TEST_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { IntegrationTestLabels } from '../IntegrationTestForm/types';
 import { ResolverRefParams, getURLForParam } from '../IntegrationTestForm/utils/create-utils';
@@ -16,7 +16,7 @@ const IntegrationTestListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<IntegrationTestScenarioKind>>
 > = ({ obj }) => {
   const actions = useIntegrationTestActions(obj);
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
   return (
     <>
       <TableData

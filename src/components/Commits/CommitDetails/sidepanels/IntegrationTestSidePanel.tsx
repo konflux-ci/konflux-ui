@@ -25,7 +25,7 @@ import {
 import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
-import { useNamespaceInfo } from '../../../../shared/providers/Namespace';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { calculateDuration } from '../../../../utils/pipeline-utils';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
@@ -40,7 +40,7 @@ export interface IntegrationTestSidePanelBodyProps {
 const IntegrationTestSidePanel: React.FC<
   React.PropsWithChildren<IntegrationTestSidePanelBodyProps>
 > = ({ workflowNode, onClose }) => {
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const integrationTestPipeline = workflowData.resource as PipelineRunKind;
   const [taskRuns] = useTaskRuns(namespace, integrationTestPipeline?.metadata.name);
@@ -68,6 +68,7 @@ const IntegrationTestSidePanel: React.FC<
               <Link
                 to={INTEGRATION_TEST_DETAILS_PATH.createPath({
                   applicationName: workflowData.application,
+                  workspaceName: namespace,
                   integrationTestName: workflowNode.getLabel(),
                 })}
               >
@@ -133,6 +134,7 @@ const IntegrationTestSidePanel: React.FC<
                           integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION],
                         componentName:
                           integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT],
+                        workspaceName: namespace,
                       })}
                     >
                       {integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT]}
@@ -181,6 +183,7 @@ const IntegrationTestSidePanel: React.FC<
                           to={PIPELINE_RUNS_LOG_PATH.createPath({
                             applicationName: workflowData.application,
                             pipelineRunName: integrationTestPipeline.metadata?.name,
+                            workspaceName: namespace,
                           })}
                         />
                       )}

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Formik } from 'formik';
 import { INTEGRATION_TEST_DETAILS_PATH, INTEGRATION_TEST_LIST_PATH } from '../../../routes/paths';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useTrackEvent, TrackEvents } from '../../../utils/analytics';
 import { defaultSelectedContextOption } from '../utils/creation-utils';
@@ -48,7 +48,7 @@ const IntegrationTestView: React.FunctionComponent<
 > = ({ applicationName, integrationTest }) => {
   const track = useTrackEvent();
   const navigate = useNavigate();
-  const { namespace } = useNamespaceInfo();
+  const namespace = useNamespace();
 
   const url = integrationTest?.spec.resolverRef?.params?.find(
     (param) => param.name === ResolverRefParams.URL,
@@ -128,11 +128,14 @@ const IntegrationTestView: React.FunctionComponent<
               INTEGRATION_TEST_DETAILS_PATH.createPath({
                 applicationName,
                 integrationTestName: integrationTest.metadata?.name,
+                workspaceName: namespace,
               }),
             );
           }
         } else {
-          navigate(INTEGRATION_TEST_LIST_PATH.createPath({ applicationName }));
+          navigate(
+            INTEGRATION_TEST_LIST_PATH.createPath({ applicationName, workspaceName: namespace }),
+          );
         }
       })
       .catch((error) => {
