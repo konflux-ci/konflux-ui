@@ -53,7 +53,10 @@ export const ApplicationSwitcher: React.FC<
             <ButtonWithAccessTooltip
               variant="link"
               component={(props) => (
-                <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+                <Link
+                  {...props}
+                  to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?isApplication=true`}
+                />
               )}
               isInline
               tooltip="You don't have access to create an application"

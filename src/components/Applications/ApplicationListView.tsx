@@ -91,7 +91,10 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
               <ButtonWithAccessTooltip
                 variant="primary"
                 component={(props) => (
-                  <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+                  <Link
+                    {...props}
+                    to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?isApplication=true`}
+                  />
                 )}
                 isDisabled={!(canCreateApplication && canCreateComponent)}
                 tooltip="You don't have access to create an application"
@@ -124,16 +127,15 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                       component={(props) => (
                         <Link
                           {...props}
-                          to={IMPORT_PATH.createPath({ workspaceName: namespace })}
-                          state={{ isApplication: true }}
+                          to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?isApplication=true`}
+                          analytics={{
+                            link_name: 'create-application',
+                            namespace,
+                          }}
                         />
                       )}
                       isDisabled={!(canCreateApplication && canCreateComponent)}
                       tooltip="You don't have access to create an application"
-                      analytics={{
-                        link_name: 'create-application',
-                        namespace,
-                      }}
                     >
                       Create application
                     </ButtonWithAccessTooltip>
