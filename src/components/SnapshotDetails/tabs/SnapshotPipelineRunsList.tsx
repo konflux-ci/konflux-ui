@@ -79,7 +79,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
   const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
 

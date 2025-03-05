@@ -79,7 +79,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
