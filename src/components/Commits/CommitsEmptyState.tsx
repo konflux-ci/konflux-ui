@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { EmptyStateBody, EmptyStateActions } from '@patternfly/react-core';
 import emptyStateImgUrl from '../../assets/Commit.svg';
 import { ComponentModel } from '../../models';
-import { IMPORT_PATH_WITH_QUERY } from '../../routes/paths';
+import { IMPORT_PATH } from '../../routes/paths';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../utils/rbac';
@@ -35,7 +35,7 @@ const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps
           component={(props) => (
             <Link
               {...props}
-              to={`${IMPORT_PATH_WITH_QUERY.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+              to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
             />
           )}
           variant="secondary"

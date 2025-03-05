@@ -2,11 +2,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
-import {
-  CommitDetailsView,
-  CommitOverviewTab,
-  CommitsPipelineRunTab,
-} from '../components/Commits/CommitDetails';
 import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
 import {
@@ -27,14 +22,6 @@ import {
 } from '../components/IntegrationTests/IntegrationTestsListView';
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
-import {
-  PipelineRunDetailsLayout,
-  PipelineRunDetailsLogsTab,
-  PipelineRunDetailsTab,
-  pipelineRunDetailsViewLoader,
-  PipelineRunSecurityEnterpriseContractTab,
-  PipelineRunTaskRunsTab,
-} from '../components/PipelineRun/PipelineRunDetailsView';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
 import {
   SnapshotDetailsView,
@@ -61,7 +48,9 @@ import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
+import commitRoutes from './page-routes/commit';
 import componentRoutes from './page-routes/components';
+import pipelineRoutes from './page-routes/pipeline';
 import releaseRoutes from './page-routes/release';
 import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
@@ -98,6 +87,8 @@ export const router = createBrowserRouter([
       ...releaseRoutes,
       ...releaseServiceRoutes,
       ...secretRoutes,
+      ...commitRoutes,
+      ...pipelineRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -170,19 +161,6 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      /* Pipeline Run details routes */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: pipelineRunDetailsViewLoader,
-        element: <PipelineRunDetailsLayout />,
-        children: [
-          { index: true, element: <PipelineRunDetailsTab /> },
-          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
-          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
-          { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
-        ],
-      },
       /* Task Run details routes */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
@@ -193,16 +171,6 @@ export const router = createBrowserRouter([
           { index: true, element: <TaskRunDetailsTab /> },
           { path: 'logs', element: <TaskRunLogsTab /> },
           { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
-        ],
-      },
-      /* Commit list view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
-        errorElement: <RouteErrorBoundry />,
-        element: <CommitDetailsView />,
-        children: [
-          { index: true, element: <CommitOverviewTab /> },
-          { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
         ],
       },
       /* Trigger Release plan */
