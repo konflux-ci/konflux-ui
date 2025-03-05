@@ -32,12 +32,11 @@ const QueryRun = curry(
     fetchFn,
     model: K8sModelCommon,
     namespace: string,
-    workspace: string,
     name: string,
   ): Promise<PipelineRunKind> => {
     try {
       return await k8sQueryGetResource(
-        { model, queryOptions: { ns: namespace, ws: workspace, name } },
+        { model, queryOptions: { ns: namespace, name } },
         { retry: false },
       );
     } catch (e) {
