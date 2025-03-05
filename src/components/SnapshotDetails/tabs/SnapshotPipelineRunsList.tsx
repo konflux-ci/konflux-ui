@@ -92,24 +92,23 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
       >
         Pipeline runs
       </Title>
+      {(isFiltered || snapshotPipelineRuns.length > 0) && (
+        <PipelineRunsFilterToolbar
+          filters={filters}
+          setFilters={setFilters}
+          onClearFilters={onClearFilters}
+          typeOptions={typeFilterObj}
+          statusOptions={statusFilterObj}
+        />
+      )}
       <Table
         key={`${snapshotPipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
         data={filteredPLRs}
         aria-label="Pipeline run List"
-        Toolbar={
-          !isFiltered && snapshotPipelineRuns.length === 0 ? null : (
-            <PipelineRunsFilterToolbar
-              filters={filters}
-              setFilters={setFilters}
-              onClearFilters={onClearFilters}
-              typeOptions={typeFilterObj}
-              statusOptions={statusFilterObj}
-            />
-          )
-        }
         customData={vulnerabilities}
         Header={PipelineRunListHeaderWithVulnerabilities}
         Row={PipelineRunListRowWithVulnerabilities}
+        unfilteredData={snapshotPipelineRuns}
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         loaded
         getRowProps={(obj: PipelineRunKind) => ({

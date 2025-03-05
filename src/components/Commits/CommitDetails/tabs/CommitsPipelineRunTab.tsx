@@ -80,23 +80,21 @@ const CommitsPipelineRunTab: React.FC = () => {
         Pipeline runs
       </Title>
       <div>
+        {(isFiltered || pipelineRuns.length > 0) && (
+          <PipelineRunsFilterToolbar
+            filters={filters}
+            setFilters={setFilters}
+            onClearFilters={onClearFilters}
+            typeOptions={typeFilterObj}
+            statusOptions={statusFilterObj}
+          />
+        )}
         <Table
           key={`${pipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
           unfilteredData={pipelineRuns}
           data={filteredPLRs}
           aria-label="Pipelinerun List"
           Header={PipelineRunListHeaderWithVulnerabilities}
-          Toolbar={
-            !isFiltered && pipelineRuns.length === 0 ? null : (
-              <PipelineRunsFilterToolbar
-                filters={filters}
-                setFilters={setFilters}
-                onClearFilters={onClearFilters}
-                typeOptions={typeFilterObj}
-                statusOptions={statusFilterObj}
-              />
-            )
-          }
           loaded={isFetchingNextPage || loaded}
           customData={vulnerabilities}
           EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}

@@ -97,21 +97,19 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   return (
     <>
+      {(isFiltered || pipelineRuns.length > 0) && (
+        <PipelineRunsFilterToolbar
+          filters={filters}
+          setFilters={setFilters}
+          onClearFilters={onClearFilters}
+          typeOptions={typeFilterObj}
+          statusOptions={statusFilterObj}
+        />
+      )}
       <Table
         data={filteredPLRs}
         unfilteredData={pipelineRuns}
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
-        Toolbar={
-          !isFiltered && pipelineRuns.length === 0 ? null : (
-            <PipelineRunsFilterToolbar
-              filters={filters}
-              setFilters={setFilters}
-              onClearFilters={onClearFilters}
-              typeOptions={typeFilterObj}
-              statusOptions={statusFilterObj}
-            />
-          )
-        }
         aria-label="Pipeline run List"
         customData={vulnerabilities}
         Header={PipelineRunListHeaderWithVulnerabilities}
