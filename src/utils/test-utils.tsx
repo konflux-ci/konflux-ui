@@ -12,7 +12,6 @@ import {
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
 import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
-import * as WorkspaceUtils from '../components/Workspace/workspace-context';
 import * as ApplicationHook from '../hooks/useApplications';
 import * as k8s from '../k8s';
 import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
@@ -47,35 +46,23 @@ export const formikRenderer = (
 export const namespaceRenderer = (
   element: React.ReactElement,
   namespace: string,
-  contextValues?: Partial<WorkspaceUtils.WorkspaceContextData>,
+  contextValues?: Partial<NamespaceUtils.NamespaceContextData>,
   options?: Omit<RenderOptions, 'wrapper'>,
 ) =>
   render(element, {
     wrapper: ({ children }) => (
-      <WorkspaceUtils.WorkspaceContext.Provider
+      <NamespaceUtils.NamespaceContext.Provider
         value={{
           namespace,
-          lastUsedWorkspace: 'test-ws',
-          workspace: 'test-ws',
-          workspaceResource: undefined,
-          workspaces: [],
-          workspacesLoaded: false,
+          lastUsedNamespace: 'test-ws',
+          namespaceResource: undefined,
+          namespaces: [],
+          namespacesLoaded: false,
           ...contextValues,
         }}
       >
-        <NamespaceUtils.NamespaceContext.Provider
-          value={{
-            namespace,
-            lastUsedNamespace: 'test-ws',
-            namespaceResource: undefined,
-            namespaces: [],
-            namespacesLoaded: false,
-            ...contextValues,
-          }}
-        >
-          {children}
-        </NamespaceUtils.NamespaceContext.Provider>
-      </WorkspaceUtils.WorkspaceContext.Provider>
+        {children}
+      </NamespaceUtils.NamespaceContext.Provider>
     ),
     ...options,
   });
@@ -253,26 +240,6 @@ export const createUseApplicationMock = (
 
   return mockFn;
 };
-
-/**
- * @deprecated use {@link WithTestNamespaceContext}
- */
-export const WithTestWorkspaceContext =
-  (children, data?: WorkspaceUtils.WorkspaceContextData) => () => (
-    <WorkspaceUtils.WorkspaceContext.Provider
-      value={{
-        namespace: 'test-ns',
-        lastUsedWorkspace: 'test-ws',
-        workspace: 'test-ws',
-        workspaceResource: undefined,
-        workspacesLoaded: true,
-        workspaces: [],
-        ...data,
-      }}
-    >
-      {children}
-    </WorkspaceUtils.WorkspaceContext.Provider>
-  );
 
 export const WithTestNamespaceContext =
   (children, data?: NamespaceUtils.NamespaceContextData) => () => (

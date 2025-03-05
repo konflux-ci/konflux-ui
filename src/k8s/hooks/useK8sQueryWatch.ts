@@ -1,8 +1,20 @@
 import * as React from 'react';
-import { useDeepCompareMemoize } from '../../shared';
+import { isEqual } from 'lodash-es';
 import { K8sResourceBaseOptions } from '../k8s-fetch';
 import { watchListResource, watchObjectResource } from '../watch-utils';
 import { WebSocketOptions } from '../web-socket/types';
+
+export const useDeepCompareMemoize = <T = unknown>(value: T, strinfigy?: boolean): T => {
+  const ref = React.useRef<T>();
+
+  if (
+    strinfigy ? JSON.stringify(value) !== JSON.stringify(ref.current) : !isEqual(value, ref.current)
+  ) {
+    ref.current = value;
+  }
+
+  return ref.current;
+};
 
 const WS = new Map();
 

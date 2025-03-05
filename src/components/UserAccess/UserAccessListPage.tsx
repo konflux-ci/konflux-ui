@@ -4,13 +4,11 @@ import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { RoleBindingModel } from '../../models';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import PageLayout from '../PageLayout/PageLayout';
 import { UserAccessListView } from './UserAccessListView';
 
 const UserAccessPage: React.FunctionComponent = () => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
   const namespace = useNamespace();
 
   const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
@@ -21,13 +19,6 @@ const UserAccessPage: React.FunctionComponent = () => {
     <PageLayout
       title="User access"
       description="Invite users to collaborate with you by granting them access to your namespace."
-      breadcrumbs={[
-        ...breadcrumbs,
-        {
-          path: '#',
-          name: 'User access',
-        },
-      ]}
       actions={[
         {
           id: 'grant-access',

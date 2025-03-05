@@ -242,8 +242,8 @@ export const k8sWatch = (
     opts.ns = query.ns;
   }
 
-  if (query.ws) {
-    opts.ws = query.ws;
+  if (query.ws || query.ns) {
+    opts.ws = query.ws ?? query.ns;
   }
 
   if (query.resourceVersion) {

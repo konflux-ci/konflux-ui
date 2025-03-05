@@ -195,9 +195,8 @@ export const editReleasePlan = async (
   });
 };
 
-export const getReleasePlanFormBreadcrumbs = (breadcrumbs, namespace, edit) => {
+export const getReleasePlanFormBreadcrumbs = (namespace, edit) => {
   return [
-    ...breadcrumbs,
     {
       path: RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }),
       name: 'Releases',

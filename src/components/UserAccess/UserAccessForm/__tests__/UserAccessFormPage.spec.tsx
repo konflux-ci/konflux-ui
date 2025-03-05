@@ -16,10 +16,6 @@ jest.mock('../../../../utils/analytics', () => ({
   useTrackEvent: jest.fn(() => jest.fn),
 }));
 
-jest.mock('../../../../utils/breadcrumb-utils', () => ({
-  useWorkspaceBreadcrumbs: jest.fn(() => []),
-}));
-
 jest.mock('../../../../shared/hooks/useScrollShadows', () => ({
   useScrollShadows: jest.fn().mockReturnValue('none'),
 }));
