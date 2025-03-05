@@ -15,12 +15,13 @@ import {
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { useIntegrationTestScenario } from '../../../../hooks/useIntegrationTestScenarios';
+import { APPLICATION_DETAILS_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import MetadataList from '../../../MetadataList';
 import { useModalLauncher } from '../../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { createEditContextsModal } from '../../EditContextsModal';
 import { createEditParamsModal } from '../../EditParamsModal';
 import { IntegrationTestLabels } from '../../IntegrationTestForm/types';
@@ -31,12 +32,11 @@ import {
 } from '../../IntegrationTestForm/utils/create-utils';
 
 const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
-  const { workspace, namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { integrationTestName, applicationName } = useParams<RouterParams>();
 
   const [integrationTest] = useIntegrationTestScenario(
     namespace,
-    workspace,
     applicationName,
     integrationTestName,
   );
@@ -214,7 +214,10 @@ const IntegrationTestOverviewTab: React.FC<React.PropsWithChildren> = () => {
                 <DescriptionListTerm>Application</DescriptionListTerm>
                 <DescriptionListDescription>
                   <Link
-                    to={`/workspaces/${workspace}/applications/${integrationTest.spec.application}`}
+                    to={APPLICATION_DETAILS_PATH.createPath({
+                      workspaceName: namespace,
+                      applicationName: integrationTest.spec.application,
+                    })}
                   >
                     {integrationTest.spec.application}
                   </Link>

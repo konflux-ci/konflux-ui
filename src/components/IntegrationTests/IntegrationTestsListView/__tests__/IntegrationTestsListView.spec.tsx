@@ -18,8 +18,8 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
+jest.mock('../../../../shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(() => 'test-ns'),
 }));
 
 jest.mock('../../../../utils/rbac', () => ({
@@ -92,7 +92,7 @@ describe('IntegrationTestsListView', () => {
 
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith(
-        '/workspaces/test-ws/applications/test-app/integrationtests/add',
+        '/workspaces/test-ns/applications/test-app/integrationtests/add',
       ),
     );
   });
@@ -105,7 +105,7 @@ describe('IntegrationTestsListView', () => {
 
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith(
-        '/workspaces/test-ws/applications/test-app/integrationtests/add',
+        '/workspaces/test-ns/applications/test-app/integrationtests/add',
       ),
     );
   });
