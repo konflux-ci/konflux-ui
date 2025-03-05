@@ -70,10 +70,12 @@ export const INTEGRATION_TEST_EDIT_PATH = INTEGRATION_TEST_DETAILS_PATH.extend('
 
 // Pipeline paths
 
-export const PIPELINE_RUNS_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
+export const ACTIVITY_PATH = APPLICATION_DETAILS_PATH.extend('activity');
 
-export const PIPELINE_RUNS_DETAILS_PATH = PIPELINE_RUNS_LIST_PATH.extend(
-  `:${RouterParams.pipelineRunName}`,
-);
+export const PIPELINE_RUNS_LIST_PATH = ACTIVITY_PATH.extend('pipelineruns');
+
+export const PLR_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
+
+export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.pipelineRunName}`);
 
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
