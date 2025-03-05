@@ -53,7 +53,7 @@ describe('useLatestIntegrationTestPipelines', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
 
-    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2));
+    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-ws', testNames2));
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });
