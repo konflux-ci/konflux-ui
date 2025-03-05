@@ -25,7 +25,7 @@ export const useComponent = (
     ComponentModel,
   );
   return React.useMemo(() => {
-    if (!isLoading && !error && component?.metadata.deletionTimestamp) {
+    if (!isLoading && !error && component?.metadata?.deletionTimestamp) {
       return [null, !isLoading, { code: 404 }];
     }
     return [component, !isLoading, error];
