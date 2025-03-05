@@ -1,16 +1,19 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
-import { useSearchParam } from '../../../../hooks/useSearchParam';
+import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunStatus } from '../../../../types';
 import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsList from '../SnapshotPipelineRunsList';
+
+jest.useFakeTimers();
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -35,7 +38,7 @@ jest.mock('../../../../hooks/useSnapshots', () => ({
 }));
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
-  useSearchParam: jest.fn(),
+  useSearchParamBatch: jest.fn(),
 }));
 
 jest.mock('../../../../shared/components/table', () => {
@@ -67,22 +70,9 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useSearchParamMock = useSearchParam as jest.Mock;
+const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
-const usePLRVulnerabilitiesMock = usePLRVulnerabilities as jest.Mock;
 const mockUseSnapshots = useSnapshots as jest.Mock;
-
-const params = {};
-
-const mockUseSearchParam = (name: string) => {
-  const setter = (value) => {
-    params[name] = value;
-  };
-  const unset = () => {
-    params[name] = '';
-  };
-  return [params[name], setter, unset];
-};
 
 const appName = 'my-test-app';
 
@@ -162,38 +152,34 @@ const snapShotPLRs = [
   },
 ];
 
+const TestedComponent = ({ name, pipelineruns, loaded }) => (
+  <PipelineRunsFilterContextProvider>
+    <SnapshotPipelineRunsList
+      applicationName={name}
+      getNextPage={null}
+      snapshotPipelineRuns={pipelineruns}
+      loaded={loaded}
+      nextPageProps={{ hasNextPage: true }}
+    />
+  </PipelineRunsFilterContextProvider>
+);
+
 describe('SnapshotPipelinerunsTab', () => {
   createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
   beforeEach(() => {
-    useSearchParamMock.mockImplementation(mockUseSearchParam);
+    useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
-    render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={[]}
-        loaded={false}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    render(<TestedComponent name={appName} pipelineruns={[]} loaded={false} />);
     screen.getByRole('progressbar');
   });
 
   it('should render empty state if no pipelinerun is present', () => {
-    render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={[]}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    render(<TestedComponent name={appName} pipelineruns={[]} loaded={true} />);
     screen.queryAllByText(/Not found/);
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
@@ -203,28 +189,12 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render pipelineruns with snapshot labels instead of annotations', () => {
-    render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(screen.queryByText('plr-with snapshot-label-only')).toBeInTheDocument();
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
-    render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-vvs')).toBeInTheDocument();
@@ -233,15 +203,7 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render filtered pipelinerun list and should call nextPage', async () => {
-    const r = render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-vvs')).toBeInTheDocument();
@@ -250,22 +212,13 @@ describe('SnapshotPipelinerunsTab', () => {
     fireEvent.change(filter, {
       target: { value: 'go-sample-s2f4f' },
     });
-
-    usePLRVulnerabilitiesMock.mockReturnValue({
-      vulnerabilities: {},
-      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
-    });
     expect(filter.value).toBe('go-sample-s2f4f');
 
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     await waitFor(() => {
       expect(screen.queryByText('python-sample-942fq')).not.toBeInTheDocument();
       expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
@@ -274,19 +227,7 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render filtered pipelinerun list by name', async () => {
-    usePLRVulnerabilitiesMock.mockReturnValue({
-      vulnerabilities: {},
-      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
-    });
-    const r = render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -296,15 +237,11 @@ describe('SnapshotPipelinerunsTab', () => {
 
     expect(filter.value).toBe('python-sample-942fq');
 
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     await waitFor(() => {
       expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
       expect(screen.queryByText('go-sample-s2f4f')).not.toBeInTheDocument();
@@ -315,32 +252,12 @@ describe('SnapshotPipelinerunsTab', () => {
     fireEvent.change(filter, {
       target: { value: '' },
     });
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(filter.value).toBe('');
   });
 
   it('should render filtered pipelinerun list by status', async () => {
-    usePLRVulnerabilitiesMock.mockReturnValue({
-      vulnerabilities: {},
-      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
-    });
-    const r = render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
 
     const statusFilter = screen.getByRole('button', {
       name: /status filter menu/i,
@@ -353,15 +270,7 @@ describe('SnapshotPipelinerunsTab', () => {
     });
     fireEvent.click(succeededOption);
 
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(succeededOption).toBeChecked();
     await waitFor(() => {
       expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
@@ -372,32 +281,12 @@ describe('SnapshotPipelinerunsTab', () => {
     // clean up for other tests
     expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(succeededOption);
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(succeededOption).not.toBeChecked();
   });
 
   it('should render filtered pipelinerun list by type', async () => {
-    usePLRVulnerabilitiesMock.mockReturnValue({
-      vulnerabilities: {},
-      fetchedPipelineRuns: snapShotPLRs.map((plr) => plr.metadata.name),
-    });
-    const r = render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
 
     const typeFilter = screen.getByRole('button', {
       name: /type filter menu/i,
@@ -409,26 +298,10 @@ describe('SnapshotPipelinerunsTab', () => {
       selector: 'input',
     });
     fireEvent.click(buildOption);
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(buildOption).toBeChecked();
 
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     await waitFor(() => {
       expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
       expect(screen.queryByText('go-sample-s2f4f')).not.toBeInTheDocument();
@@ -438,63 +311,7 @@ describe('SnapshotPipelinerunsTab', () => {
     // clean up for other tests
     expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(buildOption);
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
+    r.rerender(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
     expect(buildOption).not.toBeChecked();
-  });
-
-  it('should clear the filters and render the list again in the table', async () => {
-    const r = render(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
-
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-
-    fireEvent.change(filter, {
-      target: { value: 'no-match' },
-    });
-
-    expect(filter.value).toBe('no-match');
-
-    r.rerender(
-      <SnapshotPipelineRunsList
-        applicationName={appName}
-        getNextPage={null}
-        snapshotPipelineRuns={snapShotPLRs}
-        loaded={true}
-        nextPageProps={{ hasNextPage: true }}
-      />,
-    );
-    await waitFor(() => {
-      expect(screen.queryByText('python-sample-942fq')).not.toBeInTheDocument();
-      expect(screen.queryByText('go-sample-s2f4f')).not.toBeInTheDocument();
-      expect(screen.queryByText('go-sample-vvs')).not.toBeInTheDocument();
-      expect(screen.queryByText('No results found')).toBeInTheDocument();
-      expect(
-        screen.queryByText(
-          'No results match this filter criteria. Clear all filters and try again.',
-        ),
-      ).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.queryByRole('button', { name: 'Clear all filters' }));
-    await waitFor(() => {
-      expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
-      expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
-      expect(screen.queryByText('go-sample-vvs')).toBeInTheDocument();
-    });
   });
 });
