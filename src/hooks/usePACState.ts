@@ -11,7 +11,6 @@ import {
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { usePipelineRuns } from './usePipelineRuns';
-import { useWorkspaceForNamespace } from './useWorkspaceForNamespace';
 
 export enum PACState {
   sample,
@@ -37,11 +36,11 @@ const usePACState = (component: ComponentKind) => {
   const buildStatus = useComponentBuildStatus(component);
   const configurationTime = buildStatus?.pac?.['configuration-time'];
 
-  const workspace = useWorkspaceForNamespace(component.metadata.namespace)?.metadata?.name;
+  const namespace = component.metadata.namespace;
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded] = usePipelineRuns(
     !isSample && pacProvision ? component.metadata.namespace : null,
-    workspace,
+    namespace,
     React.useMemo(
       () => ({
         selector: {

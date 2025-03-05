@@ -3,12 +3,11 @@ import { K8sQueryListResourceItems } from '../../../k8s';
 import { ComponentModel } from '../../../models';
 import { RouterParams } from '../../../routes/utils';
 import { createLoaderWithAccessCheck } from '../../../utils/rbac';
-import { getNamespaceUsingWorspaceFromQueryCache } from '../../Workspace/utils';
 import { default as ComponentListView } from './ComponentListView';
 
 export const componentsTabLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
-    const ns = await getNamespaceUsingWorspaceFromQueryCache(params[RouterParams.workspaceName]);
+    const ns = params[RouterParams.workspaceName];
     return K8sQueryListResourceItems({
       model: ComponentModel,
       queryOptions: { ns, ws: params[RouterParams.workspaceName] },

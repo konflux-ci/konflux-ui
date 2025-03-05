@@ -12,6 +12,7 @@ COPY webpack.config.js webpack.config.js
 COPY webpack.prod.config.js webpack.prod.config.js 
 COPY yarn.lock yarn.lock
 COPY .swcrc .swcrc
+COPY aliases.config.js aliases.config.js
 
 RUN yarn install
 RUN yarn build

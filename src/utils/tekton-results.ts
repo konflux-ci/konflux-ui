@@ -274,10 +274,10 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
       if (options?.limit >= 0) {
         list = {
           nextPageToken: null,
-          records: list.records.slice(0, options.limit),
+          records: (list?.records ?? []).slice(0, options.limit),
         };
       }
-      return [list?.records.map((result) => decodeValueJson(result.data.value)), list];
+      return [(list?.records ?? []).map((result) => decodeValueJson(result.data.value)), list];
     } catch (e) {
       // return an empty response if we get a 404 error
       if (e?.code === 404) {

@@ -9,7 +9,6 @@ import { ApplicationDropdown } from '../../../../components/Secrets/SecretsForm/
 import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import { useNamespace } from '../../../../shared/providers/Namespace';
-import { useWorkspaceBreadcrumbs } from '../../../../utils/breadcrumb-utils';
 import { getReleasePlanFormBreadcrumbs, ReleasePlanFormValues } from './form-utils';
 import { RunReleasePipelineSection } from './RunReleasePipelineSection';
 
@@ -26,7 +25,6 @@ export const ReleasePlanForm: React.FC<Props> = ({
   status,
   edit,
 }) => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
   const namespace = useNamespace();
   const [{ value: labels }] = useField<ReleasePlanFormValues['labels']>('labels');
 
@@ -34,7 +32,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
     <PageLayout
       title={edit ? 'Edit release plan' : 'Create release plan'}
       description="A release plan schedules when to send your code to production."
-      breadcrumbs={getReleasePlanFormBreadcrumbs(breadcrumbs, namespace, edit)}
+      breadcrumbs={getReleasePlanFormBreadcrumbs(namespace, edit)}
       footer={
         <FormFooter
           submitLabel={edit ? 'Save' : 'Create'}

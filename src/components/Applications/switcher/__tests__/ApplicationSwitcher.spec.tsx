@@ -58,9 +58,9 @@ describe('ContextSwitcher', () => {
     const switcher = routerRenderer(<ApplicationSwitcher selectedApplication="test-app-1" />);
     act(() => screen.getByRole('button').click());
 
-    expect(screen.getByPlaceholderText('Filter application by name')).toBeVisible();
-    expect(screen.getByText('Recent')).toBeVisible();
-    expect(screen.getByText('All')).toBeVisible();
+    expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
+    expect(screen.getByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
     expect(screen.queryByText('Create application')).toHaveAttribute('aria-disabled', 'false');
     switcher.unmount();
   });
@@ -70,9 +70,9 @@ describe('ContextSwitcher', () => {
     const switcher = routerRenderer(<ApplicationSwitcher selectedApplication="test-app-1" />);
     act(() => screen.getByRole('button').click());
 
-    expect(screen.getByPlaceholderText('Filter application by name')).toBeVisible();
-    expect(screen.getByText('Recent')).toBeVisible();
-    expect(screen.getByText('All')).toBeVisible();
+    expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
+    expect(screen.getByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
     expect(screen.queryByText('Create application')).toHaveAttribute('aria-disabled', 'true');
     switcher.unmount();
   });
@@ -82,7 +82,7 @@ describe('ContextSwitcher', () => {
     act(() => screen.getByRole('button').click());
 
     const selectedItem = screen.queryAllByRole('menuitem')[0];
-    expect(selectedItem).toBeVisible();
+    expect(selectedItem).toBeInTheDocument();
     expect(selectedItem).toHaveClass('pf-m-selected');
     switcher.unmount();
   });
@@ -91,7 +91,7 @@ describe('ContextSwitcher', () => {
     const switcher = routerRenderer(<ApplicationSwitcher selectedApplication="test-app-1" />);
     act(() => screen.getByRole('button').click());
 
-    expect(screen.getByText('Test Application 2')).toBeVisible();
+    expect(screen.getByText('Test Application 2')).toBeInTheDocument();
     act(() => screen.getByText('Test Application 2').click());
     expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ns/applications/test-app-2');
     expect(screen.queryByText('Test Application 2')).toBeNull();

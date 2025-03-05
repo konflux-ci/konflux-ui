@@ -8,10 +8,12 @@ import {
   Tab,
   Tabs,
   TabTitleText,
-  TextInput,
   MenuSearchInput,
+  MenuToggleProps,
+  SearchInput,
+  MenuContainer,
+  MenuToggle,
 } from '@patternfly/react-core';
-import { Dropdown, DropdownToggle } from '@patternfly/react-core/deprecated';
 import { EllipsisHIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-h-icon';
 import '././ContextSwitcher.scss';
 import { useLocalStorage } from '../../../hooks/useLocalStorage';
@@ -42,6 +44,7 @@ type ContextSwitcherProps = {
   onSelect?: (item: ContextMenuItem) => void;
   resourceType?: string;
   footer?: React.ReactNode;
+  toggle?: (props: MenuToggleProps) => React.ReactElement;
 };
 
 export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherProps>> = ({
@@ -51,9 +54,12 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
   resourceType = 'resource',
   maxRecentItems = 5,
   footer,
+  toggle,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState('');
+  const toggleRef = React.useRef();
+  const menuRef = React.useRef();
   const [menuDrilledIn, setMenuDrilledIn] = React.useState<string[]>([]);
   const [drilldownPath, setDrilldownPath] = React.useState<string[]>([]);
   const [menuHeights, setMenuHeights] = React.useState<{ [key: string]: number }>({});
@@ -150,70 +156,79 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     }
   };
 
-  return (
-    <Dropdown
-      className="context-switcher"
-      toggle={
-        <DropdownToggle
-          id="toggle-context-switcher"
-          className="context-switcher__dropdown"
-          aria-label="toggle context switcher menu"
-          onToggle={(_event, val) => setIsOpen(val)}
-          toggleIndicator={null}
-          isPlain
-        >
-          <EllipsisHIcon />
-        </DropdownToggle>
-      }
-      isOpen={isOpen}
-      isPlain
+  const defaultToggle = (defaultToggleRef: React.RefObject<HTMLButtonElement>) => (
+    <MenuToggle
+      ref={defaultToggleRef}
+      id="toggle-context-switcher"
+      className="context-switcher__dropdown"
+      aria-label="toggle context switcher menu"
+      onClick={() => setIsOpen((val) => !val)}
+      variant="plain"
     >
-      <Menu
-        id="context-switcher-root-menu"
-        className="context-switcher__menu"
-        selected={selectedItem?.key}
-        onSelect={onItemSelect}
-        drilldownItemPath={drilldownPath}
-        drilledInMenus={menuDrilledIn}
-        activeMenu={activeMenu}
-        onDrillIn={onDrillIn}
-        onDrillOut={onDrillOut}
-        onGetMenuHeight={setHeight}
-        containsDrilldown
-        isScrollable
-        isPlain
-      >
-        <MenuSearch>
-          <MenuSearchInput>
-            <TextInput
-              value={searchText}
-              type="search"
-              aria-label="name filter"
-              placeholder={`Filter ${resourceType} by name`}
-              onChange={(_event, val) => setSearchText(val)}
-            />
-          </MenuSearchInput>
-        </MenuSearch>
-        <MenuContent menuHeight={`${menuHeights[activeMenu]}px`}>
-          <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
-            <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>}>
-              <MenuList>
-                {filteredRecentItems.map((item) => (
-                  <ContextMenuListItem key={item.key} item={item} />
-                ))}
-              </MenuList>
-            </Tab>
-            <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>}>
-              <MenuList>
-                {filteredAllItems.map((item) => (
-                  <ContextMenuListItem key={item.key} item={item} />
-                ))}
-              </MenuList>
-            </Tab>
-          </Tabs>
-        </MenuContent>
-        {footer && <MenuFooter>{footer}</MenuFooter>}
-      </Menu>
-    </Dropdown>
+      <EllipsisHIcon />
+    </MenuToggle>
+  );
+
+  return (
+    <MenuContainer
+      // className="context-switcher"
+      toggle={
+        toggle
+          ? toggle({ innerRef: toggleRef, onClick: () => setIsOpen(!isOpen), isExpanded: isOpen })
+          : defaultToggle(toggleRef)
+      }
+      toggleRef={toggleRef}
+      isOpen={isOpen}
+      menuRef={menuRef}
+      menu={
+        <Menu
+          ref={menuRef}
+          id="context-switcher-root-menu"
+          className="context-switcher__menu"
+          selected={selectedItem?.key}
+          onSelect={onItemSelect}
+          drilldownItemPath={drilldownPath}
+          drilledInMenus={menuDrilledIn}
+          activeMenu={activeMenu}
+          onDrillIn={onDrillIn}
+          onDrillOut={onDrillOut}
+          onGetMenuHeight={setHeight}
+          containsDrilldown
+          isScrollable
+        >
+          <MenuSearch>
+            <MenuSearchInput>
+              <SearchInput
+                value={searchText}
+                type="search"
+                aria-label="name filter"
+                placeholder={`Filter ${resourceType} by name`}
+                onChange={(_event, val) => setSearchText(val)}
+              />
+            </MenuSearchInput>
+          </MenuSearch>
+          <MenuContent menuHeight={`${menuHeights[activeMenu]}px`}>
+            <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
+              <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>}>
+                <MenuList>
+                  {filteredRecentItems.map((item) => (
+                    <ContextMenuListItem key={item.key} item={item} />
+                  ))}
+                </MenuList>
+              </Tab>
+              <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>}>
+                <MenuList>
+                  {filteredAllItems.map((item) => (
+                    <ContextMenuListItem key={item.key} item={item} />
+                  ))}
+                </MenuList>
+              </Tab>
+            </Tabs>
+          </MenuContent>
+          {footer && <MenuFooter>{footer}</MenuFooter>}
+        </Menu>
+      }
+      // isPlain
+    />
   );
 };
