@@ -8,11 +8,6 @@ export type PipelineRunsFilterState = {
   type: string[];
 };
 
-export type PipelineRunsFilterAction = {
-  type: 'SET_NAME' | 'SET_STATUS' | 'SET_TYPE' | 'CLEAR_ALL_FILTERS';
-  payload?: string | string[];
-};
-
 export const filterPipelineRuns = (
   pipelineRuns: PipelineRunKind[],
   filters: PipelineRunsFilterState,
