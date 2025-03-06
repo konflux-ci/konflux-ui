@@ -18,17 +18,17 @@ import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { IntegrationTestScenarioModel } from '../../../models';
+import { INTEGRATION_TEST_ADD_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { IntegrationTestListHeader } from './IntegrationTestListHeader';
 import IntegrationTestListRow from './IntegrationTestListRow';
-
 const IntegrationTestsEmptyState: React.FC<
   React.PropsWithChildren<{
     handleAddTest: () => void;
@@ -65,7 +65,7 @@ const IntegrationTestsEmptyState: React.FC<
 
 const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   const { applicationName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreateIntegrationTest] = useAccessReviewForModel(
     IntegrationTestScenarioModel,
     'create',
@@ -74,7 +74,6 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   const navigate = useNavigate();
   const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
     namespace,
-    workspace,
     applicationName,
   );
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
@@ -88,8 +87,8 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   );
 
   const handleAddTest = React.useCallback(() => {
-    navigate(`/workspaces/${workspace}/applications/${applicationName}/integrationtests/add`);
-  }, [navigate, applicationName, workspace]);
+    navigate(INTEGRATION_TEST_ADD_PATH.createPath({ applicationName, workspaceName: namespace }));
+  }, [navigate, applicationName, namespace]);
 
   const onClearFilters = () => setNameFilter('');
   const onNameInput = (name: string) => setNameFilter(name);
