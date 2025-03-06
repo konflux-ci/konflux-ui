@@ -8,17 +8,11 @@ import {
 } from '../../components/PipelineRun/PipelineRunDetailsView';
 import { PIPELINE_RUNS_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
-import { RouterParams } from '../utils';
 
 const pipelineRoutes = [
   /* Pipeline Run details routes */
   {
-    path: PIPELINE_RUNS_DETAILS_PATH.createPath({
-      workspaceName: `:${RouterParams.workspaceName}`,
-      applicationName: `:${RouterParams.applicationName}`,
-      pipelineRunName: `:${RouterParams.pipelineRunName}`,
-    }),
-
+    path: PIPELINE_RUNS_DETAILS_PATH.path,
     errorElement: <RouteErrorBoundry />,
     loader: pipelineRunDetailsViewLoader,
     element: <PipelineRunDetailsLayout />,
