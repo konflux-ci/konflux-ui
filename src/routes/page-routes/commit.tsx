@@ -3,13 +3,18 @@ import {
   CommitOverviewTab,
   CommitsPipelineRunTab,
 } from '../../components/Commits/CommitDetails';
+import { COMMIT_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 import { RouterParams } from '../utils';
 
 const commitRoutes = [
   /* Commit list view */
   {
-    path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
+    path: COMMIT_DETAILS_PATH.createPath({
+      workspaceName: `:${RouterParams.workspaceName}`,
+      applicationName: `:${RouterParams.applicationName}`,
+      commitName: `:${RouterParams.commitName}`,
+    }),
     errorElement: <RouteErrorBoundry />,
     element: <CommitDetailsView />,
     children: [

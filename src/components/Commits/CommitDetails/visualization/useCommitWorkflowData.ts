@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTestScenarios';
@@ -7,7 +8,6 @@ import { Commit, ComponentKind, PipelineRunKind } from '../../../../types';
 import { pipelineRunStatus, runStatus } from '../../../../utils/pipeline-utils';
 import { DEFAULT_NODE_HEIGHT } from '../../../topology/const';
 import { getLabelWidth } from '../../../topology/utils';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import {
   CommitWorkflowNodeModel,
   CommitWorkflowNodeType,
@@ -28,7 +28,7 @@ export const getLatestResource = (resources = []) =>
 export const useCommitWorkflowData = (
   commit: Commit,
 ): [nodes: CommitWorkflowNodeModel[], loaded: boolean, errors: unknown[]] => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   const applicationName = commit?.application || '';
   const [components, componentsLoaded] = useComponents(namespace, applicationName);

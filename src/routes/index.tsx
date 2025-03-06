@@ -108,19 +108,6 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      /* Pipeline Run details routes */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: pipelineRunDetailsViewLoader,
-        element: <PipelineRunDetailsLayout />,
-        children: [
-          { index: true, element: <PipelineRunDetailsTab /> },
-          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
-          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
-          { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
-        ],
-      },
       /* Task Run details routes */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,

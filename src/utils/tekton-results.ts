@@ -392,12 +392,14 @@ export const getTaskRunLog = (
 
 export const createTektonResultsQueryKeys = (
   model: K8sModelCommon,
+  namespace: string,
   selector: Selector,
   filter: string,
 ) => {
   const selectorFilter = selectorToFilter(selector);
   return [
     'tekton-results',
+    namespace,
     { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
     ...(selectorFilter ? [selectorFilter] : []),
     ...(filter ? [filter] : []),
@@ -407,7 +409,7 @@ export const createTektonResultsQueryKeys = (
 export const createTektonResultQueryOptions = curry(
   (fetchFn, model: K8sModelCommon, namespace: string, options: TektonResultsOptions) => {
     return {
-      queryKey: createTektonResultsQueryKeys(model, options?.selector, options?.filter),
+      queryKey: createTektonResultsQueryKeys(model, namespace, options?.selector, options?.filter),
       queryFn: async ({ pageParam }) => {
         const trData = await fetchFn(namespace, options, pageParam as string);
         return { data: trData[0], nextPage: trData[1].nextPageToken };
