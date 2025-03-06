@@ -125,14 +125,14 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                         <Link
                           {...props}
                           to={IMPORT_PATH.createPath({ workspaceName: namespace })}
-                          analytics={{
-                            link_name: 'create-application',
-                            namespace,
-                          }}
                         />
                       )}
                       isDisabled={!(canCreateApplication && canCreateComponent)}
                       tooltip="You don't have access to create an application"
+                      analytics={{
+                        link_name: 'create-application',
+                        namespace,
+                      }}
                     >
                       Create application
                     </ButtonWithAccessTooltip>

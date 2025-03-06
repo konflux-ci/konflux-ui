@@ -138,6 +138,7 @@ describe('Application List', () => {
     screen.getByText('Easily onboard your applications');
     const button = screen.getByText('Create application');
     expect(button).toBeInTheDocument();
+    expect(button.closest('a').href).toBe('http://localhost/workspaces/test-ns/import');
   });
 
   it('should render empty state with no card', () => {
