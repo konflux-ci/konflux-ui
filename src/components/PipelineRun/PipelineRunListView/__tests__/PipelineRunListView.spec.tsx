@@ -7,7 +7,6 @@ import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-// import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { createUseWorkspaceInfoMock, createUseApplicationMock } from '../../../../utils/test-utils';
@@ -83,7 +82,6 @@ jest.mock('../../../../utils/rbac', () => ({
 }));
 
 const useComponentsMock = useComponents as jest.Mock;
-// const usePLRVulnerabilitiesMock = usePLRVulnerabilities as jest.Mock;
 const mockUseSnapshots = useSnapshots as jest.Mock;
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 
