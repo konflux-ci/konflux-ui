@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useLocation } from 'react-router-dom';
 import { PageSection, PageSectionVariants } from '@patternfly/react-core';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
@@ -7,12 +6,8 @@ import PageLayout from '../PageLayout/PageLayout';
 import { GitImportForm } from './GitImportForm';
 
 const ImportForm: React.FC = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const isApplication = queryParams.get('isApplication') === 'true';
-
-  const applicationTitle = `Create an ${isApplication ? 'Application' : 'Component'}`;
   const applicationName = new URLSearchParams(window.location.search).get('application');
+  const applicationTitle = `Create an ${applicationName ? 'Component' : 'Application'}`;
   const applicationBreadcrumbs = useApplicationBreadcrumbs(applicationName);
   return (
     <PageLayout
