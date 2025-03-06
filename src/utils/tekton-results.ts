@@ -411,7 +411,7 @@ export const createTektonResultQueryOptions = curry(
     return {
       queryKey: createTektonResultsQueryKeys(model, namespace, options?.selector, options?.filter),
       queryFn: async ({ pageParam }) => {
-        const trData = await fetchFn(namespace, options, pageParam as string);
+        const trData = await fetchFn(namespace, namespace, options, pageParam as string);
         return { data: trData[0], nextPage: trData[1].nextPageToken };
       },
       enabled: !!namespace,
