@@ -19,10 +19,10 @@ import { HttpError } from '../../../k8s/error';
 import { Table } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit } from '../../../types';
 import { getCommitsFromPLRs, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import CommitsEmptyState from '../CommitsEmptyState';
 import CommitsListHeader from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
@@ -35,7 +35,7 @@ interface CommitsListViewProps {
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
 }) => {
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
