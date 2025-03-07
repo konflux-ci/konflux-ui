@@ -10,7 +10,6 @@ export const snapshotDetailsViewLoader = createLoaderWithAccessCheck(
       model: SnapshotModel,
       queryOptions: {
         ns,
-        ws: params[RouterParams.workspaceName],
         name: params[RouterParams.snapshotName],
       },
     });

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { css } from '@patternfly/react-styles';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
-import { APPLICATION_RELEASE_DETAILS_PATH } from '../../routes/paths';
+import { APPLICATION_RELEASE_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared/components/table';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -40,7 +40,11 @@ const ReleasesListRow: React.FC<
       </TableData>
       <TableData className={releasesTableColumnClasses.releaseSnapshot}>
         <Link
-          to={`/workspaces/${namespace}/applications/${applicationName}/snapshots/${obj.spec.snapshot}`}
+          to={SNAPSHOT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            snapshotName: obj.spec.snapshot,
+          })}
         >
           {obj.spec.snapshot}
         </Link>

@@ -16,6 +16,7 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
@@ -222,7 +223,11 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListTerm>Snapshot</DescriptionListTerm>
                     <DescriptionListDescription>
                       <Link
-                        to={`/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshot}`}
+                        to={SNAPSHOT_DETAILS_PATH.createPath({
+                          workspaceName: namespace,
+                          applicationName,
+                          snapshotName: snapshot,
+                        })}
                       >
                         {snapshot}
                       </Link>
