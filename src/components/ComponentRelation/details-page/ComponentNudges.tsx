@@ -27,7 +27,11 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
   radioChecked,
   component,
 }) => {
+<<<<<<< HEAD
   const namespace = useNamespace();
+=======
+  const { workspace, namespace } = useWorkspaceInfo();
+>>>>>>> eec657e (fix(KFLUXUI-295): remove workspace dependency from Application pages)
   const [components, loaded, error] = useAllComponents(namespace);
 
   const emptyState = (
