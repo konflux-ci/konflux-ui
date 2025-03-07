@@ -14,12 +14,6 @@ import {
   TextVariants,
   Truncate,
 } from '@patternfly/react-core';
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownPosition,
-  KebabToggle,
-} from '@patternfly/react-core/deprecated';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
 import sendIconUrl from '../../assets/send.svg';
 import successIconUrl from '../../assets/success.svg';
@@ -29,12 +23,7 @@ import { ComponentModel } from '../../models';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
-import {
-  enablePAC,
-  disablePAC,
-  useComponentBuildStatus,
-  getLastestImage,
-} from '../../utils/component-utils';
+import { enablePAC, useComponentBuildStatus, getLastestImage } from '../../utils/component-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import AnalyticsButton from '../AnalyticsButton/AnalyticsButton';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
@@ -46,53 +35,6 @@ import ComponentPACStateLabel from './ComponentPACStateLabel';
 type Props = RawComponentProps & {
   components: ComponentKind[];
   singleComponent?: boolean;
-};
-
-const ComponentKebab: React.FC<
-  React.PropsWithChildren<{
-    state: PACState;
-    component: ComponentKind;
-    canPatchComponent?: boolean;
-  }>
-> = ({ component, state, canPatchComponent }) => {
-  const { workspace } = useWorkspaceInfo();
-  const track = useTrackEvent();
-  const [isOpen, setOpen] = React.useState(false);
-  return (
-    <Dropdown
-      onSelect={() => setOpen(false)}
-      toggle={<KebabToggle onToggle={() => setOpen((v) => !v)} id="toggle-id-6" />}
-      isOpen={isOpen}
-      isPlain
-      position={DropdownPosition.right}
-      dropdownItems={[
-        <DropdownItem
-          key="roll-back"
-          isDisabled={![PACState.error, PACState.pending, PACState.ready].includes(state)}
-          onClick={() => {
-            track(TrackEvents.ButtonClicked, {
-              link_name: 'disable-pac',
-              link_location: 'manage-builds-pipelines-action',
-              component_name: component.metadata.name,
-              app_name: component.spec.application,
-              workspace,
-            });
-            void disablePAC(component).then(() => {
-              track('Disable PAC', {
-                component_name: component.metadata.name,
-                app_name: component.spec.application,
-                workspace,
-              });
-            });
-          }}
-          tooltip={canPatchComponent ? undefined : "You don't have access to roll back"}
-          isAriaDisabled={!canPatchComponent}
-        >
-          Roll back to default pipeline
-        </DropdownItem>,
-      ]}
-    />
-  );
 };
 
 const Row: React.FC<
@@ -255,13 +197,6 @@ const Row: React.FC<
             }
           })()}
         </Td>
-        <Td className="pf-v5-u-text-align-right">
-          <ComponentKebab
-            component={component}
-            state={pacState}
-            canPatchComponent={canPatchComponent}
-          />
-        </Td>
       </Tr>
       {pacState === PACState.sample ? (
         <Tr>
@@ -295,29 +230,6 @@ const Row: React.FC<
                   >
                     Install GitHub Application
                   </ExternalLink>
-                  <ButtonWithAccessTooltip
-                    variant={ButtonVariant.link}
-                    onClick={() =>
-                      disablePAC(component).then(() => {
-                        track('Disable PAC', {
-                          component_name: component.metadata.name,
-                          app_name: component.spec.application,
-                          workspace,
-                        });
-                      })
-                    }
-                    isAriaDisabled={!canPatchComponent}
-                    tooltip="You don't have access to roll back"
-                    analytics={{
-                      link_name: 'disable-pac',
-                      link_location: 'manage-builds-pipelines-alert',
-                      component_name: component.metadata.name,
-                      app_name: component.spec.application,
-                      workspace,
-                    }}
-                  >
-                    Roll back to default pipeline
-                  </ButtonWithAccessTooltip>
                 </>
               }
             >
