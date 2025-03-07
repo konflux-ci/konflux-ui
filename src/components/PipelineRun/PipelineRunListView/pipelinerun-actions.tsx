@@ -50,7 +50,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
     pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT],
   );
 
-  const [snapshots, snapshotsLoaded, snapshotsError] = useSnapshots(namespace, workspace);
+  const [snapshots, snapshotsLoaded, snapshotsError] = useSnapshots(namespace);
 
   const snapShotLabel = pipelineRun?.metadata?.labels?.[PipelineRunLabel.SNAPSHOT];
   const isPushBuildType = [PipelineRunEventType.PUSH, PipelineRunEventType.INCOMING].includes(
