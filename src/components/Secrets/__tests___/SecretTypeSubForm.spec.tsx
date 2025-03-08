@@ -48,10 +48,9 @@ describe('SecretTypeSubForm', () => {
 
   it('should render subforms correctly for specified targets', async () => {
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Key/value secret' })).toBeEnabled();
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('Key/value secret');
+      fireEvent.click(screen.getByTestId('dropdown-toggle'));
     });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Key/value secret' }));
     fireEvent.click(screen.getByText('Image pull secret'));
     expect(screen.getByText('Image pull sub form')).toBeVisible();
   });
