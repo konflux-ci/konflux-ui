@@ -107,43 +107,6 @@ export const router = createBrowserRouter([
           },
         ],
       },
-<<<<<<< HEAD
-      /* Task Run details routes */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/taskruns/:${RouterParams.taskRunName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: taskRunDetailsViewLoader,
-        element: <TaskRunDetailsViewLayout />,
-        children: [
-          { index: true, element: <TaskRunDetailsTab /> },
-          { path: 'logs', element: <TaskRunLogsTab /> },
-          { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
-=======
-      /* Pipeline Run details routes */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/pipelineruns/:${RouterParams.pipelineRunName}`,
-        errorElement: <RouteErrorBoundry />,
-        loader: pipelineRunDetailsViewLoader,
-        element: <PipelineRunDetailsLayout />,
-        children: [
-          { index: true, element: <PipelineRunDetailsTab /> },
-          { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
-          { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
-          { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
-        ],
-      },
-      /* Commit list view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/commit/:${RouterParams.commitName}`,
-        errorElement: <RouteErrorBoundry />,
-        element: <CommitDetailsView />,
-        children: [
-          { index: true, element: <CommitOverviewTab /> },
-          { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
->>>>>>> e55ef5a... feat(taskrun): remove workspace dependency
-        ],
-      },
-      /* Trigger Release plan */
 
       /* Snapshot Details view */
       {

@@ -73,7 +73,6 @@ type WatchURLStatus = {
 export const getDownloadAllLogsCallback = (
   sortedTaskRunNames: string[],
   taskRuns: TaskRunKind[],
-  workspace: string,
   namespace: string,
   pipelineRunName: string,
 ): (() => Promise<Error>) => {
@@ -151,12 +150,9 @@ export const getDownloadAllLogsCallback = (
         const pipelineRunUID = taskRun?.metadata?.ownerReferences?.find(
           (res) => res.kind === PipelineRunModel.kind,
         )?.uid;
-        allLogs += await getTaskRunLog(
-          workspace,
-          namespace,
-          taskRun?.metadata?.uid,
-          pipelineRunUID,
-        ).then((log) => `${tasks[currTask].name.toUpperCase()}\n\n${log}\n\n`);
+        allLogs += await getTaskRunLog(namespace, taskRun?.metadata?.uid, pipelineRunUID).then(
+          (log) => `${tasks[currTask].name.toUpperCase()}\n\n${log}\n\n`,
+        );
       }
     }
     const buffer = new LineBuffer();
