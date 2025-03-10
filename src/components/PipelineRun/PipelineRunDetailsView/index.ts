@@ -8,7 +8,6 @@ export const pipelineRunDetailsViewLoader = createLoaderWithAccessCheck(
     const ns = params[RouterParams.workspaceName];
     return QueryPipelineRun(
       ns,
-      params[RouterParams.workspaceName],
       params[RouterParams.pipelineRunName],
     );
   },

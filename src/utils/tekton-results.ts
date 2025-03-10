@@ -392,14 +392,14 @@ export const getTaskRunLog = (
 
 export const createTektonResultsQueryKeys = (
   model: K8sModelCommon,
-  workspace: string,
+  namespace: string,
   selector: Selector,
   filter: string,
 ) => {
   const selectorFilter = selectorToFilter(selector);
   return [
     'tekton-results',
-    workspace,
+    namespace,
     { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
     ...(selectorFilter ? [selectorFilter] : []),
     ...(filter ? [filter] : []),
@@ -407,17 +407,11 @@ export const createTektonResultsQueryKeys = (
 };
 
 export const createTektonResultQueryOptions = curry(
-  (
-    fetchFn,
-    model: K8sModelCommon,
-    namespace: string,
-    workspace: string,
-    options: TektonResultsOptions,
-  ) => {
+  (fetchFn, model: K8sModelCommon, namespace: string, options: TektonResultsOptions) => {
     return {
-      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
+      queryKey: createTektonResultsQueryKeys(model, namespace, options?.selector, options?.filter),
       queryFn: async ({ pageParam }) => {
-        const trData = await fetchFn(workspace, namespace, options, pageParam as string);
+        const trData = await fetchFn(namespace, namespace, options, pageParam as string);
         return { data: trData[0], nextPage: trData[1].nextPageToken };
       },
       enabled: !!namespace,

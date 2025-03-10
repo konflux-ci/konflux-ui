@@ -28,7 +28,6 @@ const CommitDetailsView: React.FC = () => {
 
   const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     commitName,
   );
