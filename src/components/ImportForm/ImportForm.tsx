@@ -7,11 +7,12 @@ import { GitImportForm } from './GitImportForm';
 
 const ImportForm: React.FC = () => {
   const applicationName = new URLSearchParams(window.location.search).get('application');
+  const applicationTitle = `Create an ${applicationName ? 'Component' : 'Application'}`;
   const applicationBreadcrumbs = useApplicationBreadcrumbs(applicationName);
   return (
     <PageLayout
-      breadcrumbs={[...applicationBreadcrumbs, { path: '#', name: 'Create an application' }]}
-      title="Create an application"
+      breadcrumbs={[...applicationBreadcrumbs, { path: '#', name: applicationTitle }]}
+      title={applicationTitle}
       description={
         <>
           An application is one or more components that run together.{' '}
