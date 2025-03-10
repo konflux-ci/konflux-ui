@@ -11,7 +11,6 @@ jest.mock('../../../../utils/rbac', () => ({
 }));
 
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
-
 describe('PipelineRunEmptyState', () => {
   beforeEach(() => {
     useNamespaceMock.mockReturnValue('test-ns');

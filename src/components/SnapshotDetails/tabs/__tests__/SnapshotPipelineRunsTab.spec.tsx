@@ -142,7 +142,6 @@ const snapShotPLRs = [
     },
   },
 ];
-
 describe('SnapshotPipelinerunsTab', () => {
   mockUseNamespaceHook('test-ns');
 

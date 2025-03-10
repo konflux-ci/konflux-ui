@@ -180,7 +180,6 @@ const pipelineRuns: PipelineRunKind[] = [
 ];
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-
 describe('Pipeline run List', () => {
   mockUseNamespaceHook('test-ns');
 
