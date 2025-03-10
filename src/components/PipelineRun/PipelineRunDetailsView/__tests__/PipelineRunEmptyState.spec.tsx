@@ -1,12 +1,9 @@
 import { render, screen } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import PipelineRunEmptyState from '../../PipelineRunEmptyState';
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
-}));
-
-jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
 jest.mock('../../../../utils/rbac', () => ({
@@ -14,10 +11,11 @@ jest.mock('../../../../utils/rbac', () => ({
 }));
 
 describe('PipelineRunEmptyState', () => {
+  mockUseNamespaceHook('test-ns');
   it('should render correct Link to Application Name', () => {
     render(<PipelineRunEmptyState applicationName="test" />);
     expect(screen.getByRole('link').getAttribute('href')).toBe(
-      '/workspaces/test-ws/import?application=test',
+      '/workspaces/test-ns/import?application=test',
     );
     screen.getByText('Add component');
   });
