@@ -72,6 +72,8 @@ export const INTEGRATION_TEST_EDIT_PATH = INTEGRATION_TEST_DETAILS_PATH.extend('
 
 export const ACTIVITY_PATH = APPLICATION_DETAILS_PATH.extend('activity');
 
+export const ACTIVITY_PATH_LATEST_COMMIT = ACTIVITY_PATH.extend('latest-commit');
+
 export const PIPELINE_RUNS_LIST_PATH = ACTIVITY_PATH.extend('pipelineruns');
 
 export const PLR_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');

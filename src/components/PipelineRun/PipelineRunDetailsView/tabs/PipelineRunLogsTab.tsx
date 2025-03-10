@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
@@ -8,11 +9,10 @@ import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunLogs } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 const PipelineRunLogsTab: React.FC = () => {
-  const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();
-  const { namespace } = useWorkspaceInfo();
+  const pipelineRunName = useParams<RouterParams>().pipelineRunName;
+  const namespace = useNamespace();
   const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
   const [activeTask, setActiveTask, unSetActiveTask] = useSearchParam('task', undefined);
@@ -49,7 +49,6 @@ const PipelineRunLogsTab: React.FC = () => {
       className="pf-v5-u-pt-md"
       obj={pipelineRun}
       taskRuns={taskRuns}
-      workspace={workspace}
       activeTask={activeTask}
       onActiveTaskChange={handleActiveTaskChange}
     />

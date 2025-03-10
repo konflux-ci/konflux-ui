@@ -1,12 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
+import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../../../../utils/test-utils';
 import { PipelineRunListRow } from '../../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { pipelineWithCommits } from '../../../__data__/pipeline-with-commits';
 import CommitsPipelineRunTab from '../CommitsPipelineRunTab';
+
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('../../../../../shared/components/table/VirtualBody', () => {
   return {
@@ -66,6 +68,7 @@ describe('Commit Pipelinerun List', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({ applicationName: appName, commitName: 'test-sha-1' });
     jest.clearAllMocks();
+    useNamespaceMock.mockReturnValue('test-ns');
   });
   it('should render error state if the API errors out', () => {
     usePipelineRunsForCommitMock.mockReturnValue([

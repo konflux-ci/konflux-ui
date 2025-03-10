@@ -1,6 +1,5 @@
 import React from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunKind, TaskRunKind } from '../types';
 import { getPipelineRunFromTaskRunOwnerRef } from '../utils/common-utils';
 import {
@@ -62,7 +61,6 @@ export const useTRTaskRunLog = (
   namespace: string,
   taskRun: TaskRunKind,
 ): [string, boolean, unknown] => {
-  const { workspace } = useWorkspaceInfo();
   const [result, setResult] = React.useState<[string, boolean, unknown]>([null, false, undefined]);
   const taskRunUid = taskRun.metadata.uid;
   const pipelineRunUid = getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid;
@@ -71,7 +69,7 @@ export const useTRTaskRunLog = (
     if (namespace && taskRunUid) {
       void (async () => {
         try {
-          const log = await getTaskRunLog(workspace, namespace, taskRunUid, pipelineRunUid);
+          const log = await getTaskRunLog(namespace, taskRunUid, pipelineRunUid);
           if (!disposed) {
             setResult([log, true, undefined]);
           }
@@ -85,6 +83,6 @@ export const useTRTaskRunLog = (
     return () => {
       disposed = true;
     };
-  }, [workspace, namespace, taskRunUid, pipelineRunUid]);
+  }, [namespace, taskRunUid, pipelineRunUid]);
   return result;
 };
