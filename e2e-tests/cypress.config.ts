@@ -112,7 +112,10 @@ export default defineConfig({
 
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
       if (config.env.PR_CHECK === true) {
-        config.env.HAC_NAMESPACE = `user-ns1`;
+        // According to the screenshot, currently there are two ns
+        // "user-ns1" and "user-ns2". Now we just enjoy the user-ns2.
+        // I guess we need to improve this part for hard-code ns.
+        config.env.HAC_NAMESPACE = `user-ns2`;
       } else {
         config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
       }
