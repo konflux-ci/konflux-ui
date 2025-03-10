@@ -1,7 +1,8 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useTaskRuns } from '../../../hooks/useTaskRuns';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { getTaskRunLog } from '../../../utils/tekton-results';
-import { createK8sUtilMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
+import { createK8sUtilMock } from '../../../utils/test-utils';
 import {
   mockEnterpriseContractJSON,
   mockEnterpriseContractUIData,
@@ -17,6 +18,10 @@ jest.mock('../../../hooks/useTaskRuns', () => ({
   useTaskRuns: jest.fn(),
 }));
 
+jest.mock('../../../shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(),
+}));
+
 jest.mock('../../../utils/tekton-results', () => ({
   getTaskRunLog: jest.fn(),
 }));
@@ -24,12 +29,11 @@ jest.mock('../../../utils/tekton-results', () => ({
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
 const mockUseTaskRuns = useTaskRuns as jest.Mock;
-const mockWorkspaceInfo = createUseWorkspaceInfoMock();
 
 describe('useEnterpriseContractResultFromLogs', () => {
   beforeEach(() => {
-    mockWorkspaceInfo.mockReturnValue({ namespace: 'test-ns', workspace: 'test-ws' });
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
+    (useNamespace as jest.Mock).mockReturnValue('test-ns');
     mockUseTaskRuns.mockReturnValue([
       [
         {

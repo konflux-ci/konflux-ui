@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
@@ -10,10 +9,9 @@ export const useLatestBuildPipelines = (
   applicationName: string,
   componentNames: string[] | undefined,
 ): [PipelineRunKind[], boolean, unknown] => {
-  const { workspace } = useWorkspaceInfo();
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestBuilds, setLatestBuilds] = React.useState<PipelineRunKind[]>([]);
-  const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
 
   React.useEffect(() => {
     setFoundNames([]);
@@ -26,7 +24,6 @@ export const useLatestBuildPipelines = (
 
   const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
     applicationLoaded ? namespace : null,
-    workspace,
     React.useMemo(
       () => ({
         selector: {

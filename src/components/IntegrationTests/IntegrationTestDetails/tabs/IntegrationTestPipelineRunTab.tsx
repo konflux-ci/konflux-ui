@@ -21,7 +21,6 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage] = usePipelineRuns(
     namespace,
-    null,
     React.useMemo(
       () => ({
         selector: {

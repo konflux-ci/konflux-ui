@@ -121,7 +121,6 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
         ? getDownloadAllLogsCallback(
             taskRunNames,
             taskRuns,
-            workspace,
             obj.metadata?.namespace,
             obj.metadata?.name,
           )

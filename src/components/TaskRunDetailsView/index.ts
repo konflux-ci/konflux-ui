@@ -6,7 +6,7 @@ import { createLoaderWithAccessCheck } from '../../utils/rbac';
 export const taskRunDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = params[RouterParams.workspaceName];
-    return QueryTaskRun(ns, params[RouterParams.workspaceName], params[RouterParams.taskRunName]);
+    return QueryTaskRun(ns, params[RouterParams.taskRunName]);
   },
   { model: TaskRunModel, verb: 'list' },
 );
