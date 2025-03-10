@@ -17,7 +17,7 @@ import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
-import { useNamespace } from '../../shared/providers/Namespace';
+import { useNamespace, useNamespaceInfo } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types/release';
 import { calculateDuration } from '../../utils/pipeline-utils';
 import MetadataList from '../MetadataList';
@@ -39,6 +39,7 @@ const getNamespaceAndPRName = (
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const { namespaces } = useNamespaceInfo();
   const [release] = useRelease(namespace, releaseName);
   const [prNamespace, pipelineRun] = getNamespaceAndPRName(getPipelineRunFromRelease(release));
   const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release.spec.releasePlan);
@@ -47,6 +48,11 @@ const ReleaseOverviewTab: React.FC = () => {
     typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
   );
   const status = useReleaseStatus(release);
+  const releaseNamespace = React.useMemo(() => {
+    return namespaces.map((obj) => obj.metadata.name).includes(prNamespace)
+      ? prNamespace
+      : namespace;
+  }, [namespaces, namespace, prNamespace]);
 
   if (!releasePlanLoaded) {
     return (
@@ -152,8 +158,10 @@ const ReleaseOverviewTab: React.FC = () => {
                       {pipelineRun}
                     </Link>
                   ) : (
-                    <Link to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}>
-                      {namespace}
+                    <Link
+                      to={APPLICATION_LIST_PATH.createPath({ workspaceName: releaseNamespace })}
+                    >
+                      {releaseNamespace}
                     </Link>
                   )}
                 </DescriptionListDescription>
