@@ -10,6 +10,7 @@ import {
   Skeleton,
   Title,
 } from '@patternfly/react-core';
+import { COMMIT_DETAILS_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SnapshotLabels } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
@@ -83,7 +84,11 @@ const SnapshotOverviewTab: React.FC = () => {
                   <DescriptionListTerm>Triggered by</DescriptionListTerm>
                   <DescriptionListDescription data-test="snapshot-commit-link">
                     <Link
-                      to={`/workspaces/${namespace}/applications/${snapshot.spec.application}/commit/${commit.sha}`}
+                      to={COMMIT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName: snapshot.spec.application,
+                        commitName: commit.sha,
+                      })}
                       title={commit.displayName || commit.shaTitle}
                     >
                       {commit.displayName || commit.shaTitle}{' '}
