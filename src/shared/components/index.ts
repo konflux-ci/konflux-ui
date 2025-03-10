@@ -8,3 +8,4 @@ export * from './markdown-view';
 export * from './help-tooltip';
 export * from './pipeline-run-logs';
 export * from './ContextSwitcher';
+export { default as ExternalLink } from './links/ExternalLink';

@@ -34,7 +34,6 @@ export const useCommitWorkflowData = (
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
     namespace,
-    workspace,
     applicationName,
   );
   const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommit(

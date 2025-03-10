@@ -4,17 +4,22 @@ import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestScenarios';
 import { HttpError } from '../../../k8s/error';
 import { IntegrationTestScenarioModel } from '../../../models';
+import {
+  INTEGRATION_TEST_DETAILS_PATH,
+  INTEGRATION_TEST_EDIT_PATH,
+  INTEGRATION_TEST_LIST_PATH,
+} from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { integrationTestDeleteModalAndNavigate } from '../IntegrationTestsListView/useIntegrationTestActions';
 
 const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { integrationTestName, applicationName } = useParams<RouterParams>();
 
   const showModal = useModalLauncher();
@@ -31,7 +36,6 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
 
   const [integrationTest, loaded, loadErr] = useIntegrationTestScenario(
     namespace,
-    workspace,
     applicationName,
     integrationTestName,
   );
@@ -53,11 +57,18 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/integrationtests`,
+            path: INTEGRATION_TEST_LIST_PATH.createPath({
+              applicationName,
+              workspaceName: namespace,
+            }),
             name: 'Integration tests',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/integrationtests/${integrationTestName}`,
+            path: INTEGRATION_TEST_DETAILS_PATH.createPath({
+              applicationName,
+              integrationTestName,
+              workspaceName: namespace,
+            }),
             name: integrationTest.metadata.name,
           },
         ]}
@@ -72,7 +83,11 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
             label: 'Edit',
             component: (
               <Link
-                to={`/workspaces/${workspace}/applications/${applicationName}/integrationtests/${integrationTestName}/edit`}
+                to={INTEGRATION_TEST_EDIT_PATH.createPath({
+                  applicationName,
+                  integrationTestName,
+                  workspaceName: namespace,
+                })}
               >
                 Edit
               </Link>
@@ -87,7 +102,10 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
               ).closed.then(({ submitClicked }) => {
                 if (submitClicked)
                   navigate(
-                    `/workspaces/${workspace}/applications/${applicationName}/integrationtests`,
+                    INTEGRATION_TEST_LIST_PATH.createPath({
+                      applicationName,
+                      workspaceName: namespace,
+                    }),
                   );
               }),
             key: `delete-${integrationTest.metadata.name.toLowerCase()}`,

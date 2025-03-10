@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url';
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { getWebpackAliases } from './aliases.config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,5 +41,6 @@ export default {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '...'],
     modules: ['src', 'node_modules'],
+    alias: getWebpackAliases(),
   },
 };

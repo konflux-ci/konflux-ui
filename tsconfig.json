@@ -1,5 +1,11 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/*"],
+      "@routes/*": ["src/routes/*"]
+    },
+
     "composite": true,
     "target": "ES2020",
     "useDefineForClassFields": true,

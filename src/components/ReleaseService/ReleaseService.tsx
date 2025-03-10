@@ -3,13 +3,11 @@ import { Link } from 'react-router-dom';
 import { ReleasePlanModel } from '../../models';
 import { RELEASEPLAN_CREATE_PATH } from '../../routes/paths';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { DetailsPage } from '../DetailsPage';
 
 export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
-  const breadcrumbs = useWorkspaceBreadcrumbs();
   const [canCreateReleasePlan] = useAccessReviewForModel(ReleasePlanModel, 'create');
   return (
     <>
@@ -30,13 +28,6 @@ export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => 
             ),
             disabled: !canCreateReleasePlan,
             disabledTooltip: "You don't have access to create a release plan",
-          },
-        ]}
-        breadcrumbs={[
-          ...breadcrumbs,
-          {
-            path: '#',
-            name: 'Releases',
           },
         ]}
         tabs={[
