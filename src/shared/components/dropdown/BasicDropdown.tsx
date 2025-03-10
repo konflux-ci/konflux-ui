@@ -1,19 +1,19 @@
-import React from 'react';
-import { Badge, ValidatedOptions } from '@patternfly/react-core';
+import React, { useCallback } from 'react';
 import {
+  Badge,
   Dropdown,
-  DropdownToggle,
   DropdownItem,
-  DropdownItemProps,
-  DropdownSeparator,
-} from '@patternfly/react-core/deprecated';
+  DropdownToggleProps,
+  ValidatedOptions,
+} from '@patternfly/react-core';
 import './BasicDropdown.scss';
 
 export type DropdownItemObject = {
   key: string;
   value: string;
+  description?: string;
   separator?: boolean;
-} & DropdownItemProps;
+};
 
 type BasicDropdownProps = {
   items: DropdownItemObject[];
@@ -44,36 +44,17 @@ const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
   onChange,
   placeholder,
   disabled,
-  dropdownToggle,
   validated,
 }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState<boolean>(false);
-  const onToggle = (
-    _:
-      | MouseEvent
-      | TouchEvent
-      | KeyboardEvent
-      | React.KeyboardEvent<unknown>
-      | React.MouseEvent<HTMLButtonElement>,
-    isOpen: boolean,
-  ) => setDropdownOpen(isOpen);
-  // We enjoys the DropDown from the following file
-  // node_modules/@patternfly/react-core/src/deprecated/components/Dropdown/Dropdown.tsx
-  // The onSelect of it just supports event.
-  // If we enjoy (event: React.SyntheticEvent, value: string), we would
-  // meet error: Type '(event: React.SyntheticEvent, value: string) => void'
-  // is not assignable to type '(event?: SyntheticEvent<HTMLDivElement, Event>) => void'.
-  const onSelect = (event: React.SyntheticEvent<HTMLDivElement>) => {
-    // When the dropdown has the description, the currentTarget.textContent
-    // would contain main + description. And we just need the main value.
-    const targetClassName = 'pf-v5-c-dropdown__menu-item-main';
-    const targetText =
-      event.currentTarget.querySelector(`.${targetClassName}`)?.textContent ||
-      event.currentTarget.textContent;
 
-    onChange && onChange(targetText);
-    setDropdownOpen(false);
-  };
+  const onSelect = useCallback(
+    (value: string) => {
+      onChange && onChange(value);
+      setDropdownOpen(false);
+    },
+    [onChange],
+  );
 
   const recommendedBadge = React.useMemo(
     () => (
@@ -84,12 +65,15 @@ const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
     [],
   );
 
-  const dropdownToggleComponent = React.useMemo(
-    () =>
-      dropdownToggle ? (
-        dropdownToggle(onToggle)
-      ) : (
-        <DropdownToggle onToggle={onToggle} isDisabled={disabled} data-test="dropdown-toggle">
+  const dropdownToggleComponent: DropdownToggleProps = React.useMemo(
+    () => ({
+      toggleNode: (
+        <div
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="dropdown-toggle"
+          aria-disabled={disabled}
+          data-test="dropdown-toggle"
+        >
           {selected ? (
             <>
               {selected}
@@ -98,39 +82,50 @@ const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
           ) : (
             placeholder
           )}
-        </DropdownToggle>
+        </div>
       ),
-    [dropdownToggle, disabled, selected, recommended, recommendedBadge, placeholder],
+    }),
+    [disabled, selected, recommended, recommendedBadge, placeholder, dropdownOpen],
   );
 
   const dropdownItems = React.useMemo(
     () =>
       items.map((item) => {
-        const { key, value, separator, ...props } = item;
+        const { key, value, description, separator } = item;
         if (separator) {
-          return <DropdownSeparator key={key} />;
+          return (
+            <DropdownItem key={key} component="div">
+              <hr />
+            </DropdownItem>
+          );
         }
         return (
-          <DropdownItem key={key} {...props}>
-            {value}
+          <DropdownItem
+            key={key}
+            onClick={() => onSelect(value)}
+            component="div"
+            data-test={`dropdown-item-${key}`}
+          >
+            <div>{value}</div>
+            {description && <div className="dropdown-item-description">{description}</div>}
             {value === recommended && recommendedBadge}
           </DropdownItem>
         );
       }),
-    [items, recommended, recommendedBadge],
+    [items, onSelect, recommended, recommendedBadge],
   );
+
   return (
     <Dropdown
-      onSelect={onSelect}
       toggle={dropdownToggleComponent}
       isOpen={dropdownOpen}
-      dropdownItems={dropdownItems}
-      autoFocus={false}
-      disabled={disabled}
+      onSelect={(_event, value) => onSelect(value as string)}
       className="basic-dropdown"
       data-test="dropdown"
       {...(validated === ValidatedOptions.error && { 'aria-invalid': true })}
-    />
+    >
+      {dropdownItems}
+    </Dropdown>
   );
 };
 
