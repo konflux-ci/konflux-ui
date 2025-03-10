@@ -25,12 +25,6 @@ import {
 } from '../components/PipelineRun/PipelineRunDetailsView';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
 import {
-  SnapshotDetailsView,
-  snapshotDetailsViewLoader,
-  SnapshotOverviewTab,
-  SnapshotPipelineRunsTab,
-} from '../components/SnapshotDetails';
-import {
   TaskRunDetailsTab,
   TaskRunDetailsViewLayout,
   taskRunDetailsViewLoader,
@@ -54,6 +48,7 @@ import workspaceRoutes from './page-routes/namespace';
 import releaseRoutes from './page-routes/release';
 import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
+import snapshotRoutes from './page-routes/snapshots';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams, RouterParams } from './utils';
 
@@ -83,6 +78,7 @@ export const router = createBrowserRouter([
       ...releaseServiceRoutes,
       ...secretRoutes,
       ...integrationTestRoutes,
+      ...snapshotRoutes,
       /* Application details */
       {
         path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
@@ -154,27 +150,6 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <CommitOverviewTab /> },
           { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
-        ],
-      },
-      /* Trigger Release plan */
-
-      /* Snapshot Details view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
-        loader: snapshotDetailsViewLoader,
-        element: <SnapshotDetailsView />,
-        errorElement: <RouteErrorBoundry />,
-        children: [
-          {
-            index: true,
-            element: <SnapshotOverviewTab />,
-            errorElement: <RouteErrorBoundry />,
-          },
-          {
-            path: 'pipelineruns',
-            element: <SnapshotPipelineRunsTab />,
-            errorElement: <RouteErrorBoundry />,
-          },
         ],
       },
       /* User Acess routes */

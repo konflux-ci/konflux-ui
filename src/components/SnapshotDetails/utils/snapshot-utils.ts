@@ -1,7 +1,7 @@
-import { SnapshotLabels } from '../../../consts/pipelinerun';
-import { K8sQueryPatchResource } from '../../../k8s';
-import { SnapshotModel } from '../../../models';
-import { Snapshot } from '../../../types/coreBuildService';
+import { SnapshotLabels } from '~/consts/pipelinerun';
+import { K8sQueryPatchResource } from '~/k8s';
+import { SnapshotModel } from '~/models';
+import { Snapshot } from '~/types/coreBuildService';
 
 export interface ErrorStatus {
   scenario: string;

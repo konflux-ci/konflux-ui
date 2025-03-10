@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { EmptyStateBody, EmptyStateActions } from '@patternfly/react-core';
+import { IMPORT_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import emptyStateImgUrl from '../../../assets/Commit.svg';
 import { ComponentModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 type SnapshotComponentsEmptyStateProps = {
   applicationName: string;
@@ -15,7 +16,7 @@ type SnapshotComponentsEmptyStateProps = {
 const SnapshotComponentsEmptyState: React.FC<
   React.PropsWithChildren<SnapshotComponentsEmptyStateProps>
 > = ({ applicationName }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 
   return (
@@ -30,7 +31,7 @@ const SnapshotComponentsEmptyState: React.FC<
           component={(props) => (
             <Link
               {...props}
-              to={`/workspaces/${workspace}/import?application=${applicationName}`}
+              to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
             />
           )}
           variant="secondary"
@@ -40,7 +41,7 @@ const SnapshotComponentsEmptyState: React.FC<
             link_name: 'add-component',
             link_location: 'commits-empty-state',
             app_name: applicationName,
-            workspace,
+            namespace,
           }}
         >
           Add component

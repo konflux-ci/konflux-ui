@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
 import { createK8sWatchResourceMock } from '../../../../../utils/test-utils';
@@ -25,10 +26,6 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(),
   useParams: jest.fn(),
-}));
-
-jest.mock('../../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 jest.mock('../../../../../hooks/useTektonResults');
 jest.mock('../../../../../hooks/usePipelineRuns', () => ({
@@ -65,6 +62,7 @@ const commitPlrs = [
 ];
 
 describe('Commit Pipelinerun List', () => {
+  mockUseNamespaceHook('test-ns');
   beforeEach(() => {
     useParamsMock.mockReturnValue({ applicationName: appName, commitName: 'test-sha-1' });
     jest.clearAllMocks();
@@ -98,7 +96,7 @@ describe('Commit Pipelinerun List', () => {
     const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 

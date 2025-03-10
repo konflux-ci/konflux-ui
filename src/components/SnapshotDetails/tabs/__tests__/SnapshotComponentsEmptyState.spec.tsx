@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import SnapshotComponentsEmptyState from '../SnapshotComponentsEmptyState';
 
 jest.mock('react-router-dom', () => ({
@@ -11,12 +11,12 @@ jest.mock('../../../../utils/rbac', () => ({
 }));
 
 describe('SnapshotComponentsEmptyState', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   it('should render correct Link to Application Name', () => {
     render(<SnapshotComponentsEmptyState applicationName="test" />);
     expect(screen.getByRole('link').getAttribute('href')).toBe(
-      '/workspaces/test-ws/import?application=test',
+      '/workspaces/test-ns/import?application=test',
     );
     screen.getByText('Add component');
   });

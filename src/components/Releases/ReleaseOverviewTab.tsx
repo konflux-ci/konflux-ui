@@ -11,6 +11,7 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
@@ -124,7 +125,11 @@ const ReleaseOverviewTab: React.FC = () => {
                   <DescriptionListTerm>Snapshot</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Link
-                      to={`/workspaces/${namespace}/applications/${releasePlan.spec.application}/snapshots/${release.spec.snapshot}`}
+                      to={SNAPSHOT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName: releasePlan.spec.application,
+                        snapshotName: release.spec.snapshot,
+                      })}
                     >
                       {release.spec.snapshot}
                     </Link>

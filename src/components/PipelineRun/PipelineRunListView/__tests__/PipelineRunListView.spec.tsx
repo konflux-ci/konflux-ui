@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-// import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind } from '../../../../types';
-import { createUseWorkspaceInfoMock, createUseApplicationMock } from '../../../../utils/test-utils';
+import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
@@ -180,7 +180,7 @@ const pipelineRuns: PipelineRunKind[] = [
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 
 describe('Pipeline run List', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useSearchParamMock.mockImplementation(mockUseSearchParam);
@@ -214,7 +214,7 @@ describe('Pipeline run List', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 
