@@ -58,7 +58,7 @@ export const RELEASEPLAN_CREATE_PATH = RELEASEPLAN_PATH.extend(`create`);
 export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
 // Integration test paths
 
-export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend('integrationtests');
+export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`integrationtests`);
 
 export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
   `:${RouterParams.integrationTestName}`,
@@ -112,12 +112,6 @@ export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`)
 export const ACTIVITY_LIST_PATH = APPLICATION_DETAILS_PATH.extend('activity');
 export const ACTIVITY_PLR_PATH = ACTIVITY_LIST_PATH.extend('pipelineruns');
 export const ACTIVITY_COMMIT_PATH = ACTIVITY_LIST_PATH.extend('latest-commits');
-
-export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`integrationTest`);
-
-export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
-  `:${RouterParams.integrationTestName}`,
-);
 
 // Snapshot routes
 
