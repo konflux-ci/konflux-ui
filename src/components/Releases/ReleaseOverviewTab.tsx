@@ -11,6 +11,7 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { APPLICATION_LIST_PATH, PIPELINE_RUNS_DETAILS_PATH } from '@routes/paths';
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
@@ -142,12 +143,18 @@ const ReleaseOverviewTab: React.FC = () => {
                 <DescriptionListDescription>
                   {pipelineRun && prNamespace && releasePlanLoaded ? (
                     <Link
-                      to={`/workspaces/${prNamespace}/applications/${releasePlan.spec.application}/pipelineruns/${pipelineRun}`}
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                        workspaceName: prNamespace,
+                        applicationName: releasePlan.spec.application,
+                        pipelineRunName: pipelineRun,
+                      })}
                     >
                       {pipelineRun}
                     </Link>
                   ) : (
-                    '-'
+                    <Link to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}>
+                      {namespace}
+                    </Link>
                   )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
