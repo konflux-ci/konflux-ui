@@ -8,7 +8,7 @@ export const secretListViewLoader = createLoaderWithAccessCheck(
     const ns = params[RouterParams.workspaceName];
     return await K8sQueryListResourceItems({
       model: SecretModel,
-      queryOptions: { ns, ws: params[RouterParams.workspaceName] },
+      queryOptions: { ns },
     });
   },
   { model: SecretModel, verb: 'list' },

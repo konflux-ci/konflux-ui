@@ -16,7 +16,6 @@ export const integrationTestEditFormLoader = createLoaderWithAccessCheck(
       model: IntegrationTestScenarioModel,
       queryOptions: {
         ns,
-        ws: params[RouterParams.workspaceName],
         name: params[RouterParams.integrationTestName],
       },
     });

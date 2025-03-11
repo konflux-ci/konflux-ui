@@ -10,7 +10,6 @@ export const componentDetailsViewLoader = createLoaderWithAccessCheck(
       model: ComponentModel,
       queryOptions: {
         ns,
-        ws: params[RouterParams.workspaceName],
         name: params[RouterParams.componentName],
       },
     });

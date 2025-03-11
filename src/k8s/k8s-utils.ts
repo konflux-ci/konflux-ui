@@ -142,7 +142,7 @@ export const getK8sResourceURL = (
   isCreate = false,
 ) => {
   const { ns, name, path, queryParams } = queryOptions;
-  let resourcePath = getK8sAPIPath(model, queryOptions.ws);
+  let resourcePath = getK8sAPIPath(model);
 
   if (resource?.metadata?.namespace) {
     resourcePath += `/namespaces/${resource.metadata.namespace}`;
@@ -310,7 +310,6 @@ export const convertToK8sQueryParams = (
   return {
     ns: resourceInit.namespace,
     name: resourceInit.name,
-    ws: resourceInit.workspace,
     queryParams,
   };
 };

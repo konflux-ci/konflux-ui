@@ -12,6 +12,8 @@ import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
 
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
+
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
@@ -178,7 +180,6 @@ const pipelineRuns: PipelineRunKind[] = [
 ];
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-
 describe('Pipeline run List', () => {
   mockUseNamespaceHook('test-ns');
 
@@ -186,6 +187,7 @@ describe('Pipeline run List', () => {
     useSearchParamMock.mockImplementation(mockUseSearchParam);
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render spinner if application data is not loaded', () => {

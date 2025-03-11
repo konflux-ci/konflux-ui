@@ -36,6 +36,7 @@ jest.mock('../../../../hooks/useSnapshots', () => ({
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParam: jest.fn(),
 }));
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('../../../../shared/components/table', () => {
   const actual = jest.requireActual('../../../../shared/components/table');
@@ -158,6 +159,7 @@ describe('SnapshotPipelinerunsTab', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
+    useNamespaceMock.mockReturnValue('test-ns');
     useSearchParamMock.mockImplementation(mockUseSearchParam);
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
