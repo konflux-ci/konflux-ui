@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useTaskRuns } from '../../../hooks/useTaskRuns';
-import { useNamespace } from '../../../shared/providers/Namespace';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { getTaskRunLog } from '../../../utils/tekton-results';
 import { createK8sUtilMock } from '../../../utils/test-utils';
 import {
@@ -18,10 +18,6 @@ jest.mock('../../../hooks/useTaskRuns', () => ({
   useTaskRuns: jest.fn(),
 }));
 
-jest.mock('../../../shared/providers/Namespace', () => ({
-  useNamespace: jest.fn(),
-}));
-
 jest.mock('../../../utils/tekton-results', () => ({
   getTaskRunLog: jest.fn(),
 }));
@@ -33,7 +29,7 @@ const mockUseTaskRuns = useTaskRuns as jest.Mock;
 describe('useEnterpriseContractResultFromLogs', () => {
   beforeEach(() => {
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
-    (useNamespace as jest.Mock).mockReturnValue('test-ns');
+    mockUseNamespaceHook('test-ns');
     mockUseTaskRuns.mockReturnValue([
       [
         {
