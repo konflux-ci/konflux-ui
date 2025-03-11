@@ -79,3 +79,11 @@ export const PLR_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
 export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.pipelineRunName}`);
 
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
+
+// Snapshot paths
+
+export const SNAPSHOT_DETAILS_PATH = APPLICATION_DETAILS_PATH.extend(
+  `snapshots/:${RouterParams.snapshotName}`,
+);
+
+export const SNAPSHOT_DETAILS_PIPELINE_RUN_PATH = SNAPSHOT_DETAILS_PATH.extend('pipelineruns');

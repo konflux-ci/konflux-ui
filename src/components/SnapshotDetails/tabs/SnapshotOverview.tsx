@@ -10,6 +10,8 @@ import {
   Skeleton,
   Title,
 } from '@patternfly/react-core';
+import { COMMIT_DETAILS_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { SnapshotLabels } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { useScanResults } from '../../../hooks/useScanResults';
@@ -19,13 +21,12 @@ import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { createCommitObjectFromPLR } from '../../../utils/commits-utils';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ScanStatus } from '../../PipelineRun/PipelineRunListView/ScanStatus';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import SnapshotComponentsList from './SnapshotComponentsList';
 import { SnapshotComponentTableData } from './SnapshotComponentsListRow';
 
 const SnapshotOverviewTab: React.FC = () => {
   const { snapshotName } = useParams<RouterParams>();
-  const { workspace, namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
@@ -35,7 +36,8 @@ const SnapshotOverviewTab: React.FC = () => {
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
     snapshot?.metadata?.namespace,
-    workspace,
+    // temporary until pipelines are migrated
+    namespace,
     buildPipelineName,
   );
 
@@ -82,7 +84,11 @@ const SnapshotOverviewTab: React.FC = () => {
                   <DescriptionListTerm>Triggered by</DescriptionListTerm>
                   <DescriptionListDescription data-test="snapshot-commit-link">
                     <Link
-                      to={`/workspaces/${workspace}/applications/${snapshot.spec.application}/commit/${commit.sha}`}
+                      to={COMMIT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName: snapshot.spec.application,
+                        commitName: commit.sha,
+                      })}
                       title={commit.displayName || commit.shaTitle}
                     >
                       {commit.displayName || commit.shaTitle}{' '}

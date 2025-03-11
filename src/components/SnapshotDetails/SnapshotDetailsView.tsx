@@ -1,6 +1,8 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { SnapshotLabels } from '../../consts/pipelinerun';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
@@ -12,10 +14,9 @@ import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const SnapshotDetailsView: React.FC = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { snapshotName, applicationName } = useParams<RouterParams>();
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
@@ -29,7 +30,8 @@ const SnapshotDetailsView: React.FC = () => {
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
     snapshot?.metadata?.namespace,
-    workspace,
+    // Temporary until pipeline runs are migrated
+    namespace,
     buildPipelineName,
   );
 
@@ -67,7 +69,11 @@ const SnapshotDetailsView: React.FC = () => {
             name: 'Snapshots',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshotName}`,
+            path: SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              snapshotName,
+            }),
             name: snapshot.metadata.name,
           },
         ]}
@@ -95,7 +101,11 @@ const SnapshotDetailsView: React.FC = () => {
             )}
           </>
         }
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshotName}`}
+        baseURL={SNAPSHOT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          snapshotName,
+        })}
         tabs={[
           {
             key: 'index',
