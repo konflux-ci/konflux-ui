@@ -21,7 +21,6 @@ export const watchListResource = (
       labelSelector: queryOptions.queryParams.labelSelector,
       ns: queryOptions.ns,
       fieldSelector: queryOptions.queryParams.fieldSelector,
-      ws: queryOptions.ws,
       // resourceVersion: response.metadata.resourceVersion,
     },
     { ...fetchOptions, timeout: 60_000 },
@@ -92,7 +91,6 @@ export const watchObjectResource = (
       labelSelector: queryOptions.queryParams.labelSelector,
       ns: queryOptions.ns,
       fieldSelector: `metadata.name=${queryOptions.name}`,
-      ws: queryOptions.ws,
     },
     fetchOptions,
   ).onBulkMessage((events: MessageDataType[]) => {

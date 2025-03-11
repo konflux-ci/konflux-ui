@@ -34,7 +34,7 @@ export const K8sQueryUpdateResource = <TResource extends K8sResourceCommon>(
       void queryClient.invalidateQueries({
         queryKey: createQueryKeys({
           model: requestInit.model,
-          queryOptions: { ws: requestInit.queryOptions.ws, ns: requestInit.queryOptions.ns },
+          queryOptions: { ns: requestInit.queryOptions.ns },
         }),
       });
   });
@@ -46,7 +46,7 @@ export const K8sQueryPatchResource = (requestInit: K8sResourcePatchOptions) => {
       void queryClient.invalidateQueries({
         queryKey: createQueryKeys({
           model: requestInit.model,
-          queryOptions: { ws: requestInit.queryOptions.ws, ns: requestInit.queryOptions.ns },
+          queryOptions: { ns: requestInit.queryOptions.ns },
         }),
       });
   });
@@ -60,7 +60,7 @@ export const K8sQueryCreateResource = <TResource extends K8sResourceCommon>(
       void queryClient.invalidateQueries({
         queryKey: createQueryKeys({
           model: requestInit.model,
-          queryOptions: { ws: requestInit.queryOptions.ws, ns: requestInit.queryOptions.ns },
+          queryOptions: { ns: requestInit.queryOptions.ns },
         }),
       });
   });
@@ -74,7 +74,7 @@ export const K8sQueryDeleteResource = <TResource extends K8sResourceCommon>(
       void queryClient.invalidateQueries({
         queryKey: createQueryKeys({
           model: requestInit.model,
-          queryOptions: { ws: requestInit.queryOptions.ws, ns: requestInit.queryOptions.ns },
+          queryOptions: { ns: requestInit.queryOptions.ns },
         }),
       });
   });
