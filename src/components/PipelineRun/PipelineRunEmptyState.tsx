@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { EmptyStateBody, EmptyStateActions } from '@patternfly/react-core';
-import { IMPORT_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import emptyStateImgUrl from '../../assets/Pipeline.svg';
 import { ComponentModel } from '../../models';
+import { IMPORT_PATH } from '../../routes/paths';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
@@ -41,7 +41,6 @@ const PipelineRunEmptyState: React.FC<React.PropsWithChildren<PipelineRunEmptySt
             link_name: 'add-component',
             link_location: 'pipeline-run-empty-state',
             app_name: applicationName,
-            namespace,
           }}
         >
           Add component

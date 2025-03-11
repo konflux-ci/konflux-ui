@@ -71,7 +71,6 @@ export const useEnterpriseContractResultFromLogs = (
         try {
           const pid = getPipelineRunFromTaskRunOwnerRef(taskRun[0])?.uid;
           const logs = await getTaskRunLog(
-            workspace,
             taskRun[0].metadata.namespace,
             taskRun[0].metadata.uid,
             pid,

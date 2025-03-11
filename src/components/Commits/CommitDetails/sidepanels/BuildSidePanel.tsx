@@ -11,9 +11,15 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
+import { useNamespace } from '~/shared/providers/Namespace';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
+import {
+  PIPELINE_RUNS_DETAILS_PATH,
+  COMPONENT_DETAILS_PATH,
+  PIPELINE_RUNS_LOG_PATH,
+} from '../../../../routes/paths';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { PipelineRunKind } from '../../../../types';
 import {
@@ -24,7 +30,6 @@ import {
 import RunResultsList from '../../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
 
 export interface PipelineSidePanelBodyProps {
@@ -36,7 +41,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
   workflowNode,
   onClose,
 }) => {
-  const { workspace, namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const pipelineRun = workflowData.resource as PipelineRunKind;
   const [taskRuns] = useTaskRuns(namespace, pipelineRun.metadata.name);
@@ -64,7 +69,11 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
         <DrawerHead data-test="build-side-panel-head">
           <span className="commit-side-panel__head-title">
             <Link
-              to={`/workspaces/${workspace}/applications/${workflowData.application}/pipelineruns/${pipelineRun.metadata.name}`}
+              to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: workflowData.application,
+                pipelineRunName: pipelineRun.metadata.name,
+              })}
             >
               {pipelineRun.metadata.name}
             </Link>
@@ -118,9 +127,11 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
                 {pipelineRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                   pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                     <Link
-                      to={`/workspaces/${workspace}/applications/${
-                        pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION]
-                      }/components/${pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]}`}
+                      to={COMPONENT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName: pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
+                        componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
+                      })}
                     >
                       {pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]}
                     </Link>
@@ -136,7 +147,11 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
             <DescriptionListGroup>
               <DescriptionListDescription>
                 <Link
-                  to={`/workspaces/${workspace}/applications/${workflowData.application}/pipelineruns/${pipelineRun.metadata.name}/logs`}
+                  to={PIPELINE_RUNS_LOG_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: workflowData.application,
+                    pipelineRunName: pipelineRun.metadata.name,
+                  })}
                 >
                   View logs
                 </Link>

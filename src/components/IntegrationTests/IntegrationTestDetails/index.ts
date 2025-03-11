@@ -9,7 +9,6 @@ export const integrationDetailsPageLoader = createLoaderWithAccessCheck(
     return k8sQueryGetResource({
       model: IntegrationTestScenarioModel,
       queryOptions: {
-        ws: params[RouterParams.workspaceName],
         ns,
         name: params[RouterParams.integrationTestName],
       },

@@ -248,14 +248,12 @@ export const getSecretTypetoLabel = (obj: SecretKind) => {
 export const createSecretResource = async (
   secretResource: SecretKind,
   namespace: string,
-  workspace: string,
   dryRun: boolean,
 ): Promise<SecretKind> =>
   K8sQueryCreateResource({
     model: SecretModel,
     queryOptions: {
       ns: namespace,
-      ws: workspace,
       ...(dryRun && { queryParams: { dryRun: 'All' } }),
     },
     resource: secretResource,

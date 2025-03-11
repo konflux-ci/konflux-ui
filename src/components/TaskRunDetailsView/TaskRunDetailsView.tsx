@@ -20,7 +20,7 @@ export const TaskRunDetailsView: React.FC = () => {
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const params = useParams();
   const navigate = useNavigate();
-  const [taskRun, loaded, error] = useTaskRun(namespace, workspace, taskRunName);
+  const [taskRun, loaded, error] = useTaskRun(namespace, taskRunName);
 
   const trStatus = React.useMemo(
     () => loaded && taskRun && taskRunStatus(taskRun),

@@ -51,7 +51,6 @@ export const DeleteResourceModal: React.FC<React.PropsWithChildren<DeleteResourc
         queryOptions: {
           name: obj.metadata.name,
           ns: obj.metadata.namespace,
-          ws: workspace,
         },
       });
       submitCallback && submitCallback(obj, obj.metadata?.namespace, workspace);

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import PipelineRunEmptyState from '../../PipelineRunEmptyState';
 
 jest.mock('react-router-dom', () => ({
@@ -10,8 +10,11 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 describe('PipelineRunEmptyState', () => {
-  mockUseNamespaceHook('test-ns');
+  beforeEach(() => {
+    useNamespaceMock.mockReturnValue('test-ns');
+  });
   it('should render correct Link to Application Name', () => {
     render(<PipelineRunEmptyState applicationName="test" />);
     expect(screen.getByRole('link').getAttribute('href')).toBe(
