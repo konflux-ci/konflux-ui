@@ -10,14 +10,14 @@ import {
   Skeleton,
   Title,
 } from '@patternfly/react-core';
-import { COMMIT_DETAILS_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { SnapshotLabels } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { useScanResults } from '../../../hooks/useScanResults';
 import { useSnapshot } from '../../../hooks/useSnapshots';
+import { COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { createCommitObjectFromPLR } from '../../../utils/commits-utils';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ScanStatus } from '../../PipelineRun/PipelineRunListView/ScanStatus';

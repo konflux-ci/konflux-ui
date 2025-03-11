@@ -2,9 +2,9 @@ import * as React from 'react';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
 import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { getPipelineRunFromTaskRunOwnerRef } from '../../utils/common-utils';
 import { getTaskRunLog } from '../../utils/tekton-results';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import {
   ComponentEnterpriseContractResult,
   EnterpriseContractResult,
@@ -16,7 +16,7 @@ import { extractEcResultsFromTaskRunLogs } from './utils';
 export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,
 ): [ComponentEnterpriseContractResult[], boolean] => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [taskRun, loaded, error] = useTaskRuns(namespace, pipelineRunName, 'verify');
   const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
   const [ecJson, setEcJson] = React.useState<EnterpriseContractResult>();
@@ -95,7 +95,7 @@ export const useEnterpriseContractResultFromLogs = (
     return () => {
       unmount = true;
     };
-  }, [fetchTknLogs, taskRun, workspace]);
+  }, [fetchTknLogs, taskRun]);
 
   const ecResult = React.useMemo(() => {
     // filter out components for which ec didn't execute because invalid image URL
