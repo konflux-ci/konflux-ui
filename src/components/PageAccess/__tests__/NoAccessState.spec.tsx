@@ -16,10 +16,6 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModels: jest.fn(),
 }));
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ workspace: 'test-ws' })),
-}));
-
 const useNavigateMock = useNavigate as jest.Mock;
 
 describe('NoAccessState', () => {

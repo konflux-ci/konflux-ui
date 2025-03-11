@@ -2,10 +2,10 @@ import React from 'react';
 import { Form, FormSection, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import isEmpty from 'lodash/isEmpty';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { FormFooter } from '../../../shared';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import IntegrationTestSection from './IntegrationTestSection';
 
 // [TODO]: Refactor form styles from the shared style sheet
@@ -20,7 +20,7 @@ type IntegrationTestFormProps = {
 const IntegrationTestForm: React.FunctionComponent<
   React.PropsWithChildren<IntegrationTestFormProps>
 > = ({ applicationName, edit }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const { dirty, handleSubmit, handleReset, isSubmitting, status, errors } = useFormikContext();
   const footer = (
@@ -41,7 +41,7 @@ const IntegrationTestForm: React.FunctionComponent<
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/integrationtests`,
+          path: `/workspaces/${namespace}/applications/${applicationName}/integrationtests`,
           name: 'Integration tests',
         },
         { path: '#', name: title },

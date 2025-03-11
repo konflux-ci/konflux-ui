@@ -1,3 +1,4 @@
+import { useNamespace } from '~/shared/providers/Namespace';
 import componentsIcon from '../../assets/Components.svg';
 import editCodeIcon from '../../assets/Edit code.svg';
 import gitAppIcon from '../../assets/git-app.svg';
@@ -10,11 +11,10 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { WhatsNextItem } from '../WhatsNext/WhatsNextSection';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const useWhatsNextItems = (applicationName: string) => {
   const showModal = useModalLauncher();
-  const { workspace, namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { url: githubAppURL } = useApplicationPipelineGitHubApp();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
@@ -31,7 +31,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: componentsIcon,
       cta: {
         label: 'Add component',
-        href: `/workspaces/${workspace}/import?application=${applicationName}`,
+        href: `/workspaces/${namespace}/import?application=${applicationName}`,
         disabled: !canCreateComponent,
         disabledTooltip: "You don't have access to add a component",
         testId: 'add-component',
@@ -39,7 +39,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           link_name: 'add-component',
           link_location: 'whats-next',
           app_name: applicationName,
-          workspace,
+          namespace,
         },
       },
       helpLink: 'https://konflux-ci.dev/docs/how-tos/creating/',
@@ -51,7 +51,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: integrationTestIcon,
       cta: {
         label: 'Add a test',
-        href: `/workspaces/${workspace}/applications/${applicationName}/integrationtests/add`,
+        href: `/workspaces/${namespace}/applications/${applicationName}/integrationtests/add`,
         disabled: !canCreateIntegrationTest,
         disabledTooltip: "You don't have access to add an integration test",
         testId: 'add-test',
@@ -59,7 +59,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           link_name: 'add-test',
           link_location: 'whats-next',
           app_name: applicationName,
-          workspace,
+          namespace,
         },
       },
       helpLink: 'https://konflux-ci.dev/docs/how-tos/testing/integration/adding/',
@@ -71,7 +71,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: releaseIcon,
       cta: {
         label: 'Create a plan',
-        href: `/workspaces/${workspace}/release/release-plan/create`,
+        href: `/workspaces/${namespace}/release/release-plan/create`,
         disabled: !canCreateReleasePlan,
         disabledTooltip: "You don't have access to create a release plan",
         testId: 'add-release-plan',
@@ -79,7 +79,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           link_name: 'add-release-plan',
           link_location: 'whats-next',
           app_name: applicationName,
-          workspace,
+          namespace,
         },
       },
       helpLink: 'https://konflux-ci.dev/docs/advanced-how-tos/releasing/',
@@ -96,7 +96,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           link_name: 'install-github-app',
           link_location: 'whats-next',
           app_name: applicationName,
-          workspace,
+          namespace,
         },
       },
       helpLink: 'https://konflux-ci.dev/docs/how-tos/creating/',
@@ -107,12 +107,12 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: editCodeIcon,
       cta: {
         label: 'View build activity',
-        href: `/workspaces/${workspace}/applications/${applicationName}/activity`,
+        href: `/workspaces/${namespace}/applications/${applicationName}/activity`,
         analytics: {
           link_name: 'view-build-activity',
           link_location: 'whats-next',
           app_name: applicationName,
-          workspace,
+          namespace,
         },
       },
       helpLink: 'https://konflux-ci.dev/docs/how-tos/creating/',
@@ -132,7 +132,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           link_name: 'manage-build-pipelines',
           link_location: 'whats-next',
           app_name: applicationName,
-          workspace,
+          namespace,
         },
       },
       helpLink: 'https://konflux-ci.dev/docs/how-tos/configuring/customizing-the-build/',

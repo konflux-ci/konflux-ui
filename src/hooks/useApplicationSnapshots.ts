@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { useK8sWatchResource } from '../k8s';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../models';
 import { Snapshot } from '../types/coreBuildService';
@@ -7,7 +7,7 @@ import { Snapshot } from '../types/coreBuildService';
 export const useApplicationSnapshots = (
   applicationName: string,
 ): [Snapshot[], boolean, unknown] => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const {
     data: snapshots,
     isLoading,
@@ -16,7 +16,6 @@ export const useApplicationSnapshots = (
     {
       groupVersionKind: SnapshotGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     SnapshotModel,

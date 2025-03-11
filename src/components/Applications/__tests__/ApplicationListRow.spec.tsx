@@ -11,10 +11,6 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 const application: ApplicationKind = {
   kind: 'Application',
   apiVersion: 'appstudio.redhat.com/v1alpha1',
