@@ -22,6 +22,8 @@ const useRuns = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
   model: K8sModelCommon,
   namespace: string,
+  //ask sahil
+  workspace,
   options?: {
     selector?: Selector;
     limit?: number;
