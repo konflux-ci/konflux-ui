@@ -120,27 +120,6 @@ export const router = createBrowserRouter([
           { path: 'security', element: <TaskrunSecurityEnterpriseContractTab /> },
         ],
       },
-      /* Trigger Release plan */
-
-      /* Snapshot Details view */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}/snapshots/:${RouterParams.snapshotName}`,
-        loader: snapshotDetailsViewLoader,
-        element: <SnapshotDetailsView />,
-        errorElement: <RouteErrorBoundry />,
-        children: [
-          {
-            index: true,
-            element: <SnapshotOverviewTab />,
-            errorElement: <RouteErrorBoundry />,
-          },
-          {
-            path: 'pipelineruns',
-            element: <SnapshotPipelineRunsTab />,
-            errorElement: <RouteErrorBoundry />,
-          },
-        ],
-      },
       /* User Acess routes */
       {
         path: `workspaces/:${RouterParams.workspaceName}/access/grant`,

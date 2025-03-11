@@ -16,7 +16,6 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
-import { SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
@@ -24,6 +23,7 @@ import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import { HttpError } from '../../../../k8s/error';
 import {
+  SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
   APPLICATION_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
@@ -53,7 +53,7 @@ import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
 const PipelineRunDetailsTab: React.FC = () => {
-  const { pipelineRunName, workspaceName: workspace } = useParams<RouterParams>();
+  const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
   const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
