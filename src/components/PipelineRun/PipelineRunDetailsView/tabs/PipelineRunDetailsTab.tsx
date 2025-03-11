@@ -23,21 +23,12 @@ import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import { HttpError } from '../../../../k8s/error';
 import {
-<<<<<<< HEAD
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
   APPLICATION_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
   COMMIT_DETAILS_PATH,
   INTEGRATION_TEST_DETAILS_PATH,
-=======
-  APPLICATION_DETAILS_PATH,
-  COMMIT_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
-  INTEGRATION_TEST_DETAILS_PATH,
-  PIPELINERUN_LOGS_PATH,
-  SNAPSHOT_DETAILS_PATH,
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
 } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
@@ -45,7 +36,6 @@ import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmpt
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
-import { useNamespace } from '../../../../shared/providers/Namespace';
 import { getCommitSha, getCommitShortName } from '../../../../utils/commits-utils';
 import {
   calculateDuration,
@@ -62,11 +52,7 @@ import PipelineRunVisualization from '../visualization/PipelineRunVisualization'
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 const PipelineRunDetailsTab: React.FC = () => {
-<<<<<<< HEAD
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
-=======
-  const { pipelineRunName } = useParams<RouterParams>();
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
   const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
@@ -222,17 +208,10 @@ const PipelineRunDetailsTab: React.FC = () => {
                           component={(props) => (
                             <Link
                               {...props}
-<<<<<<< HEAD
                               to={PIPELINE_RUNS_LOG_PATH.createPath({
                                 workspaceName: namespace,
                                 applicationName,
                                 pipelineRunName: pipelineRun.metadata?.name,
-=======
-                              to={PIPELINERUN_LOGS_PATH.createPath({
-                                applicationName,
-                                workspaceName: namespace,
-                                pipelineRunName,
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
                               })}
                             />
                           )}
@@ -255,13 +234,8 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListDescription>
                       <Link
                         to={SNAPSHOT_DETAILS_PATH.createPath({
-<<<<<<< HEAD
                           workspaceName: namespace,
                           applicationName,
-=======
-                          applicationName,
-                          workspaceName: namespace,
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
                           snapshotName: snapshot,
                         })}
                       >
@@ -299,11 +273,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                         to={APPLICATION_DETAILS_PATH.createPath({
                           workspaceName: namespace,
                           applicationName:
-<<<<<<< HEAD
-                            pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-=======
                             pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION],
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
                         })}
                       >
                         {pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION]}
@@ -321,14 +291,9 @@ const PipelineRunDetailsTab: React.FC = () => {
                       pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                         <Link
                           to={COMPONENT_DETAILS_PATH.createPath({
-<<<<<<< HEAD
                             workspaceName: namespace,
                             applicationName:
                               pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-=======
-                            applicationName,
-                            workspaceName: namespace,
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
                             componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
                           })}
                         >
@@ -348,14 +313,9 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListDescription>
                       <Link
                         to={COMMIT_DETAILS_PATH.createPath({
-<<<<<<< HEAD
                           workspaceName: namespace,
                           applicationName:
                             pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-=======
-                          applicationName,
-                          workspaceName: namespace,
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
                           commitName: sha,
                         })}
                       >
@@ -379,12 +339,8 @@ const PipelineRunDetailsTab: React.FC = () => {
                       <Link
                         to={INTEGRATION_TEST_DETAILS_PATH.createPath({
                           workspaceName: namespace,
-<<<<<<< HEAD
                           applicationName:
                             pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-=======
-                          applicationName,
->>>>>>> 56dd233... feat(taskrun): remove workspace dependency from taskruns
                           integrationTestName,
                         })}
                       >

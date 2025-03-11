@@ -6,7 +6,6 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
-import { useNamespace } from '../../../shared/providers/Namespace';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 
