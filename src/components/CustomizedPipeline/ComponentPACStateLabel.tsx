@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Label, Skeleton, Tooltip } from '@patternfly/react-core';
+import { useNamespace } from '~/shared/providers/Namespace';
 import usePACState, { PACState } from '../../hooks/usePACState';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
 import { useComponentBuildStatus } from '../../utils/component-utils';
 import { useModalLauncher } from '../modal/ModalProvider';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { createCustomizeComponentPipelineModalLauncher } from './CustomizePipelinesModal';
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
 const ComponentPACStateLabelInner: React.FC<
   React.PropsWithChildren<Props & { pacState: PACState }>
 > = ({ component, onStateChange, enableAction, pacState }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const track = useTrackEvent();
   const showModal = useModalLauncher();
   const buildStatus = useComponentBuildStatus(component);
@@ -39,7 +39,7 @@ const ComponentPACStateLabelInner: React.FC<
               link_location: 'component-list-label',
               component_name: component.metadata.name,
               app_name: component.spec.application,
-              workspace,
+              namespace,
             });
             showModal(
               createCustomizeComponentPipelineModalLauncher(
@@ -55,7 +55,7 @@ const ComponentPACStateLabelInner: React.FC<
       component.metadata.name,
       component.metadata.namespace,
       component.spec.application,
-      workspace,
+      namespace,
       track,
     ],
   );

@@ -23,10 +23,6 @@ jest.mock('react-router-dom', () => ({
   useSearchParams: () => React.useState(() => new URLSearchParams()),
 }));
 
-jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 jest.mock('../../commit-status', () => ({
   useCommitStatus: () => ['-', true],
 }));

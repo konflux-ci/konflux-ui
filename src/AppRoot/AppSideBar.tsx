@@ -80,7 +80,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
-              isActive={isActive(`/workspaces/${namespace}/access`)}
+              isActive={isActive(USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }))}
             >
               <NavLink
                 to={
