@@ -66,7 +66,7 @@ describe('getSupportedPartnerTaskSecrets', () => {
 
 describe('createSecretResource', () => {
   it('should create Opaque secret resource', async () => {
-    await createSecretResource(sampleOpaqueSecret, 'test-ns', 'test-ws', false);
+    await createSecretResource(sampleOpaqueSecret, 'test-ns', false);
 
     expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -78,7 +78,7 @@ describe('createSecretResource', () => {
     );
   });
   it('should create Image pull secret resource', async () => {
-    await createSecretResource(sampleImagePullSecret, 'test-ns', 'test-ws', false);
+    await createSecretResource(sampleImagePullSecret, 'test-ns', false);
 
     expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({

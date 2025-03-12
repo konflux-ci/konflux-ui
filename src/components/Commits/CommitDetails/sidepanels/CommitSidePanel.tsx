@@ -12,12 +12,13 @@ import {
 } from '@patternfly/react-core';
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { COMPONENT_DETAILS_PATH } from '../../../../routes/paths';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { Commit } from '../../../../types';
 import { createRepoBranchURL, createRepoPullRequestURL } from '../../../../utils/commits-utils';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { CommitIcon } from '../../CommitIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
@@ -31,7 +32,7 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
   workflowNode,
   onClose,
 }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const commit = workflowData.resource as Commit;
 
@@ -100,7 +101,11 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
                 return (
                   <React.Fragment key={component}>
                     <Link
-                      to={`/workspaces/${workspace}/applications/${workflowData.application}/components/${component}`}
+                      to={COMPONENT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName: workflowData.application,
+                        componentName: component,
+                      })}
                     >
                       {component}
                     </Link>

@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { EmptyStateBody, EmptyStateActions } from '@patternfly/react-core';
+import { useNamespace } from '~/shared/providers/Namespace';
 import emptyStateImgUrl from '../../assets/Pipeline.svg';
 import { ComponentModel } from '../../models';
+import { IMPORT_PATH } from '../../routes/paths';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 interface PipelineRunEmptyStateProps {
   applicationName: string;
@@ -15,7 +16,7 @@ interface PipelineRunEmptyStateProps {
 const PipelineRunEmptyState: React.FC<React.PropsWithChildren<PipelineRunEmptyStateProps>> = ({
   applicationName,
 }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 
   return (
@@ -30,7 +31,7 @@ const PipelineRunEmptyState: React.FC<React.PropsWithChildren<PipelineRunEmptySt
           component={(props) => (
             <Link
               {...props}
-              to={`/workspaces/${workspace}/import?application=${applicationName}`}
+              to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
             />
           )}
           variant="secondary"
@@ -40,7 +41,6 @@ const PipelineRunEmptyState: React.FC<React.PropsWithChildren<PipelineRunEmptySt
             link_name: 'add-component',
             link_location: 'pipeline-run-empty-state',
             app_name: applicationName,
-            workspace,
           }}
         >
           Add component
