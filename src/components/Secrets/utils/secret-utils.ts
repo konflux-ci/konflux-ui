@@ -1,5 +1,6 @@
 import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
+import { SECRET_LIST_PATH } from '@routes/paths';
 import { K8sQueryCreateResource } from '../../../k8s';
 import { SecretModel } from '../../../models';
 import {
@@ -259,9 +260,9 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (workspace) => {
+export const getAddSecretBreadcrumbs = (namespace) => {
   return [
-    { path: `/workspaces/${workspace}/secrets`, name: 'Secrets' },
+    { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
     { path: '#', name: 'Add secret' },
   ];
 };

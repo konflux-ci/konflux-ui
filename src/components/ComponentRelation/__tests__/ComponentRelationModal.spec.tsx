@@ -12,10 +12,6 @@ jest.mock('../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [componentCRMocks, true, null]),
 }));
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'asd', workspace: 'def' })),
-}));
-
 jest.mock('../../../utils/analytics', () => ({
   ...jest.requireActual('../../../utils/analytics'),
   useTrackEvent: jest.fn(() => () => {}),
