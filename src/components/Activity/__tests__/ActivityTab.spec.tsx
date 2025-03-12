@@ -12,10 +12,6 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 jest.mock('../../../hooks/useTektonResults');
 jest.mock('../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(() => [

@@ -1,10 +1,11 @@
+import { INTEGRATION_TEST_EDIT_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { IntegrationTestScenarioModel } from '../../../models';
 import { Action } from '../../../shared/components/action-menu/types';
 import { IntegrationTestScenarioKind, ResolverType } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { createDeleteModalLauncher } from '../../modal/DeleteResourceModal';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const integrationTestDeleteModal = (integrationTestObj: IntegrationTestScenarioKind) =>
   createDeleteModalLauncher(integrationTestObj.kind)({
@@ -27,7 +28,7 @@ export const useIntegrationTestActions = (
   integrationTest: IntegrationTestScenarioKind,
 ): Action[] => {
   const showModal = useModalLauncher();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canUpdateIntegrationTest] = useAccessReviewForModel(
     IntegrationTestScenarioModel,
     'update',
@@ -42,7 +43,11 @@ export const useIntegrationTestActions = (
       id: `edit-${integrationTest.metadata.name.toLowerCase()}`,
       label: 'Edit',
       cta: {
-        href: `/workspaces/${workspace}/applications/${integrationTest.spec.application}/integrationtests/${integrationTest.metadata.name}/edit`,
+        href: INTEGRATION_TEST_EDIT_PATH.createPath({
+          workspaceName: namespace,
+          applicationName: integrationTest.spec.application,
+          integrationTestName: integrationTest.metadata.name,
+        }),
       },
       disabled:
         !canUpdateIntegrationTest ||
@@ -56,7 +61,7 @@ export const useIntegrationTestActions = (
         link_location: 'integration-test-actions',
         integration_test_name: integrationTest.metadata.name,
         app_name: integrationTest.spec.application,
-        workspace,
+        namespace,
       },
     },
     {

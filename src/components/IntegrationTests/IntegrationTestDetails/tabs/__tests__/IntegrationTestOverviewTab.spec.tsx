@@ -4,7 +4,6 @@ import { IntegrationTestScenarioModel } from '../../../../../models';
 import {
   createK8sWatchResourceMock,
   createUseParamsMock,
-  createUseWorkspaceInfoMock,
   routerRenderer,
 } from '../../../../../utils/test-utils';
 import { useModalLauncher } from '../../../../modal/ModalProvider';
@@ -18,8 +17,6 @@ import IntegrationTestOverviewTab from '../IntegrationTestOverviewTab';
 jest.mock('../../../../modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(),
 }));
-
-createUseWorkspaceInfoMock({ namespace: 'test-namepsace', workspace: 'test-ws' });
 
 const watchResourceMock = createK8sWatchResourceMock();
 

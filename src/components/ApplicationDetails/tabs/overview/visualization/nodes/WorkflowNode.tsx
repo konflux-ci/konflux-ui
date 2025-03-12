@@ -10,8 +10,8 @@ import {
   useCombineRefs,
   useHover,
 } from '@patternfly/react-topology';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { runStatusToRunStatus } from '../../../../../topology/utils';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { WorkflowNodeModelData } from '../types';
 import { getWorkflowNodeIcon } from '../utils/node-icon-utils';
 import { getLinksForElement } from '../utils/node-utils';
@@ -25,7 +25,7 @@ type WorkflowNodeProps = {
 
 const WorkflowNode: React.FC<React.PropsWithChildren<WorkflowNodeProps>> = ({ element }) => {
   const navigate = useNavigate();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [tipHover, setTipHover] = React.useState<boolean>(false);
   const [tipVisible, setTipVisible] = React.useState<boolean>(false);
   const [hover, hoverRef] = useHover();
@@ -35,8 +35,8 @@ const WorkflowNode: React.FC<React.PropsWithChildren<WorkflowNodeProps>> = ({ el
   const outerRef = useCombineRefs(hoverRef, triggerRef);
 
   const setActiveTab = React.useCallback(() => {
-    navigate(getLinksForElement(element, workspace).elementRef);
-  }, [element, navigate, workspace]);
+    navigate(getLinksForElement(element, namespace).elementRef);
+  }, [element, navigate, namespace]);
 
   React.useEffect(() => {
     let canceled = false;

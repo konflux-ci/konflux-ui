@@ -1,4 +1,10 @@
 import { Node, PipelineNodeModel, RunStatus } from '@patternfly/react-topology';
+import {
+  APPLICATION_DETAILS_PATH,
+  APPLICATION_RELEASE_DETAILS_PATH,
+  INTEGRATION_TEST_DETAILS_PATH,
+  PIPELINERUN_LIST_PATH,
+} from '@routes/paths';
 import { PipelineRunLabel } from '../../../../../../consts/pipelinerun';
 import { ComponentKind, PipelineRunKind } from '../../../../../../types';
 import { GitOpsDeploymentHealthStatus } from '../../../../../../types/gitops-deployment';
@@ -76,7 +82,7 @@ export const statusToRunStatus = (status: string): RunStatus => {
 
 export const getLinkDataForElement = (
   element: Node<PipelineNodeModel, WorkflowNodeModelData>,
-  workspace: string,
+  namespace: string,
 ): { tab?: string; path?: string; filter?: { name: string; value: string } } => {
   const { workflowType, isDisabled, groupNode, status, resources } = element.getData();
   const label = element.getLabel();
@@ -107,9 +113,11 @@ export const getLinkDataForElement = (
     case WorkflowNodeType.APPLICATION_TEST:
       return !groupNode && !isDisabled
         ? {
-            path: `/workspaces/${workspace}/applications/${
-              element.getData().application
-            }/integrationtests/${label}`,
+            path: INTEGRATION_TEST_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: element.getData().application,
+              integrationTestName: label,
+            }),
           }
         : {
             tab: 'integrationtests',
@@ -117,9 +125,11 @@ export const getLinkDataForElement = (
     case WorkflowNodeType.RELEASE:
       return !groupNode && !isDisabled
         ? {
-            path: `/workspaces/${workspace}/applications/${
-              element.getData().application
-            }/releases/${label}`,
+            path: APPLICATION_RELEASE_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: element.getData().application,
+              releaseName: label,
+            }),
           }
         : { tab: 'releases' };
     default:
@@ -131,17 +141,23 @@ export const getLinkDataForElement = (
 
 export const getLinksForElement = (
   element: Node<PipelineNodeModel, WorkflowNodeModelData>,
-  workspace: string,
+  namespace: string,
 ): { elementRef: string; pipelinesRef: string; appRef: string } => {
-  const linkData = getLinkDataForElement(element, workspace);
+  const linkData = getLinkDataForElement(element, namespace);
 
-  const appPath = `/workspaces/${workspace}/applications/${element.getData().application}`;
+  const appPath = APPLICATION_DETAILS_PATH.createPath({
+    workspaceName: namespace,
+    applicationName: element.getData().application,
+  });
   const tabPath = linkData.tab ? `/${linkData.tab}` : '';
   const filter = linkData.filter ? `?${linkData.filter.name}=${linkData.filter.value}` : '';
 
   return {
     elementRef: linkData.path ? linkData.path : `${appPath}${tabPath}${filter}`,
-    pipelinesRef: `${appPath}/activity/pipelineruns`,
+    pipelinesRef: PIPELINERUN_LIST_PATH.createPath({
+      workspaceName: namespace,
+      applicationName: element.getData().application,
+    }),
     appRef: appPath,
   };
 };

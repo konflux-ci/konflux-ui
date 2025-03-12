@@ -19,11 +19,6 @@ jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
 }));
 
-jest.mock('../src/components/Workspace/useWorkspaceInfo', () => ({
-  __esModule: true,
-  ...jest.requireActual('../src/components/Workspace/useWorkspaceInfo'),
-}));
-
 jest.mock('../src/shared/providers/Namespace/useNamespaceInfo', () => ({
   __esModule: true,
   ...jest.requireActual('../src/shared/providers/Namespace/useNamespaceInfo'),

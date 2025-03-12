@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '@patternfly/react-core';
 import { Base64 } from 'js-base64';
-import { useWorkspaceInfo } from '../../../../components/Workspace/useWorkspaceInfo';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
 import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
@@ -32,7 +32,7 @@ const Logs: React.FC<React.PropsWithChildren<LogsProps>> = ({
   errorMessage,
 }) => {
   const { t } = useTranslation();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { name } = container;
   const { kind, metadata = {} } = resource || {};
   const { name: resName, namespace: resNamespace } = metadata;
@@ -85,7 +85,7 @@ const Logs: React.FC<React.PropsWithChildren<LogsProps>> = ({
     let ws: WebSocketFactory;
     const urlOpts = {
       ns: resNamespace,
-      ws: workspace,
+      ws: namespace,
       name: resName,
       path: 'log',
       queryParams: {
@@ -127,7 +127,7 @@ const Logs: React.FC<React.PropsWithChildren<LogsProps>> = ({
       loaded = true;
       ws && ws.destroy();
     };
-  }, [kind, name, resName, resNamespace, workspace]);
+  }, [kind, name, resName, resNamespace, namespace]);
 
   React.useEffect(() => {
     if (scrollToRef.current && render && autoScroll) {

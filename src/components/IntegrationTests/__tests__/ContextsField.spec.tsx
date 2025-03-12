@@ -2,10 +2,10 @@ import '@testing-library/jest-dom';
 import { useParams } from 'react-router-dom';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { FieldArray, useField } from 'formik';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useComponents } from '../../../hooks/useComponents';
 import { ComponentKind } from '../../../types';
 import { openIntegrationTestContextDropdown } from '../../../utils/test-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import ContextsField from '../ContextsField';
 import {
   contextOptions,
@@ -17,9 +17,6 @@ import {
 jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(),
-}));
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
@@ -30,7 +27,7 @@ jest.mock('formik', () => ({
 
 describe('ContextsField', () => {
   const mockUseParams = useParams as jest.Mock;
-  const mockUseWorkspaceInfo = useWorkspaceInfo as jest.Mock;
+  const mockNamespaceHook = mockUseNamespaceHook('test-namespace');
   const mockUseComponents = useComponents as jest.Mock;
   const mockUseField = useField as jest.Mock;
   const mockUseFieldArray = FieldArray as jest.Mock;
@@ -39,10 +36,7 @@ describe('ContextsField', () => {
 
   const setupMocks = (selectedContexts = [], components = []) => {
     mockUseParams.mockReturnValue({ applicationName: 'test-app' });
-    mockUseWorkspaceInfo.mockReturnValue({
-      namespace: 'test-namespace',
-      workspace: 'test-workspace',
-    });
+    mockNamespaceHook.mockReturnValue('test-namespace');
     mockUseComponents.mockReturnValue([components, true]);
     mockUseField.mockReturnValue([{}, { value: selectedContexts }]);
     mockUseFieldArray.mockImplementation((props) => {

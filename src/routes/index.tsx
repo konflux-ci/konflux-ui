@@ -11,13 +11,6 @@ import {
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
-import {
-  GrantAccessPage,
-  grantAccessPageLoader,
-  EditAccessPage,
-  UserAccessListPage,
-  userAccessListPageLoader,
-} from '../components/UserAccess';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
@@ -104,24 +97,6 @@ export const router = createBrowserRouter([
         ],
       },
       /* User Acess routes */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/access/grant`,
-        loader: grantAccessPageLoader,
-        element: <GrantAccessPage />,
-        errorElement: <RouteErrorBoundry />,
-      },
-      {
-        // Permission check has been covered in the EditAccessPage itself.
-        path: `/workspaces/:${RouterParams.workspaceName}/access/edit/:${RouterParams.bindingName}`,
-        element: <EditAccessPage />,
-        errorElement: <RouteErrorBoundry />,
-      },
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/access`,
-        element: <UserAccessListPage />,
-        errorElement: <RouteErrorBoundry />,
-        loader: userAccessListPageLoader,
-      },
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',

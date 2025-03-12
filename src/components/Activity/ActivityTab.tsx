@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
+import { APPLICATION_ACTIVITY_PATH } from '@routes/paths';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
@@ -19,7 +20,8 @@ export const ActivityTab: React.FC = () => {
   const currentTab = activityTab || lastSelectedTab || 'latest-commits';
 
   const getActivityTabRoute = React.useCallback(
-    (tab: string) => `/workspaces/${workspaceName}/applications/${applicationName}/activity/${tab}`,
+    (tab: string) =>
+      `${APPLICATION_ACTIVITY_PATH.createPath({ workspaceName, applicationName })}/${tab}`,
     [applicationName, workspaceName],
   );
 

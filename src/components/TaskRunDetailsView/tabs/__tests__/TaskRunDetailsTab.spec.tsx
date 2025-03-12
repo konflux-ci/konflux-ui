@@ -1,11 +1,8 @@
 import { screen } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../../utils/test-utils';
 import { testTaskRuns } from '../../../TaskRunListView/__data__/mock-TaskRun-data';
 import TaskRunDetailsTab from '../TaskRunDetailsTab';
-
-jest.mock('../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
 
 jest.mock('../../../../hooks/useTektonResults');
 
@@ -14,6 +11,8 @@ jest.mock('../../../topology/factories/VisualizationFactory', () => () => <div /
 const watchResourceMock = createK8sWatchResourceMock();
 
 describe('TaskRunDetailsTab', () => {
+  mockUseNamespaceHook('test-ns');
+
   it('should render the taskrun details tab', () => {
     watchResourceMock.mockReturnValue([[testTaskRuns[0]], true]);
     routerRenderer(<TaskRunDetailsTab />);

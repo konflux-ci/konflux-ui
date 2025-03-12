@@ -19,9 +19,6 @@ jest.mock('../../../k8s/k8s-fetch', () => ({
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
 
 const useComponentsMock = useComponents as jest.Mock;
 const patchResourceMock = k8sPatchResource as jest.Mock;

@@ -5,8 +5,8 @@ import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { useTaskRun } from '../../hooks/usePipelineRuns';
 import { HttpError } from '../../k8s/error';
 import {
-  ACTIVITY_PLR_PATH,
   PIPELINERUN_DETAILS_PATH,
+  PIPELINERUN_LIST_PATH,
   PIPELINERUN_TASK_LIST,
   TASKRUN_DETAILS_PATH,
 } from '../../routes/paths';
@@ -74,7 +74,7 @@ export const TaskRunDetailsView: React.FC = () => {
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
-          path: ACTIVITY_PLR_PATH.createPath({ applicationName, workspaceName: namespace }),
+          path: PIPELINERUN_LIST_PATH.createPath({ applicationName, workspaceName: namespace }),
           name: 'Pipeline runs',
         },
         {

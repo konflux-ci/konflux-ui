@@ -12,6 +12,8 @@ import {
   EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
+import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import { RouterParams } from '@routes/utils';
 import securityShieldImg from '../../assets/shield-security.svg';
 
 import '../../shared/components/empty-state/EmptyState.scss';
@@ -24,7 +26,7 @@ const SecurityTabEmptyState: React.FC<
   React.PropsWithChildren<Omit<EmptyStateProps, 'children'>>
 > = ({ ...props }) => {
   const navigate = useNavigate();
-  const { appName, plrName, workspaceName } = useParams();
+  const { applicationName, pipelineRunName, workspaceName } = useParams<RouterParams>();
   return (
     <EmptyState
       className="app-empty-state"
@@ -44,7 +46,11 @@ const SecurityTabEmptyState: React.FC<
             variant={ButtonVariant.primary}
             onClick={() =>
               navigate(
-                `/workspaces/${workspaceName}/applications/${appName}/pipelineruns/${plrName}`,
+                PIPELINERUN_DETAILS_PATH.createPath({
+                  workspaceName,
+                  applicationName,
+                  pipelineRunName,
+                }),
               )
             }
           >

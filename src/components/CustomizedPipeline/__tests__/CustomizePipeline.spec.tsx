@@ -27,10 +27,6 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 

@@ -1,10 +1,7 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useComponents } from '../../../../../../../hooks/useComponents';
 import { useLatestIntegrationTestPipelines } from '../../../../../../../hooks/useLatestIntegrationTestPipelines';
-import {
-  createK8sWatchResourceMock,
-  createUseWorkspaceInfoMock,
-} from '../../../../../../../utils/test-utils';
+import { createK8sWatchResourceMock } from '../../../../../../../utils/test-utils';
 import { mockIntegrationTestScenariosData } from '../../../../../__data__';
 import { testPipelineRuns } from '../__data__/test-pipeline-data';
 import { useAppApplicationTestNodes } from '../useAppApplicationTestNodes';
@@ -22,7 +19,6 @@ const useComponentsMock = useComponents as jest.Mock;
 const useLatestIntegrationTestPipelinesMock = useLatestIntegrationTestPipelines as jest.Mock;
 
 describe('useAppApplicationTestNodes', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
   beforeEach(() => {
     useK8sWatchResourceMock.mockReset();
     useK8sWatchResourceMock.mockReturnValue([mockIntegrationTestScenariosData, true]);

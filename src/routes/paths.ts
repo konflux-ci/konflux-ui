@@ -19,6 +19,8 @@ export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
   `:${RouterParams.applicationName}`,
 );
 
+export const APPLICATION_ACTIVITY_PATH = APPLICATION_DETAILS_PATH.extend('activity');
+
 export const COMPONENT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('components');
 
 export const COMPONENT_DETAILS_PATH = COMPONENT_LIST_PATH.extend(`:${RouterParams.componentName}`);
@@ -55,9 +57,7 @@ export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
 
 export const RELEASEPLAN_CREATE_PATH = RELEASEPLAN_PATH.extend(`create`);
 
-export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
 // Integration test paths
-
 export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`integrationtests`);
 
 export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
@@ -92,19 +92,17 @@ export const TASKRUN_LOGS_PATH = TASKRUN_DETAILS_PATH.extend('logs');
 
 // Pipelinerun routes
 
-export const PIPELINERUN_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineRuns');
+export const PIPELINERUN_LIST_PATH = APPLICATION_ACTIVITY_PATH.extend('pipelineruns');
 
-export const PIPELINERUN_DETAILS_PATH = PIPELINERUN_LIST_PATH.extend(
-  `:${RouterParams.pipelineRunName}`,
+export const PIPELINERUN_DETAILS_PATH = APPLICATION_DETAILS_PATH.extend(
+  `pipelineruns/:${RouterParams.pipelineRunName}`,
 );
 
 export const PIPELINERUN_LOGS_PATH = PIPELINERUN_DETAILS_PATH.extend(`logs`);
 
 export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`);
 
-export const ACTIVITY_LIST_PATH = APPLICATION_DETAILS_PATH.extend('activity');
-export const ACTIVITY_PLR_PATH = ACTIVITY_LIST_PATH.extend('pipelineruns');
-export const ACTIVITY_COMMIT_PATH = ACTIVITY_LIST_PATH.extend('latest-commits');
+export const ACTIVITY_COMMIT_PATH = APPLICATION_ACTIVITY_PATH.extend('latest-commits');
 
 // Snapshot routes
 
@@ -113,3 +111,13 @@ export const SNAPSHOT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('snapshots');
 export const SNAPSHOT_DETAILS_PATH = SNAPSHOT_LIST_PATH.extend(`:${RouterParams.snapshotName}`);
 
 export const SNAPSHOT_DETAILS_PIPELINE_RUN_PATH = SNAPSHOT_DETAILS_PATH.extend('pipelineruns');
+
+// User Access Routes
+
+export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
+
+export const USER_ACCESS_GRANT_PAGE = USER_ACCESS_LIST_PAGE.extend('grant');
+
+export const USER_ACCESS_EDIT_PAGE = USER_ACCESS_LIST_PAGE.extend(
+  `edit/:${RouterParams.bindingName}`,
+);

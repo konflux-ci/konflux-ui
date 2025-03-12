@@ -1,3 +1,4 @@
+import { USER_ACCESS_EDIT_PAGE } from '@routes/paths';
 import { RoleBindingModel } from '../../models';
 import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -32,7 +33,10 @@ export const useRBActions = (binding: RoleBinding): Action[] => {
       disabled: !canUpdate,
       disabledTooltip: "You don't have permission to edit access",
       cta: {
-        href: `/workspaces/${namespace}/access/edit/${userSubject?.name}`,
+        href: USER_ACCESS_EDIT_PAGE.createPath({
+          workspaceName: namespace,
+          bindingName: userSubject?.name,
+        }),
       },
     },
     {

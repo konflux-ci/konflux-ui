@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardCopy } from '@patternfly/react-core';
-import { COMPONENT_LIST_PATH } from '@routes/paths';
+import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import GitRepoLink from '../../GitLink/GitRepoLink';
@@ -44,7 +44,11 @@ const SnapshotComponentsListRow: React.FC<
       <TableData className={commitsTableColumnClasses.revision}>
         {obj.source?.git?.revision ? (
           <Link
-            to={`/workspaces/${namespace}/applications/${obj.application}/commit/${obj.source?.git?.revision}`}
+            to={COMMIT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: obj.application,
+              commitName: obj.source?.git?.revision,
+            })}
             data-test="snapshot-component-revision"
           >
             {obj.source?.git?.revision}

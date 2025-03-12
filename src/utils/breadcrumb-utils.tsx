@@ -1,14 +1,15 @@
 import { Link, useParams } from 'react-router-dom';
 import { BreadcrumbItem } from '@patternfly/react-core';
+import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { ApplicationSwitcher } from '../components/Applications/switcher/ApplicationSwitcher';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { RouterParams } from '../routes/utils';
 
 export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true) => {
   const params = useParams<RouterParams>();
   const applicationName = params.applicationName || appDisplayName;
 
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   return [
     <BreadcrumbItem key="app-link" component="div" showDivider>
@@ -16,7 +17,7 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
         <Link
           data-test="applications-breadcrumb-link"
           className="pf-v5-c-breadcrumb__link"
-          to={`/workspaces/${workspace}/applications`}
+          to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
         >
           Applications
         </Link>
@@ -27,7 +28,9 @@ export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true
     ...(applicationName
       ? [
           {
-            path: withLink ? `/workspaces/${workspace}/applications/${applicationName}` : '',
+            path: withLink
+              ? APPLICATION_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName })
+              : '',
             name: appDisplayName || applicationName,
           },
           <ApplicationSwitcher key="app" selectedApplication={applicationName} />,

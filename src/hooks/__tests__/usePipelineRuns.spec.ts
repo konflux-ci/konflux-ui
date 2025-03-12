@@ -1,5 +1,6 @@
 /* eslint-disable max-nested-callbacks */
 import { renderHook } from '@testing-library/react-hooks';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
@@ -24,10 +25,6 @@ jest.mock('../useTektonResults');
 jest.mock('../useComponents');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
-
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
 
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useTRTaskRunsMock = useTRTaskRuns as jest.Mock;
@@ -130,6 +127,7 @@ const resultMockPush = [
 ];
 
 describe('usePipelineRuns', () => {
+  mockUseNamespaceHook('test-ns');
   beforeEach(() => {
     jest.clearAllMocks();
   });

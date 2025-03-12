@@ -9,6 +9,7 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from '@patternfly/react-core';
+import { SECRET_CREATE_PATH } from '@routes/paths';
 import secretEmptyStateIcon from '../../../assets/secret.svg';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { useSecrets } from '../../../hooks/useSecrets';
@@ -35,7 +36,9 @@ const SecretsListView: React.FC = () => {
   const createSecretButton = React.useMemo(() => {
     return (
       <ButtonWithAccessTooltip
-        component={(props) => <Link {...props} to={`/workspaces/${namespace}/secrets/create`} />}
+        component={(props) => (
+          <Link {...props} to={SECRET_CREATE_PATH.createPath({ workspaceName: namespace })} />
+        )}
         isDisabled={!canCreateRemoteSecret}
         tooltip="You don't have access to create a secret"
         analytics={{

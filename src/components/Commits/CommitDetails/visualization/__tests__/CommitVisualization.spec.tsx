@@ -21,10 +21,6 @@ import CommitVisualization from '../CommitVisualization';
 
 jest.mock('../../../../../hooks/useTektonResults');
 
-jest.mock('../../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 jest.mock('../../../../../hooks/usePipelineRuns', () => ({
   usePipelineRunsForCommit: jest.fn(),
 }));
