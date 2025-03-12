@@ -9,7 +9,7 @@ import { RouterParams } from '../../routes/utils';
 import { Table } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { ReleaseKind } from '../../types';
-import { FilterToolbar } from '../Filter/FilterToolbar';
+import { FilterToolbar } from '../Filter/toolbars/FilterToolbar';
 import ReleasesEmptyState from './ReleasesEmptyState';
 import getReleasesListHeader, { SortableHeaders } from './ReleasesListHeader';
 import ReleasesListRow from './ReleasesListRow';

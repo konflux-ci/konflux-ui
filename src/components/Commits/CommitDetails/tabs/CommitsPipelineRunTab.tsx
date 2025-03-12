@@ -17,7 +17,7 @@ import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../../utils/pipelinerun-utils';
-import PipelineRunsFilterToolbar from '../../../Filter/PipelineRunsFilterToolbar';
+import PipelineRunsFilterToolbar from '../../../Filter/toolbars/PipelineRunsFilterToolbar';
 import {
   filterPipelineRuns,
   PipelineRunsFilterState,
