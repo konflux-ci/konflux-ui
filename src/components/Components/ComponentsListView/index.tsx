@@ -10,7 +10,7 @@ export const componentsTabLoader = createLoaderWithAccessCheck(
     const ns = params[RouterParams.workspaceName];
     return K8sQueryListResourceItems({
       model: ComponentModel,
-      queryOptions: { ns, ws: params[RouterParams.workspaceName] },
+      queryOptions: { ns },
     });
   },
   { model: ComponentModel, verb: 'list' },

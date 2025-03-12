@@ -43,11 +43,7 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
   });
 };
 
-export const unLinkSecretFromServiceAccount = async (
-  secret: SecretKind,
-  namespace: string,
-  workspace: string,
-) => {
+export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespace: string) => {
   if (!secret || (!namespace && !secret.metadata?.namespace)) {
     return;
   }
@@ -56,7 +52,6 @@ export const unLinkSecretFromServiceAccount = async (
     queryOptions: {
       name: PIPELINE_SERVICE_ACCOUNT,
       ns: namespace ?? secret.metadata?.namespace,
-      ws: workspace,
     },
   });
 
@@ -91,7 +86,6 @@ export const unLinkSecretFromServiceAccount = async (
     queryOptions: {
       name: PIPELINE_SERVICE_ACCOUNT,
       ns: namespace,
-      ws: workspace,
     },
     patches: [
       {
