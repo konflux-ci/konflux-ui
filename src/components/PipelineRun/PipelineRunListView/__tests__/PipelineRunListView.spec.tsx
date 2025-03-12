@@ -1,17 +1,21 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
+import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
-import { PipelineRunKind } from '../../../../types';
+import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
 
+jest.useFakeTimers();
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('react-i18next', () => ({
@@ -47,7 +51,7 @@ jest.mock('react-router-dom', () => {
 });
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
-  useSearchParam: jest.fn(),
+  useSearchParamBatch: jest.fn(),
 }));
 
 jest.mock('../../../../shared/components/table/TableComponent', () => {
@@ -79,22 +83,9 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useSearchParamMock = useSearchParam as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
-// const usePLRVulnerabilitiesMock = usePLRVulnerabilities as jest.Mock;
 const mockUseSnapshots = useSnapshots as jest.Mock;
-
-const params = {};
-
-const mockUseSearchParam = (name: string) => {
-  const setter = (value) => {
-    params[name] = value;
-  };
-  const unset = () => {
-    params[name] = '';
-  };
-  return [params[name], setter, unset];
-};
+const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 
 const appName = 'my-test-app';
 
@@ -119,11 +110,20 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658df1',
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
+        [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST as string,
       },
     },
     spec: {
       key: 'key1',
     },
+    status: {
+      conditions: [
+        {
+          status: 'True',
+          type: 'Succeeded',
+        },
+      ],
+    } as PipelineRunStatus,
   },
   {
     kind: 'PipelineRun',
@@ -145,6 +145,7 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658dfb',
       labels: {
         'appstudio.openshift.io/component': 'test-component',
+        [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
       },
     },
     spec: {
@@ -171,6 +172,7 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658dfc',
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
+        [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
       },
     },
     spec: {
@@ -180,11 +182,18 @@ const pipelineRuns: PipelineRunKind[] = [
 ];
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
+
+const TestedComponent = ({ name }) => (
+  <PipelineRunsFilterContextProvider>
+    <PipelineRunsListView applicationName={name} />
+  </PipelineRunsFilterContextProvider>
+);
+
 describe('Pipeline run List', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
-    useSearchParamMock.mockImplementation(mockUseSearchParam);
+    useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
     useNamespaceMock.mockReturnValue('test-ns');
@@ -198,7 +207,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<PipelineRunsListView applicationName={appName} />);
+    render(<TestedComponent name={appName} />);
     screen.getByTestId('data-table-skeleton');
   });
 
@@ -210,7 +219,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<PipelineRunsListView applicationName={appName} />);
+    render(<TestedComponent name={appName} />);
     screen.queryByText(/Keep tabs on components and activity/);
     screen.queryByText(/Monitor your components with pipelines and oversee CI\/CD activity./);
     const button = screen.queryByText('Add component');
@@ -228,7 +237,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<PipelineRunsListView applicationName="purple-mermaid-app" />);
+    render(<TestedComponent name="purple-mermaid-app" />);
     screen.getByText('Unable to load pipeline runs');
   });
 
@@ -240,24 +249,17 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<PipelineRunsListView applicationName={appName} />);
+    render(<TestedComponent name={appName} />);
     screen.queryByText('Name');
     screen.queryByText('Started');
     screen.queryByText('Duration');
     screen.queryAllByText('Status');
-    screen.queryByText('Type');
+    screen.queryAllByText('Type');
     screen.queryByText('Component');
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
-    usePipelineRunsMock.mockReturnValue([
-      pipelineRuns,
-      true,
-      null,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-    render(<PipelineRunsListView applicationName={appName} />);
+    render(<TestedComponent name={appName} />);
     expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
     expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
     expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
@@ -265,49 +267,110 @@ describe('Pipeline run List', () => {
     expect(filter.value).toBe('');
   });
 
-  xit('should render filtered pipelinerun list', async () => {
-    usePipelineRunsMock.mockReturnValue([
-      pipelineRuns,
-      true,
-      null,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-    const r = render(<PipelineRunsListView applicationName={appName} />);
+  it('should render filtered pipelinerun list by name', async () => {
+    const r = render(<TestedComponent name={appName} />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
-    await act(() =>
-      fireEvent.change(filter, {
-        target: { value: 'no-match' },
-      }),
-    );
+    fireEvent.change(filter, {
+      target: { value: 'second' },
+    });
+    expect(filter.value).toBe('second');
 
-    expect(filter.value).toBe('no-match');
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
 
-    r.rerender(<PipelineRunsListView applicationName={appName} />);
+    r.rerender(<TestedComponent name={appName} />);
     await waitFor(() => {
       expect(screen.queryByText('basic-node-js-first')).not.toBeInTheDocument();
-      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
-      expect(screen.queryByText('No results found')).toBeInTheDocument();
-      expect(
-        screen.queryByText(
-          'No results match this filter criteria. Clear all filters and try again.',
-        ),
-      ).toBeInTheDocument();
+    });
+
+    // clean up for other tests
+    fireEvent.change(filter, {
+      target: { value: '' },
+    });
+    expect(filter.value).toBe('');
+
+    act(() => {
+      jest.advanceTimersByTime(700);
     });
   });
 
-  xit('should clear the filters and render the list again in the table', async () => {
-    usePipelineRunsMock.mockReturnValue([
-      pipelineRuns,
-      true,
-      null,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-    const r = render(<PipelineRunsListView applicationName={appName} />);
+  it('should render filtered pipelinerun list by status', async () => {
+    const r = render(<TestedComponent name={appName} />);
+
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+
+    fireEvent.click(statusFilter);
+    expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
+
+    const succeededOption = r.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+
+    await act(() => fireEvent.click(succeededOption));
+
+    r.rerender(<TestedComponent name={appName} />);
+
+    await waitFor(() => {
+      expect(succeededOption).toBeChecked();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
+    });
+
+    // clean up for other tests
+    expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(succeededOption);
+    r.rerender(<TestedComponent name={appName} />);
+    expect(succeededOption).not.toBeChecked();
+  });
+
+  it('should render filtered pipelinerun list by type', async () => {
+    const r = render(<TestedComponent name={appName} />);
+
+    const typeFilter = screen.getByRole('button', {
+      name: /type filter menu/i,
+    });
+
+    fireEvent.click(typeFilter);
+    expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
+
+    const testOption = r.getByLabelText(/test/i, {
+      selector: 'input',
+    });
+
+    await act(() => fireEvent.click(testOption));
+
+    r.rerender(<TestedComponent name={appName} />);
+
+    await waitFor(() => {
+      expect(testOption).toBeChecked();
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
+    });
+
+    // clean up for other tests
+    expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(testOption);
+    r.rerender(<TestedComponent name={appName} />);
+    expect(testOption).not.toBeChecked();
+  });
+
+  it('should clear the filters and render the list again in the table', async () => {
+    const r = render(<TestedComponent name={appName} />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -319,7 +382,11 @@ describe('Pipeline run List', () => {
 
     expect(filter.value).toBe('no-match');
 
-    r.rerender(<PipelineRunsListView applicationName={appName} />);
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    r.rerender(<TestedComponent name={appName} />);
     await waitFor(() => {
       expect(screen.queryByText('basic-node-js-first')).not.toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
@@ -333,6 +400,9 @@ describe('Pipeline run List', () => {
     });
 
     await act(() => fireEvent.click(screen.queryByRole('button', { name: 'Clear all filters' })));
+    r.rerender(<TestedComponent name={appName} />);
+    expect(filter.value).toBe('');
+
     await waitFor(() => {
       expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
