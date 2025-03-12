@@ -57,8 +57,6 @@ export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
 
 export const RELEASEPLAN_CREATE_PATH = RELEASEPLAN_PATH.extend(`create`);
 
-export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
-
 // Integration test paths
 export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`integrationtests`);
 
@@ -113,3 +111,13 @@ export const SNAPSHOT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('snapshots');
 export const SNAPSHOT_DETAILS_PATH = SNAPSHOT_LIST_PATH.extend(`:${RouterParams.snapshotName}`);
 
 export const SNAPSHOT_DETAILS_PIPELINE_RUN_PATH = SNAPSHOT_DETAILS_PATH.extend('pipelineruns');
+
+// User Access Routes
+
+export const USER_ACCESS_LIST_PAGE = WORKSPACE_PATH.extend('access');
+
+export const USER_ACCESS_GRANT_PAGE = USER_ACCESS_LIST_PAGE.extend('grant');
+
+export const USER_ACCESS_EDIT_PAGE = USER_ACCESS_LIST_PAGE.extend(
+  `edit/:${RouterParams.bindingName}`,
+);

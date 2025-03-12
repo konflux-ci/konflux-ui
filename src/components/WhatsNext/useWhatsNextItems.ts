@@ -1,3 +1,9 @@
+import {
+  APPLICATION_ACTIVITY_PATH,
+  IMPORT_PATH,
+  INTEGRATION_TEST_ADD_PATH,
+  RELEASEPLAN_CREATE_PATH,
+} from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import componentsIcon from '../../assets/Components.svg';
 import editCodeIcon from '../../assets/Edit code.svg';
@@ -31,7 +37,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: componentsIcon,
       cta: {
         label: 'Add component',
-        href: `/workspaces/${namespace}/import?application=${applicationName}`,
+        href: `${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`,
         disabled: !canCreateComponent,
         disabledTooltip: "You don't have access to add a component",
         testId: 'add-component',
@@ -51,7 +57,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: integrationTestIcon,
       cta: {
         label: 'Add a test',
-        href: `/workspaces/${namespace}/applications/${applicationName}/integrationtests/add`,
+        href: INTEGRATION_TEST_ADD_PATH.createPath({ workspaceName: namespace, applicationName }),
         disabled: !canCreateIntegrationTest,
         disabledTooltip: "You don't have access to add an integration test",
         testId: 'add-test',
@@ -71,7 +77,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: releaseIcon,
       cta: {
         label: 'Create a plan',
-        href: `/workspaces/${namespace}/release/release-plan/create`,
+        href: RELEASEPLAN_CREATE_PATH.createPath({ workspaceName: namespace }),
         disabled: !canCreateReleasePlan,
         disabledTooltip: "You don't have access to create a release plan",
         testId: 'add-release-plan',
@@ -107,7 +113,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       icon: editCodeIcon,
       cta: {
         label: 'View build activity',
-        href: `/workspaces/${namespace}/applications/${applicationName}/activity`,
+        href: APPLICATION_ACTIVITY_PATH.createPath({ workspaceName: namespace, applicationName }),
         analytics: {
           link_name: 'view-build-activity',
           link_location: 'whats-next',

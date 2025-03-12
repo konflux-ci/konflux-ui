@@ -8,6 +8,7 @@ import {
   DescriptionListTerm,
   Popover,
 } from '@patternfly/react-core';
+import { TASKRUN_LOGS_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { getScanResults } from '../../../../hooks/useScanResults';
@@ -40,12 +41,16 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
     if (!showLogsLink) {
       return null;
     }
+    const applicationName = scanTaskRuns[0].metadata.labels[PipelineRunLabel.APPLICATION];
+    const taskRunName = scanTaskRuns[0].metadata.name;
     if (scanTaskRuns.length === 1) {
       return (
         <Link
-          to={`/workspaces/${namespace}/applications/${
-            scanTaskRuns[0].metadata.labels[PipelineRunLabel.APPLICATION]
-          }/taskruns/${scanTaskRuns[0].metadata.name}/logs`}
+          to={TASKRUN_LOGS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            taskRunName,
+          })}
           className="pf-v5-u-font-weight-normal"
         >
           View logs
@@ -71,9 +76,11 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
                 {scanTaskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] ||
                   scanTaskRun.metadata.name}
                 <Link
-                  to={`/workspaces/${namespace}/applications/${
-                    scanTaskRun.metadata.labels[PipelineRunLabel.APPLICATION]
-                  }/taskruns/${scanTaskRun.metadata.name}/logs`}
+                  to={TASKRUN_LOGS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: scanTaskRun.metadata.labels[PipelineRunLabel.APPLICATION],
+                    taskRunName: scanTaskRun.metadata.name,
+                  })}
                   className="pf-v5-u-font-weight-normal scan-description-list__tooltip-link"
                 >
                   <span

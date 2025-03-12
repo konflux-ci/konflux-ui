@@ -16,6 +16,7 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { useSearchParam } from '../../hooks/useSearchParam';
@@ -49,7 +50,9 @@ const UserAccessEmptyState: React.FC<
       <EmptyStateActions>
         <ButtonWithAccessTooltip
           variant="primary"
-          component={(props) => <Link {...props} to={`/workspaces/${namespace}/access/grant`} />}
+          component={(props) => (
+            <Link {...props} to={USER_ACCESS_GRANT_PAGE.createPath({ workspaceName: namespace })} />
+          )}
           isDisabled={!canCreateRB}
           tooltip="You cannot grant access in this namespace"
           analytics={{
@@ -120,7 +123,10 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
               <ButtonWithAccessTooltip
                 variant="primary"
                 component={(props) => (
-                  <Link {...props} to={`/workspaces/${namespace}/access/grant`} />
+                  <Link
+                    {...props}
+                    to={USER_ACCESS_GRANT_PAGE.createPath({ workspaceName: namespace })}
+                  />
                 )}
                 isDisabled={!canCreateRB}
                 tooltip="You cannot grant access in this namespace"

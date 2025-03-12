@@ -1,3 +1,4 @@
+import { INTEGRATION_TEST_EDIT_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { IntegrationTestScenarioModel } from '../../../models';
 import { Action } from '../../../shared/components/action-menu/types';
@@ -42,7 +43,11 @@ export const useIntegrationTestActions = (
       id: `edit-${integrationTest.metadata.name.toLowerCase()}`,
       label: 'Edit',
       cta: {
-        href: `/workspaces/${namespace}/applications/${integrationTest.spec.application}/integrationtests/${integrationTest.metadata.name}/edit`,
+        href: INTEGRATION_TEST_EDIT_PATH.createPath({
+          workspaceName: namespace,
+          applicationName: integrationTest.spec.application,
+          integrationTestName: integrationTest.metadata.name,
+        }),
       },
       disabled:
         !canUpdateIntegrationTest ||

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
+import { SECRET_LIST_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import FormFooter from '../../../shared/components/form-components/FormFooter';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -47,7 +48,7 @@ const AddSecretForm: React.FC = () => {
       onSubmit={(values, actions) => {
         addSecret(values, namespace)
           .then(() => {
-            navigate(`/workspaces/${namespace}/secrets`);
+            navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((error) => {
             // eslint-disable-next-line no-console

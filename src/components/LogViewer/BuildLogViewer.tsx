@@ -8,6 +8,7 @@ import {
   ModalVariant,
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
+import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
@@ -68,7 +69,11 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
             <DescriptionListDescription>
               {pipelineRun && loaded && (
                 <Link
-                  to={`/workspaces/${namespace}/applications/${component.spec.application}/pipelineruns/${pipelineRun.metadata?.name}`}
+                  to={PIPELINERUN_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: component.spec.application,
+                    pipelineRunName: pipelineRun.metadata?.name,
+                  })}
                   title={pipelineRun.metadata?.name}
                 >
                   {pipelineRun.metadata?.name}

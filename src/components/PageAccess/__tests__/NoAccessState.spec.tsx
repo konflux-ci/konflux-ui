@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@patternfly/react-core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import NoAccessState from '../NoAccessState';
 
 jest.mock('react-router-dom', () => {
@@ -20,7 +21,7 @@ const useNavigateMock = useNavigate as jest.Mock;
 
 describe('NoAccessState', () => {
   let navigateMock;
-
+  mockUseNamespaceHook('test-ns');
   beforeEach(() => {
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
@@ -32,7 +33,7 @@ describe('NoAccessState', () => {
     screen.getByTestId('no-access-state');
     screen.getByText(`Let's get you access`);
     screen.getByText(
-      `Ask the administrator or the owner of the test-ws namespace for access permissions.`,
+      `Ask the administrator or the owner of the test-ns namespace for access permissions.`,
     );
     screen.getByText('Go to Overview page');
   });
