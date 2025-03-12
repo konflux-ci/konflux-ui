@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useComponents } from '../../../hooks/useComponents';
 import { formikRenderer } from '../../../utils/test-utils';
 import { ComponentDropdown } from '../SecretsForm/ComponentDropdown';
@@ -8,14 +9,10 @@ jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 const useComponentsMock = useComponents as jest.Mock;
 
 describe('ComponentDropdown', () => {
-  beforeEach(() => {});
+  mockUseNamespaceHook('test-ns');
 
   it('should show loading indicator if components arent loaded', () => {
     useComponentsMock.mockReturnValue([[], false]);

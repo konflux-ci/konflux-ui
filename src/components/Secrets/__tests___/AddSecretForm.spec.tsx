@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor, configure } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useApplications } from '../../../hooks/useApplications';
 import AddSecretForm from '../SecretsForm/AddSecretForm';
 
@@ -27,16 +28,13 @@ class MockResizeObserver {
   disconnect() {}
 }
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 const useApplicationsMock = useApplications as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 window.ResizeObserver = MockResizeObserver;
 
 describe('AddSecretForm', () => {
   let navigateMock;
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     navigateMock = jest.fn();
