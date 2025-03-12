@@ -71,7 +71,6 @@ export type OwnerReference = {
 
 type _QueryOptions<S extends string | Selector> = {
   ns: string;
-  ws: string;
   name?: string;
   path?: string;
   queryParams: QueryParams<S>;

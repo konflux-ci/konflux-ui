@@ -9,6 +9,7 @@ import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
@@ -22,13 +23,12 @@ import { PipelineRunsFilterContext } from '../../../Filter/utils/PipelineRunsFil
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRunsForCommit(namespace, workspace, applicationName, commitName);
+    usePipelineRunsForCommit(namespace, applicationName, commitName);
   const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
   const { name, status, type } = filters;
 

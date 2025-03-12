@@ -8,6 +8,7 @@ import { HttpError } from '../../../k8s/error';
 import { Table } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
@@ -15,7 +16,6 @@ import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunsFilterToolbar from '../../Filter/PipelineRunsFilterToolbar';
 import { createFilterObj, filterPipelineRuns } from '../../Filter/utils/pipelineruns-filter-utils';
 import { PipelineRunsFilterContext } from '../../Filter/utils/PipelineRunsFilterContext';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';
@@ -31,15 +31,14 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   componentName,
   customFilter,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
+  const namespace = useNamespace();
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
   const { name, status, type } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
       applicationLoaded ? namespace : null,
-      workspace,
       React.useMemo(
         () => ({
           selector: {

@@ -1,6 +1,7 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
@@ -8,7 +9,6 @@ import { useComponents } from '../../../../hooks/useComponents';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunStatus } from '../../../../types';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsList from '../SnapshotPipelineRunsList';
@@ -40,6 +40,7 @@ jest.mock('../../../../hooks/useSnapshots', () => ({
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParamBatch: jest.fn(),
 }));
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('../../../../shared/components/table', () => {
   const actual = jest.requireActual('../../../../shared/components/table');
@@ -165,10 +166,11 @@ const TestedComponent = ({ name, pipelineruns, loaded }) => (
 );
 
 describe('SnapshotPipelinerunsTab', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
+    useNamespaceMock.mockReturnValue('test-ns');
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
   });
@@ -184,7 +186,7 @@ describe('SnapshotPipelinerunsTab', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 

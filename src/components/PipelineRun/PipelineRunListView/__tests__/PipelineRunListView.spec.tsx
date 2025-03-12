@@ -3,18 +3,20 @@ import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecate
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
-import { createUseWorkspaceInfoMock, createUseApplicationMock } from '../../../../utils/test-utils';
+import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
 
 jest.useFakeTimers();
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -188,12 +190,13 @@ const TestedComponent = ({ name }) => (
 );
 
 describe('Pipeline run List', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render spinner if application data is not loaded', () => {
@@ -222,7 +225,7 @@ describe('Pipeline run List', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 

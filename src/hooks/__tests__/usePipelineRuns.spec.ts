@@ -154,7 +154,7 @@ describe('usePipelineRuns', () => {
       it('should query etcd and tekton results simultaneously', () => {
         useK8sWatchResourceMock.mockReturnValue([[], false]);
         renderHook(() =>
-          useTestHook('test-ns', 'test-ws', {
+          useTestHook('test-ns', {
             selector: {
               foo: 'bar',
             },
@@ -169,12 +169,11 @@ describe('usePipelineRuns', () => {
               foo: 'bar',
             },
             watch: true,
-            workspace: 'test-ws',
           },
           model,
           { retry: false },
         );
-        expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', 'test-ws', {
+        expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', {
           selector: { foo: 'bar' },
         });
       });
@@ -182,7 +181,7 @@ describe('usePipelineRuns', () => {
       it('should query etcd only when the limit was achieved', () => {
         useK8sWatchResourceMock.mockReturnValue([resultMock, true]);
         const { result } = renderHook(() =>
-          useTestHook('test-ns', 'test-ws', {
+          useTestHook('test-ns', {
             limit: 1,
             selector: {
               foo: 'bar',
@@ -198,12 +197,11 @@ describe('usePipelineRuns', () => {
               foo: 'bar',
             },
             watch: true,
-            workspace: 'test-ws',
           },
           model,
           { retry: false },
         );
-        expect(useTRRunsMock).toHaveBeenCalledWith(null, 'test-ws', {
+        expect(useTRRunsMock).toHaveBeenCalledWith(null, {
           limit: 1,
           selector: {
             foo: 'bar',
@@ -216,7 +214,7 @@ describe('usePipelineRuns', () => {
       it('should query etcd followed by tekton results when there is a limit', () => {
         useK8sWatchResourceMock.mockReturnValue([resultMock, false]);
         const { rerender } = renderHook(() =>
-          useTestHook('test-ns', 'test-ws', {
+          useTestHook('test-ns', {
             limit: 10,
             selector: {
               foo: 'bar',
@@ -232,12 +230,11 @@ describe('usePipelineRuns', () => {
               foo: 'bar',
             },
             watch: true,
-            workspace: 'test-ws',
           },
           model,
           { retry: false },
         );
-        expect(useTRRunsMock).toHaveBeenCalledWith(null, 'test-ws', {
+        expect(useTRRunsMock).toHaveBeenCalledWith(null, {
           limit: 10,
           selector: {
             foo: 'bar',
@@ -250,7 +247,7 @@ describe('usePipelineRuns', () => {
         useK8sWatchResourceMock.mockReturnValue([[], true]);
         rerender();
 
-        expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', 'test-ws', {
+        expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', {
           limit: 10,
           selector: {
             foo: 'bar',
@@ -262,7 +259,7 @@ describe('usePipelineRuns', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([[], false, error]);
         useTRRunsMock.mockReturnValue([[], false]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([[], false, error, undefined]);
       });
 
@@ -270,7 +267,7 @@ describe('usePipelineRuns', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([[], false]);
         useTRRunsMock.mockReturnValue([[], false, error]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([[], false, error, undefined]);
       });
 
@@ -279,7 +276,7 @@ describe('usePipelineRuns', () => {
         const error2 = { code: 403 };
         useK8sWatchResourceMock.mockReturnValue([[], false, error]);
         useTRRunsMock.mockReturnValue([[], false, error2]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([[], false, error2, undefined]);
       });
 
@@ -287,7 +284,7 @@ describe('usePipelineRuns', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([resultMock, true]);
         useTRRunsMock.mockReturnValue([[], false, error]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([resultMock, false, error, undefined]);
       });
 
@@ -295,21 +292,21 @@ describe('usePipelineRuns', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([[], false, error]);
         useTRRunsMock.mockReturnValue([resultMock, true]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([resultMock, false, error, undefined]);
       });
 
       it('should dedupe results from etcd and tekton results', () => {
         useK8sWatchResourceMock.mockReturnValue([resultMock, true]);
         useTRRunsMock.mockReturnValue([resultMock, true]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([resultMock, true, undefined, undefined]);
       });
 
       it('should sort etcd results by creationTimestamp', () => {
         useK8sWatchResourceMock.mockReturnValue([resultMock.slice().reverse(), true]);
         useTRRunsMock.mockReturnValue([resultMock2, true]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([
           [...resultMock, ...resultMock2],
           true,
@@ -321,7 +318,7 @@ describe('usePipelineRuns', () => {
       it('should include removed results from etcd', () => {
         useK8sWatchResourceMock.mockReturnValue([resultMock2, true]);
         useTRRunsMock.mockReturnValue([[], true]);
-        const { result, rerender } = renderHook(() => useTestHook('test-ns', 'test-ws'));
+        const { result, rerender } = renderHook(() => useTestHook('test-ns'));
         expect(result.current).toEqual([resultMock2, true, undefined, undefined]);
 
         useK8sWatchResourceMock.mockReturnValue([resultMock, true]);
@@ -367,12 +364,11 @@ describe('usePipelineRuns', () => {
             },
           },
           watch: true,
-          workspace: 'test-ws',
         },
         PipelineRunModel,
         { retry: false },
       );
-      expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', 'test-ws', {
+      expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', {
         limit: 1,
         selector: {
           matchLabels: {
@@ -415,12 +411,11 @@ describe('usePipelineRuns', () => {
             },
           },
           watch: true,
-          workspace: 'test-ws',
         },
         PipelineRunModel,
         { retry: false },
       );
-      expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', 'test-ws', {
+      expect(useTRPipelineRunsMock).toHaveBeenCalledWith('test-ns', {
         limit: 1,
         selector: {
           matchLabels: {
@@ -444,7 +439,7 @@ describe('usePipelineRuns', () => {
   describe('usePipelineRunsForCommit', () => {
     it('should create specific selector', () => {
       useComponentsMock.mockReturnValue([[], true]);
-      renderHook(() => usePipelineRunsForCommit('test-ns', 'test-ws', 'test-app', 'sample-sha'));
+      renderHook(() => usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha'));
 
       expect(useK8sWatchResourceMock).toHaveBeenCalledTimes(1);
       expect(useK8sWatchResourceMock.mock.calls).toEqual([
@@ -460,7 +455,6 @@ describe('usePipelineRuns', () => {
               },
             },
             watch: true,
-            workspace: 'test-ws',
           },
           PipelineRunModel,
           { retry: false },
@@ -470,7 +464,6 @@ describe('usePipelineRuns', () => {
       expect(useTRPipelineRunsMock.mock.calls).toEqual([
         [
           'test-ns',
-          'test-ws',
           {
             selector: {
               filterByCommit: 'sample-sha',
@@ -491,7 +484,7 @@ describe('usePipelineRuns', () => {
       ]);
       useTRPipelineRunsMock.mockReturnValue([[], true]);
       const { result } = renderHook(() =>
-        usePipelineRunsForCommit('test-ns', 'test-ws', 'test-app', 'sample-sha'),
+        usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha'),
       );
       expect(result.current).toEqual([[...resultMock, ...resultMock2], true, undefined, undefined]);
     });
@@ -516,7 +509,7 @@ describe('usePipelineRuns', () => {
     describe(describeTitle, () => {
       it('should create specific selector', () => {
         useK8sWatchResourceMock.mockReturnValue([{}, false]);
-        const { rerender } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { rerender } = renderHook(() => useTestHook('test-ns', 'sample-name'));
 
         expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
           {
@@ -525,12 +518,11 @@ describe('usePipelineRuns', () => {
             isList: false,
             name: 'sample-name',
             watch: true,
-            workspace: 'test-ws',
           },
           model,
           { retry: false },
         );
-        expect(useTRRunsMock).toHaveBeenCalledWith(null, 'test-ws', {
+        expect(useTRRunsMock).toHaveBeenCalledWith(null, {
           limit: 1,
           filter: 'data.metadata.name == "sample-name"',
         });
@@ -546,12 +538,11 @@ describe('usePipelineRuns', () => {
             isList: false,
             name: 'sample-name',
             watch: true,
-            workspace: 'test-ws',
           },
           model,
           { retry: false },
         );
-        expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', 'test-ws', {
+        expect(useTRRunsMock).toHaveBeenCalledWith('test-ns', {
           limit: 1,
           filter: 'data.metadata.name == "sample-name"',
         });
@@ -559,28 +550,28 @@ describe('usePipelineRuns', () => {
 
       it('should return a single run', () => {
         useK8sWatchResourceMock.mockReturnValue([resultMock[0], true]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([resultMock[0], true, undefined]);
       });
 
       it('should return error', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([{}, true, error]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([undefined, false, error]);
       });
 
       it('should return a single run from tekton results', () => {
         useK8sWatchResourceMock.mockReturnValue([null, false]);
         useTRRunsMock.mockReturnValue([resultMock, true, undefined]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([resultMock[0], true, undefined]);
       });
 
       it('should return not loaded if we have no result', () => {
         useK8sWatchResourceMock.mockReturnValue([null, false, undefined]);
         useTRRunsMock.mockReturnValue([[], true, undefined]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([undefined, false, undefined]);
       });
 
@@ -588,7 +579,7 @@ describe('usePipelineRuns', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([null, false, error]);
         useTRRunsMock.mockReturnValue([[], true, undefined]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([undefined, false, error]);
       });
 
@@ -596,7 +587,7 @@ describe('usePipelineRuns', () => {
         const error = { code: 502 };
         useK8sWatchResourceMock.mockReturnValue([null, false, {}]);
         useTRRunsMock.mockReturnValue([[], true, error]);
-        const { result } = renderHook(() => useTestHook('test-ns', 'test-ws', 'sample-name'));
+        const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([undefined, false, error]);
       });
     });

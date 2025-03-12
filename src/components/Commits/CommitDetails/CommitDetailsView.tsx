@@ -1,10 +1,12 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
 import { PipelineRunGroupVersionKind } from '../../../models';
+import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
@@ -13,7 +15,6 @@ import { runStatus } from '../../../utils/pipeline-utils';
 import { DetailsPage } from '../../DetailsPage';
 import SidePanelHost from '../../SidePanel/SidePanelHost';
 import { StatusIconWithTextLabel } from '../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useCommitStatus } from '../commit-status';
 import { CommitIcon } from '../CommitIcon';
 
@@ -23,12 +24,11 @@ export const COMMITS_GS_LOCAL_STORAGE_KEY = 'commits-getting-started-modal';
 
 const CommitDetailsView: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
   const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
     namespace,
-    workspace,
     applicationName,
     commitName,
   );
@@ -73,11 +73,18 @@ const CommitDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/activity/latest-commits`,
+            path: ACTIVITY_PATH_LATEST_COMMIT.createPath({
+              workspaceName: namespace,
+              applicationName,
+            }),
             name: 'commits',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/commit/${commitName}`,
+            path: COMMIT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              commitName,
+            }),
             name: commitDisplayName,
           },
         ]}
@@ -97,7 +104,11 @@ const CommitDetailsView: React.FC = () => {
             onClick: () => window.open(commit.shaURL),
           },
         ]}
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/commit/${commitName}`}
+        baseURL={COMMIT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          commitName,
+        })}
         tabs={[
           {
             key: 'index',

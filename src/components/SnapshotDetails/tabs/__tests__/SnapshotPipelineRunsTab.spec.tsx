@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
@@ -8,10 +9,11 @@ import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsTab from '../SnapshotPipelineRunsTab';
+
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -129,9 +131,8 @@ const snapShotPLRs = [
     },
   },
 ];
-
 describe('SnapshotPipelinerunsTab', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useParamsMock.mockReturnValue({
@@ -142,6 +143,7 @@ describe('SnapshotPipelinerunsTab', () => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
@@ -157,7 +159,7 @@ describe('SnapshotPipelinerunsTab', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 

@@ -15,7 +15,10 @@ export const githubRedirectLoader: LoaderFunction = async ({ params }) => {
   );
   if (!allowed) throw new Response('Access check Denied', { status: 403 });
   if (!params[GithubRedirectRouteParams.pipelineRunName]) return null;
-  return QueryPipelineRun(namespace, namespace, params[GithubRedirectRouteParams.pipelineRunName]);
+  return QueryPipelineRun(
+    params[GithubRedirectRouteParams.ns],
+    params[GithubRedirectRouteParams.pipelineRunName],
+  );
 };
 
 export { default as GithubRedirect } from './GithubRedirect';
