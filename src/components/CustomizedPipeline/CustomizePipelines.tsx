@@ -218,18 +218,22 @@ const Row: React.FC<
               title="Pull request failed to reach its destination"
               actionLinks={
                 <>
-                  <ExternalLink
-                    href={applicationUrl}
-                    analytics={{
-                      link_name: 'install-github-app',
-                      link_location: 'manage-builds-pipelines',
-                      component_name: component.metadata.name,
-                      app_name: component.spec.application,
-                      workspace,
-                    }}
-                  >
-                    Install Git Application
-                  </ExternalLink>
+                  {applicationUrl ? (
+                    <ExternalLink
+                      href={applicationUrl}
+                      analytics={{
+                        link_name: 'install-github-app',
+                        link_location: 'manage-builds-pipelines',
+                        component_name: component.metadata.name,
+                        app_name: component.spec.application,
+                        workspace,
+                      }}
+                    >
+                      Install Git Application
+                    </ExternalLink>
+                  ) : (
+                    ''
+                  )}
                 </>
               }
             >
