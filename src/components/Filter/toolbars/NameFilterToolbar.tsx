@@ -7,6 +7,7 @@ type NameFilterToolbarProps = {
   setName: (string) => void;
   onClearFilters: () => void;
   children?: React.ReactNode;
+  dataTest?: string;
 };
 
 export const NameFilterToolbar = ({
@@ -14,13 +15,14 @@ export const NameFilterToolbar = ({
   setName,
   onClearFilters,
   children,
+  dataTest,
 }: NameFilterToolbarProps) => {
   const onNameInput = debounce((newName: string) => {
     setName(newName);
   }, 600);
 
   return (
-    <Toolbar usePageInsets clearAllFilters={onClearFilters}>
+    <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
       <ToolbarContent>
         <ToolbarItem className="pf-v5-u-ml-0">
           <SearchInput
