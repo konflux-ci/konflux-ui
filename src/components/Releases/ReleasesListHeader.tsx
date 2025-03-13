@@ -8,6 +8,8 @@ export const releasesTableColumnClasses = {
   status: 'pf-m-width-20',
   releasePlan: 'pf-m-width-25',
   releaseSnapshot: 'pf-m-hidden pf-m-width-25 pf-m-visible-on-xl',
+  managedPipelineRun: 'pf-m-hidden pf-m-width-25 pf-m-visible-on-xl',
+  tenantPipelineRun: 'pf-m-hidden pf-m-width-25 pf-m-visible-on-xl',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -59,6 +61,14 @@ const getReleasesListHeader: CreateHeader = (activeIndex, activeDirection, onSor
     {
       title: 'Release Snapshot',
       props: { className: releasesTableColumnClasses.releaseSnapshot },
+    },
+    {
+      title: 'Tenant Pipeline Run',
+      props: { className: releasesTableColumnClasses.tenantPipelineRun },
+    },
+    {
+      title: 'Managed Pipeline Run',
+      props: { className: releasesTableColumnClasses.managedPipelineRun },
     },
     {
       title: ' ',

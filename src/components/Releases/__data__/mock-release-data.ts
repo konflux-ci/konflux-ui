@@ -14,7 +14,7 @@ export const mockReleases = [
       startTime: '2023-01-01T10:30:00Z',
       completionTime: '2023-01-01T10:30:10Z',
       target: 'test-target',
-      processing: {
+      tenantProcessing: {
         releaseStrategy: 'my-ns/test-strategy',
         pipelineRun: 'my-ns/test-pipelinerun',
       },
@@ -35,7 +35,7 @@ export const mockReleases = [
       startTime: '2023-01-01T10:30:00Z',
       completionTime: '2023-01-01T10:30:10Z',
       target: 'test-target',
-      processing: {
+      tenantProcessing: {
         releaseStrategy: 'my-ns/test-strategy',
         pipelineRun: 'my-ns/test-pipelinerun',
       },
@@ -56,7 +56,7 @@ export const mockReleases = [
       startTime: '2023-01-01T10:30:00Z',
       completionTime: '2023-01-01T10:30:10Z',
       target: 'test-target',
-      processing: {
+      tenantProcessing: {
         releaseStrategy: 'my-ns/test-strategy',
         pipelineRun: 'my-ns/test-pipelinerun',
       },
