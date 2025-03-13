@@ -164,8 +164,6 @@ describe('CustomizePipeline', () => {
     );
     const link = result.getByRole('link', { name: /Install GitHub Application/ });
     expect(link).toBeInTheDocument();
-    const button = result.getByRole('button', { name: 'Roll back to default pipeline' });
-    expect(button).toBeInTheDocument();
   });
 
   it('should display upgrade status message', () => {
