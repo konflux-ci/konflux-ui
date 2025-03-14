@@ -3,6 +3,7 @@ import { actions } from '../support/pageObjects/global-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
+import { GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
 import { DetailsTab, TaskRunsTab } from '../support/pages/tabs/PipelinerunsTabPage';
@@ -40,15 +41,29 @@ describe('Basic Happy Path', () => {
     });
     if (allTestsSucceeded || Cypress.env('REMOVE_APP_ON_FAIL')) {
       // use UI to remove the application to test the flow
+      // The below command aims to navigate to applications page.
+      // but it does not work well. Because when I add the
+      // 'GetAppStartedPage.waitForLoad()' after the step, it failed.
       Common.navigateTo(NavItem.applications);
-      Applications.openKebabMenu(applicationName);
-      cy.get(actions.deleteApp).click();
-      cy.get(actions.deleteModalInput).clear().type(applicationName);
-      cy.get(actions.deleteModalButton).click();
-      // Temporary disabled flaky test. https://issues.redhat.com/browse/KFLUXUI-324
-      // cy.get(`[data-id="${applicationName}"]`).should('not.exist');
-      APIHelper.deleteGitHubRepository(repoName);
+      // we only delete the app when cy get the app.
+      // it means we would skip 'delete app' sometimes.
+      length = Cypress.$(`[data-id="${applicationName}"`).length;
+
+      if (length > 0) {
+        Applications.openKebabMenu(applicationName);
+        cy.get(actions.deleteApp)
+          .its('length')
+          .then((deleteLength) => {
+            if (deleteLength > 0) {
+              cy.get(actions.deleteApp).click();
+              cy.get(actions.deleteModalInput).clear().type(applicationName);
+              cy.get(actions.deleteModalButton).click();
+            }
+          });
+      }
     }
+
+    APIHelper.deleteGitHubRepository(repoName);
   });
 
   it('Create an Application with a component', () => {
