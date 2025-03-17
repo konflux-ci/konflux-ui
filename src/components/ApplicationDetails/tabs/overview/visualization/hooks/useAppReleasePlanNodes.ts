@@ -24,7 +24,7 @@ export const useAppReleasePlanNodes = (
   errors: unknown[],
 ] => {
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace);
+  const [releases, releasesLoaded, releasesError] = useReleases(namespace, applicationName);
   const allLoaded = releasePlansLoaded && releasesLoaded;
   const allErrors = [releasesError, releasePlansError].filter((e) => !!e);
 
