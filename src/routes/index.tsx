@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { AppRoot } from '../AppRoot/AppRoot';
 import { ActivityTab } from '../components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
@@ -86,13 +87,21 @@ export const router = createBrowserRouter([
             path: 'integrationtests',
             loader: integrationListPageLoader,
             errorElement: <RouteErrorBoundry />,
-            element: <IntegrationTestsListView />,
+            element: (
+              <FilterContextProvider filterParams={['name']}>
+                <IntegrationTestsListView />
+              </FilterContextProvider>
+            ),
           },
           {
             path: 'releases',
             loader: releaseListViewTabLoader,
             errorElement: <RouteErrorBoundry />,
-            element: <ReleaseListViewTab />,
+            element: (
+              <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
+                <ReleaseListViewTab />
+              </FilterContextProvider>
+            ),
           },
         ],
       },

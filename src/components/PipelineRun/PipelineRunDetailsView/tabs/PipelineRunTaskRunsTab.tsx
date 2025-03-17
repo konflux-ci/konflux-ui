@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { HttpError } from '../../../../k8s/error';
@@ -22,7 +23,11 @@ const PipelineRunTaskRunsTab: React.FC = () => {
     );
   }
 
-  return <TaskRunListView taskRuns={taskRuns} loaded={taskRunsLoaded} />;
+  return (
+    <FilterContextProvider filterParams={['name']}>
+      <TaskRunListView taskRuns={taskRuns} loaded={taskRunsLoaded} />
+    </FilterContextProvider>
+  );
 };
 
 export default PipelineRunTaskRunsTab;

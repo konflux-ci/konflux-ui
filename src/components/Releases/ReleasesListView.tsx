@@ -3,13 +3,13 @@ import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { useApplicationReleases } from '../../hooks/useApplicationReleases';
-import { useSearchParam } from '../../hooks/useSearchParam';
 import { useSortedResources } from '../../hooks/useSortedResources';
 import { RouterParams } from '../../routes/utils';
-import { Table } from '../../shared';
+import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { ReleaseKind } from '../../types';
-import { FilterToolbar } from '../Filter/toolbars/FilterToolbar';
+import { FilterContext } from '../Filter/generic/FilterContext';
+import { ReleasesFilterToolbar } from '../Filter/toolbars/ReleasesFilterToolbar';
 import ReleasesEmptyState from './ReleasesEmptyState';
 import getReleasesListHeader, { SortableHeaders } from './ReleasesListHeader';
 import ReleasesListRow from './ReleasesListRow';
@@ -29,11 +29,17 @@ const ReleasesListView: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
   const [releases, loaded] = useApplicationReleases(applicationName);
   const [filterType, setFilterType] = React.useState<FilterTypes>(FilterTypes.name);
-  const [searchFilter, setSearchFilter, clearSearchFilter] = useSearchParam(filterType, '');
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.created);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
     SortByDirection.desc,
   );
+
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    [filterType]: unparsedFilters[filterType] ? (unparsedFilters[filterType] as string) : '',
+  });
+
+  const { [filterType]: searchFilter } = filters;
 
   const ReleasesListHeader = React.useMemo(
     () =>
@@ -82,17 +88,17 @@ const ReleasesListView: React.FC = () => {
         Releases
       </Title>
       <>
-        <FilterToolbar
+        <ReleasesFilterToolbar
           value={searchFilter}
           dropdownItems={Object.values(FilterTypes)}
-          onInput={setSearchFilter}
+          onInput={(value) => setFilters({ [filterType]: value })}
           onFilterTypeChange={(val) => {
-            clearSearchFilter();
+            setFilters({ ...filters, [filterType]: '' });
             setFilterType(val as FilterTypes);
           }}
         />
         {!sortedReleases?.length ? (
-          <FilteredEmptyState onClearFilters={clearSearchFilter} />
+          <FilteredEmptyState onClearFilters={() => onClearFilters()} />
         ) : (
           <>
             <Table

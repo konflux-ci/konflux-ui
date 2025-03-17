@@ -5,25 +5,21 @@ import {
   EmptyStateBody,
   PageSection,
   PageSectionVariants,
-  SearchInput,
   Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
 } from '@patternfly/react-core';
-import { debounce } from 'lodash-es';
 import emptyStateImgUrl from '../../assets/Application.svg';
 import { useApplications } from '../../hooks/useApplications';
-import { useSearchParam } from '../../hooks/useSearchParam';
 import { ApplicationModel, ComponentModel } from '../../models';
 import { IMPORT_PATH } from '../../routes/paths';
-import { Table } from '../../shared';
+import { Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ApplicationKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import { FilterContext } from '../Filter/generic/FilterContext';
+import { NameFilterToolbar } from '../Filter/toolbars/NameFilterToolbar';
 import PageLayout from '../PageLayout/PageLayout';
 import { ApplicationListHeader } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
@@ -32,7 +28,11 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
   const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
 
   const [applications, loaded] = useApplications(namespace);
   applications?.sort(
@@ -47,14 +47,6 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
         app.metadata.name.includes(lowerCaseNameFilter),
     );
   }, [nameFilter, applications]);
-
-  const onClearFilters = () => {
-    setNameFilter('');
-  };
-
-  const onNameInput = debounce((n: string) => {
-    setNameFilter(n);
-  }, 600);
 
   if (!loaded) {
     return (
@@ -105,40 +97,27 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
             </AppEmptyState>
           ) : (
             <>
-              <Toolbar usePageInsets>
-                <ToolbarContent>
-                  <ToolbarItem className="pf-v5-u-ml-0">
-                    <SearchInput
-                      name="nameInput"
-                      data-test="name-input-filter"
-                      type="search"
-                      aria-label="name filter"
-                      placeholder="Filter by name..."
-                      onChange={(_, n) => onNameInput(n)}
-                      value={nameFilter}
-                    />
-                  </ToolbarItem>
-                  <ToolbarItem>
-                    <ButtonWithAccessTooltip
-                      variant="primary"
-                      component={(props) => (
-                        <Link
-                          {...props}
-                          to={IMPORT_PATH.createPath({ workspaceName: namespace })}
-                        />
-                      )}
-                      isDisabled={!(canCreateApplication && canCreateComponent)}
-                      tooltip="You don't have access to create an application"
-                      analytics={{
-                        link_name: 'create-application',
-                        namespace,
-                      }}
-                    >
-                      Create application
-                    </ButtonWithAccessTooltip>
-                  </ToolbarItem>
-                </ToolbarContent>
-              </Toolbar>
+              <NameFilterToolbar
+                name={nameFilter}
+                setName={(name) => setFilters({ name })}
+                onClearFilters={onClearFilters}
+                dataTest="application-list-toolbar"
+              >
+                <ButtonWithAccessTooltip
+                  variant="primary"
+                  component={(props) => (
+                    <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+                  )}
+                  isDisabled={!(canCreateApplication && canCreateComponent)}
+                  tooltip="You don't have access to create an application"
+                  analytics={{
+                    link_name: 'create-application',
+                    namespace,
+                  }}
+                >
+                  Create application
+                </ButtonWithAccessTooltip>
+              </NameFilterToolbar>
               {filteredApplications.length !== 0 ? (
                 <Table
                   data={filteredApplications}
@@ -151,7 +130,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                   })}
                 />
               ) : (
-                <FilteredEmptyState onClearFilters={onClearFilters} />
+                <FilteredEmptyState onClearFilters={() => onClearFilters()} />
               )}
             </>
           )}
