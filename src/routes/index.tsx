@@ -1,16 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppRoot } from '../AppRoot/AppRoot';
-import { ActivityTab } from '../components/Activity';
-import { ApplicationDetails, ApplicationOverviewTab } from '../components/ApplicationDetails';
-import { ComponentListTab, componentsTabLoader } from '../components/Components/ComponentsListView';
 import { GithubRedirect, githubRedirectLoader } from '../components/GithubRedirect';
-import {
-  integrationListPageLoader,
-  IntegrationTestsListView,
-} from '../components/IntegrationTests/IntegrationTestsListView';
 import { ModalProvider } from '../components/modal/ModalProvider';
 import { Overview } from '../components/Overview/Overview';
-import { ReleaseListViewTab, releaseListViewTabLoader } from '../components/Releases';
 import { HttpError } from '../k8s/error';
 import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
@@ -25,8 +17,9 @@ import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
 import snapshotRoutes from './page-routes/snapshots';
 import taskRunRoutes from './page-routes/taskrun';
+import userAccessRoutes from './page-routes/user-access';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
-import { GithubRedirectRouteParams, RouterParams } from './utils';
+import { GithubRedirectRouteParams } from './utils';
 
 export const router = createBrowserRouter([
   {
@@ -58,45 +51,8 @@ export const router = createBrowserRouter([
       ...commitRoutes,
       ...pipelineRoutes,
       ...taskRunRoutes,
-      /* Application details */
-      {
-        path: `workspaces/:${RouterParams.workspaceName}/applications/:${RouterParams.applicationName}`,
-        element: <ApplicationDetails />,
-        errorElement: <RouteErrorBoundry />,
-        children: [
-          {
-            index: true,
-            element: <ApplicationOverviewTab />,
-          },
-          {
-            path: `activity/:${RouterParams.activityTab}`,
-            element: <ActivityTab />,
-          },
-          {
-            path: `activity`,
-            element: <ActivityTab />,
-          },
-          {
-            path: 'components',
-            loader: componentsTabLoader,
-            errorElement: <RouteErrorBoundry />,
-            element: <ComponentListTab />,
-          },
-          {
-            path: 'integrationtests',
-            loader: integrationListPageLoader,
-            errorElement: <RouteErrorBoundry />,
-            element: <IntegrationTestsListView />,
-          },
-          {
-            path: 'releases',
-            loader: releaseListViewTabLoader,
-            errorElement: <RouteErrorBoundry />,
-            element: <ReleaseListViewTab />,
-          },
-        ],
-      },
-      /* User Acess routes */
+      ...userAccessRoutes,
+
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',
