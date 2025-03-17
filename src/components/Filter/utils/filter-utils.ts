@@ -34,7 +34,7 @@ export const filterPipelineRuns = (
 export const createFilterObj = <T>(
   items: T[],
   keyExtractor: (item: T) => string | undefined,
-  validKeys: string[],
+  validKeys?: string[],
   filterFn?: (item: T) => boolean,
 ): { [key: string]: number } => {
   return items.reduce((acc, item) => {
@@ -44,7 +44,7 @@ export const createFilterObj = <T>(
 
     const key = keyExtractor(item);
 
-    if (validKeys.includes(key)) {
+    if (!validKeys || validKeys.includes(key)) {
       if (acc[key] !== undefined) {
         acc[key] = acc[key] + 1;
       } else {
