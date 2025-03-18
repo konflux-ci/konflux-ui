@@ -2,11 +2,12 @@ import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen } from '@testing-library/react';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-import { useSearchParam } from '../../../../hooks/useSearchParam';
+import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -32,7 +33,7 @@ jest.mock('../../../../hooks/useScanResults', () => ({
 }));
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
-  useSearchParam: jest.fn(),
+  useSearchParamBatch: jest.fn(),
 }));
 
 jest.mock('../../../../hooks/useSnapshots', () => ({
@@ -78,23 +79,11 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useSearchParamMock = useSearchParam as jest.Mock;
+const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 const mockUseSnapshots = useSnapshots as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
-
-const params = {};
-
-const mockUseSearchParam = (name: string) => {
-  const setter = (value) => {
-    params[name] = value;
-  };
-  const unset = () => {
-    params[name] = '';
-  };
-  return [params[name], setter, unset];
-};
 
 const appName = 'my-test-app';
 
@@ -151,7 +140,7 @@ describe('SnapshotPipelinerunsTab', () => {
 
       snapshotName: 'test-snapshot',
     });
-    useSearchParamMock.mockImplementation(mockUseSearchParam);
+    useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
     useNamespaceMock.mockReturnValue('test-ns');

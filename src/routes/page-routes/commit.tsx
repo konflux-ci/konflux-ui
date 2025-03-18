@@ -1,3 +1,4 @@
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
   CommitDetailsView,
   CommitOverviewTab,
@@ -14,7 +15,14 @@ const commitRoutes = [
     element: <CommitDetailsView />,
     children: [
       { index: true, element: <CommitOverviewTab /> },
-      { path: 'pipelineruns', element: <CommitsPipelineRunTab /> },
+      {
+        path: 'pipelineruns',
+        element: (
+          <FilterContextProvider filterParams={['name', 'status', 'type']}>
+            <CommitsPipelineRunTab />
+          </FilterContextProvider>
+        ),
+      },
     ],
   },
 ];

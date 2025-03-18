@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -64,13 +65,15 @@ const SnapshotPipelineRunTab: React.FC = () => {
   }
 
   return (
-    <SnapshotPipelineRunsList
-      snapshotPipelineRuns={SnapshotPipelineRuns}
-      loaded={loaded}
-      applicationName={applicationName}
-      getNextPage={getNextPage}
-      nextPageProps={nextPageProps}
-    />
+    <FilterContextProvider filterParams={['name', 'status', 'type']}>
+      <SnapshotPipelineRunsList
+        snapshotPipelineRuns={SnapshotPipelineRuns}
+        loaded={loaded}
+        applicationName={applicationName}
+        getNextPage={getNextPage}
+        nextPageProps={nextPageProps}
+      />
+    </FilterContextProvider>
   );
 };
 

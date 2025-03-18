@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { PipelineRunKind } from '../../types';
+import { FilterContextProvider } from '../Filter/generic/FilterContext';
 import PipelineRunsListView from '../PipelineRun/PipelineRunListView/PipelineRunsListView';
 
 type PipelineRunsTabProps = {
@@ -14,11 +15,13 @@ const PipelineRunsTab: React.FC<React.PropsWithChildren<PipelineRunsTabProps>> =
   customFilter,
 }) => {
   return (
-    <PipelineRunsListView
-      applicationName={applicationName}
-      componentName={componentName}
-      customFilter={customFilter}
-    />
+    <FilterContextProvider filterParams={['name', 'status', 'type']}>
+      <PipelineRunsListView
+        applicationName={applicationName}
+        componentName={componentName}
+        customFilter={customFilter}
+      />
+    </FilterContextProvider>
   );
 };
 
