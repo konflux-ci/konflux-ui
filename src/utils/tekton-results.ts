@@ -238,6 +238,7 @@ const remainingTaskrunFields = [
 ];
 
 const remainingPipelinerunFields = [
+  'records.data.value.spec.params',
   'records.data.value.status.pipelineSpec.tasks',
   'records.data.value.status.pipelineSpec.finally',
   'records.data.value.status.pipelineResults',
