@@ -10,10 +10,10 @@ import {
 import { ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
 import { COMPONENT_LIST_PATH } from '@routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { getRuleStatus } from '~/utils/enterprise-contract-utils';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { UIEnterpriseContractData } from '../types';
-import { getRuleStatus } from '../utils';
 
 type EnterpriseContractRowType = {
   data: UIEnterpriseContractData;

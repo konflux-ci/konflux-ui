@@ -5,8 +5,11 @@ import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/
 import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as yellowColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
-import { ENTERPRISE_CONTRACT_STATUS, EnterpriseContractResult } from '../types';
-import { K8sResourceCommon } from '../types/k8s';
+import {
+  ENTERPRISE_CONTRACT_STATUS,
+  EnterpriseContractResult,
+} from '~/components/EnterpriseContract/types';
+import { K8sResourceCommon } from '~/types/k8s';
 
 const ENTERPRISE_CONTRACT_LABEL = 'build.appstudio.redhat.com/pipeline';
 
@@ -44,8 +47,25 @@ export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
   }
 };
 
+/**
+ * This regex expect the logs from tekton results to be in this formay
+ *
+ * ```
+ * step-vulnerabilities :-
+ * Lorem Ipsum some logs
+ *
+ * step-report-json :-
+ * {"success":true,"components":[{"name":"devfile-sample-code-with-quarkus-1",<... ec report in JSON ...>,}]}
+ *
+ * ```
+ *
+ */
+const EC_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-|$))/g;
+
 export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
-  const extractedLogs = logs.match(/(\[report-json\] ).+/g);
-  const json = JSON.parse(extractedLogs.map((l) => l.replace('[report-json] ', '')).join(''));
-  return json;
+  const extractedLogs = logs.match(EC_REPORT_JSON_REGEX);
+  if (!extractedLogs || !extractedLogs[0]) {
+    throw new Error('No valid EC report JSON found in logs');
+  }
+  return JSON.parse(extractedLogs[0]);
 };

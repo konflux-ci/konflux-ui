@@ -1,4 +1,4 @@
-import { extractEcResultsFromTaskRunLogs } from '../utils';
+import { extractEcResultsFromTaskRunLogs } from '../enterprise-contract-utils';
 
 describe('extractEcResultsFromTaskRunLogs', () => {
   it('should extract and parse JSON from logs correctly', () => {
