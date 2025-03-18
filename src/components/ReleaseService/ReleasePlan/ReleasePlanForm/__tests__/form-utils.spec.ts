@@ -1,10 +1,11 @@
 import '@testing-library/jest-dom';
 import { ReleasePlanKind } from '../../../../../types/coreBuildService';
 import { createK8sUtilMock } from '../../../../../utils/test-utils';
-import { mockReleasePlan } from '../../__data__/release-plan.mock';
+import { mockEditedReleasePlan, mockReleasePlan } from '../../__data__/release-plan.mock';
 import {
   createReleasePlan,
   editReleasePlan,
+  getReleasePlanFormBreadcrumbs,
   ReleasePipelineLocation,
   releasePlanFormParams,
 } from '../form-utils';
@@ -33,7 +34,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -86,7 +86,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result).toEqual(
       expect.objectContaining({
@@ -132,7 +131,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result.metadata.labels).toEqual({
       'release.appstudio.openshift.io/auto-release': 'true',
@@ -155,7 +153,6 @@ describe('createReleasePlan', () => {
         },
       },
       'test-ns-tenant',
-      'test-ws-tenant',
     );
     expect(result.metadata.labels).toEqual({
       'release.appstudio.openshift.io/auto-release': 'true',
@@ -166,6 +163,7 @@ describe('createReleasePlan', () => {
 
 describe('editReleasePlan', () => {
   it('should update to use the active workspace for current release location', async () => {
+    k8sUpdateMock.mockReturnValue(mockEditedReleasePlan);
     const result = await editReleasePlan(
       mockReleasePlan,
       {
@@ -182,10 +180,10 @@ describe('editReleasePlan', () => {
           path: '/',
         },
       },
-      'my-ws-tenant',
+      mockEditedReleasePlan.spec.target,
     );
 
-    expect(result.spec.target).toBe('my-ws-tenant');
+    expect(result.spec.target).toBe(mockEditedReleasePlan.spec.target);
   });
 });
 
@@ -205,5 +203,42 @@ describe('releasePlanFormParams', () => {
     } as ReleasePlanKind);
 
     expect(result).toEqual([{ name: 'test-key', value: 'test-val' }]);
+  });
+});
+
+describe('getReleasePlanFormBreadcrumbs', () => {
+  const namespace = 'test-ns';
+  it('should return the correct breadcrumbs for creating a release plan', () => {
+    const edit = false;
+
+    const breadcrumbs = getReleasePlanFormBreadcrumbs(namespace, edit);
+
+    expect(breadcrumbs).toEqual([
+      {
+        path: `/workspaces/${namespace}/release`,
+        name: 'Releases',
+      },
+      {
+        path: '#',
+        name: 'Create release plan',
+      },
+    ]);
+  });
+
+  it('should return the correct breadcrumbs for editing a release plan', () => {
+    const edit = true;
+
+    const breadcrumbs = getReleasePlanFormBreadcrumbs(namespace, edit);
+
+    expect(breadcrumbs).toEqual([
+      {
+        path: `/workspaces/${namespace}/release`,
+        name: 'Releases',
+      },
+      {
+        path: '#',
+        name: 'Edit release plan',
+      },
+    ]);
   });
 });

@@ -2,10 +2,13 @@ import { useParams } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
+import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../../../../utils/test-utils';
 import { PipelineRunListRow } from '../../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { pipelineWithCommits } from '../../../__data__/pipeline-with-commits';
 import CommitsPipelineRunTab from '../CommitsPipelineRunTab';
+
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('../../../../../shared/components/table/VirtualBody', () => {
   return {
@@ -25,10 +28,6 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(),
   useParams: jest.fn(),
-}));
-
-jest.mock('../../../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 jest.mock('../../../../../hooks/useTektonResults');
 jest.mock('../../../../../hooks/usePipelineRuns', () => ({
@@ -65,9 +64,11 @@ const commitPlrs = [
 ];
 
 describe('Commit Pipelinerun List', () => {
+  mockUseNamespaceHook('test-ns');
   beforeEach(() => {
     useParamsMock.mockReturnValue({ applicationName: appName, commitName: 'test-sha-1' });
     jest.clearAllMocks();
+    useNamespaceMock.mockReturnValue('test-ns');
   });
   it('should render error state if the API errors out', () => {
     usePipelineRunsForCommitMock.mockReturnValue([
@@ -98,7 +99,7 @@ describe('Commit Pipelinerun List', () => {
     const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 

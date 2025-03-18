@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import { useApplicationReleases } from '../useApplicationReleases';
 import { useApplicationSnapshots } from '../useApplicationSnapshots';
@@ -7,14 +8,11 @@ jest.mock('../useApplicationSnapshots', () => ({
   useApplicationSnapshots: jest.fn(),
 }));
 
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 const watchResourceMock = createK8sWatchResourceMock();
 const useSnapshotsMock = useApplicationSnapshots as jest.Mock;
 
 describe('useApplicationReleases', () => {
+  mockUseNamespaceHook('test-ns');
   it('should return empty array incase release are not loaded', () => {
     watchResourceMock.mockReturnValue([[], false]);
     useSnapshotsMock.mockReturnValue([

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { ComponentKind } from '../types';
 import {
@@ -11,6 +10,7 @@ import {
   SAMPLE_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
+import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
 import { usePipelineRuns } from './usePipelineRuns';
 
@@ -52,13 +52,13 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
   }, {} as PacStatesForComponents);
 
 const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForComponents => {
-  const { workspace } = useWorkspaceInfo();
   const [componentPacStates, setComponentPacStates] = React.useState<PacStatesForComponents>(
     getInitialPacStates(components),
   );
   const { name: prBotName } = useApplicationPipelineGitHubApp();
   const namespace = components?.[0]?.metadata.namespace;
-  const application = components?.[0]?.spec.application;
+  const applicationName = components?.[0]?.spec.application;
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
 
   React.useEffect(() => {
     setComponentPacStates(() => getInitialPacStates(components));
@@ -75,27 +75,22 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
   );
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRuns(
-    neededNames.length ? namespace : null,
-    workspace,
+    applicationLoaded ? namespace : null,
     React.useMemo(
       () => ({
         selector: {
+          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.APPLICATION]: application,
+            [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
           matchExpressions: [
-            {
-              key: PipelineRunLabel.COMPONENT,
-              operator: 'In',
-              values: neededNames,
-            },
             { key: PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL, operator: 'DoesNotExist' },
           ],
         },
       }),
-      [application, neededNames],
+      [applicationName, application],
     ),
   );
 

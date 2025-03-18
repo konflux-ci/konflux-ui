@@ -86,11 +86,12 @@ const KeyValueFileInputField: React.FC<
                 </FlexItem>
                 <FlexItem>
                   <FileUploadField
-                    required
+                    isRequired
                     data-test="file-upload-value"
                     id="value"
                     type="text"
                     label="Value"
+                    isDisabled={v.readOnlyValue}
                     name={`${name}.${idx.toString()}.value`}
                     filenamePlaceholder="Drag a file here or upload one"
                     onDataChange={(_, data: string) => {
@@ -126,4 +127,5 @@ const KeyValueFileInputField: React.FC<
   );
 };
 
+export const InternalKeyValueFileInputField = KeyValueFileInputField;
 export default KeyValueFileInputField;

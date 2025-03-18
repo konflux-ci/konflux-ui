@@ -2,24 +2,29 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { css } from '@patternfly/react-styles';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
+import { APPLICATION_RELEASE_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared/components/table';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { releasesTableColumnClasses } from './ReleasesListHeader';
 
 const ReleasesListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<ReleaseKind, { applicationName: string }>>
 > = ({ obj, customData: { applicationName } }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const status = useReleaseStatus(obj);
 
   return (
     <>
       <TableData className={releasesTableColumnClasses.name}>
         <Link
-          to={`/workspaces/${workspace}/applications/${applicationName}/releases/${obj.metadata.name}`}
+          to={APPLICATION_RELEASE_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            releaseName: obj.metadata.name,
+          })}
         >
           {obj.metadata.name}
         </Link>
@@ -35,7 +40,11 @@ const ReleasesListRow: React.FC<
       </TableData>
       <TableData className={releasesTableColumnClasses.releaseSnapshot}>
         <Link
-          to={`/workspaces/${workspace}/applications/${applicationName}/snapshots/${obj.spec.snapshot}`}
+          to={SNAPSHOT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            snapshotName: obj.spec.snapshot,
+          })}
         >
           {obj.spec.snapshot}
         </Link>

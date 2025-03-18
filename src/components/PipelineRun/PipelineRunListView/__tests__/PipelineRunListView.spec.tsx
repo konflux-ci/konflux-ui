@@ -1,16 +1,18 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-// import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind } from '../../../../types';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
+import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListView from '../PipelineRunsListView';
+
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -19,6 +21,8 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(),
 }));
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('../../../../hooks/useScanResults', () => ({
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
@@ -176,14 +180,14 @@ const pipelineRuns: PipelineRunKind[] = [
 ];
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-
 describe('Pipeline run List', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useSearchParamMock.mockImplementation(mockUseSearchParam);
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render spinner if application data is not loaded', () => {
@@ -212,7 +216,7 @@ describe('Pipeline run List', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
     );
   });
 

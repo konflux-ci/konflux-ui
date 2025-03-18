@@ -15,14 +15,16 @@ import {
 import { useLatestSuccessfulBuildPipelineRunForComponent } from '../../../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { HttpError } from '../../../../k8s/error';
+import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
+import { getLastestImage } from '../../../../utils/component-utils';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
 import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 
 type ComponentLatestBuildProps = {
   component: ComponentKind;
@@ -31,7 +33,7 @@ type ComponentLatestBuildProps = {
 const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuildProps>> = ({
   component,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineRun, pipelineRunLoaded, error] = useLatestSuccessfulBuildPipelineRunForComponent(
     namespace,
     component.metadata.name,
@@ -43,7 +45,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const [taskRuns, taskRunsLoaded] = useTaskRuns(namespace, pipelineRun?.metadata?.name);
   const buildLogsModal = useBuildLogViewerModal(component);
 
-  const containerImage = component.spec.containerImage;
+  const containerImage = getLastestImage(component);
 
   if (error) {
     const httpError = HttpError.fromCode((error as { code: number }).code);
@@ -100,7 +102,11 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
               {commit ? (
                 <>
                   <Link
-                    to={`/workspaces/${workspace}/applications/${commit.application}/commit/${commit.sha}`}
+                    to={COMMIT_DETAILS_PATH.createPath({
+                      workspaceName: namespace,
+                      applicationName: commit.application,
+                      commitName: commit.sha,
+                    })}
                   >
                     {commit.isPullRequest ? `#${commit.pullRequestNumber}` : ''} {commit.shaTitle}
                   </Link>

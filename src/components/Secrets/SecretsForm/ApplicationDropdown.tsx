@@ -2,7 +2,7 @@ import React from 'react';
 import { useField } from 'formik';
 import { useApplications } from '../../../hooks/useApplications';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../shared/providers/Namespace';
 
 type ApplicationDropdownProps = Omit<
   React.ComponentProps<typeof DropdownField>,
@@ -12,8 +12,8 @@ type ApplicationDropdownProps = Omit<
 export const ApplicationDropdown: React.FC<React.PropsWithChildren<ApplicationDropdownProps>> = (
   props,
 ) => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [applications, loaded] = useApplications(namespace, workspace);
+  const namespace = useNamespace();
+  const [applications, loaded] = useApplications(namespace);
   const [, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(

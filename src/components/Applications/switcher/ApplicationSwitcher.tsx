@@ -3,20 +3,25 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button, Level, LevelItem } from '@patternfly/react-core';
 import { useApplications } from '../../../hooks/useApplications';
 import { ApplicationModel, ComponentModel } from '../../../models';
+import {
+  APPLICATION_DETAILS_PATH,
+  APPLICATION_LIST_PATH,
+  IMPORT_PATH,
+} from '../../../routes/paths';
+import { ContextMenuItem, ContextSwitcher } from '../../../shared/components';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
-import { ContextMenuItem, ContextSwitcher } from '../../ContextSwitcher';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const ApplicationSwitcher: React.FC<
   React.PropsWithChildren<{ selectedApplication?: string }>
 > = ({ selectedApplication }) => {
   const navigate = useNavigate();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreateApplication] = useAccessReviewForModel(ApplicationModel, 'create');
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
 
-  const [applications] = useApplications(namespace, workspace);
+  const [applications] = useApplications(namespace);
 
   const menuItems = React.useMemo(
     () =>
@@ -27,7 +32,13 @@ export const ApplicationSwitcher: React.FC<
   const selectedItem = menuItems.find((item) => item.key === selectedApplication);
 
   const onSelect = (item: ContextMenuItem) => {
-    selectedItem.key !== item.key && navigate(`/workspaces/${workspace}/applications/${item.key}`);
+    selectedItem.key !== item.key &&
+      navigate(
+        APPLICATION_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName: item.key,
+        }),
+      );
   };
 
   return menuItems.length > 1 ? (
@@ -41,13 +52,15 @@ export const ApplicationSwitcher: React.FC<
           <LevelItem>
             <ButtonWithAccessTooltip
               variant="link"
-              component={(props) => <Link {...props} to={`/workspaces/${workspace}/import`} />}
+              component={(props) => (
+                <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+              )}
               isInline
               tooltip="You don't have access to create an application"
               isDisabled={!(canCreateApplication && canCreateComponent)}
               analytics={{
                 link_name: 'create-application',
-                workspace,
+                namespace,
               }}
             >
               Create application
@@ -57,7 +70,10 @@ export const ApplicationSwitcher: React.FC<
             <Button
               variant="link"
               component={(props) => (
-                <Link {...props} to={`/workspaces/${workspace}/applications`} />
+                <Link
+                  {...props}
+                  to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
+                />
               )}
               isInline
             >

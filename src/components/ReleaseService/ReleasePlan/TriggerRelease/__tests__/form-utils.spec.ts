@@ -19,7 +19,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
     expect(result.spec).toEqual(
       expect.objectContaining({
@@ -41,7 +40,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
     expect(result.spec.data.releaseNotes).toEqual(
       expect.objectContaining({
@@ -62,14 +60,13 @@ describe('triggerReleasePlan', () => {
         topic: 'topic of release',
         references: 'references',
         issues: [
-          { id: 'RHTAP-5560', summary: 'summary1', url: 'test-url' },
-          { id: 'RHTAP-5561', summary: 'summary2', url: 'test-url2' },
-          { id: 'RHTAP-5562', summary: 'summary3', url: 'test-url2' },
+          { id: 'RHTAP-5560', summary: 'summary1', source: 'test-url' },
+          { id: 'RHTAP-5561', summary: 'summary2', source: 'test-url2' },
+          { id: 'RHTAP-5562', summary: 'summary3', source: 'test-url2' },
         ],
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
 
     const advisoryIssues = result.spec.data.releaseNotes.fixed;
@@ -106,7 +103,6 @@ describe('triggerReleasePlan', () => {
         labels: [],
       },
       'test-ns',
-      'test-ws',
     );
 
     const advisoryCVE = result.spec.data.releaseNotes.cves;

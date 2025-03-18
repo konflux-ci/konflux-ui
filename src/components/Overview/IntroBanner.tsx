@@ -9,36 +9,12 @@ import {
   Title,
   Text,
   Button,
-  Alert,
 } from '@patternfly/react-core';
-import { useApplications } from '../../hooks/useApplications';
-import { ApplicationModel, ComponentModel } from '../../models';
-import ExternalLink from '../../shared/components/links/ExternalLink';
-import { AccessReviewResources } from '../../types';
-import { useAccessReviewForModels } from '../../utils/rbac';
-import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
-import { SignupStatus } from '../SignUp/signup-utils';
-import SignupButton from '../SignUp/SignupButton';
-import { useSignupStatus } from '../SignUp/useSignupStatus';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
+import { NAMESPACE_LIST_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
-const accessReviewResources: AccessReviewResources = [
-  { model: ApplicationModel, verb: 'create' },
-  { model: ComponentModel, verb: 'create' },
-];
-
 const IntroBanner: React.FC = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [canCreate] = useAccessReviewForModels(accessReviewResources);
-
-  const signupStatus = useSignupStatus();
-
-  const [applications, applicationsLoaded] = useApplications(
-    signupStatus === SignupStatus.SignedUp && namespace ? namespace : null,
-    workspace,
-  );
   return (
     <Grid className="intro-banner">
       <GridItem span={8}>
@@ -55,62 +31,17 @@ const IntroBanner: React.FC = () => {
             </Text>
           </CardBody>
           <CardBody>
-            {signupStatus === SignupStatus.SignedUp && (
-              <>
-                <ButtonWithAccessTooltip
-                  className="intro-banner__cta"
-                  component={(props) => <Link {...props} to={`/workspaces/${workspace}/import`} />}
-                  variant="primary"
-                  data-test="create-application"
-                  isDisabled={!canCreate}
-                  tooltip="You don't have access to create an application"
-                  size="lg"
-                  analytics={{
-                    link_name: 'create-application',
-                  }}
-                >
-                  Create application
-                </ButtonWithAccessTooltip>
-                {applicationsLoaded && applications?.length > 0 ? (
-                  <Button
-                    className="intro-banner__cta"
-                    component={(props) => (
-                      <Link {...props} to={`/workspaces/${workspace}/applications`} />
-                    )}
-                    variant="secondary"
-                    data-test="view-my-applications"
-                    size="lg"
-                  >
-                    View my applications
-                  </Button>
-                ) : undefined}
-              </>
-            )}
-            {signupStatus === SignupStatus.PendingApproval && (
-              <Alert
-                variant="info"
-                isInline
-                title="We have received your request. While you are waiting, please join our Slack channel."
-              >
-                <p>
-                  We are working hard to get you early access. After we approve your request, we
-                  will send you an email notification with information about how you can access and
-                  start using the service.
-                </p>
-                <p>
-                  Join the internal Red Hat Slack workspace here:{' '}
-                  <ExternalLink href="https://redhat-internal.slack.com/" hideIcon>
-                    https://redhat-internal.slack.com/
-                  </ExternalLink>
-                  , and then join our{' '}
-                  <ExternalLink href="https://app.slack.com/client/E030G10V24F/C04PZ7H0VA8">
-                    #konflux-users
-                  </ExternalLink>{' '}
-                  channel.
-                </p>
-              </Alert>
-            )}
-            {signupStatus === SignupStatus.NotSignedUp && <SignupButton />}
+            <Button
+              className="intro-banner__cta"
+              component={(props) => (
+                <Link {...props} to={NAMESPACE_LIST_PATH.createPath({} as never)} />
+              )}
+              variant="secondary"
+              data-test="view-my-applications"
+              size="lg"
+            >
+              View my namespaces
+            </Button>
           </CardBody>
         </Card>
       </GridItem>

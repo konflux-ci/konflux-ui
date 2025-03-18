@@ -8,7 +8,6 @@ import {
 import { useTaskRuns } from '../../../../../hooks/useTaskRuns';
 import {
   createUseParamsMock,
-  createUseWorkspaceInfoMock,
   renderWithQueryClientAndRouter,
 } from '../../../../../utils/test-utils';
 import { useModalLauncher } from '../../../../modal/ModalProvider';
@@ -61,7 +60,6 @@ describe('ComponentDetailTab', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
 
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
   createUseParamsMock({
     applicationName: 'test-application',
     componentName: 'human-resources',
@@ -115,7 +113,7 @@ describe('ComponentDetailTab', () => {
 
   it('should renderWithQueryClientAndRouter Component container image URL when latest build url not found', () => {
     useComponentMock.mockReturnValue([
-      { ...mockComponent, spec: { containerImage: 'test-url', ...mockComponent.spec } },
+      { ...mockComponent, status: { lastPromotedImage: 'test-url', ...mockComponent.status } },
       true,
     ]);
     renderWithQueryClientAndRouter(<ComponentDetailsTab />);

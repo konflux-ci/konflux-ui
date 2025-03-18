@@ -14,10 +14,6 @@ import {
 // import { createTestQueryClient } from '../../utils/test-utils';
 import { useTRPipelineRuns, useTRTaskRunLog, useTRTaskRuns } from '../useTektonResults';
 
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 jest.mock('../../utils/tekton-results');
 
 // const mockResponse = [
@@ -208,7 +204,6 @@ describe('useTektonResults', () => {
       getTaskRunLogMock.mockReturnValue('sample log');
       const { result, waitFor } = renderHook(() => useTRTaskRunLog('test-ns', mockTR));
       expect(getTaskRunLogMock).toHaveBeenCalledWith(
-        'test-ws',
         'test-ns',
         'sample-task-run-id',
         'sample-pipeline-run-id',
@@ -225,7 +220,6 @@ describe('useTektonResults', () => {
       });
       const { result } = renderHook(() => useTRTaskRunLog('test-ns', mockTR));
       expect(getTaskRunLogMock).toHaveBeenCalledWith(
-        'test-ws',
         'test-ns',
         'sample-task-run-id',
         'sample-pipeline-run-id',

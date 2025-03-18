@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import {
   PipelineRunEventType,
   PipelineRunLabel,
@@ -16,7 +18,6 @@ import { startNewBuild } from '../../../utils/component-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
 
@@ -41,17 +42,16 @@ export const rerunTestPipeline = (snapshot: Snapshot, scenario) => {
 
 export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
   const navigate = useNavigate();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canPatchSnapshot] = useAccessReviewForModel(SnapshotModel, 'patch');
 
   const [component, componentLoaded, componentError] = useComponent(
     namespace,
-    workspace,
     pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT],
   );
 
-  const [snapshots, snapshotsLoaded, snapshotsError] = useSnapshots(namespace, workspace);
+  const [snapshots, snapshotsLoaded, snapshotsError] = useSnapshots(namespace);
 
   const snapShotLabel = pipelineRun?.metadata?.labels?.[PipelineRunLabel.SNAPSHOT];
   const isPushBuildType = [PipelineRunEventType.PUSH, PipelineRunEventType.INCOMING].includes(
@@ -79,7 +79,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
           !componentError &&
           startNewBuild(component).then(() => {
             navigate(
-              `/workspaces/${workspace}/applications/${component.spec.application}/activity/pipelineruns?name=${component.metadata.name}`,
+              `${PIPELINE_RUNS_LIST_PATH.createPath({ workspaceName: namespace, applicationName: component.spec.application })}?name=${component.metadata.name}`,
             );
           })
         : runType === PipelineRunType.TEST &&
@@ -87,7 +87,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
           scenario &&
           rerunTestPipeline(snapshot, scenario).then(() => {
             navigate(
-              `/workspaces/${workspace}/applications/${component.spec.application}/activity/pipelineruns?name=${component.metadata.name}`,
+              `${PIPELINE_RUNS_LIST_PATH.createPath({ workspaceName: namespace, applicationName: component.spec.application })}?name=${component.metadata.name}`,
             );
           }),
     isDisabled:
@@ -125,7 +125,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       cta: () => pipelineRunStop(pipelineRun),
       id: 'pipelinerun-stop',
       label: 'Stop',
-      tooltip: 'Let the running tasks complete, then execute finally tasks',
+      tooltip: 'Let the running tasks complete, then execute "finally" tasks',
       disabled: !(pipelineRunStatus(pipelineRun) === runStatus.Running) || !canPatchPipelineRun,
       disabledTooltip: !canPatchPipelineRun
         ? "You don't have access to stop this pipeline"
@@ -135,7 +135,7 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
       cta: () => pipelineRunCancel(pipelineRun),
       id: 'pipelinerun-cancel',
       label: 'Cancel',
-      tooltip: 'Interrupt any executing non finally tasks, then execute finally tasks',
+      tooltip: 'Interrupt any executing non "finally" tasks, then execute "finally" tasks',
       disabled: !(pipelineRunStatus(pipelineRun) === runStatus.Running) || !canPatchPipelineRun,
       disabledTooltip: !canPatchPipelineRun
         ? "You don't have access to cancel this pipeline"

@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ReleasePlanModel } from '../../models';
-import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
+import { RELEASEPLAN_CREATE_PATH } from '../../routes/paths';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const { workspace } = useWorkspaceInfo();
-  const breadcrumbs = useWorkspaceBreadcrumbs();
+  const namespace = useNamespace();
   const [canCreateReleasePlan] = useAccessReviewForModel(ReleasePlanModel, 'create');
   return (
     <>
@@ -16,26 +15,19 @@ export const ReleaseService: React.FC<React.PropsWithChildren<unknown>> = () => 
         data-test="release-service-test-id"
         title="Releases"
         headTitle="Releases"
-        description="Manage all your releases in this workspace."
+        description="Manage all your releases in this namespace."
         actions={[
           {
             key: 'create-release-plan',
             id: 'create-release-plan',
             label: 'Create release plan',
             component: (
-              <Link to={`/workspaces/${workspace}/release/release-plan/create`}>
+              <Link to={RELEASEPLAN_CREATE_PATH.createPath({ workspaceName: namespace })}>
                 Create release plan
               </Link>
             ),
             disabled: !canCreateReleasePlan,
             disabledTooltip: "You don't have access to create a release plan",
-          },
-        ]}
-        breadcrumbs={[
-          ...breadcrumbs,
-          {
-            path: '#',
-            name: 'Releases',
           },
         ]}
         tabs={[

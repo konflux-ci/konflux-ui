@@ -3,7 +3,7 @@ import { PermissionsTable } from '../PermissionsTable';
 
 describe('PermissionsTable', () => {
   it('should render permissions table', () => {
-    render(<PermissionsTable role="contributor" />);
+    render(<PermissionsTable role="Contributor" />);
     const header = screen.getAllByRole('rowgroup')[0];
     expect(header).toHaveTextContent('Permissions for');
     expect(header).toHaveTextContent('Access type');
@@ -17,7 +17,7 @@ describe('PermissionsTable', () => {
   });
 
   it('should show correct permissions for given role', () => {
-    render(<PermissionsTable role="maintainer" />);
+    render(<PermissionsTable role="Maintainer" />);
     let rows = screen.getAllByRole('rowgroup')[1];
     let compRow = rows.children[1];
     expect(compRow.children[0]).toHaveTextContent('Component');
@@ -27,7 +27,7 @@ describe('PermissionsTable', () => {
     expect(appRow.children[1]).toHaveTextContent('Update');
     cleanup();
 
-    render(<PermissionsTable role="admin" />);
+    render(<PermissionsTable role="Admin" />);
     rows = screen.getAllByRole('rowgroup')[1];
     compRow = rows.children[1];
     expect(compRow.children[0]).toHaveTextContent('Component');
@@ -38,7 +38,7 @@ describe('PermissionsTable', () => {
   });
 
   it('should correctly format multiple permissions', () => {
-    render(<PermissionsTable role="maintainer" />);
+    render(<PermissionsTable role="Maintainer" />);
     const rows = screen.getAllByRole('rowgroup')[1];
     const wsRow = rows.children[10];
     expect(wsRow.children[1]).toHaveTextContent('Update and Delete');

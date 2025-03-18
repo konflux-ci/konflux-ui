@@ -14,16 +14,15 @@ import {
 } from '@patternfly/react-core/deprecated';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
-import { useComponents } from '../../../hooks/useComponents';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { HttpError } from '../../../k8s/error';
 import { Table } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit } from '../../../types';
 import { getCommitsFromPLRs, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import CommitsEmptyState from '../CommitsEmptyState';
 import CommitsListHeader from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
@@ -35,24 +34,16 @@ interface CommitsListViewProps {
 
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
-  componentName,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
-  const [components, componentsLoaded] = useComponents(
-    componentName ? null : namespace,
-    workspace,
-    applicationName,
-  );
 
   const [pipelineRuns, loaded, error, getNextPage] = useBuildPipelines(
     namespace,
     applicationName,
     undefined,
-    true,
-    componentName ? [componentName] : componentsLoaded && components?.map((c) => c.metadata.name),
   );
 
   const commits = React.useMemo(
@@ -188,7 +179,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       aria-label="Commit List"
       Header={CommitsListHeader}
       Row={CommitsListRow}
-      loaded={loaded && componentsLoaded}
+      loaded={loaded}
       getRowProps={(obj: Commit) => ({
         id: obj.sha,
       })}

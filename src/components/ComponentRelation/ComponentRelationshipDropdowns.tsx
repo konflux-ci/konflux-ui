@@ -8,10 +8,15 @@ import {
   MenuGroup,
   MenuItem,
   MenuList,
+  MenuSearch,
+  MenuSearchInput,
   MenuToggle,
+  SearchInput,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten } from 'lodash-es';
+
+import './ComponentRelationshipDropdowns.scss';
 
 type SelectComponentsDropdownProps = {
   children: React.ReactNode | React.ReactNode[];
@@ -79,10 +84,40 @@ export const MultiSelectComponentsDropdown: React.FC<MultiSelectComponentsDropdo
   name,
 }) => {
   const [{ value: selectedComponents }, , { setValue }] = useField<string[]>(name);
-  const componentNames = flatten(Object.values(groupedComponents));
+
+  // Sort the grouped components
+  const sortedGroupedComponents = React.useMemo(() => {
+    return Object.keys(groupedComponents)
+      .sort()
+      .reduce(
+        (acc, key) => {
+          acc[key] = [...groupedComponents[key]].sort();
+          return acc;
+        },
+        {} as { [application: string]: string[] },
+      );
+  }, [groupedComponents]);
+
+  const componentNames = flatten(Object.values(sortedGroupedComponents));
+
   const [selectAll, setSelectAll] = React.useState<boolean>(
     componentNames.length - 1 === selectedComponents.length,
   );
+  const [searchQuery, setSearchQuery] = React.useState<string>('');
+
+  const filteredComponents = React.useMemo(() => {
+    if (!searchQuery) return sortedGroupedComponents;
+    const lowerQuery = searchQuery.toLowerCase();
+    return Object.entries(sortedGroupedComponents).reduce(
+      (acc, [app, components]) => {
+        const filtered = components.filter((c) => c.toLowerCase().includes(lowerQuery));
+        if (filtered.length) acc[app] = filtered;
+        return acc;
+      },
+      {} as { [application: string]: string[] },
+    );
+  }, [searchQuery, sortedGroupedComponents]);
+
   const handleSelect = React.useCallback(
     (item: string) => {
       if (item === 'select-all') {
@@ -112,7 +147,19 @@ export const MultiSelectComponentsDropdown: React.FC<MultiSelectComponentsDropdo
       onSelect={handleSelect}
       badgeValue={selectedComponents.length || null}
     >
-      <MenuGroup>
+      <MenuSearch>
+        <MenuSearchInput>
+          <SearchInput
+            type="text"
+            value={searchQuery}
+            onChange={(_, searchValue) => setSearchQuery(searchValue)}
+            placeholder="Search components..."
+            aria-label="Search components"
+          />
+        </MenuSearchInput>
+      </MenuSearch>
+      <Divider component="li" />
+      <MenuGroup className="menugroup">
         <MenuList>
           <MenuItem hasCheckbox itemId="select-all" isSelected={selectAll}>
             Select all
@@ -120,7 +167,7 @@ export const MultiSelectComponentsDropdown: React.FC<MultiSelectComponentsDropdo
         </MenuList>
       </MenuGroup>
       <Divider component="li" />
-      {Object.entries(groupedComponents).map(([application, components]) => (
+      {Object.entries(filteredComponents).map(([application, components]) => (
         <MenuGroup key={application} label={application}>
           <MenuList>
             {components.map((component) => {
@@ -166,20 +213,46 @@ export const SingleSelectComponentDropdown: React.FC<SingleSelectComponentDropdo
   disableMenuItem,
 }) => {
   const [{ value }, , { setValue }] = useField<string>(name);
+  const [searchQuery, setSearchQuery] = React.useState<string>('');
+
+  // Sort component names
+  const sortedComponentNames = React.useMemo(() => [...componentNames].sort(), [componentNames]);
+
+  const filteredComponents = React.useMemo(
+    () =>
+      searchQuery
+        ? sortedComponentNames.filter((c) => c.toLowerCase().includes(searchQuery.toLowerCase()))
+        : sortedComponentNames,
+    [searchQuery, sortedComponentNames],
+  );
+
   const handleSelect = React.useCallback(
     (item: string) => {
       void setValue(item);
     },
     [setValue],
   );
+
   return (
     <SelectComponentsDropdown
       toggleText={value || 'Select a component'}
       onSelect={handleSelect}
       closeOnSelect
     >
+      <MenuSearch>
+        <MenuSearchInput>
+          <SearchInput
+            type="text"
+            value={searchQuery}
+            onChange={(_, searchValue) => setSearchQuery(searchValue)}
+            placeholder="Search components..."
+            aria-label="Search components"
+          />
+        </MenuSearchInput>
+      </MenuSearch>
+      <Divider component="li" />
       <MenuList>
-        {componentNames.map((component) => (
+        {filteredComponents.map((component) => (
           <MenuItem
             key={component}
             itemId={component}

@@ -11,9 +11,9 @@ import {
   act,
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
-import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
-import * as WorkspaceUtils from '../components/Workspace/workspace-context';
+import * as ApplicationHook from '../hooks/useApplications';
 import * as k8s from '../k8s';
+import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
 
 export function createTestQueryClient() {
   return new QueryClient({
@@ -45,24 +45,23 @@ export const formikRenderer = (
 export const namespaceRenderer = (
   element: React.ReactElement,
   namespace: string,
-  contextValues?: Partial<WorkspaceUtils.WorkspaceContextData>,
+  contextValues?: Partial<NamespaceUtils.NamespaceContextData>,
   options?: Omit<RenderOptions, 'wrapper'>,
 ) =>
   render(element, {
     wrapper: ({ children }) => (
-      <WorkspaceUtils.WorkspaceContext.Provider
+      <NamespaceUtils.NamespaceContext.Provider
         value={{
           namespace,
-          lastUsedWorkspace: 'test-ws',
-          workspace: 'test-ws',
-          workspaceResource: undefined,
-          workspaces: [],
-          workspacesLoaded: false,
+          lastUsedNamespace: 'test-ws',
+          namespaceResource: undefined,
+          namespaces: [],
+          namespacesLoaded: false,
           ...contextValues,
         }}
       >
         {children}
-      </WorkspaceUtils.WorkspaceContext.Provider>
+      </NamespaceUtils.NamespaceContext.Provider>
     ),
     ...options,
   });
@@ -210,12 +209,12 @@ export const createReactRouterMock = (name): jest.Mock => {
   return mockFn;
 };
 
-export const createUseWorkspaceInfoMock = (
-  initialValue: Record<string, string> = {},
+export const createUseApplicationMock = (
+  initialValue: [{ metadata: { name: string } }, boolean] = [{ metadata: { name: '' } }, false],
 ): jest.Mock => {
   const mockFn = jest.fn().mockReturnValue(initialValue);
 
-  jest.spyOn(WorkspaceHook, 'useWorkspaceInfo').mockImplementation(mockFn);
+  jest.spyOn(ApplicationHook, 'useApplication').mockImplementation(mockFn);
 
   beforeEach(() => {
     mockFn.mockReturnValue(initialValue);
@@ -224,21 +223,20 @@ export const createUseWorkspaceInfoMock = (
   return mockFn;
 };
 
-export const WithTestWorkspaceContext =
-  (children, data?: WorkspaceUtils.WorkspaceContextData) => () => (
-    <WorkspaceUtils.WorkspaceContext.Provider
+export const WithTestNamespaceContext =
+  (children, data?: NamespaceUtils.NamespaceContextData) => () => (
+    <NamespaceUtils.NamespaceContext.Provider
       value={{
-        namespace: 'test-ns',
-        lastUsedWorkspace: 'test-ws',
-        workspace: 'test-ws',
-        workspaceResource: undefined,
-        workspacesLoaded: true,
-        workspaces: [],
+        namespace: 'test-ws',
+        lastUsedNamespace: 'test-ws',
+        namespaceResource: undefined,
+        namespaces: [],
+        namespacesLoaded: false,
         ...data,
       }}
     >
       {children}
-    </WorkspaceUtils.WorkspaceContext.Provider>
+    </NamespaceUtils.NamespaceContext.Provider>
   );
 
 export const waitForLoadingToFinish = async () =>

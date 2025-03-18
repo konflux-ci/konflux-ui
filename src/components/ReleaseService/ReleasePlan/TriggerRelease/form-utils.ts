@@ -11,7 +11,7 @@ export enum ReleasePipelineLocation {
 
 const getIssues = (issues): { id: string; source: string }[] => {
   return issues?.map((issue) => {
-    return { id: issue.id, source: issue.url };
+    return { id: issue.id, source: issue.source };
   });
 };
 
@@ -33,11 +33,7 @@ export const triggerReleaseFormSchema = yup.object({
   snapshot: resourceNameYupValidation,
 });
 
-export const createRelease = async (
-  values: TriggerReleaseFormValues,
-  namespace: string,
-  workspace: string,
-) => {
+export const createRelease = async (values: TriggerReleaseFormValues, namespace: string) => {
   const {
     releasePlan: rp,
     snapshot,
@@ -85,7 +81,6 @@ export const createRelease = async (
     model: ReleaseModel,
     queryOptions: {
       ns: namespace,
-      ws: workspace,
     },
     resource,
   });

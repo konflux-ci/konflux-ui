@@ -6,14 +6,13 @@ import { usePipelineRuns } from './usePipelineRuns';
 
 export const useLatestIntegrationTestPipelines = (
   namespace: string,
-  workspace: string,
   applicationName: string,
   integrationTestNames: string[],
 ): [PipelineRunKind[], boolean, unknown] => {
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestTestPipelines, setLatestTestPipelines] = React.useState<PipelineRunKind[]>([]);
 
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
@@ -31,7 +30,6 @@ export const useLatestIntegrationTestPipelines = (
 
   const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRuns(
     !componentsLoaded || !neededNames.length ? null : namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {
@@ -41,11 +39,6 @@ export const useLatestIntegrationTestPipelines = (
           },
           matchExpressions: [
             {
-              key: PipelineRunLabel.COMPONENT,
-              operator: 'In',
-              values: componentNames,
-            },
-            {
               key: PipelineRunLabel.TEST_SERVICE_SCENARIO,
               operator: 'In',
               values: neededNames,
@@ -53,7 +46,7 @@ export const useLatestIntegrationTestPipelines = (
           ],
         },
       }),
-      [applicationName, componentNames, neededNames],
+      [applicationName, neededNames],
     ),
   );
 

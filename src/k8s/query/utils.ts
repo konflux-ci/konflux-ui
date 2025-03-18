@@ -22,7 +22,7 @@ export const createQueryKeys = ({
     ? [queryOptions?.queryParams?.labelSelector]
     : [];
   return [
-    queryOptions?.ws,
+    queryOptions?.ns,
     {
       group: model?.apiGroup ?? 'core',
       version: model?.apiVersion,
@@ -48,7 +48,7 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
         ? queryClient
             .getQueryData<
               TResource[]
-            >(createQueryKeys({ model: args.model, queryOptions: { ws: args.queryOptions?.ws, queryParams: args.queryOptions?.queryParams } }))
+            >(createQueryKeys({ model: args.model, queryOptions: { queryParams: args.queryOptions?.queryParams } }))
             ?.find((res) => res.metadata.name === name)
         : null;
     },

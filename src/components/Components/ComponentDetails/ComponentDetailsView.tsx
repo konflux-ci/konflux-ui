@@ -7,8 +7,10 @@ import pipelineImg from '../../../assets/Pipeline.svg';
 import { useComponent } from '../../../hooks/useComponents';
 import { HttpError } from '../../../k8s/error';
 import { ComponentGroupVersionKind, ComponentModel } from '../../../models';
+import { COMPONENT_LIST_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -17,7 +19,6 @@ import { DetailsPage } from '../../DetailsPage';
 import { Action } from '../../DetailsPage/types';
 import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard';
 import { useModalLauncher } from '../../modal/ModalProvider';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useComponentActions } from '../component-actions';
 import './ComponentDetailsView.scss';
 
@@ -26,10 +27,10 @@ export const COMPONENTS_GS_LOCAL_STORAGE_KEY = 'components-getting-started-modal
 const ComponentDetailsView: React.FC = () => {
   const { componentName, applicationName } = useParams<RouterParams>();
   const navigate = useNavigate();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const showModal = useModalLauncher();
-  const [component, loaded, componentError] = useComponent(namespace, workspace, componentName);
+  const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
 
   const componentActions = useComponentActions(loaded ? component : undefined, componentName);
@@ -112,11 +113,18 @@ const ComponentDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/components`,
+            path: COMPONENT_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+            }),
             name: 'components',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/components/${componentName}`,
+            path: COMPONENT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              componentName,
+            }),
             name: component.spec.componentName,
           },
         ]}
@@ -128,7 +136,11 @@ const ComponentDetailsView: React.FC = () => {
           </Text>
         }
         actions={actions}
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/components/${componentName}`}
+        baseURL={COMPONENT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          componentName,
+        })}
         tabs={[
           {
             key: 'index',

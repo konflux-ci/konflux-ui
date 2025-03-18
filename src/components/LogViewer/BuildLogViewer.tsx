@@ -8,6 +8,8 @@ import {
   ModalVariant,
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
+import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
 import PipelineRunLogs from '../../shared/components/pipeline-run-logs/PipelineRunLogs';
@@ -17,7 +19,6 @@ import { pipelineRunStatus } from '../../utils/pipeline-utils';
 import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 import './BuildLogViewer.scss';
 
@@ -28,7 +29,7 @@ type BuildLogViewerProps = ComponentProps & {
 export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProps>> = ({
   component,
 }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineRun, loaded] = useLatestBuildPipelineRunForComponent(
     component.metadata.namespace,
     component.metadata.name,
@@ -68,7 +69,11 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
             <DescriptionListDescription>
               {pipelineRun && loaded && (
                 <Link
-                  to={`/workspaces/${workspace}/applications/${component.spec.application}/pipelineruns/${pipelineRun.metadata?.name}`}
+                  to={PIPELINERUN_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: component.spec.application,
+                    pipelineRunName: pipelineRun.metadata?.name,
+                  })}
                   title={pipelineRun.metadata?.name}
                 >
                   {pipelineRun.metadata?.name}
@@ -90,7 +95,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
       </div>
       <div className="build-log-viewer__body">
         {pipelineRun && taskRuns && tloaded ? (
-          <PipelineRunLogs obj={pipelineRun} taskRuns={taskRuns} workspace={workspace} />
+          <PipelineRunLogs obj={pipelineRun} taskRuns={taskRuns} />
         ) : (
           <LoadingBox />
         )}

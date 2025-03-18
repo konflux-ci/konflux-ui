@@ -40,9 +40,7 @@ const editReleasePlanMock = editReleasePlan as jest.Mock;
 describe('ReleasePlanFormPage', () => {
   it('should navigate on successful creation', async () => {
     createReleasePlanMock.mockResolvedValue({ metadata: {}, spec: {} });
-    namespaceRenderer(<ReleasePlanFormPage />, 'test-ns', {
-      workspace: 'test-ws',
-    });
+    namespaceRenderer(<ReleasePlanFormPage />, 'test-ns');
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Submit' })));
 
@@ -64,10 +62,9 @@ describe('ReleasePlanFormPage', () => {
         },
       }),
       'test-ns',
-      'test-ws',
     );
     expect(createReleasePlanMock).toHaveBeenCalledTimes(2);
-    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ws/release`);
+    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ns/release`);
   });
 
   it('should navigate on successful edit', async () => {
@@ -75,29 +72,23 @@ describe('ReleasePlanFormPage', () => {
     namespaceRenderer(
       <ReleasePlanFormPage releasePlan={{ metadata: {}, spec: {} } as ReleasePlanKind} />,
       'test-ns',
-      {
-        workspace: 'test-ws',
-      },
     );
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Submit' })));
 
     expect(editReleasePlanMock).toHaveBeenCalled();
     expect(editReleasePlanMock).toHaveBeenCalledTimes(2);
-    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ws/release`);
+    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ns/release`);
   });
 
   it('should navigate to release list on reset', async () => {
     namespaceRenderer(
       <ReleasePlanFormPage releasePlan={{ metadata: {}, spec: {} } as ReleasePlanKind} />,
       'test-ns',
-      {
-        workspace: 'test-ws',
-      },
     );
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Reset' })));
 
-    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ws/release`);
+    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ns/release`);
   });
 });

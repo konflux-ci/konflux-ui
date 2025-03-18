@@ -1,4 +1,12 @@
 import * as yup from 'yup';
+import { SecretTypeDropdownLabel, SourceSecretType } from '../types';
+
+export const KONFLUX_USERNAME_REGEX = /^[-_a-zA-Z0-9@.]{2,45}$/;
+export const KONFLUX_USERNAME_REGEX_MGS =
+  'Must be 2 to 45 characters long and can only contain letters from a to Z, numbers from 0 to 9, underscores( _ ), hyphens( - ), periods( . ), or @ symbol.';
+export const konfluxUsernameYupValidation = yup
+  .string()
+  .matches(KONFLUX_USERNAME_REGEX, KONFLUX_USERNAME_REGEX_MGS);
 
 export const GIT_URL_REGEX =
   /^((((ssh|git|https?:?):\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%]*?:?))$/;
@@ -24,14 +32,49 @@ export const SecretFromSchema = yup.object({
   secretName: resourceNameYupValidation.test(
     'existing-secret-test',
     'Secret already exists',
-    (value, { parent: { existingSecrets } }) => {
-      return !existingSecrets.includes(value);
+    (value) => {
+      return value !== undefined;
     },
   ),
-  keyValues: yup.array().of(
-    yup.object({
-      key: yup.string().required('Required'),
-      value: yup.string().required('Required'),
+  type: yup.string(),
+  source: yup.object().when('type', {
+    is: SecretTypeDropdownLabel.source,
+    then: yup.object({
+      authType: yup.string(),
+      username: yup.string().when('authType', {
+        is: SourceSecretType.basic,
+        then: yup.string().required('Required'),
+      }),
+      password: yup.string().when('authType', {
+        is: SourceSecretType.basic,
+        then: yup.string().required('Required'),
+      }),
+      ['ssh-privatekey']: yup.string().when('authType', {
+        is: SourceSecretType.ssh,
+        then: yup.string().required('Required'),
+      }),
     }),
-  ),
+  }),
+  opaque: yup.object().when('type', {
+    is: SecretTypeDropdownLabel.opaque,
+    then: yup.object({
+      keyValues: yup.array().of(
+        yup.object({
+          key: yup.string().required('Required'),
+          value: yup.string().required('Required'),
+        }),
+      ),
+    }),
+  }),
+  image: yup.object().when('type', {
+    is: SecretTypeDropdownLabel.image,
+    then: yup.object({
+      keyValues: yup.array().of(
+        yup.object({
+          key: yup.string().required('Required'),
+          value: yup.string().required('Required'),
+        }),
+      ),
+    }),
+  }),
 });

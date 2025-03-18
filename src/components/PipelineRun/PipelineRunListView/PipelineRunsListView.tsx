@@ -18,7 +18,7 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { debounce } from 'lodash-es';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useComponents } from '../../../hooks/useComponents';
+import { useApplication } from '../../../hooks/useApplications';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { useSearchParam } from '../../../hooks/useSearchParam';
@@ -26,10 +26,10 @@ import { HttpError } from '../../../k8s/error';
 import { Table } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';
@@ -45,8 +45,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   componentName,
   customFilter,
 }) => {
-  const { namespace, workspace } = useWorkspaceInfo();
-  const [components, componentsLoaded] = useComponents(namespace, workspace, applicationName);
+  const namespace = useNamespace();
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
   const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
@@ -60,29 +60,24 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
-      componentsLoaded ? namespace : null,
-      workspace,
+      applicationLoaded ? namespace : null,
       React.useMemo(
         () => ({
           selector: {
+            filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
+              ...(!onLoadName &&
+                componentName && {
+                  [PipelineRunLabel.COMPONENT]: componentName,
+                }),
             },
-            ...(!onLoadName && {
-              matchExpressions: [
-                {
-                  key: `${PipelineRunLabel.COMPONENT}`,
-                  operator: 'In',
-                  values: componentName
-                    ? [componentName]
-                    : components?.map((c) => c.metadata?.name),
-                },
-              ],
+            ...(onLoadName && {
+              filterByName: onLoadName.trim().toLowerCase(),
             }),
-            ...(onLoadName && { filterByName: onLoadName.trim().toLowerCase() }),
           },
         }),
-        [applicationName, componentName, components, onLoadName],
+        [applicationName, componentName, application, onLoadName],
       ),
     );
   const statusFilters = React.useMemo(
@@ -206,7 +201,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }
   return (
-    <div>
+    <>
       <Table
         data={filteredPLRs}
         unfilteredData={pipelineRuns}
@@ -239,7 +234,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           </Bullseye>
         </Stack>
       ) : null}
-    </div>
+    </>
   );
 };
 

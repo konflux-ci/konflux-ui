@@ -3,11 +3,11 @@ import { K8sResourceCommon } from './k8s';
 export interface Workspace extends K8sResourceCommon {
   status: {
     type?: string;
-    namespaces: Namespace[];
+    namespaces: {
+      name: string;
+      type?: string;
+    }[];
     owner: string;
-    role: WorkspaceRole;
-    availableRoles?: WorkspaceRole[];
-    bindings?: WorkspaceBinding[];
   };
 }
 
@@ -16,14 +16,4 @@ export interface Namespace {
   type?: string;
 }
 
-export type WorkspaceRole = 'contributor' | 'maintainer' | 'admin';
-
-export interface WorkspaceBinding {
-  masterUserRecord: string;
-  role: WorkspaceRole;
-  availableActions?: ('update' | 'delete')[];
-  bindingRequest?: {
-    name: string;
-    namespace: string;
-  };
-}
+export type NamespaceRole = 'Contributor' | 'Maintainer' | 'Admin';

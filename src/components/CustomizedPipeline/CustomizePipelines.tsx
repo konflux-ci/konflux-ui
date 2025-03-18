@@ -21,6 +21,7 @@ import {
   KebabToggle,
 } from '@patternfly/react-core/deprecated';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
+import { useNamespace } from '~/shared/providers/Namespace';
 import sendIconUrl from '../../assets/send.svg';
 import successIconUrl from '../../assets/success.svg';
 import { useApplicationPipelineGitHubApp } from '../../hooks/useApplicationPipelineGitHubApp';
@@ -29,13 +30,17 @@ import { ComponentModel } from '../../models';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
-import { enablePAC, disablePAC, useComponentBuildStatus } from '../../utils/component-utils';
+import {
+  enablePAC,
+  disablePAC,
+  useComponentBuildStatus,
+  getLastestImage,
+} from '../../utils/component-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import AnalyticsButton from '../AnalyticsButton/AnalyticsButton';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import GitRepoLink from '../GitLink/GitRepoLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ComponentPACStateLabel from './ComponentPACStateLabel';
 
 type Props = RawComponentProps & {
@@ -50,7 +55,7 @@ const ComponentKebab: React.FC<
     canPatchComponent?: boolean;
   }>
 > = ({ component, state, canPatchComponent }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const track = useTrackEvent();
   const [isOpen, setOpen] = React.useState(false);
   return (
@@ -70,13 +75,13 @@ const ComponentKebab: React.FC<
               link_location: 'manage-builds-pipelines-action',
               component_name: component.metadata.name,
               app_name: component.spec.application,
-              workspace,
+              namespace,
             });
             void disablePAC(component).then(() => {
               track('Disable PAC', {
                 component_name: component.metadata.name,
                 app_name: component.spec.application,
-                workspace,
+                namespace,
               });
             });
           }}
@@ -96,7 +101,7 @@ const Row: React.FC<
     onStateChange: (state: PACState) => void;
   }>
 > = ({ component, onStateChange }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const track = useTrackEvent();
   const { url: githubAppURL } = useApplicationPipelineGitHubApp();
   const [pacState, setPacState] = React.useState<PACState>(PACState.loading);
@@ -111,6 +116,7 @@ const Row: React.FC<
   const buildStatus = useComponentBuildStatus(component);
   const pacError = buildStatus?.pac?.['error-message'];
   const prURL = buildStatus?.pac?.['merge-url'];
+  const latestImage = getLastestImage(component);
 
   React.useEffect(() => {
     onStateChange(pacState);
@@ -140,16 +146,12 @@ const Row: React.FC<
               />
             </div>
           )}
-          {component.spec.containerImage && (
+          {latestImage && (
             <div>
               Image:{' '}
               <ExternalLink
-                href={
-                  component.spec.containerImage.startsWith('http')
-                    ? component.spec.containerImage
-                    : `https://${component.spec.containerImage}`
-                }
-                text={<Truncate content={component.spec.containerImage} />}
+                href={latestImage.startsWith('http') ? latestImage : `https://${latestImage}`}
+                text={<Truncate content={latestImage} />}
               />
             </div>
           )}
@@ -170,7 +172,7 @@ const Row: React.FC<
                         track('Enable PAC', {
                           component_name: component.metadata.name,
                           app_name: component.spec.application,
-                          workspace,
+                          namespace,
                         });
                       });
                     }}
@@ -181,7 +183,7 @@ const Row: React.FC<
                       link_location: 'manage-builds-pipelines',
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Send pull request
@@ -208,7 +210,7 @@ const Row: React.FC<
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
                       url: prURL,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Merge in GitHub
@@ -225,7 +227,7 @@ const Row: React.FC<
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Edit pipeline in GitHub
@@ -242,7 +244,7 @@ const Row: React.FC<
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Fork sample
@@ -288,7 +290,7 @@ const Row: React.FC<
                       link_location: 'manage-builds-pipelines',
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Install GitHub Application
@@ -300,7 +302,7 @@ const Row: React.FC<
                         track('Disable PAC', {
                           component_name: component.metadata.name,
                           app_name: component.spec.application,
-                          workspace,
+                          namespace,
                         });
                       })
                     }
@@ -311,7 +313,7 @@ const Row: React.FC<
                       link_location: 'manage-builds-pipelines-alert',
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Roll back to default pipeline
@@ -335,7 +337,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
   modalProps,
 }) => {
   const track = useTrackEvent();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { url: githubAppURL } = useApplicationPipelineGitHubApp();
   const sortedComponents = React.useMemo(
     () => [...components].sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)),
@@ -373,10 +375,10 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipelines-close',
       app_name: applicationName,
-      workspace,
+      namespace,
     });
     onClose();
-  }, [onClose, applicationName, workspace, track]);
+  }, [onClose, applicationName, namespace, track]);
 
   return (
     <Modal {...modalProps} onClose={trackedOnClose}>
@@ -409,7 +411,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 analytics={{
                   link_name: 'install-github-app',
                   link_location: 'manage-builds-pipelines',
-                  workspace,
+                  namespace,
                 }}
               >
                 Install GitHub application

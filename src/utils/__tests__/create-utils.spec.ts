@@ -1,28 +1,29 @@
-import { omit } from 'lodash-es';
-import { THUMBNAIL_ANNOTATION } from '../../components/ApplicationThumbnail';
+import {
+  addSecretFormValues,
+  mockApplicationRequestData,
+  mockComponent,
+  mockComponentData,
+  mockComponentDataWithDevfile,
+  mockComponentDataWithoutAnnotation,
+  mockComponentDataWithPAC,
+  mockComponentWithDevfile,
+  secretFormValues,
+} from '../../components/Secrets/__data__/mock-secrets';
 import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
-import { commonFetch } from '../../k8s/fetch';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
+import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
-import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../types';
-import { ComponentKind, ComponentSpecs } from '../../types/component';
+import { SecretTypeDropdownLabel, SourceSecretType } from '../../types';
 import {
   createApplication,
   createComponent,
   sanitizeName,
   createSecret,
+  getSecretObject,
   addSecret,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
-
-jest.mock('../../k8s/fetch', () => {
-  const actual = jest.requireActual('../../k8s/fetch');
-  return {
-    ...actual,
-    commonFetch: jest.fn(),
-  };
-});
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(() => Promise.resolve()),
@@ -38,172 +39,46 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
 });
 
 const createResourceMock = k8sCreateResource as jest.Mock;
-const commonFetchMock = commonFetch as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
 
-jest.mock('../../components/ApplicationThumbnail', () => {
-  const actual = jest.requireActual('../../components/ApplicationThumbnail');
-  return { ...actual, getRandomSvgNumber: () => 7 };
-});
-
-const mockApplicationRequestData = {
-  apiVersion: `${ApplicationModel.apiGroup}/${ApplicationModel.apiVersion}`,
-  kind: ApplicationModel.kind,
-  metadata: {
-    name: 'test-application',
-    namespace: 'test-ns',
-    annotations: {
-      [THUMBNAIL_ANNOTATION]: '7',
-    },
-  },
-  spec: {
-    displayName: 'test-application',
-  },
-};
-
-const mockComponent: ComponentSpecs = {
-  componentName: 'Test Component',
-  application: 'test-application',
-  source: {
-    git: {
-      url: 'http://github.com/test-repo',
-    },
-  },
-};
-
-const mockComponentWithDevfile = {
-  ...mockComponent,
-  source: {
-    git: {
-      ...mockComponent.source.git,
-      devfileUrl: 'https://registry.devfile.io/sample-devfile',
-    },
-  },
-};
-
-const mockComponentData: ComponentKind = {
-  apiVersion: `${ComponentModel.apiGroup}/${ComponentModel.apiVersion}`,
-  kind: ComponentModel.kind,
-  metadata: {
-    name: 'test-component',
-    namespace: 'test-ns',
-    annotations: {
-      'build.appstudio.openshift.io/request': 'configure-pac',
-    },
-  },
-  spec: {
-    componentName: mockComponent.componentName,
-    application: 'test-application',
-    source: {
-      git: { url: mockComponent.source.git.url },
-    },
-    containerImage: undefined,
-    env: undefined,
-    replicas: undefined,
-    resources: undefined,
-    secret: undefined,
-  },
-};
-
-const mockComponentDataWithDevfile: ComponentKind = {
-  ...mockComponentData,
-  spec: {
-    ...mockComponentData.spec,
-    source: {
-      git: {
-        url: mockComponent.source.git.url,
-        devfileUrl: 'https://registry.devfile.io/sample-devfile',
-      },
-    },
-  },
-};
-
-const mockComponentDataWithoutAnnotation = omit(
-  mockComponentDataWithDevfile,
-  'metadata.annotations',
-);
-
-const mockComponentDataWithPAC = {
-  ...mockComponentDataWithDevfile,
-  metadata: {
-    ...mockComponentDataWithDevfile.metadata,
-    annotations: {
-      'build.appstudio.openshift.io/request': 'configure-pac',
-    },
-  },
-};
-
-const addSecretFormValues: AddSecretFormValues = {
-  type: 'Image pull secret',
-  name: 'test',
-  secretFor: SecretFor.Build,
-  opaque: {
-    keyValues: [
-      {
-        key: 'test',
-        value: 'dGVzdA==',
-      },
-    ],
-  },
-  image: {
-    authType: 'Image registry credentials',
-    registryCreds: [
-      {
-        registry: 'test.io',
-        username: 'test',
-        password: 'test',
-        email: 'test@test.com',
-      },
-    ],
-  },
-  source: {
-    authType: 'Basic authentication',
-    username: 'test',
-    password: 'test',
-  },
-  labels: [{ key: 'test', value: 'test' }],
-};
 describe('Create Utils', () => {
   beforeEach(() => {
     mockWindowFetch();
   });
   it('Should call k8s create util with correct model and data for application', async () => {
-    await createApplication('test-application', 'test-ns', 'test-ws');
+    await createApplication('test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ApplicationModel,
       queryOptions: {
         name: 'test-application',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockApplicationRequestData,
     });
   });
 
   it('Should call k8s create util with correct model and data for component', async () => {
-    await createComponent(mockComponent, 'test-application', 'test-ns', 'test-ws');
+    await createComponent(mockComponent, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentData,
     });
   });
 
   it('Should call k8s create util with correct model and data for component with devfile', async () => {
-    await createComponent(mockComponentWithDevfile, 'test-application', 'test-ns', 'test-ws');
+    await createComponent(mockComponentWithDevfile, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithDevfile,
     });
@@ -214,19 +89,13 @@ describe('Create Utils', () => {
       ...mockComponent,
       targetPort: 8080,
     };
-    await createComponent(
-      mockComponentDataWithTargetPort,
-      'test-application',
-      'test-ns',
-      'test-ws',
-    );
+    await createComponent(mockComponentDataWithTargetPort, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: {
         ...mockComponentData,
@@ -243,19 +112,13 @@ describe('Create Utils', () => {
       ...mockComponent,
       targetPort: undefined,
     };
-    await createComponent(
-      mockComponentDataWithoutTargetPort,
-      'test-application',
-      'test-ns',
-      'test-ws',
-    );
+    await createComponent(mockComponentDataWithoutTargetPort, 'test-application', 'test-ns');
 
     expect(k8sCreateResource).toHaveBeenCalledWith({
       model: ComponentModel,
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentData,
     });
@@ -266,7 +129,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       null,
@@ -279,7 +142,6 @@ describe('Create Utils', () => {
       queryOptions: {
         name: 'test-component',
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithPAC,
     });
@@ -290,7 +152,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithDevfile,
@@ -302,7 +164,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithDevfile,
     });
@@ -313,7 +174,7 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
+
       undefined,
       false,
       mockComponentDataWithoutAnnotation,
@@ -325,7 +186,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithoutAnnotation,
     });
@@ -336,7 +196,6 @@ describe('Create Utils', () => {
       mockComponentWithDevfile,
       'test-application',
       'test-ns',
-      'test-ws',
       undefined,
       false,
       mockComponentDataWithPAC,
@@ -348,7 +207,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: mockComponentDataWithPAC,
     });
@@ -359,7 +217,7 @@ describe('Create Utils', () => {
       mockComponent,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       mockComponentData,
@@ -387,7 +245,7 @@ describe('Create Utils', () => {
       updatedComponentWithoutEnv,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       oldComponentSpecWithEnv,
@@ -397,7 +255,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: expect.objectContaining({
         spec: expect.objectContaining({ env: undefined }),
@@ -423,7 +280,7 @@ describe('Create Utils', () => {
       updatedComponentWithoutEnv,
       'test-application',
       'test-ns',
-      'test-ws',
+
       '',
       false,
       oldComponentSpecWithEnv,
@@ -433,7 +290,6 @@ describe('Create Utils', () => {
       model: ComponentModel,
       queryOptions: {
         ns: 'test-ns',
-        ws: 'test-ws',
       },
       resource: expect.objectContaining({
         spec: expect.objectContaining({
@@ -461,81 +317,160 @@ describe('Create Utils', () => {
 
   it('should call the create secret api with dryRun query string params', async () => {
     createResourceMock.mockClear().mockImplementationOnce((props) => Promise.resolve(props));
-    commonFetchMock.mockClear().mockImplementation((props) => Promise.resolve(props));
 
     await createSecret(
       {
         secretName: 'my-snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
-      'test-ws',
+
       'test-ns',
       true,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets?dryRun=All',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"kind":"Secret"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns', queryParams: { dryRun: 'All' } },
+        resource: expect.objectContaining({ type: 'Opaque' }),
       }),
     );
   });
 
   it('should create a key/value secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
         secretName: 'my-snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"Opaque"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'Opaque' }),
       }),
     );
   });
 
   it('should create a Image pull secret', async () => {
-    commonFetchMock.mockClear();
-    commonFetchMock.mockImplementationOnce((props) => Promise.resolve(props));
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
 
     await createSecret(
       {
         secretName: 'registry-creds',
         type: SecretTypeDropdownLabel.image,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        image: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
-      'test-ws',
+
       'test-ns',
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalledTimes(1);
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"kubernetes.io/dockerconfigjson"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/dockerconfigjson' }),
+      }),
+    );
+  });
+
+  it('should add correct values for Image pull secret', async () => {
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.image,
+        image: { keyValues: [{ key: 'test', value: 'test-value' }] },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ stringData: { test: 'test-value' } }),
+      }),
+    );
+  });
+
+  it('should create a Source secret', async () => {
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.source,
+        source: { authType: SourceSecretType.basic, username: 'test1', password: 'pass-test' },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/basic-auth' }),
+      }),
+    );
+  });
+
+  it('should add correct data for Source secret', async () => {
+    createResourceMock.mockClear();
+    createResourceMock.mockImplementationOnce((props) => Promise.resolve(props));
+
+    await createSecret(
+      {
+        secretName: 'registry-creds',
+        type: SecretTypeDropdownLabel.source,
+        source: { authType: SourceSecretType.basic, username: 'test1', password: 'pass-test' },
+      },
+      'test-ns',
+      false,
+    );
+
+    expect(createResourceMock).toHaveBeenCalledTimes(1);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({
+          stringData: { password: 'cGFzcy10ZXN0', username: 'dGVzdDE=' },
+        }),
       }),
     );
   });
 
   it('should create partner task secret', async () => {
-    commonFetchMock.mockClear();
+    createResourceMock.mockClear();
     createResourceMock
       .mockClear()
       .mockImplementationOnce((props) => Promise.resolve(props))
@@ -545,36 +480,51 @@ describe('Create Utils', () => {
       {
         secretName: 'snyk-secret',
         type: SecretTypeDropdownLabel.opaque,
-        keyValues: [{ key: 'token', value: 'my-token-data' }],
+        opaque: { keyValues: [{ key: 'token', value: 'my-token-data' }] },
       },
-      'test-ws',
       'test-ns',
       false,
     );
 
-    expect(commonFetchMock).toHaveBeenCalled();
+    expect(createResourceMock).toHaveBeenCalled();
   });
   it('should add secret', async () => {
-    commonFetchMock.mockClear();
-    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
-    expect(commonFetchMock).toHaveBeenCalled();
+    createResourceMock.mockClear();
+    await addSecret(addSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
 
-    expect(commonFetchMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/api/v1/namespaces/test-ns/secrets',
+    expect(createResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        body: expect.stringContaining('"type":"kubernetes.io/dockerconfigjson"'),
+        model: SecretModel,
+        queryOptions: { ns: 'test-ns' },
+        resource: expect.objectContaining({ type: 'kubernetes.io/dockerconfigjson' }),
       }),
     );
   });
 
   it('should call linkToServiceAccount For image pull secrets', async () => {
     linkSecretToServiceAccountMock.mockClear();
-    await addSecret(addSecretFormValues, 'test-ws', 'test-ns');
+    await addSecret(addSecretFormValues, 'test-ns');
     expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
     expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
       'test-ns',
-      'test-ws',
     );
+  });
+});
+
+describe('create-utils getSecretObject', () => {
+  beforeEach(() => {
+    mockWindowFetch();
+  });
+
+  it('should create a secret object', () => {
+    const obj = getSecretObject(secretFormValues, 'test-ns');
+    expect(obj.kind).toBe(SecretModel.kind);
+  });
+
+  it('should create a correct fields', () => {
+    const obj = getSecretObject(secretFormValues, 'test-ns');
+    expect(obj.stringData).toEqual({ test: 'dGVzdA==' });
   });
 });

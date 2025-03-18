@@ -3,10 +3,7 @@ import { useK8sWatchResource } from '../k8s';
 import { ApplicationGroupVersionKind, ApplicationModel } from '../models';
 import { ApplicationKind } from '../types';
 
-export const useApplications = (
-  namespace: string,
-  workspace: string,
-): [ApplicationKind[], boolean, unknown] => {
+export const useApplications = (namespace: string): [ApplicationKind[], boolean, unknown] => {
   const {
     data: applications,
     isLoading,
@@ -15,7 +12,6 @@ export const useApplications = (
     {
       groupVersionKind: ApplicationGroupVersionKind,
       namespace,
-      workspace,
       isList: true,
     },
     ApplicationModel,
@@ -31,7 +27,6 @@ export const useApplications = (
 
 export const useApplication = (
   namespace: string,
-  workspace: string,
   applicationName: string,
 ): [ApplicationKind, boolean, unknown] => {
   const {
@@ -43,7 +38,6 @@ export const useApplication = (
       groupVersionKind: ApplicationGroupVersionKind,
       name: applicationName,
       namespace,
-      workspace,
     },
     ApplicationModel,
   );
@@ -52,7 +46,7 @@ export const useApplication = (
     if (
       !isLoading &&
       !error &&
-      (application as unknown as ApplicationKind).metadata?.deletionTimestamp
+      (application as unknown as ApplicationKind)?.metadata?.deletionTimestamp
     ) {
       return [null, !isLoading, { code: 404 }];
     }

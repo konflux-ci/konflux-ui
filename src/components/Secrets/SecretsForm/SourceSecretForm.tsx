@@ -28,16 +28,18 @@ export const SourceSecretForm: React.FC<React.PropsWithChildren<unknown>> = () =
         <>
           <InputField
             name="source.username"
+            data-test="secret-source-username"
             label="Username"
             helperText="For Git authentication"
-            required
+            isRequired
           />
           <InputField
             name="source.password"
+            data-test="secret-source-password"
             label="Password"
             type={TextInputTypes.password}
             helperText="For Git authentication"
-            required
+            isRequired
           />
         </>
       ) : (

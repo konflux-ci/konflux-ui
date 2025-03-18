@@ -3,7 +3,6 @@ import { useReleasePlans } from '../../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../../hooks/useReleases';
 import { Condition } from '../../../../../../types';
 import { conditionsRunStatus, runStatus } from '../../../../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
@@ -24,12 +23,8 @@ export const useAppReleasePlanNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const { workspace } = useWorkspaceInfo();
-  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(
-    namespace,
-    workspace,
-  );
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace, workspace);
+  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
+  const [releases, releasesLoaded, releasesError] = useReleases(namespace);
   const allLoaded = releasePlansLoaded && releasesLoaded;
   const allErrors = [releasesError, releasePlansError].filter((e) => !!e);
 

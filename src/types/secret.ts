@@ -5,11 +5,21 @@ export const SecretByUILabel = 'ui.appstudio.redhat.com/secret-for';
 export type ImportSecret = {
   secretName: string;
   type: string;
-  keyValues: {
-    key: string;
-    value: string;
-    readOnlyKey?: boolean;
-  }[];
+  source?: Source;
+  opaque?: {
+    keyValues: {
+      key: string;
+      value: string;
+      readOnlyKey?: boolean;
+    }[];
+  };
+  image?: {
+    keyValues: {
+      key: string;
+      value: string;
+      readOnlyKey?: boolean;
+    }[];
+  };
 };
 
 export enum SecretSPILabel {
@@ -106,8 +116,32 @@ export interface Target {
   secretName: string;
 }
 
+export type BuildTimeSecret = {
+  type: SecretType;
+  name: string;
+  providerUrl: string;
+  tokenKeyName: string;
+  source?: Source;
+  opaque?: {
+    keyValuePairs: {
+      key: string;
+      value: string;
+      readOnlyKey?: boolean;
+      readOnlyValue?: boolean;
+    }[];
+  };
+  image?: {
+    keyValuePairs: {
+      key: string;
+      value: string;
+      readOnlyKey?: boolean;
+      readOnlyValue?: boolean;
+    }[];
+  };
+};
+
 export type SecretFormValues = ImportSecret & {
-  existingSecrets?: string[];
+  existingSecrets?: BuildTimeSecret[];
 };
 
 export enum SecretTypeDropdownLabel {

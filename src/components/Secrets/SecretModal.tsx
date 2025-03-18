@@ -1,14 +1,13 @@
 import * as React from 'react';
-import {
-  Alert,
-  Button,
-  Modal,
-  ModalBoxBody,
-  ModalBoxHeader,
-  ModalVariant,
-} from '@patternfly/react-core';
+import { Button, Modal, ModalBoxBody, ModalVariant } from '@patternfly/react-core';
 import { Formik } from 'formik';
-import { ImportSecret, SecretTypeDropdownLabel } from '../../types';
+import { isEmpty } from 'lodash-es';
+import {
+  ImportSecret,
+  SecretTypeDropdownLabel,
+  SourceSecretType,
+  BuildTimeSecret,
+} from '../../types';
 import { SecretFromSchema } from '../../utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import SecretForm from './SecretForm';
@@ -25,11 +24,11 @@ const createPartnerTaskSecret = (
 };
 
 export type SecretModalValues = ImportSecret & {
-  existingSecrets: string[];
+  existingSecrets: BuildTimeSecret[];
 };
 
 type SecretModalProps = RawComponentProps & {
-  existingSecrets: string[];
+  existingSecrets: BuildTimeSecret[];
   onSubmit: (value: SecretModalValues) => void;
 };
 
@@ -42,7 +41,15 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
   const initialValues: SecretModalValues = {
     secretName: '',
     type: SecretTypeDropdownLabel.opaque,
-    keyValues: defaultKeyValues,
+    opaque: {
+      keyValues: defaultKeyValues,
+    },
+    image: {
+      keyValues: defaultKeyValues,
+    },
+    source: {
+      authType: SourceSecretType.basic,
+    },
     existingSecrets,
   };
 
@@ -68,6 +75,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
               onClick={() => {
                 props.handleSubmit();
               }}
+              isDisabled={!props.dirty || !isEmpty(props.errors) || props.isSubmitting}
             >
               Create
             </Button>,
@@ -76,12 +84,6 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
             </Button>,
           ]}
         >
-          <ModalBoxHeader>
-            <Alert
-              isInline
-              title="For now we only support Opaque secret and Image pull secret types, but we’ll be expanding to more types in the future."
-            />
-          </ModalBoxHeader>
           <ModalBoxBody>
             <SecretForm existingSecrets={existingSecrets} />
           </ModalBoxBody>

@@ -4,8 +4,7 @@ import { FormikProps } from 'formik';
 import isEmpty from 'lodash/isEmpty';
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import { FormFooter } from '../../../shared';
-import { useWorkspaceBreadcrumbs } from '../../../utils/breadcrumb-utils';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { UserAccessFormValues } from './form-utils';
 import { RoleSection } from './RoleSection';
 import { UsernameSection } from './UsernameSection';
@@ -23,26 +22,18 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
   handleSubmit,
   handleReset,
 }) => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   return (
     <PageLayout
       title={
-        edit ? `Edit access to workspace, ${workspace}` : `Grant access to workspace, ${workspace}`
+        edit ? `Edit access to namespace, ${namespace}` : `Grant access to namespace, ${namespace}`
       }
       description={
         edit
           ? 'Change permissions for this user by adding a role or removing a current role.'
-          : 'Invite users to collaborate with you by granting them access to your workspace.'
+          : 'Invite users to collaborate with you by granting them access to your namespace.'
       }
-      breadcrumbs={[
-        ...breadcrumbs,
-        {
-          path: '#',
-          name: 'User access',
-        },
-      ]}
       footer={
         <FormFooter
           submitLabel={edit ? 'Save changes' : 'Grant access'}

@@ -1,13 +1,13 @@
-import { SpaceBindingRequestModel } from '../../models';
+import { RoleBindingModel } from '../../models';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
 
 export const userAccessListPageLoader = createLoaderWithAccessCheck(() => null, {
-  model: SpaceBindingRequestModel,
+  model: RoleBindingModel,
   verb: 'list',
 });
 
 export const grantAccessPageLoader = createLoaderWithAccessCheck(() => null, {
-  model: SpaceBindingRequestModel,
+  model: RoleBindingModel,
   verb: 'create',
 });
 

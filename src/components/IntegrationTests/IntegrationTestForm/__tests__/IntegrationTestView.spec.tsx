@@ -2,10 +2,10 @@ import { fireEvent, RenderResult } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useApplications } from '../../../../hooks/useApplications';
 import { useComponents } from '../../../../hooks/useComponents';
+import { NamespaceContext } from '../../../../shared/providers/Namespace/namespace-context';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { mockApplication } from '../../../ApplicationDetails/__data__/mock-data';
 import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
-import { WorkspaceContext } from '../../../Workspace/workspace-context';
 import {
   MockIntegrationTests,
   MockIntegrationTestsWithGit,
@@ -73,18 +73,17 @@ class MockResizeObserver {
 window.ResizeObserver = MockResizeObserver;
 
 const IntegrationTestViewWrapper = ({ children }) => (
-  <WorkspaceContext.Provider
+  <NamespaceContext.Provider
     value={{
       namespace: 'test-ns',
-      lastUsedWorkspace: 'test-ws',
-      workspace: 'test-ws',
-      workspaceResource: undefined,
-      workspacesLoaded: true,
-      workspaces: [],
+      lastUsedNamespace: 'test-ns',
+      namespaceResource: undefined,
+      namespacesLoaded: true,
+      namespaces: [],
     }}
   >
     {children}
-  </WorkspaceContext.Provider>
+  </NamespaceContext.Provider>
 );
 
 const useApplicationsMock = useApplications as jest.Mock;

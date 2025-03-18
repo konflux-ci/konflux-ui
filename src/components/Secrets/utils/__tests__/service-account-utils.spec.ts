@@ -30,7 +30,7 @@ describe('linkSecretToServiceAccount', () => {
     });
   });
   it('should return early if no namespace ', async () => {
-    await linkSecretToServiceAccount(imagePullSecret, null, null);
+    await linkSecretToServiceAccount(imagePullSecret, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -41,7 +41,7 @@ describe('linkSecretToServiceAccount', () => {
       imagePullSecrets: [],
       secrets: [],
     });
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns', 'test-ws');
+    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -64,7 +64,7 @@ describe('linkSecretToServiceAccount', () => {
 
   it('should append to imagePull secrets list ', async () => {
     k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns', 'test-ws');
+    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -96,7 +96,7 @@ describe('linkSecretToServiceAccount', () => {
       metadata: { name: 'test-cdq' },
     });
     k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns', 'test-ws');
+    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -133,7 +133,7 @@ describe('UnLinkSecretFromServiceAccount', () => {
   });
   it('should return early if no namespace ', async () => {
     k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(imagePullSecret, null, null);
+    await unLinkSecretFromServiceAccount(imagePullSecret, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -142,7 +142,7 @@ describe('UnLinkSecretFromServiceAccount', () => {
       metadata: { name: 'test-cdq' },
     });
     k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(imagePullSecret, null, null);
+    await unLinkSecretFromServiceAccount(imagePullSecret, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -161,7 +161,6 @@ describe('UnLinkSecretFromServiceAccount', () => {
         apiVersion: imagePullSecret.apiVersion,
       },
       'test-ns',
-      'test-ws',
     );
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
@@ -193,7 +192,6 @@ describe('UnLinkSecretFromServiceAccount', () => {
         apiVersion: imagePullSecret.apiVersion,
       },
       'test-ns',
-      'test-ws',
     );
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(

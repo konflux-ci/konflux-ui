@@ -2,17 +2,19 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Flex, FlexItem, Skeleton } from '@patternfly/react-core';
 import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents';
+import { COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
+import { getLastestImage } from '../../../utils/component-utils';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { useBuildLogViewerModal } from '../../LogViewer/BuildLogViewer';
 import PipelineRunStatus from '../../PipelineRun/PipelineRunStatus';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { useComponentActions } from '../component-actions';
 import { componentsTableColumnClasses } from './ComponentsListHeader';
 
@@ -28,11 +30,12 @@ export const getContainerImageLink = (url: string) => {
 const ComponentsListRow: React.FC<
   RowFunctionArgs<ComponentWithLatestBuildPipeline, PacStatesForComponents>
 > = ({ obj: component, customData }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationName = component.spec.application;
   const name = component.metadata.name;
   const actions = useComponentActions(component, name);
   const buildLogsModal = useBuildLogViewerModal(component);
+  const latestImage = getLastestImage(component);
 
   const commit = React.useMemo(
     () =>
@@ -48,7 +51,11 @@ const ComponentsListRow: React.FC<
         <Flex direction={{ default: 'column' }}>
           <FlexItem data-test="component-list-item-name" style={{ minWidth: '30%' }}>
             <Link
-              to={`/workspaces/${workspace}/applications/${applicationName}/components/${name}`}
+              to={COMPONENT_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName,
+                componentName: name,
+              })}
             >
               <b>{name}</b>{' '}
               <ComponentRelationStatusIcon
@@ -66,14 +73,14 @@ const ComponentsListRow: React.FC<
               />
             </FlexItem>
           )}
-          {component.spec.containerImage && (
+          {latestImage && (
             <FlexItem>
               <ExternalLink
                 /** by default patternfly button disable text selection on Button component
                     this enables it on <a /> tag */
                 style={{ userSelect: 'auto' }}
-                href={getContainerImageLink(component.spec.containerImage)}
-                text={component.spec.containerImage}
+                href={getContainerImageLink(latestImage)}
+                text={latestImage}
               />
             </FlexItem>
           )}
@@ -90,7 +97,11 @@ const ComponentsListRow: React.FC<
             {commit ? (
               <>
                 <Link
-                  to={`/workspaces/${workspace}/applications/${commit.application}/commit/${commit.sha}`}
+                  to={COMMIT_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: commit.application,
+                    commitName: commit.sha,
+                  })}
                 >
                   {commit.isPullRequest ? `#${commit.pullRequestNumber}` : ''} {commit.shaTitle}
                 </Link>

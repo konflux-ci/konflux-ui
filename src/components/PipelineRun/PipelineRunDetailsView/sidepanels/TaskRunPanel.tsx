@@ -10,9 +10,10 @@ import {
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
+import { TASKRUN_DETAILS_PATH } from '../../../../routes/paths';
+import { useNamespace } from '../../../../shared/providers/Namespace';
 import { StatusIconWithTextLabel } from '../../../StatusIcon/StatusIcon';
 import TaskRunLogs from '../../../TaskRuns/TaskRunLogs';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { PipelineRunNodeData } from '../visualization/types';
 import TaskRunDetails from './TaskRunDetails';
 
@@ -27,7 +28,7 @@ const TaskRunPanel: React.FC<React.PropsWithChildren<Props>> = ({ taskNode, onCl
   const task = taskNode.getData().task;
   const taskRun = taskNode.getData().taskRun;
   const { status } = taskNode.getData();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationName = taskRun?.metadata?.labels[PipelineRunLabel.APPLICATION];
 
   return (
@@ -37,7 +38,11 @@ const TaskRunPanel: React.FC<React.PropsWithChildren<Props>> = ({ taskNode, onCl
           <span>
             {applicationName ? (
               <Link
-                to={`/workspaces/${workspace}/applications/${applicationName}/taskruns/${taskRun.metadata.name}`}
+                to={TASKRUN_DETAILS_PATH.createPath({
+                  applicationName,
+                  workspaceName: namespace,
+                  taskRunName: taskRun.metadata?.name,
+                })}
               >
                 {task.name}
               </Link>

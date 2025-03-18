@@ -13,8 +13,8 @@ import {
 } from '@patternfly/react-core';
 import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import { css } from '@patternfly/react-styles';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { HttpError } from '../../k8s/error';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 import '../../shared/components/empty-state/EmptyState.scss';
 
@@ -33,7 +33,7 @@ const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
   ...props
 }) => {
   const navigate = useNavigate();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   return (
     <EmptyState
       className={css('app-empty-state', className)}
@@ -48,7 +48,7 @@ const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
       />
       <EmptyStateBody>
         {body ||
-          `Ask the administrator or the owner of the ${workspace} workspace for access permissions.`}
+          `Ask the administrator or the owner of the ${namespace} namespace for access permissions.`}
       </EmptyStateBody>
       <EmptyStateFooter>
         {children || (

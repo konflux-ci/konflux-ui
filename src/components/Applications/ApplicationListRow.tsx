@@ -2,18 +2,19 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { pluralize, Skeleton } from '@patternfly/react-core';
 import { useComponents } from '../../hooks/useComponents';
+import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
+import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ApplicationKind } from '../../types';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { useApplicationActions } from './application-actions';
 import { applicationTableColumnClasses } from './ApplicationListHeader';
 
 const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<ApplicationKind>>> = ({
   obj,
 }) => {
-  const { workspace, namespace } = useWorkspaceInfo();
-  const [components, loaded] = useComponents(namespace, workspace, obj.metadata?.name);
+  const namespace = useNamespace();
+  const [components, loaded] = useComponents(namespace, obj.metadata?.name);
   const actions = useApplicationActions(obj);
 
   const displayName = obj.spec.displayName || obj.metadata?.name;
@@ -22,7 +23,10 @@ const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Appli
     <>
       <TableData className={applicationTableColumnClasses.name} data-test="app-row-test-id">
         <Link
-          to={`/workspaces/${workspace}/applications/${obj.metadata?.name}`}
+          to={APPLICATION_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata.name,
+          })}
           title={displayName}
         >
           {displayName}

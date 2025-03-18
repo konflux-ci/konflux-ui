@@ -2,9 +2,9 @@ import * as React from 'react';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
 import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { getPipelineRunFromTaskRunOwnerRef } from '../../utils/common-utils';
 import { getTaskRunLog } from '../../utils/tekton-results';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import {
   ComponentEnterpriseContractResult,
   EnterpriseContractResult,
@@ -16,7 +16,7 @@ import { extractEcResultsFromTaskRunLogs } from './utils';
 export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,
 ): [ComponentEnterpriseContractResult[], boolean] => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [taskRun, loaded, error] = useTaskRuns(namespace, pipelineRunName, 'verify');
   const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
   const [ecJson, setEcJson] = React.useState<EnterpriseContractResult>();
@@ -72,7 +72,6 @@ export const useEnterpriseContractResultFromLogs = (
         try {
           const pid = getPipelineRunFromTaskRunOwnerRef(taskRun[0])?.uid;
           const logs = await getTaskRunLog(
-            workspace,
             taskRun[0].metadata.namespace,
             taskRun[0].metadata.uid,
             pid,
@@ -97,7 +96,7 @@ export const useEnterpriseContractResultFromLogs = (
     return () => {
       unmount = true;
     };
-  }, [ecLoaded, fetchTknLogs, taskRun, workspace]);
+  }, [ecLoaded, fetchTknLogs, taskRun]);
 
   const ecResult = React.useMemo(() => {
     // filter out components for which ec didn't execute because invalid image URL

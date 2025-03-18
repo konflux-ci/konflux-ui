@@ -5,8 +5,8 @@ import {
   Model,
   PipelineNodeModel,
 } from '@patternfly/react-topology';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { runStatus } from '../../../../../../utils/pipeline-utils';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
 import { NodeType } from '../const';
 import { WorkflowNodeType } from '../types';
 import { groupToPipelineNode, worstWorkflowStatus } from '../utils/node-utils';
@@ -19,7 +19,7 @@ export const useAppWorkflowData = (
   applicationName: string,
   expanded: boolean,
 ): [model: Model, loaded: boolean, errors: unknown[]] => {
-  const { namespace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [componentNodes, componentGroup, componentTasks, componentsLoaded, componentsErrors] =
     useAppComponentsNodes(namespace, applicationName, [], expanded);
   const [buildNodes, buildGroup, buildTasks, buildsLoaded, buildsErrors] = useAppBuildNodes(

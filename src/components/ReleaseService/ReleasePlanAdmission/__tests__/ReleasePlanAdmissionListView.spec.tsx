@@ -1,6 +1,7 @@
 import { render, waitFor } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useReleasePlanAdmissions } from '../../../../hooks/useReleasePlanAdmissions';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
+import { mockAccessReviewUtil } from '../../../../unit-test-utils/mock-access-review';
 import { mockReleasePlanAdmission } from '../__data__/release-plan-admission.mock';
 import ReleasePlanAdmissionListView from '../ReleasePlanAdmissionListView';
 
@@ -19,7 +20,8 @@ jest.mock('../../../../hooks/useReleasePlanAdmissions', () => ({
 const mockReleasePlanHook = useReleasePlanAdmissions as jest.Mock;
 
 describe('ReleasePlanAdmissionListView', () => {
-  createUseWorkspaceInfoMock({ namespace: 'abcd', workpsace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
+  mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
 
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);

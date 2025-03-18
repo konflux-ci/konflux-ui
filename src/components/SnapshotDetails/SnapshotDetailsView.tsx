@@ -5,22 +5,23 @@ import { SnapshotLabels } from '../../consts/pipelinerun';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { HttpError } from '../../k8s/error';
+import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const SnapshotDetailsView: React.FC = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { snapshotName, applicationName } = useParams<RouterParams>();
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [snapshot, loaded, loadErr] = useSnapshot(namespace, workspace, snapshotName);
+  const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
     () => loaded && !loadErr && snapshot?.metadata?.labels[SnapshotLabels.BUILD_PIPELINE_LABEL],
@@ -29,7 +30,6 @@ const SnapshotDetailsView: React.FC = () => {
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
     snapshot?.metadata?.namespace,
-    workspace,
     buildPipelineName,
   );
 
@@ -67,7 +67,11 @@ const SnapshotDetailsView: React.FC = () => {
             name: 'Snapshots',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshotName}`,
+            path: SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              snapshotName,
+            }),
             name: snapshot.metadata.name,
           },
         ]}
@@ -95,7 +99,11 @@ const SnapshotDetailsView: React.FC = () => {
             )}
           </>
         }
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshotName}`}
+        baseURL={SNAPSHOT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          snapshotName,
+        })}
         tabs={[
           {
             key: 'index',

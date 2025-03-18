@@ -21,6 +21,7 @@ export * from './service-account';
 export * from './limit-range';
 export * from './remotesecret';
 export * from './workspace';
-export * from './space-binding-request';
+export * from './role-binding';
 export * from './config-map';
 export * from './image-repository';
+export * from './namespace';

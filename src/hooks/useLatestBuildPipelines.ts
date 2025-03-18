@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
+import { useApplication } from './useApplications';
 import { usePipelineRuns } from './usePipelineRuns';
 
 export const useLatestBuildPipelines = (
@@ -9,9 +9,9 @@ export const useLatestBuildPipelines = (
   applicationName: string,
   componentNames: string[] | undefined,
 ): [PipelineRunKind[], boolean, unknown] => {
-  const { workspace } = useWorkspaceInfo();
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestBuilds, setLatestBuilds] = React.useState<PipelineRunKind[]>([]);
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
 
   React.useEffect(() => {
     setFoundNames([]);
@@ -23,25 +23,18 @@ export const useLatestBuildPipelines = (
   );
 
   const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
-    neededNames?.length ? namespace : null,
-    workspace,
+    applicationLoaded ? namespace : null,
     React.useMemo(
       () => ({
         selector: {
+          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
           },
-          matchExpressions: [
-            {
-              key: PipelineRunLabel.COMPONENT,
-              operator: 'In',
-              values: neededNames,
-            },
-          ],
         },
       }),
-      [applicationName, neededNames],
+      [applicationName, application],
     ),
   );
 

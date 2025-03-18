@@ -1,5 +1,5 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
-import { SecretTypeDropdownLabel } from '../../../types';
+import { act, fireEvent, screen, waitFor, configure } from '@testing-library/react';
+import { SecretTypeDropdownLabel, SecretType } from '../../../types';
 import { formikRenderer } from '../../../utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
 import { supportedPartnerTasksSecrets } from '../utils/secret-utils';
@@ -7,15 +7,33 @@ import { supportedPartnerTasksSecrets } from '../utils/secret-utils';
 const initialValues: SecretModalValues = {
   secretName: '',
   type: SecretTypeDropdownLabel.opaque,
-  keyValues: [{ key: '', value: '', readOnlyKey: false }],
+  opaque: { keyValues: [{ key: '', value: '', readOnlyKey: false }] },
   existingSecrets: [],
 };
 
-describe('SecretForm', () => {
+const snykSecret = {
+  type: SecretType.opaque,
+  name: 'snyk-secret',
+  tokenKeyName: 'snyk-secret',
+  providerUrl: '',
+  keyValuePairs: [{ key: 'snyk_token', value: 'snyk_value', readOnlyKey: true }],
+};
+
+const testSecret = {
+  type: SecretType.opaque,
+  name: 'test-secret',
+  tokenKeyName: 'test-secret',
+  providerUrl: '',
+  keyValuePairs: [{ key: 'test_token', value: 'test_value', readOnlyKey: true }],
+};
+
+configure({ testIdAttribute: 'data-test' });
+
+describe('SecretModal', () => {
   it('should show secret form in a modal', async () => {
     formikRenderer(
       <SecretModal
-        existingSecrets={['test']}
+        existingSecrets={[testSecret]}
         onSubmit={jest.fn()}
         modalProps={{ isOpen: true, onClose: jest.fn() }}
       />,
@@ -27,19 +45,41 @@ describe('SecretForm', () => {
     });
   });
 
-  it('should render validation message when user click on create button without filling the form', async () => {
+  it('should show different secret types', async () => {
     formikRenderer(
       <SecretModal
-        existingSecrets={['test']}
+        existingSecrets={[testSecret]}
         onSubmit={jest.fn()}
         modalProps={{ isOpen: true, onClose: jest.fn() }}
       />,
       initialValues,
     );
+    await waitFor(() => {
+      expect(screen.getByTestId('secret-form')).toBeInTheDocument();
+      expect(screen.getByText('Secret type')).toBeInTheDocument();
+      expect(screen.getByText('Key/value secret')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Key/value secret'));
+    expect(screen.getByText('Image pull secret')).toBeInTheDocument();
+    expect(screen.getByText('Source secret')).toBeInTheDocument();
+  });
+
+  it('should render validation message when user click on create button without filling the form', async () => {
+    formikRenderer(
+      <SecretModal
+        existingSecrets={[testSecret]}
+        onSubmit={jest.fn()}
+        modalProps={{ isOpen: true, onClose: jest.fn() }}
+      />,
+      initialValues,
+    );
+    expect(screen.getByTestId('key-0')).toBeInTheDocument();
+    fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
 
     await waitFor(() => {
       fireEvent.click(screen.getByRole('button', { name: /Create/ }));
-      expect(screen.getAllByText('Required')).toHaveLength(3);
+      expect(screen.getAllByText('Required')).toHaveLength(2);
     });
   });
 
@@ -48,7 +88,7 @@ describe('SecretForm', () => {
     formikRenderer(
       <SecretModal
         onSubmit={jest.fn()}
-        existingSecrets={['test']}
+        existingSecrets={[testSecret]}
         modalProps={{ isOpen: true, onClose }}
       />,
       initialValues,
@@ -67,7 +107,7 @@ describe('SecretForm', () => {
     formikRenderer(
       <SecretModal
         onSubmit={jest.fn()}
-        existingSecrets={['test']}
+        existingSecrets={[testSecret]}
         modalProps={{ isOpen: true, onClose }}
       />,
       initialValues,
@@ -91,7 +131,7 @@ describe('SecretForm', () => {
     formikRenderer(
       <SecretModal
         onSubmit={jest.fn()}
-        existingSecrets={['snyk-secret']}
+        existingSecrets={[snykSecret]}
         modalProps={{ isOpen: true, onClose }}
       />,
       initialValues,
@@ -102,7 +142,7 @@ describe('SecretForm', () => {
       const modal = screen.queryByTestId('build-secret-modal');
       fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
     });
-    expect(screen.queryByText('snyk-secret')).not.toBeInTheDocument();
+    expect(screen.queryByText('snyk-secret')).toBeInTheDocument();
   });
 
   it('should remove the selected value with clearn button is clicked', async () => {
@@ -156,6 +196,7 @@ describe('SecretForm', () => {
       fireEvent.input(screen.getByTestId('file-upload-value').querySelector('textarea'), {
         target: { value: 'Value' },
       });
+      fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
     });
 
     await waitFor(() => {

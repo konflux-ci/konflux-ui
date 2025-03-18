@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@patternfly/react-core';
+import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
@@ -9,7 +11,6 @@ import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { PipelineRunKind } from '../../../types';
 import { calculateDuration, pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
@@ -40,7 +41,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
 
   const status = pipelineRunStatus(obj);
   const actions = usePipelinerunActions(obj);
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
@@ -50,7 +51,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
         <Link
-          to={`/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${obj.metadata?.name}`}
+          to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            pipelineRunName: obj.metadata?.name,
+          })}
           title={obj.metadata?.name}
         >
           {obj.metadata?.name}
@@ -95,9 +100,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
           obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
             <Link
-              to={`/workspaces/${workspace}/applications/${
-                obj.metadata?.labels[PipelineRunLabel.APPLICATION]
-              }/components/${obj.metadata?.labels[PipelineRunLabel.COMPONENT]}`}
+              to={COMPONENT_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+                componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
+              })}
             >
               {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
             </Link>

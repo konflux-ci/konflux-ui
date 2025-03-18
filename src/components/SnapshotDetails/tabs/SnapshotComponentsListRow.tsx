@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardCopy } from '@patternfly/react-core';
+import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import GitRepoLink from '../../GitLink/GitRepoLink';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { commitsTableColumnClasses } from './SnapshotComponentsListHeader';
 
 export type SnapshotComponentTableData = {
@@ -17,11 +18,16 @@ export type SnapshotComponentTableData = {
 const SnapshotComponentsListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<SnapshotComponentTableData>>
 > = ({ obj }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   return (
     <>
       <TableData data-test="snapshot-component-list-row" className={commitsTableColumnClasses.name}>
-        <Link to={`/workspaces/${workspace}/applications/${obj.application}/components/`}>
+        <Link
+          to={COMPONENT_LIST_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.application,
+          })}
+        >
           {obj.name}
         </Link>
       </TableData>
@@ -36,7 +42,20 @@ const SnapshotComponentsListRow: React.FC<
         </TableData>
       )}
       <TableData className={commitsTableColumnClasses.revision}>
-        <span data-test="snapshot-component-revision">{obj.source?.git?.revision}</span>
+        {obj.source?.git?.revision ? (
+          <Link
+            to={COMMIT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: obj.application,
+              commitName: obj.source?.git?.revision,
+            })}
+            data-test="snapshot-component-revision"
+          >
+            {obj.source?.git?.revision}
+          </Link>
+        ) : (
+          '-'
+        )}
       </TableData>
     </>
   );

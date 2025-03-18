@@ -1,9 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import {
   createK8sWatchResourceMock,
-  createUseWorkspaceInfoMock,
+  createUseApplicationMock,
   routerRenderer,
 } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
@@ -27,6 +28,8 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
+
 const watchResourceMock = createK8sWatchResourceMock();
 const useComponentsMock = useComponents as jest.Mock;
 const componentMock = useComponent as jest.Mock;
@@ -36,7 +39,7 @@ const useParamsMock = useParams as jest.Mock;
 describe('ComponentActivityTab', () => {
   let navigateMock: jest.Mock;
 
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     watchResourceMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
@@ -46,7 +49,6 @@ describe('ComponentActivityTab', () => {
     useNavigateMock.mockImplementation(() => navigateMock);
     useParamsMock.mockReturnValue({
       activityTab: 'latest-commits',
-      workspaceName: 'test-ws',
       componentName: 'test-component',
     });
   });
@@ -70,7 +72,7 @@ describe('ComponentActivityTab', () => {
 
     await act(() => fireEvent.click(plrTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/applications/my-test-output/components/test-component/activity/pipelineruns',
+      '/workspaces/test-ns/applications/my-test-output/components/test-component/activity/pipelineruns',
     );
   });
 });

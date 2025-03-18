@@ -28,7 +28,7 @@ export type K8sResourceDeleteOptions = K8sResourceBaseOptions & {
 };
 
 export type K8sResourceListOptions = K8sResourceBaseOptions<
-  Pick<Partial<QueryOptionsWithSelector>, 'ns' | 'queryParams' | 'ws'>
+  Pick<Partial<QueryOptionsWithSelector>, 'ns' | 'queryParams'>
 >;
 
 export type K8sResourceListResult<TResource extends K8sResourceCommon> = {
@@ -65,7 +65,6 @@ export const k8sListResource = <TResource extends K8sResourceCommon>({
   commonFetchJSON<K8sResourceListResult<TResource>>(
     getK8sResourceURL(model, undefined, {
       ns: queryOptions.ns,
-      ws: queryOptions.ws,
       queryParams: queryOptions.queryParams,
     }),
     fetchOptions.requestInit,
@@ -73,11 +72,13 @@ export const k8sListResource = <TResource extends K8sResourceCommon>({
     true,
   ).then((result) => ({
     ...result,
-    items: result.items.map((i) => ({
-      ...i,
-      apiVersion: result.apiVersion,
-      kind: model.kind,
-    })),
+    items: result.items
+      ? result.items.map((i) => ({
+          ...i,
+          apiVersion: result.apiVersion,
+          kind: model.kind,
+        }))
+      : [],
   }));
 
 export const K8sListResourceItems = <TResource extends K8sResourceCommon>(

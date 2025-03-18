@@ -51,7 +51,7 @@ export const secretFormValidationSchema = yup.object({
       authType: yup.string(),
       username: yup.string().when('authType', {
         is: SourceSecretType.basic,
-        then: yup.string().required('Required'),
+        then: yup.string(),
       }),
       password: yup.string().when('authType', {
         is: SourceSecretType.basic,

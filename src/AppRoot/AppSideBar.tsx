@@ -1,30 +1,94 @@
 import * as React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly/react-core';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
+import { css } from '@patternfly/react-styles';
+import {
+  APPLICATION_LIST_PATH,
+  NAMESPACE_LIST_PATH,
+  RELEASE_SERVICE_PATH,
+  SECRET_LIST_PATH,
+  USER_ACCESS_LIST_PAGE,
+} from '@routes/paths';
+import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
+import { useNamespace } from '../shared/providers/Namespace';
+
+import './AppSideBar.scss';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
-  const location = useLocation();
-  const { workspace } = useWorkspaceInfo();
+  const isActive = useActiveRouteChecker();
+  const namespace = useNamespace();
+  const disabled = !namespace;
   return (
-    <PageSidebar isSidebarOpen={isOpen}>
+    <PageSidebar data-test="sidebar" isSidebarOpen={isOpen}>
       <PageSidebarBody>
         <Nav>
           <NavList>
-            <NavItem isActive={location.pathname === '/'}>
+            <NavItem isActive={isActive('/', { exact: true })}>
               <NavLink to="/">Overview</NavLink>
             </NavItem>
-            <NavItem isActive={location.pathname.includes('applications')}>
-              <NavLink to={`/workspaces/${workspace}/applications`}>Applications</NavLink>
+
+            <NavItem
+              isActive={isActive(NAMESPACE_LIST_PATH.path, {
+                exact: true,
+              })}
+            >
+              <NavLink to={NAMESPACE_LIST_PATH.createPath({} as never)}>Namespaces</NavLink>
             </NavItem>
-            <NavItem isActive={location.pathname.includes('/secrets')}>
-              <NavLink to={`/workspaces/${workspace}/secrets`}>Secrets</NavLink>
+
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(APPLICATION_LIST_PATH.path)}
+            >
+              <Link
+                to={
+                  namespace
+                    ? APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })
+                    : undefined
+                }
+              >
+                Applications
+              </Link>
             </NavItem>
-            <NavItem isActive={location.pathname.includes('/release')}>
-              <NavLink to={`/workspaces/${workspace}/release`}>Releases</NavLink>
+
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(SECRET_LIST_PATH.path)}
+            >
+              <NavLink
+                to={
+                  namespace ? SECRET_LIST_PATH.createPath({ workspaceName: namespace }) : undefined
+                }
+              >
+                Secrets
+              </NavLink>
             </NavItem>
-            <NavItem isActive={location.pathname.includes('/access')}>
-              <NavLink to={`/workspaces/${workspace}/access`}>User Access</NavLink>
+
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(RELEASE_SERVICE_PATH.path)}
+            >
+              <NavLink
+                to={
+                  namespace
+                    ? RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace })
+                    : undefined
+                }
+              >
+                Releases
+              </NavLink>
+            </NavItem>
+
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }))}
+            >
+              <NavLink
+                to={
+                  namespace ? USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }) : null
+                }
+              >
+                User Access
+              </NavLink>
             </NavItem>
           </NavList>
         </Nav>

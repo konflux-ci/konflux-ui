@@ -8,8 +8,8 @@ import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { ApplicationDropdown } from '../../../../components/Secrets/SecretsForm/ApplicationDropdown';
 import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
-import { useWorkspaceBreadcrumbs } from '../../../../utils/breadcrumb-utils';
-import { ReleasePlanFormValues } from './form-utils';
+import { useNamespace } from '../../../../shared/providers/Namespace';
+import { getReleasePlanFormBreadcrumbs, ReleasePlanFormValues } from './form-utils';
 import { RunReleasePipelineSection } from './RunReleasePipelineSection';
 
 type Props = FormikProps<ReleasePlanFormValues> & {
@@ -25,24 +25,14 @@ export const ReleasePlanForm: React.FC<Props> = ({
   status,
   edit,
 }) => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
+  const namespace = useNamespace();
   const [{ value: labels }] = useField<ReleasePlanFormValues['labels']>('labels');
 
   return (
     <PageLayout
       title={edit ? 'Edit release plan' : 'Create release plan'}
       description="A release plan schedules when to send your code to production."
-      breadcrumbs={[
-        ...breadcrumbs,
-        {
-          path: `/release`,
-          name: 'Releases',
-        },
-        {
-          path: '#',
-          name: edit ? 'Edit release plan' : 'Create release plan',
-        },
-      ]}
+      breadcrumbs={getReleasePlanFormBreadcrumbs(namespace, edit)}
       footer={
         <FormFooter
           submitLabel={edit ? 'Save' : 'Create'}
