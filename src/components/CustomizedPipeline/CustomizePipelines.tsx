@@ -15,6 +15,7 @@ import {
   Truncate,
 } from '@patternfly/react-core';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
+import { useNamespace } from '~/shared/providers/Namespace';
 import sendIconUrl from '../../assets/send.svg';
 import successIconUrl from '../../assets/success.svg';
 import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
@@ -29,7 +30,6 @@ import AnalyticsButton from '../AnalyticsButton/AnalyticsButton';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import GitRepoLink from '../GitLink/GitRepoLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ComponentPACStateLabel from './ComponentPACStateLabel';
 
 type Props = RawComponentProps & {
@@ -42,7 +42,7 @@ const Row: React.FC<
     onStateChange: (state: PACState) => void;
   }>
 > = ({ component, onStateChange }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const track = useTrackEvent();
   const [konfluxInfo] = useKonfluxPublicInfo();
   const applicationUrl = konfluxInfo?.integrations?.github?.application_url || '';
@@ -114,7 +114,7 @@ const Row: React.FC<
                         track('Enable PAC', {
                           component_name: component.metadata.name,
                           app_name: component.spec.application,
-                          workspace,
+                          namespace,
                         });
                       });
                     }}
@@ -125,7 +125,7 @@ const Row: React.FC<
                       link_location: 'manage-builds-pipelines',
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Send pull request
@@ -152,7 +152,7 @@ const Row: React.FC<
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
                       url: prURL,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Merge in Git
@@ -169,7 +169,7 @@ const Row: React.FC<
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Edit pipeline in Git
@@ -186,7 +186,7 @@ const Row: React.FC<
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Fork sample
@@ -226,14 +226,12 @@ const Row: React.FC<
                         link_location: 'manage-builds-pipelines',
                         component_name: component.metadata.name,
                         app_name: component.spec.application,
-                        workspace,
+                        namespace,
                       }}
                     >
-                      Install Git Application
+                      Install GitHub Application
                     </ExternalLink>
-                  ) : (
-                    ''
-                  )}
+                  ) : null}
                 </>
               }
             >
@@ -252,7 +250,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
   modalProps,
 }) => {
   const track = useTrackEvent();
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [konfluxInfo] = useKonfluxPublicInfo();
   const applicationUrl = konfluxInfo?.integrations?.github?.application_url || '';
   const sortedComponents = React.useMemo(
@@ -291,10 +289,10 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipelines-close',
       app_name: applicationName,
-      workspace,
+      namespace,
     });
     onClose();
-  }, [onClose, applicationName, workspace, track]);
+  }, [onClose, applicationName, namespace, track]);
 
   return (
     <Modal {...modalProps} onClose={trackedOnClose}>
@@ -325,7 +323,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 analytics={{
                   link_name: 'install-github-app',
                   link_location: 'manage-builds-pipelines',
-                  workspace,
+                  namespace,
                 }}
               >
                 Learn more about the Git application
@@ -338,7 +336,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 analytics={{
                   link_name: 'learn-more-gitlab-token',
                   link_location: 'gitlab-repository-access-token',
-                  workspace,
+                  namespace,
                 }}
               >
                 Learn more about GitLab repository access token

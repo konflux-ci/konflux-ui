@@ -7,7 +7,8 @@ import {
 } from '@patternfly/react-topology';
 import { Matcher, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
-import { createUseWorkspaceInfoMock, routerRenderer } from '../../../../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { routerRenderer } from '../../../../../../../utils/test-utils';
 import { layoutFactory, PipelineLayout } from '../../../../../../topology/factories';
 import { mockComponentsData } from '../../../../../__data__';
 import { getMockWorkflows } from '../../../../../__data__/WorkflowTestUtils';
@@ -20,7 +21,7 @@ import WorkflowNodeTipContent from '../WorkflowNodeTipContent';
 const { workflowMocks, applyWorkflowMocks } = getMockWorkflows();
 
 describe('WorkflowNode', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
   beforeEach(() => {
     applyWorkflowMocks(workflowMocks);
 
@@ -69,7 +70,7 @@ describe('WorkflowNode', () => {
     expect(
       screen.getByText(TYPE_DESCRIPTIONS[mockElement.getData().workflowType] as Matcher),
     ).toBeInTheDocument();
-    let linkData = getLinkDataForElement(mockElement, 'test-ws');
+    let linkData = getLinkDataForElement(mockElement, 'test-ns');
     expect(linkData.tab).toBe('components');
     expect(linkData.filter).toBeUndefined();
     expect(screen.getAllByTestId('child-row')).toHaveLength(mockComponentsData.length);
@@ -93,7 +94,7 @@ describe('WorkflowNode', () => {
     ).toBeInTheDocument();
 
     expect(screen.getByTestId('element-link')).toBeVisible();
-    linkData = getLinkDataForElement(mockElement, 'test-ws');
+    linkData = getLinkDataForElement(mockElement, 'test-ns');
     expect(linkData.tab).toBe('integrationtests');
     expect(linkData.filter).toBeUndefined();
 
@@ -120,10 +121,10 @@ describe('WorkflowNode', () => {
     ).toBeInTheDocument();
     const link = screen.getByTestId('element-link');
     expect(link).toBeVisible();
-    const linkData = getLinkDataForElement(mockElement, 'test-ws');
+    const linkData = getLinkDataForElement(mockElement, 'test-ns');
     expect(linkData.tab).toBe(`components/${mockElement.getLabel()}`);
     expect(linkData.filter).toBeUndefined();
-    const buildLinkData = getLinkDataForElement(mockBuildElement, 'test-ws');
+    const buildLinkData = getLinkDataForElement(mockBuildElement, 'test-ns');
     expect(buildLinkData.tab).toBe('activity/pipelineruns');
     expect(buildLinkData.filter.name).toBe('name');
     expect(buildLinkData.filter.value).toBe(mockBuildElement.getData().resources[0].metadata.name);
