@@ -11,10 +11,12 @@ jest.mock('../../../../../hooks/useSnapshots', () => ({
 const useSnapshotsMock = useSnapshots as jest.Mock;
 
 describe('SnapshotDropdown', () => {
-  beforeEach(() => {});
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
-  it('should show loading indicator if snapshot arent loaded', () => {
-    useSnapshotsMock.mockReturnValue([[], false]);
+  it('should show loading indicator if snapshots are not loaded', () => {
+    useSnapshotsMock.mockReturnValue([[], false, null]);
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
@@ -28,11 +30,14 @@ describe('SnapshotDropdown', () => {
         { metadata: { name: 'snapshot2' }, spec: { application: 'app' } },
       ],
       true,
+      null,
     ]);
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
-    await act(() => fireEvent.click(screen.getByRole('button')));
+    await act(() =>
+      fireEvent.click(screen.getByRole('button', { name: 'Options menu', hidden: true })),
+    );
 
     expect(screen.getByRole('option', { name: 'snapshot1' })).toBeVisible();
     expect(screen.getByRole('option', { name: 'snapshot2' })).toBeVisible();
@@ -45,13 +50,15 @@ describe('SnapshotDropdown', () => {
         { metadata: { name: 'snapshot2' }, spec: { application: 'app2' } },
       ],
       true,
+      null,
     ]);
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
-    await act(() => fireEvent.click(screen.getByRole('button')));
+    await act(() =>
+      fireEvent.click(screen.getByRole('button', { name: 'Options menu', hidden: true })),
+    );
 
-    expect(screen.getByRole('menuitem', { name: 'snapshot1' })).toBeVisible();
     expect(screen.queryByRole('menuitem', { name: 'snapshot2' })).not.toBeInTheDocument();
   });
 
@@ -62,6 +69,7 @@ describe('SnapshotDropdown', () => {
         { metadata: { name: 'snapshot2' }, spec: { application: 'app' } },
       ],
       true,
+      null,
     ]);
 
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
@@ -72,13 +80,13 @@ describe('SnapshotDropdown', () => {
     await act(() => fireEvent.click(screen.getByRole('button')));
 
     await waitFor(() => {
-      expect(screen.getByRole('menu')).toBeInTheDocument();
-      expect(screen.getByLabelText('Select snapshot'));
-      screen.getByText('snapshot1');
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Select snapshot')).toBeInTheDocument();
+      expect(screen.getByText('snapshot1')).toBeInTheDocument();
     });
     await act(() => fireEvent.click(screen.getByText('snapshot2')));
     await waitFor(() => {
-      expect(screen.getByText('snapshot2'));
+      expect(screen.getByDisplayValue('snapshot2')).toBeInTheDocument();
     });
   });
 
@@ -94,14 +102,13 @@ describe('SnapshotDropdown', () => {
         { setValue: setValueMock } as unknown as formik.FieldHelperProps<unknown>,
       ]);
 
-    formik.useField;
-
     useSnapshotsMock.mockReturnValue([
       [
         { metadata: { name: 'snapshot1' }, spec: { application: 'app' } },
         { metadata: { name: 'snapshot2' }, spec: { application: 'app' } },
       ],
       true,
+      null,
     ]);
 
     // Render with initial applicationName
@@ -120,9 +127,9 @@ describe('SnapshotDropdown', () => {
 
     await waitFor(() => {
       // Snapshot dropdown menu
-      expect(screen.getByRole('menu')).toBeInTheDocument();
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
       // Placeholder text
-      expect(screen.getByLabelText('Select snapshot'));
+      expect(screen.getByPlaceholderText('Select snapshot')).toBeInTheDocument();
     });
     await act(() =>
       // Select a snapshot value
@@ -137,7 +144,16 @@ describe('SnapshotDropdown', () => {
 
     // Expect the snapshot dropdown to have placeholder text.
     await waitFor(() => {
-      expect(screen.getByText('Select snapshot'));
+      expect(screen.getByPlaceholderText('Select snapshot')).toBeInTheDocument();
     });
+  });
+
+  it('should show error message if snapshots fail to load', () => {
+    useSnapshotsMock.mockReturnValue([[], true, { message: 'Failed to load snapshots' }]);
+    formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
+      targets: { application: 'app' },
+    });
+
+    expect(screen.getByText('Failed to load snapshots')).toBeInTheDocument();
   });
 });

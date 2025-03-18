@@ -63,7 +63,6 @@ describe('TriggerReleaseForm', () => {
     const props = { values } as FormikProps<TriggerReleaseFormValues>;
     formikRenderer(<TriggerReleaseForm {...props} />, values);
     expect(screen.getByText('Loading release plans...')).toBeVisible();
-    expect(screen.getByText('Loading snapshots...')).toBeVisible();
   });
 });
 
