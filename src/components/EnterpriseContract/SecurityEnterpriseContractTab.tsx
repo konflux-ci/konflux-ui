@@ -16,13 +16,14 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { Select, SelectOption, SelectVariant } from '@patternfly/react-core/deprecated';
+import isEqual from 'lodash/isEqual';
+import { getRuleStatus } from '~/utils/enterprise-contract-utils';
 import { useSearchParam } from '../../hooks/useSearchParam';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { EnterpriseContractTable } from './EnterpriseContractTable/EnterpriseContractTable';
 import SecurityTabEmptyState from './SecurityTabEmptyState';
 import { ENTERPRISE_CONTRACT_STATUS } from './types';
 import { useEnterpriseContractResults } from './useEnterpriseContractResultFromLogs';
-import { getRuleStatus } from './utils';
 
 const getResultsSummary = (ECs, ecLoaded) => {
   const statusFilter = {
@@ -46,6 +47,27 @@ export const SecurityEnterpriseContractTab: React.FC<
   React.PropsWithChildren<{ pipelineRun: string }>
 > = ({ pipelineRun }) => {
   const [ecResult, ecResultLoaded] = useEnterpriseContractResults(pipelineRun);
+  const prevEcResult = React.useRef(ecResult);
+
+  // ecResult is alaways different even through the value of ecResult has no change.
+  // Different ecResult would always bring redender the compoents.
+  // However, when the value of ecResult is the same, we do not want
+  // it brings rerender.
+  // We use useEffect and stableEcResult to avoid unexpected rerender to improve
+  // user experiences.
+  React.useEffect(() => {
+    if (ecResultLoaded && ecResult && !isEqual(prevEcResult.current, ecResult)) {
+      prevEcResult.current = ecResult;
+    }
+  }, [ecResult, ecResultLoaded]);
+
+  // When the ecResult is loading,the stabeEcResult would be undefined.
+  // We cannot set it as [], otherwise the filertedEcResult would be set as [].
+  // UI would show incorrect status when ecResult is true but filertedEcResult is [].
+  const stableEcResult = React.useMemo(() => {
+    return prevEcResult.current;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prevEcResult.current]);
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
 
@@ -57,15 +79,18 @@ export const SecurityEnterpriseContractTab: React.FC<
     () => (statusFiltersParam ? statusFiltersParam.split(',') : []),
     [statusFiltersParam],
   );
-
   const setStatusFilters = React.useCallback(
-    (filters: string[]) => setStatusFiltersParam(filters.join(',')),
-    [setStatusFiltersParam],
+    (filters: string[]) => {
+      if (!isEqual(filters, statusFilters)) {
+        setStatusFiltersParam(filters.join(','));
+      }
+    },
+    [statusFilters, setStatusFiltersParam],
   );
 
   const statusFilterObj = React.useMemo(
-    () => getResultsSummary(ecResult, ecResultLoaded),
-    [ecResult, ecResultLoaded],
+    () => getResultsSummary(stableEcResult, ecResultLoaded),
+    [stableEcResult, ecResultLoaded],
   );
 
   // Component filter
@@ -78,13 +103,17 @@ export const SecurityEnterpriseContractTab: React.FC<
   );
 
   const setComponentFilters = React.useCallback(
-    (filters: string[]) => setComponentFiltersParam(filters.join(',')),
-    [setComponentFiltersParam],
+    (filters: string[]) => {
+      if (!isEqual(filters, componentFilters)) {
+        setComponentFiltersParam(filters.join(','));
+      }
+    },
+    [componentFilters, setComponentFiltersParam],
   );
 
   const componentFilterObj = React.useMemo(() => {
     return ecResultLoaded
-      ? ecResult?.reduce((acc, ec) => {
+      ? stableEcResult?.reduce((acc, ec) => {
           if (acc[ec.component]) {
             acc[ec.component] += 1;
           } else {
@@ -93,10 +122,9 @@ export const SecurityEnterpriseContractTab: React.FC<
           return acc;
         }, {})
       : {};
-  }, [ecResult, ecResultLoaded]);
+  }, [stableEcResult, ecResultLoaded]);
 
   // Filter Toolbar chips
-
   const onDeleteChip = React.useCallback(
     (category: string, chip: string) => {
       if (category === 'Component') {
@@ -122,8 +150,8 @@ export const SecurityEnterpriseContractTab: React.FC<
 
   // filter data in table
   const filteredECResult = React.useMemo(() => {
-    return ecResultLoaded && ecResult
-      ? ecResult?.filter((rule) => {
+    return ecResultLoaded && stableEcResult
+      ? stableEcResult?.filter((rule) => {
           return (
             (!nameFilter || rule.title.toLowerCase().indexOf(nameFilter.toLowerCase()) !== -1) &&
             (!statusFilters.length || statusFilters.includes(rule.status)) &&
@@ -131,7 +159,7 @@ export const SecurityEnterpriseContractTab: React.FC<
           );
         })
       : undefined;
-  }, [componentFilters, ecResult, ecResultLoaded, nameFilter, statusFilters]);
+  }, [componentFilters, stableEcResult, ecResultLoaded, nameFilter, statusFilters]);
 
   // result summary
   const resultSummary = React.useMemo(

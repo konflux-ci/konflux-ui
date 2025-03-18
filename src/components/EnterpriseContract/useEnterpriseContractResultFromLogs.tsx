@@ -4,6 +4,7 @@ import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { getPipelineRunFromTaskRunOwnerRef } from '../../utils/common-utils';
+import { extractEcResultsFromTaskRunLogs } from '../../utils/enterprise-contract-utils';
 import { getTaskRunLog } from '../../utils/tekton-results';
 import {
   ComponentEnterpriseContractResult,
@@ -11,7 +12,6 @@ import {
   ENTERPRISE_CONTRACT_STATUS,
   UIEnterpriseContractData,
 } from './types';
-import { extractEcResultsFromTaskRunLogs } from './utils';
 
 export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,

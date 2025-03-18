@@ -45,7 +45,11 @@ export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
 };
 
 export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
-  const extractedLogs = logs.match(/(\[report-json\] ).+/g);
-  const json = JSON.parse(extractedLogs.map((l) => l.replace('[report-json] ', '')).join(''));
-  return json;
+  const EC_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-|$))/g;
+  const extractedLogs = logs?.match(EC_REPORT_JSON_REGEX);
+  try {
+    return JSON.parse(extractedLogs[0]);
+  } catch {
+    return null;
+  }
 };
