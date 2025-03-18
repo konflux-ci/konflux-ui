@@ -18,7 +18,7 @@ describe('SnapshotDropdown', () => {
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
-    expect(screen.getByText('Loading snapshots...')).toBeVisible();
+    expect(screen.getByPlaceholderText('Loading snapshots...')).toBeInTheDocument();
   });
 
   it('should show dropdown if snapshots are loaded', async () => {
@@ -34,8 +34,8 @@ describe('SnapshotDropdown', () => {
     });
     await act(() => fireEvent.click(screen.getByRole('button')));
 
-    expect(screen.getByRole('menuitem', { name: 'snapshot1' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'snapshot2' })).toBeVisible();
+    expect(screen.getByRole('option', { name: 'snapshot1' })).toBeVisible();
+    expect(screen.getByRole('option', { name: 'snapshot2' })).toBeVisible();
   });
 
   it('should only show dropdowns related to the correct application', async () => {
