@@ -1,7 +1,7 @@
 import { extractEcResultsFromTaskRunLogs } from '../utils';
 
 describe('extractEcResultsFromTaskRunLogs', () => {
-  test('should extract and parse JSON from logs correctly', () => {
+  it('should extract and parse JSON from logs correctly', () => {
     const logs = `
       step-vulnerabilities :-
       Lorem Ipsum some logs
@@ -25,24 +25,24 @@ describe('extractEcResultsFromTaskRunLogs', () => {
     expect(extractEcResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
   });
 
-  test('should return null if JSON parsing fails', () => {
+  it('should throw error if JSON parsing fails', () => {
     const logs = `
       step-report-json :-
       {invalid JSON}
     `;
-    expect(extractEcResultsFromTaskRunLogs(logs)).toBeNull();
+    expect(() => extractEcResultsFromTaskRunLogs(logs)).toThrow();
   });
 
-  test('should return null if step-report-json is missing', () => {
+  it('should throw error if step-report-json is missing', () => {
     const logs = `
       step-vulnerabilities :-
       Lorem Ipsum some logs
     `;
 
-    expect(extractEcResultsFromTaskRunLogs(logs)).toBeNull();
+    expect(() => extractEcResultsFromTaskRunLogs(logs)).toThrow();
   });
 
-  test('should handle multiple step-report-json blocks and extract the first one', () => {
+  it('should handle multiple step-report-json blocks and extract the first one', () => {
     const logs = `
       step-report-json :-
       {"success":true,"components":[{"name":"first-component","details":"example"}]}
@@ -63,7 +63,7 @@ describe('extractEcResultsFromTaskRunLogs', () => {
     expect(extractEcResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
   });
 
-  test('should handle empty logs and return null', () => {
-    expect(extractEcResultsFromTaskRunLogs(``)).toBeNull();
+  it('should handle empty logs and throw error', () => {
+    expect(() => extractEcResultsFromTaskRunLogs(``)).toThrow();
   });
 });

@@ -61,9 +61,8 @@ const EC_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-
 
 export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
   const extractedLogs = logs.match(EC_REPORT_JSON_REGEX);
-  try {
-    return JSON.parse(extractedLogs[0]);
-  } catch {
-    return null;
+  if (!extractedLogs || !extractedLogs[0]) {
+    throw new Error('No valid EC report JSON found in logs');
   }
+  return JSON.parse(extractedLogs[0]);
 };
