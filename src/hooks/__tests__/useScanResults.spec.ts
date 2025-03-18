@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind } from '../../types';
 import { usePLRScanResults, usePLRVulnerabilities, useScanResults } from '../useScanResults';
@@ -6,10 +7,6 @@ import { useTRTaskRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults', () => ({
   useTRTaskRuns: jest.fn(() => [[], true]),
-}));
-
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
 const useTRTaskRunsMock = useTRTaskRuns as jest.Mock;
@@ -46,6 +43,8 @@ const taskRunData = [
 ];
 
 describe('useScanResults', () => {
+  mockUseNamespaceHook('test-ns');
+
   it('returns null if results are not fetched', () => {
     useTRTaskRunsMock.mockReturnValue([null, false]);
     const { result } = renderHook(() => useScanResults('test'));

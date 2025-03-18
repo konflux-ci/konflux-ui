@@ -1,5 +1,6 @@
 import React from 'react';
 import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { RoleBindingModel } from '../../models';
@@ -26,7 +27,7 @@ const UserAccessPage: React.FunctionComponent = () => {
           disabled: !canCreateRB,
           disabledTooltip: 'You cannot grant access in this namespace',
           cta: {
-            href: `/workspaces/${namespace}/access/grant`,
+            href: USER_ACCESS_GRANT_PAGE.createPath({ workspaceName: namespace }),
           },
         },
       ]}

@@ -1,14 +1,13 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import { useApplicationSnapshots } from '../useApplicationSnapshots';
-
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
 
 const watchResourceMock = createK8sWatchResourceMock();
 
 describe('useApplicationSnapshots', () => {
+  mockUseNamespaceHook('test-ns');
+
   it('should only return snapshots for the given application', () => {
     watchResourceMock.mockReturnValue([
       [

@@ -8,7 +8,6 @@ import {
   createK8sWatchResourceMock,
   createTestQueryClient,
   createUseParamsMock,
-  createUseWorkspaceInfoMock,
 } from '../../../../utils/test-utils';
 import { mockPipelineRuns } from '../../../ApplicationDetails/__data__/mock-pipeline-run';
 import { MockIntegrationTestsWithGit } from '../../IntegrationTestsListView/__data__/mock-integration-tests';
@@ -17,8 +16,6 @@ import IntegrationTestDetailsView from '../IntegrationTestDetailsView';
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
-
-createUseWorkspaceInfoMock({ namespace: 'test-ns', workspace: 'test-ws' });
 
 const watchResourceMock = createK8sWatchResourceMock();
 

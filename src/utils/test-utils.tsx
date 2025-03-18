@@ -11,7 +11,6 @@ import {
   act,
 } from '@testing-library/react';
 import { FormikValues, Formik } from 'formik';
-import * as WorkspaceHook from '../components/Workspace/useWorkspaceInfo';
 import * as ApplicationHook from '../hooks/useApplications';
 import * as k8s from '../k8s';
 import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
@@ -206,23 +205,6 @@ export const createReactRouterMock = (name): jest.Mock => {
   const mockFn = jest.fn();
 
   jest.spyOn(ReactRouterDom, name).mockImplementation(mockFn);
-
-  return mockFn;
-};
-
-/**
- * @deprecated use [namespace-mock](../unit-test-utils/mock-namespace.ts)
- */
-export const createUseWorkspaceInfoMock = (
-  initialValue: Record<string, string> = {},
-): jest.Mock => {
-  const mockFn = jest.fn().mockReturnValue(initialValue);
-
-  jest.spyOn(WorkspaceHook, 'useWorkspaceInfo').mockImplementation(mockFn);
-
-  beforeEach(() => {
-    mockFn.mockReturnValue(initialValue);
-  });
 
   return mockFn;
 };

@@ -10,7 +10,7 @@ import {
   PipelineNodeModel,
 } from '@patternfly/react-topology';
 import pipelineStyles from '@patternfly/react-topology/dist/esm/css/topology-pipelines';
-import { useWorkspaceInfo } from '../../../../../Workspace/useWorkspaceInfo';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import { getLinksForElement, statusToRunStatus, TYPE_DESCRIPTIONS } from '../utils/node-utils';
 import './WorkflowNodeTipContent.scss';
@@ -24,8 +24,8 @@ const WorkflowNodeTipContent: React.FC<React.PropsWithChildren<WorkflowNodeTipCo
 }) => {
   const { workflowType, children } = element.getData();
   const label = element.getLabel();
-  const { workspace } = useWorkspaceInfo();
-  const { elementRef, pipelinesRef, appRef } = getLinksForElement(element, workspace);
+  const namespace = useNamespace();
+  const { elementRef, pipelinesRef, appRef } = getLinksForElement(element, namespace);
 
   const links = React.useMemo(() => {
     switch (workflowType) {

@@ -8,9 +8,10 @@ import {
   Truncate,
 } from '@patternfly/react-core';
 import { ExpandableRowContent, Tbody, Td, Tr } from '@patternfly/react-table';
+import { COMPONENT_LIST_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { UIEnterpriseContractData } from '../types';
 import { getRuleStatus } from '../utils';
 
@@ -23,7 +24,7 @@ export const EnterpriseContractRow: React.FC<
   React.PropsWithChildren<EnterpriseContractRowType>
 > = ({ data, rowIndex }) => {
   const [rowExpanded, setRowExpanded] = React.useState<boolean>(false);
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { appName } = useParams();
 
   return (
@@ -41,7 +42,12 @@ export const EnterpriseContractRow: React.FC<
         <Td data-test="rule-status">{getRuleStatus(data.status)}</Td>
         <Td>{data.msg ? <Truncate content={data.msg} /> : '-'}</Td>
         <Td>
-          <Link to={`/workspaces/${workspace}/applications/${appName}/components`}>
+          <Link
+            to={COMPONENT_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: appName,
+            })}
+          >
             {data.component}
           </Link>
         </Td>
