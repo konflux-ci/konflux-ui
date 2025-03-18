@@ -207,7 +207,7 @@ export const clearCache = () => {
 };
 const InFlightStore: { [key: string]: boolean } = {};
 
-const getTRUrlPrefix = (workspace: string): string => URL_PREFIX.replace(_WORKSPACE_, workspace);
+const getTRUrlPrefix = (namespace: string): string => URL_PREFIX.replace(_WORKSPACE_, namespace);
 
 const commonFields = [
   'records.name',

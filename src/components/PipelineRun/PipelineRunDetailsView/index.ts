@@ -4,12 +4,9 @@ import { QueryPipelineRun } from '../../../utils/pipelinerun-utils';
 import { createLoaderWithAccessCheck } from '../../../utils/rbac';
 
 export const pipelineRunDetailsViewLoader = createLoaderWithAccessCheck(
-  async ({ params }) => {
+  ({ params }) => {
     const ns = params[RouterParams.workspaceName];
-    return QueryPipelineRun(
-      ns,
-      params[RouterParams.pipelineRunName],
-    );
+    return QueryPipelineRun(ns, params[RouterParams.pipelineRunName]);
   },
   [
     { model: PipelineRunModel, verb: 'list' },

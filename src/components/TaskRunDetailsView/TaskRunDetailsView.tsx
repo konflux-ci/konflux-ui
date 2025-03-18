@@ -4,19 +4,25 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { useTaskRun } from '../../hooks/usePipelineRuns';
 import { HttpError } from '../../k8s/error';
+import {
+  PIPELINERUN_DETAILS_PATH,
+  PIPELINERUN_LIST_PATH,
+  PIPELINERUN_TASK_LIST,
+  TASKRUN_DETAILS_PATH,
+} from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../types';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { runStatus, taskRunStatus } from '../../utils/pipeline-utils';
 import { DetailsPage } from '../DetailsPage';
 import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 export const TaskRunDetailsView: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const params = useParams();
   const navigate = useNavigate();
@@ -27,7 +33,11 @@ export const TaskRunDetailsView: React.FC = () => {
     [loaded, taskRun],
   );
   const applicationName = taskRun?.metadata?.labels[PipelineRunLabel.APPLICATION];
-  const baseURL = `/workspaces/${workspace}/applications/${applicationName}/taskruns/${taskRunName}`;
+  const baseURL = TASKRUN_DETAILS_PATH.createPath({
+    applicationName,
+    workspaceName: namespace,
+    taskRunName,
+  });
   const { activeTab } = params;
 
   React.useEffect(() => {
@@ -64,19 +74,31 @@ export const TaskRunDetailsView: React.FC = () => {
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/activity/pipelineruns`,
+          path: PIPELINERUN_LIST_PATH.createPath({ applicationName, workspaceName: namespace }),
           name: 'Pipeline runs',
         },
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${plrName}`,
+          path: PIPELINERUN_DETAILS_PATH.createPath({
+            applicationName,
+            workspaceName: namespace,
+            pipelineRunName: plrName,
+          }),
           name: plrName,
         },
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/pipelineruns/${plrName}/taskruns`,
+          path: PIPELINERUN_TASK_LIST.createPath({
+            applicationName,
+            workspaceName: namespace,
+            pipelineRunName: plrName,
+          }),
           name: `Task runs`,
         },
         {
-          path: `/workspaces/${workspace}/applications/${applicationName}/taskruns/${taskRunName}`,
+          path: TASKRUN_DETAILS_PATH.createPath({
+            applicationName,
+            workspaceName: namespace,
+            taskRunName,
+          }),
           name: taskRunName,
         },
       ]}

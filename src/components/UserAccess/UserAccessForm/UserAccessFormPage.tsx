@@ -2,12 +2,14 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
+import { USER_ACCESS_LIST_PAGE } from '@routes/paths';
 import { useRoleMap } from '../../../hooks/useRole';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { NamespaceRole, RoleBinding } from '../../../types';
 import { TrackEvents, useTrackEvent } from '../../../utils/analytics';
 import { createRBs, editRB, userAccessFormSchema, UserAccessFormValues } from './form-utils';
 import { UserAccessForm } from './UserAccessForm';
+
 type Props = {
   existingRb?: RoleBinding;
   username?: string;
@@ -46,7 +48,7 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
         usernames: values.usernames,
         namespace,
       });
-      navigate(`/workspaces/${namespace}/access`);
+      navigate(USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }));
     } catch (error) {
       // eslint-disable-next-line no-console
       console.warn('Error while submitting access form:', error);
@@ -67,7 +69,7 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
           }),
       namespace,
     });
-    navigate(`/workspaces/${namespace}/access`);
+    navigate(USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }));
   };
 
   if (!loaded) {

@@ -51,7 +51,6 @@ import { getSourceUrl } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
-
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
@@ -274,7 +273,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                         to={APPLICATION_DETAILS_PATH.createPath({
                           workspaceName: namespace,
                           applicationName:
-                            pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
+                            pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION],
                         })}
                       >
                         {pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION]}
