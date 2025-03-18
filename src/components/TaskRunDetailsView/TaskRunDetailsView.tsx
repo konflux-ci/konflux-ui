@@ -15,9 +15,9 @@ import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState
 import { useNamespace } from '../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../types';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
+import { isResourceEnterpriseContract } from '../../utils/enterprise-contract-utils';
 import { runStatus, taskRunStatus } from '../../utils/pipeline-utils';
 import { DetailsPage } from '../DetailsPage';
-import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
 
 export const TaskRunDetailsView: React.FC = () => {

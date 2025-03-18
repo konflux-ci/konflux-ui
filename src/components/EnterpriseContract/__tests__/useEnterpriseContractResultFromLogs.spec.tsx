@@ -123,7 +123,8 @@ describe('useEnterpriseContractResultFromLogs', () => {
     const [ec, ecLoaded] = result.current;
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
     expect(ecLoaded).toBe(true);
-    expect(ec).toEqual([]);
+    // stableEcresult would be undefined.
+    expect(ec).toEqual(undefined);
   });
 });
 
