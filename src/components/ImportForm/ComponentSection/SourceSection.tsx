@@ -11,7 +11,7 @@ import GitOptions from './GitOptions';
 
 export const SourceSection = () => {
   const [, { touched, error }] = useField('source.git.url');
-  const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
+  const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(true);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched
     ? touched && !error
@@ -35,15 +35,12 @@ export const SourceSection = () => {
         const gitType = detectGitType(event.target?.value as string);
         if (gitType !== GitProvider.GITHUB && gitType !== GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', '');
-          setGitAdvancedOpen(true);
         }
         if (gitType === GitProvider.GITHUB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITHUB);
-          setGitAdvancedOpen(false);
         }
         if (gitType === GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITLAB);
-          setGitAdvancedOpen(false);
         }
 
         let parsed: GitUrlParse.GitUrl;
@@ -72,12 +69,8 @@ export const SourceSection = () => {
         data-testid="enter-source"
         onChange={handleChange}
       />
-      {validated === ValidatedOptions.success ? (
-        <SwitchField name="isPrivateRepo" label="Should the image produced be private?" />
-      ) : null}
-      {validated === ValidatedOptions.success ? (
-        <GitOptions isGitAdvancedOpen={isGitAdvancedOpen} setGitAdvancedOpen={setGitAdvancedOpen} />
-      ) : null}
+      <SwitchField name="isPrivateRepo" label="Should the image produced be private?" />
+      <GitOptions isGitAdvancedOpen={isGitAdvancedOpen} setGitAdvancedOpen={setGitAdvancedOpen} />
     </>
   );
 };
