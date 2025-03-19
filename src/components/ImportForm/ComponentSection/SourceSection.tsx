@@ -35,15 +35,12 @@ export const SourceSection = () => {
         const gitType = detectGitType(event.target?.value as string);
         if (gitType !== GitProvider.GITHUB && gitType !== GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', '');
-          setGitAdvancedOpen(true);
         }
         if (gitType === GitProvider.GITHUB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITHUB);
-          setGitAdvancedOpen(false);
         }
         if (gitType === GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITLAB);
-          setGitAdvancedOpen(false);
         }
 
         let parsed: GitUrlParse.GitUrl;
