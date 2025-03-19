@@ -5,6 +5,7 @@ export const addComponentPagePO = {
   verifiedSource: '[class="pf-v5-c-form-control pf-m-success"]',
   gitOptions: 'Git options',
   gitReference: '[data-test="git-reference"]',
+  hideAdvancedGitOptions: 'Hide advanced Git options',
   contextDir: '[data-test="context-dir"]',
   next: 'button[type=submit]',
   cancel: 'button[type=reset]',
