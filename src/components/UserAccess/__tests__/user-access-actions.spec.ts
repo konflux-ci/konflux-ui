@@ -26,7 +26,7 @@ describe('useRBActions', () => {
     disabled: false,
     disabledTooltip: "You don't have permission to edit access",
     cta: {
-      href: `/workspaces/${mockNamespace}/access/edit/user1`,
+      href: `/ns/${mockNamespace}/access/edit/user1`,
     },
   };
   const deletePermissionItem = {
@@ -72,7 +72,7 @@ describe('useRBActions', () => {
         id: 'edit-access-undefined',
         cta: {
           ...editPermissionItem.cta,
-          href: `/workspaces/${mockNamespace}/access/edit/undefined`,
+          href: `/ns/${mockNamespace}/access/edit/undefined`,
         },
       },
       {

@@ -15,7 +15,7 @@ const GithubRedirect: React.FC = () => {
   const application =
     loaded && !error ? pr.metadata.labels[PipelineRunLabel.APPLICATION] : undefined;
 
-  const navigateUrl = `/workspaces/${ns}${
+  const navigateUrl = `/ns/${ns}${
     application && !error
       ? `/applications/${application}${pipelineRunName ? `/pipelineruns/${pipelineRunName}` : ''}${
           isLogsTabSelected ? `/logs` : ''

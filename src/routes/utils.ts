@@ -7,6 +7,7 @@ export const RouterParams = {
    * use [useNamespace](../shared/providers/Namespace)
    */
   workspaceName: 'workspaceName',
+  ns: 'ns',
   applicationName: 'applicationName',
   integrationTestName: 'integrationTestName',
   releaseName: 'releaseName',

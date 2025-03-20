@@ -62,7 +62,7 @@ describe('SnapshotComponentsListRow', () => {
     const revisionLink = screen.getByText('test-revision');
     expect(revisionLink).toHaveAttribute(
       'href',
-      `/workspaces//applications/${rowData?.application}/commit/test-revision`,
+      `/ns//applications/${rowData?.application}/commit/test-revision`,
     );
   });
   it('should show hyphen when revision is not available ', () => {
