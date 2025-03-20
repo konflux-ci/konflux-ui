@@ -5,23 +5,17 @@ export const hacAPIEndpoints = {
     )}/applications/${applicationName}`,
 
   environments: (envName: string) =>
-    `/api/k8s/workspaces/${Cypress.env(
-      'HAC_WORKSPACE',
-    )}/apis/appstudio.redhat.com/v1alpha1/namespaces/${Cypress.env(
+    `/api/k8s/apis/appstudio.redhat.com/v1alpha1/namespaces/${Cypress.env(
       'HAC_NAMESPACE',
     )}/environments/${envName}`,
 
   pipelinerunsFilter: (applicationName: string, label: string) =>
-    `/api/k8s/workspaces/${Cypress.env(
-      'HAC_WORKSPACE',
-    )}/apis/tekton.dev/v1beta1/namespaces/${Cypress.env(
+    `/api/k8s/apis/tekton.dev/v1beta1/namespaces/${Cypress.env(
       'HAC_NAMESPACE',
     )}/pipelineruns?labelSelector=appstudio.openshift.io/application=${applicationName},${label}&limit=250`,
 
   secrets: (secretName: string) =>
-    `/api/k8s/workspaces/${Cypress.env('HAC_WORKSPACE')}/api/v1/namespaces/${Cypress.env(
-      'HAC_NAMESPACE',
-    )}/secrets/${secretName}`,
+    `/api/k8s/api/v1/namespaces/${Cypress.env('HAC_NAMESPACE')}/secrets/${secretName}`,
 
   resources: (resourceType: string) =>
     `/api/k8s/apis/appstudio.redhat.com/v1beta1/namespaces/${Cypress.env(
