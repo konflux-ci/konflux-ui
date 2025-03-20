@@ -72,7 +72,7 @@ export const EnterpriseContractTable: React.FC<
     <Table variant="compact">
       <Thead>
         <Tr>
-          <Th width={10} />
+          <Th width={10} aria-label="expand toggle" />
           <Th width={30} sort={getSortParams(1)}>
             Rules
           </Th>
