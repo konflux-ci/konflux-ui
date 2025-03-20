@@ -7,6 +7,7 @@ import { RowFunctionArgs, TableData } from '../../shared/components/table';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types';
+import { calculateDuration } from '../../utils/pipeline-utils';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 import { releasesTableColumnClasses } from './ReleasesListHeader';
 
@@ -31,6 +32,14 @@ const ReleasesListRow: React.FC<
       </TableData>
       <TableData className={releasesTableColumnClasses.created}>
         <Timestamp timestamp={obj.metadata.creationTimestamp} />
+      </TableData>
+      <TableData className={releasesTableColumnClasses.duration}>
+        {obj.status?.startTime != null
+          ? calculateDuration(
+              typeof obj.status?.startTime === 'string' ? obj.status?.startTime : '',
+              typeof obj.status?.completionTime === 'string' ? obj.status?.completionTime : '',
+            )
+          : '-'}
       </TableData>
       <TableData className={releasesTableColumnClasses.status}>
         <StatusIconWithText dataTestAttribute="release-status" status={status} />
