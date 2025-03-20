@@ -110,7 +110,7 @@ describe('NamespaceProvider', () => {
     await waitFor(() => {
       fireEvent.click(screen.getByRole('button', { name: /Go to test-ns namespace/i }));
       expect(mockSetLastUsedNamespace).toHaveBeenCalledWith('test-ns');
-      expect(mockNavigate).toHaveBeenCalledWith('/workspaces/test-ns/applications');
+      expect(mockNavigate).toHaveBeenCalledWith('/ns/test-ns/applications');
     });
   });
 });

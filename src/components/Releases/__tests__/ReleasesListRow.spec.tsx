@@ -46,7 +46,7 @@ describe('ReleasesListRow', () => {
     expect(cells[0].children[0].innerHTML).toBe(mockRelease.metadata.name);
     expect(cells[3].innerHTML).toBe('test-plan');
     expect(cells[4].innerHTML).toBe(
-      '<a href="/workspaces//applications/test-app/snapshots/test-snapshot">test-snapshot</a>',
+      '<a href="/ns//applications/test-app/snapshots/test-snapshot">test-snapshot</a>',
     );
     expect(status[0].innerHTML).toBe('Succeeded');
   });
