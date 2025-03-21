@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
-import { FormikProps } from 'formik';
+import { FormikProps, useFormikContext } from 'formik';
 import isEmpty from 'lodash/isEmpty';
 import PageLayout from '../../../components/PageLayout/PageLayout';
 import { FormFooter } from '../../../shared';
@@ -17,12 +17,21 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
   edit,
   isSubmitting,
   dirty,
-  errors,
+  errors, // The errors is caculated by formik automatically.
   status,
   handleSubmit,
   handleReset,
 }) => {
   const namespace = useNamespace();
+  const { values } = useFormikContext<{ usernames: string[] }>();
+  // After we add 'enter' to input usernames, when users select roles and then input username with enter,
+  // errors about empty usernames would be returned. This makes submit button disabled.
+  // We prevent the enter default behaviour in UsernameSection but not for the form here.
+  // Entering username would also bring default submit behavior.
+  // Add the customErrors here to avoid unexpected disabled button. While when the submit buttion is
+  // active, it is saying there is no hidden submit.
+  const customErrors =
+    errors?.usernames === '' && values?.usernames.length > 0 ? undefined : errors;
 
   return (
     <PageLayout
@@ -38,9 +47,10 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
         <FormFooter
           submitLabel={edit ? 'Save changes' : 'Grant access'}
           handleCancel={handleReset}
+          // Customizing the handleSubmit is useless to hanle the submit button status
           handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
-          disableSubmit={!dirty || !isEmpty(errors) || isSubmitting}
+          disableSubmit={!dirty || !isEmpty(customErrors) || isSubmitting}
           errorMessage={status?.submitError}
         />
       }
