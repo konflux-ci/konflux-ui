@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Bullseye,
+  Text,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -11,7 +12,7 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { PIPELINERUN_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
@@ -147,7 +148,7 @@ const ReleaseOverviewTab: React.FC = () => {
                 <DescriptionListDescription>
                   {pipelineRun && prNamespace && releasePlanLoaded ? (
                     <Link
-                      to={PIPELINERUN_DETAILS_PATH.createPath({
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
                         workspaceName: prNamespace,
                         applicationName: releasePlan.spec.application,
                         pipelineRunName: pipelineRun,
@@ -156,7 +157,7 @@ const ReleaseOverviewTab: React.FC = () => {
                       {pipelineRun}
                     </Link>
                   ) : (
-                    '-'
+                    <Text>Not available yet</Text>
                   )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
