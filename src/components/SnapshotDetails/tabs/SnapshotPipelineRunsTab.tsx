@@ -6,6 +6,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
+import { PipelineRunsFilterContextProvider } from '../../Filter/utils/PipelineRunsFilterContext';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 
@@ -64,13 +65,15 @@ const SnapshotPipelineRunTab: React.FC = () => {
   }
 
   return (
-    <SnapshotPipelineRunsList
-      snapshotPipelineRuns={SnapshotPipelineRuns}
-      loaded={loaded}
-      applicationName={applicationName}
-      getNextPage={getNextPage}
-      nextPageProps={nextPageProps}
-    />
+    <PipelineRunsFilterContextProvider>
+      <SnapshotPipelineRunsList
+        snapshotPipelineRuns={SnapshotPipelineRuns}
+        loaded={loaded}
+        applicationName={applicationName}
+        getNextPage={getNextPage}
+        nextPageProps={nextPageProps}
+      />
+    </PipelineRunsFilterContextProvider>
   );
 };
 

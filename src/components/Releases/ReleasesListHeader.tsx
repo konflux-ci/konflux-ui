@@ -3,7 +3,8 @@ import { HeaderFunc } from '../../shared/components/table/Table';
 
 export const releasesTableColumnClasses = {
   name: 'pf-m-width-30 pf-m-width-20-on-xl wrap-column',
-  created: 'pf-m-width-30 pf-m-width-20-on-xl',
+  created: 'pf-m-width-20 pf-m-width-20-on-xl',
+  duration: 'pf-m-hidden pf-m-width-20 pf-m-visible-on-xl',
   status: 'pf-m-width-20',
   releasePlan: 'pf-m-width-25',
   releaseSnapshot: 'pf-m-hidden pf-m-width-25 pf-m-visible-on-xl',
@@ -42,6 +43,10 @@ const getReleasesListHeader: CreateHeader = (activeIndex, activeDirection, onSor
         className: releasesTableColumnClasses.created,
         sort: getSortParams(SortableHeaders.created),
       },
+    },
+    {
+      title: 'Duration',
+      props: { className: releasesTableColumnClasses.duration },
     },
     {
       title: 'Status',
