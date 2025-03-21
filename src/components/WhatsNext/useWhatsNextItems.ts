@@ -48,7 +48,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           namespace,
         },
       },
-      helpLink: 'https://konflux-ci.dev/docs/how-tos/creating/',
+      helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
       title: 'Add integration tests',
@@ -68,7 +68,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           namespace,
         },
       },
-      helpLink: 'https://konflux-ci.dev/docs/how-tos/testing/integration/adding/',
+      helpLink: 'https://konflux-ci.dev/docs/testing/integration/adding/',
     },
     {
       title: 'Create a release plan',
@@ -88,7 +88,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           namespace,
         },
       },
-      helpLink: 'https://konflux-ci.dev/docs/advanced-how-tos/releasing/',
+      helpLink: 'https://konflux-ci.dev/docs/releasing/',
     },
     {
       title: 'Install our GitHub app',
@@ -105,7 +105,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           namespace,
         },
       },
-      helpLink: 'https://konflux-ci.dev/docs/how-tos/creating/',
+      helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
       title: 'Make a code change',
@@ -121,7 +121,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           namespace,
         },
       },
-      helpLink: 'https://konflux-ci.dev/docs/how-tos/creating/',
+      helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
       title: 'Manage build pipelines',
@@ -141,7 +141,7 @@ export const useWhatsNextItems = (applicationName: string) => {
           namespace,
         },
       },
-      helpLink: 'https://konflux-ci.dev/docs/how-tos/configuring/customizing-the-build/',
+      helpLink: 'https://konflux-ci.dev/docs/building/customizing-the-build/',
     },
   ];
   return whatsNextItems;
