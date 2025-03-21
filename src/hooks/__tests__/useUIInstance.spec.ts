@@ -1,6 +1,17 @@
+/* eslint-disable camelcase */
+
 import { renderHook } from '@testing-library/react';
 import { mockLocation } from '../../utils/test-utils';
-import { getEnv, getInternalInstance, useSbomUrl, useUIInstance } from '../useUIInstance';
+import { useKonfluxPublicInfo } from '../useKonfluxPublicInfo';
+import {
+  getEnv,
+  getInternalInstance,
+  useSbomUrl,
+  useBombinoUrl,
+  useUIInstance,
+} from '../useUIInstance';
+
+jest.mock('../useKonfluxPublicInfo');
 
 jest.mock('../useUIInstance', () => {
   const actual = jest.requireActual('../useUIInstance');
@@ -41,6 +52,7 @@ describe('useUIInstance', () => {
     rerender();
     expect(result.current).toEqual('prod');
   });
+
   it('should return correct environment when not internal instance', () => {
     mockEnv.mockReturnValue('dev');
     mockLocation({ hostname: 'not.internal.instance.com' });
@@ -51,20 +63,67 @@ describe('useUIInstance', () => {
 });
 
 describe('useSbomUrl', () => {
-  it('should return correct SBOM url based for prod env', () => {
-    mockEnv.mockReturnValue('prod');
+  it('should return the correct SBOM URL from KonfluxPublicInfo', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
     const { result } = renderHook(() => useSbomUrl());
-    expect(result.current('image-hash-prod')).toEqual(
-      'https://atlas.devshift.net/sbom/content/image-hash-prod',
-    );
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
   });
 
-  it('should return correct SBOM url based for stage env', () => {
-    mockEnv.mockClear().mockReturnValue('stage');
+  it('should return an empty string if SBOM URL is not available', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: {
+            notifications: [],
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
     const { result } = renderHook(() => useSbomUrl());
-    expect(result.current('image-hash-stage')).toEqual(
-      // [TODO]: fix this test once we have a valid getEnv
-      'https://atlas.devshift.net/sbom/content/image-hash-stage',
-    );
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe('');
+  });
+});
+
+describe('useBombinoUrl', () => {
+  it('should return the correct Bombino URL from KonfluxPublicInfo notifications', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: {
+            notifications: [
+              {
+                title: 'SBOM-event-to-Bombino',
+                event: 'repo_push',
+                method: 'webhook',
+                config: {
+                  url: 'https://custom-bombino-url.com',
+                },
+              },
+            ],
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useBombinoUrl());
+    expect(result.current).toBe('https://custom-bombino-url.com');
   });
 });
