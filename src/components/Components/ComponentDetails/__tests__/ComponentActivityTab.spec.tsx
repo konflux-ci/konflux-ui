@@ -72,7 +72,7 @@ describe('ComponentActivityTab', () => {
 
     await act(() => fireEvent.click(plrTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ns/applications/my-test-output/components/test-component/activity/pipelineruns',
+      '/ns/test-ns/applications/my-test-output/components/test-component/activity/pipelineruns',
     );
   });
 });

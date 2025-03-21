@@ -1,9 +1,9 @@
 import { buildRoute, type RouteDefinition, RouterParams } from './utils';
 
-type NamespacePath = 'workspaces';
+type NamespacePath = 'ns';
 
 /* Namespace/Workspace Paths */
-export const NAMESPACE_LIST_PATH: RouteDefinition<NamespacePath> = buildRoute('workspaces');
+export const NAMESPACE_LIST_PATH: RouteDefinition<NamespacePath> = buildRoute('ns');
 
 export const WORKSPACE_PATH = NAMESPACE_LIST_PATH.extend(`:${RouterParams.workspaceName}`);
 

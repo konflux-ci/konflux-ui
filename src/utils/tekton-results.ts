@@ -14,8 +14,7 @@ import {
 // REST API spec
 // https://github.com/tektoncd/results/blob/main/docs/api/rest-api-spec.md
 
-const _WORKSPACE_ = '<_workspace_>';
-const URL_PREFIX = `/plugins/tekton-results/workspaces/${_WORKSPACE_}/apis/results.tekton.dev/v1alpha2/parents`;
+const URL_PREFIX = `/plugins/tekton-results/apis/results.tekton.dev/v1alpha2/parents`;
 
 const MINIMUM_PAGE_SIZE = 5;
 const MAXIMUM_PAGE_SIZE = 10000;
@@ -207,8 +206,6 @@ export const clearCache = () => {
 };
 const InFlightStore: { [key: string]: boolean } = {};
 
-const getTRUrlPrefix = (namespace: string): string => URL_PREFIX.replace(_WORKSPACE_, namespace);
-
 export const createTektonResultsUrl = (
   namespace: string,
   dataTypes: DataType[],
@@ -216,7 +213,7 @@ export const createTektonResultsUrl = (
   options?: TektonResultsOptions,
   nextPageToken?: string,
 ): string =>
-  `${getTRUrlPrefix(namespace)}/${namespace}/results/-/records?${new URLSearchParams({
+  `${URL_PREFIX}/${namespace}/results/-/records?${new URLSearchParams({
     // default sort should always be by `create_time desc`
     ['order_by']: 'create_time desc',
     ['page_size']: `${Math.max(
@@ -366,9 +363,9 @@ export const getTaskRuns = (
 //   commonFetchText(`${getTRUrlPrefix(workspace)}/${taskRunPath.replace('/records/', '/logs/')}`);
 
 export const getTaskRunLog = (namespace: string, taskRunID: string, pid: string): Promise<string> =>
-  commonFetchText(
-    `${getTRUrlPrefix(namespace)}/${namespace}/results/${pid}/logs/${taskRunID}`,
-  ).catch(() => throw404());
+  commonFetchText(`${URL_PREFIX}/${namespace}/results/${pid}/logs/${taskRunID}`).catch(() =>
+    throw404(),
+  );
 
 export const createTektonResultsQueryKeys = (
   model: K8sModelCommon,
