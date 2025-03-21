@@ -66,7 +66,7 @@ const AddSecretForm: React.FC = () => {
           description={
             <>
               Add a secret that will be stored using AWS Secret Manager to keep your data private.{' '}
-              <ExternalLink href="https://konflux-ci.dev/docs/how-tos/configuring/creating-secrets/">
+              <ExternalLink href="https://konflux-ci.dev/docs/building/creating-secrets/">
                 Learn more
               </ExternalLink>
             </>
