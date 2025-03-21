@@ -11,7 +11,7 @@ const ReleasesEmptyState: React.FC<React.PropsWithChildren<unknown>> = () => (
         A release object represents a deployed snapshot of your application components. To view your
         releases, set up a release plan for your application.
       </Text>
-      <ExternalLink href="https://konflux-ci.dev/docs/advanced-how-tos/releasing/">
+      <ExternalLink href="https://konflux-ci.dev/docs/releasing/">
         Learn more about setting up release plans
       </ExternalLink>
     </EmptyStateBody>

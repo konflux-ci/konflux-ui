@@ -67,7 +67,7 @@ const updateCommitObject = (plr: PipelineRunKind, commit: Commit): Commit => {
   const creationTime = plr.metadata.creationTimestamp;
   const component = plr.metadata.labels[PipelineRunLabel.COMPONENT] ?? '';
 
-  if (newCommit.creationTime < creationTime) {
+  if (new Date(newCommit.creationTime).getTime() > new Date(creationTime).getTime()) {
     newCommit.creationTime = creationTime;
   }
   if (!newCommit.components) {
