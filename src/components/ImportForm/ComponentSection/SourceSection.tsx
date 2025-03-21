@@ -49,7 +49,7 @@ export const SourceSection = () => {
         let parsed: GitUrlParse.GitUrl;
         try {
           parsed = GitUrlParse(event.target?.value ?? '');
-          await setFieldValue('gitURLAnnotation', parsed?.resource);
+          await setFieldValue('gitURLAnnotation', `https://${parsed?.resource}`);
         } catch {
           await setFieldValue('gitURLAnnotation', '');
         }
