@@ -33,9 +33,11 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
       return snapshots.filter((sn) => sn.spec?.application === props.applicationName);
     }
 
-    return snapshots
-      .filter((sn) => sn.spec?.application === props.applicationName)
-      .filter((sn) => sn.metadata.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return snapshots.filter(
+      (sn) =>
+        sn.spec?.application === props.applicationName &&
+        sn.metadata.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
   }, [error, loaded, props.applicationName, snapshots, searchTerm]);
 
   const dropdownItems = useMemo(
