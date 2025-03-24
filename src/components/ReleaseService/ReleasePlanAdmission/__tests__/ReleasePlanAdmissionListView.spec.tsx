@@ -1,5 +1,7 @@
 import { render, waitFor } from '@testing-library/react';
+import { mockApplication } from '~/components/ApplicationDetails/__data__/mock-data';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { useApplications } from '../../../../hooks/useApplications';
 import { useReleasePlanAdmissions } from '../../../../hooks/useReleasePlanAdmissions';
 import { mockAccessReviewUtil } from '../../../../unit-test-utils/mock-access-review';
 import { mockReleasePlanAdmission } from '../__data__/release-plan-admission.mock';
@@ -17,11 +19,17 @@ jest.mock('../../../../hooks/useReleasePlanAdmissions', () => ({
   useReleasePlanAdmissions: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useApplications', () => ({
+  useApplications: jest.fn(),
+}));
+
 const mockReleasePlanHook = useReleasePlanAdmissions as jest.Mock;
+const useApplicationsMock = useApplications as jest.Mock;
 
 describe('ReleasePlanAdmissionListView', () => {
   mockUseNamespaceHook('test-ns');
   mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
+  useApplicationsMock.mockReturnValue([[mockApplication], true]);
 
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);
