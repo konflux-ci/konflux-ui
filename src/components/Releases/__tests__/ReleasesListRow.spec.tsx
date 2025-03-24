@@ -61,8 +61,8 @@ describe('ReleasesListRow', () => {
 
     expect(cells[0].children[0].innerHTML).toBe(mockRelease.metadata.name);
     expect(cells[2].innerHTML).toBe('1 hour 30 minutes');
-    expect(cells[3].innerHTML).toBe('test-plan');
-    expect(cells[4].innerHTML).toBe(
+    expect(cells[4].innerHTML).toBe('test-plan');
+    expect(cells[5].innerHTML).toBe(
       '<a href="/ns//applications/test-app/snapshots/test-snapshot">test-snapshot</a>',
     );
     expect(status[0].innerHTML).toBe('Succeeded');

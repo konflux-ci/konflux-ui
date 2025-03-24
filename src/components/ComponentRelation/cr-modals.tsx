@@ -53,7 +53,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
       description={
         <>
           Nudging references another component by digest.{' '}
-          <ExternalLink href="https://konflux-ci.dev/docs/how-tos/configuring/component-nudges/">
+          <ExternalLink href="https://konflux-ci.dev/docs/building/component-nudges/">
             Learn more about nudging.
           </ExternalLink>
         </>
