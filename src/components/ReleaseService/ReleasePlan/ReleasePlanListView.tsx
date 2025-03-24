@@ -13,6 +13,7 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { useApplications } from '~/hooks/useApplications';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
@@ -25,17 +26,32 @@ import { ReleaseKind } from '../../../types';
 import { withPageAccessCheck } from '../../PageAccess/withPageAccessCheck';
 import { ReleaseServiceEmptyState } from '../ReleaseServiceEmptyState';
 import ReleasePlanListHeader from './ReleasePlanListHeader';
-import ReleasePlanListRow from './ReleasePlanListRow';
+import ReleasePlanListRow, { ReleasePlanWithApplicationData } from './ReleasePlanListRow';
 
 const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
+  const [applications, appLoaded] = useApplications(namespace);
   const [releasePlans, loaded] = useReleasePlans(namespace);
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
   const onClearFilters = () => setNameFilter('');
 
+  const releasePlanWithApplicationData: ReleasePlanWithApplicationData[] = React.useMemo(() => {
+    if (!loaded || !releasePlans) {
+      return [];
+    }
+    return appLoaded && applications
+      ? releasePlans.map((rpa) => {
+          const application = applications.find(
+            (app) => app.metadata?.name === rpa.spec.application,
+          );
+          return { ...rpa, application };
+        })
+      : releasePlans;
+  }, [loaded, appLoaded, releasePlans, applications]);
+
   const filteredReleasePlans = React.useMemo(
-    () => (loaded ? releasePlans.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1) : []),
-    [releasePlans, nameFilter, loaded],
+    () => releasePlanWithApplicationData.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1),
+    [releasePlanWithApplicationData, nameFilter],
   );
 
   useDocumentTitle(`Release Plan | ${FULL_APPLICATION_TITLE}`);
