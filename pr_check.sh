@@ -12,6 +12,10 @@ yarn install
 yarn start > yarn_start_logfile 2>&1 &
 YARN_PID=$!
 
+# monitor memory usage during a test
+while true; do date '+%F_%H:%M:%S' >> mem.log && free -m >> mem.log; sleep 1; done 2>&1 &
+MEM_PID=$!
+
 set -x
 
 # -------------------------------------
@@ -55,6 +59,10 @@ podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} || TEST_RUN=1
 # kill the background process running the UI
 kill $YARN_PID
 cp yarn_start_logfile $PWD/artifacts
+
+# kill the background process monitoring memory usage
+kill $MEM_PID
+cp mem.log $PWD/artifacts
 
 echo "Exiting pr_check.sh with code $TEST_RUN"
 

@@ -17,7 +17,7 @@
     "cypress-high-resolution": "^1.0.0",
     "cypress-mochawesome-reporter": "^3.4.0",
     "cypress-multi-reporters": "^1.6.0",
-    "cypress-terminal-report": "^5.0.2",
+    "cypress-terminal-report": "^7.1.0",
     "deepmerge": "^4.2.2",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-cypress": "^4.1.0",
