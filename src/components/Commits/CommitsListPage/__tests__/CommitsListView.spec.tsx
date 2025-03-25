@@ -66,7 +66,7 @@ jest.mock('../../../../hooks/useBuildPipelines', () => ({
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
-const useBuildPipelinesMock = useBuildPipelines as jest.mock;
+const useBuildPipelinesMock = useBuildPipelines as jest.Mock;
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
