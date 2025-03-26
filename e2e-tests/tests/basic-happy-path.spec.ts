@@ -126,6 +126,7 @@ describe('Basic Happy Path', () => {
 
       componentPage.verifyAndWaitForPRMerge();
       componentPage.closeModal();
+      componentPage.verifyCustomPipelineStatus();
       // Go back to Components tab
       Applications.clickBreadcrumbLink(applicationName);
       Applications.goToComponentsTab();

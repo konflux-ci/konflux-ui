@@ -177,4 +177,9 @@ export class ComponentPage extends AbstractWizardPage {
   verifyComponentGHReferenceAndLink(linkText: string, link: string) {
     cy.contains('a', linkText).should('be.visible').and('have.attr', 'href', link);
   }
+
+  verifyCustomPipelineStatus() {
+    Common.waitForLoad();
+    this.checkStatusOnModal('Custom');
+  }
 }
