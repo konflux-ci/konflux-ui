@@ -58,6 +58,8 @@ module.exports = {
           'dev_file_url',
           'dockerfile_url',
           'environment_id',
+          'image_controller',
+          'sbom_server',
         ],
       },
     ],

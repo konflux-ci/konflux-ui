@@ -1,5 +1,3 @@
-/* eslint-disable camelcase */
-
 import { renderHook } from '@testing-library/react';
 import { mockLocation } from '../../utils/test-utils';
 import { useKonfluxPublicInfo } from '../useKonfluxPublicInfo';
