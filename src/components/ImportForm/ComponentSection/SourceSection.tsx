@@ -3,7 +3,6 @@ import { ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
-import { v4 as uuidv4 } from 'uuid';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';
@@ -19,15 +18,14 @@ export const SourceSection = () => {
       : ValidatedOptions.error
     : ValidatedOptions.default;
 
-  function generateRandomString(): string {
-    let uniqueName: string;
-    do {
-      uniqueName = uuidv4()
-        .replace(/[^a-z0-9-]/g, '')
-        .substring(0, 5);
-    } while (!/^[a-z][a-z0-9-]*[a-z0-9]$/.test(uniqueName));
-    return uniqueName;
-  }
+  const formatToKebabCase = (name: string): string =>
+    name
+      .replace(/_/g, '-')
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      .replace(/(\d+)/g, '-$1')
+      .toLowerCase()
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
 
   const handleChange = React.useCallback(
     async (event) => {
@@ -47,14 +45,17 @@ export const SourceSection = () => {
         }
 
         let parsed: GitUrlParse.GitUrl;
+        let name: string;
         try {
           parsed = GitUrlParse(event.target?.value ?? '');
           await setFieldValue('gitURLAnnotation', parsed?.resource);
+          name = parsed.name;
         } catch {
+          name = '';
           await setFieldValue('gitURLAnnotation', '');
         }
         if (!touchedValues.componentName) {
-          await setFieldValue('componentName', generateRandomString());
+          await setFieldValue('componentName', formatToKebabCase(name));
         }
       }
     },
