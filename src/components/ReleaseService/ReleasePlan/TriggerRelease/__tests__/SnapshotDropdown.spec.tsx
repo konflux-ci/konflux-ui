@@ -1,14 +1,14 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import * as formik from 'formik';
-import { useSnapshots } from '../../../../../hooks/useSnapshots';
+import { useSnapshotsForApplication } from '../../../../../hooks/useSnapshots';
 import { formikRenderer } from '../../../../../utils/test-utils';
 import { SnapshotDropdown } from '../SnapshotDropdown';
 
 jest.mock('../../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
+  useSnapshotsForApplication: jest.fn(),
 }));
 
-const useSnapshotsMock = useSnapshots as jest.Mock;
+const useSnapshotsMock = useSnapshotsForApplication as jest.Mock;
 
 describe('SnapshotDropdown', () => {
   beforeEach(() => {});

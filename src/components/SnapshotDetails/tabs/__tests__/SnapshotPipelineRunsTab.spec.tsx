@@ -8,7 +8,6 @@ import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsTab from '../SnapshotPipelineRunsTab';
@@ -34,10 +33,6 @@ jest.mock('../../../../hooks/useScanResults', () => ({
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParamBatch: jest.fn(),
-}));
-
-jest.mock('../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => {
@@ -82,7 +77,6 @@ jest.mock('../../../../utils/rbac', () => ({
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-const mockUseSnapshots = useSnapshots as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 
 const appName = 'my-test-app';
@@ -142,7 +136,6 @@ describe('SnapshotPipelinerunsTab', () => {
     });
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
 

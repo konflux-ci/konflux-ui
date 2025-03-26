@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { FormikProps } from 'formik';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
-import { useSnapshots } from '../../../../../hooks/useSnapshots';
+import { useSnapshotsForApplication } from '../../../../../hooks/useSnapshots';
 import { formikRenderer } from '../../../../../utils/test-utils';
 import { TriggerReleaseFormValues } from '../form-utils';
 import { TriggerReleaseForm, getApplicationNameForReleasePlan } from '../TriggerReleaseForm';
@@ -21,7 +21,7 @@ jest.mock('../AddIssueSection/AddIssueSection', () => ({
 }));
 
 jest.mock('../../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
+  useSnapshotsForApplication: jest.fn(),
 }));
 
 jest.mock('../../../../../hooks/useReleasePlans', () => ({
@@ -32,7 +32,7 @@ jest.mock('../../../../../shared/hooks/useScrollShadows', () => ({
   useScrollShadows: jest.fn().mockReturnValue('none'),
 }));
 
-const useSnapshotsMock = useSnapshots as jest.Mock;
+const useSnapshotsMock = useSnapshotsForApplication as jest.Mock;
 const useReleasePlansMock = useReleasePlans as jest.Mock;
 
 describe('TriggerReleaseForm', () => {
