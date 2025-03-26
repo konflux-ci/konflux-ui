@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useBuildPipelines } from '../../../../hooks/useBuildPipelines';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
-import { createK8sWatchResourceMock, createUseApplicationMock } from '../../../../utils/test-utils';
+import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
@@ -58,28 +59,32 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
 
-const watchResourceMock = createK8sWatchResourceMock();
+jest.mock('../../../../hooks/useBuildPipelines', () => ({
+  useBuildPipelines: jest.fn(),
+}));
+
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
+const useBuildPipelinesMock = useBuildPipelines as jest.Mock;
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
 describe('CommitsListView', () => {
   beforeEach(() => {
-    watchResourceMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
+    useBuildPipelinesMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
     useComponentsMock.mockReturnValue([MockComponents, true]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render error state when there is an API error', () => {
-    watchResourceMock.mockReturnValue([[], true, new Error('500: Internal server error')]);
+    useBuildPipelinesMock.mockReturnValue([[], true, new Error('500: Internal server error')]);
     render(<CommitsListView applicationName="purple-mermaid-app" />);
     screen.getByText('Unable to load pipeline runs');
   });
 
   it('should render empty state if no commits are present', () => {
-    watchResourceMock.mockReturnValue([[], true]);
+    useBuildPipelinesMock.mockReturnValue([[], true]);
     render(<CommitsListView applicationName="purple-mermaid-app" />);
     expect(
       screen.getByText(
@@ -186,7 +191,7 @@ describe('CommitsListView', () => {
   });
 
   it('should render skeleton while data is not loaded', () => {
-    watchResourceMock.mockReturnValue([[], false]);
+    useBuildPipelinesMock.mockReturnValue([[], false]);
     useTRPipelineRunsMock.mockReturnValue([[], false]);
     useComponentsMock.mockReturnValue([[], false]);
     render(<CommitsListView applicationName="purple-mermaid-app" />);

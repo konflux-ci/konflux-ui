@@ -16,7 +16,7 @@ const SecretsListPage: React.FC = () => {
           Manage your secrets and their related configurations. You can add a secret at the
           namespace level.
           <br /> All secrets are stored using AWS Secrets Manager to keep your data private.{' '}
-          <ExternalLink href="https://konflux-ci.dev/docs/how-tos/configuring/creating-secrets/">
+          <ExternalLink href="https://konflux-ci.dev/docs/building/creating-secrets/">
             Learn more
           </ExternalLink>
         </>
