@@ -20,6 +20,7 @@ const mockOnClick = jest.fn();
 
 const mockWhatsNextItems: WhatsNextItem[] = [
   {
+    id: 0,
     title: 'React router action',
     description: 'Sample action to take user to a router link inside the app.',
     icon: componentsIcon,
@@ -30,6 +31,7 @@ const mockWhatsNextItems: WhatsNextItem[] = [
     helpLink: 'mock-help-id',
   },
   {
+    id: 1,
     title: 'External link action',
     description: 'Sample action to take user to an external link.',
     icon: gitAppIcon,
@@ -40,6 +42,7 @@ const mockWhatsNextItems: WhatsNextItem[] = [
     },
   },
   {
+    id: 2,
     title: 'On click action',
     description: 'Sample action to trigger an onClick action.',
     icon: gitAppIcon,
