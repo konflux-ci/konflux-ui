@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Label, capitalize } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import { getApplicationDisplayName } from '~/components/Applications/application-utils';
 import { ApplicationKind } from '~/types';
 import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
@@ -21,6 +22,7 @@ const ReleasePlanListRow: React.FC<
 > = ({ obj }) => {
   const actions = useReleasePlanActions(obj);
   const namespace = useNamespace();
+  const appDisplayName = getApplicationDisplayName(obj.application) ?? obj.spec?.application;
 
   return (
     <>
@@ -29,11 +31,11 @@ const ReleasePlanListRow: React.FC<
         <Link
           to={APPLICATION_DETAILS_PATH.createPath({
             workspaceName: namespace,
-            applicationName: obj.spec.application,
+            applicationName: obj.spec?.application,
           })}
-          title={obj.application?.spec?.displayName ?? obj.spec.application}
+          title={appDisplayName}
         >
-          {obj.application?.spec?.displayName ?? obj.spec.application}
+          {appDisplayName}
         </Link>
       </TableData>
       <TableData className={releasesPlanTableColumnClasses.target}>{obj.spec.target}</TableData>
