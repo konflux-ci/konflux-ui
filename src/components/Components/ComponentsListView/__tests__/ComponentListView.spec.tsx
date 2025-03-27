@@ -104,7 +104,7 @@ describe('ComponentListViewPage', () => {
     const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toBe(
-      'http://localhost/workspaces/test-ns/import?application=test-app',
+      'http://localhost/ns/test-ns/import?application=test-app',
     );
   });
 

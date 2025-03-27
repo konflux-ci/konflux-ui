@@ -46,7 +46,7 @@ describe('useReleasePlanActions', () => {
       expect.objectContaining({
         label: 'Trigger release plan',
         cta: {
-          href: `/workspaces/test-ns/release/release-plan/trigger/test-release-plan`,
+          href: `/ns/test-ns/release/release-plan/trigger/test-release-plan`,
         },
       }),
     );
@@ -65,7 +65,7 @@ describe('useReleasePlanActions', () => {
       expect.objectContaining({
         label: 'Edit release plan',
         cta: {
-          href: `/workspaces/test-ns/release/release-plan/edit/test-release-plan`,
+          href: `/ns/test-ns/release/release-plan/edit/test-release-plan`,
         },
       }),
     );
