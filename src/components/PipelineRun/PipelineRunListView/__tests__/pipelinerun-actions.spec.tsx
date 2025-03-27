@@ -336,7 +336,7 @@ describe('usePipelinererunAction', () => {
   beforeEach(() => {
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true, null]);
   });
 
   it('should contain disabled rerurn action & tooltip for build plr without access', () => {
@@ -411,6 +411,7 @@ describe('usePipelinererunAction', () => {
   });
 
   it('should contain disabled rerun action when snapshot missing', () => {
+    mockUseSnapshots.mockReturnValue([undefined, true, null]);
     useAccessReviewForModelMock.mockReturnValue([true, true]);
     const { result } = renderHook(() =>
       usePipelinererunAction({

@@ -14,6 +14,10 @@ import SnapshotPipelineRunsTab from '../SnapshotPipelineRunsTab';
 
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
+jest.mock('~/hooks/useSnapshots', () => ({
+  useSnapshot: jest.fn(() => [{ metadata: { name: 'snap' } }, false, null]),
+}));
+
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));

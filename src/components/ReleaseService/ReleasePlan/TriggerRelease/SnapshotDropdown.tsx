@@ -24,7 +24,7 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
 
   const dropdownItems = React.useMemo(
     () =>
-      !isLoading ? snapshots?.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
+      !isLoading ? snapshots.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
     [isLoading, snapshots],
   );
 

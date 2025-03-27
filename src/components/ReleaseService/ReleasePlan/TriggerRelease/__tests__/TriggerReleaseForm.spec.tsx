@@ -38,7 +38,7 @@ const useReleasePlansMock = useReleasePlans as jest.Mock;
 describe('TriggerReleaseForm', () => {
   beforeEach(() => {
     useReleasePlansMock.mockReturnValue([[], false]);
-    useSnapshotsMock.mockReturnValue([[], false]);
+    useSnapshotsMock.mockReturnValue({ data: [], isLoading: true });
   });
   it('should show trigger release button and heading', () => {
     const values = {};
