@@ -113,6 +113,9 @@ describe('Basic Happy Path', () => {
       // Use clickSendingPullRequest() until the bug is fixed
       // https://issues.redhat.com/browse/KFLUXUI-226
       componentPage.clickSendingPullRequest();
+      componentPage.closeModal();
+      cy.reload();
+      componentPage.clickMergePullRequest();
       // componentPage.clickMergePullRequest();
       componentPage.verifyAndWaitForPRIsSent();
 
