@@ -49,7 +49,7 @@ describe('ReleasePlanListRow', () => {
     const cells = wrapper.container.getElementsByTagName('td');
 
     expect(cells[0].innerHTML).toBe(mockReleasePlan.metadata.name);
-    expect(cells[1].children[0].innerHTML).toBe('my-app-1');
+    expect(cells[1].children[0].innerHTML).toBe(mockApplicationWithDisplayName.metadata.name);
     expect(cells[2].innerHTML).toBe('rorai-tenant');
     expect(cells[3].innerHTML).toBe('True');
     expect(cells[4].innerHTML).toBe('True');
