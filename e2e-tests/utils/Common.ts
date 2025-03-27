@@ -30,14 +30,14 @@ export class Common {
   }
 
   static openApplicationURL(applicationName: string) {
-    const workspacePathMatcher = new RegExp(/workspaces\/([^/]+)/);
+    const workspacePathMatcher = new RegExp(/ns\/([^/]+)/);
     cy.url().then((url) => {
-      const [, workspace = ''] = url.match(workspacePathMatcher) || [];
+      const [, namespace = ''] = url.match(workspacePathMatcher) || [];
 
       Common.openURL(
         `${Cypress.env(
           'KONFLUX_BASE_URL',
-        )}/workspaces/${workspace}/applications/${applicationName.replace('.', '-')}`,
+        )}/ns/${namespace}/applications/${applicationName.replace('.', '-')}`,
       );
       Common.verifyPageTitle(applicationName);
       Common.waitForLoad();

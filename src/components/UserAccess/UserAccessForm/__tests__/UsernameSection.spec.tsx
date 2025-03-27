@@ -1,13 +1,26 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { formikRenderer } from '../../../../utils/test-utils';
-import { KONFLUX_USERNAME_REGEX_MGS } from '../../../../utils/validation-utils';
 import { UsernameSection } from '../UsernameSection';
 
-const testValidUsernameInput = async (inputValue: string) => {
+const testValidUsernameInput = async (inputValue: string, keyCode: string) => {
   act(() => {
     const inputElement = screen.getByRole('searchbox');
     fireEvent.change(inputElement, { target: { value: inputValue } });
-    fireEvent.keyDown(inputElement, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(inputElement, { key: keyCode, code: keyCode });
+  });
+
+  await waitFor(() => {
+    expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
+    expect(screen.getByText(inputValue)).toBeVisible();
+  });
+};
+
+const testValidUsernameInputWithBlur = async (inputValue: string) => {
+  act(() => {
+    const inputElement = screen.getByRole('searchbox');
+    fireEvent.focus(inputElement);
+    fireEvent.change(inputElement, { target: { value: inputValue } });
+    fireEvent.blur(inputElement);
   });
 
   await waitFor(() => {
@@ -17,18 +30,21 @@ const testValidUsernameInput = async (inputValue: string) => {
 };
 
 const testInvalidUsernameInput = async (inputValue: string, expectedError: string | null) => {
-  await act(() =>
-    fireEvent.input(screen.getByRole('searchbox'), { target: { value: inputValue } }),
-  );
+  act(() => {
+    const inputElement = screen.getByRole('searchbox');
+    fireEvent.focus(inputElement);
+    fireEvent.change(inputElement, { target: { value: inputValue } });
+    fireEvent.blur(inputElement); // ensure tab or enter will not the invalid string gone.
+  });
 
   if (expectedError) {
     await waitFor(() => {
       expect(screen.getByText(expectedError)).toBeVisible();
+      expect(screen.getByText(inputValue)).toBeVisible();
     });
   } else {
     await waitFor(() => {
       expect(screen.getByRole('list', { name: 'Chip group category' })).toBeVisible();
-      expect(screen.getByText(inputValue)).toBeVisible();
     });
   }
 };
@@ -48,10 +64,18 @@ describe('UsernameSection', () => {
 
   it('should add username chip when entered', async () => {
     formikRenderer(<UsernameSection />, { usernames: [] });
-    await testValidUsernameInput('user1');
+    await testValidUsernameInput('user1', 'Enter');
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove user1' })));
     expect(screen.queryByText('user1')).not.toBeInTheDocument();
-    await testValidUsernameInput('user2');
+    await testValidUsernameInput('user2', 'Enter');
+  });
+
+  it('should add username chip when tab', async () => {
+    formikRenderer(<UsernameSection />, { usernames: [] });
+    await testValidUsernameInput('user1', 'Tab');
+    await act(() => fireEvent.click(screen.getByRole('button', { name: 'Remove user1' })));
+    expect(screen.queryByText('user1')).not.toBeInTheDocument();
+    await testValidUsernameInput('user2', 'Tab');
   });
 
   it('should show correct field status while entering', async () => {
@@ -60,12 +84,12 @@ describe('UsernameSection', () => {
       screen.getByText('Provide Konflux usernames for the users you want to invite.'),
     ).toBeVisible();
     await testInvalidUsernameInput('user!@#', 'Username not validated');
-    await testValidUsernameInput('myuser');
+    await testValidUsernameInputWithBlur('myuser');
   });
 
   it('should not add username again if entry already exists', async () => {
     formikRenderer(<UsernameSection />, { usernames: [] });
-    await testValidUsernameInput('user1');
+    await testValidUsernameInputWithBlur('user1');
 
     const inputElement = screen.getByRole('searchbox');
     fireEvent.change(inputElement, { target: { value: 'user1' } });
@@ -75,12 +99,8 @@ describe('UsernameSection', () => {
 
   it('should validate username format', async () => {
     formikRenderer(<UsernameSection />, { usernames: [] });
-    await testValidUsernameInput('user-12_@3');
-    await testInvalidUsernameInput('user1!@#', KONFLUX_USERNAME_REGEX_MGS);
-    await testInvalidUsernameInput('1', KONFLUX_USERNAME_REGEX_MGS);
-    await testInvalidUsernameInput(
-      '11111111111111111111111111111111111111111111111',
-      KONFLUX_USERNAME_REGEX_MGS,
-    );
+    await testValidUsernameInputWithBlur('user-12_@3');
+    await testInvalidUsernameInput('user1!@#', 'Username not validated');
+    await testInvalidUsernameInput('1', 'Username not validated');
   });
 });

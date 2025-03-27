@@ -92,7 +92,7 @@ describe('IntegrationTestsListView', () => {
 
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith(
-        '/workspaces/test-ns/applications/test-app/integrationtests/add',
+        '/ns/test-ns/applications/test-app/integrationtests/add',
       ),
     );
   });
@@ -105,7 +105,7 @@ describe('IntegrationTestsListView', () => {
 
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith(
-        '/workspaces/test-ns/applications/test-app/integrationtests/add',
+        '/ns/test-ns/applications/test-app/integrationtests/add',
       ),
     );
   });

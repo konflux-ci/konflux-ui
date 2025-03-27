@@ -16,6 +16,13 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   getActiveWorkspace: jest.fn(() => 'test-ws'),
 }));
 
+jest.mock('~/auth/utils', () => ({
+  getUserDataFromLocalStorage: jest.fn(() => ({
+    email: 'test@demo',
+    preferredUsername: 'testuser',
+  })),
+}));
+
 const createResourceMock = k8sCreateResource as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
@@ -35,6 +42,8 @@ describe('checkAccess', () => {
         model: expect.objectContaining({ kind: 'SelfSubjectAccessReview' }),
         resource: expect.objectContaining({
           spec: {
+            user: 'testuser',
+            group: ['system:authenticated'],
             resourceAttributes: expect.objectContaining({
               group: 'tekton.dev',
               resource: 'pipelineruns',

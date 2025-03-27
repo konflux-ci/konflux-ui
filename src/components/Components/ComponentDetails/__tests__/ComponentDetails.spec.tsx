@@ -108,7 +108,7 @@ describe('ComponentDetailsView', () => {
 
     await act(() => fireEvent.click(activityTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ns/applications/test-application/components/human-resources/activity',
+      '/ns/test-ns/applications/test-application/components/human-resources/activity',
     );
   });
 });

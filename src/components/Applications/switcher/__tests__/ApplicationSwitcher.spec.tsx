@@ -93,7 +93,7 @@ describe('ContextSwitcher', () => {
 
     expect(screen.getByText('Test Application 2')).toBeInTheDocument();
     act(() => screen.getByText('Test Application 2').click());
-    expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ns/applications/test-app-2');
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/applications/test-app-2');
     expect(screen.queryByText('Test Application 2')).toBeNull();
     switcher.unmount();
   });
