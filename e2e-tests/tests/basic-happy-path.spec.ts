@@ -110,12 +110,9 @@ describe('Basic Happy Path', () => {
       // Pipeline build plan was removed from the Pipeline runs Tab
       // See https://issues.redhat.com/browse/KFLUXBUGS-603
       ComponentsTabPage.openComponent(componentName);
-      // Use clickSendingPullRequest() until the bug is fixed
-      // https://issues.redhat.com/browse/KFLUXUI-226
       componentPage.clickSendingPullRequest();
-      // componentPage.closeModal();
-      // cy.reload();
-      // componentPage.clickMergePullRequest();
+      componentPage.closeModal();
+      componentPage.clickMergePullRequest();
       componentPage.verifyAndWaitForPRIsSent();
 
       APIHelper.mergePR(
