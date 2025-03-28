@@ -54,6 +54,7 @@ export default defineConfig({
           'cypress-log.txt': 'txt',
         },
         printLogsToFile: 'always',
+        printLogsToConsole: 'onFail',
       };
       require('cypress-terminal-report/src/installLogsPrinter')(on, logOptions);
 
@@ -80,6 +81,16 @@ export default defineConfig({
           }
           return null;
         },
+      });
+
+      on('before:run', async (details) => {
+        // cypress-mochawesome-reporter
+        await beforeRunHook(details);
+      });
+
+      on('after:run', async () => {
+        // cypress-mochawesome-reporter
+        await afterRunHook();
       });
 
       const defaultValues: { [key: string]: string | boolean } = {
