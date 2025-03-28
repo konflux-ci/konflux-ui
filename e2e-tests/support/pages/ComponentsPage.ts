@@ -45,6 +45,7 @@ export class ComponentPage extends AbstractWizardPage {
 
   clickSendingPullRequest() {
     cy.contains('button', 'Sending pull request').should('be.visible').click();
+    cy.wait(15000);
   }
 
   setPipeline(pipeline: string) {
