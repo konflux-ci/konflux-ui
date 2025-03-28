@@ -32,6 +32,7 @@ export const useWhatsNextItems = (applicationName: string) => {
 
   const whatsNextItems: WhatsNextItem[] = [
     {
+      id: 0,
       title: 'Grow your application',
       description: 'Grow your application by adding components.',
       icon: componentsIcon,
@@ -51,6 +52,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
+      id: 1,
       title: 'Add integration tests',
       description:
         'Integration tests run in parallel, validating each new component build with the latest version of all other components.',
@@ -71,6 +73,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/testing/integration/adding/',
     },
     {
+      id: 2,
       title: 'Create a release plan',
       description:
         'A release object represents deployable snapshot of your application. To release your code, create a release plan with release details.',
@@ -91,6 +94,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/releasing/',
     },
     {
+      id: 3,
       title: 'Install our GitHub app',
       description: 'Install the GitHub app to monitor your work from a commit to deployment.',
       icon: gitAppIcon,
@@ -108,6 +112,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
+      id: 4,
       title: 'Make a code change',
       description: 'Make a change to your source code to automatically trigger a new build.',
       icon: editCodeIcon,
@@ -124,6 +129,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
+      id: 5,
       title: 'Manage build pipelines',
       description:
         'Add some automation by upgrading your default build pipelines to custom build pipelines.',
