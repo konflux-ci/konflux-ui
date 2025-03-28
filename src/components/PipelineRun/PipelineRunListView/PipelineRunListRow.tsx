@@ -115,6 +115,9 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           '-'
         )}
       </TableData>
+      <TableData className={pipelineRunTableColumnClasses.eventType}>
+        {obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ?? '-'}
+      </TableData>
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
