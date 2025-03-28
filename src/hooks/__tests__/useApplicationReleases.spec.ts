@@ -2,23 +2,13 @@ import { renderHook } from '@testing-library/react-hooks';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import { useApplicationReleases } from '../useApplicationReleases';
-import { useApplicationSnapshots } from '../useApplicationSnapshots';
-
-jest.mock('../useApplicationSnapshots', () => ({
-  useApplicationSnapshots: jest.fn(),
-}));
 
 const watchResourceMock = createK8sWatchResourceMock();
-const useSnapshotsMock = useApplicationSnapshots as jest.Mock;
 
 describe('useApplicationReleases', () => {
   mockUseNamespaceHook('test-ns');
   it('should return empty array incase release are not loaded', () => {
     watchResourceMock.mockReturnValue([[], false]);
-    useSnapshotsMock.mockReturnValue([
-      [{ metadata: { name: 'my-snapshot' } }, { metadata: { name: 'my-snapshot-2' } }],
-      true,
-    ]);
 
     const { result } = renderHook(() => useApplicationReleases('test-app'));
     const [results, loaded] = result.current;
@@ -28,14 +18,10 @@ describe('useApplicationReleases', () => {
 
   it('should return empty array incase snapshots are not loaded', () => {
     watchResourceMock.mockReturnValue([[], true]);
-    useSnapshotsMock.mockReturnValue([
-      [{ metadata: { name: 'my-snapshot' } }, { metadata: { name: 'my-snapshot-2' } }],
-      false,
-    ]);
 
     const { result } = renderHook(() => useApplicationReleases('test-app'));
     const [results, loaded] = result.current;
-    expect(loaded).toEqual(false);
+    expect(loaded).toEqual(true);
     expect(results.length).toEqual(0);
   });
 
@@ -49,16 +35,11 @@ describe('useApplicationReleases', () => {
       ],
       true,
     ]);
-    useSnapshotsMock.mockReturnValue([
-      [{ metadata: { name: 'my-snapshot' } }, { metadata: { name: 'my-snapshot-2' } }],
-      true,
-    ]);
 
     const { result } = renderHook(() => useApplicationReleases('test-app'));
     const [results, loaded] = result.current;
-    expect(useSnapshotsMock).toHaveBeenCalledWith('test-app');
     expect(loaded).toEqual(true);
-    expect(results.length).toEqual(2);
-    expect(results.map((r) => r.metadata.name)).toEqual(['r1', 'r2']);
+    expect(results.length).toEqual(4);
+    expect(results.map((r) => r.metadata.name)).toEqual(['r1', 'r2', 'r3', 'r4']);
   });
 });
