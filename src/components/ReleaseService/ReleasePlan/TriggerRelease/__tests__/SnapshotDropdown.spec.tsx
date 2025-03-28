@@ -1,20 +1,20 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import * as formik from 'formik';
-import { useSnapshots } from '../../../../../hooks/useSnapshots';
+import { useSnapshotsForApplication } from '../../../../../hooks/useSnapshots';
 import { formikRenderer } from '../../../../../utils/test-utils';
 import { SnapshotDropdown } from '../SnapshotDropdown';
 
 jest.mock('../../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
+  useSnapshotsForApplication: jest.fn(),
 }));
 
-const useSnapshotsMock = useSnapshots as jest.Mock;
+const useSnapshotsMock = useSnapshotsForApplication as jest.Mock;
 
 describe('SnapshotDropdown', () => {
   beforeEach(() => {});
 
   it('should show loading indicator if snapshot arent loaded', () => {
-    useSnapshotsMock.mockReturnValue([[], false]);
+    useSnapshotsMock.mockReturnValue({ data: [], isLoading: true });
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
@@ -22,13 +22,13 @@ describe('SnapshotDropdown', () => {
   });
 
   it('should show dropdown if snapshots are loaded', async () => {
-    useSnapshotsMock.mockReturnValue([
-      [
+    useSnapshotsMock.mockReturnValue({
+      data: [
         { metadata: { name: 'snapshot1' }, spec: { application: 'app' } },
         { metadata: { name: 'snapshot2' }, spec: { application: 'app' } },
       ],
-      true,
-    ]);
+      isLoading: false,
+    });
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
@@ -39,13 +39,10 @@ describe('SnapshotDropdown', () => {
   });
 
   it('should only show dropdowns related to the correct application', async () => {
-    useSnapshotsMock.mockReturnValue([
-      [
-        { metadata: { name: 'snapshot1' }, spec: { application: 'app' } },
-        { metadata: { name: 'snapshot2' }, spec: { application: 'app2' } },
-      ],
-      true,
-    ]);
+    useSnapshotsMock.mockReturnValue({
+      data: [{ metadata: { name: 'snapshot1' }, spec: { application: 'app' } }],
+      isLoading: false,
+    });
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
@@ -56,13 +53,13 @@ describe('SnapshotDropdown', () => {
   });
 
   it('should change the Snapshot dropdown value', async () => {
-    useSnapshotsMock.mockReturnValue([
-      [
+    useSnapshotsMock.mockReturnValue({
+      data: [
         { metadata: { name: 'snapshot1' }, spec: { application: 'app' } },
         { metadata: { name: 'snapshot2' }, spec: { application: 'app' } },
       ],
-      true,
-    ]);
+      isLoading: false,
+    });
 
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
@@ -96,13 +93,13 @@ describe('SnapshotDropdown', () => {
 
     formik.useField;
 
-    useSnapshotsMock.mockReturnValue([
-      [
+    useSnapshotsMock.mockReturnValue({
+      data: [
         { metadata: { name: 'snapshot1' }, spec: { application: 'app' } },
         { metadata: { name: 'snapshot2' }, spec: { application: 'app' } },
       ],
-      true,
-    ]);
+      isLoading: false,
+    });
 
     // Render with initial applicationName
     const { rerender } = formikRenderer(
