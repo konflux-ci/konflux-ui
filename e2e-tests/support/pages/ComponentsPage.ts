@@ -183,4 +183,9 @@ export class ComponentPage extends AbstractWizardPage {
     Common.waitForLoad();
     this.checkStatusOnModal('Custom');
   }
+
+  verifySendPRPipelineStatus() {
+    Common.waitForLoad();
+    this.checkStatusOnModal('Send pull request');
+  }
 }
