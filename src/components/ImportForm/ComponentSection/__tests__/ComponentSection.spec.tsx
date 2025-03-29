@@ -60,10 +60,7 @@ describe('ComponentSection', () => {
 
     await user.type(source, 'https://gitlab.com/abcd/repo.git');
     await user.tab();
-    await waitFor(() =>
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe('gitlab.com'),
-    );
+    await waitFor(() => expect(screen.getByTestId('url-annotation').value).toBe('gitlab.com'));
   });
 
   it('should render helper text for component name', () => {
@@ -72,5 +69,32 @@ describe('ComponentSection', () => {
     });
 
     expect(screen.getByText('Must be unique within tenant namespace')).toBeInTheDocument();
+  });
+
+  it('should handle new line in Git URL input gracefully', async () => {
+    formikRenderer(<ComponentSection />, {
+      source: { git: { url: '' } },
+    });
+    const user = userEvent.setup();
+    const source = screen.getByPlaceholderText('Enter your source');
+
+    await user.type(source, 'https://github.com/abcd/repo.git\n');
+    await user.tab();
+    await waitFor(() => screen.getByText('Show advanced Git options'));
+  });
+
+  it('should format component name to kebab-case', async () => {
+    formikRenderer(<ComponentSection />, {
+      source: { git: { url: '' } },
+    });
+    const user = userEvent.setup();
+    const source = screen.getByPlaceholderText('Enter your source');
+
+    await user.type(source, 'https://github.com/ExampleRepo123.git');
+    await user.tab();
+    await waitFor(() => {
+      const componentNameInput = screen.getByTestId('component-name');
+      expect((componentNameInput as HTMLInputElement).value).toBe('example-repo-123');
+    });
   });
 });
