@@ -1,3 +1,5 @@
+import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
+
 export enum ConsoleDotEnvironments {
   dev = 'dev',
   stage = 'stage',
@@ -32,27 +34,29 @@ export const useUIInstance = (): ConsoleDotEnvironments => {
   return getInternalInstance() ?? env;
 };
 
-const SBOM_PLACEHOLDER = '<PLACEHOLDER>';
-const getSBOMEnvUrl = (env: ConsoleDotEnvironments) => (imageHash: string) => {
-  if (env === ConsoleDotEnvironments.prod) {
-    return `https://atlas.devshift.net/sbom/content/${SBOM_PLACEHOLDER}`.replace(
-      SBOM_PLACEHOLDER,
-      imageHash,
-    );
-  }
-  return `https://atlas.stage.devshift.net/sbom/content/${SBOM_PLACEHOLDER}`.replace(
-    SBOM_PLACEHOLDER,
-    imageHash,
+const getBombinoUrl = (
+  notifications: { title: string; event: string; config?: { url: string } }[],
+) => {
+  const notification = notifications?.find(
+    (n) => n.title === 'SBOM-event-to-Bombino' && n.event === 'repo_push',
   );
+  return notification?.config?.url ?? '';
 };
 
-const getBombinoUrl = (env: ConsoleDotEnvironments) => {
-  if (env === ConsoleDotEnvironments.prod) {
-    return 'https://bombino.api.redhat.com/v1/sbom/quay/push';
-  }
-  return 'https://bombino.preprod.api.redhat.com/v1/sbom/quay/push';
+export const useSbomUrl = (): ((imageHash: string) => string) => {
+  const [konfluxPublicInfo] = useKonfluxPublicInfo();
+  const sbomServerUrl = konfluxPublicInfo?.integrations?.sbom_server?.url ?? '';
+
+  return (imageHash: string) => sbomServerUrl.replace('<PLACEHOLDER>', imageHash);
 };
 
-export const useSbomUrl = () => getSBOMEnvUrl(useUIInstance());
+export const useBombinoUrl = () => {
+  const [konfluxPublicInfo] = useKonfluxPublicInfo();
+  const notifications = konfluxPublicInfo?.integrations?.image_controller?.notifications ?? [];
+  return getBombinoUrl(notifications);
+};
 
-export const useBombinoUrl = () => getBombinoUrl(useUIInstance());
+export const useApplicationUrl = () => {
+  const [konfluxPublicInfo] = useKonfluxPublicInfo();
+  return konfluxPublicInfo?.integrations?.github?.application_url ?? '';
+};

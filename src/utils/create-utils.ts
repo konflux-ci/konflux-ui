@@ -8,6 +8,7 @@ import {
   typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
 import { linkSecretToServiceAccount } from '../components/Secrets/utils/service-account-utils';
+import { useKonfluxPublicInfo } from '../hooks/useKonfluxPublicInfo';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
 import {
@@ -41,6 +42,7 @@ import {
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
+
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 
 /**
@@ -403,12 +405,21 @@ type CreateImageRepositoryType = {
   namespace: string;
   isPrivate: boolean;
   bombinoUrl: string;
+  konfluxPublicInfo: ReturnType<typeof useKonfluxPublicInfo>[0]; // Add konfluxPublicInfo type
 };
 
-export const createImageRepository = (
-  { application, component, namespace, isPrivate, bombinoUrl }: CreateImageRepositoryType,
+export const createImageRepository = async (
+  {
+    application,
+    component,
+    namespace,
+    isPrivate,
+    konfluxPublicInfo,
+  }: Omit<CreateImageRepositoryType, 'bombinoUrl'>,
   dryRun: boolean = false,
 ) => {
+  const notifications = konfluxPublicInfo?.integrations?.image_controller?.notifications ?? [];
+
   const imageRepositoryResource: ImageRepositoryKind = {
     apiVersion: `${ImageRepositoryModel.apiGroup}/${ImageRepositoryModel.apiVersion}`,
     kind: ImageRepositoryModel.kind,
@@ -429,16 +440,7 @@ export const createImageRepository = (
           ? ImageRepositoryVisibility.private
           : ImageRepositoryVisibility.public,
       },
-      notifications: [
-        {
-          title: 'SBOM-event-to-Bombino',
-          event: 'repo_push',
-          method: 'webhook',
-          config: {
-            url: bombinoUrl,
-          },
-        },
-      ],
+      notifications,
     },
   };
 
