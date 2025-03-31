@@ -69,7 +69,6 @@ export const createRBs = async (
         kind: 'User',
         apiGroup: RoleBindingGroupVersionKind.group,
         name: username,
-        namespace,
       },
     ],
   }));
