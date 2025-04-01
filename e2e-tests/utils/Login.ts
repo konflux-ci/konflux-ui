@@ -37,12 +37,12 @@ export class Login {
     Common.waitForLoad();
     // Wait for https://localhost:8080/ loaded
     GetStartedPage.waitForLoad();
-    // Go to the https://localhost:8080/workspaces
+    // Go to the https://localhost:8080/ns
     Common.navigateTo(NavItem.namespaces);
     Common.verifyPageTitle(pageTitles.namespaces);
     Common.waitForLoad();
     cy.testA11y(`${pageTitles.namespaces}`);
-    // Go to https://localhost:8080/workspaces/your-tenant/applications
+    // Go to https://localhost:8080/ns/your-tenant/applications
     cy.get(
       goToApplicationsPagePo(`${Cypress.env('HAC_NAMESPACE')}`).goToApplicationsPagePo,
     ).click();
