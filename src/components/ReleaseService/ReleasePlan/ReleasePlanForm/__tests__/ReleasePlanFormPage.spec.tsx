@@ -64,7 +64,7 @@ describe('ReleasePlanFormPage', () => {
       'test-ns',
     );
     expect(createReleasePlanMock).toHaveBeenCalledTimes(2);
-    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ns/release`);
+    expect(navigateMock).toHaveBeenCalledWith(`/ns/test-ns/release`);
   });
 
   it('should navigate on successful edit', async () => {
@@ -78,7 +78,7 @@ describe('ReleasePlanFormPage', () => {
 
     expect(editReleasePlanMock).toHaveBeenCalled();
     expect(editReleasePlanMock).toHaveBeenCalledTimes(2);
-    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ns/release`);
+    expect(navigateMock).toHaveBeenCalledWith(`/ns/test-ns/release`);
   });
 
   it('should navigate to release list on reset', async () => {
@@ -89,6 +89,6 @@ describe('ReleasePlanFormPage', () => {
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Reset' })));
 
-    expect(navigateMock).toHaveBeenCalledWith(`/workspaces/test-ns/release`);
+    expect(navigateMock).toHaveBeenCalledWith(`/ns/test-ns/release`);
   });
 });
