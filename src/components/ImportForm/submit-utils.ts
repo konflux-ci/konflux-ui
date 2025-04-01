@@ -1,3 +1,4 @@
+import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { ApplicationKind, ImportSecret } from '../../types';
 import {
   createApplication,
@@ -33,6 +34,7 @@ export const createResources = async (
   formValues: ImportFormValues,
   namespace: string,
   bombinoUrl: string,
+  konfluxPublicInfo: ReturnType<typeof useKonfluxPublicInfo>,
 ) => {
   const {
     source,
@@ -83,6 +85,7 @@ export const createResources = async (
         namespace,
         isPrivate: isPrivateRepo,
         bombinoUrl,
+        konfluxPublicInfo,
       },
       true,
     );
@@ -119,6 +122,7 @@ export const createResources = async (
       namespace,
       isPrivate: isPrivateRepo,
       bombinoUrl,
+      konfluxPublicInfo,
     });
     await createSecrets(secretsToCreate, namespace, false);
   }

@@ -405,7 +405,7 @@ type CreateImageRepositoryType = {
   namespace: string;
   isPrivate: boolean;
   bombinoUrl: string;
-  konfluxPublicInfo: ReturnType<typeof useKonfluxPublicInfo>[0]; // Add konfluxPublicInfo type
+  konfluxPublicInfo: ReturnType<typeof useKonfluxPublicInfo>;
 };
 
 export const createImageRepository = async (
@@ -418,7 +418,9 @@ export const createImageRepository = async (
   }: Omit<CreateImageRepositoryType, 'bombinoUrl'>,
   dryRun: boolean = false,
 ) => {
-  const notifications = konfluxPublicInfo?.integrations?.image_controller?.notifications ?? [];
+  const [konfluxPublicInfoData, loaded, error] = konfluxPublicInfo;
+  const notifications =
+    loaded && !error ? konfluxPublicInfoData.integrations.image_controller.notifications ?? [] : []; // TBD
 
   const imageRepositoryResource: ImageRepositoryKind = {
     apiVersion: `${ImageRepositoryModel.apiGroup}/${ImageRepositoryModel.apiVersion}`,

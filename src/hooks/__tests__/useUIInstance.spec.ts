@@ -86,6 +86,9 @@ describe('useSbomUrl', () => {
           image_controller: {
             notifications: [],
           },
+          sbom_server: {
+            url: '',
+          },
         },
       },
       true,

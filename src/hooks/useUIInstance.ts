@@ -1,3 +1,4 @@
+import React from 'react';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
 export enum ConsoleDotEnvironments {
@@ -44,19 +45,38 @@ const getBombinoUrl = (
 };
 
 export const useSbomUrl = (): ((imageHash: string) => string) => {
-  const [konfluxPublicInfo] = useKonfluxPublicInfo();
-  const sbomServerUrl = konfluxPublicInfo?.integrations?.sbom_server?.url ?? '';
-
-  return (imageHash: string) => sbomServerUrl.replace('<PLACEHOLDER>', imageHash);
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  return (imageHash: string) => {
+    if (loaded && !error) {
+      const sbomServerUrl = konfluxPublicInfo.integrations.sbom_server.url ?? '';
+      return sbomServerUrl.replace('<PLACEHOLDER>', imageHash);
+    }
+  };
 };
 
-export const useBombinoUrl = () => {
-  const [konfluxPublicInfo] = useKonfluxPublicInfo();
-  const notifications = konfluxPublicInfo?.integrations?.image_controller?.notifications ?? [];
-  return getBombinoUrl(notifications);
+export const useBombinoUrl = (): string | undefined => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+
+  const bombinoUrl = React.useMemo(() => {
+    if (loaded && !error && konfluxPublicInfo) {
+      const notifications = konfluxPublicInfo.integrations.image_controller.notifications;
+      return getBombinoUrl(notifications);
+    }
+    return undefined;
+  }, [konfluxPublicInfo, loaded, error]);
+
+  return bombinoUrl;
 };
 
-export const useApplicationUrl = () => {
-  const [konfluxPublicInfo] = useKonfluxPublicInfo();
-  return konfluxPublicInfo?.integrations?.github?.application_url ?? '';
+export const useApplicationUrl = (): string | undefined => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+
+  const applicationUrl = React.useMemo(() => {
+    if (loaded && !error && konfluxPublicInfo) {
+      return konfluxPublicInfo.integrations.github.application_url;
+    }
+    return undefined;
+  }, [konfluxPublicInfo, loaded, error]);
+
+  return applicationUrl;
 };

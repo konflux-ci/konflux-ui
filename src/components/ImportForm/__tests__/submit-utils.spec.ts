@@ -13,6 +13,7 @@ jest.mock('../../../utils/create-utils', () => ({
   createComponent: jest.fn(),
   createImageRepository: jest.fn(),
   createSecret: jest.fn(),
+  useRef: jest.fn(() => ({ current: null })),
 }));
 
 jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () => ({
