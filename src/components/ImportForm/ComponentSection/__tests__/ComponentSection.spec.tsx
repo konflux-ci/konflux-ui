@@ -60,7 +60,10 @@ describe('ComponentSection', () => {
 
     await user.type(source, 'https://gitlab.com/abcd/repo.git');
     await user.tab();
-    await waitFor(() => expect(screen.getByTestId('url-annotation').value).toBe('gitlab.com'));
+    await waitFor(() => {
+      const annotationInput = screen.getByTestId('url-annotation');
+      expect(annotationInput.value).toBe('gitlab.com');
+    });
   });
 
   it('should render helper text for component name', () => {
@@ -94,7 +97,7 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() => {
       const componentNameInput = screen.getByTestId('component-name');
-      expect((componentNameInput as HTMLInputElement).value).toBe('example-repo-123');
+      expect(componentNameInput.value).toBe('example-repo-123');
     });
   });
 });

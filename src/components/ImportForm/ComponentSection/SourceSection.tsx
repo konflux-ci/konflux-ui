@@ -3,6 +3,8 @@ import { ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
+import { v4 as uuidv4 } from 'uuid';
+import { useNamespaceInfo } from '../../../shared/providers/Namespace';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';
@@ -10,6 +12,7 @@ import GitOptions from './GitOptions';
 
 export const SourceSection = () => {
   const [, { touched, error }] = useField('source.git.url');
+  const { namespaces } = useNamespaceInfo();
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched
@@ -18,11 +21,21 @@ export const SourceSection = () => {
       : ValidatedOptions.error
     : ValidatedOptions.default;
 
+  function generateRandomString(): string {
+    let uniqueName: string;
+    do {
+      uniqueName = uuidv4()
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 5);
+    } while (!/^[a-z][a-z0-9-]*[a-z0-9]$/.test(uniqueName));
+    return uniqueName;
+  }
+
   const formatToKebabCase = (name: string): string =>
     name
-      .replace(/_/g, '-')
-      .replace(/([a-z])([A-Z])/g, '$1-$2')
-      .replace(/(\d+)/g, '-$1')
+      .replace(/([a-z])([A-Z])|_|(\d+)/g, (_, lower, upper, digit) =>
+        lower && upper ? `${lower}-${upper}` : digit ? `-${digit}` : '-',
+      )
       .toLowerCase()
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '');
@@ -54,12 +67,20 @@ export const SourceSection = () => {
           name = '';
           await setFieldValue('gitURLAnnotation', '');
         }
+
         if (!touchedValues.componentName) {
-          await setFieldValue('componentName', formatToKebabCase(name));
+          let formattedName = formatToKebabCase(name);
+          const namespaceMatch = namespaces.some(
+            (namespace) => namespace.metadata.name === formattedName,
+          );
+          if (namespaceMatch) {
+            formattedName = `${formattedName}-${generateRandomString()}`;
+          }
+          await setFieldValue('componentName', formattedName);
         }
       }
     },
-    [setFieldValue, touchedValues.componentName, validated],
+    [setFieldValue, touchedValues.componentName, validated, namespaces],
   );
 
   return (
