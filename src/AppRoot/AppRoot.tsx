@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH } from '@routes/paths';
+import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
 import { NamespaceSwitcher } from '../shared/providers/Namespace/NamespaceSwitcher';
 import { AppHeader } from './AppHeader';
@@ -23,12 +24,15 @@ export const AppRoot: React.FC = () => {
         <AppHeader isSideBarOpen={isSideBarOpen} onSideBarOpen={() => setSideBarOpen((s) => !s)} />
       }
     >
-      {!showSwitcher ? (
-        <PageSection variant="light" style={{ paddingBlock: 0 }} hasShadowBottom>
-          <NamespaceSwitcher />
-        </PageSection>
-      ) : null}
-      <Outlet />
+      <SidePanelHost>
+        {!showSwitcher ? (
+          <PageSection variant="light" style={{ paddingBlock: 0 }} hasShadowBottom>
+            <NamespaceSwitcher />
+          </PageSection>
+        ) : null}
+
+        <Outlet />
+      </SidePanelHost>
     </Page>
   );
 };

@@ -51,18 +51,27 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
     }, [setError, username]),
   );
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    // Only trigger on Enter key press
-    if (event.key === 'Enter' && username.trim() !== '' && !usernames.includes(username)) {
-      void debouncedValidate(); // Trigger validation before adding to the list
+  const handleAddUsername = () => {
+    if (username.trim() !== '' && !usernames.includes(username)) {
+      void debouncedValidate();
       if (!error) {
-        // Only add the username if there is no validation error
-        if (!usernames.includes(username)) {
-          void setValue([...usernames, username]);
-        }
-        setUsername(''); // Clear input after adding the username
+        void setValue([...usernames, username]);
+        setUsername(''); // only clean username when there is no error.
       }
     }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    // for enter and tab
+    if ((event.key === 'Enter' || event.key === 'Tab') && username.trim() !== '') {
+      event.preventDefault();
+      handleAddUsername();
+    }
+  };
+
+  // for lose focus
+  const handleBlur = () => {
+    handleAddUsername();
   };
 
   return (
@@ -95,6 +104,7 @@ export const UsernameSection: React.FC<React.PropsWithChildren<Props>> = ({ disa
               void debouncedValidate(); // Trigger validation on input change
             }}
             onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
           >
             <ChipGroup>
               {usernames?.map((name) => (
