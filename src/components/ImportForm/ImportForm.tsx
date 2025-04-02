@@ -16,7 +16,7 @@ const ImportForm: React.FC = () => {
       description={
         <>
           An application is one or more components that run together.{' '}
-          <ExternalLink href="https://konflux-ci.dev/docs/how-tos/creating/">
+          <ExternalLink href="https://konflux-ci.dev/docs/building/creating/">
             Learn more
           </ExternalLink>
         </>

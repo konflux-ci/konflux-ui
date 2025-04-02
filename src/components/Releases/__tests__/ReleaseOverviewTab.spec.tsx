@@ -50,7 +50,7 @@ describe('ReleaseOverviewTab', () => {
 
     expect(screen.getByText('Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
-      `/workspaces/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
+      `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );
   });
 
@@ -58,7 +58,7 @@ describe('ReleaseOverviewTab', () => {
     render(<ReleaseOverviewTab />);
     expect(screen.getByText('Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
-      `/workspaces/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
+      `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );
   });
 });

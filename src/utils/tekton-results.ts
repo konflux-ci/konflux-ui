@@ -14,8 +14,7 @@ import {
 // REST API spec
 // https://github.com/tektoncd/results/blob/main/docs/api/rest-api-spec.md
 
-const _WORKSPACE_ = '<_workspace_>';
-const URL_PREFIX = `/plugins/tekton-results/workspaces/${_WORKSPACE_}/apis/results.tekton.dev/v1alpha2/parents`;
+const URL_PREFIX = `/plugins/tekton-results/apis/results.tekton.dev/v1alpha2/parents`;
 
 const MINIMUM_PAGE_SIZE = 5;
 const MAXIMUM_PAGE_SIZE = 10000;
@@ -207,7 +206,40 @@ export const clearCache = () => {
 };
 const InFlightStore: { [key: string]: boolean } = {};
 
-const getTRUrlPrefix = (namespace: string): string => URL_PREFIX.replace(_WORKSPACE_, namespace);
+const commonFields = [
+  'records.name',
+  'records.data.value.apiVersion',
+  'records.data.value.kind',
+  'records.data.value.metadata.annotations',
+  'records.data.value.metadata.labels',
+  'records.data.value.metadata.name',
+  'records.data.value.metadata.namespace',
+  'records.data.value.metadata.uid',
+  'records.data.value.metadata.creationTimestamp',
+  'records.data.value.metadata.ownerReferences',
+  'records.data.value.status.conditions',
+  'records.data.value.status.results',
+  'records.data.value.status.startTime',
+  'records.data.value.status.completionTime',
+];
+
+const remainingTaskrunFields = [
+  'records.data.value.status.podName',
+  'records.data.value.status.taskSpec.description',
+  'records.data.value.spec.taskRef.params',
+  'records.data.value.spec.taskRef.name',
+  'records.data.value.spec.containers',
+  'records.data.value.spec.status',
+  'records.data.value.status.taskResults',
+  'records.data.value.status.containerStatuses',
+];
+
+const remainingPipelinerunFields = [
+  'records.data.value.spec.params',
+  'records.data.value.status.pipelineSpec.tasks',
+  'records.data.value.status.pipelineSpec.finally',
+  'records.data.value.status.pipelineResults',
+];
 
 export const createTektonResultsUrl = (
   namespace: string,
@@ -216,7 +248,7 @@ export const createTektonResultsUrl = (
   options?: TektonResultsOptions,
   nextPageToken?: string,
 ): string =>
-  `${getTRUrlPrefix(namespace)}/${namespace}/results/-/records?${new URLSearchParams({
+  `${URL_PREFIX}/${namespace}/results/-/records?${new URLSearchParams({
     // default sort should always be by `create_time desc`
     ['order_by']: 'create_time desc',
     ['page_size']: `${Math.max(
@@ -224,6 +256,11 @@ export const createTektonResultsUrl = (
       Math.min(MAXIMUM_PAGE_SIZE, options?.limit >= 0 ? options.limit : options?.pageSize ?? 30),
     )}`,
     ...(nextPageToken ? { ['page_token']: nextPageToken } : {}),
+    // get partial response with required fields
+    ['PartialResponse']: 'true',
+    ['fields']: dataTypes.every((item) => item.includes('PipelineRun'))
+      ? [...commonFields, ...remainingPipelinerunFields].join(',')
+      : [...commonFields, ...remainingTaskrunFields].join(','),
     filter: AND(
       IN('data_type', dataTypes),
       filter,
@@ -366,9 +403,9 @@ export const getTaskRuns = (
 //   commonFetchText(`${getTRUrlPrefix(workspace)}/${taskRunPath.replace('/records/', '/logs/')}`);
 
 export const getTaskRunLog = (namespace: string, taskRunID: string, pid: string): Promise<string> =>
-  commonFetchText(
-    `${getTRUrlPrefix(namespace)}/${namespace}/results/${pid}/logs/${taskRunID}`,
-  ).catch(() => throw404());
+  commonFetchText(`${URL_PREFIX}/${namespace}/results/${pid}/logs/${taskRunID}`).catch(() =>
+    throw404(),
+  );
 
 export const createTektonResultsQueryKeys = (
   model: K8sModelCommon,

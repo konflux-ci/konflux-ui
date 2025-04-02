@@ -56,7 +56,7 @@ export const createRBs = async (
     metadata: {
       // To sanitize the username and ensure every user just has one role
       // in the namespace.
-      name: `${sanitizeUsername(username)}`,
+      name: `konflux-${role.toLowerCase()}-${sanitizeUsername(username)}-user-actions`,
       namespace,
     },
     roleRef: {
@@ -69,7 +69,6 @@ export const createRBs = async (
         kind: 'User',
         apiGroup: RoleBindingGroupVersionKind.group,
         name: username,
-        namespace,
       },
     ],
   }));
@@ -98,14 +97,7 @@ export const deleteRB = async (roleBinding: RoleBinding, dryRun?: boolean): Prom
     },
   };
 
-  // K8sQueryDeleteResource enjoys the k8sDeleteResource to delete resources.
-  // However, based on the design of k8sDeleteResource, 'dryRun' just affect the
-  // query parameter but would not affect commonFetchJSON.delete.
-  // That is to say, with 'true' dryRun, the resource would be also deleted.
-  // If so, we have to skip the redeletion when dryRun is false.
-  // To do: let us improve the function when the K8sQueryDeleteResource
-  // works well with dryRun.
-  dryRun ? await K8sQueryDeleteResource(queryOptions) : void 0;
+  await K8sQueryDeleteResource(queryOptions);
 };
 
 /**
@@ -125,14 +117,7 @@ export const editRB = async (
   const usernames = roleBinding.subjects.map((subject) => subject.name);
   const { role, roleMap } = values;
 
-  // We need to delete the role binding before we create the new one.
-  const existingRBs = await getRBs(roleBinding.metadata.namespace);
-
-  const roleBindingExists = existingRBs.some(
-    (binding) => binding.metadata.name === roleBinding.metadata.name,
-  );
-
-  if (roleBindingExists) {
+  if (!dryRun) {
     await deleteRB(roleBinding, dryRun);
   }
 

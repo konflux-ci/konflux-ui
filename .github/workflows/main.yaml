@@ -39,6 +39,9 @@ jobs:
 
       - name: Lint ✅
         run: yarn lint
+
+      - name: Type Checking
+        run: yarn type-checks
         
       - name: Run unit tests 🧪
         run: yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false

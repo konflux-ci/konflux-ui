@@ -225,7 +225,7 @@ describe('Pipeline run List', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ns/import?application=my-test-app`,
+      `http://localhost/ns/test-ns/import?application=my-test-app`,
     );
   });
 

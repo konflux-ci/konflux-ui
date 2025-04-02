@@ -21,7 +21,7 @@ import NamespaceListRow from './NamespaceListRow';
 const NamespaceCreateButton = () => (
   <ExternalLink
     variant="primary"
-    href="https://konflux.pages.redhat.com/docs/users/getting-started/getting-access.html"
+    href="https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html"
   >
     Go to create namespace instructions
   </ExternalLink>

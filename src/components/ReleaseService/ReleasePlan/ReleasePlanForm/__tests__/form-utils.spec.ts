@@ -215,7 +215,7 @@ describe('getReleasePlanFormBreadcrumbs', () => {
 
     expect(breadcrumbs).toEqual([
       {
-        path: `/workspaces/${namespace}/release`,
+        path: `/ns/${namespace}/release`,
         name: 'Releases',
       },
       {
@@ -232,7 +232,7 @@ describe('getReleasePlanFormBreadcrumbs', () => {
 
     expect(breadcrumbs).toEqual([
       {
-        path: `/workspaces/${namespace}/release`,
+        path: `/ns/${namespace}/release`,
         name: 'Releases',
       },
       {

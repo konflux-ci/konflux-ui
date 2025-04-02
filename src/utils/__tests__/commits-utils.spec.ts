@@ -52,6 +52,7 @@ describe('commit-utils', () => {
       expect(result[result.length - 1].components[0]).toBe('go-3');
       expect(result[result.length - 1].user).toBe('abhi');
       expect(result[result.length - 1].pipelineRuns).toHaveLength(3);
+      expect(result[result.length - 1].creationTime).toBe('2022-06-20T12:47:24Z');
     });
 
     it('Should return 0 commits', () => {
