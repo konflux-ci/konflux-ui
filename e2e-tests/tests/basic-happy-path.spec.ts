@@ -61,9 +61,9 @@ describe('Basic Happy Path', () => {
             }
           });
       }
-    }
 
-    APIHelper.deleteGitHubRepository(repoName);
+      APIHelper.deleteGitHubRepository(repoName);
+    }
   });
 
   it('Create an Application with a component', () => {

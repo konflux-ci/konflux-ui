@@ -11,7 +11,7 @@ export class Login {
     password: string = Cypress.env('PASSWORD'),
   ) {
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
-    cy.get(stageLoginPO.dex).should('be.visible').click();
+    // cy.get(stageLoginPO.dex).should('be.visible').click();
     // disabling as we don't have testing account on stage, manual log in is needed
     // cy.get(stageLoginPO.loginWithSso).click();
     // cy.get(stageLoginPO.username).type(username);
