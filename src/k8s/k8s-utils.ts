@@ -42,14 +42,8 @@ const getQueryString = (queryParams: QueryParams) =>
     .map(([key, value = '']) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&');
 
-const getK8sAPIPath = (
-  { apiGroup = 'core', apiVersion }: K8sModelCommon,
-  activeWorkspace?: string,
-) => {
+const getK8sAPIPath = ({ apiGroup = 'core', apiVersion }: K8sModelCommon) => {
   let path = '';
-  if (activeWorkspace) {
-    path += `/workspaces/${activeWorkspace}`;
-  }
   const isLegacy = apiGroup === 'core' && apiVersion === 'v1';
   path += isLegacy ? `/api/${apiVersion}` : `/apis/${apiGroup}/${apiVersion}`;
   return path;
@@ -207,7 +201,6 @@ export const k8sWatch = (
     resourceVersion?: string;
     ns?: string;
     fieldSelector?: string;
-    ws?: string;
   } = {},
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
@@ -217,7 +210,6 @@ export const k8sWatch = (
   const opts: {
     queryParams: QueryParams<Selector>;
     ns?: string;
-    ws?: string;
   } = { queryParams };
   const wsOptionsUpdated: WebSocketOptions = {
     path: '',
@@ -240,10 +232,6 @@ export const k8sWatch = (
 
   if (query.ns) {
     opts.ns = query.ns;
-  }
-
-  if (query.ws || query.ns) {
-    opts.ws = query.ws ?? query.ns;
   }
 
   if (query.resourceVersion) {

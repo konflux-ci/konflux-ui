@@ -66,7 +66,7 @@ jest.mock('../../../../hooks/useBuildPipelines', () => ({
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
-const useBuildPipelinesMock = useBuildPipelines as jest.mock;
+const useBuildPipelinesMock = useBuildPipelines as jest.Mock;
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
@@ -94,7 +94,7 @@ describe('CommitsListView', () => {
     const addButton = screen.queryByText('Add component');
     expect(addButton).toBeInTheDocument();
     expect(addButton.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ns/import?application=purple-mermaid-app`,
+      `http://localhost/ns/test-ns/import?application=purple-mermaid-app`,
     );
   });
 

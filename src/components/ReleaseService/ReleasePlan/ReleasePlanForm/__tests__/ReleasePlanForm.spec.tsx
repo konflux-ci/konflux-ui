@@ -38,7 +38,7 @@ describe('ReleasePlanForm', () => {
     expect(result.getByRole('textbox', { name: 'Release plan name' })).toBeVisible();
     const breadcrumbLink = result.getByRole('link', { name: /release/i });
     fireEvent.click(breadcrumbLink);
-    expect(breadcrumbLink).toHaveAttribute('href', '/workspaces/test-ns/release');
+    expect(breadcrumbLink).toHaveAttribute('href', '/ns/test-ns/release');
   });
 
   it('should show edit form if edit flag is provided', () => {
