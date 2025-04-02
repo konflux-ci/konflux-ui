@@ -1,6 +1,6 @@
 import React from 'react';
 import { useField, useFormikContext } from 'formik';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
+import { useSnapshotsForApplication } from '../../../../hooks/useSnapshots';
 import DropdownField from '../../../../shared/components/formik-fields/DropdownField';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
 import { useNamespace } from '../../../../shared/providers/Namespace';
@@ -15,34 +15,31 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
 ) => {
   const { setErrors } = useFormikContext();
   const namespace = useNamespace();
-  const [snapshots, loaded, error] = useSnapshots(namespace);
+  const {
+    data: snapshots,
+    isLoading,
+    error,
+  } = useSnapshotsForApplication(namespace, props.applicationName);
   const [, , { setValue }] = useField<string>(props.name);
 
-  const filteredSnapshots = React.useMemo(
-    () =>
-      loaded && props.applicationName && !error
-        ? snapshots?.filter((sn) => sn.spec?.application === props.applicationName)
-        : snapshots,
-    [error, loaded, props.applicationName, snapshots],
-  );
-
   const dropdownItems = React.useMemo(
-    () => filteredSnapshots?.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) ?? [],
-    [filteredSnapshots],
+    () =>
+      !isLoading ? snapshots.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
+    [isLoading, snapshots],
   );
 
   React.useEffect(() => {
     // Reset snapshot dropdown value when applicationName changes
     void setValue('');
-  }, [error, loaded, props.applicationName, setErrors, setValue]);
+  }, [error, isLoading, props.applicationName, setErrors, setValue]);
 
   return (
     <>
       <DropdownField
         {...props}
         label="Snapshot"
-        placeholder={!loaded || !!error ? 'Loading snapshots...' : 'Select snapshot'}
-        isDisabled={props.isDisabled || !loaded || !!error}
+        placeholder={isLoading || !!error ? 'Loading snapshots...' : 'Select snapshot'}
+        isDisabled={props.isDisabled || isLoading || !!error}
         items={dropdownItems}
         onChange={(app: string) => setValue(app)}
       />
