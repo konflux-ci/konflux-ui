@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { SelectVariant, SelectOption } from '@patternfly/react-core/deprecated';
+import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { useSnapshots } from '../../../../hooks/useSnapshots';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
@@ -72,14 +72,8 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
         options={dropdownItems}
         onSelect={(_, selection) => setValue(selection as string)}
         onClear={handleClear}
-        onFilter={(_, value) => {
+        onFilterSearch={(value) => {
           value && debouncedSetSearchTerm(value);
-          const filteredOptions = dropdownItems.filter((item) =>
-            item.value.toLowerCase().includes(value.toLowerCase()),
-          );
-          return filteredOptions.map((item) => (
-            <SelectOption value={item.value} isDisabled={item.disabled} key={item.key} />
-          ));
         }}
       />
       {error ? (

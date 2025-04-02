@@ -22,6 +22,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
   toggleAriaLabel,
   onSelect: onSelectCallback,
   onClear: onClearCallback,
+  onFilterSearch,
   ...restProps
 }) => {
   const [field, { touched, error }] = useField<string[]>(name);
@@ -78,6 +79,15 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
     onClearCallback && onClearCallback();
   };
 
+  const onFilter = (_, value: string) => {
+    onFilterSearch(value);
+    return newOptions
+      .filter((option) => option.value.includes(value))
+      .map((option) => (
+        <SelectOption key={option.value} value={option.value} isDisabled={option.disabled} />
+      ));
+  };
+
   return (
     <FormGroup fieldId={fieldId} label={label} isRequired={required}>
       <Select
@@ -94,6 +104,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
         toggleId={toggleId}
         toggleAriaLabel={toggleAriaLabel}
         onCreateOption={(hasOnCreateOption && onCreateOption) || undefined}
+        onFilter={onFilter}
       >
         {newOptions.map((op) => (
           <SelectOption value={op.value} isDisabled={op.disabled} key={op.value} />

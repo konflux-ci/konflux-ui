@@ -182,6 +182,7 @@ export interface SelectInputFieldProps extends FieldProps {
   isInputValuePersisted?: boolean;
   hasOnCreateOption?: boolean;
   onFilter?: (e: React.ChangeEvent<HTMLInputElement>, value: string) => void;
+  onFilterSearch?: (value: string) => void;
 }
 
 export interface EnvironmentFieldProps extends FieldProps {
