@@ -45,6 +45,7 @@ export class ComponentPage extends AbstractWizardPage {
 
   clickSendingPullRequest() {
     cy.contains('button', 'Sending pull request').should('be.visible').click();
+    cy.wait(30000);
   }
 
   setPipeline(pipeline: string) {
@@ -176,5 +177,15 @@ export class ComponentPage extends AbstractWizardPage {
 
   verifyComponentGHReferenceAndLink(linkText: string, link: string) {
     cy.contains('a', linkText).should('be.visible').and('have.attr', 'href', link);
+  }
+
+  verifyCustomPipelineStatus() {
+    Common.waitForLoad();
+    this.checkStatusOnModal('Custom');
+  }
+
+  verifySendPRPipelineStatus() {
+    Common.waitForLoad();
+    this.checkStatusOnModal('Send pull request');
   }
 }

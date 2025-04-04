@@ -105,18 +105,18 @@ describe('Basic Happy Path', () => {
       Applications.clickBreadcrumbLink(applicationName);
     });
 
-    it('Merge the auto-generated PR, and verify the event status on modal', () => {
+    it('Merge the auto-generated PR, and verify the event status on modal', async () => {
       Applications.goToComponentsTab();
       // Pipeline build plan was removed from the Pipeline runs Tab
       // See https://issues.redhat.com/browse/KFLUXBUGS-603
       ComponentsTabPage.openComponent(componentName);
-      // Use clickSendingPullRequest() until the bug is fixed
-      // https://issues.redhat.com/browse/KFLUXUI-226
+      componentPage.verifySendPRPipelineStatus();
       componentPage.clickSendingPullRequest();
-      // componentPage.clickMergePullRequest();
+      componentPage.closeModal();
+      componentPage.clickMergePullRequest();
       componentPage.verifyAndWaitForPRIsSent();
 
-      APIHelper.mergePR(
+      await APIHelper.mergePR(
         repoOwner,
         repoName,
         1,
@@ -126,6 +126,7 @@ describe('Basic Happy Path', () => {
 
       componentPage.verifyAndWaitForPRMerge();
       componentPage.closeModal();
+      componentPage.verifyCustomPipelineStatus();
       // Go back to Components tab
       Applications.clickBreadcrumbLink(applicationName);
       Applications.goToComponentsTab();
