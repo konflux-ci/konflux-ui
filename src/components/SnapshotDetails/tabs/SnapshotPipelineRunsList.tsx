@@ -1,16 +1,20 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
-import { Table } from '../../../shared';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
-import PipelineRunsFilterToolbar from '../../Filter/PipelineRunsFilterToolbar';
-import { createFilterObj, filterPipelineRuns } from '../../Filter/utils/pipelineruns-filter-utils';
-import { PipelineRunsFilterContext } from '../../Filter/utils/PipelineRunsFilterContext';
+import PipelineRunsFilterToolbar from '../../Filter/toolbars/PipelineRunsFilterToolbar';
+import {
+  filterPipelineRuns,
+  PipelineRunsFilterState,
+} from '../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -31,7 +35,12 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   nextPageProps,
   customFilter,
 }) => {
-  const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters: PipelineRunsFilterState = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+    type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
+  });
   const { name, status, type } = filters;
 
   const statusFilterObj = React.useMemo(

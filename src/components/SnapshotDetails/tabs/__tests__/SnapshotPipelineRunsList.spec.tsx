@@ -1,6 +1,6 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
@@ -154,7 +154,7 @@ const snapShotPLRs = [
 ];
 
 const TestedComponent = ({ name, pipelineruns, loaded }) => (
-  <PipelineRunsFilterContextProvider>
+  <FilterContextProvider filterParams={['name', 'status', 'type']}>
     <SnapshotPipelineRunsList
       applicationName={name}
       getNextPage={null}
@@ -162,7 +162,7 @@ const TestedComponent = ({ name, pipelineruns, loaded }) => (
       loaded={loaded}
       nextPageProps={{ hasNextPage: true }}
     />
-  </PipelineRunsFilterContextProvider>
+  </FilterContextProvider>
 );
 
 describe('SnapshotPipelinerunsTab', () => {
