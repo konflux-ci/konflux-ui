@@ -11,6 +11,7 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
@@ -34,6 +35,7 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
@@ -62,6 +64,7 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
@@ -87,6 +90,7 @@ describe('PipelineRunsFilterToolbar', () => {
       name: '',
       status: ['Succeeded'],
       type: [],
+      commitId: [],
     });
   });
 
@@ -99,6 +103,7 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
@@ -124,6 +129,7 @@ describe('PipelineRunsFilterToolbar', () => {
       name: '',
       status: [],
       type: ['build'],
+      commitId: [],
     });
   });
 });

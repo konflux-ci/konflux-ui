@@ -6,6 +6,7 @@ export type PipelineRunsFilterState = {
   name: string;
   status: string[];
   type: string[];
+  commitId: string[];
 };
 
 export const filterPipelineRuns = (
@@ -13,18 +14,20 @@ export const filterPipelineRuns = (
   filters: PipelineRunsFilterState,
   customFilter?: (plr: PipelineRunKind) => boolean,
 ): PipelineRunKind[] => {
-  const { name, status, type } = filters;
+  const { name, status, type, commitId } = filters;
 
   return pipelineRuns
     .filter((plr) => {
       const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+      const runCommit = plr?.metadata.labels[PipelineRunLabel.COMMIT_LABEL];
       return (
         (!name ||
           plr.metadata.name.indexOf(name) >= 0 ||
           plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(name.trim().toLowerCase()) >=
             0) &&
         (!status.length || status.includes(pipelineRunStatus(plr))) &&
-        (!type.length || type.includes(runType))
+        (!type.length || type.includes(runType)) &&
+        (!commitId.length || commitId.includes(runCommit))
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));

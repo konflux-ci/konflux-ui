@@ -26,6 +26,16 @@ type PipelineRunsListViewProps = {
   customFilter?: (plr: PipelineRunKind) => boolean;
 };
 
+const getUniqueCommitLabels = (pipelineRuns: PipelineRunKind[]): string[] => {
+  return pipelineRuns.reduce((uniqueLabels, plr) => {
+    const commitLabel = plr.metadata?.labels[PipelineRunLabel.COMMIT_LABEL];
+    if (commitLabel && !uniqueLabels.includes(commitLabel)) {
+      uniqueLabels.push(commitLabel);
+    }
+    return uniqueLabels;
+  }, [] as string[]);
+};
+
 const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListViewProps>> = ({
   applicationName,
   componentName,
@@ -35,7 +45,6 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
   const { name, status, type } = filters;
-
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
       applicationLoaded ? namespace : null,
@@ -71,6 +80,22 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     [pipelineRuns, customFilter],
   );
 
+  const uniqueCommitLabels = React.useMemo(
+    () => getUniqueCommitLabels(pipelineRuns),
+    [pipelineRuns],
+  );
+
+  const commitFilterObj = React.useMemo(
+    () =>
+      createFilterObj(
+        pipelineRuns,
+        (plr) => plr.metadata?.labels[PipelineRunLabel.COMMIT_LABEL],
+        uniqueCommitLabels,
+        customFilter,
+      ),
+    [pipelineRuns, customFilter, uniqueCommitLabels],
+  );
+
   const filteredPLRs = React.useMemo(
     () => filterPipelineRuns(pipelineRuns, filters, customFilter),
     [pipelineRuns, filters, customFilter],
@@ -103,6 +128,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           onClearFilters={onClearFilters}
           typeOptions={typeFilterObj}
           statusOptions={statusFilterObj}
+          commitOptions={commitFilterObj}
         />
       )}
       <Table
