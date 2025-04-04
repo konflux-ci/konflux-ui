@@ -11,13 +11,12 @@ import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptySt
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { AccessReviewResources } from '../../../types';
 import PageAccessCheck from '../../PageAccess/PageAccessCheck';
-import { sanitizeUsername } from './form-utils';
 import { UserAccessFormPage } from './UserAccessFormPage';
 
 const EditAccessPage: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { bindingName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [binding, loaded, error] = useRoleBinding(namespace, sanitizeUsername(bindingName));
+  const [binding, loaded, error] = useRoleBinding(namespace, bindingName);
 
   useDocumentTitle(`Edit access to namespace, ${namespace} | ${FULL_APPLICATION_TITLE}`);
 
