@@ -87,4 +87,13 @@ describe('SecurityEnterpriseContractTab', () => {
     expect(value[1].textContent).toBe('0');
     expect(value[2].textContent).toBe('1');
   });
+
+  it('should pagination well for large ec reports', () => {
+    routerRenderer(<SecurityEnterpriseContractTab pipelineRun="dummy-1" />);
+    // The first '1-2 of 2' ensures user can change row counts of per page,
+    // while the second one ensures user can input the exact page number.
+    expect(document.getElementById('options-menu-top-pagination').textContent).toContain(
+      '1 - 2 of 2 1 - 2 of 2',
+    );
+  });
 });
