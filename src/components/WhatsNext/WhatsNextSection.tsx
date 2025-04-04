@@ -47,12 +47,15 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
     DISMISSED_CARD_STORAGE_KEY,
   );
 
-  const handleCardDismissal = (id: number) => {
-    setWhatsNextData((prev) => prev.filter((item) => item.id !== id));
-    let dismissedCards: number[] = [];
-    if (localStorageItem !== null) dismissedCards = localStorageItem;
-    setLocalStorageItem([id, ...dismissedCards]);
-  };
+  const handleCardDismissal = React.useCallback(
+    (id: number) => {
+      setWhatsNextData((prev) => prev.filter((item) => item.id !== id));
+      let dismissedCards: number[] = [];
+      if (localStorageItem !== null) dismissedCards = localStorageItem;
+      setLocalStorageItem([id, ...dismissedCards]);
+    },
+    [localStorageItem, setLocalStorageItem],
+  );
 
   React.useEffect(() => {
     const list: WhatsNextItem[] = whatsNextItems.filter(
@@ -61,59 +64,57 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
     setWhatsNextData(list);
   }, [whatsNextItems, localStorageItem]);
 
-  return (
-    whatsNextData?.length > 0 && (
-      <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-        <Title size="lg" headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
-          What&apos;s next?
-        </Title>
-        {whatsNextData.map((item) => (
-          <Card className="whats-next-card" key={item.id} isFlat>
-            <SplitItem>
-              <img src={item.icon} alt={item.title} className="whats-next-card__icon" />
-            </SplitItem>
-            <SplitItem className="whats-next-card__content" isFilled>
-              <Title headingLevel="h4">{item.title}</Title>
-              <HelperText>{item.description}</HelperText>
-            </SplitItem>
-            <SplitItem className="whats-next-card__cta" data-test={item.cta.testId}>
-              <ButtonWithAccessTooltip
-                {...(item.cta.onClick
-                  ? { onClick: item.cta.onClick }
-                  : !item.cta.external
-                    ? {
-                        component: (props) => <Link {...props} to={item.cta.href} />,
-                      }
-                    : {
-                        component: 'a',
-                        href: item.cta.href,
-                        target: '_blank',
-                        rel: 'noreferrer',
-                      })}
-                isDisabled={item.cta.disabled}
-                tooltip={item.cta.disabledTooltip}
-                variant="secondary"
-                analytics={item.cta.analytics}
-              >
-                {item.cta.label}
-              </ButtonWithAccessTooltip>
-              {item.helpLink && (
-                <ExternalLink href={item.helpLink} isInline={false}>
-                  Learn more
-                </ExternalLink>
-              )}
-              <CloseButton
-                dataTestID="close-button"
-                onClick={() => {
-                  handleCardDismissal(item.id);
-                }}
-              />
-            </SplitItem>
-          </Card>
-        ))}
-      </PageSection>
-    )
-  );
+  return whatsNextData?.length > 0 ? (
+    <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
+      <Title size="lg" headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
+        What&apos;s next?
+      </Title>
+      {whatsNextData.map((item) => (
+        <Card className="whats-next-card" key={item.id} isFlat>
+          <SplitItem>
+            <img src={item.icon} alt={item.title} className="whats-next-card__icon" />
+          </SplitItem>
+          <SplitItem className="whats-next-card__content" isFilled>
+            <Title headingLevel="h4">{item.title}</Title>
+            <HelperText>{item.description}</HelperText>
+          </SplitItem>
+          <SplitItem className="whats-next-card__cta" data-test={item.cta.testId}>
+            <ButtonWithAccessTooltip
+              {...(item.cta.onClick
+                ? { onClick: item.cta.onClick }
+                : !item.cta.external
+                  ? {
+                      component: (props) => <Link {...props} to={item.cta.href} />,
+                    }
+                  : {
+                      component: 'a',
+                      href: item.cta.href,
+                      target: '_blank',
+                      rel: 'noreferrer',
+                    })}
+              isDisabled={item.cta.disabled}
+              tooltip={item.cta.disabledTooltip}
+              variant="secondary"
+              analytics={item.cta.analytics}
+            >
+              {item.cta.label}
+            </ButtonWithAccessTooltip>
+            {item.helpLink && (
+              <ExternalLink href={item.helpLink} isInline={false}>
+                Learn more
+              </ExternalLink>
+            )}
+            <CloseButton
+              dataTestID="close-button"
+              onClick={() => {
+                handleCardDismissal(item.id);
+              }}
+            />
+          </SplitItem>
+        </Card>
+      ))}
+    </PageSection>
+  ) : null;
 };
 
 export default WhatsNextSection;
