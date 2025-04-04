@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@patternfly/react-core';
-import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
+import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
@@ -65,6 +65,17 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         <Timestamp
           timestamp={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : ''}
         />
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.commitId}>
+      <Link
+        to={COMMIT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName: obj.metadata?.name,
+          commitName: obj.metadata?.uid,
+        })}
+      >
+        {obj.metadata?.uid}
+      </Link>
       </TableData>
       {showVulnerabilities ? (
         <TableData
