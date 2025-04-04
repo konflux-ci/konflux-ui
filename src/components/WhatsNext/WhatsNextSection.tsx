@@ -51,7 +51,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
     (id: number) => {
       setWhatsNextData((prev) => prev.filter((item) => item.id !== id));
       let dismissedCards: number[] = [];
-      if (localStorageItem !== null) dismissedCards = localStorageItem;
+      if (localStorageItem !== null) dismissedCards = localStorageItem as number[];
       setLocalStorageItem([id, ...dismissedCards]);
     },
     [localStorageItem, setLocalStorageItem],
