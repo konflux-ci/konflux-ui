@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
-import { useBombinoUrl } from '../../hooks/useUIInstance';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { AnalyticsProperties, TrackEvents, useTrackEvent } from '../../utils/analytics';
@@ -23,7 +22,6 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
   const track = useTrackEvent();
   const navigate = useNavigate();
   const namespace = useNamespace();
-  const bombinoUrl = useBombinoUrl();
   const konfluxPublicInfoData = useKonfluxPublicInfo();
   const initialValues: ImportFormValues = {
     application: applicationName || '',
@@ -47,7 +45,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
     (values: ImportFormValues, formikHelpers: FormikHelpers<ImportFormValues>) => {
       track(TrackEvents.ButtonClicked, { link_name: 'import-submit', namespace });
 
-      createResources(values, namespace, bombinoUrl, konfluxPublicInfoData)
+      createResources(values, namespace, konfluxPublicInfoData)
         .then(({ applicationName: appName, application, component }) => {
           if (application) {
             track('Application Create', {
@@ -84,7 +82,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
           formikHelpers.setStatus({ submitError: errorMessage });
         });
     },
-    [bombinoUrl, konfluxPublicInfoData, namespace, navigate, track],
+    [konfluxPublicInfoData, namespace, navigate, track],
   );
 
   const handleReset = React.useCallback(() => {

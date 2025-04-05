@@ -33,7 +33,6 @@ export const createSecrets = async (
 export const createResources = async (
   formValues: ImportFormValues,
   namespace: string,
-  bombinoUrl: string,
   konfluxPublicInfo: ReturnType<typeof useKonfluxPublicInfo>,
 ) => {
   const {
@@ -84,7 +83,6 @@ export const createResources = async (
         component: componentName,
         namespace,
         isPrivate: isPrivateRepo,
-        bombinoUrl,
         konfluxPublicInfo,
       },
       true,
@@ -121,7 +119,6 @@ export const createResources = async (
       component: componentName,
       namespace,
       isPrivate: isPrivateRepo,
-      bombinoUrl,
       konfluxPublicInfo,
     });
     await createSecrets(secretsToCreate, namespace, false);

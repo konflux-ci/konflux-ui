@@ -1,4 +1,3 @@
-import React from 'react';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
 export enum ConsoleDotEnvironments {
@@ -57,26 +56,17 @@ export const useSbomUrl = (): ((imageHash: string) => string) => {
 export const useBombinoUrl = (): string | undefined => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
 
-  const bombinoUrl = React.useMemo(() => {
-    if (loaded && !error && konfluxPublicInfo) {
-      const notifications = konfluxPublicInfo.integrations.image_controller.notifications;
-      return getBombinoUrl(notifications);
-    }
-    return undefined;
-  }, [konfluxPublicInfo, loaded, error]);
-
-  return bombinoUrl;
+  if (loaded && !error && konfluxPublicInfo) {
+    const notifications = konfluxPublicInfo.integrations.image_controller.notifications;
+    return getBombinoUrl(notifications);
+  }
+  return undefined;
 };
 
 export const useApplicationUrl = (): string | undefined => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
-
-  const applicationUrl = React.useMemo(() => {
-    if (loaded && !error && konfluxPublicInfo) {
-      return konfluxPublicInfo.integrations.github.application_url;
-    }
-    return undefined;
-  }, [konfluxPublicInfo, loaded, error]);
-
-  return applicationUrl;
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.integrations.github.application_url;
+  }
+  return undefined;
 };
