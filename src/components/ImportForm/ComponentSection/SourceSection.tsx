@@ -4,13 +4,17 @@ import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
 import { v4 as uuidv4 } from 'uuid';
+import { useComponents } from '../../../hooks/useComponents';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
-export const SourceSection = () => {
+export const SourceSection: React.FC<{ applicationName: string }> = ({ applicationName }) => {
   const [, { touched, error }] = useField('source.git.url');
+  const namespace = useNamespace();
+  const [components] = useComponents(namespace, applicationName);
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched
@@ -28,6 +32,21 @@ export const SourceSection = () => {
     } while (!/^[a-z][a-z0-9-]*[a-z0-9]$/.test(uniqueName));
     return uniqueName;
   }
+
+  const formatToKebabCase = (name: string): string =>
+    name.replace(
+      /([a-z])([A-Z])|_|(\d+)|(^-+|-+$)|(-+)/g,
+      (_, lower, upper, digit, edge, multiple) =>
+        lower && upper
+          ? `${lower}-${upper}`
+          : digit
+            ? `-${digit}`
+            : edge
+              ? ''
+              : multiple
+                ? '-'
+                : '-',
+    );
 
   const handleChange = React.useCallback(
     async (event) => {
@@ -47,18 +66,29 @@ export const SourceSection = () => {
         }
 
         let parsed: GitUrlParse.GitUrl;
+        let name: string;
         try {
           parsed = GitUrlParse(event.target?.value ?? '');
           await setFieldValue('gitURLAnnotation', parsed?.resource);
+          name = parsed.name;
         } catch {
+          name = '';
           await setFieldValue('gitURLAnnotation', '');
         }
+
         if (!touchedValues.componentName) {
-          await setFieldValue('componentName', generateRandomString());
+          let formattedName = formatToKebabCase(name).toLowerCase();
+          const namespaceMatch = components.some(
+            (component) => component.spec.componentName.toLowerCase() === formattedName,
+          );
+          if (namespaceMatch) {
+            formattedName = `${formattedName}-${generateRandomString()}`;
+          }
+          await setFieldValue('componentName', formattedName);
         }
       }
     },
-    [setFieldValue, touchedValues.componentName, validated],
+    [setFieldValue, touchedValues.componentName, validated, components],
   );
 
   return (
