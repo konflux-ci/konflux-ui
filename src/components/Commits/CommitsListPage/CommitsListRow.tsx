@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
+import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH, PIPELINE_RUNS_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -68,6 +68,25 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
         </div>
       </TableData>
       <TableData className={commitsTableColumnClasses.byUser}>{obj.user ?? '-'}</TableData>
+      <TableData className={commitsTableColumnClasses.byUser}>
+        <div className="pipelines-component-list">
+          {obj.pipelineRuns.length > 0
+            ? obj.pipelineRuns.map((c) => (
+                <Link
+                  key={c.metadata?.name}
+                  to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: obj.application,
+                    pipelineRunName: c.metadata?.name,
+                  })}
+                  title={c.metadata?.name}
+                >
+                  {c.metadata?.name}
+                </Link>
+              ))
+            : '-'}
+        </div>
+      </TableData>
       <TableData className={commitsTableColumnClasses.committedAt}>
         <Timestamp timestamp={obj.creationTime} />
       </TableData>

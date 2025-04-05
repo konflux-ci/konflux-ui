@@ -15,6 +15,7 @@ type PipelineRunsFilterToolbarProps = {
   onClearFilters: () => void;
   typeOptions: { [key: string]: number };
   statusOptions: { [key: string]: number };
+  commitOptions: { [key: string]: number };
 };
 
 const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
@@ -22,9 +23,10 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   setFilters,
   onClearFilters,
   typeOptions,
+  commitOptions,
   statusOptions,
 }: PipelineRunsFilterToolbarProps) => {
-  const { name, status, type } = filters;
+  const { name, status, type, commitId } = filters;
 
   const onNameInput = debounce((newName: string) => {
     setFilters({ ...filters, name: newName });
@@ -61,6 +63,15 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
               values={type}
               setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
               options={typeOptions}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
+            <MultiSelect
+              label="Commit Id"
+              filterKey="commitId"
+              values={commitId}
+              setValues={(newFilters) => setFilters({ ...filters, commitId: newFilters })}
+              options={commitOptions}
             />
           </ToolbarItem>
         </ToolbarGroup>

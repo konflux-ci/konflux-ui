@@ -6,6 +6,7 @@ export const commitsTableColumnClasses = {
   committedAt: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-20 pf-m-width-10-on-xl',
   status: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   kebab: 'pf-v5-c-table__action',
+  pipelineRuns: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
 };
 
 const CommitsListHeader = () => {
@@ -25,6 +26,10 @@ const CommitsListHeader = () => {
     {
       title: 'By user',
       props: { className: commitsTableColumnClasses.byUser },
+    },
+    {
+      title: 'Pipeline runs',
+      props: { className: commitsTableColumnClasses.pipelineRuns },
     },
     {
       title: 'Latest commit at',

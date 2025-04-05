@@ -1,13 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@patternfly/react-core';
-import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
+import {
+  PIPELINE_RUNS_DETAILS_PATH,
+  COMPONENT_DETAILS_PATH,
+  COMMIT_DETAILS_PATH,
+} from '../../../routes/paths';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { calculateDuration, pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
@@ -65,6 +69,17 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         <Timestamp
           timestamp={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : ''}
         />
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.commitId}>
+        <Link
+          to={COMMIT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+            commitName: obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL],
+          })}
+        >
+          {obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL] || '-'}
+        </Link>
       </TableData>
       {showVulnerabilities ? (
         <TableData
