@@ -46,6 +46,7 @@ mkdir artifacts
 echo "running tests using image ${TEST_IMAGE}"
 COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
     -v $PWD/e2e-tests:/e2e:Z,U \
+    --timeout=3600 \
     -e CYPRESS_PR_CHECK=true \
     -e CYPRESS_KONFLUX_BASE_URL=https://localhost:8080 \
     -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
@@ -54,7 +55,22 @@ COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
 
 TEST_RUN=0
 set +e
-podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} || TEST_RUN=1
+podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} 
+PODMAN_RETURN_CODE=$?
+if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
+    case $PODMAN_RETURN_CODE in
+        255)
+            echo "Test took too long, podman exited due to timeout set to 1 hour."
+            ;;
+        130)
+            echo "Podman run was interrupted."
+            ;;
+        *)
+            echo "Podman exited with exit code: ${PODMAN_RETURN_CODE}"
+            ;;
+    esac
+    TEST_RUN=1
+fi
 
 # kill the background process running the UI
 kill $YARN_PID
