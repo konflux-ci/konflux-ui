@@ -4,15 +4,17 @@ import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
 import { v4 as uuidv4 } from 'uuid';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
+import { useComponents } from '../../../hooks/useComponents';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
-export const SourceSection = () => {
+export const SourceSection: React.FC<{ applicationName: string }> = ({ applicationName }) => {
   const [, { touched, error }] = useField('source.git.url');
-  const { namespaces } = useNamespaceInfo();
+  const namespace = useNamespace();
+  const [components] = useComponents(namespace, applicationName);
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched
@@ -32,13 +34,19 @@ export const SourceSection = () => {
   }
 
   const formatToKebabCase = (name: string): string =>
-    name
-      .replace(/([a-z])([A-Z])|_|(\d+)/g, (_, lower, upper, digit) =>
-        lower && upper ? `${lower}-${upper}` : digit ? `-${digit}` : '-',
-      )
-      .toLowerCase()
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
+    name.replace(
+      /([a-z])([A-Z])|_|(\d+)|(^-+|-+$)|(-+)/g,
+      (_, lower, upper, digit, edge, multiple) =>
+        lower && upper
+          ? `${lower}-${upper}`
+          : digit
+            ? `-${digit}`
+            : edge
+              ? ''
+              : multiple
+                ? '-'
+                : '-',
+    );
 
   const handleChange = React.useCallback(
     async (event) => {
@@ -69,9 +77,9 @@ export const SourceSection = () => {
         }
 
         if (!touchedValues.componentName) {
-          let formattedName = formatToKebabCase(name);
-          const namespaceMatch = namespaces.some(
-            (namespace) => namespace.metadata.name === formattedName,
+          let formattedName = formatToKebabCase(name).toLowerCase();
+          const namespaceMatch = components.some(
+            (component) => component.spec.componentName.toLowerCase() === formattedName,
           );
           if (namespaceMatch) {
             formattedName = `${formattedName}-${generateRandomString()}`;
@@ -80,7 +88,7 @@ export const SourceSection = () => {
         }
       }
     },
-    [setFieldValue, touchedValues.componentName, validated, namespaces],
+    [setFieldValue, touchedValues.componentName, validated, components],
   );
 
   return (
