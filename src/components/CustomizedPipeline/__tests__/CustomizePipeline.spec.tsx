@@ -159,7 +159,7 @@ describe('CustomizePipeline', () => {
 
   it('should render install Git app alert when there is an error', () => {
     usePipelineRunsMock.mockReturnValue([
-      [{ pac: { 'error-message': 'GitHub Application is not installed in user repository' } }],
+      [{ pac: { 'error-message': 'Git Application is not installed in user repository' } }],
       true,
     ]);
     render(

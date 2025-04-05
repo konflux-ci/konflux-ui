@@ -249,6 +249,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
+  const learnMoreGitLabUrl = 'https://konflux-ci.dev/docs/building/creating-secrets/#gitlab-source-secret';
   const track = useTrackEvent();
   const namespace = useNamespace();
   const [konfluxInfo] = useKonfluxPublicInfo();
@@ -317,7 +318,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               grant permission by uploading a repository access token.
             </Text>
             <Text component={TextVariants.p}>
-              <ExternalLink
+              {applicationUrl ? <ExternalLink
                 style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
                 href={applicationUrl}
                 analytics={{
@@ -327,12 +328,10 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 }}
               >
                 Learn more about the Git application
-              </ExternalLink>
-              <ExternalLink
+              </ExternalLink> : null}
+              {learnMoreGitLabUrl ? <ExternalLink
                 style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                href={
-                  'https://konflux-ci.dev/docs/how-tos/configuring/creating-secrets/#creating-source-control-secrets'
-                }
+                href={learnMoreGitLabUrl}
                 analytics={{
                   link_name: 'learn-more-gitlab-token',
                   link_location: 'gitlab-repository-access-token',
@@ -340,7 +339,7 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                 }}
               >
                 Learn more about GitLab repository access token
-              </ExternalLink>
+              </ExternalLink> : ""}
             </Text>
           </TextContent>
           <div className="pf-v5-u-mt-lg" />

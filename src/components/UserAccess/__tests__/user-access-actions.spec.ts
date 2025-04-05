@@ -22,16 +22,16 @@ describe('useRBActions', () => {
 
   const editPermissionItem = {
     label: 'Edit access',
-    id: 'edit-access-user1',
+    id: 'edit-access-metadata-name',
     disabled: false,
     disabledTooltip: "You don't have permission to edit access",
     cta: {
-      href: `/ns/${mockNamespace}/access/edit/user1`,
+      href: `/ns/${mockNamespace}/access/edit/metadata-name`,
     },
   };
   const deletePermissionItem = {
     label: 'Revoke access',
-    id: 'revoke-access-user1',
+    id: 'revoke-access-metadata-name',
     disabled: false,
     disabledTooltip: "You don't have permission to revoke access",
     cta: expect.any(Function),
@@ -69,16 +69,16 @@ describe('useRBActions', () => {
       {
         ...editPermissionItem,
         disabled: true,
-        id: 'edit-access-undefined',
+        id: 'edit-access-metadata-name',
         cta: {
           ...editPermissionItem.cta,
-          href: `/ns/${mockNamespace}/access/edit/undefined`,
+          href: `/ns/${mockNamespace}/access/edit/metadata-name`,
         },
       },
       {
         ...deletePermissionItem,
         disabled: true,
-        id: 'revoke-access-undefined',
+        id: 'revoke-access-metadata-name',
       },
     ];
     expect(actions).toEqual(permissionItems);
