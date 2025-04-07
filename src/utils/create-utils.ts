@@ -8,7 +8,6 @@ import {
   typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
 import { linkSecretToServiceAccount } from '../components/Secrets/utils/service-account-utils';
-import { useKonfluxPublicInfo } from '../hooks/useKonfluxPublicInfo';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
 import {
@@ -36,6 +35,7 @@ import {
   SecretFormValues,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
+import { SBOMEventNotification } from './../types/konflux-public-info';
 import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
@@ -405,7 +405,7 @@ type CreateImageRepositoryType = {
   namespace: string;
   isPrivate: boolean;
   bombinoUrl: string;
-  konfluxPublicInfo: ReturnType<typeof useKonfluxPublicInfo>;
+  notifications: SBOMEventNotification[];
 };
 
 export const createImageRepository = async (
@@ -414,14 +414,10 @@ export const createImageRepository = async (
     component,
     namespace,
     isPrivate,
-    konfluxPublicInfo,
+    notifications,
   }: Omit<CreateImageRepositoryType, 'bombinoUrl'>,
   dryRun: boolean = false,
 ) => {
-  const [konfluxPublicInfoData, loaded, error] = konfluxPublicInfo;
-  const notifications =
-    loaded && !error ? konfluxPublicInfoData.integrations.image_controller.notifications ?? [] : []; // TBD
-
   const imageRepositoryResource: ImageRepositoryKind = {
     apiVersion: `${ImageRepositoryModel.apiGroup}/${ImageRepositoryModel.apiVersion}`,
     kind: ImageRepositoryModel.kind,

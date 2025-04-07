@@ -1,3 +1,4 @@
+import { SBOMEventNotification } from '../types/konflux-public-info';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
 export enum ConsoleDotEnvironments {
@@ -69,4 +70,12 @@ export const useApplicationUrl = (): string | undefined => {
     return konfluxPublicInfo.integrations.github.application_url;
   }
   return undefined;
+};
+
+export const useNotifications = (): SBOMEventNotification[] => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.integrations.image_controller.notifications;
+  }
+  return [];
 };

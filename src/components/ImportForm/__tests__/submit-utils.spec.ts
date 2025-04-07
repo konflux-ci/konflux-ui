@@ -44,7 +44,7 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      null,
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(2);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(2);
@@ -70,7 +70,7 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      null,
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(2);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(2);
@@ -120,7 +120,7 @@ describe('Submit Utils: createResources', () => {
         ],
       },
       'test-ws-tenant',
-      null,
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(0);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(0);
@@ -147,29 +147,7 @@ describe('Submit Utils: createResources', () => {
         importSecrets: [],
       },
       'test-ws-tenant',
-      [
-        {
-          rbac: [
-            {
-              displayName: 'Admin',
-              description: { text: 'Administrator role with full access' },
-              roleRef: {
-                apiGroup: 'rbac.authorization.k8s.io',
-                kind: 'ClusterRole',
-                name: 'admin',
-              },
-            },
-          ],
-          environment: 'test-environment',
-          integrations: {
-            github: { application_url: 'https://github.com/' },
-            sbom_server: { url: 'https://sbom.server/' },
-            image_controller: null,
-          },
-        },
-        false,
-        null,
-      ],
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(0);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(0);
