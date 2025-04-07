@@ -50,7 +50,7 @@ export const useAppReleaseNodes = (
   loaded: boolean,
   errors: unknown[],
 ] => {
-  const [releases, releasesLoaded, releasesError] = useReleases(namespace);
+  const [releases, releasesLoaded, releasesError] = useReleases(namespace, applicationName);
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
   const allLoaded = releasesLoaded && releasePlansLoaded;
   const allErrors = [releasesError, releasePlansError].filter((e) => !!e);

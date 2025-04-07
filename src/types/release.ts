@@ -15,7 +15,19 @@ export type ReleaseKind = K8sResourceCommon & {
     startTime?: string;
     completionTime?: string;
     automated?: boolean;
+    tenantProcessing?: {
+      completionTime?: string;
+      pipelineRun?: string;
+      startTime?: string;
+      roleBinding?: string;
+    };
     managedProcessing?: {
+      completionTime?: string;
+      pipelineRun?: string;
+      startTime?: string;
+      roleBinding?: string;
+    };
+    finalProcessing?: {
       completionTime?: string;
       pipelineRun?: string;
       startTime?: string;
