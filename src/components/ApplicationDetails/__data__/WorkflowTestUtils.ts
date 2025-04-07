@@ -1,4 +1,4 @@
-import { useComponents, useSortedComponents } from '../../../hooks/useComponents';
+import { useAllComponents, useComponents, useSortedComponents } from '../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { useLatestBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
 import { useLatestIntegrationTestPipelines } from '../../../hooks/useLatestIntegrationTestPipelines';
@@ -15,6 +15,7 @@ import {
 
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
+  useAllComponents: jest.fn(),
   useSortedComponents: jest.fn(),
 }));
 jest.mock('../../../hooks/useIntegrationTestScenarios', () => ({
@@ -36,6 +37,7 @@ jest.mock('../../../hooks/useLatestIntegrationTestPipelines', () => ({
 export const getMockWorkflows = () => {
   const workflowMocks = {
     useComponentsMock: useComponents as jest.Mock,
+    useAllComponentsMock: useAllComponents as jest.Mock,
     useSortedComponentsMock: useSortedComponents as jest.Mock,
     useIntegrationTestScenariosMock: useIntegrationTestScenarios as jest.Mock,
     useLatestBuildPipelinesMock: useLatestBuildPipelines as jest.Mock,
@@ -46,6 +48,7 @@ export const getMockWorkflows = () => {
 
   const applyWorkflowMocks = (mockFns) => {
     mockFns.useComponentsMock.mockReturnValue([mockComponentsData, true]);
+    mockFns.useAllComponentsMock.mockReturnValue([mockComponentsData, true]);
     mockFns.useSortedComponentsMock.mockReturnValue([[], false]);
     mockFns.useIntegrationTestScenariosMock.mockReturnValue([
       mockIntegrationTestScenariosData,
