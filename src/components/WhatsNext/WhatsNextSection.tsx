@@ -59,7 +59,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
 
   React.useEffect(() => {
     const list: WhatsNextItem[] = whatsNextItems.filter(
-      (item) => !localStorageItem?.includes(item?.id),
+      (item) => !(localStorageItem as number[])?.includes(item?.id),
     );
     setWhatsNextData(list);
   }, [whatsNextItems, localStorageItem]);
