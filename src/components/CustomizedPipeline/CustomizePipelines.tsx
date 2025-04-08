@@ -15,13 +15,14 @@ import {
   Truncate,
 } from '@patternfly/react-core';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
-import { useNamespace } from '~/shared/providers/Namespace';
 import sendIconUrl from '../../assets/send.svg';
 import successIconUrl from '../../assets/success.svg';
+import { learnMoreGitLabUrl } from '../../consts/documentation';
 import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { PACState } from '../../hooks/usePACState';
 import { ComponentModel } from '../../models';
 import ExternalLink from '../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
 import { enablePAC, useComponentBuildStatus, getLastestImage } from '../../utils/component-utils';
@@ -249,7 +250,6 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
-  const learnMoreGitLabUrl = 'https://konflux-ci.dev/docs/building/creating-secrets/#gitlab-source-secret';
   const track = useTrackEvent();
   const namespace = useNamespace();
   const [konfluxInfo] = useKonfluxPublicInfo();
@@ -318,28 +318,34 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               grant permission by uploading a repository access token.
             </Text>
             <Text component={TextVariants.p}>
-              {applicationUrl ? <ExternalLink
-                style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                href={applicationUrl}
-                analytics={{
-                  link_name: 'install-github-app',
-                  link_location: 'manage-builds-pipelines',
-                  namespace,
-                }}
-              >
-                Learn more about the Git application
-              </ExternalLink> : null}
-              {learnMoreGitLabUrl ? <ExternalLink
-                style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                href={learnMoreGitLabUrl}
-                analytics={{
-                  link_name: 'learn-more-gitlab-token',
-                  link_location: 'gitlab-repository-access-token',
-                  namespace,
-                }}
-              >
-                Learn more about GitLab repository access token
-              </ExternalLink> : ""}
+              {applicationUrl ? (
+                <ExternalLink
+                  style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                  href={applicationUrl}
+                  analytics={{
+                    link_name: 'install-github-app',
+                    link_location: 'manage-builds-pipelines',
+                    namespace,
+                  }}
+                >
+                  Learn more about the Git application
+                </ExternalLink>
+              ) : null}
+              {learnMoreGitLabUrl ? (
+                <ExternalLink
+                  style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                  href={learnMoreGitLabUrl}
+                  analytics={{
+                    link_name: 'learn-more-gitlab-token',
+                    link_location: 'gitlab-repository-access-token',
+                    namespace,
+                  }}
+                >
+                  Learn more about GitLab repository access token
+                </ExternalLink>
+              ) : (
+                ''
+              )}
             </Text>
           </TextContent>
           <div className="pf-v5-u-mt-lg" />
