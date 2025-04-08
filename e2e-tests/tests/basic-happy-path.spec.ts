@@ -127,10 +127,7 @@ describe('Basic Happy Path', () => {
 
     it('Verify the Pipeline run details and Node Graph view', function () {
       Applications.goToPipelinerunsTab();
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(
-        'contain.text',
-        'Cancelling',
-      );
+      Applications.checkPipelineIsCancellingOrCancelled(componentName);
 
       UIhelper.getTableRow('Pipeline run List', `${componentName}-on-push`)
         .contains(componentName)
