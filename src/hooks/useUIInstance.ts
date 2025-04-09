@@ -38,7 +38,7 @@ export const useUIInstance = (): ConsoleDotEnvironments => {
 const getBombinoUrl = (
   notifications: { title: string; event: string; config?: { url: string } }[],
 ) => {
-  const notification = notifications?.find(
+  const notification = notifications.find(
     (n) => n.title === 'SBOM-event-to-Bombino' && n.event === 'repo_push',
   );
   return notification?.config?.url ?? '';
@@ -58,7 +58,7 @@ export const useBombinoUrl = (): string | undefined => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
 
   if (loaded && !error && konfluxPublicInfo) {
-    const notifications = konfluxPublicInfo.integrations.image_controller.notifications;
+    const notifications = konfluxPublicInfo.integrations.image_controller.notifications || [];
     return getBombinoUrl(notifications);
   }
   return undefined;
@@ -75,7 +75,7 @@ export const useApplicationUrl = (): string | undefined => {
 export const useNotifications = (): SBOMEventNotification[] => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
   if (loaded && !error && konfluxPublicInfo) {
-    return konfluxPublicInfo.integrations.image_controller.notifications;
+    return konfluxPublicInfo.integrations.image_controller.notifications || [];
   }
   return [];
 };
