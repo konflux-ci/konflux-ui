@@ -18,7 +18,7 @@ const ComponentDetailsTab: React.FC = () => {
   const { componentName } = useParams<RouterParams>();
   const track = useTrackEvent();
   const showModal = useModalLauncher();
-  const [component] = useComponent(namespace, componentName);
+  const [component] = useComponent(namespace, componentName, true);
   const customizePipeline = () => {
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipeline',
