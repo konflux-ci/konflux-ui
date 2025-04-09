@@ -1,4 +1,5 @@
 import { ApplicationKind, ImportSecret } from '../../types';
+import { SBOMEventNotification } from '../../types/konflux-public-info';
 import {
   createApplication,
   createComponent,
@@ -32,7 +33,7 @@ export const createSecrets = async (
 export const createResources = async (
   formValues: ImportFormValues,
   namespace: string,
-  notifications,
+  notifications: SBOMEventNotification[],
 ) => {
   const {
     source,
