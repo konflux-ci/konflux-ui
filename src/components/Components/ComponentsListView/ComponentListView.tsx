@@ -15,9 +15,10 @@ import {
   TextVariants,
   Title,
 } from '@patternfly/react-core';
+import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
@@ -110,10 +111,11 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       componentsWithLatestBuild.filter((component) => {
         const compStatus = statusFilter?.length
           ? pipelineRunStatus(component.latestBuildPipelineRun)
-          : '';
+          : 'unknown';
+
         return (
           (!nameFilter || component.metadata.name.indexOf(nameFilter) !== -1) &&
-          (!statusFilter?.length || statusFilter.includes(compStatus))
+          (!statusFilter?.length || statusFilter.includes(capitalize(compStatus)))
         );
       }),
     [componentsWithLatestBuild, statusFilter, nameFilter],
@@ -205,9 +207,10 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
   );
 
   const toolbar = (
-    <NameFilterToolbar
-      name={nameFilter}
-      setName={(name) => setFilters({ ...filters, name })}
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="name"
+      setText={(name) => setFilters({ ...filters, name })}
       onClearFilters={onClearFilters}
       dataTest="component-list-toolbar"
     >
@@ -237,7 +240,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       >
         Add component
       </ButtonWithAccessTooltip>
-    </NameFilterToolbar>
+    </BaseTextFilterToolbar>
   );
 
   return (

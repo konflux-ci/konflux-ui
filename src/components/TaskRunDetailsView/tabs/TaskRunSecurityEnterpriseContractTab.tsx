@@ -14,7 +14,7 @@ export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
   const plrName = taskRun.metadata?.labels[TektonResourceLabel.pipelinerun];
 
   return (
-    <FilterContextProvider filterParams={['name', 'status', 'component']}>
+    <FilterContextProvider filterParams={['rule', 'status', 'component']}>
       <SecurityEnterpriseContractTab pipelineRun={plrName} />
     </FilterContextProvider>
   );

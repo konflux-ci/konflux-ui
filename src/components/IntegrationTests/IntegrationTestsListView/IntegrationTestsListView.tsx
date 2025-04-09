@@ -10,7 +10,7 @@ import {
   EmptyStateActions,
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioModel } from '../../../models';
@@ -98,9 +98,10 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
     />
   );
   const DataToolbar = (
-    <NameFilterToolbar
-      name={nameFilter}
-      setName={(name) => setFilters({ name })}
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="name"
+      setText={(name) => setFilters({ name })}
       onClearFilters={onClearFilters}
       dataTest="integration-list-toolbar"
     >
@@ -113,7 +114,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
       >
         Add integration test
       </ButtonWithAccessTooltip>
-    </NameFilterToolbar>
+    </BaseTextFilterToolbar>
   );
 
   return (

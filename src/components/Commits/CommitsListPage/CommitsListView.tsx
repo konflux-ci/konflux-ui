@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
 import { HttpError } from '../../../k8s/error';
@@ -72,9 +72,10 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
 
   const DataToolbar = (
-    <NameFilterToolbar
-      name={nameFilter}
-      setName={(name) => setFilters({ ...filters, name })}
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="name"
+      setText={(name) => setFilters({ ...filters, name })}
       onClearFilters={onClearFilters}
       data-test="commit-list-toolbar"
     >
@@ -85,7 +86,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
         options={statusFilterObj}
       />
-    </NameFilterToolbar>
+    </BaseTextFilterToolbar>
   );
 
   if (error) {

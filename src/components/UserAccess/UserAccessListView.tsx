@@ -19,7 +19,7 @@ import { RoleBinding } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
-import { NameFilterToolbar } from '../Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { RBListHeader } from './RBListHeader';
 import { RBListRow } from './RBListRow';
 
@@ -64,19 +64,19 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    username: unparsedFilters.username ? (unparsedFilters.username as string) : '',
   });
-  const { name: nameFilter } = filters;
+  const { username: usernameFilter } = filters;
   const [roleBindings, loaded] = useRoleBindings(namespace);
 
   const filterRBs = React.useMemo(
     () =>
       roleBindings.filter((rb) =>
         rb.subjects.some((subject) =>
-          subject.name.toLowerCase().includes(nameFilter.toLowerCase()),
+          subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
         ),
       ),
-    [roleBindings, nameFilter],
+    [roleBindings, usernameFilter],
   );
   if (!loaded) {
     return (
@@ -92,9 +92,10 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
   return (
     <>
-      <NameFilterToolbar
-        name={nameFilter}
-        setName={(name) => setFilters({ name })}
+      <BaseTextFilterToolbar
+        text={usernameFilter}
+        label="username"
+        setText={(username) => setFilters({ username })}
         onClearFilters={onClearFilters}
         dataTest="user-access-list-toolbar"
       >
@@ -112,7 +113,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         >
           Grant access
         </ButtonWithAccessTooltip>
-      </NameFilterToolbar>
+      </BaseTextFilterToolbar>
       <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       {filterRBs.length ? (
         <Table

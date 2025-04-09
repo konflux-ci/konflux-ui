@@ -11,7 +11,7 @@ import {
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { FieldArray, useField } from 'formik';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useDeepCompareMemoize } from '~/shared';
 import ActionMenu from '../../../../../shared/components/action-menu/ActionMenu';
 import FilteredEmptyState from '../../../../../shared/components/empty-state/FilteredEmptyState';
@@ -95,14 +95,15 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
                   : 'Are there any CVEs you would like to add to this release?'}
               </Text>
             </TextContent>
-            <NameFilterToolbar
-              name={nameFilter}
-              setName={(name) => setFilters({ [field]: name })}
+            <BaseTextFilterToolbar
+              text={nameFilter}
+              label="name"
+              setText={(name) => setFilters({ [field]: name })}
               onClearFilters={onClearFilters}
               dataTest={`add-${field}-section-toolbar`}
             >
               <AddIssueModal bugArrayHelper={addNewBug} issueType={issueType} />
-            </NameFilterToolbar>
+            </BaseTextFilterToolbar>
             <div className="pf-v5-u-mb-md">
               <Table
                 aria-label="Simple table"

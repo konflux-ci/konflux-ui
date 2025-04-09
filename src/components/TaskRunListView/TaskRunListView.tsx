@@ -4,7 +4,7 @@ import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { TaskRunKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
-import { NameFilterToolbar } from '../Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { TaskRunListHeader } from './TaskRunListHeader';
 import TaskRunListRow from './TaskRunListRow';
 
@@ -56,9 +56,10 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, l
 
   return (
     <>
-      <NameFilterToolbar
-        name={nameFilter}
-        setName={(name) => setFilters({ name })}
+      <BaseTextFilterToolbar
+        text={nameFilter}
+        label="name"
+        setText={(name) => setFilters({ name })}
         onClearFilters={onClearFilters}
         dataTest="taskrun-list-toolbar"
       />

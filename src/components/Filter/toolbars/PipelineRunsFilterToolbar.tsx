@@ -1,6 +1,6 @@
 import { MultiSelect } from '../generic/MultiSelect';
 import { PipelineRunsFilterState } from '../utils/pipelineruns-filter-utils';
-import { NameFilterToolbar } from './NameFilterToolbar';
+import { BaseTextFilterToolbar } from './BaseTextFIlterToolbar';
 
 type PipelineRunsFilterToolbarProps = {
   filters: PipelineRunsFilterState;
@@ -20,9 +20,10 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   const { name, status, type } = filters;
 
   return (
-    <NameFilterToolbar
-      name={name}
-      setName={(newName) => setFilters({ ...filters, name: newName })}
+    <BaseTextFilterToolbar
+      text={name}
+      label="name"
+      setText={(newName) => setFilters({ ...filters, name: newName })}
       onClearFilters={onClearFilters}
     >
       <MultiSelect
@@ -39,7 +40,7 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
         setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
         options={typeOptions}
       />
-    </NameFilterToolbar>
+    </BaseTextFilterToolbar>
   );
 };
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
@@ -45,9 +45,10 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <NameFilterToolbar
-        name={nameFilter}
-        setName={(name) => setFilters({ name })}
+      <BaseTextFilterToolbar
+        text={nameFilter}
+        label="name"
+        setText={(name) => setFilters({ name })}
         onClearFilters={onClearFilters}
         dataTest="release-plan-list-toolbar"
       />

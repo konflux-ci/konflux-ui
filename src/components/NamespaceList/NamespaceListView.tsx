@@ -13,7 +13,7 @@ import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmpt
 import { useNamespaceInfo } from '../../shared/providers/Namespace';
 import { NamespaceKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
-import { NameFilterToolbar } from '../Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import PageLayout from '../PageLayout/PageLayout';
 import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
@@ -77,14 +77,15 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
             </AppEmptyState>
           ) : (
             <>
-              <NameFilterToolbar
-                name={nameFilter}
-                setName={(name) => setFilters({ name })}
+              <BaseTextFilterToolbar
+                text={nameFilter}
+                label="name"
+                setText={(name) => setFilters({ name })}
                 onClearFilters={onClearFilters}
                 dataTest="namespace-list-toolbar"
               >
                 <NamespaceCreateButton />
-              </NameFilterToolbar>
+              </BaseTextFilterToolbar>
               {filteredNamespaces.length !== 0 ? (
                 <Table
                   data={filteredNamespaces}

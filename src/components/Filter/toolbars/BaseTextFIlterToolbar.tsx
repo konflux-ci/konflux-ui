@@ -2,23 +2,25 @@ import { Children } from 'react';
 import { SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
 import { debounce } from 'lodash-es';
 
-type NameFilterToolbarProps = {
-  name: string;
-  setName: (string) => void;
+type BaseTextFilterToolbarProps = {
+  text: string;
+  label: string;
+  setText: (string) => void;
   onClearFilters: () => void;
   children?: React.ReactNode;
   dataTest?: string;
 };
 
-export const NameFilterToolbar = ({
-  name,
-  setName,
+export const BaseTextFilterToolbar = ({
+  text,
+  label,
+  setText,
   onClearFilters,
   children,
   dataTest,
-}: NameFilterToolbarProps) => {
-  const onNameInput = debounce((newName: string) => {
-    setName(newName);
+}: BaseTextFilterToolbarProps) => {
+  const onTextInput = debounce((newName: string) => {
+    setText(newName);
   }, 600);
 
   return (
@@ -26,13 +28,13 @@ export const NameFilterToolbar = ({
       <ToolbarContent>
         <ToolbarItem className="pf-v5-u-ml-0">
           <SearchInput
-            name="nameInput"
-            data-test="name-input-filter"
+            name={`${label}Input`}
+            data-test={`${label}-input-filter`}
             type="search"
-            aria-label="name filter"
-            placeholder="Filter by name..."
-            onChange={(_, n) => onNameInput(n)}
-            value={name}
+            aria-label={`${label} filter`}
+            placeholder={`Filter by ${label}...`}
+            onChange={(_, n) => onTextInput(n)}
+            value={text}
           />
         </ToolbarItem>
         {Children.map(children, (child, index) => (

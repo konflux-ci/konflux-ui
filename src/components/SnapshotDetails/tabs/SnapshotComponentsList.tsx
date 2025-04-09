@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PageSection, PageSectionVariants, Text, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { ComponentKind } from '../../../types';
@@ -45,9 +45,10 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
         ) : (
           <>
             <Text className="pf-u-mb-lg">Component builds that are included in this snapshot</Text>
-            <NameFilterToolbar
-              name={nameFilter}
-              setName={(name) => setFilters({ name })}
+            <BaseTextFilterToolbar
+              text={nameFilter}
+              label="name"
+              setText={(name) => setFilters({ name })}
               onClearFilters={onClearFilters}
               dataTest="component-list-toolbar"
             />

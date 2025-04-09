@@ -13,7 +13,7 @@ import { useDeepCompareMemoize } from '~/shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
-import { NameFilterToolbar } from '../Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '../Filter/utils/filter-utils';
 import { EnterpriseContractTable } from './EnterpriseContractTable/EnterpriseContractTable';
 import SecurityTabEmptyState from './SecurityTabEmptyState';
@@ -48,12 +48,12 @@ export const SecurityEnterpriseContractTab: React.FC<
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    rule: unparsedFilters.rule ? (unparsedFilters.rule as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     component: unparsedFilters.component ? (unparsedFilters.component as string[]) : [],
   });
 
-  const { name: nameFilter, status: statusFilter, component: componentFilter } = filters;
+  const { rule: ruleFilter, status: statusFilter, component: componentFilter } = filters;
 
   const statusFilterObj = React.useMemo(
     () =>
@@ -71,13 +71,13 @@ export const SecurityEnterpriseContractTab: React.FC<
     return ecResultLoaded && ecResult
       ? ecResult?.filter((rule) => {
           return (
-            (!nameFilter || rule.title.toLowerCase().indexOf(nameFilter.toLowerCase()) !== -1) &&
+            (!ruleFilter || rule.title.toLowerCase().indexOf(ruleFilter.toLowerCase()) !== -1) &&
             (!statusFilter.length || statusFilter.includes(rule.status)) &&
             (!componentFilter.length || componentFilter.includes(rule.component))
           );
         })
       : undefined;
-  }, [componentFilter, ecResult, ecResultLoaded, nameFilter, statusFilter]);
+  }, [componentFilter, ecResult, ecResultLoaded, ruleFilter, statusFilter]);
 
   // result summary
   const resultSummary = React.useMemo(
@@ -86,9 +86,10 @@ export const SecurityEnterpriseContractTab: React.FC<
   );
 
   const toolbar = (
-    <NameFilterToolbar
-      name={nameFilter}
-      setName={(name) => setFilters({ ...filters, name })}
+    <BaseTextFilterToolbar
+      text={ruleFilter}
+      label="rule"
+      setText={(rule) => setFilters({ ...filters, rule })}
       onClearFilters={onClearFilters}
       dataTest="security-enterprise-contract-list-toolbar"
     >
@@ -106,7 +107,7 @@ export const SecurityEnterpriseContractTab: React.FC<
         setValues={(status) => setFilters({ ...filters, status })}
         options={statusFilterObj}
       />
-    </NameFilterToolbar>
+    </BaseTextFilterToolbar>
   );
 
   if (!ecResultLoaded && !filteredECResult) {

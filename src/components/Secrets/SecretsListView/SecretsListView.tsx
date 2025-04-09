@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bullseye, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { SECRET_CREATE_PATH } from '@routes/paths';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { NameFilterToolbar } from '~/components/Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useDeepCompareMemoize } from '~/shared';
 import secretEmptyStateIcon from '../../../assets/secret.svg';
 import { useSecrets } from '../../../hooks/useSecrets';
@@ -78,14 +78,15 @@ const SecretsListView: React.FC = () => {
 
   return (
     <>
-      <NameFilterToolbar
-        name={nameFilter}
-        setName={(name) => setFilters({ name })}
+      <BaseTextFilterToolbar
+        text={nameFilter}
+        label="name"
+        setText={(name) => setFilters({ name })}
         onClearFilters={onClearFilters}
         dataTest="secrets-list-toolbar"
       >
         {createSecretButton}
-      </NameFilterToolbar>
+      </BaseTextFilterToolbar>
       {filteredRemoteSecrets.length === 0 ? (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       ) : (

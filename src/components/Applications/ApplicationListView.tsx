@@ -19,7 +19,7 @@ import { ApplicationKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
-import { NameFilterToolbar } from '../Filter/toolbars/NameFilterToolbar';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import PageLayout from '../PageLayout/PageLayout';
 import { ApplicationListHeader } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
@@ -97,9 +97,10 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
             </AppEmptyState>
           ) : (
             <>
-              <NameFilterToolbar
-                name={nameFilter}
-                setName={(name) => setFilters({ name })}
+              <BaseTextFilterToolbar
+                text={nameFilter}
+                label="name"
+                setText={(name) => setFilters({ name })}
                 onClearFilters={onClearFilters}
                 dataTest="application-list-toolbar"
               >
@@ -117,7 +118,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 >
                   Create application
                 </ButtonWithAccessTooltip>
-              </NameFilterToolbar>
+              </BaseTextFilterToolbar>
               {filteredApplications.length !== 0 ? (
                 <Table
                   data={filteredApplications}

@@ -8,7 +8,7 @@ export const PipelineRunSecurityEnterpriseContractTab: React.FC = () => {
   const { pipelineRunName } = useParams<RouterParams>();
 
   return (
-    <FilterContextProvider filterParams={['name', 'status', 'component']}>
+    <FilterContextProvider filterParams={['rule', 'status', 'component']}>
       <SecurityEnterpriseContractTab pipelineRun={pipelineRunName} />
     </FilterContextProvider>
   );
