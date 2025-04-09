@@ -55,7 +55,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
     [localStorageItem, setLocalStorageItem],
   );
 
-  return !(localStorageItem?.length === 6) ? (
+  return !(localStorageItem?.length === whatsNextItems.length) ? (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
       <Title size="lg" headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
         What&apos;s next?
