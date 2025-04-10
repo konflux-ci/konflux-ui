@@ -19,8 +19,7 @@ build_ui_image() {
     yq eval --inplace "(.images[] | select(.name == \"*konflux-ui*\")) |=.newTag=\"${IMAGE_TAG}\"" "${ui_kustomize_yaml_path}"
     yq eval --inplace "(.images[] | select(.name == \"*konflux-ui*\")) |=.newName=\"${IMAGE_NAME}\"" "${ui_kustomize_yaml_path}"
 
-    # TODO: change to konflux-ui
-    export COMPONENT=nodejs-test
+    export COMPONENT=konflux-ui
     export AGENT_VERSION
 
     AGENT_VERSION=$(podman run $NODEJS_AGENT_IMAGE /bin/sh -c 'echo ${AGENT_VERSION}')
