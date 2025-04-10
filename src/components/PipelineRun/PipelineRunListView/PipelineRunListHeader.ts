@@ -45,7 +45,7 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
       props: { className: pipelineRunTableColumnClasses.component },
     },
     {
-      title: 'Triggered by',
+      title: 'Triggered By',
       props: { className: pipelineRunTableColumnClasses.eventType },
     },
     {
