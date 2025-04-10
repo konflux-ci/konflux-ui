@@ -8,7 +8,6 @@ import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
@@ -17,6 +16,10 @@ import PipelineRunsListView from '../PipelineRunsListView';
 
 jest.useFakeTimers();
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
+
+jest.mock('~/hooks/useSnapshots', () => ({
+  useSnapshot: jest.fn(() => [{ metadata: { name: 'snap' } }, false, null]),
+}));
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -35,10 +38,6 @@ jest.mock('../../../../hooks/useScanResults', () => ({
 jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn().mockReturnValue([[], true]),
   useComponent: jest.fn().mockReturnValue([{ metadata: { name: { test } } }, true]),
-}));
-
-jest.mock('../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => {
@@ -84,7 +83,6 @@ jest.mock('../../../../utils/rbac', () => ({
 }));
 
 const useComponentsMock = useComponents as jest.Mock;
-const mockUseSnapshots = useSnapshots as jest.Mock;
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 
 const appName = 'my-test-app';
@@ -195,7 +193,6 @@ describe('Pipeline run List', () => {
   beforeEach(() => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
 

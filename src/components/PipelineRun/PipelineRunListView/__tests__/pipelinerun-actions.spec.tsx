@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import { useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
 import { PipelineRunEventType, PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
+import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind } from '../../../../types';
 import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
@@ -28,12 +28,12 @@ jest.mock('../../../../utils/component-utils', () => {
 });
 
 jest.mock('../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
+  useSnapshot: jest.fn(),
 }));
 
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
-const mockUseSnapshots = useSnapshots as jest.Mock;
+const mockUseSnapshots = useSnapshot as jest.Mock;
 
 describe('usePipelinerunActions', () => {
   let navigateMock: jest.Mock;
@@ -42,7 +42,7 @@ describe('usePipelinerunActions', () => {
   beforeEach(() => {
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    mockUseSnapshots.mockReturnValue([{ metadata: { name: 'snp1' } }, true]);
     mockWatchResource.mockReturnValue([[], false]);
   });
 
@@ -336,7 +336,7 @@ describe('usePipelinererunAction', () => {
   beforeEach(() => {
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true, null]);
   });
 
   it('should contain disabled rerurn action & tooltip for build plr without access', () => {
@@ -411,6 +411,7 @@ describe('usePipelinererunAction', () => {
   });
 
   it('should contain disabled rerun action when snapshot missing', () => {
+    mockUseSnapshots.mockReturnValue([undefined, true, null]);
     useAccessReviewForModelMock.mockReturnValue([true, true]);
     const { result } = renderHook(() =>
       usePipelinererunAction({

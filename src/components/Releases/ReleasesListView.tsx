@@ -51,6 +51,7 @@ const ReleasesListView: React.FC = () => {
   );
 
   const filteredReleases = React.useMemo(() => {
+    if (!loaded) return [];
     switch (filterType) {
       case FilterTypes.name:
         return releases.filter((r) => r.metadata.name.indexOf(searchFilter) !== -1);
@@ -61,7 +62,7 @@ const ReleasesListView: React.FC = () => {
       default:
         return releases;
     }
-  }, [filterType, releases, searchFilter]);
+  }, [filterType, loaded, releases, searchFilter]);
 
   const sortedReleases = useSortedResources(
     filteredReleases,
