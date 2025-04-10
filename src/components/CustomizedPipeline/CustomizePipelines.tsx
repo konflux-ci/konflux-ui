@@ -331,21 +331,17 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                   Learn more about the Git application
                 </ExternalLink>
               ) : null}
-              {LEARN_MORE_GITLAB_URL ? (
-                <ExternalLink
-                  style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                  href={LEARN_MORE_GITLAB_URL}
-                  analytics={{
-                    link_name: 'learn-more-gitlab-token',
-                    link_location: 'gitlab-repository-access-token',
-                    namespace,
-                  }}
-                >
-                  Learn more about GitLab repository access token
-                </ExternalLink>
-              ) : (
-                ''
-              )}
+              <ExternalLink
+                style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                href={LEARN_MORE_GITLAB_URL}
+                analytics={{
+                  link_name: 'learn-more-gitlab-token',
+                  link_location: 'gitlab-repository-access-token',
+                  namespace,
+                }}
+              >
+                Learn more about GitLab repository access token
+              </ExternalLink>
             </Text>
           </TextContent>
           <div className="pf-v5-u-mt-lg" />
