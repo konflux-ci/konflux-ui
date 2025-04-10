@@ -1,0 +1,6 @@
+.rule-description {
+  display: flex;
+  padding-top: 8%;
+  flex-direction: column;
+  grid-column: '2 / span 4', // it cannot ensure the long description show in one line.
+}

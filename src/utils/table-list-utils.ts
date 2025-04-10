@@ -5,6 +5,7 @@ export type ColumnConfig = {
   title: string;
   className: string;
   sortable?: boolean;
+  style?: React.CSSProperties;
 };
 
 export const createTableHeaders = (
@@ -25,6 +26,7 @@ export const createTableHeaders = (
       title: column.title,
       props: {
         className: column.className,
+        style: column.style,
         ...(column.sortable && { sort: getSortParams(index) }),
       },
     }));
