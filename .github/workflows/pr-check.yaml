@@ -76,6 +76,7 @@ jobs:
 
       - name: WORKAROUND - Reduce CPU/Memory requirements in build pipeline
         run: |
+          sed -i "s|pipelinesascode.tekton.dev/original-prname:.*|pipelinesascode.tekton.dev/original-prname: \"java-quarkus-*\"|g" ./dependencies/kyverno/policy/e2e-reduce-resources.yaml
           kubectl create -f  ./dependencies/kyverno/policy/e2e-reduce-resources.yaml
 
       - name: Deploying Konflux
