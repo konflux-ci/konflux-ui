@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { ThProps } from '@patternfly/react-table';
-import { Table } from '~/shared';
+import { Table, Th, Thead, ThProps, Tr } from '@patternfly/react-table';
+import { VirtualBody } from '~/shared';
 import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
-import EnterpriseContractHeader from './EnterpriseContractHeader';
 import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
 
 type EnterpriseContractTableProps = {
@@ -71,28 +70,43 @@ export const EnterpriseContractTable: React.FC<
     columnIndex,
   });
 
-  const [expandedRowIndex, setExpandedRowIndex] = React.useState<number | null>(null);
+  const columns = [
+    { title: '', width: 10 as const }, // Expand column
+    { title: 'Rules', width: 30 as const, sort: getSortParams(1) },
+    { title: 'Status', width: 10 as const, sort: getSortParams(2) },
+    { title: 'Message', width: 30 as const },
+    { title: 'Component', width: 20 as const, sort: getSortParams(4) },
+  ];
+
   return sortedECResult ? (
-    <Table
-      virtualize
-      data={sortedECResult}
-      aria-label="ec table"
-      Header={() => EnterpriseContractHeader(getSortParams)}
-      Row={(props) => {
-        const obj = props.obj as UIEnterpriseContractData;
-        return (
-          <WrappedEnterpriseContractRow
-            {...props}
-            expandedRowIndex={expandedRowIndex}
-            setExpandedRowIndex={setExpandedRowIndex}
-            obj={obj}
-            customData={{ sortedECResult }}
-          />
-        );
-      }}
-      loaded
-      customData={{ sortedECResult }}
-      expand={true}
-    />
+    <Table variant="compact" aria-label="ec table">
+      <Thead>
+        <Tr>
+          {columns.map((column, index) => (
+            <Th key={index} width={column.width} sort={column.sort} aria-label={column.title}>
+              {column.title}
+            </Th>
+          ))}
+        </Tr>
+      </Thead>
+      <VirtualBody
+        data={sortedECResult}
+        columns={columns}
+        Row={({ obj }) => {
+          return (
+            <WrappedEnterpriseContractRow
+              obj={obj as UIEnterpriseContractData}
+              customData={{ sortedECResult }}
+            />
+          );
+        }}
+        height={400}
+        isScrolling={false}
+        onChildScroll={() => {}}
+        scrollTop={0}
+        width={400}
+        expand={false}
+      />
+    </Table>
   ) : null;
 };

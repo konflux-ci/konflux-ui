@@ -18,16 +18,13 @@ import { getRuleStatus } from '../utils';
 type EnterpriseContractRowType = {
   data: UIEnterpriseContractData;
   rowIndex: number;
-  rowExpanded: boolean;
-  onToggle: () => void;
 };
 
-const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
+const EnterpriseContractRow: React.FC<React.PropsWithChildren<EnterpriseContractRowType>> = ({
   data,
   rowIndex,
-  rowExpanded,
-  onToggle,
 }) => {
+  const [rowExpanded, setRowExpanded] = React.useState<boolean>(false);
   const namespace = useNamespace();
   const { appName } = useParams();
 
@@ -39,7 +36,7 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
           expand={{
             rowIndex,
             isExpanded: rowExpanded,
-            onToggle,
+            onToggle: () => setRowExpanded((e) => !e),
           }}
         />
         <Td>{data.title ?? '-'}</Td>
@@ -70,7 +67,7 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
                 <DescriptionListTerm>Rule Description</DescriptionListTerm>
                 <DescriptionListDescription>{data.description ?? '-'}</DescriptionListDescription>
               </DescriptionListGroup>
-              {data.collection && data.collection.length ? (
+              {data.collection && data.collection?.length ? (
                 <DescriptionListGroup>
                   <DescriptionListTerm>Collection</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -105,31 +102,18 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
 interface WrappedEnterpriseContractRowProps {
   obj: UIEnterpriseContractData;
   customData: { sortedECResult: UIEnterpriseContractData[] };
-  expandedRowIndex: number | null;
-  setExpandedRowIndex: (index: number | null) => void;
 }
 
 export const WrappedEnterpriseContractRow: React.FC<WrappedEnterpriseContractRowProps> = ({
   obj,
   customData,
-  expandedRowIndex,
-  setExpandedRowIndex,
 }) => {
   const customSortedECResult = customData?.sortedECResult;
 
   if (Array.isArray(customSortedECResult) && customSortedECResult.length > 0) {
     const index = customSortedECResult?.findIndex((item) => item === obj);
-    const isRowExpanded = expandedRowIndex === index;
 
-    return (
-      <EnterpriseContractRow
-        data={obj}
-        key={index}
-        rowIndex={index}
-        rowExpanded={isRowExpanded}
-        onToggle={() => setExpandedRowIndex(isRowExpanded ? null : index)}
-      />
-    );
+    return <EnterpriseContractRow data={obj} key={index} rowIndex={index} />;
   }
 
   return null;
