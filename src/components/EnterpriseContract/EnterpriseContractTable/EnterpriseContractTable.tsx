@@ -1,7 +1,9 @@
 import * as React from 'react';
-import { Table /* data-codemods */, Th, Thead, ThProps, Tr } from '@patternfly/react-table';
+import { ThProps } from '@patternfly/react-table';
+import { Table } from '~/shared';
 import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
-import { EnterpriseContractRow } from './EnterpriseContractRow';
+import EnterpriseContractHeader from './EnterpriseContractHeader';
+import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
 
 type EnterpriseContractTableProps = {
   ecResult: UIEnterpriseContractData[];
@@ -68,28 +70,29 @@ export const EnterpriseContractTable: React.FC<
     },
     columnIndex,
   });
+
+  const [expandedRowIndex, setExpandedRowIndex] = React.useState<number | null>(null);
   return sortedECResult ? (
-    <Table variant="compact">
-      <Thead>
-        <Tr>
-          <Th width={10} aria-label="expand toggle" />
-          <Th width={30} sort={getSortParams(1)}>
-            Rules
-          </Th>
-          <Th width={10} sort={getSortParams(2)}>
-            Status
-          </Th>
-          <Th width={30}>Message</Th>
-          <Th width={20} sort={getSortParams(4)}>
-            Component
-          </Th>
-        </Tr>
-      </Thead>
-      {sortedECResult
-        ? sortedECResult.map((rule, i) => {
-            return <EnterpriseContractRow rowIndex={i} key={i} data={rule} />;
-          })
-        : null}
-    </Table>
+    <Table
+      virtualize
+      data={sortedECResult}
+      aria-label="ec table"
+      Header={() => EnterpriseContractHeader(getSortParams)}
+      Row={(props) => {
+        const obj = props.obj as UIEnterpriseContractData;
+        return (
+          <WrappedEnterpriseContractRow
+            {...props}
+            expandedRowIndex={expandedRowIndex}
+            setExpandedRowIndex={setExpandedRowIndex}
+            obj={obj}
+            customData={{ sortedECResult }}
+          />
+        );
+      }}
+      loaded
+      customData={{ sortedECResult }}
+      expand={true}
+    />
   ) : null;
 };
