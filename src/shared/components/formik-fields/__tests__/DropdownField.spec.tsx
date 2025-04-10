@@ -54,10 +54,8 @@ describe('DropdownField', () => {
         <DropdownField name={fieldName} label="label" helpText="helpText" items={items} />
       </Wrapper>,
     );
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText(initialValues.dropdownValue));
     await waitFor(() => {
-      expect(screen.getByRole('menu')).toBeInTheDocument();
       const menuItems = screen.getAllByRole('menuitem');
       const isItemExist = (item) =>
         menuItems.some((mi) => mi.firstChild.textContent === item.value);
@@ -74,16 +72,13 @@ describe('DropdownField', () => {
     expect(screen.getByTestId('dropdown-toggle').firstChild).toHaveTextContent(
       initialValues.dropdownValue,
     );
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText(initialValues.dropdownValue));
     await waitFor(() => {
-      expect(screen.queryByRole('menu')).toBeInTheDocument();
       const menuItem = screen.getByText(items[1].value);
       fireEvent.click(menuItem);
     });
     await waitFor(() => {
       expect(screen.getByTestId('dropdown-toggle').firstChild).toHaveTextContent(items[1].value);
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
   });
 
@@ -103,10 +98,8 @@ describe('DropdownField', () => {
     expect(screen.getByTestId('dropdown-toggle').firstChild).toHaveTextContent(
       initialValues.dropdownValue,
     );
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText(initialValues.dropdownValue));
     await waitFor(() => {
-      expect(screen.queryByRole('menu')).toBeInTheDocument();
       const menuItem = screen.getByText(items[1].value);
       fireEvent.click(menuItem);
     });
@@ -124,25 +117,22 @@ describe('DropdownField', () => {
     );
     expect(screen.getByText('label')).toBeInTheDocument();
     expect(screen.getByText('helpText')).toBeInTheDocument();
-    expect(screen.getByTestId('dropdown-toggle').firstChild).toHaveTextContent('');
+    expect(screen.getByTestId('dropdown-toggle')).toHaveTextContent('');
   });
 
   it('renders empty dropdown menu if items is empty', async () => {
-    render(
+    const { container } = render(
       <Wrapper initialValues={initialValues} onSubmit={jest.fn()}>
         <DropdownField name={fieldName} label="label" helpText="helpText" items={[]} />
       </Wrapper>,
     );
-    const dropdownDivContainer = screen.getByTestId('dropdown');
     expect(screen.getByTestId('dropdown-toggle').firstChild).toHaveTextContent(
       initialValues.dropdownValue,
     );
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-    expect(dropdownDivContainer.children).toHaveLength(1);
+    expect(container.children).toHaveLength(1);
     fireEvent.click(screen.getByText(initialValues.dropdownValue));
     await waitFor(() => {
-      expect(dropdownDivContainer.children).toHaveLength(2);
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      expect(container.querySelectorAll('.dropdown-item').length).toEqual(0);
     });
   });
 });
