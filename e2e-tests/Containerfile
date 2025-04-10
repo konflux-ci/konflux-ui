@@ -1,4 +1,4 @@
-FROM quay.io/konflux_ui_qe/konflux-ui-tests-base:latest
+FROM quay.io/konflux_ui_qe/konflux-ui-tests-base:5.8.0
 
 RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
     install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
