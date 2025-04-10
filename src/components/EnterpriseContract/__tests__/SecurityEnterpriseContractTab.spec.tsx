@@ -1,14 +1,17 @@
+import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { routerRenderer } from '../../../utils/test-utils';
 import { mockEnterpriseContractUIData } from '../__data__/mockEnterpriseContractLogsJson';
+import { WrappedEnterpriseContractRow } from '../EnterpriseContractTable/EnterpriseContractRow';
 import { SecurityEnterpriseContractTab } from '../SecurityEnterpriseContractTab';
 import { useEnterpriseContractResults } from '../useEnterpriseContractResultFromLogs';
 import '@testing-library/jest-dom';
 
 jest.useFakeTimers();
 
+// Mock the custom hook
 jest.mock('../useEnterpriseContractResultFromLogs', () => ({
   useEnterpriseContractResults: jest.fn(),
 }));
@@ -16,6 +19,34 @@ jest.mock('../useEnterpriseContractResultFromLogs', () => ({
 jest.mock('~/hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
 }));
+
+jest.mock('../../../shared/components/table/TableComponent', () => {
+  return (props) => {
+    const { data, filters, selected, match, kindObj } = props;
+    const cProps = { data, filters, selected, match, kindObj };
+    const columns = props.Header(cProps);
+
+    return (
+      <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
+        <TableHeader role="rowgroup" />
+        <tbody>
+          {props.data.map((d, i) => (
+            <tr key={i}>
+              <WrappedEnterpriseContractRow
+                obj={d}
+                customData={{
+                  sortedECResult: data,
+                }}
+                expandedRowIndex={0}
+                setExpandedRowIndex={() => {}}
+              />
+            </tr>
+          ))}
+        </tbody>
+      </PfTable>
+    );
+  };
+});
 
 const mockUseEnterpriseContractResults = useEnterpriseContractResults as jest.Mock;
 
@@ -30,8 +61,6 @@ describe('SecurityEnterpriseContractTab', () => {
     mockUseEnterpriseContractResults.mockReturnValue([mockEnterpriseContractUIData, true]);
   });
 
-  afterEach(() => {});
-
   it('should render empty state for security tab when pods are missing', () => {
     mockUseEnterpriseContractResults.mockReturnValue([undefined, true]);
 
@@ -39,9 +68,9 @@ describe('SecurityEnterpriseContractTab', () => {
     screen.getByTestId('security-tab-empty-state');
   });
 
-  it('should render component security tab', () => {
+  it('should render component security tab', async () => {
     routerRenderer(securityEnterpriseContracts('dummy'));
-    screen.getByText('Missing CVE scan results');
+    await screen.findByText('Missing CVE scan results');
   });
 
   it('should filter out results based on the name input field', () => {
