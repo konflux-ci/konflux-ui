@@ -193,7 +193,6 @@ describe('Pipeline run List', () => {
   beforeEach(() => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
-    // mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
 
