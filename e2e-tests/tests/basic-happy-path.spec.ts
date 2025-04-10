@@ -112,7 +112,7 @@ describe('Basic Happy Path', () => {
       ComponentsTabPage.openComponent(componentName);
       // Use clickSendingPullRequest() until the bug is fixed
       // https://issues.redhat.com/browse/KFLUXUI-226
-      componentPage.clickSendingPullRequest();
+      componentPage.clickSendingOrMergePullRequest();
       // componentPage.clickMergePullRequest();
       componentPage.verifyAndWaitForPRIsSent();
 

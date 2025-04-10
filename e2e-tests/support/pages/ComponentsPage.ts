@@ -47,6 +47,17 @@ export class ComponentPage extends AbstractWizardPage {
     cy.contains('button', 'Sending pull request').should('be.visible').click();
   }
 
+  clickSendingOrMergePullRequest() {
+    // debug the actual text in a label
+    cy.get('[data-test="edit-build-pipeline"]')
+      .find('button')
+      .then((btn) => {
+        cy.log('Build pipeline plan label has text: ', btn.text());
+      });
+
+    cy.get('[data-test="edit-build-pipeline"]').find('button').click();
+  }
+
   setPipeline(pipeline: string) {
     cy.contains('.pf-v5-c-form__group', 'Pipeline').within(($form) => {
       cy.get(ComponentsPagePO.dropdown).click();
