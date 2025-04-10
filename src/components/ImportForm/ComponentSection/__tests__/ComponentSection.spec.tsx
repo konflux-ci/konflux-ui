@@ -62,7 +62,9 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe('gitlab.com'),
+      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+        'https://gitlab.com',
+      ),
     );
   });
 

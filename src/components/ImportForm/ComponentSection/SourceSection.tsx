@@ -69,7 +69,7 @@ export const SourceSection: React.FC<{ applicationName: string }> = ({ applicati
         let name: string;
         try {
           parsed = GitUrlParse(event.target?.value ?? '');
-          await setFieldValue('gitURLAnnotation', parsed?.resource);
+          await setFieldValue('gitURLAnnotation', `https://${parsed?.resource}`);
           name = parsed.name;
         } catch {
           name = '';
