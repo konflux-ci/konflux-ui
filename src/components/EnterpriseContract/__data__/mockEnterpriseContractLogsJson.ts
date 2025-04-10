@@ -1,3 +1,5 @@
+import { ENTERPRISE_CONTRACT_STATUS } from '~/types';
+
 export const mockEnterpriseContractYaml = `components:
 - containerImage: quay.io/redhat-appstudio/user-workload:GE4iZ-devfile-sample-1jik
   name: devfile-sample-1jik
@@ -178,7 +180,7 @@ export const mockEnterpriseContractUIData = [
     title: 'Missing CVE scan results',
     description:
       'The clair-scan task results have not been found in the SLSA Provenance attestation of the build pipeline.',
-    status: 'Failed',
+    status: ENTERPRISE_CONTRACT_STATUS.violations,
     timestamp: '2022-01-01T00:00:00Z',
     component: 'devfile-sample-python-basic-aw05',
     msg: 'CVE scan results not found',
@@ -189,7 +191,7 @@ export const mockEnterpriseContractUIData = [
     title: 'No tasks run',
     description:
       'This policy enforces that at least one Task is present in the PipelineRun attestation.',
-    status: 'Success',
+    status: ENTERPRISE_CONTRACT_STATUS.successes,
     component: 'devfile-sample-python-basic-aw05',
     collection: ['minimal'],
   },
