@@ -17,7 +17,7 @@ import {
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
 import sendIconUrl from '../../assets/send.svg';
 import successIconUrl from '../../assets/success.svg';
-import { learnMoreGitLabUrl } from '../../consts/documentation';
+import { LEARN_MORE_GITLAB_URL } from '../../consts/documentation';
 import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { PACState } from '../../hooks/usePACState';
 import { ComponentModel } from '../../models';
@@ -331,10 +331,10 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
                   Learn more about the Git application
                 </ExternalLink>
               ) : null}
-              {learnMoreGitLabUrl ? (
+              {LEARN_MORE_GITLAB_URL ? (
                 <ExternalLink
                   style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                  href={learnMoreGitLabUrl}
+                  href={LEARN_MORE_GITLAB_URL}
                   analytics={{
                     link_name: 'learn-more-gitlab-token',
                     link_location: 'gitlab-repository-access-token',
