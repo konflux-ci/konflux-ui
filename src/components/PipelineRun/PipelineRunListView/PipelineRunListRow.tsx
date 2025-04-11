@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@patternfly/react-core';
+import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
+import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
+import { ExternalLink } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
@@ -14,6 +17,7 @@ import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
+import './PipelineRunListRow.scss';
 
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,
@@ -25,6 +29,13 @@ type PipelineRunListRowProps = RowFunctionArgs<
 >;
 
 type BasePipelineRunListRowProps = PipelineRunListRowProps & { showVulnerabilities?: boolean };
+
+enum EventTypeLabel {
+  pull_request = 'Pull Request',
+  push = 'Push',
+  incoming = 'Incoming',
+  retest_all_comments = 'Retest all comments',
+}
 
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
@@ -111,6 +122,25 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           ) : (
             obj.metadata?.labels[PipelineRunLabel.COMPONENT]
           )
+        ) : (
+          '-'
+        )}
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.eventType}>
+        {obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL] === 'github' ? (
+          <GithubIcon className="git-icon" />
+        ) : obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL] === 'gitlab' ? (
+          <GitlabIcon className="git-icon" />
+        ) : null}
+
+        {obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ? (
+          <ExternalLink
+            href={`https://${obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL]}.com/${obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL]}/${obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL]}#${obj.metadata?.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL]}`}
+            text={
+              EventTypeLabel[obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]] ?? '-'
+            }
+            hideIcon={true}
+          />
         ) : (
           '-'
         )}
