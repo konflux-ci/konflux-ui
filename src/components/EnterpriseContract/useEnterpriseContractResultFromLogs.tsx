@@ -166,6 +166,5 @@ export const useEnterpriseContractResults = (
   const ecResult = React.useMemo(() => {
     return ecLoaded && ec ? mapEnterpriseContractResultData(ec) : undefined;
   }, [ec, ecLoaded]);
-
   return [ecResult, ecLoaded];
 };
