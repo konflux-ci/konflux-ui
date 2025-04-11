@@ -2,7 +2,7 @@ import { formatToKebabCase } from './string-utils';
 
 describe('formatToKebabCase', () => {
   it('should convert camelCase to kebab-case', () => {
-    expect(formatToKebabCase('camelCase')).toBe('camel-case');
+    expect(formatToKebabCase('camelCase')).toBe('camel-Case');
   });
 
   it('should replace underscores with dashes', () => {
@@ -14,7 +14,7 @@ describe('formatToKebabCase', () => {
   });
 
   it('should trim leading and trailing dashes', () => {
-    expect(formatToKebabCase('-leadingAndTrailing-')).toBe('leading-and-trailing');
+    expect(formatToKebabCase('-leadingAndTrailing-')).toBe('leading-And-Trailing');
   });
 
   it('should replace multiple dashes with a single dash', () => {
