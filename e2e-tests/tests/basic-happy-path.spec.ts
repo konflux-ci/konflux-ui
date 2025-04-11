@@ -112,7 +112,7 @@ describe('Basic Happy Path', () => {
       ComponentsTabPage.openComponent(componentName);
       // Use clickSendingPullRequest() until the bug is fixed
       // https://issues.redhat.com/browse/KFLUXUI-226
-      componentPage.clickSendingPullRequest();
+      componentPage.clickSendingOrMergePullRequest();
       // componentPage.clickMergePullRequest();
       componentPage.verifyAndWaitForPRIsSent();
 
@@ -131,10 +131,7 @@ describe('Basic Happy Path', () => {
 
     it('Verify the Pipeline run details and Node Graph view', function () {
       Applications.goToPipelinerunsTab();
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(
-        'contain.text',
-        'Cancelling',
-      );
+      Applications.checkPipelineIsCancellingOrCancelled(componentName);
 
       UIhelper.getTableRow('Pipeline run List', `${componentName}-on-push`)
         .contains(componentName)
