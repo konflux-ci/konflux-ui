@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
@@ -75,9 +75,9 @@ const commitPlrs = [
 
 const TestedComponent = () => (
   <div style={{ overflow: 'auto' }}>
-    <PipelineRunsFilterContextProvider>
+    <FilterContextProvider filterParams={['name', 'status', 'type']}>
       <CommitsPipelineRunTab />
-    </PipelineRunsFilterContextProvider>
+    </FilterContextProvider>
   </div>
 );
 

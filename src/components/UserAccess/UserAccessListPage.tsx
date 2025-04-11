@@ -6,6 +6,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { RoleBindingModel } from '../../models';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../utils/rbac';
+import { FilterContextProvider } from '../Filter/generic/FilterContext';
 import PageLayout from '../PageLayout/PageLayout';
 import { UserAccessListView } from './UserAccessListView';
 
@@ -34,7 +35,9 @@ const UserAccessPage: React.FunctionComponent = () => {
     >
       <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       <PageSection variant={PageSectionVariants.light} isFilled>
-        <UserAccessListView />
+        <FilterContextProvider filterParams={['name']}>
+          <UserAccessListView />
+        </FilterContextProvider>
       </PageSection>
     </PageLayout>
   );
