@@ -8,6 +8,7 @@ import { useComponents } from '../../../hooks/useComponents';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
+import { formatToKebabCase } from '../../../utils/string-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
@@ -32,21 +33,6 @@ export const SourceSection: React.FC<{ applicationName: string }> = ({ applicati
     } while (!/^[a-z][a-z0-9-]*[a-z0-9]$/.test(uniqueName));
     return uniqueName;
   }
-
-  const formatToKebabCase = (name: string): string =>
-    name.replace(
-      /([a-z])([A-Z])|_|(\d+)|(^-+|-+$)|(-+)/g,
-      (_, lower, upper, digit, edge, multiple) =>
-        lower && upper
-          ? `${lower}-${upper}`
-          : digit
-            ? `-${digit}`
-            : edge
-              ? ''
-              : multiple
-                ? '-'
-                : '-',
-    );
 
   const handleChange = React.useCallback(
     async (event) => {
