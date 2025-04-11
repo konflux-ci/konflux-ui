@@ -11,10 +11,12 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from '@patternfly/react-core';
+import { SortByDirection } from '@patternfly/react-table';
 import { debounce } from 'lodash-es';
 import emptyStateImgUrl from '../../assets/Application.svg';
 import { useApplications } from '../../hooks/useApplications';
 import { useSearchParam } from '../../hooks/useSearchParam';
+import { useSortedResources } from '../../hooks/useSortedResources';
 import { ApplicationModel, ComponentModel } from '../../models';
 import { IMPORT_PATH } from '../../routes/paths';
 import { Table } from '../../shared';
@@ -25,8 +27,12 @@ import { ApplicationKind } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import PageLayout from '../PageLayout/PageLayout';
-import { ApplicationListHeader } from './ApplicationListHeader';
+import getApplicationListHeader, { SortableHeaders } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
+
+const sortPaths: Record<SortableHeaders, string> = {
+  [SortableHeaders.name]: 'metadata.name',
+};
 
 const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
@@ -34,11 +40,21 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
 
-  const [applications, loaded] = useApplications(namespace);
-  applications?.sort(
-    (app1, app2) =>
-      +new Date(app2.metadata?.creationTimestamp) - +new Date(app1.metadata?.creationTimestamp),
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
+    SortByDirection.asc,
   );
+
+  const ApplicationListHeader = React.useMemo(
+    () =>
+      getApplicationListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
+        setActiveSortIndex(index);
+        setActiveSortDirection(direction);
+      }),
+    [activeSortDirection, activeSortIndex],
+  );
+
+  const [applications, loaded] = useApplications(namespace);
   const filteredApplications = React.useMemo(() => {
     const lowerCaseNameFilter = nameFilter.toLowerCase();
     return applications?.filter(
@@ -47,6 +63,13 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
         app.metadata.name.includes(lowerCaseNameFilter),
     );
   }, [nameFilter, applications]);
+
+  const sortedApplications = useSortedResources(
+    filteredApplications,
+    activeSortIndex,
+    activeSortDirection,
+    sortPaths,
+  );
 
   const onClearFilters = () => {
     setNameFilter('');
@@ -139,9 +162,9 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                   </ToolbarItem>
                 </ToolbarContent>
               </Toolbar>
-              {filteredApplications.length !== 0 ? (
+              {sortedApplications.length !== 0 ? (
                 <Table
-                  data={filteredApplications}
+                  data={sortedApplications}
                   aria-label="Application List"
                   Header={ApplicationListHeader}
                   Row={ApplicationListRow}
