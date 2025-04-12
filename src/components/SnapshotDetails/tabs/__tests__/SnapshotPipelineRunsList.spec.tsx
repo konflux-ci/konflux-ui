@@ -7,13 +7,16 @@ import { mockPipelineRuns } from '../../../../components/Components/__data__/moc
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
 import { PipelineRunStatus } from '../../../../types';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsList from '../SnapshotPipelineRunsList';
 
 jest.useFakeTimers();
+
+jest.mock('~/hooks/useSnapshots', () => ({
+  useSnapshot: jest.fn(() => [{ metadata: { name: 'snap' } }, false, null]),
+}));
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -31,10 +34,6 @@ jest.mock('../../../../hooks/useScanResults', () => ({
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(),
-}));
-
-jest.mock('../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
 }));
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
@@ -73,7 +72,6 @@ jest.mock('../../../../utils/rbac', () => ({
 
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
-const mockUseSnapshots = useSnapshots as jest.Mock;
 
 const appName = 'my-test-app';
 
@@ -172,7 +170,6 @@ describe('SnapshotPipelinerunsTab', () => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useNamespaceMock.mockReturnValue('test-ns');
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
   });
 
   it('should render spinner if pipeline data is not loaded', () => {

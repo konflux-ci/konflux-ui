@@ -4,7 +4,6 @@ import { useIntegrationTestScenarios } from '../../../../../hooks/useIntegration
 import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../hooks/useReleases';
-import { useSnapshots } from '../../../../../hooks/useSnapshots';
 import { CustomError } from '../../../../../k8s/error';
 import { Commit } from '../../../../../types';
 import {
@@ -13,7 +12,6 @@ import {
   MockComponents,
   MockReleasePlans,
   MockReleases,
-  MockSnapshots,
   MockTestPipelines,
   MockCommit,
 } from '../__data__/MockCommitWorkflowData';
@@ -46,7 +44,6 @@ const mockUseComponents = useComponents as jest.Mock;
 const mockUseIntegrationTestScenarios = useIntegrationTestScenarios as jest.Mock;
 const mockUseReleasePlans = useReleasePlans as jest.Mock;
 const mockUseReleases = useReleases as jest.Mock;
-const mockUseSnapshots = useSnapshots as jest.Mock;
 
 const commit = MockCommit;
 
@@ -62,7 +59,6 @@ describe('CommitVisualization', () => {
     mockUseIntegrationTestScenarios.mockReturnValue([MockIntegrationTests, true]);
     mockUseReleasePlans.mockReturnValue([MockReleasePlans, true]);
     mockUseReleases.mockReturnValue([MockReleases, true]);
-    mockUseSnapshots.mockReturnValue([MockSnapshots, true]);
 
     (window.SVGElement as any).prototype.getBBox = () => ({
       x: 100,
@@ -83,7 +79,6 @@ describe('CommitVisualization', () => {
     mockUseIntegrationTestScenarios.mockReturnValue([[], false]);
     mockUseReleasePlans.mockReturnValue([[], false]);
     mockUseReleases.mockReturnValue([[], false]);
-    mockUseSnapshots.mockReturnValue([[], false]);
     render(<CommitVisualization commit={commit as Commit} />);
     expect(screen.queryByTestId('commit-graph')).not.toBeInTheDocument();
   });
@@ -103,7 +98,6 @@ describe('CommitVisualization', () => {
     mockUseIntegrationTestScenarios.mockReturnValue([[], true]);
     mockUseReleasePlans.mockReturnValue([[], true]);
     mockUseReleases.mockReturnValue([[], true]);
-    mockUseSnapshots.mockReturnValue([[], true]);
 
     render(<CommitVisualization commit={commit as Commit} />);
     screen.getByText('Model does not exist');

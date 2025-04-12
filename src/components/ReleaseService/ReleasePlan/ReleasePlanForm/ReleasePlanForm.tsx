@@ -51,7 +51,7 @@ export const ReleasePlanForm: React.FC<Props> = ({
             label="Release plan name"
             placeholder="Enter name"
             isDisabled={edit}
-            required
+            isRequired
           />
           <ApplicationDropdown
             name="application"
