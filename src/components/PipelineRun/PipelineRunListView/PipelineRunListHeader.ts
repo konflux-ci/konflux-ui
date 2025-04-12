@@ -7,6 +7,7 @@ export const pipelineRunTableColumnClasses = {
   duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   kebab: 'pf-v5-c-table__action',
+  commitId: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
 };
 
 const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
@@ -42,6 +43,10 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
     {
       title: 'Component',
       props: { className: pipelineRunTableColumnClasses.component },
+    },
+    {
+      title: 'Commit Id',
+      props: { className: pipelineRunTableColumnClasses.commitId },
     },
     {
       title: ' ',

@@ -9,15 +9,21 @@ export type PipelineRunsFilterContextType = {
 };
 
 export const PipelineRunsFilterContext = createContext<PipelineRunsFilterContextType>({
-  filters: { name: '', status: [], type: [] },
+  filters: { name: '', status: [], type: [], commitId: [] },
   setFilters: () => null,
   onClearFilters: () => null,
 });
 
 export const PipelineRunsFilterContextProvider = ({ children }) => {
-  const [getValues, batchSet, batchUnset] = useSearchParamBatch(['name', 'status', 'type']);
+  const [getValues, batchSet, batchUnset] = useSearchParamBatch([
+    'name',
+    'status',
+    'type',
+    'commitId',
+  ]);
   const { name } = getValues('name');
   const { status } = getValues('status');
+  const { commitId } = getValues('commitId');
   const { type } = getValues('type');
 
   const nameFilter = name ?? '';
@@ -26,6 +32,7 @@ export const PipelineRunsFilterContextProvider = ({ children }) => {
   }, [type]);
 
   const statusFilter = useMemo(() => (status ? status.split(',') : []), [status]);
+  const commitFilter = useMemo(() => (commitId ? commitId.split(',') : []), [commitId]);
 
   const setFilters = useCallback(
     (newFilter: Record<string, string | string[]>) => {
@@ -46,7 +53,12 @@ export const PipelineRunsFilterContextProvider = ({ children }) => {
   return (
     <PipelineRunsFilterContext.Provider
       value={{
-        filters: { name: nameFilter, status: statusFilter, type: typeFilter },
+        filters: {
+          name: nameFilter,
+          status: statusFilter,
+          type: typeFilter,
+          commitId: commitFilter,
+        },
         setFilters,
         onClearFilters: batchUnset,
       }}

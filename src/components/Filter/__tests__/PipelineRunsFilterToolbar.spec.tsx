@@ -11,11 +11,13 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
+        commitOptions={{ 'commit-1': 1, 'commit-2': 2 }}
       />,
     );
 
@@ -34,11 +36,13 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
+        commitOptions={{ 'commit-1': 1, 'commit-2': 2 }}
       />,
     );
 
@@ -49,8 +53,12 @@ describe('PipelineRunsFilterToolbar', () => {
       }),
     );
     expect(name.value).toBe('test');
-    expect(setFilters.mock.calls).toHaveLength(1);
-    expect(setFilters.mock.calls[0][0]).toStrictEqual({ name: 'test', status: [], type: [] });
+    expect(setFilters.mock.calls[0][0]).toStrictEqual({
+      name: 'test',
+      status: [],
+      type: [],
+      commitId: [],
+    });
   });
 
   it('it should update status filter', () => {
@@ -62,11 +70,13 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
+        commitOptions={{ 'commit-1': 1, 'commit-2': 2 }}
       />,
     );
 
@@ -87,6 +97,7 @@ describe('PipelineRunsFilterToolbar', () => {
       name: '',
       status: ['Succeeded'],
       type: [],
+      commitId: [],
     });
   });
 
@@ -99,11 +110,13 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          commitId: [],
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
+        commitOptions={{ 'commit-1': 1, 'commit-2': 2 }}
       />,
     );
 
@@ -124,6 +137,7 @@ describe('PipelineRunsFilterToolbar', () => {
       name: '',
       status: [],
       type: ['build'],
+      commitId: [],
     });
   });
 });
