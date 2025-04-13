@@ -1,15 +1,21 @@
-import { PIPELINE_SERVICE_ACCOUNT } from '../../../consts/pipeline';
-import { K8sQueryPatchResource, K8sGetResource } from '../../../k8s';
+import { SecretModel } from '~/models/secret';
+import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../../../consts/pipeline';
+import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
-import { SecretKind, ServiceAccountKind } from '../../../types';
+import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
 
-export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
-  if (!secret || (!namespace && !secret.metadata?.namespace)) {
+export const linkSecretToServiceAccount = async (secret: SecretKind, component: ComponentKind) => {
+  // When there is no secret/component or they are not in the same namespace, return
+  if (!secret || !component || !(secret.metadata?.namespace === component?.metadata?.namespace)) {
     return;
   }
+
+  const serviceAccountName = `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${component.metadata.name}`;
+  const namespace = component.metadata.namespace;
+
   const serviceAccount = await K8sGetResource<ServiceAccountKind>({
     model: ServiceAccountModel,
-    queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace },
+    queryOptions: { name: serviceAccountName, ns: namespace },
   });
 
   const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
@@ -25,7 +31,7 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
   return K8sQueryPatchResource({
     model: ServiceAccountModel,
     queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
+      name: serviceAccountName,
       ns: namespace,
     },
     patches: [
@@ -43,15 +49,22 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
   });
 };
 
-export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespace: string) => {
-  if (!secret || (!namespace && !secret.metadata?.namespace)) {
+export const unLinkSecretFromServiceAccount = async (
+  secret: SecretKind,
+  component: ComponentKind,
+) => {
+  if (!secret || !component || !(secret.metadata?.namespace === component?.metadata?.namespace)) {
     return;
   }
+
+  const serviceAccountName = `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${component.metadata.name}`;
+  const namespace = component.metadata.namespace;
+
   const serviceAccount = await K8sGetResource<ServiceAccountKind>({
     model: ServiceAccountModel,
     queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
-      ns: namespace ?? secret.metadata?.namespace,
+      name: serviceAccountName,
+      ns: namespace,
     },
   });
 
@@ -84,7 +97,7 @@ export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespa
   return K8sQueryPatchResource({
     model: ServiceAccountModel,
     queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
+      name: serviceAccountName,
       ns: namespace,
     },
     patches: [
@@ -100,4 +113,37 @@ export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespa
       },
     ],
   });
+};
+
+export const linkSecretToAllServiceAccounts = async (
+  secret: SecretKind,
+  components: ComponentKind[],
+) => {
+  if (!secret || !components || !secret.metadata?.namespace) {
+    return;
+  }
+
+  for (const component of components) {
+    await linkSecretToServiceAccount(secret, component);
+  }
+};
+
+export const linkCommonSecretsToServiceAccount = async (component: ComponentKind) => {
+  if (!component || !component.metadata?.namespace) {
+    return;
+  }
+  const commonSecrets: SecretKind[] = await K8sListResourceItems<SecretKind>({
+    model: SecretModel,
+    queryOptions: {
+      ns: component.metadata?.namespace,
+      queryParams: {
+        labelSelector: {
+          matchLabels: { [COMMON_SECRETS_LABEL]: 'true' },
+        },
+      },
+    },
+  });
+  for (const secret of commonSecrets) {
+    await linkSecretToServiceAccount(secret, component);
+  }
 };
