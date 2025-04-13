@@ -1,20 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
-import { useFormikContext } from 'formik';
+import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { DropdownItemObject } from '../../../shared/components/dropdown';
 import KeyValueFileInputField from '../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '../../../shared/components/formik-fields/SelectInputField';
-import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../../types';
+import {
+  AddSecretFormValues,
+  SecretFor,
+  SecretTypeDropdownLabel,
+  SourceSecretType,
+} from '../../../types';
 import SecretTypeSelector from '../SecretTypeSelector';
 import {
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
   isPartnerTask,
   isPartnerTaskAvailable,
+  SecretForComponentOption,
 } from '../utils/secret-utils';
 import { ImagePullSecretForm } from './ImagePullSecretForm';
 import { KeyValueSecretForm } from './KeyValueSecretForm';
+import { SecretLinkOptions } from './SecretLinkOption';
 import { SourceSecretForm } from './SourceSecretForm';
 import './SecretTypeSubForm.scss';
 
@@ -61,12 +68,20 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
   );
 
   const [options, setOptions] = React.useState(initialOptions);
-  const currentTypeRef = React.useRef(secretType);
+  const [currentType, setCurrentType] = useState(secretType);
+  const [currentAuthType, setCurrentAuthType] = useState<string | null>(null);
 
-  const selectedForm = React.useMemo(
-    () => secretTypes.find((t) => t.label === secretType),
-    [secretType],
+  const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
+    'secretForComponentOption',
   );
+
+  const selectedForm = React.useMemo(() => {
+    const form = secretTypes.find((t) => t.label === currentType);
+    if (form?.key === 'source') {
+      form.component = <SourceSecretForm onAuthTypeChange={setCurrentAuthType} />;
+    }
+    return form;
+  }, [currentType]);
 
   const clearKeyValues = React.useCallback(() => {
     const newKeyValues = keyValues.filter((kv) => !kv.readOnlyKey);
@@ -95,6 +110,9 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
     [],
   );
 
+  const shouldShowSecretLinkOptions =
+    currentType === SecretTypeDropdownLabel.image || currentAuthType === SourceSecretType.basic;
+
   return (
     <>
       <SecretTypeSelector
@@ -103,7 +121,9 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
         isDisabled={secretFor === SecretFor.Deployment}
         onChange={(type) => {
           setTimeout(() => validateForm());
-          currentTypeRef.current = type;
+          setCurrentType(type);
+          setCurrentAuthType(null);
+          void setValue(null);
           if (type !== SecretTypeDropdownLabel.opaque) {
             resetKeyValues();
             name && isPartnerTask(name) && void setFieldValue('name', '');
@@ -113,35 +133,37 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
           }
         }}
       />
-      {isPartnerTaskAvailable(currentTypeRef.current) ? (
-        <SelectInputField
-          name="name"
-          data-test="secret-name"
-          label="Select or enter secret name"
-          toggleAriaLabel="Select or enter secret name"
-          helpText="Unique name of the new secret"
-          toggleId="secret-name-toggle"
-          variant={SelectVariant.typeahead}
-          options={options}
-          isCreatable
-          className="secret-type-subform__dropdown"
-          isInputValuePersisted
-          hasOnCreateOption
-          required
-          onSelect={(_e, value: string) => {
-            if (isPartnerTask(value)) {
-              void setFieldValue('opaque.keyValues', [
-                ...keyValues.filter((kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value)),
-                ...getSupportedPartnerTaskKeyValuePairs(value),
-              ]);
-            }
-          }}
-          onClear={() => {
-            if (isPartnerTask(name)) {
-              clearKeyValues();
-            }
-          }}
-        />
+      {isPartnerTaskAvailable(currentType) ? (
+        <>
+          <SelectInputField
+            name="name"
+            data-test="secret-name"
+            label="Select or enter secret name"
+            toggleAriaLabel="Select or enter secret name"
+            helpText="Unique name of the new secret"
+            toggleId="secret-name-toggle"
+            variant={SelectVariant.typeahead}
+            options={options}
+            isCreatable
+            className="secret-type-subform__dropdown"
+            isInputValuePersisted
+            hasOnCreateOption
+            required
+            onSelect={(_e, value: string) => {
+              if (isPartnerTask(value)) {
+                void setFieldValue('opaque.keyValues', [
+                  ...keyValues.filter((kv) => !kv.readOnlyKey && (!!kv.key || !!kv.value)),
+                  ...getSupportedPartnerTaskKeyValuePairs(value),
+                ]);
+              }
+            }}
+            onClear={() => {
+              if (isPartnerTask(name)) {
+                clearKeyValues();
+              }
+            }}
+          />
+        </>
       ) : (
         <InputField
           name="name"
@@ -152,7 +174,13 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
           required
         />
       )}
-
+      {/* Just for image pull secret and basic auth */}
+      {shouldShowSecretLinkOptions && (
+        <SecretLinkOptions
+          secretForComponentOption={secretForComponentOption}
+          onOptionChange={(option) => setValue(option)}
+        />
+      )}
       {selectedForm && selectedForm.component}
       <KeyValueFileInputField
         name="labels"
