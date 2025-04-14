@@ -1,3 +1,4 @@
+import { PLACEHOLDER, REPO_PUSH, SBOM_EVENT_TO_BOMBINO } from '../consts/constants';
 import { SBOMEventNotification } from '../types/konflux-public-info';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
@@ -39,7 +40,7 @@ const getBombinoUrl = (
   notifications: { title: string; event: string; config?: { url: string } }[],
 ) => {
   const notification = notifications.find(
-    (n) => n.title === 'SBOM-event-to-Bombino' && n.event === 'repo_push',
+    (n) => n.title === SBOM_EVENT_TO_BOMBINO && n.event === REPO_PUSH,
   );
   return notification?.config?.url ?? '';
 };
@@ -49,7 +50,7 @@ export const useSbomUrl = (): ((imageHash: string) => string) => {
   return (imageHash: string) => {
     if (loaded && !error) {
       const sbomServerUrl = konfluxPublicInfo.integrations.sbom_server.url ?? '';
-      return sbomServerUrl.replace('<PLACEHOLDER>', imageHash);
+      return sbomServerUrl.replace(PLACEHOLDER, imageHash);
     }
   };
 };
