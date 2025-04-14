@@ -1,9 +1,10 @@
 import { ServiceAccountModel } from '../../../../models';
-import { ComponentKind, SecretKind, SecretType } from '../../../../types';
+import { SecretKind, SecretType } from '../../../../types';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
+import { SecretForComponentOption } from '../secret-utils';
 import {
   linkCommonSecretsToServiceAccount,
-  linkSecretToAllServiceAccounts,
+  linkSecretToServiceAccounts,
   linkSecretToServiceAccount,
   unLinkSecretFromServiceAccount,
 } from '../service-account-utils';
@@ -29,8 +30,10 @@ const testComponent = {
 
 const testComponents = [
   testComponent,
-  { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-1' } },
-] as ComponentKind[];
+  { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
+];
+
+const testComponentsNames = [testComponent.metadata.name, 'test-component-2'];
 
 const testSecrets = [
   imagePullSecret,
@@ -284,23 +287,46 @@ describe('linkSecretToAllServiceAccounts', () => {
   });
 
   it('should call linkSecretToServiceAccount for each component', async () => {
-    await linkSecretToAllServiceAccounts(imagePullSecret, testComponents);
-    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponents.length);
+    K8sListResourceItemsMock.mockReturnValue(testComponents);
+    await linkSecretToServiceAccounts(
+      imagePullSecret,
+      [], // when select all components, we do not need relatedComponents
+      SecretForComponentOption.all,
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponentsNames.length);
+  });
+
+  it('should call linkSecretToServiceAccount for selected component', async () => {
+    const selectedComponentsNames = [testComponent.metadata.name];
+    K8sListResourceItemsMock.mockReturnValue([
+      testComponent,
+      { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
+    ]);
+    await linkSecretToServiceAccounts(
+      imagePullSecret,
+      selectedComponentsNames,
+      SecretForComponentOption.partial,
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(selectedComponentsNames.length);
   });
 
   it('should return early if secret is invalid', async () => {
-    await linkSecretToAllServiceAccounts(null, testComponents);
+    await linkSecretToServiceAccounts(null, testComponentsNames, SecretForComponentOption.partial);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
   it('should return early if components is invalid', async () => {
-    await linkSecretToAllServiceAccounts(imagePullSecret, null);
+    await linkSecretToServiceAccounts(imagePullSecret, null, SecretForComponentOption.partial);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
   it('should return early if secret has no namespace', async () => {
     const invalidSecret = { metadata: { name: 'test-secret' } } as SecretKind;
-    await linkSecretToAllServiceAccounts(invalidSecret, testComponents);
+    await linkSecretToServiceAccounts(
+      invalidSecret,
+      testComponentsNames,
+      SecretForComponentOption.partial,
+    );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 });
