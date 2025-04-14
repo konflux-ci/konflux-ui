@@ -138,7 +138,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           <GitlabIcon className="git-icon" />
         ) : null}
 
-        {obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ? (
+        {eventType ? (
           <ExternalLink
             href={`https://${gitProvider}.com/${repoOrg}/${repoURL}#${prNumber}`}
             text={EventTypeLabel[eventType] ?? '-'}
