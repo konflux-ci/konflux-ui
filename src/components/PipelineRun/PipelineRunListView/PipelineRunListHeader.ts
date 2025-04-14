@@ -20,14 +20,6 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
       title: 'Started',
       props: { className: pipelineRunTableColumnClasses.started },
     },
-    ...(showVulnerabilities
-      ? [
-          {
-            title: 'Fixable Vulnerabilities',
-            props: { className: pipelineRunTableColumnClasses.vulnerabilities },
-          },
-        ]
-      : []),
     {
       title: 'Duration',
       props: { className: pipelineRunTableColumnClasses.duration },
@@ -48,6 +40,14 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
       title: 'Commit Id',
       props: { className: pipelineRunTableColumnClasses.commitId },
     },
+    ...(showVulnerabilities
+      ? [
+          {
+            title: 'Fixable Vulnerabilities',
+            props: { className: pipelineRunTableColumnClasses.vulnerabilities },
+          },
+        ]
+      : []),
     {
       title: ' ',
       props: { className: pipelineRunTableColumnClasses.kebab },

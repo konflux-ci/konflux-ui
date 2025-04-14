@@ -70,17 +70,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           timestamp={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : ''}
         />
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.commitId}>
-        <Link
-          to={COMMIT_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-            commitName: obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL],
-          })}
-        >
-          {obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL] || '-'}
-        </Link>
-      </TableData>
       {showVulnerabilities ? (
         <TableData
           data-test="vulnerabilities"
@@ -110,6 +99,17 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.type}>
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.commitId}>
+        <Link
+          to={COMMIT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+            commitName: obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL],
+          })}
+        >
+          {obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL] || '-'}
+        </Link>
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.component}>
         {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
