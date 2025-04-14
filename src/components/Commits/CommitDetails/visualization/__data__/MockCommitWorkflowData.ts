@@ -8982,6 +8982,35 @@ export const MockSnapshots: Snapshot[] = [
       ],
     },
   },
+  {
+    apiVersion: 'appstudio.redhat.com/v1alpha1',
+    kind: 'Snapshot',
+    metadata: {
+      generateName: 'my-test-output-no-labels',
+      annotations: {
+        'test.appstudio.openshift.io/status':
+          '[{"scenario":"app-sample-go-basic-enterprise-contract","status":"Pending","lastUpdateTime":"2023-09-20T16:00:38.969982048Z","details":"Failed to find deploymentTargetClass with right provisioner for copy of existingEnvironment","startTime":"2023-09-20T16:00:17.970660813Z","completionTime":"2023-09-20T16:00:38.969982048Z"}]',
+      },
+      resourceVersion: '92260135',
+      name: 'snapshot with diff err',
+      uid: '406579cb-03dc-4ebd-9d36-aafc9478eb9c',
+      creationTimestamp: '2023-03-27T13:47:16Z',
+      generation: 1,
+      namespace: 'jephilli-tenant',
+      ownerReferences: [],
+    },
+    spec: {
+      application: 'my-test-output',
+      artifacts: {},
+      components: [
+        {
+          containerImage:
+            'quay.io/redhat-appstudio/user-workload@sha256:0afbdd832f28a7de094e6f0771f5b1b7a80bd8f45d282823ae9ef093d29fac52',
+          name: 'devfile-sample-go-basic-kksq',
+        },
+      ],
+    },
+  },
 ];
 
 export const MockReleases = [];
