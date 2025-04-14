@@ -75,6 +75,9 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
       <TableData className={commitsTableColumnClasses.byUser}>
         <Truncate content={obj.user ?? '-'} />
       </TableData>
+      <TableData className={commitsTableColumnClasses.committedAt}>
+        <Timestamp timestamp={obj.creationTime} />
+      </TableData>
       <TableData className={commitsTableColumnClasses.byUser}>
         <div className="pipelines-component-list">
           {obj.pipelineRuns.length ? (
@@ -91,9 +94,6 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
             '-'
           )}
         </div>
-      </TableData>
-      <TableData className={commitsTableColumnClasses.committedAt}>
-        <Timestamp timestamp={obj.creationTime} />
       </TableData>
       <TableData className={commitsTableColumnClasses.status}>
         {statuses.includes(status) ? <StatusIconWithText status={status} /> : '-'}

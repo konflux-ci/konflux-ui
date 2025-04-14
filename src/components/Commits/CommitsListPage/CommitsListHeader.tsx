@@ -32,12 +32,12 @@ const CommitsListHeader = () => {
       props: { className: commitsTableColumnClasses.committedAt },
     },
     {
-      title: 'Status',
-      props: { className: commitsTableColumnClasses.status },
-    },
-    {
       title: 'Pipeline runs',
       props: { className: commitsTableColumnClasses.pipelineRuns },
+    },
+    {
+      title: 'Status',
+      props: { className: commitsTableColumnClasses.status },
     },
     {
       title: ' ',
