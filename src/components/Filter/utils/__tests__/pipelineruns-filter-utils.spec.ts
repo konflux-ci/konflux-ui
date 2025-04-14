@@ -102,6 +102,7 @@ describe('pipelineruns-filter-utils', () => {
         name: 'basic-node-js-first',
         status: [],
         type: [],
+        commitId: [],
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result.length).toBe(1);
@@ -113,6 +114,7 @@ describe('pipelineruns-filter-utils', () => {
         name: '',
         status: ['Succeeded'],
         type: [],
+        commitId: [],
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result.length).toBe(1);
@@ -124,6 +126,7 @@ describe('pipelineruns-filter-utils', () => {
         name: '',
         status: [],
         type: ['build'],
+        commitId: [],
       };
       const expectedNames = ['basic-node-js-second', 'basic-node-js-third'];
 
@@ -138,6 +141,7 @@ describe('pipelineruns-filter-utils', () => {
         name: '',
         status: [],
         type: [],
+        commitId: [],
       };
       const expectedNames = ['basic-node-js-first', 'basic-node-js-third'];
       const customFilter = (plr: PipelineRunKind) =>
