@@ -4,18 +4,14 @@ import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
 import { v4 as uuidv4 } from 'uuid';
-import { useComponents } from '../../../hooks/useComponents';
-import { useNamespace } from '../../../shared/providers/Namespace';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
 import { formatToKebabCase } from '../../../utils/string-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
-export const SourceSection: React.FC<{ applicationName: string }> = ({ applicationName }) => {
+export const SourceSection = () => {
   const [, { touched, error }] = useField('source.git.url');
-  const namespace = useNamespace();
-  const [components] = useComponents(namespace, applicationName);
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched
@@ -63,18 +59,12 @@ export const SourceSection: React.FC<{ applicationName: string }> = ({ applicati
         }
 
         if (!touchedValues.componentName) {
-          let formattedName = formatToKebabCase(name).toLowerCase();
-          const namespaceMatch = components.some(
-            (component) => component.spec.componentName.toLowerCase() === formattedName,
-          );
-          if (namespaceMatch) {
-            formattedName = `${formattedName}-${generateRandomString()}`;
-          }
+          const formattedName = `${formatToKebabCase(name).toLowerCase()}-${generateRandomString()}`;
           await setFieldValue('componentName', formattedName);
         }
       }
     },
-    [setFieldValue, touchedValues.componentName, validated, components],
+    [setFieldValue, touchedValues.componentName, validated],
   );
 
   return (

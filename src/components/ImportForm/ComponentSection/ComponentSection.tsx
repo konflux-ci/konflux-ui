@@ -15,7 +15,7 @@ import { SourceSection } from './SourceSection';
 
 import './ComponentSection.scss';
 
-export const ComponentSection: React.FC<{ applicationName: string }> = ({ applicationName }) => {
+export const ComponentSection = () => {
   const { values } = useFormikContext<ImportFormValues>();
   const namespace = useNamespace();
   return (
@@ -26,7 +26,7 @@ export const ComponentSection: React.FC<{ applicationName: string }> = ({ applic
           A component is an image built from source code repository.
         </Text>
       </TextContent>
-      <SourceSection applicationName={applicationName} />
+      <SourceSection />
       <InputField
         name="source.git.dockerfileUrl"
         label="Docker file"

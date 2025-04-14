@@ -8,7 +8,7 @@ configure({ testIdAttribute: 'data-test' });
 
 describe('ComponentSection', () => {
   it('should render component section', () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     screen.getByPlaceholderText('Enter your source');
@@ -16,7 +16,7 @@ describe('ComponentSection', () => {
   });
 
   it('should render git options if source url is valid', async () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -28,7 +28,7 @@ describe('ComponentSection', () => {
   });
 
   it('should expand git options if source url is others', async () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -40,7 +40,7 @@ describe('ComponentSection', () => {
   });
 
   it('should show advanced Annotation section', async () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -52,7 +52,7 @@ describe('ComponentSection', () => {
   });
 
   it('should populate annotation fields', async () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -69,7 +69,7 @@ describe('ComponentSection', () => {
   });
 
   it('should render helper text for component name', () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
 
@@ -77,7 +77,7 @@ describe('ComponentSection', () => {
   });
 
   it('should format component name to kebab-case', async () => {
-    formikRenderer(<ComponentSection applicationName="TestApp" />, {
+    formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
@@ -87,8 +87,8 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('component-name') as HTMLInputElement).value).toBe(
-        'example-repo-123',
+      expect((screen.getByTestId('component-name') as HTMLInputElement).value).toContain(
+        'example-repo',
       );
     });
   });
