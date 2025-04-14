@@ -58,6 +58,19 @@ const errorSnapshotResources = (params: WatchK8sResource) => {
   return [[], true];
 };
 
+const getSnapshotWithNoLabels = (params: WatchK8sResource) => {
+  if (params?.groupVersionKind === SnapshotGroupVersionKind) {
+    return [
+      mockSnapshots.find((s) => s.metadata.generateName === 'my-test-output-no-labels'),
+      true,
+    ];
+  }
+  if (params?.groupVersionKind === PipelineRunGroupVersionKind) {
+    return [[pipelineWithCommits[0]], true];
+  }
+  return [[], true];
+};
+
 describe('SnapshotDetailsView', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({
@@ -117,5 +130,16 @@ describe('SnapshotDetailsView', () => {
     });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     screen.queryByText('scn 2');
+  });
+
+  it('should render without crashing when snapshot has no labels', () => {
+    watchResourceMock.mockImplementation(getSnapshotWithNoLabels);
+    useParamsMock.mockReturnValue({
+      snapshotName: 'my-test-output-no-labels',
+      applicationName: 'my-test-output',
+    });
+    renderWithQueryClientAndRouter(<SnapshotDetails />);
+    expect(screen.getByTestId('snapshot-header-details')).toBeInTheDocument();
+    expect(screen.getByTestId('snapshot-name').innerHTML).toBe('my-test-output-no-labels');
   });
 });
