@@ -148,7 +148,6 @@ describe('AddIssueSection for CVEs', () => {
   it('should show correct columns ', () => {
     formikRenderer(<AddIssueSection field="cve" issueType={IssueType.CVE} />);
     screen.getByText('CVE key');
-    screen.getByText('URL');
     screen.getByText('Components');
     screen.getByText('Summary');
     screen.getByText('Last updated');
@@ -158,14 +157,29 @@ describe('AddIssueSection for CVEs', () => {
   it('should render correct cve list ', () => {
     formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
       cves: [
-        { id: 'cve-nodejs', url: 'http://url1.com' },
-        { id: 'cve-java', url: 'http://url2.com' },
-        { id: 'cve-python', url: 'http://url3.com' },
+        {
+          key: 'cve-nodejs',
+          components: [{ name: 'cmp1' }, { name: 'cmp2', packages: ['a', 'b'] }],
+        },
+        {
+          key: 'cve-java',
+          components: [{ name: 'cmp4' }, { name: 'cmp5', packages: ['a', 'b'] }],
+        },
+        {
+          key: 'cve-python',
+          components: [{ name: 'cmp7' }, { name: 'cmp8', packages: ['a', 'b'] }],
+        },
       ],
     });
     expect(screen.getByText('cve-nodejs')).toBeInTheDocument();
+    expect(screen.getByText('cmp1')).toBeInTheDocument();
+    expect(screen.getByText('cmp2')).toBeInTheDocument();
     expect(screen.getByText('cve-java')).toBeInTheDocument();
+    expect(screen.getByText('cmp4')).toBeInTheDocument();
+    expect(screen.getByText('cmp5')).toBeInTheDocument();
     expect(screen.getByText('cve-python')).toBeInTheDocument();
+    expect(screen.getByText('cmp7')).toBeInTheDocument();
+    expect(screen.getByText('cmp8')).toBeInTheDocument();
   });
 
   it('should render - when data is missing', () => {
@@ -179,9 +193,18 @@ describe('AddIssueSection for CVEs', () => {
   it('should filter cves list ', async () => {
     formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
       cves: [
-        { id: 'cve-nodejs', url: 'http://url1.com' },
-        { id: 'cve-java', url: 'http://url2.com' },
-        { id: 'cve-python', url: 'http://url3.com' },
+        {
+          key: 'cve-nodejs',
+          components: [{ name: 'cmp1' }, { name: 'cmp2', packages: ['a', 'b'] }],
+        },
+        {
+          key: 'cve-java',
+          components: [{ name: 'cmp3' }, { name: 'cmp5', packages: ['a', 'b'] }, { name: 'cmp6' }],
+        },
+        {
+          key: 'cve-python',
+          components: [{ name: 'cmp4' }, { name: 'cmp2', packages: ['a', 'b'] }],
+        },
       ],
     });
     const tableBody = screen.getByTestId('issue-table-body');

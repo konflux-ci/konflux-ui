@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { Truncate } from '@patternfly/react-core';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
@@ -67,7 +68,9 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
             : '-'}
         </div>
       </TableData>
-      <TableData className={commitsTableColumnClasses.byUser}>{obj.user ?? '-'}</TableData>
+      <TableData className={commitsTableColumnClasses.byUser}>
+        <Truncate content={obj.user ?? '-'} />
+      </TableData>
       <TableData className={commitsTableColumnClasses.committedAt}>
         <Timestamp timestamp={obj.creationTime} />
       </TableData>
