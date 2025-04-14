@@ -25,13 +25,14 @@ build_ui_image() {
     AGENT_VERSION=$(podman run $NODEJS_AGENT_IMAGE /bin/sh -c 'echo ${AGENT_VERSION}')
 
     if [ "${JOB_TYPE}" == "on-pr" ]; then
-    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-        $NODEJS_AGENT_IMAGE \
-        /bin/bash -cx "slnodejs prConfig --appName ${COMPONENT} --targetBranch ${TARGET_BRANCH} --repositoryUrl ${FORKED_REPO_URL} --latestCommit ${HEAD_SHA} --pullRequestNumber ${PR_NUMBER} --token ${SEALIGHTS_TOKEN}"
+        podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
+            $NODEJS_AGENT_IMAGE \
+            /bin/bash -cx "slnodejs prConfig --appName ${COMPONENT} --targetBranch ${TARGET_BRANCH} --repositoryUrl ${FORKED_REPO_URL} --latestCommit ${HEAD_SHA} --pullRequestNumber ${PR_NUMBER} --token ${SEALIGHTS_TOKEN}"
     elif [ "${JOB_TYPE}" == "periodic" ]; then
-    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-        $NODEJS_AGENT_IMAGE \
-        /bin/bash -cx "slnodejs config --appName ${COMPONENT} --branch ${TARGET_BRANCH} --build ${HEAD_SHA} --token ${SEALIGHTS_TOKEN}"
+        BUILD_NAME="${HEAD_SHA}_$(date +'%y%m%d.%H%M')"
+        podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
+            $NODEJS_AGENT_IMAGE \
+            /bin/bash -cx "slnodejs config --appName ${COMPONENT} --branch ${TARGET_BRANCH} --build ${BUILD_NAME} --token ${SEALIGHTS_TOKEN}"
     else
         echo "ERROR: invalid job type '${JOB_TYPE}' specified"
     fi
