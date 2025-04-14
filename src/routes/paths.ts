@@ -102,8 +102,6 @@ export const PIPELINERUN_LOGS_PATH = PIPELINERUN_DETAILS_PATH.extend(`logs`);
 
 export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`);
 
-export const ACTIVITY_COMMIT_PATH = APPLICATION_ACTIVITY_PATH.extend('latest-commits');
-
 // Snapshot routes
 
 export const SNAPSHOT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('snapshots');
