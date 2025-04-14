@@ -6,8 +6,8 @@ export const pipelineRunTableColumnClasses = {
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  kebab: 'pf-v5-c-table__action',
   commitId: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  kebab: 'pf-v5-c-table__action',
 };
 
 const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
@@ -20,6 +20,14 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
       title: 'Started',
       props: { className: pipelineRunTableColumnClasses.started },
     },
+    ...(showVulnerabilities
+      ? [
+          {
+            title: 'Fixable Vulnerabilities',
+            props: { className: pipelineRunTableColumnClasses.vulnerabilities },
+          },
+        ]
+      : []),
     {
       title: 'Duration',
       props: { className: pipelineRunTableColumnClasses.duration },
@@ -40,14 +48,6 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
       title: 'Commit Id',
       props: { className: pipelineRunTableColumnClasses.commitId },
     },
-    ...(showVulnerabilities
-      ? [
-          {
-            title: 'Fixable Vulnerabilities',
-            props: { className: pipelineRunTableColumnClasses.vulnerabilities },
-          },
-        ]
-      : []),
     {
       title: ' ',
       props: { className: pipelineRunTableColumnClasses.kebab },

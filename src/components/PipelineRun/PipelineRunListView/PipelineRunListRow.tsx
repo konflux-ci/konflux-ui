@@ -100,17 +100,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       <TableData className={pipelineRunTableColumnClasses.type}>
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.commitId}>
-        <Link
-          to={COMMIT_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-            commitName: obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL],
-          })}
-        >
-          {obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL] || '-'}
-        </Link>
-      </TableData>
       <TableData className={pipelineRunTableColumnClasses.component}>
         {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
           obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
@@ -129,6 +118,17 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         ) : (
           '-'
         )}
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.commitId}>
+        <Link
+          to={COMMIT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+            commitName: obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL],
+          })}
+        >
+          {obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL] || '-'}
+        </Link>
       </TableData>
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
