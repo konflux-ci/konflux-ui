@@ -62,7 +62,7 @@ export const RunReleasePipelineSection: React.FC = () => {
           },
           { value: ReleasePipelineLocation.target, label: 'In a target namespace' },
         ]}
-        required
+        isRequired
       />
       {pipelineLocation === ReleasePipelineLocation.current && (
         <>
@@ -77,7 +77,7 @@ export const RunReleasePipelineSection: React.FC = () => {
                 bodyContent="Which service account do you want to use to run your release pipeline?"
               />
             }
-            required
+            isRequired
           />
           <FormikParamsField
             fieldName="params"
@@ -118,7 +118,7 @@ export const RunReleasePipelineSection: React.FC = () => {
                 bodyContent="Your application will be released to the environments in this namespace."
               />
             }
-            required
+            isRequired
           />
           <GitOptions />
           <TextAreaField
