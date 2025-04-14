@@ -3,10 +3,10 @@ import { ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
+import { kebabCase } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
-import { formatToKebabCase } from '../../../utils/string-utils';
 import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
@@ -59,7 +59,7 @@ export const SourceSection = () => {
         }
 
         if (!touchedValues.componentName) {
-          const formattedName = `${formatToKebabCase(name).toLowerCase()}-${generateRandomString()}`;
+          const formattedName = `${kebabCase(name).toLowerCase()}-${generateRandomString()}`;
           await setFieldValue('componentName', formattedName);
         }
       }
