@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
@@ -182,9 +182,9 @@ const pipelineRuns: PipelineRunKind[] = [
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 
 const TestedComponent = ({ name }) => (
-  <PipelineRunsFilterContextProvider>
+  <FilterContextProvider filterParams={['name', 'status', 'type']}>
     <PipelineRunsListView applicationName={name} />
-  </PipelineRunsFilterContextProvider>
+  </FilterContextProvider>
 );
 
 describe('Pipeline run List', () => {

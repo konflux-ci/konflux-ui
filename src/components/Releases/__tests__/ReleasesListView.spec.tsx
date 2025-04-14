@@ -93,7 +93,7 @@ describe('ReleasesListView', () => {
   it('should render filter toolbar', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
     const wrapper = render(<ReleasesListView />);
-    screen.getByTestId('filter-toolbar');
+    screen.getByTestId('releases-filter-toolbar');
     expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
     expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(4);
   });
