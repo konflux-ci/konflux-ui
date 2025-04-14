@@ -57,6 +57,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     obj.metadata.labels = {};
   }
   const applicationName = obj.metadata?.labels[PipelineRunLabel.APPLICATION];
+  const gitProvider = obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
+  const repoOrg = obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoURL = obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
+  const prNumber = obj.metadata?.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
+  const eventType = obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
 
   return (
     <>
@@ -126,19 +131,17 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           '-'
         )}
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.eventType}>
-        {obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL] === 'github' ? (
+      <TableData className={pipelineRunTableColumnClasses.triggeredBy}>
+        {gitProvider === 'github' ? (
           <GithubIcon className="git-icon" />
-        ) : obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL] === 'gitlab' ? (
+        ) : gitProvider === 'gitlab' ? (
           <GitlabIcon className="git-icon" />
         ) : null}
 
         {obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ? (
           <ExternalLink
-            href={`https://${obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL]}.com/${obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL]}/${obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL]}#${obj.metadata?.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL]}`}
-            text={
-              EventTypeLabel[obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]] ?? '-'
-            }
+            href={`https://${gitProvider}.com/${repoOrg}/${repoURL}#${prNumber}`}
+            text={EventTypeLabel[eventType] ?? '-'}
             hideIcon={true}
           />
         ) : (

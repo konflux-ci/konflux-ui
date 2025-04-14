@@ -110,7 +110,11 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658df1',
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
+        'pipelinesascode.tekton.dev/event-type': 'pull_request',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST as string,
+      },
+      annotations: {
+        [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
       },
     },
     spec: {
@@ -145,7 +149,11 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658dfb',
       labels: {
         'appstudio.openshift.io/component': 'test-component',
+        'pipelinesascode.tekton.dev/event-type': 'pull_request',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
+      },
+      annotations: {
+        [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
       },
     },
     spec: {
@@ -172,7 +180,11 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658dfc',
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
+        'pipelinesascode.tekton.dev/event-type': 'push',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
+      },
+      annotations: {
+        [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
       },
     },
     spec: {
@@ -256,6 +268,7 @@ describe('Pipeline run List', () => {
     screen.queryAllByText('Status');
     screen.queryAllByText('Type');
     screen.queryByText('Component');
+    screen.queryByText('Triggered By');
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {

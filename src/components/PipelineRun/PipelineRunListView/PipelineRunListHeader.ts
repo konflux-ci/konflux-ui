@@ -6,7 +6,7 @@ export const pipelineRunTableColumnClasses = {
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
-  eventType: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
+  triggeredBy: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -46,7 +46,7 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
     },
     {
       title: 'Triggered By',
-      props: { className: pipelineRunTableColumnClasses.eventType },
+      props: { className: pipelineRunTableColumnClasses.triggeredBy },
     },
     {
       title: ' ',
