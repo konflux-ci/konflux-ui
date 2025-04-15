@@ -56,7 +56,7 @@ export const ApplicationSwitcher: React.FC<
                 <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
               )}
               isInline
-              tooltip="You don't have access to create a application"
+              tooltip="You don't have access to create an application"
               isDisabled={!(canCreateApplication && canCreateComponent)}
               analytics={{
                 link_name: 'create-application',

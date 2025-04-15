@@ -1,7 +1,7 @@
 export const pageTitles = {
   namespaces: 'Namespaces',
   applications: 'Applications',
-  createApp: 'Create a Application',
+  createApp: 'Create an Application',
   sampleStart: 'Start with a sample',
   reviewComponent: 'Review your new components',
   deploymentSettings: 'Edit deployment settings',

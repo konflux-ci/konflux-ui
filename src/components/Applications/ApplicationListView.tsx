@@ -86,7 +86,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 Automate the building, testing, and deploying of your applications with just a few
                 clicks.
                 <br />
-                To get started, create a application.
+                To get started, create an application.
               </EmptyStateBody>
               <ButtonWithAccessTooltip
                 variant="primary"
@@ -94,7 +94,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                   <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
                 )}
                 isDisabled={!(canCreateApplication && canCreateComponent)}
-                tooltip="You don't have access to create a application"
+                tooltip="You don't have access to create an application"
                 analytics={{
                   link_name: 'create-application',
                   namespace,
@@ -128,7 +128,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                         />
                       )}
                       isDisabled={!(canCreateApplication && canCreateComponent)}
-                      tooltip="You don't have access to create a application"
+                      tooltip="You don't have access to create an application"
                       analytics={{
                         link_name: 'create-application',
                         namespace,
