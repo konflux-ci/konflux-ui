@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-core';
 import TimesIcon from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { useField, useFormikContext } from 'formik';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
+import { useSnapshotsForApplication } from '../../../../hooks/useSnapshots';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
 import SelectInputField from '../../../../shared/components/formik-fields/SelectInputField';
 import { useDebounceCallback } from '../../../../shared/hooks/useDebounceCallback';
@@ -35,7 +35,11 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
 ) => {
   const { setErrors } = useFormikContext();
   const namespace = useNamespace();
-  const [snapshots, loaded, error] = useSnapshots(namespace);
+  const {
+    data: snapshots = [],
+    isLoading,
+    error,
+  } = useSnapshotsForApplication(namespace, props.applicationName);
   const [, { touched, error: fieldError }, { setValue }] = useField<string>(props.name);
   const [inputValue, setInputValue] = React.useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -45,20 +49,18 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
   const debouncedSetSearchTerm = useDebounceCallback(setSearchTerm, 500);
 
   const filteredSnapshots = useMemo(() => {
-    if (!loaded || error || !props.applicationName) {
+    if (isLoading || error || !props.applicationName) {
       return [];
     }
 
     if (searchTerm.trim() === '') {
-      return snapshots.filter((sn) => sn.spec?.application === props.applicationName);
+      return snapshots;
     }
 
-    return snapshots.filter(
-      (sn) =>
-        sn.spec?.application === props.applicationName &&
-        sn.metadata.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    return snapshots.filter((sn) =>
+      sn.metadata.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [error, loaded, props.applicationName, snapshots, searchTerm]);
+  }, [error, isLoading, snapshots, searchTerm, props.applicationName]);
 
   const dropdownItems = useMemo(
     () =>
@@ -148,7 +150,7 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
                   e.stopPropagation();
                   onSearchInputChange((e.target as HTMLInputElement).value);
                 }}
-                placeholder={!loaded || !!error ? 'Loading snapshots...' : 'Select snapshot'}
+                placeholder={isLoading ? 'Loading snapshots...' : 'Select snapshot'}
                 autoComplete="off"
                 role="combobox"
                 isExpanded={isOpen}
