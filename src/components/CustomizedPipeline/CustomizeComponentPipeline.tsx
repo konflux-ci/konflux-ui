@@ -21,7 +21,6 @@ const CustomizeComponentPipeline: React.FC<React.PropsWithChildren<Props>> = ({
         components={[watchedComponent]}
         onClose={onClose}
         modalProps={modalProps}
-        singleComponent
       />
     );
   }
