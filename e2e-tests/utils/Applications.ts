@@ -21,6 +21,23 @@ import { Common } from './Common';
 import { UIhelper } from './UIhelper';
 
 export class Applications {
+  static checkPipelineIsCancellingOrCancelled(componentName: string) {
+    UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).then((row) => {
+      const text = row.text();
+      let isCancellingOrCancelled = false;
+      if (text.includes('Cancelling')) {
+        cy.log('Pipeline was in a state Cancelling.');
+        isCancellingOrCancelled = true;
+      } else if (text.includes('Cancelled')) {
+        cy.log('Pipeline was in a state Cancelled.');
+        isCancellingOrCancelled = true;
+      } else {
+        cy.log("Status wasn't Cancelling nor Cancelled.");
+      }
+      assert(isCancellingOrCancelled == true);
+    });
+  }
+
   static createCleanApp(applicationName: string) {
     cy.title().should('eq', `Applications | ${FULL_APPLICATION_TITLE}`);
     const createApplicationPage = new CreateApplicationPage();
