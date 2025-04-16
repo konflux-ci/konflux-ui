@@ -13,6 +13,7 @@ jest.mock('../../../utils/create-utils', () => ({
   createComponent: jest.fn(),
   createImageRepository: jest.fn(),
   createSecret: jest.fn(),
+  useRef: jest.fn(() => ({ current: null })),
 }));
 
 jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () => ({
@@ -43,7 +44,7 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      'url.bombino',
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(2);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(2);
@@ -69,7 +70,7 @@ describe('Submit Utils: createResources', () => {
         componentName: 'component',
       },
       'test-ws-tenant',
-      'url.bombino',
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(2);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(2);
@@ -119,7 +120,7 @@ describe('Submit Utils: createResources', () => {
         ],
       },
       'test-ws-tenant',
-      'url.bombino',
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(0);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(0);
@@ -146,7 +147,7 @@ describe('Submit Utils: createResources', () => {
         importSecrets: [],
       },
       'test-ws-tenant',
-      'url.bombino',
+      [],
     );
     expect(createApplicationMock).toHaveBeenCalledTimes(0);
     expect(createIntegrationTestMock).toHaveBeenCalledTimes(0);

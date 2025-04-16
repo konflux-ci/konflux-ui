@@ -22,6 +22,9 @@ jest.mock('../submit-utils', () => ({
 jest.mock('../../../hooks/useUIInstance', () => {
   return {
     useBombinoUrl: jest.fn(() => 'https://mock.bombino.url'),
+    useNotifications: jest.fn(() => ({
+      notify: jest.fn(),
+    })),
   };
 });
 
