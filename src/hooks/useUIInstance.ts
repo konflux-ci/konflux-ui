@@ -1,3 +1,7 @@
+import { PLACEHOLDER, REPO_PUSH, SBOM_EVENT_TO_BOMBINO } from '../consts/constants';
+import { SBOMEventNotification } from '../types/konflux-public-info';
+import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
+
 export enum ConsoleDotEnvironments {
   dev = 'dev',
   stage = 'stage',
@@ -32,27 +36,47 @@ export const useUIInstance = (): ConsoleDotEnvironments => {
   return getInternalInstance() ?? env;
 };
 
-const SBOM_PLACEHOLDER = '<PLACEHOLDER>';
-const getSBOMEnvUrl = (env: ConsoleDotEnvironments) => (imageHash: string) => {
-  if (env === ConsoleDotEnvironments.prod) {
-    return `https://atlas.devshift.net/sbom/content/${SBOM_PLACEHOLDER}`.replace(
-      SBOM_PLACEHOLDER,
-      imageHash,
-    );
-  }
-  return `https://atlas.stage.devshift.net/sbom/content/${SBOM_PLACEHOLDER}`.replace(
-    SBOM_PLACEHOLDER,
-    imageHash,
+const getBombinoUrl = (
+  notifications: { title: string; event: string; config?: { url: string } }[],
+) => {
+  const notification = notifications.find(
+    (n) => n.title === SBOM_EVENT_TO_BOMBINO && n.event === REPO_PUSH,
   );
+  return notification?.config?.url ?? '';
 };
 
-const getBombinoUrl = (env: ConsoleDotEnvironments) => {
-  if (env === ConsoleDotEnvironments.prod) {
-    return 'https://bombino.api.redhat.com/v1/sbom/quay/push';
+export const useSbomUrl = (): ((imageHash: string) => string) => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  return (imageHash: string) => {
+    if (loaded && !error) {
+      const sbomServerUrl = konfluxPublicInfo.integrations.sbom_server.url ?? '';
+      return sbomServerUrl.replace(PLACEHOLDER, imageHash);
+    }
+  };
+};
+
+export const useBombinoUrl = (): string | undefined => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+
+  if (loaded && !error && konfluxPublicInfo) {
+    const notifications = konfluxPublicInfo.integrations.image_controller.notifications || [];
+    return getBombinoUrl(notifications);
   }
-  return 'https://bombino.preprod.api.redhat.com/v1/sbom/quay/push';
+  return undefined;
 };
 
-export const useSbomUrl = () => getSBOMEnvUrl(useUIInstance());
+export const useApplicationUrl = (): string | undefined => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.integrations.github.application_url;
+  }
+  return undefined;
+};
 
-export const useBombinoUrl = () => getBombinoUrl(useUIInstance());
+export const useNotifications = (): SBOMEventNotification[] => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.integrations.image_controller.notifications || [];
+  }
+  return [];
+};

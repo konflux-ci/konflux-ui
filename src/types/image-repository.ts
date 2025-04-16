@@ -37,8 +37,8 @@ type ImageRepositorySpec = {
   };
   notifications?: {
     title: string;
-    event: 'repo_push';
-    method: 'email' | 'webhook';
+    event: string;
+    method: string;
     config: {
       url?: string;
       email?: string;
