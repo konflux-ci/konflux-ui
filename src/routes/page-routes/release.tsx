@@ -2,6 +2,7 @@ import {
   ReleaseDetailsLayout,
   releaseListViewTabLoader,
   ReleaseOverviewTab,
+  ReleaseYamlTab,
 } from '../../components/Releases';
 import { APPLICATION_RELEASE_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
@@ -18,6 +19,7 @@ const releaseRoutes = [
         index: true,
         element: <ReleaseOverviewTab />,
       },
+      { path: 'yaml', element: <ReleaseYamlTab /> },
     ],
   },
 ];

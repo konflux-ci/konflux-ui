@@ -30,5 +30,6 @@ export const releaseDetailsViewLoader = createLoaderWithAccessCheck(
 );
 
 export { default as ReleaseOverviewTab } from './ReleaseOverviewTab';
+export { default as ReleaseYamlTab } from './ReleaseYamlTab';
 export { default as ReleaseDetailsLayout } from './ReleaseDetailsView';
 export { default as ReleaseListViewTab } from './ReleasesListView';
