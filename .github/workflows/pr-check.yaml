@@ -52,4 +52,4 @@ jobs:
           CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
           CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
         with:
-          job-type: 'periodic'
+          job-type: 'on-pr'
