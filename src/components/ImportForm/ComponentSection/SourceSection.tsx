@@ -3,6 +3,7 @@ import { ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField, SwitchField } from 'formik-pf';
 import GitUrlParse from 'git-url-parse';
+import { kebabCase } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { detectGitType, GitProvider } from '../../../shared/utils/git-utils';
 import { GIT_PROVIDER_ANNOTATION_VALUE } from '../../../utils/component-utils';
@@ -47,14 +48,19 @@ export const SourceSection = () => {
         }
 
         let parsed: GitUrlParse.GitUrl;
+        let name: string;
         try {
           parsed = GitUrlParse(event.target?.value ?? '');
           await setFieldValue('gitURLAnnotation', `https://${parsed?.resource}`);
+          name = parsed.name;
         } catch {
+          name = '';
           await setFieldValue('gitURLAnnotation', '');
         }
+
         if (!touchedValues.componentName) {
-          await setFieldValue('componentName', generateRandomString());
+          const formattedName = `${kebabCase(name).toLowerCase()}-${generateRandomString()}`;
+          await setFieldValue('componentName', formattedName);
         }
       }
     },
