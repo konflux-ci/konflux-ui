@@ -33,12 +33,14 @@ import {
   SecretFormValues,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
+import { SBOMEventNotification } from './../types/konflux-public-info';
 import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
+
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 
 /**
@@ -405,10 +407,17 @@ type CreateImageRepositoryType = {
   namespace: string;
   isPrivate: boolean;
   bombinoUrl: string;
+  notifications: SBOMEventNotification[];
 };
 
-export const createImageRepository = (
-  { application, component, namespace, isPrivate, bombinoUrl }: CreateImageRepositoryType,
+export const createImageRepository = async (
+  {
+    application,
+    component,
+    namespace,
+    isPrivate,
+    notifications,
+  }: Omit<CreateImageRepositoryType, 'bombinoUrl'>,
   dryRun: boolean = false,
 ) => {
   const imageRepositoryResource: ImageRepositoryKind = {
@@ -431,16 +440,7 @@ export const createImageRepository = (
           ? ImageRepositoryVisibility.private
           : ImageRepositoryVisibility.public,
       },
-      notifications: [
-        {
-          title: 'SBOM-event-to-Bombino',
-          event: 'repo_push',
-          method: 'webhook',
-          config: {
-            url: bombinoUrl,
-          },
-        },
-      ],
+      notifications,
     },
   };
 
