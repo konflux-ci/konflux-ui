@@ -72,7 +72,7 @@ export const INTEGRATION_TEST_EDIT_PATH = INTEGRATION_TEST_DETAILS_PATH.extend('
 
 export const ACTIVITY_PATH = APPLICATION_DETAILS_PATH.extend('activity');
 
-export const ACTIVITY_PATH_LATEST_COMMIT = ACTIVITY_PATH.extend('latest-commit');
+export const ACTIVITY_PATH_LATEST_COMMIT = ACTIVITY_PATH.extend('latest-commits');
 
 export const PIPELINE_RUNS_LIST_PATH = ACTIVITY_PATH.extend('pipelineruns');
 
@@ -101,8 +101,6 @@ export const PIPELINERUN_DETAILS_PATH = APPLICATION_DETAILS_PATH.extend(
 export const PIPELINERUN_LOGS_PATH = PIPELINERUN_DETAILS_PATH.extend(`logs`);
 
 export const PIPELINERUN_TASK_LIST = PIPELINERUN_DETAILS_PATH.extend(`taskruns`);
-
-export const ACTIVITY_COMMIT_PATH = APPLICATION_ACTIVITY_PATH.extend('latest-commits');
 
 // Snapshot routes
 
