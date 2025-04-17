@@ -1,3 +1,4 @@
+import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import {
   addSecretFormValues,
   mockApplicationRequestData,
@@ -9,7 +10,10 @@ import {
   mockComponentWithDevfile,
   secretFormValues,
 } from '../../components/Secrets/__data__/mock-secrets';
-import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
+import {
+  linkSecretToServiceAccount,
+  linkSecretToServiceAccounts,
+} from '../../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
@@ -30,16 +34,13 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   k8sUpdateResource: jest.fn(() => Promise.resolve()),
 }));
 
-/**
- * [TODO]: enable test for linkSecret and secret utils
- */
-
 jest.mock('../../components/Secrets/utils/service-account-utils', () => {
-  return { linkSecretToServiceAccount: jest.fn() };
+  return { linkSecretToServiceAccount: jest.fn(), linkSecretToServiceAccounts: jest.fn() };
 });
 
 const createResourceMock = k8sCreateResource as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
+const linkSecretToServiceAccountsMock = linkSecretToServiceAccounts as jest.Mock;
 
 describe('Create Utils', () => {
   beforeEach(() => {
@@ -502,14 +503,34 @@ describe('Create Utils', () => {
     );
   });
 
-  it('should call linkToServiceAccount For image pull secrets', async () => {
+  it('should not call linkToServiceAccounts without secret link option and components', async () => {
     linkSecretToServiceAccountMock.mockClear();
     await addSecret(addSecretFormValues, 'test-ns');
-    expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
-    expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
-      expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
-      'test-ns',
-    );
+    expect(linkSecretToServiceAccountsMock).not.toHaveBeenCalled();
+  });
+
+  it('should call linkToServiceAccounts with secret link option', async () => {
+    linkSecretToServiceAccountMock.mockClear();
+    const updatedAddSecretFormValues = {
+      ...addSecretFormValues,
+      secretForComponentOption: SecretForComponentOption.all,
+      relatedComponents: [],
+    };
+
+    await addSecret(updatedAddSecretFormValues, 'test-ns');
+    expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
+  });
+
+  it('should call linkToServiceAccounts with relatedComponents', async () => {
+    linkSecretToServiceAccountMock.mockClear();
+    const updatedAddSecretFormValues = {
+      ...addSecretFormValues,
+      secretForComponentOption: SecretForComponentOption.partial,
+      relatedComponents: ['test-component-1'],
+    };
+
+    await addSecret(updatedAddSecretFormValues, 'test-ns');
+    expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
   });
 });
 

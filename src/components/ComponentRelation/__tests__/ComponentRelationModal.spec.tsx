@@ -1,5 +1,8 @@
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { componentCRMocks } from '../../Components/__data__/mock-data';
+import {
+  componentCRMocks,
+  sortedGroupedComponentsMocks,
+} from '../../Components/__data__/mock-data';
 import { ComponentRelationModal } from '../ComponentRelationModal';
 import { ComponentRelationNudgeType, ComponentRelationValue } from '../type';
 import { useNudgeData } from '../useNudgeData';
@@ -9,7 +12,7 @@ configure({ testIdAttribute: 'id' });
 
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(() => [[componentCRMocks[0]], true, null]),
-  useAllComponents: jest.fn(() => [componentCRMocks, true, null]),
+  useSortedGroupComponents: jest.fn(() => [sortedGroupedComponentsMocks, true, null]),
 }));
 
 jest.mock('../../../utils/analytics', () => ({

@@ -1,7 +1,10 @@
 import { ServiceAccountModel } from '../../../../models';
-import { SecretType } from '../../../../types';
+import { SecretKind, SecretType } from '../../../../types';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
+import { SecretForComponentOption } from '../secret-utils';
 import {
+  linkCommonSecretsToServiceAccount,
+  linkSecretToServiceAccounts,
   linkSecretToServiceAccount,
   unLinkSecretFromServiceAccount,
 } from '../service-account-utils';
@@ -9,12 +12,40 @@ import {
 const imagePullSecret = {
   apiVersion: 'v1',
   kind: 'secret',
-  metadata: { name: 'test-secret' },
+  metadata: { name: 'test-secret', namespace: 'test-ns' },
   type: SecretType.dockerconfigjson,
 };
 
+const testComponent = {
+  apiVersion: 'v1',
+  kind: 'component',
+  metadata: { name: 'test-component', namespace: 'test-ns' },
+  spec: {
+    application: 'jira-unfurl-bot-saas-main',
+    componentName: 'test-component',
+    containerImage:
+      'quay.io/redhat-user-workloads/assisted-installer-tenant/jira-unfurl-bot-saas-main/jira-unfurl-bot-saas-main@sha256:c627197223e03873d7b9',
+  },
+};
+
+const testComponents = [
+  testComponent,
+  { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
+];
+
+const testComponentsNames = [testComponent.metadata.name, 'test-component-2'];
+
+const testSecrets = [
+  imagePullSecret,
+  {
+    ...imagePullSecret,
+    metadata: { ...imagePullSecret.metadata, name: 'test-secret-2' },
+  },
+] as SecretKind[];
+
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
+const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
 
 describe('linkSecretToServiceAccount', () => {
   beforeEach(() => {
@@ -29,7 +60,7 @@ describe('linkSecretToServiceAccount', () => {
       secrets: [{ name: 'secret1' }, { name: 'secret2' }],
     });
   });
-  it('should return early if no namespace ', async () => {
+  it('should return early if no component ', async () => {
     await linkSecretToServiceAccount(imagePullSecret, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
@@ -41,7 +72,7 @@ describe('linkSecretToServiceAccount', () => {
       imagePullSecrets: [],
       secrets: [],
     });
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
+    await linkSecretToServiceAccount(imagePullSecret, testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -64,7 +95,7 @@ describe('linkSecretToServiceAccount', () => {
 
   it('should append to imagePull secrets list ', async () => {
     k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
+    await linkSecretToServiceAccount(imagePullSecret, testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -96,7 +127,7 @@ describe('linkSecretToServiceAccount', () => {
       metadata: { name: 'test-cdq' },
     });
     k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
+    await linkSecretToServiceAccount(imagePullSecret, testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -155,12 +186,12 @@ describe('UnLinkSecretFromServiceAccount', () => {
     k8sPatchResourceMock.mockClear();
     await unLinkSecretFromServiceAccount(
       {
-        metadata: { name: 'ip-secret3' },
+        metadata: { name: 'ip-secret3', namespace: 'test-ns' },
         type: imagePullSecret.type,
         kind: imagePullSecret.kind,
         apiVersion: imagePullSecret.apiVersion,
       },
-      'test-ns',
+      testComponent,
     );
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
@@ -186,12 +217,12 @@ describe('UnLinkSecretFromServiceAccount', () => {
     k8sPatchResourceMock.mockClear();
     await unLinkSecretFromServiceAccount(
       {
-        metadata: { name: 'ip-secret3' },
+        metadata: { name: 'ip-secret3', namespace: 'test-ns' },
         type: imagePullSecret.type,
         kind: imagePullSecret.kind,
         apiVersion: imagePullSecret.apiVersion,
       },
-      'test-ns',
+      testComponent,
     );
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
@@ -211,5 +242,91 @@ describe('UnLinkSecretFromServiceAccount', () => {
         ],
       }),
     );
+  });
+});
+
+describe('linkCommonSecretsToServiceAccount', () => {
+  beforeEach(() => {
+    k8sPatchResourceMock.mockClear();
+    K8sListResourceItemsMock.mockReturnValue(testSecrets);
+  });
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return early if there is no component', async () => {
+    k8sPatchResourceMock.mockClear();
+    await linkCommonSecretsToServiceAccount(null);
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+
+  it('should return early if the component has no namespace', async () => {
+    await linkCommonSecretsToServiceAccount({
+      ...testComponent,
+      metadata: { ...testComponent.metadata, namespace: null },
+    });
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+
+  it('should return early there is no common secret ', async () => {
+    K8sListResourceItemsMock.mockReturnValue([]);
+    await linkCommonSecretsToServiceAccount(testComponent);
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+
+  it('should call linkSecretToServiceAccount for each secret', async () => {
+    await linkCommonSecretsToServiceAccount(testComponent);
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testSecrets.length);
+  });
+});
+
+describe('linkSecretToAllServiceAccounts', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+    k8sPatchResourceMock.mockClear();
+  });
+
+  it('should call linkSecretToServiceAccount for each component', async () => {
+    K8sListResourceItemsMock.mockReturnValue(testComponents);
+    await linkSecretToServiceAccounts(
+      imagePullSecret,
+      [], // when select all components, we do not need relatedComponents
+      SecretForComponentOption.all,
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponentsNames.length);
+  });
+
+  it('should call linkSecretToServiceAccount for selected component', async () => {
+    const selectedComponentsNames = [testComponent.metadata.name];
+    K8sListResourceItemsMock.mockReturnValue([
+      testComponent,
+      { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
+    ]);
+    await linkSecretToServiceAccounts(
+      imagePullSecret,
+      selectedComponentsNames,
+      SecretForComponentOption.partial,
+    );
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(selectedComponentsNames.length);
+  });
+
+  it('should return early if secret is invalid', async () => {
+    await linkSecretToServiceAccounts(null, testComponentsNames, SecretForComponentOption.partial);
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+
+  it('should return early if components is invalid', async () => {
+    await linkSecretToServiceAccounts(imagePullSecret, null, SecretForComponentOption.partial);
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+
+  it('should return early if secret has no namespace', async () => {
+    const invalidSecret = { metadata: { name: 'test-secret' } } as SecretKind;
+    await linkSecretToServiceAccounts(
+      invalidSecret,
+      testComponentsNames,
+      SecretForComponentOption.partial,
+    );
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 });

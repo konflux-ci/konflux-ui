@@ -2,12 +2,22 @@ import React from 'react';
 import { TextInputTypes } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { InputField } from 'formik-pf';
-import DropdownField from '../../../shared/components/formik-fields/DropdownField';
-import { SourceSecretType } from '../../../types';
+import DropdownField from '~/shared/components/formik-fields/DropdownField';
+import { SourceSecretType } from '~/types/secret';
 import EncodedFileUploadField from './EncodedFileUploadField';
 
-export const SourceSecretForm: React.FC<React.PropsWithChildren<unknown>> = () => {
-  const [{ value: type }] = useField<SourceSecretType>('source.authType');
+type SourceSecretFormProps = {
+  onAuthTypeChange?: (type: SourceSecretType) => void;
+};
+
+export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeChange }) => {
+  const [{ value: type }, ,] = useField<SourceSecretType>('source.authType');
+
+  React.useEffect(() => {
+    if (onAuthTypeChange) {
+      onAuthTypeChange(type);
+    }
+  }, [type, onAuthTypeChange]);
 
   return (
     <>
@@ -54,3 +64,4 @@ export const SourceSecretForm: React.FC<React.PropsWithChildren<unknown>> = () =
     </>
   );
 };
+export { SourceSecretType };

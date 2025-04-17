@@ -20,6 +20,11 @@ import {
   BuildTimeSecret,
 } from '../../../types';
 
+export enum SecretForComponentOption {
+  all = 'all',
+  partial = 'partial',
+}
+
 export type PartnerTask = {
   type: SecretType;
   name: string;
@@ -178,7 +183,13 @@ export const getTargetLabelsForRemoteSecret = (
 };
 
 export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
-  if (!values.source?.host && (!values.labels || values.labels.length === 0)) {
+  const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
+
+  if (
+    !values.source?.host &&
+    (!values.labels || values.labels.length === 0) &&
+    !addCommonSecretLabel
+  ) {
     // if no labels quit early
     return null;
   }
@@ -197,6 +208,10 @@ export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]
     // get scm labels for host
     labels[SecretLabels.CREDENTIAL_LABEL] = SecretLabels.CREDENTIAL_VALUE;
     labels[SecretLabels.HOST_LABEL] = values.source.host;
+  }
+
+  if (addCommonSecretLabel) {
+    labels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
   }
   return labels;
 };
