@@ -35,6 +35,8 @@ export const COMMIT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('commit');
 
 export const COMMIT_DETAILS_PATH = COMMIT_LIST_PATH.extend(`:${RouterParams.commitName}`);
 
+export const COMMIT_PIPELINERUNS_PATH = COMMIT_DETAILS_PATH.extend('pipelineruns');
+
 export const APPLICATION_RELEASE_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`releases`);
 
 export const APPLICATION_RELEASE_DETAILS_PATH = APPLICATION_RELEASE_LIST_PATH.extend(

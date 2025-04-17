@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
-import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
+import {
+  COMMIT_DETAILS_PATH,
+  COMMIT_PIPELINERUNS_PATH,
+  COMPONENT_DETAILS_PATH,
+} from '../../../routes/paths';
 import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -73,6 +77,23 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
       </TableData>
       <TableData className={commitsTableColumnClasses.committedAt}>
         <Timestamp timestamp={obj.creationTime} />
+      </TableData>
+      <TableData className={commitsTableColumnClasses.byUser}>
+        <div className="pipelines-component-list">
+          {obj.pipelineRuns.length ? (
+            <Link
+              to={COMMIT_PIPELINERUNS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: obj.application,
+                commitName: obj.sha,
+              })}
+            >
+              {obj.pipelineRuns.length}
+            </Link>
+          ) : (
+            '-'
+          )}
+        </div>
       </TableData>
       <TableData className={commitsTableColumnClasses.status}>
         {statuses.includes(status) ? <StatusIconWithText status={status} /> : '-'}
