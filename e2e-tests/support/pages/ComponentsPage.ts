@@ -171,7 +171,8 @@ export class ComponentPage extends AbstractWizardPage {
   }
 
   closeModal() {
-    cy.get(ComponentsPagePO.customBuildPipelineModalCloseBtn).click();
+    // force click as there is sometimes a tooltip blocking the button
+    cy.get(ComponentsPagePO.customBuildPipelineModalCloseBtn).click({ force: true });
   }
 
   verifyComponentGHReferenceAndLink(linkText: string, link: string) {
