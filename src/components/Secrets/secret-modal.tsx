@@ -1,5 +1,5 @@
-import { SecretModel } from '../../models';
-import { SecretKind, SecretTypeDisplayLabel } from '../../types';
+import { SecretModel } from '~/models';
+import { SecretKind, SecretTypeDisplayLabel } from '~/types';
 import { createDeleteModalLauncher } from '../modal/DeleteResourceModal';
 import { typeToLabel } from './utils/secret-utils';
 import {
@@ -7,28 +7,17 @@ import {
   unlinkSecretFromServiceAccounts,
 } from './utils/service-account-utils';
 
-export const secretDeleteModalForBuildServiceAccount = (secret: SecretKind) =>
-  createDeleteModalLauncher(secret.kind)({
-    obj: secret,
-    model: SecretModel,
-    submitCallback: unlinkSecretFromServiceAccounts,
-    displayName: secret.metadata.name,
-    description: (
-      <>
-        The secret <strong>{secret.metadata.name}</strong> and its value will be deleted from all
-        the environments it is attached to.
-      </>
-    ),
-  });
+export const secretDeleteModal = (secret: SecretKind, isFeatureFlagEnabled: boolean) => {
+  const submitCallback = isFeatureFlagEnabled
+    ? unlinkSecretFromServiceAccounts
+    : typeToLabel(secret.type) === SecretTypeDisplayLabel.imagePull
+      ? unLinkSecretFromServiceAccount
+      : null;
 
-export const secretDeleteModal = (secret: SecretKind) =>
-  createDeleteModalLauncher(secret.kind)({
+  return createDeleteModalLauncher(secret.kind)({
     obj: secret,
     model: SecretModel,
-    submitCallback:
-      typeToLabel(secret.type) === SecretTypeDisplayLabel.imagePull
-        ? unLinkSecretFromServiceAccount
-        : null,
+    submitCallback,
     displayName: secret.metadata.name,
     description: (
       <>
@@ -37,3 +26,4 @@ export const secretDeleteModal = (secret: SecretKind) =>
       </>
     ),
   });
+};
