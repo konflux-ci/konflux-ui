@@ -1,9 +1,10 @@
 import { QueryClient } from '@tanstack/react-query';
+import { HALF_MINUTE } from '~/consts/time';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: HALF_MINUTE,
     },
   },
 });

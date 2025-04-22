@@ -8,7 +8,7 @@ import {
 } from '../../../consts/pipeline';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
-import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
+import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
 import { SecretForComponentOption } from './secret-utils';
 
 export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
@@ -316,4 +316,13 @@ export const linkCommonSecretsToServiceAccount = async (component: ComponentKind
   });
 
   await processWithPLimit(commonSecrets, 10, linkSecretToBuildServiceAccount, component);
+};
+
+export const isLinkableSecret = (secret: SecretKind): boolean => {
+  if (!secret) {
+    return false;
+  }
+
+  const linkableValues = Object.values(LinkableSecretType) as string[];
+  return linkableValues.includes(secret.type);
 };
