@@ -18,7 +18,7 @@ import { SecretTypeSubForm } from './SecretTypeSubForm';
 const AddSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  const isNew = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
   const initialValues: AddSecretFormValues = {
     type: SecretTypeDropdownLabel.opaque,
     name: '',
@@ -50,7 +50,10 @@ const AddSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        (!isNew ? addSecret(values, namespace) : addSecretWithLinkingComponents(values, namespace))
+        (!isBuildServiceAccountFeatureOn
+          ? addSecret(values, namespace)
+          : addSecretWithLinkingComponents(values, namespace)
+        )
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })

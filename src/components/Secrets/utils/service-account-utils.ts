@@ -8,7 +8,7 @@ import {
 } from '../../../consts/pipeline';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
-import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
+import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
 import { SecretForComponentOption } from './secret-utils';
 
 type SecretEntry = { name: string };
@@ -237,10 +237,27 @@ export const unLinkSecretFromBuildServiceAccount = async (
   });
 };
 
+export const filterLinkedServiceAccounts = (
+  secretName: string,
+  serviceAccounts: ServiceAccountKind[],
+): ServiceAccountKind[] => {
+  if (!secretName || !serviceAccounts) {
+    return [];
+  }
+
+  return serviceAccounts.filter((sa) => {
+    const isBuildServiceAccount = sa.metadata.name.startsWith(PIPELINE_SERVICE_ACCOUNT_PREFIX);
+    const hasSecret = sa.secrets?.some((s) => s.name === secretName);
+    const hasImagePullSecret = sa.imagePullSecrets?.some((s) => s.name === secretName);
+    return isBuildServiceAccount && (hasSecret || hasImagePullSecret);
+  });
+};
+
 export const getLinkedServiceAccounts = async (secret: SecretKind) => {
   if (!secret || !secret.metadata?.namespace) {
     return;
   }
+
   const allServiceAccounts: ServiceAccountKind[] = await K8sListResourceItems<ServiceAccountKind>({
     model: ServiceAccountModel,
     queryOptions: {
@@ -248,12 +265,7 @@ export const getLinkedServiceAccounts = async (secret: SecretKind) => {
     },
   });
 
-  const linkedServiceAccounts = allServiceAccounts.filter((sa) => {
-    const hasSecret = sa.secrets?.some((s) => s.name === secret.metadata.name);
-    const hasImagePullSecret = sa.imagePullSecrets?.some((s) => s.name === secret.metadata.name);
-    return hasSecret || hasImagePullSecret;
-  });
-  return linkedServiceAccounts;
+  return filterLinkedServiceAccounts(secret.metadata.name, allServiceAccounts);
 };
 
 export const unlinkSecretFromServiceAccounts = async (
@@ -335,4 +347,13 @@ export const linkCommonSecretsToServiceAccount = async (component: ComponentKind
   });
 
   await processWithPLimit(commonSecrets, 10, linkSecretToBuildServiceAccount, component);
+};
+
+export const isLinkableSecret = (secret: SecretKind): boolean => {
+  if (!secret) {
+    return false;
+  }
+
+  const linkableValues = Object.values(LinkableSecretType) as string[];
+  return linkableValues.includes(secret.type);
 };
