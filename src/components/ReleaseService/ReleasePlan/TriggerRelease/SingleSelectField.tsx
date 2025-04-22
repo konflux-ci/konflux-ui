@@ -14,6 +14,7 @@ import {
 } from '@patternfly/react-core';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { useField } from 'formik';
+import { NO_RESULTS } from '../../../../consts/constants';
 import { getFieldId } from '../../../../shared/components/formik-fields/field-utils';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
 
@@ -50,8 +51,6 @@ export const SelectTypeahead: React.FunctionComponent<SelectTypeaheadProps> = ({
   const [focusedItemIndex, setFocusedItemIndex] = React.useState<number | null>(null);
   const [activeItemId, setActiveItemId] = React.useState<string | null>(null);
   const textInputRef = React.useRef<HTMLInputElement>();
-
-  const NO_RESULTS = 'no results';
 
   React.useEffect(() => {
     let newSelectOptions: SelectOptionProps[] = options;
