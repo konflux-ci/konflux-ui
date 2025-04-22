@@ -31,7 +31,7 @@ const SnapshotOverviewTab: React.FC = () => {
   const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
-    () => loaded && !loadErr && snapshot?.metadata?.labels[SnapshotLabels.BUILD_PIPELINE_LABEL],
+    () => loaded && !loadErr && snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
     [snapshot, loaded, loadErr],
   );
 
