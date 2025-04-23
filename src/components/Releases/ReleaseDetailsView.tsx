@@ -82,6 +82,11 @@ const ReleaseDetailsView: React.FC = () => {
           label: 'Release artifacts',
           isFilled: true,
         },
+        {
+          key: 'yaml',
+          label: 'YAML',
+          isFilled: true,
+        },
       ]}
     />
   );
