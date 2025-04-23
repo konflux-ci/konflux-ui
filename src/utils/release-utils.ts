@@ -16,6 +16,14 @@ export const getTenantPipelineRunFromRelease = (release: ReleaseKind): string =>
   return release.status?.tenantProcessing?.pipelineRun;
 };
 
+export const getTenantCollectorPipelineRunFromRelease = (release: ReleaseKind): string => {
+  return release.status?.collectorsProcessing?.tenantCollectorsProcessing?.pipelineRun;
+};
+
+export const getManagedCollectorPipelineRunFromRelease = (release: ReleaseKind): string => {
+  return release.status?.collectorsProcessing?.managedCollectorsProcessing?.pipelineRun;
+};
+
 export const getFinalPipelineRunFromRelease = (release: ReleaseKind): string => {
   return release.status?.finalProcessing?.pipelineRun;
 };
