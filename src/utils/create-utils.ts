@@ -10,6 +10,7 @@ import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
+  SecretForComponentOption,
   typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
@@ -390,6 +391,35 @@ export const createSecretResource = async (
   });
 };
 
+export const enqueueLinkingTask = (
+  secret: SecretKind,
+  relatedComponents: string[],
+  option: SecretForComponentOption,
+) => {
+  const { setTaskStatus, clearTask } = useTaskStore.getState();
+  const taskId = `${secret.metadata.name}`;
+
+  setTaskStatus(taskId, LinkSecretStatus.Pending);
+
+  queueInstance.enqueue(async () => {
+    setTaskStatus(taskId, LinkSecretStatus.Running);
+
+    try {
+      await linkSecretToServiceAccounts(secret, relatedComponents, option);
+      setTaskStatus(taskId, LinkSecretStatus.Succeeded);
+      clearTask(taskId);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to link secret:', err);
+      setTaskStatus(
+        taskId,
+        LinkSecretStatus.Failed,
+        err instanceof Error ? err.message : String(err),
+      );
+    }
+  });
+};
+
 export const createSecretResourceWithLinkingComponents = async (
   values: AddSecretFormValues,
   namespace: string,
@@ -419,37 +449,7 @@ export const createSecretResourceWithLinkingComponents = async (
   });
 
   if (values.secretForComponentOption && createdSecret) {
-    const { setTaskStatus, clearTask } = useTaskStore.getState();
-
-    if (values.secretForComponentOption && createdSecret) {
-      const taskId = `${createdSecret.metadata.name}`;
-
-      setTaskStatus(taskId, LinkSecretStatus.Pending);
-
-      queueInstance.enqueue(async () => {
-        setTaskStatus(taskId, LinkSecretStatus.Running);
-
-        try {
-          await linkSecretToServiceAccounts(
-            createdSecret,
-            values.relatedComponents,
-            values.secretForComponentOption,
-          );
-          setTaskStatus(taskId, LinkSecretStatus.Succeeded);
-          // we just keep the failed jobs in task store to keep the store
-          // as clean as possible.
-          clearTask(taskId);
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to link secret:', err);
-          setTaskStatus(
-            taskId,
-            LinkSecretStatus.Failed,
-            err instanceof Error ? err.message : String(err),
-          );
-        }
-      });
-    }
+    enqueueLinkingTask(secretResource, values.relatedComponents, values.secretForComponentOption);
   }
 
   return createdSecret;
@@ -474,6 +474,25 @@ export const createSecret = async (secret: ImportSecret, namespace: string, dryR
     resource: secretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
+};
+
+export const createSecretWithLinkingComponents = async (
+  secret: ImportSecret,
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const secretResource = getSecretObject(secret, namespace);
+
+  const createdSecret = await K8sQueryCreateResource({
+    model: SecretModel,
+    resource: secretResource,
+    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
+  });
+
+  if (secret.secretForComponentOption && createdSecret) {
+    enqueueLinkingTask(createdSecret, secret.relatedComponents, secret.secretForComponentOption);
+  }
+  return createdSecret;
 };
 
 type CreateImageRepositoryType = {

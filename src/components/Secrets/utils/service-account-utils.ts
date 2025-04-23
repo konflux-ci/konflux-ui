@@ -326,3 +326,42 @@ export const isLinkableSecret = (secret: SecretKind): boolean => {
   const linkableValues = Object.values(LinkableSecretType) as string[];
   return linkableValues.includes(secret.type);
 };
+
+export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {
+  if (!secret || !secret.metadata?.name || !secret.metadata?.namespace) {
+    return;
+  }
+
+  await K8sGetResource<SecretKind>({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata?.namespace,
+    },
+  });
+
+  const currentLabels = secret.metadata.labels || {};
+  if (currentLabels[COMMON_SECRETS_LABEL] === 'true') {
+    return;
+  }
+
+  const updatedLabels = {
+    ...currentLabels,
+    [COMMON_SECRETS_LABEL]: 'true',
+  };
+
+  await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: '/metadata/labels',
+        value: updatedLabels,
+      },
+    ],
+  });
+};

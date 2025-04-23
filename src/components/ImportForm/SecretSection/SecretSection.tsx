@@ -23,7 +23,6 @@ const SecretSection = () => {
   const showModal = useModalLauncher();
   const { values, setFieldValue } = useFormikContext<ImportFormValues>();
   const namespace = useNamespace();
-
   const [secrets, secretsLoaded] = useSecrets(namespace);
 
   const partnerTaskSecrets: BuildTimeSecret[] =
