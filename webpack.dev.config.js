@@ -1,3 +1,5 @@
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { merge } from 'webpack-merge';
 import commonConfig from './webpack.config.js';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
@@ -6,6 +8,9 @@ import { config } from '@dotenvx/dotenvx';
 
 config();
 const DEV_SERVER_PORT = 8080;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default merge(commonConfig, {
   mode: 'development',
@@ -72,6 +77,7 @@ export default merge(commonConfig, {
     rules: [
       {
         test: /\.s?[ac]ss$/i,
+        exclude: path.resolve(__dirname, 'node_modules/monaco-editor'), // Exclude Monaco's CSS
         use: [
           'style-loader',
           'css-loader',
