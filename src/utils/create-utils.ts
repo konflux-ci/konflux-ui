@@ -438,6 +438,11 @@ export const addSecretWithLinkingComponents = async (
 export const createSecret = async (secret: ImportSecret, namespace: string, dryRun: boolean) => {
   const secretResource = getSecretObject(secret, namespace);
 
+  // if image pull secret, link to service account
+  if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
+    await linkSecretToServiceAccount(secretResource, namespace);
+  }
+
   return await K8sQueryCreateResource({
     model: SecretModel,
     resource: secretResource,
