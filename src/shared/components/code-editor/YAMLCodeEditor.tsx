@@ -38,7 +38,6 @@ export const YAMLCodeEditor: React.FC<Props> = ({ code, ...props }) => {
   return (
     <CodeEditor
       {...props}
-      data-test="monaco-editor"
       language={Language.yaml}
       code={yamlStringify(code ?? {})}
       onEditorDidMount={(_, monaco) => handleEditorDidMount(monaco)}
