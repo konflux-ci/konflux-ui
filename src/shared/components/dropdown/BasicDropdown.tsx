@@ -176,7 +176,7 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
   };
 
   return (
-    <div>
+    <>
       <Select
         id="basic-dropdown"
         isOpen={isOpen}
@@ -222,7 +222,7 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
           <HelperTextItem variant="error">{helperText}</HelperTextItem>
         </HelperText>
       )}
-    </div>
+    </>
   );
 };
 
