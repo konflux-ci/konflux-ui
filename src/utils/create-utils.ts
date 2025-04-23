@@ -2,6 +2,9 @@ import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  addCommonSecretLabelToBuildSecret,
+  isLinkableSecret,
+  linkSecretToBuildServiceAccount,
   linkSecretToServiceAccount,
   linkSecretToServiceAccounts,
 } from '~/components/Secrets/utils/service-account-utils';
@@ -9,9 +12,10 @@ import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
+  SecretForComponentOption,
   typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
-import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
+import { k8sCreateResource, K8sGetResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
 import {
   ApplicationModel,
@@ -449,6 +453,51 @@ export const createSecret = async (secret: ImportSecret, namespace: string, dryR
       await linkSecretToServiceAccount(secretResource, namespace);
     }
   });
+};
+
+export const createSecretWithLinkingComponents = async (
+  secret: ImportSecret,
+  componentName: string,
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const secretResource = getSecretObject(secret, namespace);
+
+  const createdSecret = await K8sQueryCreateResource({
+    model: SecretModel,
+    resource: secretResource,
+    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
+  });
+
+  if (!createdSecret || dryRun) {
+    return createdSecret;
+  }
+
+  if (secret.secretForComponentOption) {
+    await linkSecretToServiceAccounts(
+      createdSecret,
+      secret.relatedComponents,
+      secret.secretForComponentOption,
+    );
+  }
+
+  if (secret.secretForComponentOption === SecretForComponentOption.all) {
+    await addCommonSecretLabelToBuildSecret(createdSecret);
+  }
+
+  if (isLinkableSecret(createdSecret)) {
+    const createdComponent = await K8sGetResource<ComponentKind>({
+      model: ComponentModel,
+      queryOptions: { name: componentName, ns: namespace },
+    });
+
+    // As default, importing linkable secret would link to the created component build sa.
+    if (createdComponent) {
+      await linkSecretToBuildServiceAccount(createdSecret, createdComponent);
+    }
+  }
+
+  return createdSecret;
 };
 
 type CreateImageRepositoryType = {
