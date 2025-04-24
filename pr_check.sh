@@ -25,6 +25,11 @@ build_ui_image() {
 
     AGENT_VERSION=$(podman run $NODEJS_AGENT_IMAGE /bin/sh -c 'echo ${AGENT_VERSION}')
 
+    # Setting up Sealight builds for PRs and branches require a slighly different approaches
+    # The main difference is between the config commands
+    # - slnodejs config - used for reporting branch builds
+    # - slnodejs prConfig - used for reporting PR builds
+    # See the docs for more details https://sealights.atlassian.net/wiki/spaces/SUP/pages/1376262/SeaLights+Node.js+agent+-+Command+Reference
     if [ "${JOB_TYPE}" == "on-pr" ]; then
         podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
             $NODEJS_AGENT_IMAGE \
