@@ -1,12 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Skeleton } from '@patternfly/react-core';
-import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
-import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
+import { CommitIcon } from '~/components/Commits/CommitIcon';
 import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { ExternalLink } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
@@ -29,13 +28,6 @@ type PipelineRunListRowProps = RowFunctionArgs<
 >;
 
 type BasePipelineRunListRowProps = PipelineRunListRowProps & { showVulnerabilities?: boolean };
-
-enum EventTypeLabel {
-  pull_request = 'Pull Request',
-  push = 'Push',
-  incoming = 'Incoming',
-  retest_all_comments = 'Retest all comments',
-}
 
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
@@ -62,6 +54,29 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const repoURL = obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
   const prNumber = obj.metadata?.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
   const eventType = obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
+  const commidId = obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL];
+
+  const getTriggerredByColumnData = () => {
+    let icon = null,
+      text = ``,
+      link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
+    if (eventType === PipelineRunEventType.PULL) {
+      icon = <CommitIcon isPR={true} className="sha-title-icon" />;
+      text = `${repoOrg}/${repoURL}/${prNumber}`;
+      link = `${link}/pull/${prNumber}`;
+    } else if (eventType === PipelineRunEventType.PUSH) {
+      icon = <CommitIcon isPR={false} className="sha-title-icon" />;
+      text = commidId?.substring(0, 7);
+      link = `${link}/commit/${commidId}`;
+    }
+
+    return (
+      <>
+        {icon}
+        {eventType ? <ExternalLink href={link} text={text ?? '-'} hideIcon={true} /> : '-'}
+      </>
+    );
+  };
 
   return (
     <>
@@ -132,21 +147,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         )}
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.triggeredBy}>
-        {gitProvider === 'github' ? (
-          <GithubIcon className="git-icon" />
-        ) : gitProvider === 'gitlab' ? (
-          <GitlabIcon className="git-icon" />
-        ) : null}
-
-        {eventType ? (
-          <ExternalLink
-            href={`https://${gitProvider}.com/${repoOrg}/${repoURL}#${prNumber}`}
-            text={EventTypeLabel[eventType] ?? '-'}
-            hideIcon={true}
-          />
-        ) : (
-          '-'
-        )}
+        {getTriggerredByColumnData()}
       </TableData>
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
