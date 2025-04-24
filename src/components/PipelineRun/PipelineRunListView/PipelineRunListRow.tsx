@@ -48,13 +48,13 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
-  const applicationName = obj.metadata?.labels[PipelineRunLabel.APPLICATION];
-  const gitProvider = obj.metadata?.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
-  const repoOrg = obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
-  const repoURL = obj.metadata?.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
-  const prNumber = obj.metadata?.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
-  const eventType = obj.metadata?.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
-  const commidId = obj.metadata?.labels[PipelineRunLabel.COMMIT_LABEL];
+  const applicationName = obj.metadata.labels?.[PipelineRunLabel.APPLICATION];
+  const gitProvider = obj.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
+  const repoOrg = obj.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoURL = obj.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
+  const prNumber = obj.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
+  const eventType = obj.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
+  const commidId = obj.metadata.labels?.[PipelineRunLabel.COMMIT_LABEL];
 
   const getTriggerredByColumnData = () => {
     let icon = null,
