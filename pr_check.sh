@@ -118,9 +118,9 @@ run_test() {
         TEST_RUN=1
     fi
 
-    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD/artifacts:/artifacts" --workdir /artifacts -e NODE_DEBUG=sl \
+    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
         $NODEJS_AGENT_IMAGE \
-        /bin/bash -cx "slnodejs uploadReports --teststage ${TEST_STAGE_NAME} --buildsessionidfile buildSessionId --reportfile \$(ls *.xml) --token ${SEALIGHTS_TOKEN}"
+        /bin/bash -cx "slnodejs uploadReports --teststage ${TEST_STAGE_NAME} --buildsessionidfile buildSessionId --reportfile \$(ls ./artifacts/*.xml) --token ${SEALIGHTS_TOKEN}"
 
     podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
         $NODEJS_AGENT_IMAGE \
