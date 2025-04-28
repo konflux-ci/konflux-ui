@@ -20,6 +20,7 @@ const mockOnClick = jest.fn();
 
 const mockWhatsNextItems: WhatsNextItem[] = [
   {
+    id: 0,
     title: 'React router action',
     description: 'Sample action to take user to a router link inside the app.',
     icon: componentsIcon,
@@ -30,6 +31,7 @@ const mockWhatsNextItems: WhatsNextItem[] = [
     helpLink: 'mock-help-id',
   },
   {
+    id: 1,
     title: 'External link action',
     description: 'Sample action to take user to an external link.',
     icon: gitAppIcon,
@@ -40,6 +42,7 @@ const mockWhatsNextItems: WhatsNextItem[] = [
     },
   },
   {
+    id: 2,
     title: 'On click action',
     description: 'Sample action to trigger an onClick action.',
     icon: gitAppIcon,
@@ -82,5 +85,20 @@ describe('Whats Next Section', () => {
       fireEvent.click(trigger);
     });
     expect(mockOnClick).toHaveBeenCalled();
+  });
+
+  it('it should close the card when clicked on close button', () => {
+    render(<WhatsNextSection whatsNextItems={[mockWhatsNextItems[0]]} />);
+    expect(screen.getByText('React router action')).toBeInTheDocument();
+    expect(screen.getByText('Take me to router link')).toBeInTheDocument();
+
+    act(() => {
+      const trigger = screen.getByTestId('close-button');
+      fireEvent.click(trigger);
+    });
+
+    expect(mockOnClick).toHaveBeenCalled();
+    expect(screen.queryByText('React router action')).not.toBeInTheDocument();
+    expect(screen.queryByText('Take me to router link')).not.toBeInTheDocument();
   });
 });
