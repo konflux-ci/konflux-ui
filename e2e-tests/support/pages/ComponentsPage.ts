@@ -162,16 +162,17 @@ export class ComponentPage extends AbstractWizardPage {
 
   verifyAndWaitForPRIsSent() {
     this.checkStatusOnModal('Merge pull request');
-    cy.contains('a', 'Merge in GitHub').should('be.visible');
+    cy.contains('a', 'Merge in Git').should('be.visible');
   }
 
   verifyAndWaitForPRMerge() {
     this.checkStatusOnModal('Custom');
-    cy.contains('a', 'Edit pipeline in GitHub').should('be.visible');
+    cy.contains('a', 'Edit pipeline in Git').should('be.visible');
   }
 
   closeModal() {
-    cy.get(ComponentsPagePO.customBuildPipelineModalCloseBtn).click();
+    // force click as there is sometimes a tooltip blocking the button
+    cy.get(ComponentsPagePO.customBuildPipelineModalCloseBtn).click({ force: true });
   }
 
   verifyComponentGHReferenceAndLink(linkText: string, link: string) {

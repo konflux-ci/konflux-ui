@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import {
@@ -8,7 +8,6 @@ import {
   PipelineRunType,
 } from '../../../consts/pipelinerun';
 import { useComponent } from '../../../hooks/useComponents';
-import { useSnapshots } from '../../../hooks/useSnapshots';
 import { K8sQueryPatchResource } from '../../../k8s';
 import { ComponentModel, PipelineRunModel, SnapshotModel } from '../../../models';
 import { Action } from '../../../shared/components/action-menu/types';
@@ -51,23 +50,15 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
     pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT],
   );
 
-  const [snapshots, snapshotsLoaded, snapshotsError] = useSnapshots(namespace);
-
   const snapShotLabel = pipelineRun?.metadata?.labels?.[PipelineRunLabel.SNAPSHOT];
+
+  const [snapshot, , snapshotError] = useSnapshot(namespace, snapShotLabel);
+
   const isPushBuildType = [PipelineRunEventType.PUSH, PipelineRunEventType.INCOMING].includes(
     pipelineRun?.metadata?.labels?.[
       PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL
     ]?.toLowerCase() as PipelineRunEventType,
   );
-
-  const snapshot = React.useMemo(
-    () =>
-      snapshotsLoaded &&
-      !snapshotsError &&
-      snapshots.find((sn) => sn.metadata?.name === snapShotLabel),
-    [snapshots, snapshotsLoaded, snapshotsError, snapShotLabel],
-  );
-
   const runType = pipelineRun?.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE];
 
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
@@ -79,7 +70,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
           !componentError &&
           startNewBuild(component).then(() => {
             navigate(
-              `${PIPELINE_RUNS_LIST_PATH.createPath({ workspaceName: namespace, applicationName: component.spec.application })}?name=${component.metadata.name}`,
+              `${PIPELINE_RUNS_LIST_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: component.spec.application,
+              })}?name=${component.metadata.name}`,
             );
           })
         : runType === PipelineRunType.TEST &&
@@ -87,7 +81,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
           scenario &&
           rerunTestPipeline(snapshot, scenario).then(() => {
             navigate(
-              `${PIPELINE_RUNS_LIST_PATH.createPath({ workspaceName: namespace, applicationName: component.spec.application })}?name=${component.metadata.name}`,
+              `${PIPELINE_RUNS_LIST_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: component.spec.application,
+              })}?name=${component.metadata.name}`,
             );
           }),
     isDisabled:
@@ -98,7 +95,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
       (runType === PipelineRunType.BUILD && !canPatchComponent) ||
       (runType === PipelineRunType.TEST && !canPatchSnapshot)
         ? "You don't have access to rerun"
-        : runType === PipelineRunType.TEST && (!snapshot || !scenario)
+        : runType === PipelineRunType.TEST && (!snapshot || snapshotError || !scenario)
           ? 'Missing snapshot or scenario'
           : runType === PipelineRunType.BUILD && !isPushBuildType
             ? 'Comment `/retest` on pull request to rerun'
