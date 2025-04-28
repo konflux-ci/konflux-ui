@@ -82,7 +82,10 @@ describe('SingleSelectComponentDropdown', () => {
 describe('MultiSelectComponentDropdown', () => {
   it('should render component dropdown', () => {
     formikRenderer(
-      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      <MultiSelectComponentsDropdown
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
+        name="multiSelect"
+      />,
       { multiSelect: '' },
     );
     screen.getByText('Choose components to nudge');
@@ -90,7 +93,10 @@ describe('MultiSelectComponentDropdown', () => {
 
   it('should select all item from menu', () => {
     formikRenderer(
-      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      <MultiSelectComponentsDropdown
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
+        name="multiSelect"
+      />,
       { multiSelect: '' },
     );
     screen.getByText('Choose components to nudge');
@@ -106,7 +112,10 @@ describe('MultiSelectComponentDropdown', () => {
 
   it('should select/unselect all item from menu', () => {
     formikRenderer(
-      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      <MultiSelectComponentsDropdown
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
+        name="multiSelect"
+      />,
       { multiSelect: '' },
     );
     screen.getByText('Choose components to nudge');
@@ -125,7 +134,7 @@ describe('MultiSelectComponentDropdown', () => {
   it('should not select disabled menu item', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown
-        groupedComponents={{ c: ['a', 'b'] }}
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
         name="multiSelect"
         sourceComponentName="a"
       />,
@@ -147,7 +156,7 @@ describe('MultiSelectComponentDropdown', () => {
   it('should render grouped components in sorted order', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown
-        groupedComponents={{ Group1: ['aa', 'ab', 'ac'] }}
+        sortedGroupedComponents={{ Group1: ['aa', 'ab', 'ac'] }}
         name="multiSelect"
       />,
       { multiSelect: [] },
@@ -160,7 +169,7 @@ describe('MultiSelectComponentDropdown', () => {
   it('should filter grouped components based on search input', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown
-        groupedComponents={{ Group1: ['test1', 'example', 'sample'] }}
+        sortedGroupedComponents={{ Group1: ['test1', 'example', 'sample'] }}
         name="multiSelect"
       />,
       { multiSelect: [] },
