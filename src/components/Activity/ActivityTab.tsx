@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
-import { APPLICATION_ACTIVITY_PATH } from '@routes/paths';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { APPLICATION_ACTIVITY_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
 import PipelineRunsTab from './PipelineRunsTab';
@@ -13,7 +13,7 @@ export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
 export const ActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
-  const { applicationName, workspaceName, activityTab } = params;
+  const { applicationName, workspaceName, activityTab = 'latest-commits' } = params;
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
     ACTIVITY_SECONDARY_TAB_KEY,
   );
