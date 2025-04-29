@@ -8,7 +8,10 @@ import './LinkedSecretsListView.scss';
 export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ obj: secret }) => {
   return (
     <>
-      <TableData className={linkedSecretsTableColumnClasses.secretName}>
+      <TableData
+        className={linkedSecretsTableColumnClasses.secretName}
+        data-test="linked-secrets-list-item"
+      >
         <Text component={TextVariants.p}>{secret.metadata.name}</Text>
       </TableData>
 
