@@ -171,22 +171,24 @@ export const LinkedSecretsListView: React.FC = () => {
             <Text component={TextVariants.p}>Linked secrets</Text>
           </TextContent>
 
-          <Table
-            virtualize={false}
-            data={filteredLinkedSecrets}
-            unfilteredData={sortedLinkedSecrets}
-            Toolbar={<LinkedSecretsToolbar />}
-            EmptyMsg={EmptyMessage}
-            NoDataEmptyMsg={NoDataEmptyMessage}
-            aria-label="Linked Secrets List"
-            Header={LinkedSecretsListHeader}
-            Row={LinkedSecretsListRow}
-            loaded={linkedSecretsLoaded}
-            getRowProps={(obj: SecretKind) => ({
-              id: `${obj.metadata.name}-linked-secret-list-item`,
-              'aria-label': obj.metadata.name,
-            })}
-          />
+          <div data-test="linked-secrets-list">
+            <Table
+              virtualize={false}
+              data={filteredLinkedSecrets}
+              unfilteredData={sortedLinkedSecrets}
+              Toolbar={<LinkedSecretsToolbar />}
+              EmptyMsg={EmptyMessage}
+              NoDataEmptyMsg={NoDataEmptyMessage}
+              aria-label="Linked Secrets List"
+              Header={LinkedSecretsListHeader}
+              Row={LinkedSecretsListRow}
+              loaded={linkedSecretsLoaded}
+              getRowProps={(obj: SecretKind) => ({
+                id: `${obj.metadata.name}-linked-secrets-list-item`,
+                'aria-label': obj.metadata.name,
+              })}
+            />
+          </div>
         </PageSection>
       </PageLayout>
     </>
