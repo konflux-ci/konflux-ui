@@ -183,7 +183,7 @@ export const LinkedSecretsListView: React.FC = () => {
             Row={LinkedSecretsListRow}
             loaded={linkedSecretsLoaded}
             getRowProps={(obj: SecretKind) => ({
-              id: `${obj.metadata.name}-linked-secret-list-item`,
+              id: `${obj.metadata.name}-linked-secrets-list-item`,
               'aria-label': obj.metadata.name,
             })}
           />
