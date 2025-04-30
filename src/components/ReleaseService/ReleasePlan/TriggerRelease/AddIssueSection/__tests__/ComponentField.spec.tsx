@@ -34,15 +34,9 @@ describe('ComponentField', () => {
     expect(addCmpBtn).toBeInTheDocument();
 
     expect(screen.queryByTestId('component-0')).toBeInTheDocument();
-    expect(
-      screen.queryByTestId('component-0').getElementsByClassName('pf-v5-c-dropdown__toggle-text')[0]
-        .innerHTML,
-    ).toBe('a');
+    expect(screen.queryByTestId('component-0').firstChild.lastChild.textContent).toBe('a');
     expect(screen.queryByTestId('component-1')).toBeInTheDocument();
-    expect(
-      screen.queryByTestId('component-1').getElementsByClassName('pf-v5-c-dropdown__toggle-text')[0]
-        .innerHTML,
-    ).toBe('b');
+    expect(screen.queryByTestId('component-1').firstChild.lastChild.textContent).toBe('b');
   });
 
   it('should show disabled remove button when only one component', () => {
@@ -61,18 +55,14 @@ describe('ComponentField', () => {
 
     expect(screen.queryByTestId('remove-component-0')).toBeInTheDocument();
     expect(screen.queryByTestId('component-0')).toBeInTheDocument();
-    expect(
-      screen.queryByTestId('component-0').getElementsByClassName('pf-v5-c-dropdown__toggle-text')[0]
-        .innerHTML,
-    ).toBe('remove-component');
+    expect(screen.queryByTestId('component-0').firstChild.lastChild.textContent).toBe(
+      'remove-component',
+    );
 
     act(() => {
       fireEvent.click(screen.queryByTestId('remove-component-0'));
     });
-    expect(
-      screen.queryByTestId('component-0').getElementsByClassName('pf-v5-c-dropdown__toggle-text')[0]
-        .innerHTML,
-    ).toBe('cmp2');
+    expect(screen.queryByTestId('component-0').firstChild.lastChild.textContent).toBe('cmp2');
   });
 
   it('should show packages', () => {
