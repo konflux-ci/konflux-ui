@@ -50,13 +50,21 @@ const applicationRoutes = [
         path: 'integrationtests',
         loader: integrationListPageLoader,
         errorElement: <RouteErrorBoundry />,
-        element: <IntegrationTestsListView />,
+        element: (
+          <FilterContextProvider filterParams={['name']}>
+            <IntegrationTestsListView />
+          </FilterContextProvider>
+        ),
       },
       {
         path: 'releases',
         loader: releaseListViewTabLoader,
         errorElement: <RouteErrorBoundry />,
-        element: <ReleaseListViewTab />,
+        element: (
+          <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
+            <ReleaseListViewTab />
+          </FilterContextProvider>
+        ),
       },
     ],
   },
