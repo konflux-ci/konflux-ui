@@ -14,7 +14,8 @@ describe('ImagePullSecretForm', () => {
     expect(screen.getByText('Authentication type')).toBeVisible();
 
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Image registry credentials' }));
+      expect(screen.getByTestId('dropdown-toggle').textContent).toBe('Image registry credentials');
+      fireEvent.click(screen.getByTestId('dropdown-toggle'));
     });
 
     act(() => {
