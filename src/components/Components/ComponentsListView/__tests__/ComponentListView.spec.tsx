@@ -1,4 +1,6 @@
 import { render, screen, fireEvent, within, act } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PACState } from '../../../../hooks/usePACState';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../../models';
@@ -8,6 +10,8 @@ import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
 import ComponentListView from '../ComponentListView';
 import { getContainerImageLink } from '../ComponentsListRow';
+
+jest.useFakeTimers();
 
 const mockComponents = componentCRMocks.reduce((acc, mock) => {
   acc.push({ ...mock, spec: { ...mock.spec, application: 'test-app' } });
@@ -34,15 +38,8 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-let paramValues = {};
 jest.mock('../../../../hooks/useSearchParam', () => ({
-  useSearchParam: (param: string) => {
-    const set = (val) => {
-      paramValues[param] = val;
-    };
-    const unset = () => (paramValues[param] = undefined);
-    return [paramValues[param], set, unset];
-  },
+  useSearchParamBatch: () => mockUseSearchParamBatch(),
 }));
 
 jest.mock('../../../../hooks/usePipelineRuns', () => ({
@@ -85,22 +82,27 @@ const getMockedResources = (kind) => {
   return [[], true];
 };
 
+const ComponentList = () => (
+  <FilterContextProvider filterParams={['name', 'status']}>
+    <ComponentListView applicationName="test-app" />
+  </FilterContextProvider>
+);
+
 describe('ComponentListViewPage', () => {
   beforeEach(() => {
     useK8sWatchResourceMock.mockImplementation(getMockedResources);
-    paramValues = {};
   });
 
   mockUseNamespaceHook('test-ns');
 
   it('should render skeleton if data is not loaded', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false]);
-    render(<ComponentListView applicationName="test-app" />);
+    render(<ComponentList />);
     screen.getByTestId('data-table-skeleton');
   });
 
   it('should render button to add components', () => {
-    render(<ComponentListView applicationName="test-app" />);
+    render(<ComponentList />);
     const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toBe(
@@ -109,7 +111,7 @@ describe('ComponentListViewPage', () => {
   });
 
   it('should render filter toolbar and filter components based on name', () => {
-    render(<ComponentListView applicationName="test-app" />);
+    render(<ComponentList />);
     expect(screen.getByTestId('component-list-toolbar')).toBeInTheDocument();
     const nameSearchInput = screen.getByTestId('name-input-filter');
     const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
@@ -120,75 +122,65 @@ describe('ComponentListViewPage', () => {
   });
 
   it('should show a warning when showMergeStatus is set', () => {
-    render(<ComponentListView applicationName="test-app" />);
+    render(<ComponentList />);
     screen.getByTestId('components-unmerged-build-pr');
   });
-  it('should filter components by type', () => {
-    const view = render(<ComponentListView applicationName="test-app" />);
+  it('should filter components by status', () => {
+    const view = render(<ComponentList />);
 
     expect(view.getAllByTestId('component-list-item')).toHaveLength(2);
 
     // interact with filters
-    const filterMenuButton = view.getByRole('button', { name: /filter/i });
+    const filterMenuButton = view.getByRole('button', { name: /status filter menu/i });
     fireEvent.click(filterMenuButton);
 
-    const successCb = view.getByLabelText(/successful/i, {
+    const successCb = view.getByLabelText(/succeeded/i, {
       selector: 'input',
     }) as HTMLInputElement;
     fireEvent.click(successCb);
-    view.rerender(<ComponentListView applicationName="test-app" />);
+    view.rerender(<ComponentList />);
 
     expect(successCb.checked).toBe(true);
     expect(view.queryAllByTestId('component-list-item')).toHaveLength(1);
     fireEvent.click(successCb);
-    view.rerender(<ComponentListView applicationName="test-app" />);
+    view.rerender(<ComponentList />);
 
     expect(view.queryAllByTestId('component-list-item')).toHaveLength(2);
 
-    const failedCb = view.getByLabelText(/failed/i, {
+    const pendingCb = view.getByLabelText(/pending/i, {
       selector: 'input',
     }) as HTMLInputElement;
-    fireEvent.click(failedCb);
-    view.rerender(<ComponentListView applicationName="test-app" />);
+    fireEvent.click(pendingCb);
+    view.rerender(<ComponentList />);
 
-    expect(failedCb.checked).toBe(true);
-    expect(view.queryAllByTestId('component-list-item')).toHaveLength(0);
-    fireEvent.click(failedCb);
-    view.rerender(<ComponentListView applicationName="test-app" />);
-
-    expect(view.queryAllByTestId('component-list-item')).toHaveLength(2);
-
-    const buildingCb = view.getByLabelText(/Building/i, {
-      selector: 'input',
-    }) as HTMLInputElement;
-    fireEvent.click(buildingCb);
-    view.rerender(<ComponentListView applicationName="test-app" />);
-
-    expect(buildingCb.checked).toBe(true);
-    expect(view.queryAllByTestId('component-list-item')).toHaveLength(0);
+    expect(pendingCb.checked).toBe(true);
+    expect(view.queryAllByTestId('component-list-item')).toHaveLength(1);
+    fireEvent.click(pendingCb);
+    view.rerender(<ComponentList />);
 
     // clear the filter
-    const clearFilterButton = view.getAllByRole('button', { name: 'Clear filters' })[0];
-    fireEvent.click(clearFilterButton);
-    view.rerender(<ComponentListView applicationName="test-app" />);
-
+    expect(pendingCb.checked).toBe(false);
     expect(view.queryAllByTestId('component-list-item')).toHaveLength(2);
   });
-  it('should clear filters from empty state', async () => {
-    const view = render(<ComponentListView applicationName="test-app" />);
+  it('should clear filters from empty state', () => {
+    const view = render(<ComponentList />);
     expect(screen.getAllByTestId('component-list-item')).toHaveLength(2);
 
-    const nameSearchInput = screen.getByTestId('name-input-filter');
-    const textFilterInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
-    await act(() => fireEvent.change(textFilterInput, { target: { value: 'no match' } }));
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, {
+        target: { value: 'no match' },
+      });
+    });
+    act(() => jest.advanceTimersByTime(700));
 
-    view.rerender(<ComponentListView applicationName="test-app" />);
+    view.rerender(<ComponentList />);
     expect(screen.queryAllByTestId('component-list-item')).toHaveLength(0);
 
     const clearFilterButton = screen.getByRole('button', { name: 'Clear all filters' });
     fireEvent.click(clearFilterButton);
 
-    view.rerender(<ComponentListView applicationName="test-app" />);
+    view.rerender(<ComponentList />);
 
     expect(screen.getAllByTestId('component-list-item')).toHaveLength(2);
   });
@@ -196,7 +188,7 @@ describe('ComponentListViewPage', () => {
   it('should get more data if there is another page', () => {
     const getNextPageMock = jest.fn();
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
-    render(<ComponentListView applicationName="test-app" />);
+    render(<ComponentList />);
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });

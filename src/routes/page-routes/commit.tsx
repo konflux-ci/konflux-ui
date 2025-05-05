@@ -1,4 +1,4 @@
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
   CommitDetailsView,
   CommitOverviewTab,
@@ -18,9 +18,9 @@ const commitRoutes = [
       {
         path: 'pipelineruns',
         element: (
-          <PipelineRunsFilterContextProvider>
+          <FilterContextProvider filterParams={['name', 'status', 'type']}>
             <CommitsPipelineRunTab />
-          </PipelineRunsFilterContextProvider>
+          </FilterContextProvider>
         ),
       },
     ],
