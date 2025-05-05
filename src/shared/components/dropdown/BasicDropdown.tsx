@@ -16,8 +16,7 @@ import {
 } from '@patternfly/react-core';
 import './BasicDropdown.scss';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
-
-const NO_RESULTS = 'no results';
+import { NO_RESULTS } from '~/consts/constants';
 
 export type DropdownItemObject = {
   key: string;

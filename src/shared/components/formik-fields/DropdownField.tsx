@@ -1,11 +1,10 @@
 import React from 'react';
 import { FormGroup, ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext, FormikValues } from 'formik';
+import { TYPEAHEAD_THRESHOLD } from '~/consts/constants';
 import BasicDropdown, { DropdownItemObject } from '../dropdown/BasicDropdown';
 import { getFieldId } from './field-utils';
 import FieldHelperText from './FieldHelperText';
-
-const TYPEAHEAD_THRESHOLD = 10;
 
 export interface FieldProps {
   name: string;
