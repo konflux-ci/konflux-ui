@@ -107,3 +107,38 @@ export const useAllComponents = (namespace: string): [ComponentKind[], boolean, 
   );
   return [allComponents, !componentsLoaded, error];
 };
+
+export const useSortedGroupComponents = (
+  namespace: string,
+): [{ [application: string]: string[] }, boolean, unknown] => {
+  const [allComponents, allCompsLoaded, allCompsError] = useAllComponents(namespace);
+  const groupedComponents = React.useMemo(
+    () =>
+      allCompsLoaded && !allCompsError
+        ? allComponents.reduce((acc, val) => {
+            if (acc[val.spec.application]) {
+              acc[val.spec.application] = [...acc[val.spec.application], val.metadata.name];
+            } else {
+              acc[val.spec.application] = [val.metadata.name];
+            }
+            return acc;
+          }, {})
+        : {},
+    [allComponents, allCompsError, allCompsLoaded],
+  );
+
+  // Sort the grouped components
+  const sortedGroupedComponents = React.useMemo(() => {
+    return Object.keys(groupedComponents)
+      .sort()
+      .reduce(
+        (acc, key) => {
+          acc[key] = [...groupedComponents[key]].sort();
+          return acc;
+        },
+        {} as { [application: string]: string[] },
+      );
+  }, [groupedComponents]);
+
+  return [sortedGroupedComponents, allCompsLoaded, allCompsError];
+};
