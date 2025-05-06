@@ -18,6 +18,13 @@ const releaseRoutes = [
         index: true,
         element: <ReleaseOverviewTab />,
       },
+      {
+        path: 'yaml',
+        async lazy() {
+          const { ReleaseYamlTab } = await import('../../components/Releases');
+          return { element: <ReleaseYamlTab /> };
+        },
+      },
     ],
   },
 ];
