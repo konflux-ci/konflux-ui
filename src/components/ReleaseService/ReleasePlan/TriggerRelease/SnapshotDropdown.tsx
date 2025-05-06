@@ -1,14 +1,15 @@
 import React from 'react';
 import { useField, useFormikContext } from 'formik';
 import { useSnapshotsForApplication } from '../../../../hooks/useSnapshots';
-import DropdownField from '../../../../shared/components/formik-fields/DropdownField';
-import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
 import { useNamespace } from '../../../../shared/providers/Namespace';
+import { SelectTypeahead } from './SingleSelectField';
 
-type SnapshotDropdownProps = Omit<
-  React.ComponentProps<typeof DropdownField>,
-  'items' | 'label' | 'placeholder'
-> & { name: string; applicationName: string };
+type SnapshotDropdownProps = {
+  name: string;
+  applicationName: string;
+  helpText?: string;
+  required?: boolean;
+};
 
 export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdownProps>> = (
   props,
@@ -22,30 +23,51 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
   } = useSnapshotsForApplication(namespace, props.applicationName);
   const [, , { setValue }] = useField<string>(props.name);
 
-  const dropdownItems = React.useMemo(
+  const allSnapshots = React.useMemo(
     () =>
-      !isLoading ? snapshots.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
+      !isLoading
+        ? snapshots.map((a) => ({
+            name: a.metadata.name,
+            value: a.metadata.name,
+            selected: false,
+          }))
+        : [],
     [isLoading, snapshots],
   );
 
   React.useEffect(() => {
-    // Reset snapshot dropdown value when applicationName changes
     void setValue('');
-  }, [error, isLoading, props.applicationName, setErrors, setValue]);
+    allSnapshots.forEach((snapshot) => (snapshot.selected = false));
+  }, [error, isLoading, props.applicationName, setErrors, setValue, allSnapshots]);
+
+  const handleSelect = React.useCallback(
+    (snapshotName: string) => {
+      if (!allSnapshots || allSnapshots.length === 0) {
+        return;
+      }
+
+      allSnapshots.forEach((snapshot) => {
+        snapshot.selected = snapshot.name === snapshotName;
+      });
+
+      void setValue(snapshotName);
+    },
+    [allSnapshots, setValue],
+  );
 
   return (
     <>
-      <DropdownField
+      <SelectTypeahead
         {...props}
         label="Snapshot"
-        placeholder={isLoading || !!error ? 'Loading snapshots...' : 'Select snapshot'}
-        isDisabled={props.isDisabled || isLoading || !!error}
-        items={dropdownItems}
-        onChange={(app: string) => setValue(app)}
+        options={allSnapshots.map((snapshot) => ({
+          value: snapshot.name,
+          children: snapshot.name,
+        }))}
+        placeholder="Select a snapshot"
+        onOptionSelect={(value) => handleSelect(value as string)}
+        setValue={setValue}
       />
-      {error ? (
-        <FieldHelperText isValid={false} errorMessage={(error as { message: string }).message} />
-      ) : null}
     </>
   );
 };
