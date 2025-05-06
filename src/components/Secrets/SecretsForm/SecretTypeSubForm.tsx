@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
+import { previewMode } from '~/consts/featureflag';
 import { DropdownItemObject } from '../../../shared/components/dropdown';
 import KeyValueFileInputField from '../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '../../../shared/components/formik-fields/SelectInputField';
@@ -174,8 +175,8 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
           required
         />
       )}
-      {/* Just for image pull secret and basic auth */}
-      {shouldShowSecretLinkOptions && (
+      {/* Just for image pull secret and basic auth when previewMode is enabled */}
+      {previewMode && shouldShowSecretLinkOptions && (
         <SecretLinkOptions
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}

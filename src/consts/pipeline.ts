@@ -23,6 +23,8 @@ export const preferredNameAnnotation = 'pipeline.openshift.io/preferredName';
 
 export const PIPELINE_SERVICE_ACCOUNT_PREFIX = 'build-pipeline-';
 
+export const PIPELINE_SERVICE_ACCOUNT = 'appstudio-pipeline';
+
 export const COMMON_SECRETS_LABEL = 'build.appstudio.openshift.io/common-secret';
 
 export const PIPELINE_NAMESPACE = 'openshift-pipelines';

@@ -1,13 +1,19 @@
+import { previewMode } from '~/consts/featureflag';
 import { SecretModel } from '../../models';
 import { SecretKind } from '../../types';
 import { createDeleteModalLauncher } from '../modal/DeleteResourceModal';
-import { unlinkSecretFromServiceAccounts } from './utils/service-account-utils';
+import {
+  unlinkSecretFromComponentServiceAccounts,
+  unLinkSecretFromServiceAccount,
+} from './utils/service-account-utils';
 
 export const secretDeleteModal = (secret: SecretKind) =>
   createDeleteModalLauncher(secret.kind)({
     obj: secret,
     model: SecretModel,
-    submitCallback: unlinkSecretFromServiceAccounts,
+    submitCallback: previewMode
+      ? unLinkSecretFromServiceAccount
+      : unlinkSecretFromComponentServiceAccounts,
     displayName: secret.metadata.name,
     description: (
       <>

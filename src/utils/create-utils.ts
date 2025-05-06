@@ -1,11 +1,16 @@
 import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import { linkSecretToServiceAccounts } from '~/components/Secrets/utils/service-account-utils';
+import {
+  linkSecretToComponentServiceAccounts,
+  linkSecretToServiceAccount,
+} from '~/components/Secrets/utils/service-account-utils';
+import { previewMode } from '~/consts/featureflag';
 import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
+  typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
@@ -31,6 +36,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   SecretFormValues,
+  SecretTypeDisplayLabel,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
@@ -356,6 +362,7 @@ export const createSecretResource = async (
   dryRun: boolean,
 ) => {
   const secretResource: SecretKind = getSecretFormData(values, namespace);
+
   const labels = {
     secret: getLabelsForSecret(values),
   };
@@ -372,12 +379,19 @@ export const createSecretResource = async (
     },
   };
 
-  if (values.secretForComponentOption) {
-    await linkSecretToServiceAccounts(
-      secretResource,
-      values.relatedComponents,
-      values.secretForComponentOption,
-    );
+  if (previewMode) {
+    if (values.secretForComponentOption) {
+      await linkSecretToComponentServiceAccounts(
+        secretResource,
+        values.relatedComponents,
+        values.secretForComponentOption,
+      );
+    }
+  } else {
+    // if image pull secret, link to service account
+    if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
+      await linkSecretToServiceAccount(secretResource, namespace);
+    }
   }
 
   return await K8sQueryCreateResource({

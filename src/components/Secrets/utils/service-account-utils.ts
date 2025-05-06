@@ -1,13 +1,113 @@
 import { ComponentModel } from '~/models';
 import { SecretModel } from '~/models/secret';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
-import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../../../consts/pipeline';
+import {
+  COMMON_SECRETS_LABEL,
+  PIPELINE_SERVICE_ACCOUNT,
+  PIPELINE_SERVICE_ACCOUNT_PREFIX,
+} from '../../../consts/pipeline';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
 import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
 import { SecretForComponentOption } from './secret-utils';
 
-export const linkSecretToServiceAccount = async (secret: SecretKind, component: ComponentKind) => {
+export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
+  if (!secret || (!namespace && !secret.metadata?.namespace)) {
+    return;
+  }
+  const serviceAccount = await K8sGetResource<ServiceAccountKind>({
+    model: ServiceAccountModel,
+    queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace },
+  });
+
+  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
+  const imagePullSecretList = existingIPSecrets
+    ? [...existingIPSecrets, { name: secret.metadata.name }]
+    : [{ name: secret.metadata.name }];
+  const existingSecrets = serviceAccount?.secrets as SecretKind[];
+  const secretList = existingSecrets
+    ? [...existingSecrets, { name: secret.metadata.name }]
+    : [{ name: secret.metadata.name }];
+  return K8sQueryPatchResource({
+    model: ServiceAccountModel,
+    queryOptions: {
+      name: PIPELINE_SERVICE_ACCOUNT,
+      ns: namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: `/imagePullSecrets`,
+        value: imagePullSecretList,
+      },
+      {
+        op: 'replace',
+        path: `/secrets`,
+        value: secretList,
+      },
+    ],
+  });
+};
+
+export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespace: string) => {
+  if (!secret || (!namespace && !secret.metadata?.namespace)) {
+    return;
+  }
+  const serviceAccount = await K8sGetResource<ServiceAccountKind>({
+    model: ServiceAccountModel,
+    queryOptions: {
+      name: PIPELINE_SERVICE_ACCOUNT,
+      ns: namespace ?? secret.metadata?.namespace,
+    },
+  });
+
+  const existingIPSecrets = serviceAccount?.imagePullSecrets;
+  const existingSecrets = serviceAccount?.secrets;
+  if (
+    Array.isArray(existingIPSecrets) &&
+    existingIPSecrets.length === 0 &&
+    Array.isArray(existingSecrets) &&
+    existingSecrets.length === 0
+  ) {
+    return;
+  }
+  const imagePullSecretsList =
+    Array.isArray(existingIPSecrets) && existingIPSecrets.length >= 0
+      ? (existingIPSecrets as { [key: string]: string }[]).filter(
+          (s) => s.name !== secret.metadata?.name,
+        )
+      : [];
+  const secretsList =
+    Array.isArray(existingSecrets) && existingSecrets.length >= 0
+      ? (existingSecrets as { [key: string]: string }[]).filter(
+          (s) => s.name !== secret.metadata?.name,
+        )
+      : [];
+  return K8sQueryPatchResource({
+    model: ServiceAccountModel,
+    queryOptions: {
+      name: PIPELINE_SERVICE_ACCOUNT,
+      ns: namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: `/imagePullSecrets`,
+        value: imagePullSecretsList,
+      },
+      {
+        op: 'replace',
+        path: `/secrets`,
+        value: secretsList,
+      },
+    ],
+  });
+};
+
+export const linkSecretToComponentServiceAccount = async (
+  secret: SecretKind,
+  component: ComponentKind,
+) => {
   // When there is no secret/component or they are not in the same namespace, return
   if (!secret || !component || !(secret.metadata?.namespace === component?.metadata?.namespace)) {
     return;
@@ -52,7 +152,7 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, component: 
   });
 };
 
-export const unLinkSecretFromServiceAccount = async (
+export const unLinkSecretFromComponentServiceAccount = async (
   secret: SecretKind,
   component: ComponentKind,
 ) => {
@@ -137,7 +237,7 @@ export const getLinkedServiceAccounts = async (secret: SecretKind) => {
   return linkedServiceAccounts;
 };
 
-export const unlinkSecretFromServiceAccounts = async (
+export const unlinkSecretFromComponentServiceAccounts = async (
   secret: SecretKind,
   namespace?: string,
   components?: string[],
@@ -157,7 +257,7 @@ export const unlinkSecretFromServiceAccounts = async (
   const unlinkSecretForComponent = async (componentName: string, sec: SecretKind) => {
     const componentData = componentMap.get(componentName);
     if (componentData) {
-      await unLinkSecretFromServiceAccount(sec, componentData);
+      await unLinkSecretFromComponentServiceAccount(sec, componentData);
     }
   };
 
@@ -172,7 +272,7 @@ export const unlinkSecretFromServiceAccounts = async (
   }
 };
 
-export const linkSecretToServiceAccounts = async (
+export const linkSecretToComponentServiceAccounts = async (
   secret: SecretKind,
   components: string[],
   allOrPartial: SecretForComponentOption,
@@ -192,13 +292,13 @@ export const linkSecretToServiceAccounts = async (
       : allComponents.filter((c) => components.includes(c.metadata.name));
 
   const linkSecretForComponent = async (component: ComponentKind, sec: SecretKind) => {
-    await linkSecretToServiceAccount(sec, component);
+    await linkSecretToComponentServiceAccount(sec, component);
   };
 
   await processWithPLimit(selectedComponents, 10, linkSecretForComponent, secret);
 };
 
-export const linkCommonSecretsToServiceAccount = async (component: ComponentKind) => {
+export const linkCommonSecretsToComponentServiceAccount = async (component: ComponentKind) => {
   if (!component || !component.metadata?.namespace) {
     return;
   }
@@ -215,5 +315,5 @@ export const linkCommonSecretsToServiceAccount = async (component: ComponentKind
     },
   });
 
-  await processWithPLimit(commonSecrets, 10, linkSecretToServiceAccount, component);
+  await processWithPLimit(commonSecrets, 10, linkSecretToComponentServiceAccount, component);
 };

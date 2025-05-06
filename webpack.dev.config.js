@@ -1,4 +1,5 @@
 import { merge } from 'webpack-merge';
+import webpack from 'webpack';
 import commonConfig from './webpack.config.js';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
@@ -95,5 +96,11 @@ export default merge(commonConfig, {
       },
     ],
   },
-  plugins: [new ReactRefreshWebpackPlugin(), new ForkTsCheckerWebpackPlugin({ devServer: false })],
+  plugins: [
+    new ReactRefreshWebpackPlugin(),
+    new ForkTsCheckerWebpackPlugin({ devServer: false }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
+  ],
 });

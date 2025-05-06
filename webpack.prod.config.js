@@ -1,4 +1,5 @@
 import { merge } from 'webpack-merge';
+import webpack from 'webpack';
 import commonConfig from './webpack.config.js';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 
@@ -18,5 +19,10 @@ export default merge(commonConfig, {
       },
     ],
   },
-  plugins: [new MiniCssExtractPlugin({ filename: '[name].css' })],
+  plugins: [
+    new MiniCssExtractPlugin({ filename: '[name].css' }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+    }),
+  ],
 });
