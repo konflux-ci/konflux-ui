@@ -2,12 +2,12 @@ export const pipelineRunTableColumnClasses = {
   name: 'pf-m-width-40 pf-m-width-20-on-xl wrap-column',
   status: 'pf-m-width-20 pf-m-width-10-on-xl',
   started: 'pf-m-width-30 pf-m-width-10-on-xl',
-  vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
-  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
-  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
+  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
+  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
   kebab: 'pf-v5-c-table__action',
 };
 
