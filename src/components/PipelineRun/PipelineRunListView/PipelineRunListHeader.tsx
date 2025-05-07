@@ -3,11 +3,12 @@ export const pipelineRunTableColumnClasses = {
   status: 'pf-m-width-10 pf-m-width-5-on-xl',
   testResultStatus: 'pf-m-width-10 pf-m-width-5-on-xl',
   started: 'pf-m-width-20 pf-m-width-10-on-xl',
-  vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
-  triggeredBy: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
+  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
+  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -57,8 +58,12 @@ const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
       props: { className: pipelineRunTableColumnClasses.component },
     },
     {
-      title: 'Triggered By',
-      props: { className: pipelineRunTableColumnClasses.triggeredBy },
+      title: 'Trigger',
+      props: { className: pipelineRunTableColumnClasses.trigger },
+    },
+    {
+      title: 'Reference',
+      props: { className: pipelineRunTableColumnClasses.reference },
     },
     {
       title: ' ',
