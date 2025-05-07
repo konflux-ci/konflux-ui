@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Skeleton } from '@patternfly/react-core';
+import { Label, Skeleton, Truncate } from '@patternfly/react-core';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
 import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { ExternalLink } from '~/shared';
@@ -29,6 +29,13 @@ type PipelineRunListRowProps = RowFunctionArgs<
 
 type BasePipelineRunListRowProps = PipelineRunListRowProps & { showVulnerabilities?: boolean };
 
+export enum PipelineRunEventTypeLabel {
+  push = 'Push',
+  pull_request = 'Pull Request',
+  incoming = 'Incoming',
+  'retest-all-comment' = 'Retest All Comment',
+}
+
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
   showVulnerabilities,
@@ -48,32 +55,43 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
-  const applicationName = obj.metadata.labels?.[PipelineRunLabel.APPLICATION];
+  const labels = obj.metadata.labels;
+  const applicationName = labels?.[PipelineRunLabel.APPLICATION];
   const gitProvider = obj.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
-  const repoOrg = obj.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
-  const repoURL = obj.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
-  const prNumber = obj.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
-  const eventType = obj.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
-  const commidId = obj.metadata.labels?.[PipelineRunLabel.COMMIT_LABEL];
+  const repoOrg = labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoURL = labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
+  const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
+  const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
+  const commidId = labels?.[PipelineRunLabel.COMMIT_LABEL];
 
   const getTriggerredByColumnData = () => {
     let icon = null,
       text = ``,
       link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
-    if (eventType === PipelineRunEventType.PULL) {
+    const commitDetails = {
+      text: commidId?.substring(0, 7),
+      link: `${link}/commit/${commidId}`,
+    };
+    if (eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.RETEST) {
+      icon = <CommitIcon isPR={false} className="sha-title-icon" />;
+    } else if (eventType === PipelineRunEventType.PULL) {
       icon = <CommitIcon isPR={true} className="sha-title-icon" />;
       text = `${repoOrg}/${repoURL}/${prNumber}`;
       link = `${link}/pull/${prNumber}`;
-    } else if (eventType === PipelineRunEventType.PUSH) {
-      icon = <CommitIcon isPR={false} className="sha-title-icon" />;
-      text = commidId?.substring(0, 7);
-      link = `${link}/commit/${commidId}`;
     }
-
     return (
       <>
         {icon}
-        {eventType ? <ExternalLink href={link} text={text ?? '-'} hideIcon={true} /> : '-'}
+        {eventType === PipelineRunEventType.PULL && (
+          <ExternalLink href={link} text={<Truncate content={text} />} hideIcon={true} />
+        )}
+        {eventType ? (
+          <Label color="blue">
+            <ExternalLink href={commitDetails.link} text={commitDetails.text} />
+          </Label>
+        ) : (
+          '-'
+        )}
       </>
     );
   };
@@ -146,7 +164,10 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           '-'
         )}
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.triggeredBy}>
+      <TableData className={pipelineRunTableColumnClasses.trigger}>
+        {PipelineRunEventTypeLabel[eventType]}
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.reference}>
         {getTriggerredByColumnData()}
       </TableData>
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
