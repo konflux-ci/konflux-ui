@@ -15,7 +15,7 @@ describe('ComponentSection', () => {
     expect(screen.queryByTestId('git-reference')).not.toBeInTheDocument();
   });
 
-  it('should render git options if source url is valid', async () => {
+  it('should render git options by default', async () => {
     formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
@@ -23,18 +23,6 @@ describe('ComponentSection', () => {
     const source = screen.getByPlaceholderText('Enter your source');
 
     await user.type(source, 'https://github.com/abcd/repo.git');
-    await user.tab();
-    await waitFor(() => screen.getByText('Show advanced Git options'));
-  });
-
-  it('should expand git options if source url is others', async () => {
-    formikRenderer(<ComponentSection />, {
-      source: { git: { url: '' } },
-    });
-    const user = userEvent.setup();
-    const source = screen.getByPlaceholderText('Enter your source');
-
-    await user.type(source, 'https://bitbucket.com/abcd/repo.git');
     await user.tab();
     await waitFor(() => screen.getByText('Hide advanced Git options'));
   });
