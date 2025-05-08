@@ -10,7 +10,6 @@ import {
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten } from 'lodash-es';
-// import './ComponentSelectMenu.scss';
 import SelectSecretsDropdown from './SelectSeceretsDropdown';
 
 type ComponentSelectMenuProps = {
@@ -46,7 +45,6 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
     return options;
   }, [isGrouped, options]);
 
-  //   console.log("secret selector menu",options)
   const isItemDisabled = (item: string) => disableItem?.(item) || item === sourceComponentName;
   const isSelected = (item: string) =>
     isMulti ? (value as string[])?.includes(item) : (value as string) === item;
