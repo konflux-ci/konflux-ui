@@ -22,6 +22,8 @@ type ComponentSelectMenuProps = {
   includeSelectAll?: boolean;
   defaultToggleText?: string;
   selectedToggleText?: string | ((value: string | string[]) => string);
+  searchInputPlaceholder?: string;
+  defaultInputAriaLabel?: string;
   title?: string;
   linkedSecrets?: (data?: string[] | string) => void;
 };
@@ -35,6 +37,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   includeSelectAll = false,
   defaultToggleText = 'Select components',
   selectedToggleText = 'Select components',
+  searchInputPlaceholder = 'Search components...',
+  defaultInputAriaLabel = 'Search components',
   linkedSecrets,
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);
@@ -119,8 +123,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               type="text"
               value={searchQuery}
               onChange={(_, v) => setSearchQuery(v)}
-              placeholder="Search components..."
-              aria-label="Search components"
+              placeholder={searchInputPlaceholder}
+              aria-label={defaultInputAriaLabel}
             />
           </MenuSearchInput>
         </MenuSearch>
