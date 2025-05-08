@@ -375,15 +375,16 @@ export const createSecretResource = async (
       annotations,
     },
   };
-  // if image pull secret, link to service account
-  if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-    await linkSecretToServiceAccount(secretResource, namespace);
-  }
 
-  return await K8sQueryCreateResource({
+  return K8sQueryCreateResource({
     model: SecretModel,
     resource: k8sSecretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
+  }).then(async () => {
+    // if image pull secret & created succesfully then link to service account
+    if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
+      return await linkSecretToServiceAccount(secretResource, namespace);
+    }
   });
 };
 
@@ -438,15 +439,15 @@ export const addSecretWithLinkingComponents = async (
 export const createSecret = async (secret: ImportSecret, namespace: string, dryRun: boolean) => {
   const secretResource = getSecretObject(secret, namespace);
 
-  // if image pull secret, link to service account
-  if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-    await linkSecretToServiceAccount(secretResource, namespace);
-  }
-
-  return await K8sQueryCreateResource({
+  return K8sQueryCreateResource({
     model: SecretModel,
     resource: secretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
+  }).then(async () => {
+    // if image pull secret & created succesfully then link to service account
+    if (!dryRun && typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
+      await linkSecretToServiceAccount(secretResource, namespace);
+    }
   });
 };
 
