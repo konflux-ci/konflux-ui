@@ -1,11 +1,15 @@
 import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import { linkSecretToServiceAccounts } from '~/components/Secrets/utils/service-account-utils';
+import {
+  linkSecretToServiceAccount,
+  linkSecretToServiceAccounts,
+} from '~/components/Secrets/utils/service-account-utils';
 import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
+  typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
@@ -31,6 +35,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   SecretFormValues,
+  SecretTypeDisplayLabel,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
@@ -42,7 +47,6 @@ import {
 } from './component-utils';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
-
 /**
  * Create HAS Application CR
  * @param application application name
@@ -356,6 +360,39 @@ export const createSecretResource = async (
   dryRun: boolean,
 ) => {
   const secretResource: SecretKind = getSecretFormData(values, namespace);
+
+  const labels = {
+    secret: getLabelsForSecret(values),
+  };
+  const annotations = getAnnotationForSecret(values);
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels?.secret,
+      },
+      annotations,
+    },
+  };
+  // if image pull secret, link to service account
+  if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
+    await linkSecretToServiceAccount(secretResource, namespace);
+  }
+
+  return await K8sQueryCreateResource({
+    model: SecretModel,
+    resource: k8sSecretResource,
+    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
+  });
+};
+
+export const createSecretResourceWithLinkingComponents = async (
+  values: AddSecretFormValues,
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const secretResource: SecretKind = getSecretFormData(values, namespace);
   const labels = {
     secret: getLabelsForSecret(values),
   };
@@ -389,6 +426,13 @@ export const createSecretResource = async (
 
 export const addSecret = async (values: AddSecretFormValues, namespace: string) => {
   return await createSecretResource(values, namespace, false);
+};
+
+export const addSecretWithLinkingComponents = async (
+  values: AddSecretFormValues,
+  namespace: string,
+) => {
+  return await createSecretResourceWithLinkingComponents(values, namespace, false);
 };
 
 export const createSecret = async (secret: ImportSecret, namespace: string, dryRun: boolean) => {
