@@ -8,7 +8,7 @@ const LS_KEY = '__ff_overrides__';
  * @param search - URL search params
  * @returns Partial<FlagState>
  */
-function parseUrl(search: string): Partial<FlagState> {
+export function parseUrlForFeatureFlags(search: string): Partial<FlagState> {
   const params = new URLSearchParams(search);
   const result: Partial<FlagState> = {};
 
@@ -41,7 +41,7 @@ function parseStorage(): Partial<FlagState> {
 }
 
 function compose(search: string): FlagState {
-  const url = parseUrl(search);
+  const url = parseUrlForFeatureFlags(search);
   const ls = parseStorage();
   return Object.fromEntries(
     Object.entries(FLAGS).map(([k, meta]) => [
@@ -121,7 +121,10 @@ export const FeatureFlagsStore = {
     return state[key];
   },
   set(key: FlagKey, value: boolean) {
-    const next = { ...parseStorage(), [key]: value };
+    if (state[key] === value) {
+      return;
+    }
+    const next = { ...state, [key]: value };
     localStorage.setItem(LS_KEY, JSON.stringify(next));
     updateUrlSearchParams(key, value);
     state = compose(location.search);
@@ -140,6 +143,8 @@ export const FeatureFlagsStore = {
   },
   subscribe(cb: () => void) {
     subs.add(cb);
-    return () => subs.delete(cb);
+    return () => {
+      subs.delete(cb);
+    };
   },
 };
