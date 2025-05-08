@@ -33,9 +33,9 @@ export const LinkSecret: React.FC<React.PropsWithChildren<DeleteResourceModalPro
   );
 };
 
-export const createDeleteModalLauncher2 = (kind: string) =>
+export const createLinkSecretModalLauncher = () =>
   createModalLauncher(LinkSecret, {
-    'data-test': `delete-${kind}-modal`,
+    'data-test': `link-secret-modal`,
     variant: ModalVariant.small,
     title: `Link Secrets?`,
   });
