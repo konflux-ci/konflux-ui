@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { Label, capitalize } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import { ApplicationKind } from '~/types';
+import { getApplicationDisplayName } from '~/utils/common-utils';
 import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
@@ -11,11 +13,17 @@ import { ReleasePlanKind, ReleasePlanLabel } from '../../../types/coreBuildServi
 import { useReleasePlanActions } from './releaseplan-actions';
 import { releasesPlanTableColumnClasses } from './ReleasePlanListHeader';
 
-const ReleasePlanListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<ReleasePlanKind>>> = ({
-  obj,
-}) => {
+export type ReleasePlanWithApplicationData = ReleasePlanKind & {
+  application?: ApplicationKind;
+};
+
+const ReleasePlanListRow: React.FC<
+  React.PropsWithChildren<RowFunctionArgs<ReleasePlanWithApplicationData>>
+> = ({ obj }) => {
   const actions = useReleasePlanActions(obj);
   const namespace = useNamespace();
+  const appDisplayName = getApplicationDisplayName(obj.application) ?? obj.spec?.application;
+
   return (
     <>
       <TableData className={releasesPlanTableColumnClasses.name}>{obj.metadata.name}</TableData>
@@ -23,11 +31,11 @@ const ReleasePlanListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Relea
         <Link
           to={APPLICATION_DETAILS_PATH.createPath({
             workspaceName: namespace,
-            applicationName: obj.spec.application,
+            applicationName: obj.spec?.application,
           })}
-          title={obj.spec.application}
+          title={appDisplayName}
         >
-          {obj.spec.application}
+          {appDisplayName}
         </Link>
       </TableData>
       <TableData className={releasesPlanTableColumnClasses.target}>{obj.spec.target}</TableData>
