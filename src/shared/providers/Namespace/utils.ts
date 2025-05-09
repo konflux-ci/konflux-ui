@@ -1,4 +1,5 @@
 import { queryOptions as _createQueryOptions, UseQueryOptions } from '@tanstack/react-query';
+import { FOREVER, TEN_MINUTES } from '~/consts/time';
 import { K8sGetResource, K8sListResourceItems, queryClient } from '../../../k8s';
 import { NamespaceModel } from '../../../models';
 import { NamespaceKind } from '../../../types';
@@ -42,7 +43,7 @@ export function createNamespaceQueryOptions(
             ?.find((w: NamespaceKind) => w.metadata.name === name);
         }
       : undefined,
-    staleTime: name ? 5_00_000 : Infinity,
+    staleTime: name ? TEN_MINUTES : FOREVER,
   });
 }
 
