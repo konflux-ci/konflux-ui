@@ -185,7 +185,7 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
         selected={selected}
         onSelect={handleSelect}
         aria-invalid={validated === ValidatedOptions.error}
-        maxMenuHeight="35rem"
+        maxMenuHeight="40vh"
         style={{ overflowY: 'auto' }}
         toggle={menuToggle}
       >
