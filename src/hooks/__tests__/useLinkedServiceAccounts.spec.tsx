@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, waitFor, screen } from '@testing-library/react';
 import { mockSecret, mockServiceAccounts } from '~/components/Secrets/__data__/mock-secrets';
+import { LinkSecretStatus } from '~/components/Secrets/SecretsListView/SecretsListRowWithComponents';
 import * as utils from '~/components/Secrets/utils/service-account-utils';
 import { SecretKind } from '~/types';
+import { TaskStatus } from '~/utils/task-store';
 import { useLinkedServiceAccounts } from '../useLinkedServiceAccounts';
 
 jest.mock('~/components/Secrets/utils/service-account-utils', () => {
@@ -13,14 +15,14 @@ jest.mock('~/components/Secrets/utils/service-account-utils', () => {
   };
 });
 
-const TestComponent = ({ secret }: { secret: SecretKind }) => {
-  const { data, isLoading } = useLinkedServiceAccounts(secret);
+const TestComponent = ({ secret, status }: { secret: SecretKind; status?: TaskStatus }) => {
+  const { data, isLoading } = useLinkedServiceAccounts(secret, status);
 
   if (isLoading) return <div>Loading...</div>;
   return <div>{data?.map((sa) => <div key={sa.metadata.name}>{sa.metadata.name}</div>)}</div>;
 };
 
-describe('useLinkedServiceAccounts', () => {
+describe('useLinkedServiceAccounts without link job status', () => {
   let queryClient: QueryClient;
   let spyGetLinkedServiceAccounts: jest.SpyInstance;
 
@@ -127,6 +129,34 @@ describe('useLinkedServiceAccounts', () => {
     // Ensure that getLinkedServiceAccounts is NOT called for unsupported secret types
     await waitFor(() => {
       expect(spyGetLinkedServiceAccounts).not.toHaveBeenCalled();
+    });
+  });
+
+  it('should call queryFn based on link job status', async () => {
+    spyGetLinkedServiceAccounts.mockResolvedValue(mockServiceAccounts as SecretKind[]);
+
+    const validSecret: SecretKind = {
+      ...mockSecret,
+      type: 'kubernetes.io/basic-auth',
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TestComponent secret={validSecret} status={LinkSecretStatus.Pending} />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(spyGetLinkedServiceAccounts).not.toHaveBeenCalled();
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TestComponent secret={validSecret} status={LinkSecretStatus.Succeeded} />
+      </QueryClientProvider>,
+    );
+    await waitFor(() => {
+      expect(spyGetLinkedServiceAccounts).toHaveBeenCalled();
     });
   });
 });

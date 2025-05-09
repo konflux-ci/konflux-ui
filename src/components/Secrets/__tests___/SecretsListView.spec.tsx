@@ -124,7 +124,7 @@ describe('Secrets List', () => {
   });
 });
 
-describe('Secrets List With Components', () => {
+describe('Secrets List With Components and Status', () => {
   beforeEach(() => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     useSecretsMock.mockReturnValue([
@@ -163,6 +163,7 @@ describe('Secrets List With Components', () => {
     screen.getByText('test-secret-one');
     screen.getByText('Image pull');
     screen.getByText('Components');
+    screen.getByText('Status');
     expect(screen.getByTestId('components-count')).toHaveTextContent('2');
   });
 
@@ -174,6 +175,7 @@ describe('Secrets List With Components', () => {
     });
     render(<SecretsListView />);
     screen.getByText('Components');
+    screen.getByText('Status');
     screen.getByRole('progressbar');
   });
 

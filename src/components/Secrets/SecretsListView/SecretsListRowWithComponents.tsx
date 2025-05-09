@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Label, Spinner } from '@patternfly/react-core';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
+import { useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { SecretKind } from '../../../types/secret';
@@ -9,12 +10,14 @@ import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils'
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
 
-type SecretsListRowProps = RowFunctionArgs<SecretKind>;
-
-export enum RemoteSecretStatus {
+export enum LinkSecretStatus {
   Succeeded = 'Succeeded',
   Failed = 'Failed',
+  Running = 'Running',
+  Pending = 'Pending',
 }
+
+type SecretsListRowProps = RowFunctionArgs<SecretKind>;
 
 const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsListRowProps>> = ({
   obj,
@@ -27,7 +30,14 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
       ? secretLabels.split(', ').map((s) => <Label key={s}>{s}</Label>)
       : secretLabels;
 
-  const { data: linkedServiceAccounts = [], isLoading, isError } = useLinkedServiceAccounts(obj);
+  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
+  const taskStatus = !task ? LinkSecretStatus.Succeeded : task?.status;
+
+  const {
+    data: linkedServiceAccounts = [],
+    isLoading,
+    isError,
+  } = useLinkedServiceAccounts(obj, taskStatus);
 
   return (
     <>
@@ -50,6 +60,7 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           </div>
         )}
       </TableData>
+      <TableData className={secretsTableColumnClasses.status}>{taskStatus ?? '-'}</TableData>
       <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
       <TableData className={secretsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
