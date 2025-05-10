@@ -1,3 +1,4 @@
+import yaml from 'js-yaml';
 import { SecretKind, ServiceAccountKind } from '../../types';
 import { LimitRange, SnapshotEnvironmentBinding } from '../../types/coreBuildService';
 import { RouteKind } from '../../types/routes';
@@ -588,3 +589,288 @@ export const mockedSecrets: SecretKind[] = [
     },
   },
 ];
+
+// Banner Related
+function formatTimeUTC(date: Date): string {
+  const h = date.getUTCHours().toString().padStart(2, '0');
+  const m = date.getUTCMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+const now = new Date();
+const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+const oneHourEarlier = new Date(now.getTime() - 60 * 60 * 1000);
+const halfHourEarlier = new Date(now.getTime() - 30 * 60 * 1000);
+
+const futureStartTime = formatTimeUTC(oneHourLater);
+const pastStartTime = formatTimeUTC(oneHourEarlier);
+const pastEndTime = formatTimeUTC(halfHourEarlier);
+
+const dayOfWeek = now.getUTCDay();
+const dayOfMonth = now.getUTCDate();
+const year = now.getUTCFullYear().toString();
+const month = (now.getUTCMonth() + 1).toString();
+
+// === YAML Banner Generator ===
+function generateBannerYAML({
+  enable = true,
+  type = 'info',
+  summary = 'Default banner',
+  repeatType,
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  dayOfWeek,
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  dayOfMonth,
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  year,
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  month,
+  startTime,
+  endTime,
+}: {
+  enable?: boolean;
+  type?: string;
+  summary?: string;
+  repeatType?: 'weekly' | 'monthly' | 'none';
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  year?: string;
+  month?: string;
+  startTime?: string;
+  endTime?: string;
+}) {
+  const lines = [`enable: ${enable}`, `type: ${type}`, `summary: ${summary}`];
+  if (repeatType) {
+    lines.push(`repeatType: ${repeatType}`);
+    if (repeatType === 'weekly' && dayOfWeek !== undefined) {
+      lines.push(`dayOfWeek: ${dayOfWeek}`);
+    }
+    if (repeatType === 'monthly' && dayOfMonth !== undefined) {
+      lines.push(`dayOfMonth: ${dayOfMonth}`);
+    }
+    if (repeatType === 'none') {
+      if (year !== undefined) lines.push(`year: ${year}`);
+      if (month !== undefined) lines.push(`month: ${month}`);
+      if (dayOfMonth !== undefined) lines.push(`dayOfMonth: ${dayOfMonth}`);
+    }
+  }
+  if (startTime) lines.push(`startTime: "${startTime}"`);
+  if (endTime) lines.push(`endTime: "${endTime}"`);
+  return lines.join('\n');
+}
+
+export function generateBannerYAMLList(banners: ReturnType<typeof generateBannerYAML>[]): string {
+  return yaml.dump(banners.map((b) => yaml.load(b)));
+}
+
+// === Base ConfigMap Template ===
+const baseConfigMap = {
+  apiVersion: 'v1',
+  kind: 'ConfigMap',
+  metadata: {
+    name: 'konflux-banner-configmap',
+    namespace: 'konflux-info',
+  },
+};
+
+// === Exported Mock Configs ===
+export const mockedValidBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary:
+          'This is a <strong>test banner</strong>. Free to check more details in [channel](https://test.com)',
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+export const mockedObsoletedBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'This is a <strong>test banner</strong>. Free to check more details in [channel]',
+        repeatType: 'none',
+        year,
+        month,
+        dayOfMonth,
+        startTime: pastStartTime,
+        endTime: pastEndTime,
+      }),
+    ]),
+  },
+};
+
+export const mockedValidBannerConfigWithNoTimeRange = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'This is a test banner',
+      }),
+    ]),
+  },
+};
+
+export const mockedInvalidBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': 'invalid yaml content',
+  },
+};
+
+export const mockedDisabledBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        enable: false,
+        summary: 'This banner is no longer valid',
+        startTime: '00:00',
+        endTime: '00:00',
+      }),
+    ]),
+  },
+};
+
+export const mockedOneTimeBannerConfigWithTime = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'One-time banner with time fields',
+        repeatType: 'none',
+        year,
+        month,
+        dayOfMonth,
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+// === Weekly Banners ===
+export const mockedWeeklyBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Weekly banner',
+        repeatType: 'weekly',
+        dayOfWeek,
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+export const mockedInvalidWeeklyBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Weekly banner',
+        repeatType: 'weekly',
+        dayOfWeek: (dayOfWeek + 1) % 7, // tomorrow
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+// === Monthly Banners ===
+export const mockedMonthlyBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Monthly banner',
+        repeatType: 'monthly',
+        dayOfMonth,
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+export const mockedInvalidMonthlyBannerConfig = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Monthly banner',
+        repeatType: 'monthly',
+        dayOfMonth: dayOfMonth + 1,
+        startTime: '00:00',
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+export const mockedValidMonthlyBannerConfigWithInvalidTimeRange = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Monthly banner',
+        repeatType: 'monthly',
+        dayOfMonth: dayOfMonth + 1,
+        startTime: futureStartTime,
+        endTime: '23:59',
+      }),
+    ]),
+  },
+};
+
+export const mockedObsoletedMonthlyBannerConfigWithTimeRange = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Monthly banner',
+        repeatType: 'monthly',
+        dayOfMonth: dayOfMonth + 1,
+        startTime: pastStartTime,
+        endTime: pastEndTime,
+      }),
+    ]),
+  },
+};
+
+export const mockedBannerListWithSeveralActive = {
+  ...baseConfigMap,
+  data: {
+    'banner-content.yaml': generateBannerYAMLList([
+      generateBannerYAML({
+        summary: 'Inactive old banner',
+        enable: false,
+        startTime: pastStartTime,
+        endTime: pastEndTime,
+      }),
+      generateBannerYAML({
+        summary: 'Active banner-1',
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+      generateBannerYAML({
+        type: 'info',
+        summary: 'Active banner-latest',
+        startTime: pastStartTime,
+        endTime: '23:59',
+      }),
+      generateBannerYAML({
+        summary: 'Another inactive',
+        enable: false,
+      }),
+    ]),
+  },
+};

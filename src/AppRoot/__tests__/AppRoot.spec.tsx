@@ -1,6 +1,7 @@
 import { screen, fireEvent } from '@testing-library/react';
+import { mockedValidBannerConfig } from '~/hooks/__data__/mock-data';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
-import { routerRenderer } from '../../utils/test-utils';
+import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
 
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
@@ -9,10 +10,19 @@ jest.mock('../../hooks/useActiveRouteChecker', () => ({
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
 }));
+const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
 
 describe('AppRoot', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: null });
+  });
+
+  it('should render banner when useBanner returns a banner', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    k8sWatchMock.mockReturnValue({ data: mockedValidBannerConfig, isLoading: false, error: null });
+    routerRenderer(<AppRoot />);
+    expect(screen.getByTestId('banner')).toBeInTheDocument();
   });
 
   it('should render AppRoot with header and sidebar', () => {
