@@ -1,7 +1,104 @@
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { Base64 } from 'js-base64';
 import { attempt, isError } from 'lodash-es';
 import * as yup from 'yup';
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../types';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+export const hhmmRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export const bannerConfigYupSchema = yup.object({
+  enable: yup.boolean().required(),
+
+  summary: yup
+    .string()
+    .required()
+    .min(5, 'Must be at least 5 characters')
+    .max(500, 'Must be at most 500 characters'),
+
+  type: yup.mixed<'info' | 'warning' | 'danger'>().oneOf(['info', 'warning', 'danger']).required(),
+
+  repeatType: yup
+    .mixed<'none' | 'weekly' | 'monthly'>()
+    .oneOf(['none', 'weekly', 'monthly'])
+    .default('none'),
+
+  startTime: yup
+    .string()
+    .matches(hhmmRegex, 'startTime must be in HH:mm 24-hour format')
+    .when(['repeatType', 'year', 'month'], {
+      is: (repeatType: string, year: string, month: string) =>
+        repeatType === 'weekly' ||
+        repeatType === 'monthly' ||
+        (repeatType === 'none' && (!!year || !!month)),
+      then: (schema) => schema.required('startTime is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  endTime: yup
+    .string()
+    .matches(hhmmRegex, 'endTime must be in HH:mm 24-hour format')
+    .when(['repeatType', 'year', 'month'], {
+      is: (repeatType: string, year: string, month: string) =>
+        repeatType === 'weekly' ||
+        repeatType === 'monthly' ||
+        (repeatType === 'none' && (!!year || !!month)),
+      then: (schema) => schema.required('endTime is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  timeZone: yup
+    .string()
+    .optional()
+    .test(
+      'is-valid-timezone',
+      'Invalid timeZone format, expected valid IANA zone like "UTC" or "Asia/Shanghai"',
+      (value) => (!value ? true : dayjs().tz(value, true).isValid()),
+    ),
+
+  dayOfWeek: yup
+    .number()
+    .min(0)
+    .max(6)
+    .when('repeatType', {
+      is: 'weekly',
+      then: (schema) => schema.required('dayOfWeek is required when repeatType is weekly'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  dayOfMonth: yup
+    .number()
+    .min(1)
+    .max(31)
+    .when(['repeatType', 'year', 'month'], {
+      is: (repeatType: string, year: string, month: string) =>
+        repeatType === 'monthly' || (repeatType === 'none' && (!!year || !!month)),
+      then: (schema) => schema.required('dayOfMonth is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  year: yup
+    .string()
+    .matches(/^\d{4}$/, 'year must be a 4-digit string')
+    .when('repeatType', {
+      is: 'none',
+      then: (schema) => schema.notRequired(),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  month: yup
+    .string()
+    .matches(/^(0?[1-9]|1[0-2])$/, 'month must be 1-12 or 01-12')
+    .when('repeatType', {
+      is: 'none',
+      then: (schema) => schema.notRequired(),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+});
 
 export const KONFLUX_USERNAME_REGEX = /^[-_a-zA-Z0-9@.]{2,45}$/;
 export const KONFLUX_USERNAME_REGEX_MGS =
