@@ -1,4 +1,5 @@
 import { curry } from 'lodash-es';
+import { FIVE_MINUTES } from '~/consts/time';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { commonFetchJSON, commonFetchText } from '../k8s';
 import { PipelineRunModel, TaskRunModel } from '../models';
@@ -432,7 +433,7 @@ export const createTektonResultQueryOptions = curry(
       enabled: !!namespace,
       initialPageParam: null,
       getNextPageParam: (lastPage) => lastPage.nextPage || undefined,
-      staleTime: 1000 * 60 * 5,
+      staleTime: FIVE_MINUTES,
     };
   },
 );

@@ -21,6 +21,8 @@ export type ImportSecret = {
       readOnlyKey?: boolean;
     }[];
   };
+  relatedComponents?: [];
+  secretForComponentOption?: null | SecretForComponentOption;
 };
 
 export enum SecretSPILabel {
@@ -160,6 +162,12 @@ export enum SecretType {
   serviceAccountToken = 'kubernetes.io/service-account-token',
   sshAuth = 'kubernetes.io/ssh-auth',
   tls = 'kubernetes.io/tls',
+}
+
+export enum LinkableSecretType {
+  dockerconfigjson = 'kubernetes.io/dockerconfigjson',
+  basicAuth = 'kubernetes.io/basic-auth',
+  dockercfg = 'kubernetes.io/dockercfg',
 }
 
 export type ServiceAccountKind = {
