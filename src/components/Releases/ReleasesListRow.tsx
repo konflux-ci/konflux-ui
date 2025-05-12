@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { css } from '@patternfly/react-styles';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
   PIPELINERUN_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '../../routes/paths';
+import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../shared/components/table';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -19,6 +19,7 @@ import {
   getFinalPipelineRunFromRelease,
 } from '../../utils/release-utils';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
+import { useReleaseActions } from './release-actions';
 import { releasesTableColumnClasses } from './ReleasesListHeader';
 
 const ReleasesListRow: React.FC<
@@ -35,6 +36,7 @@ const ReleasesListRow: React.FC<
   const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
     getFinalPipelineRunFromRelease(obj),
   );
+  const actions = useReleaseActions(obj);
 
   return (
     <>
@@ -122,7 +124,9 @@ const ReleasesListRow: React.FC<
           '-'
         )}
       </TableData>
-      <TableData className={css(releasesTableColumnClasses.kebab, 'm-no-actions')}> </TableData>
+      <TableData className={releasesTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} />
+      </TableData>
     </>
   );
 };
