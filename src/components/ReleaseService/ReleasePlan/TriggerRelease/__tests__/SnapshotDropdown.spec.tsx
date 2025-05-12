@@ -32,10 +32,11 @@ describe('SnapshotDropdown', () => {
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
-    await act(() => fireEvent.click(screen.getByRole('button')));
-
-    expect(screen.getByRole('menuitem', { name: 'snapshot1' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'snapshot2' })).toBeVisible();
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'snapshot1' })).toBeVisible();
+      expect(screen.getByRole('menuitem', { name: 'snapshot2' })).toBeVisible();
+    });
   });
 
   it('should only show dropdowns related to the correct application', async () => {
@@ -46,10 +47,12 @@ describe('SnapshotDropdown', () => {
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
-    await act(() => fireEvent.click(screen.getByRole('button')));
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
 
-    expect(screen.getByRole('menuitem', { name: 'snapshot1' })).toBeVisible();
-    expect(screen.queryByRole('menuitem', { name: 'snapshot2' })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'snapshot1' })).toBeVisible();
+      expect(screen.queryByRole('menuitem', { name: 'snapshot2' })).not.toBeInTheDocument();
+    });
   });
 
   it('should change the Snapshot dropdown value', async () => {
@@ -64,15 +67,7 @@ describe('SnapshotDropdown', () => {
     formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
       targets: { application: 'app' },
     });
-    expect(screen.queryByRole('button')).toBeInTheDocument();
-
-    await act(() => fireEvent.click(screen.getByRole('button')));
-
-    await waitFor(() => {
-      expect(screen.getByRole('menu')).toBeInTheDocument();
-      expect(screen.getByLabelText('Select snapshot'));
-      screen.getByText('snapshot1');
-    });
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
     await act(() => fireEvent.click(screen.getByText('snapshot2')));
     await waitFor(() => {
       expect(screen.getByText('snapshot2'));
@@ -109,17 +104,12 @@ describe('SnapshotDropdown', () => {
       },
     );
 
-    // Snapshot select toggle
-    expect(screen.queryByRole('button')).toBeInTheDocument();
-
     // Click the snapshot select toggle
-    await act(() => fireEvent.click(screen.getByRole('button')));
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
 
     await waitFor(() => {
-      // Snapshot dropdown menu
-      expect(screen.getByRole('menu')).toBeInTheDocument();
       // Placeholder text
-      expect(screen.getByLabelText('Select snapshot'));
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('Select snapshot');
     });
     await act(() =>
       // Select a snapshot value

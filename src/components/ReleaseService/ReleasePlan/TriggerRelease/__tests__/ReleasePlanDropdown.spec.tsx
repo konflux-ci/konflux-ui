@@ -28,10 +28,11 @@ describe('ReleasePlanDropdown', () => {
     formikRenderer(
       <ReleasePlanDropdown name="releasePlan" releasePlans={releasePlans} loaded={loaded} />,
     );
-    await act(() => fireEvent.click(screen.getByRole('button')));
-
-    expect(screen.getByRole('menuitem', { name: 'rp1' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'rp2' })).toBeVisible();
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'rp1' })).toBeVisible();
+      expect(screen.getByRole('menuitem', { name: 'rp2' })).toBeVisible();
+    });
   });
 
   it('should select current releasePlan by default', () => {
@@ -58,18 +59,15 @@ describe('ReleasePlanDropdown', () => {
         targets: { application: 'app' },
       },
     );
-    expect(screen.queryByRole('button')).toBeInTheDocument();
-
-    await act(() => fireEvent.click(screen.getByRole('button')));
-
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
     await waitFor(() => {
-      expect(screen.getByRole('menu')).toBeInTheDocument();
-      expect(screen.getByLabelText('Select release plan'));
-      screen.getByText('rp2');
+      expect(screen.getByTestId('dropdown-toggle').textContent).toBe('Select release plan');
+      expect(screen.getAllByRole('menuitem').length).toEqual(2);
     });
+
     await act(() => fireEvent.click(screen.getByText('rp2')));
     await waitFor(() => {
-      expect(screen.getByText('rp2'));
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('rp2');
     });
   });
 });

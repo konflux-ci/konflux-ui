@@ -67,10 +67,7 @@ describe('CVEFormContent', () => {
     });
     expect(screen.queryByTestId('component-0')).toBeInTheDocument();
     expect(screen.queryByTestId('component-1')).not.toBeInTheDocument();
-    expect(
-      screen.queryByTestId('component-0').getElementsByClassName('pf-v5-c-dropdown__toggle-text')[0]
-        .innerHTML,
-    ).toBe('b');
+    expect(screen.queryByTestId('component-0').firstChild.lastChild.textContent).toBe('b');
   });
 
   it('should have disabled Submit button when ID not there', () => {
