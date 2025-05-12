@@ -16,7 +16,8 @@ describe('SourceSecretForm', () => {
     expect(screen.getByText('Password')).toBeVisible();
 
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Basic authentication' }));
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('Basic authentication');
+      fireEvent.click(screen.getByTestId('dropdown-toggle'));
     });
 
     act(() => {
