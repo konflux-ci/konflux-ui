@@ -1,0 +1,45 @@
+export const FLAGS_STATUS = {
+  wip: 'Unstable',
+  ready: 'Stable',
+} as const;
+
+/**
+ * Feature flags for the application.
+ * wip - work in progress
+ * ready - feature is stable and ready for production
+ */
+export type FlagStatus = keyof typeof FLAGS_STATUS;
+
+export interface FeatureMeta {
+  /**
+   * Unique key for the feature flag.
+   * This key is used to identify the feature flag in the codebase.
+   */
+  key: FlagKey;
+  /**
+   * Description of the feature flag.
+   * This description is used to provide context for the feature flag.
+   */
+  description: string;
+  /**
+   * Default enabled state of the feature flag.
+   * This state is used to determine if the feature flag is enabled by default.
+   */
+  defaultEnabled: boolean;
+  /**
+   * Status of the feature flag.
+   * This status is used to determine if the feature flag is a work in progress or ready for production.
+   */
+  status: FlagStatus;
+}
+
+export const FLAGS = {
+  buildServiceAccount: {
+    key: 'buildServiceAccount',
+    description: 'New build service account model for secrets linking to components',
+    defaultEnabled: false,
+    status: 'wip',
+  } as const,
+} as const;
+
+export type FlagKey = keyof typeof FLAGS;
