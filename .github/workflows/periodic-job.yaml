@@ -4,29 +4,44 @@ on:
   workflow_dispatch:
 
   schedule:
-    - cron: '0 0 * * *'
+  - cron: '0 0 * * *'
 
 jobs:
   e2e-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy konflux-ci, build konflux-ui image and test
-        id: pr-check-action
-        uses: ./.github/actions/konflux-ui-deploy-test
-        env:
-          TARGET_BRANCH: ${{ github.ref_name }}
-          HEAD_SHA: ${{ github.sha }}
-          # secrets
-          HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-          SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
-          GH_APP_ID: ${{ secrets.GH_APP_ID }}
-          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
-          QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
-          QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
-          SMEE_URL: ${{ secrets.SMEE_URL }}
-          CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
-          CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-        with:
-          job-type: 'periodic'
+    - uses: actions/checkout@v4
+    - name: Deploy konflux-ci, build konflux-ui image and test
+      id: pr-check-action
+      uses: ./.github/actions/konflux-ui-deploy-test
+      env:
+        TARGET_BRANCH: ${{ github.ref_name }}
+        HEAD_SHA: ${{ github.sha }}
+        # secrets
+        HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+        SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
+        GH_APP_ID: ${{ secrets.GH_APP_ID }}
+        GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+        QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+        QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
+        SMEE_URL: ${{ secrets.SMEE_URL }}
+        CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
+        CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+      with:
+        job-type: 'periodic'
+
+  check-stale-prs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Run stale PR checker
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      run: |
+        npm install @octokit/rest dayjs
+        node .github/scripts/check-stale-prs.js
