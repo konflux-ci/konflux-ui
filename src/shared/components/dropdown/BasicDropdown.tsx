@@ -1,19 +1,24 @@
 import React from 'react';
-import { Badge, ValidatedOptions } from '@patternfly/react-core';
 import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
-  DropdownItemProps,
-  DropdownSeparator,
-} from '@patternfly/react-core/deprecated';
+  Select,
+  SelectList,
+  SelectOption,
+  Badge,
+  HelperText,
+  HelperTextItem,
+  Divider,
+  ValidatedOptions,
+  MenuToggle,
+} from '@patternfly/react-core';
+
 import './BasicDropdown.scss';
 
 export type DropdownItemObject = {
   key: string;
   value: string;
+  description?: string;
   separator?: boolean;
-} & DropdownItemProps;
+};
 
 type BasicDropdownProps = {
   items: DropdownItemObject[];
@@ -23,114 +28,94 @@ type BasicDropdownProps = {
   placeholder?: string;
   fullWidth?: boolean;
   disabled?: boolean;
-  dropdownToggle?: (
-    onToggle: (
-      ev:
-        | MouseEvent
-        | TouchEvent
-        | KeyboardEvent
-        | React.KeyboardEvent<unknown>
-        | React.MouseEvent<HTMLButtonElement>,
-      isOpen: boolean,
-    ) => void,
-  ) => React.ReactElement;
   validated?: ValidatedOptions;
+  helperText?: string;
 };
 
-const BasicDropdown: React.FC<React.PropsWithChildren<BasicDropdownProps>> = ({
+const BasicDropdown: React.FC<BasicDropdownProps> = ({
   items,
   selected,
   recommended,
   onChange,
   placeholder,
+  fullWidth = true,
   disabled,
-  dropdownToggle,
   validated,
+  helperText,
 }) => {
-  const [dropdownOpen, setDropdownOpen] = React.useState<boolean>(false);
-  const onToggle = (
-    _:
-      | MouseEvent
-      | TouchEvent
-      | KeyboardEvent
-      | React.KeyboardEvent<unknown>
-      | React.MouseEvent<HTMLButtonElement>,
-    isOpen: boolean,
-  ) => setDropdownOpen(isOpen);
-  // We enjoys the DropDown from the following file
-  // node_modules/@patternfly/react-core/src/deprecated/components/Dropdown/Dropdown.tsx
-  // The onSelect of it just supports event.
-  // If we enjoy (event: React.SyntheticEvent, value: string), we would
-  // meet error: Type '(event: React.SyntheticEvent, value: string) => void'
-  // is not assignable to type '(event?: SyntheticEvent<HTMLDivElement, Event>) => void'.
-  const onSelect = (event: React.SyntheticEvent<HTMLDivElement>) => {
-    // When the dropdown has the description, the currentTarget.textContent
-    // would contain main + description. And we just need the main value.
-    const targetClassName = 'pf-v5-c-dropdown__menu-item-main';
-    const targetText =
-      event.currentTarget.querySelector(`.${targetClassName}`)?.textContent ||
-      event.currentTarget.textContent;
+  const [isOpen, setIsOpen] = React.useState(false);
 
-    onChange && onChange(targetText);
-    setDropdownOpen(false);
+  const handleSelect = (_ev: unknown, value: string | number) => {
+    if (typeof value === 'string') {
+      onChange?.(value);
+      setIsOpen(false);
+    }
   };
 
-  const recommendedBadge = React.useMemo(
-    () => (
-      <>
-        &nbsp;<Badge isRead>Recommended</Badge>
-      </>
-    ),
-    [],
-  );
-
-  const dropdownToggleComponent = React.useMemo(
-    () =>
-      dropdownToggle ? (
-        dropdownToggle(onToggle)
-      ) : (
-        <DropdownToggle onToggle={onToggle} isDisabled={disabled} data-test="dropdown-toggle">
-          {selected ? (
-            <>
-              {selected}
-              {selected === recommended && recommendedBadge}
-            </>
-          ) : (
-            placeholder
-          )}
-        </DropdownToggle>
-      ),
-    [dropdownToggle, disabled, selected, recommended, recommendedBadge, placeholder],
-  );
-
-  const dropdownItems = React.useMemo(
-    () =>
-      items.map((item) => {
-        const { key, value, separator, ...props } = item;
-        if (separator) {
-          return <DropdownSeparator key={key} />;
-        }
-        return (
-          <DropdownItem key={key} {...props}>
-            {value}
-            {value === recommended && recommendedBadge}
-          </DropdownItem>
-        );
-      }),
-    [items, recommended, recommendedBadge],
-  );
   return (
-    <Dropdown
-      onSelect={onSelect}
-      toggle={dropdownToggleComponent}
-      isOpen={dropdownOpen}
-      dropdownItems={dropdownItems}
-      autoFocus={false}
-      disabled={disabled}
-      className="basic-dropdown"
-      data-test="dropdown"
-      {...(validated === ValidatedOptions.error && { 'aria-invalid': true })}
-    />
+    <div>
+      <Select
+        isOpen={isOpen}
+        onOpenChange={(newIsOpen) => {
+          if (!disabled) setIsOpen(newIsOpen);
+        }}
+        selected={selected}
+        onSelect={handleSelect}
+        aria-invalid={validated === ValidatedOptions.error}
+        toggle={(toggleRef) => (
+          <MenuToggle
+            aria-disabled={disabled}
+            data-test="dropdown-toggle"
+            style={{ width: fullWidth ? '100%' : undefined }}
+            ref={toggleRef}
+            isExpanded={isOpen}
+            isDisabled={disabled}
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            variant="default"
+            aria-invalid={validated === ValidatedOptions.error}
+          >
+            {selected ? (
+              <>
+                {selected}
+                {selected === recommended && (
+                  <>
+                    &nbsp;<Badge isRead>Recommended</Badge>
+                  </>
+                )}
+              </>
+            ) : (
+              <span>{placeholder ?? ''}</span>
+            )}
+          </MenuToggle>
+        )}
+      >
+        <SelectList>
+          {items.map(({ key, value, description, separator }) =>
+            separator ? (
+              <Divider key={key} component="li" />
+            ) : (
+              <SelectOption key={key} value={value} role="menuitem">
+                <div>
+                  {value}
+                  {value === recommended && (
+                    <>
+                      &nbsp;<Badge isRead>Recommended</Badge>
+                    </>
+                  )}
+                </div>
+                {description && <div className="dropdown-item-description">{description}</div>}
+              </SelectOption>
+            ),
+          )}
+        </SelectList>
+      </Select>
+
+      {validated === ValidatedOptions.error && helperText && (
+        <HelperText>
+          <HelperTextItem variant="error">{helperText}</HelperTextItem>
+        </HelperText>
+      )}
+    </div>
   );
 };
 

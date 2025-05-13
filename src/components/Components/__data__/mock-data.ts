@@ -1,5 +1,10 @@
 import { ComponentKind } from '../../../types';
 
+export const sortedGroupedComponentsMocks: { [application: string]: string[] } = {
+  'purple-mermaid-app': ['basic-node-js'],
+  'test-application': ['nodejs'],
+};
+
 export const componentCRMocks: ComponentKind[] = [
   {
     apiVersion: 'appstudio.redhat.com/v1alpha1',

@@ -76,7 +76,7 @@ describe('NamespaceButton', () => {
     routerRenderer(<NamespaceButton namespace="test-namespace" />);
 
     const button = screen.getByText('Go to the namespace');
-    expect(button.closest('a')).toHaveAttribute('href', '/workspaces/test-namespace/applications');
+    expect(button.closest('a')).toHaveAttribute('href', '/ns/test-namespace/applications');
     expect(button.closest('a')).toHaveAttribute('title', 'Go to this namespace');
   });
 

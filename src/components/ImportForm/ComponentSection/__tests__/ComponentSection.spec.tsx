@@ -62,7 +62,9 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe('gitlab.com'),
+      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+        'https://gitlab.com',
+      ),
     );
   });
 
@@ -72,5 +74,22 @@ describe('ComponentSection', () => {
     });
 
     expect(screen.getByText('Must be unique within tenant namespace')).toBeInTheDocument();
+  });
+
+  it('should format component name to kebab-case', async () => {
+    formikRenderer(<ComponentSection />, {
+      source: { git: { url: '' } },
+    });
+    const user = userEvent.setup();
+    const source = screen.getByPlaceholderText('Enter your source');
+
+    await user.type(source, 'https://github.com/ExampleRepo123.git');
+    await user.tab();
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      expect((screen.getByTestId('component-name') as HTMLInputElement).value).toContain(
+        'example-repo',
+      );
+    });
   });
 });

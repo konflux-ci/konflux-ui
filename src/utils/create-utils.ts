@@ -1,13 +1,12 @@
 import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
+import { linkSecretToServiceAccounts } from '~/components/Secrets/utils/service-account-utils';
 import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
-  typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
-import { linkSecretToServiceAccount } from '../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
 import {
@@ -26,7 +25,6 @@ import {
   K8sSecretType,
   SecretKind,
   AddSecretFormValues,
-  SecretTypeDisplayLabel,
   ImportSecret,
   ImageRepositoryKind,
   ImageRepositoryVisibility,
@@ -35,12 +33,14 @@ import {
   SecretFormValues,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
+import { SBOMEventNotification } from './../types/konflux-public-info';
 import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
+
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 
 /**
@@ -356,10 +356,10 @@ export const createSecretResource = async (
   dryRun: boolean,
 ) => {
   const secretResource: SecretKind = getSecretFormData(values, namespace);
-
   const labels = {
     secret: getLabelsForSecret(values),
   };
+
   const annotations = getAnnotationForSecret(values);
   const k8sSecretResource = {
     ...secretResource,
@@ -371,9 +371,13 @@ export const createSecretResource = async (
       annotations,
     },
   };
-  // if image pull secret, link to service account
-  if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-    await linkSecretToServiceAccount(secretResource, namespace);
+
+  if (values.secretForComponentOption) {
+    await linkSecretToServiceAccounts(
+      secretResource,
+      values.relatedComponents,
+      values.secretForComponentOption,
+    );
   }
 
   return await K8sQueryCreateResource({
@@ -403,10 +407,17 @@ type CreateImageRepositoryType = {
   namespace: string;
   isPrivate: boolean;
   bombinoUrl: string;
+  notifications: SBOMEventNotification[];
 };
 
-export const createImageRepository = (
-  { application, component, namespace, isPrivate, bombinoUrl }: CreateImageRepositoryType,
+export const createImageRepository = async (
+  {
+    application,
+    component,
+    namespace,
+    isPrivate,
+    notifications,
+  }: Omit<CreateImageRepositoryType, 'bombinoUrl'>,
   dryRun: boolean = false,
 ) => {
   const imageRepositoryResource: ImageRepositoryKind = {
@@ -429,16 +440,7 @@ export const createImageRepository = (
           ? ImageRepositoryVisibility.private
           : ImageRepositoryVisibility.public,
       },
-      notifications: [
-        {
-          title: 'SBOM-event-to-Bombino',
-          event: 'repo_push',
-          method: 'webhook',
-          config: {
-            url: bombinoUrl,
-          },
-        },
-      ],
+      notifications,
     },
   };
 

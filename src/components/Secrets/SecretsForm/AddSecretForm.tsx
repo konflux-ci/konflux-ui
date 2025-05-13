@@ -38,6 +38,8 @@ const AddSecretForm: React.FC = () => {
     source: {
       authType: 'Basic authentication',
     },
+    relatedComponents: [],
+    secretForComponentOption: null,
   };
   return (
     <Formik

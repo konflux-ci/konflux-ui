@@ -19,29 +19,29 @@ import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { ReleaseKind } from '../../types/release';
 import { calculateDuration } from '../../utils/pipeline-utils';
+import {
+  getNamespaceAndPRName,
+  getManagedPipelineRunFromRelease,
+  getTenantPipelineRunFromRelease,
+  getFinalPipelineRunFromRelease,
+} from '../../utils/release-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
-
-const getPipelineRunFromRelease = (release: ReleaseKind): string => {
-  // backward compatibility until https://issues.redhat.com/browse/RELEASE-1109 is released.
-  return release.status?.processing?.pipelineRun ?? release.status?.managedProcessing?.pipelineRun;
-};
-
-const getNamespaceAndPRName = (
-  pipelineRunObj: string,
-): [namespace?: string, pipelineRun?: string] => {
-  return pipelineRunObj
-    ? (pipelineRunObj.split('/').slice(0, 2) as [string?, string?])
-    : [undefined, undefined];
-};
 
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release] = useRelease(namespace, releaseName);
-  const [prNamespace, pipelineRun] = getNamespaceAndPRName(getPipelineRunFromRelease(release));
+  const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
+    getManagedPipelineRunFromRelease(release),
+  );
+  const [tenantPrNamespace, tenantPipelineRun] = getNamespaceAndPRName(
+    getTenantPipelineRunFromRelease(release),
+  );
+  const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
+    getFinalPipelineRunFromRelease(release),
+  );
   const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release.spec.releasePlan);
   const duration = calculateDuration(
     typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
@@ -144,17 +144,53 @@ const ReleaseOverviewTab: React.FC = () => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
-                <DescriptionListTerm>Pipeline Run</DescriptionListTerm>
+                <DescriptionListTerm>Tenant Pipeline Run</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {pipelineRun && prNamespace && releasePlanLoaded ? (
+                  {tenantPipelineRun && tenantPrNamespace && releasePlanLoaded ? (
                     <Link
                       to={PIPELINE_RUNS_DETAILS_PATH.createPath({
-                        workspaceName: prNamespace,
+                        workspaceName: tenantPrNamespace,
                         applicationName: releasePlan.spec.application,
-                        pipelineRunName: pipelineRun,
+                        pipelineRunName: tenantPipelineRun,
                       })}
                     >
-                      {pipelineRun}
+                      {tenantPipelineRun}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Managed Pipeline Run</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {managedPipelineRun && managedPrNamespace && releasePlanLoaded ? (
+                    <Link
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                        workspaceName: managedPrNamespace,
+                        applicationName: releasePlan.spec.application,
+                        pipelineRunName: managedPipelineRun,
+                      })}
+                    >
+                      {managedPipelineRun}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Final Pipeline Run</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {finalPipelineRun && finalPrNamespace && releasePlanLoaded ? (
+                    <Link
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                        workspaceName: finalPrNamespace,
+                        applicationName: releasePlan.spec.application,
+                        pipelineRunName: finalPipelineRun,
+                      })}
+                    >
+                      {finalPipelineRun}
                     </Link>
                   ) : (
                     <Text>Not available yet</Text>

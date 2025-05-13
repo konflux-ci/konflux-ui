@@ -46,13 +46,11 @@ describe('getBuildNodeForComponent', () => {
       componentsGroupElement as unknown as Node<PipelineNodeModel, WorkflowNodeModelData>,
       'test-workspace',
     );
-    expect(elementLinks.elementRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/components',
-    );
+    expect(elementLinks.elementRef).toBe('/ns/test-workspace/applications/test-app/components');
     expect(elementLinks.pipelinesRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns',
     );
-    expect(elementLinks.appRef).toBe('/workspaces/test-workspace/applications/test-app');
+    expect(elementLinks.appRef).toBe('/ns/test-workspace/applications/test-app');
 
     // Component node
     const componentNodeElement = {
@@ -72,12 +70,12 @@ describe('getBuildNodeForComponent', () => {
       'test-workspace',
     );
     expect(elementLinks.elementRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/components/test-component',
+      '/ns/test-workspace/applications/test-app/components/test-component',
     );
     expect(elementLinks.pipelinesRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns',
     );
-    expect(elementLinks.appRef).toBe('/workspaces/test-workspace/applications/test-app');
+    expect(elementLinks.appRef).toBe('/ns/test-workspace/applications/test-app');
   });
 
   it('should return correct link data for different build node types', () => {
@@ -97,13 +95,11 @@ describe('getBuildNodeForComponent', () => {
       emptyBuildElement as unknown as Node<PipelineNodeModel, WorkflowNodeModelData>,
       'test-workspace',
     );
-    expect(elementLinks.elementRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/components',
-    );
+    expect(elementLinks.elementRef).toBe('/ns/test-workspace/applications/test-app/components');
     expect(elementLinks.pipelinesRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns',
     );
-    expect(elementLinks.appRef).toBe('/workspaces/test-workspace/applications/test-app');
+    expect(elementLinks.appRef).toBe('/ns/test-workspace/applications/test-app');
 
     // Build group node
     const buildGroupElement = {
@@ -123,12 +119,12 @@ describe('getBuildNodeForComponent', () => {
       'test-workspace',
     );
     expect(elementLinks.elementRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns',
     );
     expect(elementLinks.pipelinesRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns',
     );
-    expect(elementLinks.appRef).toBe('/workspaces/test-workspace/applications/test-app');
+    expect(elementLinks.appRef).toBe('/ns/test-workspace/applications/test-app');
 
     // Build node
     const buildNodeElement = {
@@ -148,11 +144,11 @@ describe('getBuildNodeForComponent', () => {
       'test-workspace',
     );
     expect(elementLinks.elementRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns?name=test-build',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns?name=test-build',
     );
     expect(elementLinks.pipelinesRef).toBe(
-      '/workspaces/test-workspace/applications/test-app/activity/pipelineruns',
+      '/ns/test-workspace/applications/test-app/activity/pipelineruns',
     );
-    expect(elementLinks.appRef).toBe('/workspaces/test-workspace/applications/test-app');
+    expect(elementLinks.appRef).toBe('/ns/test-workspace/applications/test-app');
   });
 });

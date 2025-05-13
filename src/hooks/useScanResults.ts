@@ -165,6 +165,7 @@ export const usePLRScanResults = (
       () => ({
         filter: OR(
           ...CVE_SCAN_RESULT_FIELDS.map((field) => `data.status.taskResults.contains("${field}")`),
+          ...CVE_SCAN_RESULT_FIELDS.map((field) => `data.status.results.contains("${field}")`),
         ),
         selector: {
           matchExpressions: [

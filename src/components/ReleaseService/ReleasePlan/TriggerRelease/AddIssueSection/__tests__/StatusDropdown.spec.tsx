@@ -1,13 +1,15 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import { formikRenderer } from '../../../../../../utils/test-utils';
 import StatusDropdown from '../StatusDropdown';
 
 describe('StatusDropdown', () => {
+  const user = userEvent.setup();
   beforeEach(() => {});
 
   it('should show dropdown options', async () => {
     formikRenderer(<StatusDropdown name="status" />);
-    await act(() => fireEvent.click(screen.getByRole('button')));
+    await user.click(screen.getByText('Select status of isssue'));
     expect(screen.getByRole('menuitem', { name: 'Resolved' })).toBeVisible();
     expect(screen.getByRole('menuitem', { name: 'Unresolved' })).toBeVisible();
   });
@@ -16,17 +18,10 @@ describe('StatusDropdown', () => {
     formikRenderer(<StatusDropdown name="status" />, {
       targets: { application: 'app' },
     });
-    expect(screen.queryByRole('button')).toBeInTheDocument();
-
-    await act(() => fireEvent.click(screen.getByRole('button')));
-
+    await user.click(screen.getByText('Select status of isssue'));
+    await user.click(screen.getByText('Unresolved'));
     await waitFor(() => {
-      expect(screen.getByRole('menu')).toBeInTheDocument();
-      screen.getByText('Unresolved');
-    });
-    await act(() => fireEvent.click(screen.getByText('Unresolved')));
-    await waitFor(() => {
-      expect(screen.getByText('Unresolved'));
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('Unresolved');
     });
   });
 });

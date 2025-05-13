@@ -65,20 +65,11 @@ describe('AppSideBar', () => {
 
     expect(screen.getByText('Applications')).toHaveAttribute(
       'href',
-      '/workspaces/test-namespace/applications',
+      '/ns/test-namespace/applications',
     );
-    expect(screen.getByText('Secrets')).toHaveAttribute(
-      'href',
-      '/workspaces/test-namespace/secrets',
-    );
-    expect(screen.getByText('Releases')).toHaveAttribute(
-      'href',
-      '/workspaces/test-namespace/release',
-    );
-    expect(screen.getByText('User Access')).toHaveAttribute(
-      'href',
-      '/workspaces/test-namespace/access',
-    );
+    expect(screen.getByText('Secrets')).toHaveAttribute('href', '/ns/test-namespace/secrets');
+    expect(screen.getByText('Releases')).toHaveAttribute('href', '/ns/test-namespace/release');
+    expect(screen.getByText('User Access')).toHaveAttribute('href', '/ns/test-namespace/access');
   });
 
   it('should not render links for disabled namespace-dependent routes when no namespace is available', () => {
@@ -87,7 +78,7 @@ describe('AppSideBar', () => {
 
     routerRenderer(<AppSideBar isOpen={true} />);
 
-    expect(screen.getByText('Namespaces')).toHaveAttribute('href', '/workspaces');
+    expect(screen.getByText('Namespaces')).toHaveAttribute('href', '/ns');
     expect(screen.getByText('Applications')).toHaveAttribute('href', '/');
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');

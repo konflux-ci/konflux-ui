@@ -11,7 +11,7 @@ export class Login {
     password: string = Cypress.env('PASSWORD'),
   ) {
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
-    cy.get(stageLoginPO.dex).should('be.visible').click();
+    // cy.get(stageLoginPO.dex).should('be.visible').click();
     // disabling as we don't have testing account on stage, manual log in is needed
     // cy.get(stageLoginPO.loginWithSso).click();
     // cy.get(stageLoginPO.username).type(username);
@@ -37,12 +37,12 @@ export class Login {
     Common.waitForLoad();
     // Wait for https://localhost:8080/ loaded
     GetStartedPage.waitForLoad();
-    // Go to the https://localhost:8080/workspaces
+    // Go to the https://localhost:8080/ns
     Common.navigateTo(NavItem.namespaces);
     Common.verifyPageTitle(pageTitles.namespaces);
     Common.waitForLoad();
     cy.testA11y(`${pageTitles.namespaces}`);
-    // Go to https://localhost:8080/workspaces/your-tenant/applications
+    // Go to https://localhost:8080/ns/your-tenant/applications
     cy.get(
       goToApplicationsPagePo(`${Cypress.env('HAC_NAMESPACE')}`).goToApplicationsPagePo,
     ).click();

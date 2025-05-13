@@ -125,6 +125,8 @@ export const addSecretFormValues: AddSecretFormValues = {
     password: 'test',
   },
   labels: [{ key: 'test', value: 'test' }],
+  relatedComponents: [],
+  secretForComponentOption: null,
 };
 
 export const existingSecrets: BuildTimeSecret[] = [

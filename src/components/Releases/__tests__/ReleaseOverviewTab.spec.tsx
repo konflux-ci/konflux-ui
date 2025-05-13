@@ -48,17 +48,17 @@ describe('ReleaseOverviewTab', () => {
     expect(screen.getByText('Release Target')).toBeVisible();
     expect(screen.getByText('test-target')).toBeVisible();
 
-    expect(screen.getByText('Pipeline Run')).toBeVisible();
+    expect(screen.getByText('Tenant Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
-      `/workspaces/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
+      `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );
   });
 
   it('should render correct details if managedProcessing', () => {
     render(<ReleaseOverviewTab />);
-    expect(screen.getByText('Pipeline Run')).toBeVisible();
+    expect(screen.getByText('Managed Pipeline Run')).toBeVisible();
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
-      `/workspaces/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
+      `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );
   });
 });

@@ -1,3 +1,4 @@
+import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import { K8sResourceCommon } from './k8s';
 
 export const SecretByUILabel = 'ui.appstudio.redhat.com/secret-for';
@@ -33,6 +34,7 @@ export enum SecretLabels {
   CREDENTIAL_VALUE = 'scm',
   HOST_LABEL = 'appstudio.redhat.com/scm.host',
   REPO_ANNOTATION = 'appstudio.redhat.com/scm.repository',
+  COMMON_SECRET_LABEL = 'build.appstudio.openshift.io/common-secret',
 }
 
 export enum TargetDropdownDefaults {
@@ -203,6 +205,8 @@ export interface AddSecretFormValues {
   image: Image;
   source: Source;
   labels?: KeyValueEntry[];
+  relatedComponents?: string[];
+  secretForComponentOption?: null | SecretForComponentOption;
 }
 
 export interface Image {
