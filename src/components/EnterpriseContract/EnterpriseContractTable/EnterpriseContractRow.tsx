@@ -1,18 +1,9 @@
 import * as React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  Truncate,
-} from '@patternfly/react-core';
-import { ExpandableRowContent } from '@patternfly/react-table';
+import { Truncate } from '@patternfly/react-core';
 import { COMPONENT_LIST_PATH } from '@routes/paths';
 import { TableData } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
-import ExternalLink from '../../../shared/components/links/ExternalLink';
-import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { UIEnterpriseContractData } from '../types';
 import { getRuleStatus } from '../utils';
 import { EnterpriseContractTableColumnClasses } from './EnterpriseContractHeader';
@@ -46,46 +37,6 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
 
       <TableData className={`${EnterpriseContractTableColumnClasses.rules}`}>
         {data.title ?? '-'}
-        {/* Expanded Row */}
-        {rowExpanded && (
-          <div className="rule-description" data-test="ec-expand-row">
-            <ExpandableRowContent>
-              <DescriptionList isAutoColumnWidths columnModifier={{ default: '3Col' }}>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>Rule Description</DescriptionListTerm>
-                  <DescriptionListDescription>{data.description ?? '-'}</DescriptionListDescription>
-                </DescriptionListGroup>
-
-                {data.collection?.length ? (
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Collection</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      <ExternalLink href="https://enterprisecontract.dev/docs/ec-policies/release_policy.html#_available_rule_collections">
-                        {data.collection.join(', ')}
-                      </ExternalLink>
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                ) : null}
-
-                {data.solution ? (
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Solution</DescriptionListTerm>
-                    <DescriptionListDescription>{data.solution}</DescriptionListDescription>
-                  </DescriptionListGroup>
-                ) : null}
-
-                {data.timestamp ? (
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Effective from</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      <Timestamp timestamp={data.timestamp} />
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                ) : null}
-              </DescriptionList>
-            </ExpandableRowContent>
-          </div>
-        )}
       </TableData>
       <TableData
         data-test="rule-status"

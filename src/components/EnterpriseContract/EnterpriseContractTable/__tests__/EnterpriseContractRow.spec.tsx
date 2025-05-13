@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { UIEnterpriseContractData } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
+import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
 import { WrappedEnterpriseContractRow } from '../EnterpriseContractRow';
 
 jest.mock('react-router-dom', () => {
@@ -58,12 +59,19 @@ describe('EnterpriseContractRow', () => {
 
   it('should render Failed rule and failure message in table', () => {
     render(
-      <WrappedEnterpriseContractRow
-        customData={cusmtomDummyData}
-        obj={dumpFailRowData}
-        setExpandedRowIndex={mockSetExpandedRowIndex}
-        expandedRowIndex={1}
-      />,
+      <>
+        <WrappedEnterpriseContractRow
+          customData={cusmtomDummyData}
+          obj={dumpFailRowData}
+          setExpandedRowIndex={mockSetExpandedRowIndex}
+          expandedRowIndex={1}
+        />
+        <EnterpriseContractExpandedRowContent
+          customData={cusmtomDummyData}
+          obj={dumpFailRowData}
+          expandedRowIndex={1}
+        />
+      </>,
     );
     screen.getByText('dummyTitle');
     screen.getByText('component-1');

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { Table } from '~/shared';
 import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
+import { EnterpriseContractExpandedRowContent } from './EnterpriseContractExpandedRowContent';
 import getEnterpriseContractHeader from './EnterpriseContractHeader';
 import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
 import './EnterpriceContractTable.scss';
@@ -78,6 +79,18 @@ export const EnterpriseContractTable: React.FC<
         data={sortedECResult}
         aria-label="ec table"
         Header={EnterpriseContractHeader}
+        expandedRowIndex={expandedRowIndex}
+        ExpandedContent={(props) => {
+          const obj = props.obj as UIEnterpriseContractData;
+          return (
+            <EnterpriseContractExpandedRowContent
+              {...props}
+              obj={obj}
+              expandedRowIndex={expandedRowIndex}
+              customData={{ sortedECResult }}
+            />
+          );
+        }}
         Row={(props) => {
           const obj = props.obj as UIEnterpriseContractData;
           return (
