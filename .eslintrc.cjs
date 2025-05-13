@@ -61,6 +61,7 @@ module.exports = {
           'image_controller',
           'application_url',
           'sbom_server',
+          'release_name',
         ],
       },
     ],
