@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
+import { IfFeature } from '~/feature-flags/hooks';
 import { DropdownItemObject } from '../../../shared/components/dropdown';
 import KeyValueFileInputField from '../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '../../../shared/components/formik-fields/SelectInputField';
@@ -174,13 +175,15 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
           required
         />
       )}
-      {/* Just for image pull secret and basic auth */}
-      {shouldShowSecretLinkOptions && (
-        <SecretLinkOptions
-          secretForComponentOption={secretForComponentOption}
-          onOptionChange={(option) => setValue(option)}
-        />
-      )}
+      <IfFeature flag="buildServiceAccount">
+        {/* Just for image pull secret and basic auth */}
+        {shouldShowSecretLinkOptions && (
+          <SecretLinkOptions
+            secretForComponentOption={secretForComponentOption}
+            onOptionChange={(option) => setValue(option)}
+          />
+        )}
+      </IfFeature>
       {selectedForm && selectedForm.component}
       <KeyValueFileInputField
         name="labels"
