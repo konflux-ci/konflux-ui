@@ -1,5 +1,5 @@
 .rule-description {
   display: flex;
-  padding-top: 6%;
-  flex-direction: column;
+  padding-top: var(--pf-v5-global--spacer--md);
+  padding-left: var(--pf-v5-global--spacer--md);
 }
