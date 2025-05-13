@@ -34,6 +34,7 @@ export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & 
   Header: HeaderFunc;
   loadError?: string | object;
   Row?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
+  ExpandedContent?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   'aria-label': string;
   onSelect?: OnSelect;
   NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;
@@ -55,6 +56,7 @@ export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & 
   onRowsRendered?: VirtualBodyProps<D>['onRowsRendered'];
   isInfiniteLoading?: boolean;
   infiniteLoaderProps?: InfiniteLoaderProps;
+  expandedRowIndex?: number;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = ({

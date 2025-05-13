@@ -57,6 +57,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   kindObj,
   Header: initHeader,
   Row,
+  ExpandedContent,
   expand,
   'aria-label': ariaLabel,
   customData,
@@ -68,6 +69,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   onRowsRendered,
   infiniteLoaderProps,
   isInfiniteLoading,
+  expandedRowIndex,
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
@@ -101,6 +103,8 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                         expand={expand}
                         getRowProps={getRowProps}
                         onRowsRendered={handleRowsRendered}
+                        ExpandedContent={ExpandedContent}
+                        expandedRowIndex={expandedRowIndex}
                       />
                     </div>
                   );
@@ -121,6 +125,8 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                   expand={expand}
                   getRowProps={getRowProps}
                   onRowsRendered={onRowsRendered}
+                  ExpandedContent={ExpandedContent}
+                  expandedRowIndex={expandedRowIndex}
                 />
               </div>
             )
