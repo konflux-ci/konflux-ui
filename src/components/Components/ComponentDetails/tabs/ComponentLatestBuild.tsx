@@ -21,7 +21,6 @@ import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
-import { getLastestImage } from '../../../../utils/component-utils';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
 import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
@@ -45,7 +44,9 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const [taskRuns, taskRunsLoaded] = useTaskRuns(namespace, pipelineRun?.metadata?.name);
   const buildLogsModal = useBuildLogViewerModal(component);
 
-  const containerImage = getLastestImage(component);
+  // Avoid getLastestImage fallback to spec.containerImage, which lacks image tag
+  // and causes 'cosign download sbom' to fail. Use lastPromotedImage explicitly.
+  const containerImage = component?.status?.lastPromotedImage;
 
   if (error) {
     const httpError = HttpError.fromCode((error as { code: number }).code);
