@@ -13,7 +13,9 @@ type SecretSelectorProps = {
   onClose: () => void;
 };
 
-export const SecretSelector: React.FC = ({ onClose }: SecretSelectorProps) => {
+export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProps>> = ({
+  onClose,
+}) => {
   const namespace = useNamespace();
   const secrets: SecretKind[] = useSecrets(namespace)[0];
   const secretOptions: string[] = secrets?.map((item) => item?.metadata?.name);

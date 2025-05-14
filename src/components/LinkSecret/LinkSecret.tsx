@@ -4,16 +4,11 @@ import { Formik } from 'formik';
 import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 import { SecretSelector } from './SecretSelector';
 
-type DeleteResourceModalProps = ComponentProps & {
-  obj: string;
-  model?: string;
-  displayName?: string;
-  isEntryNotRequired?: boolean;
-  description?: React.ReactNode;
-  submitCallback?: (obj: unknown, namespace?) => void;
+type LinkSecretModalProps = ComponentProps & {
+  onClose: () => void;
 };
 
-export const LinkSecret: React.FC<React.PropsWithChildren<DeleteResourceModalProps>> = ({
+export const LinkSecret: React.FC<React.PropsWithChildren<LinkSecretModalProps>> = ({
   onClose,
 }) => {
   const onReset = () => {
