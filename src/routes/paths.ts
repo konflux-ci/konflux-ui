@@ -25,6 +25,8 @@ export const COMPONENT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('components')
 
 export const COMPONENT_DETAILS_PATH = COMPONENT_LIST_PATH.extend(`:${RouterParams.componentName}`);
 
+export const COMPONENT_LINKED_SECRETS_PATH = COMPONENT_DETAILS_PATH.extend(`linked-secrets`);
+
 export const COMPONENT_ACTIVITY_PATH = COMPONENT_DETAILS_PATH.extend('activity');
 
 export const COMPONENT_ACTIVITY_CHILD_TAB_PATH = COMPONENT_ACTIVITY_PATH.extend(

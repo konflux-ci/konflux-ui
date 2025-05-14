@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useIsOnFeatureFlag } from '../../feature-flags/hooks';
 import { ComponentModel, ServiceAccountModel } from '../../models';
+import { COMPONENT_LINKED_SECRETS_PATH } from '../../routes/paths';
 import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../types';
@@ -63,9 +64,13 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
         ? [
             {
               cta: {
-                href: './', // TODO: navigate to "Manage linked secrets" page once it's implemented
+                href: COMPONENT_LINKED_SECRETS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName,
+                  componentName: component.metadata.name,
+                }),
               },
-              id: `manage-linked-secrets-${name.toLowerCase()}`,
+              id: `linked-secrets-${name.toLowerCase()}`,
               label: 'Manage linked secrets',
               disabled: !canManageLinkedSecrets,
               disabledTooltip: "You don't have access to manage linked secrets",
