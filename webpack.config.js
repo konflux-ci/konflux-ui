@@ -64,7 +64,8 @@ export default {
   plugins: [
     new HtmlWebpackPlugin({ template: './public/index.html', favicon: './public/favicon.ico' }),
     new MonacoWebpackPlugin({
-      languages: ['yaml', 'dockerfile', 'json', 'plaintext'],
+      languages: ['yaml'], // add only 'yaml' language, since that's the only one we're going to support for now
+      features: ['find', 'quickCommand', 'hover'], // only basic features we might need for now
       globalAPI: true,
       customLanguages: [
         {
@@ -87,6 +88,14 @@ export default {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendor',
           chunks: 'all',
+        },
+        // isolate 'monaco' dependencies in a separate chunk, it'll decrease the 'vendor' size
+        monaco: {
+          test: /[\\/]node_modules[\\/](monaco-editor|monaco-yaml)/,
+          name: 'monaco',
+          chunks: 'async',
+          priority: 20,
+          enforce: true,
         },
       },
     },
