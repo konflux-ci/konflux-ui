@@ -3,6 +3,7 @@ import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { FormikProps, useField } from 'formik';
 import { TextAreaField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useReleasePlans } from '../../../../../src/hooks/useReleasePlans';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { RELEASE_SERVICE_PATH } from '../../../../routes/paths';
@@ -85,9 +86,13 @@ export const TriggerReleaseForm: React.FC<Props> = ({
             required
             applicationName={applicationName}
           />
-          <AddIssueSection field="issues" issueType={IssueType.BUG} />
+          <FilterContextProvider filterParams={['issues']}>
+            <AddIssueSection field="issues" issueType={IssueType.BUG} />
+          </FilterContextProvider>
 
-          <AddIssueSection field="cves" issueType={IssueType.CVE} />
+          <FilterContextProvider filterParams={['cves']}>
+            <AddIssueSection field="cves" issueType={IssueType.CVE} />
+          </FilterContextProvider>
 
           <TextAreaField
             name="synopsis"

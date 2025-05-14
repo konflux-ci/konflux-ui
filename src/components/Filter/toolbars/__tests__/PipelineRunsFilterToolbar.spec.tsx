@@ -19,7 +19,6 @@ describe('PipelineRunsFilterToolbar', () => {
       />,
     );
 
-    expect(screen.getByTestId('pipelinerun-list-toolbar')).toBeVisible();
     expect(screen.getByRole('textbox', { name: 'name filter' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Status filter menu' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Type filter menu' })).toBeVisible();

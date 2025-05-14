@@ -1,8 +1,11 @@
-import * as React from 'react';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { formikRenderer } from '../../../../../../utils/test-utils';
 import { IssueType } from '../AddIssueModal';
 import { AddIssueSection } from '../AddIssueSection';
+
+jest.useFakeTimers();
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -14,23 +17,30 @@ jest.mock('react-router-dom', () => {
       </a>
     ),
     useNavigate: () => jest.fn(),
-    useSearchParams: () => React.useState(() => new URLSearchParams()),
     useParams: jest.fn(),
   };
 });
+
+const AddIssue = (field: string, issueType: IssueType) => (
+  <MemoryRouter>
+    <FilterContextProvider filterParams={[field]}>
+      <AddIssueSection field={field} issueType={issueType} />
+    </FilterContextProvider>
+  </MemoryRouter>
+);
 
 describe('AddIssueSection for Bugs', () => {
   beforeEach(() => {});
 
   it('should show correct heading ', () => {
-    formikRenderer(<AddIssueSection field="bug" issueType={IssueType.BUG} />);
+    formikRenderer(AddIssue('bug', IssueType.BUG));
     expect(
       screen.getByText('Are there any bug fixes you would like to add to this release?'),
     ).toBeVisible();
   });
 
   it('should show correct columns ', () => {
-    formikRenderer(<AddIssueSection field="bug" issueType={IssueType.BUG} />);
+    formikRenderer(AddIssue('bug', IssueType.BUG));
     screen.getByText('Bug issue key');
     screen.getByText('URL');
     screen.getByText('Summary');
@@ -39,7 +49,7 @@ describe('AddIssueSection for Bugs', () => {
   });
 
   it('should render correct bug list ', () => {
-    formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
+    formikRenderer(AddIssue('bugs', IssueType.BUG), {
       bugs: [
         { id: 'bug-nodejs', url: 'http://url1.com' },
         { id: 'bug-java', url: 'http://url2.com' },
@@ -52,21 +62,20 @@ describe('AddIssueSection for Bugs', () => {
   });
 
   it('should have no search filter onLoad ', () => {
-    formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
+    formikRenderer(AddIssue('bugs', IssueType.BUG), {
       bugs: [
         { id: 'bug-nodejs', url: 'http://url1.com' },
         { id: 'bug-java', url: 'http://url2.com' },
         { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
-    const inputFilter = screen
-      .getByTestId('bugs-input-filter')
-      .querySelector('.pf-v5-c-text-input-group__text-input');
-    expect((inputFilter as HTMLInputElement).value).toBe('');
+    const filterToolbar = screen.getByTestId('add-bugs-section-toolbar');
+    const inputFilter = within(filterToolbar).getByPlaceholderText('Filter by name...');
+    expect(inputFilter).toHaveValue('');
   });
 
   it('should filter bug list ', async () => {
-    formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
+    formikRenderer(AddIssue('bugs', IssueType.BUG), {
       bugs: [
         { id: 'bug-nodejs', url: 'http://url1.com' },
         { id: 'bug-java', url: 'http://url2.com' },
@@ -75,11 +84,14 @@ describe('AddIssueSection for Bugs', () => {
     });
     const tableBody = screen.getByTestId('issue-table-body');
     expect(tableBody.children.length).toBe(3);
-    const inputFilter = screen
-      .getByTestId('bugs-input-filter')
-      .querySelector('.pf-v5-c-text-input-group__text-input');
 
+    const filterToolbar = screen.getByTestId('add-bugs-section-toolbar');
+    const inputFilter = within(filterToolbar).getByPlaceholderText('Filter by name...');
     fireEvent.change(inputFilter, { target: { value: 'java' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
     await waitFor(() => {
       expect(tableBody.children.length).toBe(1);
       expect(tableBody.children[0].children[0].innerHTML).toBe('bug-java');
@@ -87,50 +99,32 @@ describe('AddIssueSection for Bugs', () => {
   });
 
   it('should show emptyState ', () => {
-    formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
+    formikRenderer(AddIssue('bugs', IssueType.BUG), {
       bugs: [],
     });
     expect(screen.getByText('No Bugs found'));
   });
 
   it('should show filteredEmptyState ', async () => {
-    formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
+    formikRenderer(AddIssue('bugs', IssueType.BUG), {
       bugs: [
         { id: 'bug-nodejs', url: 'http://url1.com' },
         { id: 'bug-java', url: 'http://url2.com' },
         { id: 'bug-python', url: 'http://url3.com' },
       ],
     });
-    const inputFilter = screen
-      .getByTestId('bugs-input-filter')
-      .querySelector('.pf-v5-c-text-input-group__text-input');
 
-    fireEvent.change(inputFilter, { target: { value: 'dotnet' } });
+    const filterToolbar = screen.getByTestId('add-bugs-section-toolbar');
+    const inputFilter = within(filterToolbar).getByPlaceholderText('Filter by name...');
+    fireEvent.change(inputFilter, { target: { value: 'no-match' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
     await waitFor(() => {
       expect(
         screen.getByText('No results match this filter criteria. Clear all filters and try again.'),
       );
-    });
-  });
-
-  it('should filter bug list ', async () => {
-    formikRenderer(<AddIssueSection field="bugs" issueType={IssueType.BUG} />, {
-      bugs: [
-        { id: 'bug-nodejs', url: 'http://url1.com' },
-        { id: 'bug-java', url: 'http://url2.com' },
-        { id: 'bug-python', url: 'http://url3.com' },
-      ],
-    });
-    const tableBody = screen.getByTestId('issue-table-body');
-    expect(tableBody.children.length).toBe(3);
-    const inputFilter = screen
-      .getByTestId('bugs-input-filter')
-      .querySelector('.pf-v5-c-text-input-group__text-input');
-
-    fireEvent.change(inputFilter, { target: { value: 'java' } });
-    await waitFor(() => {
-      expect(tableBody.children.length).toBe(1);
-      expect(tableBody.children[0].children[0].innerHTML).toBe('bug-java');
     });
   });
 });
@@ -139,14 +133,14 @@ describe('AddIssueSection for CVEs', () => {
   beforeEach(() => {});
 
   it('should show correct heading ', () => {
-    formikRenderer(<AddIssueSection field="cve" issueType={IssueType.CVE} />);
+    formikRenderer(AddIssue('cve', IssueType.CVE));
     expect(
       screen.getByText('Are there any CVEs you would like to add to this release?'),
     ).toBeVisible();
   });
 
   it('should show correct columns ', () => {
-    formikRenderer(<AddIssueSection field="cve" issueType={IssueType.CVE} />);
+    formikRenderer(AddIssue('cve', IssueType.CVE));
     screen.getByText('CVE key');
     screen.getByText('Components');
     screen.getByText('Summary');
@@ -155,7 +149,7 @@ describe('AddIssueSection for CVEs', () => {
   });
 
   it('should render correct cve list ', () => {
-    formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
+    formikRenderer(AddIssue('cves', IssueType.CVE), {
       cves: [
         {
           key: 'cve-nodejs',
@@ -183,7 +177,7 @@ describe('AddIssueSection for CVEs', () => {
   });
 
   it('should render - when data is missing', () => {
-    formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
+    formikRenderer(AddIssue('cves', IssueType.CVE), {
       cves: [{ key: 'cve-nodejs', url: 'url1' }],
     });
     expect(screen.getByTestId('issue-summary').innerHTML).toBe('-');
@@ -191,7 +185,7 @@ describe('AddIssueSection for CVEs', () => {
   });
 
   it('should filter cves list ', async () => {
-    formikRenderer(<AddIssueSection field="cves" issueType={IssueType.CVE} />, {
+    formikRenderer(AddIssue('cves', IssueType.CVE), {
       cves: [
         {
           key: 'cve-nodejs',
@@ -209,14 +203,56 @@ describe('AddIssueSection for CVEs', () => {
     });
     const tableBody = screen.getByTestId('issue-table-body');
     expect(tableBody.children.length).toBe(3);
-    const inputFilter = screen
-      .getByTestId('cves-input-filter')
-      .querySelector('.pf-v5-c-text-input-group__text-input');
 
+    const filterToolbar = screen.getByTestId('add-cves-section-toolbar');
+    const inputFilter = within(filterToolbar).getByPlaceholderText('Filter by name...');
     fireEvent.change(inputFilter, { target: { value: 'java' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
     await waitFor(() => {
       expect(tableBody.children.length).toBe(1);
       expect(tableBody.children[0].children[0].innerHTML).toBe('cve-java');
+    });
+  });
+
+  it('should show emptyState ', () => {
+    formikRenderer(AddIssue('cves', IssueType.CVE), {
+      cves: [],
+    });
+    expect(screen.getByText('No CVEs found'));
+  });
+
+  it('should show filteredEmptyState ', async () => {
+    formikRenderer(AddIssue('cves', IssueType.CVE), {
+      cves: [
+        {
+          key: 'cve-nodejs',
+          components: [{ name: 'cmp1' }, { name: 'cmp2', packages: ['a', 'b'] }],
+        },
+        {
+          key: 'cve-java',
+          components: [{ name: 'cmp3' }, { name: 'cmp5', packages: ['a', 'b'] }, { name: 'cmp6' }],
+        },
+        {
+          key: 'cve-python',
+          components: [{ name: 'cmp4' }, { name: 'cmp2', packages: ['a', 'b'] }],
+        },
+      ],
+    });
+
+    const filterToolbar = screen.getByTestId('add-cves-section-toolbar');
+    const inputFilter = within(filterToolbar).getByPlaceholderText('Filter by name...');
+    fireEvent.change(inputFilter, { target: { value: 'no-match' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('No results match this filter criteria. Clear all filters and try again.'),
+      );
     });
   });
 });
