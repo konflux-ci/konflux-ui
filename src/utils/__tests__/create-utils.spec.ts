@@ -26,6 +26,7 @@ import {
   createSecret,
   getSecretObject,
   addSecret,
+  addSecretWithLinkingComponents,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
 
@@ -35,7 +36,11 @@ jest.mock('../../k8s/k8s-fetch', () => ({
 }));
 
 jest.mock('../../components/Secrets/utils/service-account-utils', () => {
-  return { linkSecretToServiceAccount: jest.fn(), linkSecretToServiceAccounts: jest.fn() };
+  return {
+    linkSecretToServiceAccount: jest.fn(),
+    linkSecretToBuildServiceAccount: jest.fn(),
+    linkSecretToServiceAccounts: jest.fn(),
+  };
 });
 
 const createResourceMock = k8sCreateResource as jest.Mock;
@@ -315,7 +320,9 @@ describe('Create Utils', () => {
     // does not handle special characters
     expect(sanitizeName('!  @  #')).toBe('!--@--#');
   });
+});
 
+describe('create-utils createSecrets', () => {
   it('should call the create secret api with dryRun query string params', async () => {
     createResourceMock.mockClear().mockImplementationOnce((props) => Promise.resolve(props));
 
@@ -489,6 +496,9 @@ describe('Create Utils', () => {
 
     expect(createResourceMock).toHaveBeenCalled();
   });
+});
+
+describe('create-utils addSecrets', () => {
   it('should add secret', async () => {
     createResourceMock.mockClear();
     await addSecret(addSecretFormValues, 'test-ns');
@@ -503,33 +513,50 @@ describe('Create Utils', () => {
     );
   });
 
-  it('should not call linkToServiceAccounts without secret link option and components', async () => {
+  it('should call linkToServiceAccount For image pull secrets', async () => {
     linkSecretToServiceAccountMock.mockClear();
+    expect(createResourceMock).toHaveBeenCalled();
     await addSecret(addSecretFormValues, 'test-ns');
+    expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
+    expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
+      expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
+      'test-ns',
+    );
+  });
+});
+
+describe('create-utils addSecretWithLinkingComponents', () => {
+  it('should not call linkToServiceAccounts without secret link option and components', async () => {
+    linkSecretToServiceAccountsMock.mockClear();
+    await addSecretWithLinkingComponents(addSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
+
     expect(linkSecretToServiceAccountsMock).not.toHaveBeenCalled();
   });
 
   it('should call linkToServiceAccounts with secret link option', async () => {
-    linkSecretToServiceAccountMock.mockClear();
+    linkSecretToServiceAccountsMock.mockClear();
     const updatedAddSecretFormValues = {
       ...addSecretFormValues,
       secretForComponentOption: SecretForComponentOption.all,
       relatedComponents: [],
     };
 
-    await addSecret(updatedAddSecretFormValues, 'test-ns');
+    await addSecretWithLinkingComponents(updatedAddSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
     expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
   });
 
   it('should call linkToServiceAccounts with relatedComponents', async () => {
-    linkSecretToServiceAccountMock.mockClear();
+    linkSecretToServiceAccountsMock.mockClear();
     const updatedAddSecretFormValues = {
       ...addSecretFormValues,
       secretForComponentOption: SecretForComponentOption.partial,
       relatedComponents: ['test-component-1'],
     };
 
-    await addSecret(updatedAddSecretFormValues, 'test-ns');
+    await addSecretWithLinkingComponents(updatedAddSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
     expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
   });
 });
