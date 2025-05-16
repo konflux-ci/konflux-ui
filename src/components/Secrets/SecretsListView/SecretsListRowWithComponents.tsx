@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Label, Spinner, Tooltip, TooltipPosition } from '@patternfly/react-core';
+import {
+  Alert,
+  AlertVariant,
+  Label,
+  Spinner,
+  Tooltip,
+  TooltipPosition,
+} from '@patternfly/react-core';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { useTaskStore } from '~/utils/task-store';
@@ -40,7 +47,12 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
   );
 
   const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
+
   const taskStatus = !task ? LinkSecretStatus.Succeeded : task?.status;
+
+  const taskErrors = task?.error
+    ? task.error.split('\n').map((line) => line.replace(/^"(.*)"$/, '$1'))
+    : [];
 
   return (
     <>
@@ -64,7 +76,37 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           )}
         </div>
       </TableData>
-      <TableData className={secretsTableColumnClasses.status}>{taskStatus ?? '-'}</TableData>
+      <TableData className={secretsTableColumnClasses.status}>
+        <div data-test="components-status">
+          {taskStatus === LinkSecretStatus.Failed ? (
+            <Tooltip
+              content={
+                <div>
+                  <Alert
+                    isInline
+                    variant={AlertVariant.warning}
+                    title="Note: This error is only available in this browser."
+                  />
+                  {taskErrors.length > 0 ? (
+                    <ul>
+                      {taskErrors.map((line, index) => (
+                        <li key={index}>- {line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div>Error details not available.</div>
+                  )}
+                </div>
+              }
+              position={TooltipPosition.rightEnd}
+            >
+              <span>Error</span>
+            </Tooltip>
+          ) : (
+            taskStatus
+          )}
+        </div>
+      </TableData>
       <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
       <TableData className={secretsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
