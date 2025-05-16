@@ -43,6 +43,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         () => ({
           selector: {
             filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+            filterByName: name || undefined,
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
               ...(componentName && {
@@ -51,7 +52,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
             },
           },
         }),
-        [applicationName, componentName, application],
+        [applicationName, componentName, application, name],
       ),
     );
 
