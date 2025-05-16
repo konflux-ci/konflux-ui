@@ -14,9 +14,22 @@ const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 describe('useBuildPipelines', () => {
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
+    useTRPipelineRunsMock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     const { result } = renderHook(() => useBuildPipelines('test-ns', 'test-pipelinerun', null));
 
-    expect(result.current).toEqual([[], false, undefined, undefined]);
+    expect(result.current).toEqual([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
   });
 
   it('should return build pipelines', () => {
@@ -25,7 +38,13 @@ describe('useBuildPipelines', () => {
       true,
       undefined,
     ]);
-    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    useTRPipelineRunsMock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     const { result } = renderHook(() => useBuildPipelines('test-ns', 'test-pipelinerun', null));
 
     const [pipelineRuns, loaded] = result.current;
