@@ -1,12 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
+import { useBuildPipelines } from '../../../../hooks/useBuildPipelines';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import {
-  createK8sWatchResourceMock,
-  createUseApplicationMock,
-  routerRenderer,
-} from '../../../../utils/test-utils';
+import { createUseApplicationMock, routerRenderer } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
 import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import { ComponentActivityTab } from '../tabs/ComponentActivityTab';
@@ -28,13 +25,17 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useBuildPipelines', () => ({
+  useBuildPipelines: jest.fn(),
+}));
+
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
-const watchResourceMock = createK8sWatchResourceMock();
 const useComponentsMock = useComponents as jest.Mock;
 const componentMock = useComponent as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
+const useBuildPipelinesMock = useBuildPipelines as jest.Mock;
 
 describe('ComponentActivityTab', () => {
   let navigateMock: jest.Mock;
@@ -42,7 +43,13 @@ describe('ComponentActivityTab', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
-    watchResourceMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
+    useBuildPipelinesMock.mockReturnValue([
+      pipelineWithCommits.slice(0, 4),
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     useComponentsMock.mockReturnValue([MockComponents, true]);
 
     navigateMock = jest.fn();
