@@ -439,14 +439,24 @@ export const createSecretResourceWithLinkingComponents = async (
           // we just keep the failed jobs in task store to keep the store
           // as clean as possible.
           clearTask(taskId);
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to link secret:', err);
-          setTaskStatus(
-            taskId,
-            LinkSecretStatus.Failed,
-            err instanceof Error ? err.message : String(err),
-          );
+        } catch (errs) {
+          if (Array.isArray(errs)) {
+            const allMessages = errs
+              .map((e) => {
+                if (e.error instanceof Error) return e.error.message;
+                if (typeof e.error === 'object' && e.error !== null)
+                  return JSON.stringify(e.error.message || e.error.reason);
+                return String(e.error);
+              })
+              .join('\n');
+            setTaskStatus(taskId, LinkSecretStatus.Failed, allMessages);
+          } else {
+            setTaskStatus(
+              taskId,
+              LinkSecretStatus.Failed,
+              errs instanceof Error ? errs.message : String(errs),
+            );
+          }
         }
       });
     }

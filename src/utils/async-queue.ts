@@ -1,3 +1,11 @@
+// AsyncQueue: Runs async tasks one by one, in order.
+// Used for I/O-heavy tasks like API calls.
+
+// ✅ Each task is async (e.g., fetch), so it doesn't block the main thread.
+// ✅ Tasks run sequentially — next one starts only after the previous one finishes.
+// ✅ Keeps UI responsive even when running many network requests.
+// ⚠️ Do not use it for CPU-heavy tasks (e.g., big loops), those will block the UI.
+// Example: Used to link secrets to components without blocking UI.
 export class AsyncQueue {
   private queue: (() => Promise<void>)[] = [];
   private running = false;
