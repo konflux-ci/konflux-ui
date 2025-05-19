@@ -1,45 +1,19 @@
-.konflux-banner-fixed {
-  background-color: var(--pf-global--BackgroundColor--100);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 2000;
-  width: 100%;
-  font-size: smaller !important;
-  overflow: hidden;
-  max-height: 1000px;
-  transition: max-height 0.3s ease;
-}
-
-
-.konflux-banner-fixed.collapsed {
-  max-height: 4px;
-}
-
-.konflux-banner-fixed.collapsed:hover {
-  max-height: 1000px;
-}
-
-.konflux-banner-content {
-  padding: 8px 16px;
-}
-
 .banner-inline-content {
+  font-size: var(--pf-global--FontSize--xs);
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--pf-global--spacer--sm); 
 }
 
 .banner-toggle-button {
-  font-size: smaller;
+  font-size: var(--pf-global--FontSize--sm);
   white-space: nowrap;
-  padding-left: 0.5rem;
+  padding-left: var(--pf-global--spacer--sm);
 }
 
 .konflux-banner-footer {
-  margin-top: 1rem;
-  font-size: 0.75rem;
+  margin-top: var(--pf-global--spacer--md);
+  font-size: var(--pf-global--FontSize--xs);
   text-align: left;
 }
