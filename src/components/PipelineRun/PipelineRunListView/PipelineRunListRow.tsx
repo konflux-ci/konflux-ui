@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Label, Skeleton, Truncate } from '@patternfly/react-core';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
@@ -64,7 +64,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
   const commidId = labels?.[PipelineRunLabel.COMMIT_LABEL];
 
-  const getTriggerredByColumnData = () => {
+  const getTriggerredByColumnData = useCallback(() => {
     let icon = null,
       text = ``,
       link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
@@ -94,7 +94,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         )}
       </>
     );
-  };
+  }, [commidId, eventType, gitProvider, prNumber, repoOrg, repoURL]);
 
   return (
     <>
