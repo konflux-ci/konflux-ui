@@ -25,7 +25,7 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
   // get list of existing IP secrets
   const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretEntry[];
   // check whether existing IP secrets list already contains the secret name
-  const alreadyContainsIPSecret = existingIPSecrets.includes({ name: secret.metadata?.name });
+  const alreadyContainsIPSecret = existingIPSecrets?.includes({ name: secret.metadata?.name });
 
   const imagePullSecretList = existingIPSecrets
     ? alreadyContainsIPSecret
@@ -36,7 +36,7 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
   // get list of existing secrets
   const existingSecrets = serviceAccount?.secrets as SecretEntry[];
   // check whether existing secrets list already contains the secret name
-  const alreadyContainsSecret = existingSecrets.includes({ name: secret.metadata?.name });
+  const alreadyContainsSecret = existingSecrets?.includes({ name: secret.metadata?.name });
 
   const secretList = existingSecrets
     ? alreadyContainsSecret
