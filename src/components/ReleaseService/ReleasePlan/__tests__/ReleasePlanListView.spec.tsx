@@ -1,6 +1,8 @@
 import { MemoryRouter } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { mockApplication } from '~/components/ApplicationDetails/__data__/mock-data';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useApplications } from '../../../../hooks/useApplications';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
 import { mockAccessReviewUtil } from '../../../../unit-test-utils/mock-access-review';
 import { mockReleasePlan, mockReleasePlans } from '../__data__/release-plan.mock';
@@ -26,7 +28,12 @@ jest.mock('../../../../hooks/useReleasePlans', () => ({
   useReleasePlans: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useApplications', () => ({
+  useApplications: jest.fn(),
+}));
+
 const mockReleasePlanHook = useReleasePlans as jest.Mock;
+
 const ReleasePlanList = (
   <MemoryRouter>
     <FilterContextProvider filterParams={['name']}>
@@ -35,8 +42,11 @@ const ReleasePlanList = (
   </MemoryRouter>
 );
 
+const useApplicationsMock = useApplications as jest.Mock;
+
 describe('ReleasePlanListView', () => {
   mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
+  useApplicationsMock.mockReturnValue([[mockApplication], true]);
 
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);

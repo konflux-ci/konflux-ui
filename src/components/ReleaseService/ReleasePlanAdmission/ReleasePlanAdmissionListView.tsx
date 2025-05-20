@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useApplications } from '~/hooks/useApplications';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlanAdmissions } from '../../../hooks/useReleasePlanAdmissions';
@@ -13,10 +14,13 @@ import { ReleasePlanAdmissionKind } from '../../../types/release-plan-admission'
 import { withPageAccessCheck } from '../../PageAccess/withPageAccessCheck';
 import { ReleaseServiceEmptyState } from '../ReleaseServiceEmptyState';
 import ReleasePlanAdmissionListHeader from './ReleasePlanAdmissionListHeader';
-import ReleasePlanAdmissionListRow from './ReleasePlanAdmissionListRow';
+import ReleasePlanAdmissionListRow, {
+  ReleasePlanAdmissionWithApplicationData,
+} from './ReleasePlanAdmissionListRow';
 
 const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
+  const [applications, appLoaded] = useApplications(namespace);
   const [releasePlanAdmission, loaded] = useReleasePlanAdmissions(namespace);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -24,10 +28,26 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
   });
   const { name: nameFilter } = filters;
 
+  const releasePlanAdmissionWithApplicationData: ReleasePlanAdmissionWithApplicationData[] =
+    React.useMemo(() => {
+      return loaded && appLoaded && applications && releasePlanAdmission
+        ? releasePlanAdmission.map((rpa) => {
+            const application = applications.filter(
+              (app) => app.metadata?.name === rpa.spec.application,
+            );
+            return { ...rpa, application };
+          })
+        : releasePlanAdmission;
+    }, [loaded, appLoaded, releasePlanAdmission, applications]);
+
   const filteredReleasePlanAdmission = React.useMemo(
     () =>
-      loaded ? releasePlanAdmission.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1) : [],
-    [loaded, releasePlanAdmission, nameFilter],
+      releasePlanAdmissionWithApplicationData
+        ? releasePlanAdmissionWithApplicationData.filter(
+            (r) => r.metadata.name.indexOf(nameFilter) !== -1,
+          )
+        : [],
+    [releasePlanAdmissionWithApplicationData, nameFilter],
   );
 
   useDocumentTitle(`Release Plan Admission | ${FULL_APPLICATION_TITLE}`);

@@ -76,3 +76,17 @@ export const mockEditedReleasePlan = {
     target: 'my-tenant',
   },
 };
+
+export const mockApplicationWithDisplayName = {
+  apiVersion: 'v1',
+  kind: 'Application',
+  spec: { displayName: 'my application 2' },
+  metadata: { name: 'my-app-2' },
+};
+
+export const mockApplicationWithoutDisplayName = {
+  apiVersion: 'v1',
+  kind: 'Application',
+  spec: null,
+  metadata: { name: 'my-app-2' },
+};
