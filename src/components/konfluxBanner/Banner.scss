@@ -1,0 +1,19 @@
+.banner-inline-content {
+  font-size: var(--pf-global--FontSize--xs);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--pf-global--spacer--sm); 
+}
+
+.banner-toggle-button {
+  font-size: var(--pf-global--FontSize--sm);
+  white-space: nowrap;
+  padding-left: var(--pf-global--spacer--sm);
+}
+
+.konflux-banner-footer {
+  margin-top: var(--pf-global--spacer--md);
+  font-size: var(--pf-global--FontSize--xs);
+  text-align: left;
+}
