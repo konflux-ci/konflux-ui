@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
+import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
+import { AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons/angle-right-icon';
 import { COMPONENT_LIST_PATH } from '@routes/paths';
 import { TableData } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -31,7 +33,7 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
         className={`${EnterpriseContractTableColumnClasses.expand}`}
       >
         <button className="pf-v5-c-button pf-m-plain" onClick={() => onToggle?.(rowIndex)}>
-          {rowExpanded ? '▼' : '▶'}
+          {rowExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
         </button>
       </TableData>
 
