@@ -1,3 +1,4 @@
+import { SecretKind, ServiceAccountKind } from '../../types';
 import { LimitRange, SnapshotEnvironmentBinding } from '../../types/coreBuildService';
 import { RouteKind } from '../../types/routes';
 
@@ -514,3 +515,76 @@ export const mockLimitRange: LimitRange = {
     ],
   },
 };
+
+export const mockedServiceAccount: ServiceAccountKind = {
+  kind: 'ServiceAccount',
+  apiVersion: 'v1',
+  metadata: {
+    name: 'build-pipeline-c7814',
+    namespace: 'rh-ee-rgalvao-tenant',
+    uid: '1e50e721-a93d-41d4-8f3a-8da999c67d1c',
+  },
+  secrets: [
+    {
+      name: 'build-pipeline-c7814-dockercfg-bksxm',
+    },
+    {
+      name: 'c7814-image-push',
+    },
+    {
+      name: 'testing-new-secret',
+    },
+    {
+      name: 'aha-new-test',
+    },
+  ],
+  imagePullSecrets: [
+    {
+      name: 'build-pipeline-c7814-dockercfg-bksxm',
+    },
+    {
+      name: 'testing-new-secret',
+    },
+    {
+      name: 'aha-new-test',
+    },
+  ],
+};
+
+export const mockedSecret: SecretKind = {
+  metadata: {
+    name: 'a036c-image-pull',
+    namespace: 'rh-ee-rgalvao-tenant',
+    uid: 'bbb8afad-4043-4eba-93c3-bb51331e88cd',
+    creationTimestamp: '2025-04-14T09:07:41Z',
+    deletionTimestamp: '2025-04-17T12:55:26Z',
+    labels: { 'appstudio.redhat.com/internal': 'true' },
+  },
+  type: 'kubernetes.io/dockerconfigjson',
+  apiVersion: 'v1',
+  kind: 'Secret',
+};
+
+export const mockedSecrets: SecretKind[] = [
+  mockedSecret,
+  {
+    ...mockedSecret,
+    metadata: { ...mockedSecret.metadata, name: 'a342f-image-pull', deletionTimestamp: undefined },
+  },
+  {
+    ...mockedSecret,
+    metadata: {
+      ...mockedSecret.metadata,
+      name: 'build-pipeline-c7814-dockercfg-bksxm',
+      deletionTimestamp: undefined,
+    },
+  },
+  {
+    ...mockedSecret,
+    metadata: {
+      ...mockedSecret.metadata,
+      name: 'build-pipeline-c7814-token-fbljb',
+      deletionTimestamp: undefined,
+    },
+  },
+];
