@@ -10,11 +10,15 @@ import {
   Text,
   Button,
 } from '@patternfly/react-core';
-import { NAMESPACE_LIST_PATH } from '../../routes/paths';
+import { FLAGS } from '~/feature-flags/flags';
+import { useIsOnFeatureFlag } from '../../feature-flags/hooks';
+import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
 const IntroBanner: React.FC = () => {
+  // Feature flag enable for release monitor
+  const isReleaseMonitorFeatureOn = useIsOnFeatureFlag(FLAGS.releaseMonitor.key);
   return (
     <Grid className="intro-banner">
       <GridItem span={8}>
@@ -42,6 +46,18 @@ const IntroBanner: React.FC = () => {
             >
               View my namespaces
             </Button>
+            {isReleaseMonitorFeatureOn && (
+              <Button
+                className="intro-banner__cta"
+                component={(props) => (
+                  <Link {...props} to={RELEASE_MONITOR_PATH.createPath({} as never)} />
+                )}
+                variant="secondary"
+                size="lg"
+              >
+                Release Monitor Board
+              </Button>
+            )}
           </CardBody>
         </Card>
       </GridItem>
