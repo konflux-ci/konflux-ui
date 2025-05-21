@@ -62,15 +62,15 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const repoURL = labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
   const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
   const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
-  const commidId = labels?.[PipelineRunLabel.COMMIT_LABEL];
+  const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
 
   const getTriggerredByColumnData = useCallback(() => {
     let icon = null,
       text = ``,
       link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
     const commitDetails = {
-      text: commidId?.substring(0, 7),
-      link: `${link}/commit/${commidId}`,
+      text: commitId?.substring(0, 7),
+      link: `${link}/commit/${commitId}`,
     };
     if (eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.RETEST) {
       icon = <CommitIcon isPR={false} className="sha-title-icon" />;
@@ -94,7 +94,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         )}
       </>
     );
-  }, [commidId, eventType, gitProvider, prNumber, repoOrg, repoURL]);
+  }, [commitId, eventType, gitProvider, prNumber, repoOrg, repoURL]);
 
   return (
     <>
@@ -165,7 +165,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         )}
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.trigger}>
-        {PipelineRunEventTypeLabel[eventType]}
+        {PipelineRunEventTypeLabel[eventType] ?? '-'}
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.reference}>
         {getTriggerredByColumnData()}
