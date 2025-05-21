@@ -135,3 +135,50 @@ export const mockApplication = {
       'metadata:\n  attributes:\n    appModelRepository.url: https://github.com/redhat-appstudio-appdata/test-application-rorai-hold-control\n    gitOpsRepository.url: https://github.com/redhat-appstudio-appdata/test-application-rorai-hold-control\n  name: Test Application\nprojects:\n- git:\n    remotes:\n      origin: https://github.com/nodeshift-starters/devfile-sample\n  name: nodejs\nschemaVersion: 2.1.0\n',
   },
 };
+
+export const mockedActions = [
+  {
+    analytics: {
+      app_name: 'purple-mermaid-app',
+      component_name: 'basic-node-js',
+      link_location: 'component-list',
+      link_name: 'manage-build-pipeline',
+      namespace: '',
+    },
+    cta: () => {},
+    disabled: false,
+    disabledTooltip: "You don't have access to edit the build pipeline plan",
+    id: 'manage-build-pipeline',
+    label: 'Edit build pipeline plan',
+  },
+  {
+    analytics: {
+      app_name: 'purple-mermaid-app',
+      component_name: 'basic-node-js',
+      link_location: 'component-actions',
+      link_name: 'start-new-build',
+      namespace: '',
+    },
+    cta: () => {},
+    disabled: false,
+    disabledTooltip: "You don't have access to start a new build",
+    id: 'start-new-build',
+    label: 'Start new build',
+  },
+  {
+    cta: {
+      href: './',
+    },
+    disabled: false,
+    disabledTooltip: "You don't have access to manage linked secrets",
+    id: 'linked-secrets-basic-node-js',
+    label: 'Manage linked secrets',
+  },
+  {
+    cta: () => {},
+    disabled: false,
+    disabledTooltip: "You don't have access to delete a component",
+    id: 'delete-basic-node-js',
+    label: 'Delete component',
+  },
+];
