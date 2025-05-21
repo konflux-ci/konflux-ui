@@ -33,6 +33,7 @@
     "@tanstack/react-query-devtools": "^5.52.0",
     "classnames": "^2.5.1",
     "dagre": "^0.8.5",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
     "formik": "^2.4.6",

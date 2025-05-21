@@ -1,4 +1,5 @@
 import { K8sResourceCommon } from '../../types/k8s';
+import { ReleaseKind } from '../../types/release';
 import {
   k8sCreateResource,
   k8sDeleteResource,
@@ -21,6 +22,12 @@ export const k8sQueryGetResource = <TResource extends K8sResourceCommon>(
   queryClient.ensureQueryData<TResource>(createGetQueryOptions<TResource>(resourceInit, options));
 
 export const K8sQueryListResourceItems = <TResource extends K8sResourceCommon[]>(
+  resourceInit: K8sResourceListOptions,
+  options?: TQueryOptions<TResource>,
+): Promise<TResource> =>
+  queryClient.ensureQueryData(createListqueryOptions<TResource>(resourceInit, options));
+
+export const K8sQueryReleaseListItems = <TResource extends ReleaseKind[]>(
   resourceInit: K8sResourceListOptions,
   options?: TQueryOptions<TResource>,
 ): Promise<TResource> =>

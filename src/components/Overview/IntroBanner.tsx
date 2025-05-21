@@ -10,7 +10,7 @@ import {
   Text,
   Button,
 } from '@patternfly/react-core';
-import { NAMESPACE_LIST_PATH } from '../../routes/paths';
+import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
@@ -41,6 +41,16 @@ const IntroBanner: React.FC = () => {
               size="lg"
             >
               View my namespaces
+            </Button>
+            <Button
+              className="intro-banner__cta"
+              component={(props) => (
+                <Link {...props} to={RELEASE_MONITOR_PATH.createPath({} as never)} />
+              )}
+              variant="secondary"
+              size="lg"
+            >
+              Release Monitor Board
             </Button>
           </CardBody>
         </Card>

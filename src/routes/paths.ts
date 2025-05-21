@@ -1,9 +1,13 @@
 import { buildRoute, type RouteDefinition, RouterParams } from './utils';
 
 type NamespacePath = 'ns';
+type ReleaseMonitorPath = 'releasemonitor';
 
 /* Namespace/Workspace Paths */
 export const NAMESPACE_LIST_PATH: RouteDefinition<NamespacePath> = buildRoute('ns');
+
+export const RELEASE_MONITOR_PATH: RouteDefinition<ReleaseMonitorPath> =
+  buildRoute('releasemonitor');
 
 export const WORKSPACE_PATH = NAMESPACE_LIST_PATH.extend(`:${RouterParams.workspaceName}`);
 
