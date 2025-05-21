@@ -4,7 +4,9 @@ import {
   ComponentDetailsViewLayout,
   componentDetailsViewLoader,
 } from '../../components/Components/ComponentDetails';
-import { COMPONENT_DETAILS_PATH } from '../paths';
+import { linkedSecretsListViewLoader } from '../../components/Components/LinkedSecretsListView';
+import { LinkedSecretsListView } from '../../components/Components/LinkedSecretsListView/LinkedSecretsListView';
+import { COMPONENT_DETAILS_PATH, COMPONENT_LINKED_SECRETS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 import { RouterParams } from '../utils';
 
@@ -28,6 +30,12 @@ const componentRoutes = [
         element: <ComponentActivityTab />,
       },
     ],
+  },
+  {
+    path: COMPONENT_LINKED_SECRETS_PATH.path,
+    element: <LinkedSecretsListView />,
+    loader: linkedSecretsListViewLoader,
+    errorElement: <RouteErrorBoundry />,
   },
 ];
 

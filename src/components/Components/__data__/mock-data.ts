@@ -171,7 +171,7 @@ export const mockedActions = [
     },
     disabled: false,
     disabledTooltip: "You don't have access to manage linked secrets",
-    id: 'manage-linked-secrets-basic-node-js',
+    id: 'linked-secrets-basic-node-js',
     label: 'Manage linked secrets',
   },
   {
