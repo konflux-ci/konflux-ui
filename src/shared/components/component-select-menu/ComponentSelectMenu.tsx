@@ -28,6 +28,10 @@ type ComponentSelectMenuProps = {
   linkedSecrets?: (data?: string[] | string) => void;
 };
 
+const TOGGLETEXT = 'Select components';
+const SEARCHINPUTPLACEHOLDER = 'Search components...';
+const DEFAULTINPUTARIALABEL = 'Search components';
+
 export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   name,
   options,
@@ -35,10 +39,10 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   disableItem,
   sourceComponentName,
   includeSelectAll = false,
-  defaultToggleText = 'Select components',
-  selectedToggleText = 'Select components',
-  searchInputPlaceholder = 'Search components...',
-  defaultInputAriaLabel = 'Search components',
+  defaultToggleText = TOGGLETEXT,
+  selectedToggleText = TOGGLETEXT,
+  searchInputPlaceholder = SEARCHINPUTPLACEHOLDER,
+  defaultInputAriaLabel = DEFAULTINPUTARIALABEL,
   linkedSecrets,
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);
