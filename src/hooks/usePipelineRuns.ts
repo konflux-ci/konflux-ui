@@ -119,12 +119,20 @@ const useRuns = <Kind extends K8sResourceCommon>(
     NextPageProps,
   ];
 
-  return React.useMemo(() => {
-    const rResources =
+  const rResources = React.useMemo(() => {
+    const combined =
       runs && trResources
         ? uniqBy([...runs, ...trResources], (r) => r.metadata.name)
         : runs || trResources;
 
+    return combined?.sort((a, b) => {
+      const aTime = (a.metadata.creationTimestamp || a.status?.startTime || '') as string;
+      const bTime = (b.metadata.creationTimestamp || b.status?.startTime || '') as string;
+      return bTime.localeCompare(aTime);
+    });
+  }, [runs, trResources]);
+
+  return React.useMemo(() => {
     return [
       rResources,
       namespace
@@ -144,15 +152,14 @@ const useRuns = <Kind extends K8sResourceCommon>(
           ? isList
             ? trError || error
             : // when searching by name, return an error if we have no result
-              trError || (trLoaded && !trResources.length ? error : undefined)
+              trError || (trLoaded && !trResources?.length ? error : undefined)
           : error
         : undefined,
       trGetNextPage,
       nextPageProps,
     ];
   }, [
-    runs,
-    trResources,
+    rResources,
     namespace,
     queryTr,
     isList,
@@ -160,6 +167,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
     isLoading,
     trError,
     error,
+    trResources?.length,
     trGetNextPage,
     nextPageProps,
   ]);
