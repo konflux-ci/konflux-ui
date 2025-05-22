@@ -25,7 +25,7 @@ describe('Basic Happy Path', () => {
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
   const piplinerunlogsTasks = ['init', 'clone-repository', 'build-container', 'show-sbom'];
-  const pipeline = 'docker-build';
+  const pipeline = 'docker-build-oci-ta';
 
   before(function () {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
@@ -61,9 +61,9 @@ describe('Basic Happy Path', () => {
             }
           });
       }
-    }
 
-    APIHelper.deleteGitHubRepository(repoName);
+      APIHelper.deleteGitHubRepository(repoName);
+    }
   });
 
   it('Create an Application with a component', () => {
@@ -110,11 +110,7 @@ describe('Basic Happy Path', () => {
       // Pipeline build plan was removed from the Pipeline runs Tab
       // See https://issues.redhat.com/browse/KFLUXBUGS-603
       ComponentsTabPage.openComponent(componentName);
-      // Use clickSendingPullRequest() until the bug is fixed
-      // https://issues.redhat.com/browse/KFLUXUI-226
-      componentPage.clickSendingPullRequest();
-      // componentPage.clickMergePullRequest();
-      componentPage.verifyAndWaitForPRIsSent();
+      componentPage.clickMergePullRequest();
 
       APIHelper.mergePR(
         repoOwner,
@@ -126,14 +122,14 @@ describe('Basic Happy Path', () => {
 
       componentPage.verifyAndWaitForPRMerge();
       componentPage.closeModal();
-      // Go back to Components tab
       Applications.clickBreadcrumbLink(applicationName);
-      Applications.goToComponentsTab();
     });
 
-    it('Verify the Pipeline run details and Node Graph view', () => {
+    it('Verify the Pipeline run details and Node Graph view', function () {
       Applications.goToPipelinerunsTab();
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`)
+      Applications.checkPipelineIsCancellingOrCancelled(componentName);
+
+      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-push`)
         .contains(componentName)
         .invoke('text')
         .then((pipelinerunName) => {
@@ -159,23 +155,12 @@ describe('Basic Happy Path', () => {
         });
     });
 
-    it('Wait for on-push build to finish', () => {
+    it('Verify that on-pull pipeline was cancelled', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-push`)
-        .contains(componentName)
-        .invoke('text')
-        .then((pipelinerunName) => {
-          UIhelper.clickRowCellInTable('Pipeline run List', pipelinerunName, pipelinerunName);
-          DetailsTab.waitForPLRAndDownloadAllLogs();
-
-          //Verify the Pipeline run details Graph
-          piplinerunlogsTasks.forEach((item) => {
-            UIhelper.verifyGraphNodes(item);
-          });
-        });
-
-      Applications.clickBreadcrumbLink('Pipeline runs');
-      UIhelper.checkTableHasRows('Pipeline run List', 'test', 2);
+      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(
+        'contain.text',
+        'Cancelled',
+      );
     });
 
     it('Verify Enterprise contract Test pipeline run Details', () => {

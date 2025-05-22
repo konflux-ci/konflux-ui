@@ -7,7 +7,7 @@ import { GitImportForm } from './GitImportForm';
 
 const ImportForm: React.FC = () => {
   const applicationName = new URLSearchParams(window.location.search).get('application');
-  const applicationTitle = `Create an ${applicationName ? 'Component' : 'Application'}`;
+  const applicationTitle = `Create ${applicationName ? 'a Component' : 'an Application'}`;
   const applicationBreadcrumbs = useApplicationBreadcrumbs(applicationName);
   return (
     <PageLayout

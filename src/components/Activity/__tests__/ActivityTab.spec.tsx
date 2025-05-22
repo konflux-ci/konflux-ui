@@ -58,7 +58,7 @@ describe('Activity Tab', () => {
       fireEvent.click(plrTab);
     });
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/applications/test-app/activity/pipelineruns',
+      '/ns/test-ws/applications/test-app/activity/pipelineruns',
     );
   });
   it('should display the correct tab', () => {
@@ -106,7 +106,7 @@ describe('Activity Tab', () => {
     localStorage.setItem(ACTIVITY_SECONDARY_TAB_KEY, 'pipelineruns');
     routerRenderer(<ActivityTab />);
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ws/applications/test-app/activity/pipelineruns',
+      '/ns/test-ws/applications/test-app/activity/pipelineruns',
       { replace: true },
     );
   });

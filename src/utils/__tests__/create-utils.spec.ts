@@ -1,3 +1,4 @@
+import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import {
   addSecretFormValues,
   mockApplicationRequestData,
@@ -9,7 +10,10 @@ import {
   mockComponentWithDevfile,
   secretFormValues,
 } from '../../components/Secrets/__data__/mock-secrets';
-import { linkSecretToServiceAccount } from '../../components/Secrets/utils/service-account-utils';
+import {
+  linkSecretToServiceAccount,
+  linkSecretToServiceAccounts,
+} from '../../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
@@ -22,6 +26,7 @@ import {
   createSecret,
   getSecretObject,
   addSecret,
+  addSecretWithLinkingComponents,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
 
@@ -30,16 +35,17 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   k8sUpdateResource: jest.fn(() => Promise.resolve()),
 }));
 
-/**
- * [TODO]: enable test for linkSecret and secret utils
- */
-
 jest.mock('../../components/Secrets/utils/service-account-utils', () => {
-  return { linkSecretToServiceAccount: jest.fn() };
+  return {
+    linkSecretToServiceAccount: jest.fn(),
+    linkSecretToBuildServiceAccount: jest.fn(),
+    linkSecretToServiceAccounts: jest.fn(),
+  };
 });
 
 const createResourceMock = k8sCreateResource as jest.Mock;
 const linkSecretToServiceAccountMock = linkSecretToServiceAccount as jest.Mock;
+const linkSecretToServiceAccountsMock = linkSecretToServiceAccounts as jest.Mock;
 
 describe('Create Utils', () => {
   beforeEach(() => {
@@ -314,7 +320,9 @@ describe('Create Utils', () => {
     // does not handle special characters
     expect(sanitizeName('!  @  #')).toBe('!--@--#');
   });
+});
 
+describe('create-utils createSecrets', () => {
   it('should call the create secret api with dryRun query string params', async () => {
     createResourceMock.mockClear().mockImplementationOnce((props) => Promise.resolve(props));
 
@@ -488,6 +496,9 @@ describe('Create Utils', () => {
 
     expect(createResourceMock).toHaveBeenCalled();
   });
+});
+
+describe('create-utils addSecrets', () => {
   it('should add secret', async () => {
     createResourceMock.mockClear();
     await addSecret(addSecretFormValues, 'test-ns');
@@ -504,12 +515,49 @@ describe('Create Utils', () => {
 
   it('should call linkToServiceAccount For image pull secrets', async () => {
     linkSecretToServiceAccountMock.mockClear();
+    expect(createResourceMock).toHaveBeenCalled();
     await addSecret(addSecretFormValues, 'test-ns');
     expect(linkSecretToServiceAccountMock).toHaveBeenCalled();
     expect(linkSecretToServiceAccountMock).toHaveBeenCalledWith(
       expect.objectContaining({ metadata: expect.objectContaining({ name: 'test' }) }),
       'test-ns',
     );
+  });
+});
+
+describe('create-utils addSecretWithLinkingComponents', () => {
+  it('should not call linkToServiceAccounts without secret link option and components', async () => {
+    linkSecretToServiceAccountsMock.mockClear();
+    await addSecretWithLinkingComponents(addSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
+
+    expect(linkSecretToServiceAccountsMock).not.toHaveBeenCalled();
+  });
+
+  it('should call linkToServiceAccounts with secret link option', async () => {
+    linkSecretToServiceAccountsMock.mockClear();
+    const updatedAddSecretFormValues = {
+      ...addSecretFormValues,
+      secretForComponentOption: SecretForComponentOption.all,
+      relatedComponents: [],
+    };
+
+    await addSecretWithLinkingComponents(updatedAddSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
+    expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
+  });
+
+  it('should call linkToServiceAccounts with relatedComponents', async () => {
+    linkSecretToServiceAccountsMock.mockClear();
+    const updatedAddSecretFormValues = {
+      ...addSecretFormValues,
+      secretForComponentOption: SecretForComponentOption.partial,
+      relatedComponents: ['test-component-1'],
+    };
+
+    await addSecretWithLinkingComponents(updatedAddSecretFormValues, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
+    expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
   });
 });
 

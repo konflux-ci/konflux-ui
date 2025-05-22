@@ -11,7 +11,7 @@ import { ComponentRelationNudgeType } from './type';
 
 type ComponentRelationProps = {
   componentNames: string[];
-  groupedComponents: { [application: string]: string[] };
+  sortedGroupedComponents: { [application: string]: string[] };
   index?: number;
   removeProps: {
     disableRemove: boolean;
@@ -22,7 +22,7 @@ type ComponentRelationProps = {
 export const ComponentRelation: React.FC<ComponentRelationProps> = ({
   index,
   componentNames,
-  groupedComponents,
+  sortedGroupedComponents,
   removeProps: { disableRemove, onRemove },
 }) => {
   const sourceName = `relations.${index.toString()}.source`;
@@ -90,7 +90,7 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
         <MultiSelectComponentsDropdown
           name={targetName}
           sourceComponentName={sourceValue}
-          groupedComponents={groupedComponents}
+          sortedGroupedComponents={sortedGroupedComponents}
         />
       </GridItem>
       <GridItem span={1}>

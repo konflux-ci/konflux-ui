@@ -63,7 +63,7 @@ describe('ReleasesListRow', () => {
     expect(cells[2].innerHTML).toBe('1 hour 30 minutes');
     expect(cells[4].innerHTML).toBe('test-plan');
     expect(cells[5].innerHTML).toBe(
-      '<a href="/workspaces//applications/test-app/snapshots/test-snapshot">test-snapshot</a>',
+      '<a href="/ns//applications/test-app/snapshots/test-snapshot">test-snapshot</a>',
     );
     expect(status[0].innerHTML).toBe('Succeeded');
   });

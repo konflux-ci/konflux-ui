@@ -41,7 +41,7 @@ describe('BuildLogViewer', () => {
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     const plrLink = screen.getByText('basic-node-js-7c8nd');
     expect(plrLink.getAttribute('href')).toBe(
-      '/workspaces//applications/purple-mermaid-app/pipelineruns/basic-node-js-7c8nd',
+      '/ns//applications/purple-mermaid-app/pipelineruns/basic-node-js-7c8nd',
     );
   });
 

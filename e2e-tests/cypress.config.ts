@@ -23,6 +23,7 @@ export default defineConfig({
   chromeWebSecurity: false,
   viewportWidth: 1920,
   viewportHeight: 1080,
+  video: true,
   reporter: 'cypress-multi-reporters',
   reporterOptions: {
     reporterEnabled: 'cypress-mochawesome-reporter, spec, mocha-junit-reporter',
@@ -80,6 +81,16 @@ export default defineConfig({
           }
           return null;
         },
+      });
+
+      on('before:run', async (details) => {
+        // cypress-mochawesome-reporter
+        await beforeRunHook(details);
+      });
+
+      on('after:run', async () => {
+        // cypress-mochawesome-reporter
+        await afterRunHook();
       });
 
       const defaultValues: { [key: string]: string | boolean } = {

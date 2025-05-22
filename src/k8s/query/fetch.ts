@@ -70,12 +70,20 @@ export const K8sQueryDeleteResource = <TResource extends K8sResourceCommon>(
   requestInit: K8sResourceDeleteOptions,
 ) => {
   return k8sDeleteResource<TResource>(requestInit).finally(() => {
-    !requestInit.queryOptions?.queryParams?.dryRun &&
+    if (!requestInit.queryOptions?.queryParams?.dryRun) {
+      void queryClient.removeQueries({
+        queryKey: createQueryKeys({
+          model: requestInit.model,
+          queryOptions: { ns: requestInit.queryOptions.ns, name: requestInit.queryOptions.name },
+        }),
+        exact: true,
+      });
       void queryClient.invalidateQueries({
         queryKey: createQueryKeys({
           model: requestInit.model,
           queryOptions: { ns: requestInit.queryOptions.ns },
         }),
       });
+    }
   });
 };

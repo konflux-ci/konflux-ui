@@ -16,7 +16,7 @@ describe('SnapshotComponentsEmptyState', () => {
   it('should render correct Link to Application Name', () => {
     render(<SnapshotComponentsEmptyState applicationName="test" />);
     expect(screen.getByRole('link').getAttribute('href')).toBe(
-      '/workspaces/test-ns/import?application=test',
+      '/ns/test-ns/import?application=test',
     );
     screen.getByText('Add component');
   });

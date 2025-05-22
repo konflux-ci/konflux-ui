@@ -15,7 +15,7 @@ describe('ComponentSection', () => {
     expect(screen.queryByTestId('git-reference')).not.toBeInTheDocument();
   });
 
-  it('should render git options if source url is valid', async () => {
+  it('should render git options by default', async () => {
     formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
@@ -23,18 +23,6 @@ describe('ComponentSection', () => {
     const source = screen.getByPlaceholderText('Enter your source');
 
     await user.type(source, 'https://github.com/abcd/repo.git');
-    await user.tab();
-    await waitFor(() => screen.getByText('Show advanced Git options'));
-  });
-
-  it('should expand git options if source url is others', async () => {
-    formikRenderer(<ComponentSection />, {
-      source: { git: { url: '' } },
-    });
-    const user = userEvent.setup();
-    const source = screen.getByPlaceholderText('Enter your source');
-
-    await user.type(source, 'https://bitbucket.com/abcd/repo.git');
     await user.tab();
     await waitFor(() => screen.getByText('Hide advanced Git options'));
   });
@@ -62,7 +50,9 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe('gitlab.com'),
+      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+        'https://gitlab.com',
+      ),
     );
   });
 
@@ -72,5 +62,22 @@ describe('ComponentSection', () => {
     });
 
     expect(screen.getByText('Must be unique within tenant namespace')).toBeInTheDocument();
+  });
+
+  it('should format component name to kebab-case', async () => {
+    formikRenderer(<ComponentSection />, {
+      source: { git: { url: '' } },
+    });
+    const user = userEvent.setup();
+    const source = screen.getByPlaceholderText('Enter your source');
+
+    await user.type(source, 'https://github.com/ExampleRepo123.git');
+    await user.tab();
+    await waitFor(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      expect((screen.getByTestId('component-name') as HTMLInputElement).value).toContain(
+        'example-repo',
+      );
+    });
   });
 });

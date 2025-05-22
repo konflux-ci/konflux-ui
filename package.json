@@ -15,6 +15,7 @@
     "lint": "yarn lint:ts && yarn lint:sass",
     "lint:ts": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:sass": "stylelint 'src/**/*.scss' --config .stylelintrc.json",
+    "type-checks": "tsc --noEmit",
     "prepare": "husky",
     "analyze": "source-map-explorer 'dist/*.js'",
     "analyze:webpack": "webpack --analyze -c ./webpack.prod.config.js"
@@ -40,6 +41,7 @@
     "jotai": "^2.10.1",
     "js-base64": "^3.7.7",
     "lodash-es": "^4.17.21",
+    "p-limit": "^6.2.0",
     "react": "^18.3.1",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",

@@ -1,6 +1,7 @@
 import React from 'react';
 import { FormGroup, ValidatedOptions } from '@patternfly/react-core';
 import { useField, useFormikContext, FormikValues } from 'formik';
+import { TYPEAHEAD_THRESHOLD } from '~/consts/constants';
 import BasicDropdown, { DropdownItemObject } from '../dropdown/BasicDropdown';
 import { getFieldId } from './field-utils';
 import FieldHelperText from './FieldHelperText';
@@ -33,6 +34,7 @@ export interface DropdownFieldProps extends FieldProps {
   disabled?: boolean;
   placeholder?: string;
   validateOnChange?: boolean;
+  typeaheadThreshold?: number;
   autocompleteFilter?: (text: string, item: object, key?: string) => boolean;
   onChange?: (value: string) => void;
   dropdownToggle?: (
@@ -62,6 +64,7 @@ const DropdownField: React.FC<React.PropsWithChildren<DropdownFieldProps>> = ({
   value,
   isDisabled,
   className,
+  typeaheadThreshold = TYPEAHEAD_THRESHOLD,
   ...props
 }) => {
   const [field, { touched, error }] = useField(name);
@@ -86,6 +89,7 @@ const DropdownField: React.FC<React.PropsWithChildren<DropdownFieldProps>> = ({
         items={items}
         selected={value ?? field.value}
         recommended={recommended}
+        variant={items.length > typeaheadThreshold ? 'typeahead' : 'default'}
         fullWidth={fullWidth}
         aria-describedby={helpText ? `${fieldId}-helper` : undefined}
         onChange={(val: string) => {
