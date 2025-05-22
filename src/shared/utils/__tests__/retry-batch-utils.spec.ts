@@ -18,10 +18,12 @@ describe('processWithPLimit', () => {
         await new Promise((resolve) => setTimeout(resolve, 0)); // Simulate async behavior
         throw k8s503Error;
       }
+      return `result-${item}`;
     });
 
-    await processWithPLimit(items, 3, processor);
+    const result = await processWithPLimit(items, 3, processor);
     expect(processor).toHaveBeenCalledTimes(4); // Initial attempt + 1 retry for item2
+    expect(result).toEqual(['result-item1', 'result-item2', 'result-item3']);
   });
 
   it('should fail if retries are exhausted', async () => {
@@ -35,7 +37,17 @@ describe('processWithPLimit', () => {
     });
 
     // Expect the function to throw an error when retries are exhausted
-    await expect(processWithPLimit(items, 3, processor)).rejects.toBe(k8s503Error);
+    await expect(processWithPLimit(items, 2, processor)).rejects.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          item: 'item2',
+          error: expect.objectContaining({
+            code: k8s503Error.code,
+            message: k8s503Error.message,
+          }),
+        }),
+      ]),
+    );
 
     // Verify retries
     const expectedCallCount = items.length + 3; // Initial attempt + retries for item2
@@ -54,7 +66,17 @@ describe('processWithPLimit', () => {
       return `processed-${item}`;
     });
 
-    await expect(processWithPLimit(items, 3, processor)).rejects.toEqual(k8s404Error);
+    await expect(processWithPLimit(items, 2, processor)).rejects.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          item: 'item2',
+          error: expect.objectContaining({
+            code: k8s404Error.code,
+            message: k8s404Error.message,
+          }),
+        }),
+      ]),
+    );
 
     // Verify no retries for non-temporary errors
     expect(processor).toHaveBeenCalledTimes(2); // Only one attempt per item

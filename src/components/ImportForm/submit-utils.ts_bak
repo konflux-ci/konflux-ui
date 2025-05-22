@@ -5,7 +5,7 @@ import {
   createComponent,
   createImageRepository,
   createSecret,
-  createSecretWithLinkingComponents,
+  enqueueLinkingTask,
 } from '../../utils/create-utils';
 import {
   EC_INTEGRATION_TEST_PATH,
@@ -14,6 +14,11 @@ import {
 } from '../IntegrationTests/IntegrationTestForm/const';
 import { IntegrationTestFormValues } from '../IntegrationTests/IntegrationTestForm/types';
 import { createIntegrationTest } from '../IntegrationTests/IntegrationTestForm/utils/create-utils';
+import { SecretForComponentOption } from '../Secrets/utils/secret-utils';
+import {
+  addCommonSecretLabelToBuildSecret,
+  isLinkableSecret,
+} from '../Secrets/utils/service-account-utils';
 import { ImportFormValues } from './type';
 
 const BUILD_PIPELINE_ANNOTATION = 'build.appstudio.openshift.io/pipeline';
@@ -26,6 +31,27 @@ export const createSecrets = async (
   const results = [];
   for (const secret of secrets) {
     const sec = await createSecret(secret, namespace, dryRun);
+    results.push(sec);
+  }
+  return results;
+};
+
+export const createSecretsWithLinkingComponents = async (
+  secrets: ImportSecret[],
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const results = [];
+
+  for (const secret of secrets) {
+    const sec = await createSecret(secret, namespace, dryRun);
+    const shouldLink = !dryRun && sec && isLinkableSecret(sec);
+    if (shouldLink && secret?.secretForComponentOption === SecretForComponentOption.all) {
+      await addCommonSecretLabelToBuildSecret(sec);
+    }
+    if (shouldLink && secret.relatedComponents?.length > 0) {
+      enqueueLinkingTask(sec, secret.relatedComponents, secret.secretForComponentOption);
+    }
     results.push(sec);
   }
   return results;
@@ -132,20 +158,7 @@ export const createResources = async (
   };
 };
 
-export const createSecretsWithLinkingComponents = async (
-  secrets: ImportSecret[],
-  namespace: string,
-  dryRun: boolean,
-) => {
-  const results = [];
-  for (const secret of secrets) {
-    const sec = await createSecretWithLinkingComponents(secret, namespace, dryRun);
-    results.push(sec);
-  }
-  return results;
-};
-
-export const createResourcesWithLinkingComponents = async (
+export const createResourcesForNew = async (
   formValues: ImportFormValues,
   namespace: string,
   notifications: SBOMEventNotification[],
@@ -216,7 +229,7 @@ export const createResourcesWithLinkingComponents = async (
     const secretsToCreate = importSecrets.filter((secret) =>
       secret.existingSecrets.find((existing) => secret.secretName === existing.name) ? false : true,
     );
-    await createSecretsWithLinkingComponents(secretsToCreate, namespace, true);
+    await createSecrets(secretsToCreate, namespace, true);
 
     createdComponent = await createComponent(
       { componentName, application, gitProviderAnnotation, source, gitURLAnnotation },
@@ -236,7 +249,7 @@ export const createResourcesWithLinkingComponents = async (
       isPrivate: isPrivateRepo,
       notifications,
     });
-    await createSecretsWithLinkingComponents(secretsToCreate, namespace, false);
+    await createSecrets(secretsToCreate, namespace, false);
   }
 
   return {
