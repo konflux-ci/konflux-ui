@@ -16,7 +16,6 @@ import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
-import './PipelineRunListRow.scss';
 
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,
@@ -83,7 +82,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       <>
         {icon}
         {eventType === PipelineRunEventType.PULL && (
-          <ExternalLink href={link} text={<Truncate content={text} />} hideIcon={true} />
+          <ExternalLink
+            href={link}
+            text={<Truncate content={text} style={{ marginBottom: '0.5rem' }} />}
+            hideIcon={true}
+          />
         )}
         {eventType ? (
           <Label color="blue">
