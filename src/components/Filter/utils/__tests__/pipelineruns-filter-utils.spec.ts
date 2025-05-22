@@ -1,7 +1,6 @@
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
-import { pipelineRunTypes } from '../../../../utils/pipelinerun-utils';
-import { createFilterObj, filterPipelineRuns } from '../pipelineruns-filter-utils';
+import { filterPipelineRuns } from '../pipelineruns-filter-utils';
 
 const pipelineRuns: PipelineRunKind[] = [
   {
@@ -147,23 +146,6 @@ describe('pipelineruns-filter-utils', () => {
       expect(result.length).toBe(2);
       const resultNames = [result[0].metadata.name, result[1].metadata.name];
       expect(resultNames.sort()).toStrictEqual(expectedNames.sort());
-    });
-  });
-
-  describe('createFilterObj', () => {
-    it('should count pipelinerun keys for filter options', () => {
-      const result = createFilterObj(
-        pipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
-        pipelineRunTypes,
-        (plr: PipelineRunKind) => plr.kind === 'PipelineRun',
-      );
-      const expected = {
-        build: 2,
-        test: 1,
-      };
-
-      expect(result).toStrictEqual(expected);
     });
   });
 });

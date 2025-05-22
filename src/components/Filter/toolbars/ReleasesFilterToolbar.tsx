@@ -22,7 +22,7 @@ type Props = {
   onFilterTypeChange: (value: string) => void;
 };
 
-export const FilterToolbar: React.FC<Props> = ({
+export const ReleasesFilterToolbar: React.FC<Props> = ({
   value,
   onInput,
   onFilterTypeChange,
@@ -32,7 +32,7 @@ export const FilterToolbar: React.FC<Props> = ({
   const [filterType, setFilterType] = React.useState(dropdownItems[0]);
 
   return (
-    <Toolbar data-test="filter-toolbar" usePageInsets>
+    <Toolbar data-test="releases-filter-toolbar" usePageInsets>
       <ToolbarContent className="pf-v5-u-pl-0">
         <ToolbarGroup align={{ default: 'alignLeft' }}>
           <ToolbarItem>

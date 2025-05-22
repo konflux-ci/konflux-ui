@@ -1,8 +1,10 @@
+import { act } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, fireEvent, waitFor, render } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { NamespaceKind } from '~/types';
 import { mockNamespaceHooks, mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { useSearchParam } from '../../../hooks/useSearchParam';
 import {
   createReactRouterMock,
   renderWithQueryClient,
@@ -11,9 +13,7 @@ import {
 import NamespaceListRow from '../NamespaceListRow';
 import NamespaceListView from '../NamespaceListView';
 
-jest.mock('~/hooks/useSearchParam', () => ({
-  useSearchParam: jest.fn(),
-}));
+jest.useFakeTimers();
 
 jest.mock('~/hooks/useApplications', () => ({
   useApplications: jest.fn(() => [[], true]),
@@ -53,14 +53,19 @@ const mockNamespaceData = {
 
 const mockUseNamespaceInfo = mockNamespaceHooks('useNamespaceInfo', mockNamespaceData);
 
+const NamespaceList = (
+  <MemoryRouter>
+    <FilterContextProvider filterParams={['name']}>
+      <NamespaceListView />
+    </FilterContextProvider>
+  </MemoryRouter>
+);
 describe('NamespaceListView', () => {
   createReactRouterMock('useFetcher');
   mockUseNamespaceHook('test-namespace');
-  const mockSetSearchParam = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (useSearchParam as jest.Mock).mockImplementation(() => ['', mockSetSearchParam]);
   });
 
   it('should render a spinner while loading namespaces', () => {
@@ -119,17 +124,18 @@ describe('NamespaceListView', () => {
       namespacesLoaded: true,
     });
 
-    (useSearchParam as jest.Mock).mockImplementation(() => ['', mockSetSearchParam]);
-
-    renderWithQueryClientAndRouter(<NamespaceListView />);
+    render(NamespaceList);
 
     const filterInput = screen.getByPlaceholderText('Filter by name...');
     fireEvent.change(filterInput, { target: { value: 'namespace-1' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
 
     await waitFor(() => {
-      expect(mockSetSearchParam).toHaveBeenCalledWith('namespace-1');
+      expect(screen.queryByText('namespace-1')).toBeInTheDocument();
+      expect(screen.queryByText('namespace-2')).not.toBeInTheDocument();
     });
-    expect(screen.getByText('namespace-1')).toBeInTheDocument();
   });
 
   it('should clear the filter when clear button is clicked', async () => {
@@ -144,16 +150,24 @@ describe('NamespaceListView', () => {
       namespacesLoaded: true,
     });
 
-    (useSearchParam as jest.Mock).mockImplementation(() => ['namespace-1-2', mockSetSearchParam]);
+    render(NamespaceList);
 
-    renderWithQueryClientAndRouter(<NamespaceListView />);
+    const filterInput = screen.getByPlaceholderText('Filter by name...');
+    fireEvent.change(filterInput, { target: { value: 'no-match' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
 
-    expect(screen.getByPlaceholderText('Filter by name...')).toHaveValue('namespace-1-2');
+    await waitFor(() => {
+      expect(screen.queryByText('namespace-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('namespace-2')).not.toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear all filters' }));
 
     await waitFor(() => {
-      expect(mockSetSearchParam).toHaveBeenCalledWith('');
+      expect(screen.queryByText('namespace-1')).toBeInTheDocument();
+      expect(screen.queryByText('namespace-2')).toBeInTheDocument();
     });
   });
 
@@ -164,14 +178,17 @@ describe('NamespaceListView', () => {
       namespacesLoaded: true,
     });
 
-    (useSearchParam as jest.Mock).mockImplementation(() => [
-      'non-matching-namespace',
-      mockSetSearchParam,
-    ]);
+    render(NamespaceList);
 
-    renderWithQueryClient(<NamespaceListView />);
+    const filterInput = screen.getByPlaceholderText('Filter by name...');
+    fireEvent.change(filterInput, { target: { value: 'no-match' } });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
 
     await waitFor(() => {
+      expect(screen.queryByText('namespace-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('namespace-2')).not.toBeInTheDocument();
       expect(screen.getByText('No results found')).toBeInTheDocument();
     });
   });

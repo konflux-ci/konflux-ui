@@ -5,6 +5,7 @@ import { APPLICATION_ACTIVITY_PATH } from '@routes/paths';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
+import { FilterContextProvider } from '../Filter/generic/FilterContext';
 import PipelineRunsTab from './PipelineRunsTab';
 
 import './ActivityTab.scss';
@@ -75,7 +76,9 @@ export const ActivityTab: React.FC = () => {
           eventKey="latest-commits"
           className="activity-tab"
         >
-          <CommitsListView applicationName={applicationName} />
+          <FilterContextProvider filterParams={['name', 'status']}>
+            <CommitsListView applicationName={applicationName} />
+          </FilterContextProvider>
         </Tab>
         <Tab
           data-test={`activity__tabItem pipelineruns`}

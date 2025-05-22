@@ -1,25 +1,13 @@
 import * as React from 'react';
-import {
-  Bullseye,
-  Button,
-  InputGroup,
-  PageSection,
-  PageSectionVariants,
-  Spinner,
-  TextInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
-} from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
+import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useApplications } from '~/hooks/useApplications';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlanAdmissions } from '../../../hooks/useReleasePlanAdmissions';
-import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ReleasePlanAdmissionModel } from '../../../models/release-plan-admission';
-import { Table } from '../../../shared';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleasePlanAdmissionKind } from '../../../types/release-plan-admission';
@@ -34,8 +22,11 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
   const namespace = useNamespace();
   const [applications, appLoaded] = useApplications(namespace);
   const [releasePlanAdmission, loaded] = useReleasePlanAdmissions(namespace);
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
-  const onClearFilters = () => setNameFilter('');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
 
   const releasePlanAdmissionWithApplicationData: ReleasePlanAdmissionWithApplicationData[] =
     React.useMemo(() => {
@@ -75,30 +66,15 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <Toolbar data-test="release-plan-admission-list-toolbar" clearAllFilters={onClearFilters}>
-        <ToolbarContent>
-          <ToolbarGroup align={{ default: 'alignLeft' }}>
-            <ToolbarItem>
-              <InputGroup>
-                <Button variant="control">
-                  <FilterIcon /> Name
-                </Button>
-                <TextInput
-                  name="nameInput"
-                  data-test="name-input-filter"
-                  type="search"
-                  aria-label="name filter"
-                  placeholder="Filter by name..."
-                  onChange={(_, value: string) => setNameFilter(value)}
-                  value={nameFilter}
-                />
-              </InputGroup>
-            </ToolbarItem>
-          </ToolbarGroup>
-        </ToolbarContent>
-      </Toolbar>
+      <BaseTextFilterToolbar
+        text={nameFilter}
+        label="name"
+        setText={(name) => setFilters({ name })}
+        onClearFilters={onClearFilters}
+        dataTest="release-plan-admission-list-toolbar"
+      />
       {!filteredReleasePlanAdmission?.length ? (
-        <FilteredEmptyState onClearFilters={onClearFilters} />
+        <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       ) : (
         <Table
           data-test="release-plan-admission__table"
@@ -116,6 +92,14 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
   );
 };
 
-export default withPageAccessCheck(ReleasePlanAdmissionListView)({
+const ReleasePlanAdmissionListViewWithContext = (
+  props: React.ComponentProps<typeof ReleasePlanAdmissionListView>,
+) => (
+  <FilterContextProvider filterParams={['name']}>
+    <ReleasePlanAdmissionListView {...props} />
+  </FilterContextProvider>
+);
+
+export default withPageAccessCheck(ReleasePlanAdmissionListViewWithContext)({
   accessReviewResources: [{ model: ReleasePlanAdmissionModel, verb: 'list' }],
 });
