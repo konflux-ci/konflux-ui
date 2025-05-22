@@ -10,8 +10,7 @@ import {
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten } from 'lodash-es';
-import SelectComponentsDropdown from './SelectComponnetsDropdown';
-import './ComponentSelectMenu.scss';
+import SelectSecretsDropdown from './SelectSeceretsDropdown';
 
 type ComponentSelectMenuProps = {
   name: string;
@@ -22,15 +21,8 @@ type ComponentSelectMenuProps = {
   includeSelectAll?: boolean;
   defaultToggleText?: string;
   selectedToggleText?: string | ((value: string | string[]) => string);
-  searchInputPlaceholder?: string;
-  defaultInputAriaLabel?: string;
   title?: string;
-  linkedSecrets?: (data?: string[] | string) => void;
 };
-
-const TOGGLETEXT = 'Select components';
-const SEARCHINPUTPLACEHOLDER = 'Search components...';
-const DEFAULTINPUTARIALABEL = 'Search components';
 
 export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   name,
@@ -39,11 +31,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   disableItem,
   sourceComponentName,
   includeSelectAll = false,
-  defaultToggleText = TOGGLETEXT,
-  selectedToggleText = TOGGLETEXT,
-  searchInputPlaceholder = SEARCHINPUTPLACEHOLDER,
-  defaultInputAriaLabel = DEFAULTINPUTARIALABEL,
-  linkedSecrets,
+  defaultToggleText = 'Select secrets',
+  selectedToggleText = 'Select secrets',
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);
   const [searchQuery, setSearchQuery] = React.useState<string>('');
@@ -64,14 +53,12 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
     if (includeSelectAll && item === 'select-all') {
       if (!isMulti) return;
       const selectable = allItems?.filter((v) => !isItemDisabled(v));
-      const selectedCount = Array.isArray(value) ? value?.length : 0;
+      const selectedCount = Array.isArray(value) ? value.length : 0;
 
-      if (selectedCount === selectable?.length) {
+      if (selectedCount === selectable.length) {
         void setValue([]);
-        linkedSecrets([]);
       } else {
         void setValue(selectable);
-        linkedSecrets(selectable);
       }
     } else {
       if (isMulti) {
@@ -80,10 +67,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
           ? selected.filter((v) => v !== item)
           : [...selected, item];
         void setValue(newValue);
-        linkedSecrets(newValue);
       } else {
         void setValue(item);
-        linkedSecrets(item);
       }
     }
   };
@@ -115,7 +100,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
 
   return (
     <>
-      <SelectComponentsDropdown
+      <SelectSecretsDropdown
         toggleText={toggleText}
         onSelect={handleSelect}
         closeOnSelect={!isMulti}
@@ -127,15 +112,15 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               type="text"
               value={searchQuery}
               onChange={(_, v) => setSearchQuery(v)}
-              placeholder={searchInputPlaceholder}
-              aria-label={defaultInputAriaLabel}
+              placeholder="Search Secrets..."
+              aria-label="Search Secrets"
             />
           </MenuSearchInput>
         </MenuSearch>
         <Divider component="li" />
         {includeSelectAll && isMulti && (
           <>
-            <MenuGroup className="menugroup" label="Components">
+            <MenuGroup className="menugroup" label="Secrets">
               <MenuList>
                 <MenuItem
                   hasCheckbox
@@ -181,8 +166,6 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               <MenuItem
                 key={item}
                 itemId={item}
-                hasCheckbox={isMulti}
-                isSelected={isSelected(item)}
                 selected={!isMulti && isSelected(item)}
                 isDisabled={isItemDisabled(item)}
               >
@@ -191,7 +174,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
             ))}
           </MenuList>
         )}
-      </SelectComponentsDropdown>
+      </SelectSecretsDropdown>
     </>
   );
 };
