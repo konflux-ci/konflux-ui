@@ -1,6 +1,7 @@
 import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
+import { LinkSecretStatus } from '~/components/Secrets/SecretsListView/SecretsListRowWithComponents';
 import {
   linkSecretToServiceAccount,
   linkSecretToServiceAccounts,
@@ -39,12 +40,14 @@ import {
 } from '../types';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
+import { queueInstance } from './async-queue';
 import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
+import { useTaskStore } from './task-store';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 /**
@@ -409,19 +412,57 @@ export const createSecretResourceWithLinkingComponents = async (
     },
   };
 
-  if (values.secretForComponentOption) {
-    await linkSecretToServiceAccounts(
-      secretResource,
-      values.relatedComponents,
-      values.secretForComponentOption,
-    );
-  }
-
-  return await K8sQueryCreateResource({
+  const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
     resource: k8sSecretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
+
+  if (values.secretForComponentOption && createdSecret) {
+    const { setTaskStatus, clearTask } = useTaskStore.getState();
+
+    if (values.secretForComponentOption && createdSecret) {
+      const taskId = `${createdSecret.metadata.name}`;
+
+      setTaskStatus(taskId, LinkSecretStatus.Pending);
+
+      queueInstance.enqueue(async () => {
+        setTaskStatus(taskId, LinkSecretStatus.Running);
+
+        try {
+          await linkSecretToServiceAccounts(
+            createdSecret,
+            values.relatedComponents,
+            values.secretForComponentOption,
+          );
+          setTaskStatus(taskId, LinkSecretStatus.Succeeded);
+          // we just keep the failed jobs in task store to keep the store
+          // as clean as possible.
+          clearTask(taskId);
+        } catch (errs) {
+          if (Array.isArray(errs)) {
+            const allMessages = errs
+              .map((e) => {
+                if (e.error instanceof Error) return e.error.message;
+                if (typeof e.error === 'object' && e.error !== null)
+                  return JSON.stringify(e.error.message || e.error.reason);
+                return String(e.error);
+              })
+              .join('\n');
+            setTaskStatus(taskId, LinkSecretStatus.Failed, allMessages);
+          } else {
+            setTaskStatus(
+              taskId,
+              LinkSecretStatus.Failed,
+              errs instanceof Error ? errs.message : String(errs),
+            );
+          }
+        }
+      });
+    }
+  }
+
+  return createdSecret;
 };
 
 export const addSecret = async (values: AddSecretFormValues, namespace: string) => {
