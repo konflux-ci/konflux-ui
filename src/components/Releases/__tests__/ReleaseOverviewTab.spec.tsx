@@ -49,6 +49,10 @@ describe('ReleaseOverviewTab', () => {
     expect(screen.getByText('test-target')).toBeVisible();
 
     expect(screen.getByText('Tenant Pipeline Run')).toBeVisible();
+
+    expect(screen.getByText('Tenant Collector Pipeline Run')).toBeVisible();
+    expect(screen.getByText('Managed Collector Pipeline Run')).toBeVisible();
+
     expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
       `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
     );

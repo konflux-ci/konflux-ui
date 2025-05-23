@@ -25,6 +25,8 @@ import {
   getManagedPipelineRunFromRelease,
   getTenantPipelineRunFromRelease,
   getFinalPipelineRunFromRelease,
+  getTenantCollectorPipelineRunFromRelease,
+  getManagedCollectorPipelineRunFromRelease,
 } from '../../utils/release-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
@@ -38,6 +40,12 @@ const ReleaseOverviewTab: React.FC = () => {
   );
   const [tenantPrNamespace, tenantPipelineRun] = getNamespaceAndPRName(
     getTenantPipelineRunFromRelease(release),
+  );
+  const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = getNamespaceAndPRName(
+    getTenantCollectorPipelineRunFromRelease(release),
+  );
+  const [managedCollectorPrNamespace, managedCollectorPipelineRun] = getNamespaceAndPRName(
+    getManagedCollectorPipelineRunFromRelease(release),
   );
   const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
     getFinalPipelineRunFromRelease(release),
@@ -141,6 +149,44 @@ const ReleaseOverviewTab: React.FC = () => {
                 <DescriptionListTerm>Release Target</DescriptionListTerm>
                 <DescriptionListDescription>
                   <>{release.status?.target ?? '-'}</>
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Tenant Collector Pipeline Run</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {tenantCollectorPipelineRun && tenantCollectorPrNamespace ? (
+                    <Link
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                        workspaceName: tenantCollectorPrNamespace,
+                        applicationName: releasePlan.spec.application,
+                        pipelineRunName: tenantCollectorPipelineRun,
+                      })}
+                    >
+                      {tenantCollectorPipelineRun}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
+              <DescriptionListGroup>
+                <DescriptionListTerm>Managed Collector Pipeline Run</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {managedCollectorPipelineRun &&
+                  managedCollectorPrNamespace &&
+                  releasePlanLoaded ? (
+                    <Link
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                        workspaceName: managedCollectorPrNamespace,
+                        applicationName: releasePlan.spec.application,
+                        pipelineRunName: managedCollectorPipelineRun,
+                      })}
+                    >
+                      {managedCollectorPipelineRun}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
