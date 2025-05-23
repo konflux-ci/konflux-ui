@@ -103,10 +103,15 @@ describe('Activity Tab', () => {
   });
 
   it('should replace url if full path was not used', () => {
-    localStorage.setItem(ACTIVITY_SECONDARY_TAB_KEY, 'pipelineruns');
+    localStorage.setItem(ACTIVITY_SECONDARY_TAB_KEY, 'latest-commits');
+    useParamsMock.mockReturnValue({
+      applicationName: 'test-app',
+      workspaceName: 'test-ws',
+      activityTab: null,
+    });
     routerRenderer(<ActivityTab />);
     expect(navigateMock).toHaveBeenCalledWith(
-      '/ns/test-ws/applications/test-app/activity/pipelineruns',
+      '/ns/test-ws/applications/test-app/activity/latest-commits',
       { replace: true },
     );
   });
