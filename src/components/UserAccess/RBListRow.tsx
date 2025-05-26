@@ -19,6 +19,7 @@ export const RBListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<RoleBin
       <TableData className={rbTableColumnClasses.role}>
         {!loaded ? <Skeleton width="200px" height="20px" /> : roleMap?.roleMap[obj.roleRef.name]}
       </TableData>
+      <TableData className={rbTableColumnClasses.rolebinding}>{obj.metadata.name}</TableData>
       <TableData className={rbTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
