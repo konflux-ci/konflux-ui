@@ -44,7 +44,7 @@ describe('Activity Tab', () => {
 
   it('should render Activity Tab', () => {
     routerRenderer(<ActivityTab />);
-    screen.getByText('Activity By');
+    screen.getByText('Activity by');
   });
 
   it('should render two tabs under activity', () => {
