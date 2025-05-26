@@ -1,6 +1,7 @@
 export const rbTableColumnClasses = {
   username: 'pf-m-width-25',
   role: 'pf-m-width-20',
+  rolebinding: 'pf-m-width-20',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -12,6 +13,10 @@ export const RBListHeader = () => [
   {
     title: 'Role',
     props: { className: rbTableColumnClasses.role },
+  },
+  {
+    title: 'Role Binding',
+    props: { className: rbTableColumnClasses.rolebinding },
   },
   {
     title: ' ',
