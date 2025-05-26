@@ -25,7 +25,9 @@ export type InfiniteLoaderProps = {
   isRowLoaded: (params: { index: number }) => boolean;
 };
 
-export type HeaderFunc = (componentProps: ComponentProps) => { title: string; props: ThProps }[];
+export type HeaderFunc = (
+  componentProps: ComponentProps,
+) => { title: string | React.ReactNode; props: ThProps }[];
 
 export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & {
   customData?: C;
