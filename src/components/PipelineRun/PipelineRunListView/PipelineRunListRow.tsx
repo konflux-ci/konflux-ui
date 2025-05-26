@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Skeleton } from '@patternfly/react-core';
+import { Popover, Skeleton } from '@patternfly/react-core';
 import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -9,7 +9,12 @@ import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { PipelineRunKind } from '../../../types';
-import { calculateDuration, pipelineRunStatus } from '../../../utils/pipeline-utils';
+import {
+  calculateDuration,
+  getPipelineRunStatusResults,
+  pipelineRunStatus,
+  taskTestResultStatus,
+} from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
@@ -46,6 +51,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     obj.metadata.labels = {};
   }
   const applicationName = obj.metadata?.labels[PipelineRunLabel.APPLICATION];
+
+  const testStatus = React.useMemo(() => {
+    const results = getPipelineRunStatusResults(obj);
+    return taskTestResultStatus(results);
+  }, [obj]);
 
   return (
     <>
@@ -92,6 +102,16 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.status}>
         <StatusIconWithText status={status} />
+      </TableData>
+      <TableData className={pipelineRunTableColumnClasses.testResultStatus}>
+        <Popover
+          triggerAction="hover"
+          aria-label="error popover"
+          bodyContent={testStatus?.note}
+          isVisible={testStatus?.note ? undefined : false}
+        >
+          <div>{testStatus?.result ? testStatus.result : '-'}</div>
+        </Popover>
       </TableData>
       <TableData className={pipelineRunTableColumnClasses.type}>
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
