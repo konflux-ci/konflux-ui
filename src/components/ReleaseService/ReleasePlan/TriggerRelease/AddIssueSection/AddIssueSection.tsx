@@ -2,21 +2,17 @@ import * as React from 'react';
 import {
   EmptyState,
   EmptyStateBody,
-  SearchInput,
   TextContent,
   TextVariants,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
   Text,
   EmptyStateVariant,
   Truncate,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { FieldArray, useField } from 'formik';
-import { debounce } from 'lodash-es';
-import { useSearchParam } from '../../../../../hooks/useSearchParam';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useDeepCompareMemoize } from '~/shared';
 import ActionMenu from '../../../../../shared/components/action-menu/ActionMenu';
 import FilteredEmptyState from '../../../../../shared/components/empty-state/FilteredEmptyState';
 import { AddIssueModal, IssueType } from './AddIssueModal';
@@ -62,18 +58,14 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
   field,
   issueType,
 }) => {
-  const [nameFilter, setNameFilter] = useSearchParam(field, '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters[field] ? (unparsedFilters[field] as string) : '',
+  });
+  const { name: nameFilter } = filters;
   const [{ value: issues }, ,] = useField<IssueObject[]>(field);
 
   const isBug = issueType === IssueType.BUG;
-
-  const [onLoadName, setOnLoadName] = React.useState(nameFilter);
-  React.useEffect(() => {
-    if (nameFilter) {
-      setOnLoadName(nameFilter);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const filteredIssues = React.useMemo(
     () =>
@@ -86,19 +78,9 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
     [issues, nameFilter, isBug],
   );
 
-  const onClearFilters = () => {
-    onLoadName.length && setOnLoadName('');
-    setNameFilter('');
-  };
-  const onNameInput = debounce((n: string) => {
-    n.length === 0 && onLoadName.length && setOnLoadName('');
-
-    setNameFilter(n);
-  }, 600);
-
   const EmptyMsg = (type) =>
     nameFilter ? (
-      <FilteredEmptyState onClearFilters={onClearFilters} variant={EmptyStateVariant.xs} />
+      <FilteredEmptyState onClearFilters={() => onClearFilters()} variant={EmptyStateVariant.xs} />
     ) : (
       <EmptyState className="pf-v5-u-m-0 pf-v5-u-p-0" variant={EmptyStateVariant.xs}>
         <EmptyStateBody className="pf-v5-u-m-0 pf-v5-u-p-0">
@@ -124,30 +106,15 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
                   : 'Are there any CVEs you would like to add to this release?'}
               </Text>
             </TextContent>
-            <Toolbar
-              data-test="pipelinerun-list-toolbar"
-              clearAllFilters={onClearFilters}
-              className="pf-v5-u-mb-0 pf-v5-u-pb-0 pf-v5-u-pl-0"
+            <BaseTextFilterToolbar
+              text={nameFilter}
+              label="name"
+              setText={(name) => setFilters({ [field]: name })}
+              onClearFilters={onClearFilters}
+              dataTest={`add-${field}-section-toolbar`}
             >
-              <ToolbarContent>
-                <ToolbarGroup align={{ default: 'alignLeft' }}>
-                  <ToolbarItem className="pf-v5-u-ml-0">
-                    <SearchInput
-                      name="nameInput"
-                      data-test={`${field}-input-filter`}
-                      type="search"
-                      aria-label="name filter"
-                      placeholder="Filter by name..."
-                      onChange={(_, n) => onNameInput(n)}
-                      value={nameFilter}
-                    />
-                  </ToolbarItem>
-                  <ToolbarItem>
-                    <AddIssueModal bugArrayHelper={addNewBug} issueType={issueType} />
-                  </ToolbarItem>
-                </ToolbarGroup>
-              </ToolbarContent>
-            </Toolbar>
+              <AddIssueModal bugArrayHelper={addNewBug} issueType={issueType} />
+            </BaseTextFilterToolbar>
             <div className="pf-v5-u-mb-md">
               <Table
                 aria-label="Simple table"

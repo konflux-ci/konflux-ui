@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
@@ -89,10 +90,12 @@ export const ComponentActivityTab: React.FC = () => {
             eventKey="latest-commits"
             className="activity-tab"
           >
-            <CommitsListView
-              applicationName={applicationName}
-              componentName={component.spec.componentName}
-            />
+            <FilterContextProvider filterParams={['name', 'status']}>
+              <CommitsListView
+                applicationName={applicationName}
+                componentName={component.spec.componentName}
+              />
+            </FilterContextProvider>
           </Tab>
           <Tab
             data-test={`comp__activity__tabItem pipelineruns`}

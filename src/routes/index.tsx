@@ -52,7 +52,6 @@ export const router = createBrowserRouter([
       ...pipelineRoutes,
       ...taskRunRoutes,
       ...userAccessRoutes,
-
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',

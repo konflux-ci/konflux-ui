@@ -10,6 +10,7 @@ import {
   Skeleton,
   Title,
 } from '@patternfly/react-core';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { SnapshotLabels } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { useScanResults } from '../../../hooks/useScanResults';
@@ -122,10 +123,12 @@ const SnapshotOverviewTab: React.FC = () => {
         </Flex>
       </Flex>
       <div className="pf-vf-u-mt-lg">
-        <SnapshotComponentsList
-          components={componentsTableData}
-          applicationName={snapshot.spec.application}
-        />
+        <FilterContextProvider filterParams={['name']}>
+          <SnapshotComponentsList
+            components={componentsTableData}
+            applicationName={snapshot.spec.application}
+          />
+        </FilterContextProvider>
       </div>
     </>
   );

@@ -1,11 +1,14 @@
-import * as React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { screen, render, fireEvent } from '@testing-library/react';
+import { screen, render, fireEvent, act } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { RemoteSecretStatusReason } from '../../../types';
 import SecretsListRow from '../SecretsListView/SecretsListRow';
 import SecretsListView from '../SecretsListView/SecretsListView';
 import { sampleRemoteSecrets } from './secret-data';
+
+jest.useFakeTimers();
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -17,7 +20,6 @@ jest.mock('react-router-dom', () => {
       </a>
     ),
     useNavigate: () => jest.fn(),
-    useSearchParams: () => React.useState(() => new URLSearchParams()),
     useParams: jest.fn(),
   };
 });
@@ -52,17 +54,25 @@ jest.mock('../../../shared/components/table', () => {
 
 const useSecretsMock = useSecrets as jest.Mock;
 
+const SecretsList = (
+  <MemoryRouter>
+    <FilterContextProvider filterParams={['name']}>
+      <SecretsListView />
+    </FilterContextProvider>
+  </MemoryRouter>
+);
+
 describe('Secrets List', () => {
   it('should render the loader if the secrets are not loaded', () => {
     useSecretsMock.mockReturnValue([[], false]);
-    render(<SecretsListView />);
+    render(SecretsList);
 
     screen.getByRole('progressbar');
   });
 
   it('should render the empty state if there are not remote secrets in the workspace', () => {
     useSecretsMock.mockReturnValue([[], true]);
-    render(<SecretsListView />);
+    render(SecretsList);
 
     expect(screen.queryByTestId('secrets-empty-state')).toBeInTheDocument();
   });
@@ -77,7 +87,7 @@ describe('Secrets List', () => {
       ],
       true,
     ]);
-    render(<SecretsListView />);
+    render(SecretsList);
 
     expect(screen.queryByTestId('secrets-empty-state')).not.toBeInTheDocument();
 
@@ -102,14 +112,15 @@ describe('Secrets List', () => {
       ],
       true,
     ]);
-    const r = render(<SecretsListView />);
+    render(SecretsList);
 
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Search secrets');
-    fireEvent.change(filter, {
-      target: { value: 'test-secret-two' },
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, {
+        target: { value: 'test-secret-two' },
+      });
+      jest.advanceTimersByTime(700);
     });
-
-    r.rerender(<SecretsListView />);
 
     expect(filter.value).toBe('test-secret-two');
     expect(screen.queryByText('test-secret-one')).not.toBeInTheDocument();
