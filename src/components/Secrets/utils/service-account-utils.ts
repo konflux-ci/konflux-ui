@@ -11,6 +11,8 @@ import { ServiceAccountModel } from '../../../models/service-account';
 import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
 import { SecretForComponentOption } from './secret-utils';
 
+type SecretEntry = { name: string };
+
 export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
   if (!secret || (!namespace && !secret.metadata?.namespace)) {
     return;
@@ -20,33 +22,50 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
     queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace },
   });
 
-  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
+  // get list of existing IP secrets
+  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretEntry[];
+  // check whether existing IP secrets list already contains the secret name
+  const alreadyContainsIPSecret = existingIPSecrets?.includes({ name: secret.metadata?.name });
+
   const imagePullSecretList = existingIPSecrets
-    ? [...existingIPSecrets, { name: secret.metadata.name }]
+    ? alreadyContainsIPSecret
+      ? existingIPSecrets
+      : [...existingIPSecrets, { name: secret.metadata.name }]
     : [{ name: secret.metadata.name }];
-  const existingSecrets = serviceAccount?.secrets as SecretKind[];
+
+  // get list of existing secrets
+  const existingSecrets = serviceAccount?.secrets as SecretEntry[];
+  // check whether existing secrets list already contains the secret name
+  const alreadyContainsSecret = existingSecrets?.includes({ name: secret.metadata?.name });
+
   const secretList = existingSecrets
-    ? [...existingSecrets, { name: secret.metadata.name }]
+    ? alreadyContainsSecret
+      ? existingSecrets
+      : [...existingSecrets, { name: secret.metadata.name }]
     : [{ name: secret.metadata.name }];
-  return K8sQueryPatchResource({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
-      ns: namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: `/imagePullSecrets`,
-        value: imagePullSecretList,
+
+  if (!alreadyContainsIPSecret || !alreadyContainsSecret) {
+    return K8sQueryPatchResource({
+      model: ServiceAccountModel,
+      queryOptions: {
+        name: PIPELINE_SERVICE_ACCOUNT,
+        ns: namespace,
       },
-      {
-        op: 'replace',
-        path: `/secrets`,
-        value: secretList,
-      },
-    ],
-  });
+      patches: [
+        {
+          op: 'replace',
+          path: `/imagePullSecrets`,
+          value: imagePullSecretList,
+        },
+        {
+          op: 'replace',
+          path: `/secrets`,
+          value: secretList,
+        },
+      ],
+    });
+  }
+  return;
 };
 
 export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespace: string) => {
