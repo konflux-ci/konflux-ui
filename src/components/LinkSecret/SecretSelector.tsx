@@ -52,7 +52,7 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
         />
       </div>
       <div style={{ marginTop: '2rem' }}>
-        <Button onClick={() => handleSubmit()} disabled={linkedSecretsList.length === 0}>
+        <Button onClick={() => handleSubmit()} isDisabled={linkedSecretsList.length === 0}>
           Link Secrets
         </Button>
         <Button variant={ButtonVariant.link} onClick={onClose}>

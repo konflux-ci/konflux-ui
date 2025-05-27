@@ -180,12 +180,10 @@ export const linkSecretsToBuildServiceAccount = async (
   const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
   const imagePullSecretList = existingIPSecrets
     ? [...existingIPSecrets, ...secretListString]
-    : [...secretListString];
+    : secretListString;
 
   const existingSecrets = serviceAccount?.secrets as SecretKind[];
-  const secretList = existingSecrets
-    ? [...existingSecrets, ...secretListString]
-    : [...secretListString];
+  const secretList = existingSecrets ? [...existingSecrets, ...secretListString] : secretListString;
 
   return K8sQueryPatchResource({
     model: ServiceAccountModel,
