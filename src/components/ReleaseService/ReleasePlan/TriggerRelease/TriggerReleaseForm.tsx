@@ -1,7 +1,17 @@
 import * as React from 'react';
-import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import {
+  Button,
+  Form,
+  Grid,
+  GridItem,
+  PageSection,
+  PageSectionVariants,
+  TextInput,
+  TextInputTypes,
+} from '@patternfly/react-core';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FormikProps, useField } from 'formik';
-import { TextAreaField } from 'formik-pf';
+import { InputField, TextAreaField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useReleasePlans } from '../../../../../src/hooks/useReleasePlans';
@@ -9,6 +19,7 @@ import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { RELEASE_SERVICE_PATH } from '../../../../routes/paths';
 import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
+import TextColumnField from '../../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { IssueType } from './AddIssueSection/AddIssueModal';
 import { AddIssueSection } from './AddIssueSection/AddIssueSection';
@@ -39,6 +50,9 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   const [{ value: labels }] = useField<TriggerReleaseFormValues['labels']>('labels');
   const [releasePlans, loaded] = useReleasePlans(namespace);
   const [selectedReleasePlanField] = useField('releasePlan');
+  const [reference, setReference] = React.useState<string>('');
+  const [references, , { setValue }] =
+    useField<TriggerReleaseFormValues['references']>('references');
 
   const applicationName = getApplicationNameForReleasePlan(
     releasePlans,
@@ -107,11 +121,43 @@ export const TriggerReleaseForm: React.FC<Props> = ({
 
           <TextAreaField name="description" label="Description" />
           <TextAreaField name="solution" label="Solution" />
-          <TextAreaField
+          <TextColumnField
             name="references"
             label="References"
-            helperText="Please enter at least 1 reference"
+            noFooter
+            isReadOnly
+            onChange={(v) => setValue(references.value.filter?.((r) => v.includes(r)))}
+          >
+            {(props) => {
+              return (
+                <Grid>
+                  <GridItem span={6}>
+                    <InputField name={props.name} type={TextInputTypes.text} isDisabled />
+                  </GridItem>
+                  <GridItem span={6}>{props.removeButton}</GridItem>
+                </Grid>
+              );
+            }}
+          </TextColumnField>
+          <TextInput
+            name="reference"
+            type={TextInputTypes.text}
+            onChange={(_, val) => setReference(val)}
+            value={reference}
           />
+          <Button
+            data-test="add-reference-button"
+            variant="link"
+            onClick={() => {
+              void setValue([...references.value, reference]);
+              setReference('');
+            }}
+            icon={<PlusCircleIcon />}
+            isInline
+            isDisabled={!reference}
+          >
+            {'Add reference'}
+          </Button>
           <KeyValueField
             name="labels"
             label="Labels"
