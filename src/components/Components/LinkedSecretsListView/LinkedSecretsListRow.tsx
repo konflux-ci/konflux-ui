@@ -30,11 +30,7 @@ export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ ob
       </TableData>
 
       <TableData className={linkedSecretsTableColumnClasses.actions}>
-        {/* TODO: onClick logic will be implemented in another ticket*/}
-        {/* eslint-disable-next-line no-alert */}
-        {/* <Button variant="secondary" onClick={() => alert('TODO')}> */}
         <UnlinkSecretView secret={secret} />
-        {/* </Button> */}
       </TableData>
 
       <TableData className={linkedSecretsTableColumnClasses.kebab}>
