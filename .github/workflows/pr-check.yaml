@@ -52,33 +52,46 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
 
-  e2e-test:
+  deploy-konfux-ui:
     needs: check-org-membership
     runs-on: ubuntu-latest
+    env:
+      TARGET_BRANCH: ${{ github.base_ref }}
+      SOURCE_BRANCH: ${{ github.head_ref }}
+      PR_NUMBER: ${{ github.event.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+      BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+      # secrets
+      CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+      QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+      QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
+      SMEE_URL: ${{ secrets.SMEE_URL }}
+      CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
+      CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: ${{ github.repository }}
           ref: "${{ github.event.pull_request.head.sha }}"
-      - name: Deploy konflux-ci, build konflux-ui image and test
+          path: base
+      - uses: actions/checkout@v4
+        with:
+          ref: "${{ github.event.pull_request.head.sha }}"
+      - name: Deploy konflux-ci
         id: pr-check-action
-        uses: ./.github/actions/konflux-ui-deploy-test
-        env:
-          TARGET_BRANCH: ${{ github.base_ref }}
-          SOURCE_BRANCH: ${{ github.head_ref }}
-          PR_NUMBER: ${{ github.event.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
-          BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
-          # secrets
-          HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-          SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
-          GH_APP_ID: ${{ secrets.GH_APP_ID }}
-          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
-          QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
-          QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
-          SMEE_URL: ${{ secrets.SMEE_URL }}
-          CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
-          CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+        uses: ./base/.github/actions/konflux-ui-deploy-test
         with:
           job-type: 'on-pr'
+  
+      - name: Konflux-ui e2e test
+        uses: ./base/.github/actions/konflux-ui-e2e-test
+  
+      - name: Generate error logs
+        if: ${{ always() }}
+        uses: ./base/.github/actions/generate-error-logs
