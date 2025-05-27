@@ -1,17 +1,19 @@
 import { Button } from '@patternfly/react-core';
+import { SecretKind } from '~/types';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { createUnlinkSecretModalLauncher } from './UnlinkSecret';
 
-const UnlinkSecretView = () => {
+const UnlinkSecretView: React.FC = (secret: SecretKind) => {
   const showModal = useModalLauncher();
   return (
     <>
       <Button
+        variant="secondary"
         onClick={() => {
-          showModal(createUnlinkSecretModalLauncher()());
+          showModal(createUnlinkSecretModalLauncher()(secret));
         }}
       >
-        Unlink Secret
+        Unlink
       </Button>
     </>
   );

@@ -37,7 +37,12 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
           <>
             {secret?.metadata?.name} will be unlinked from {component?.metadata?.name}
             <div style={{ marginTop: '1rem' }}>
-              <Button variant="primary" onClick={handleSubmit}>
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                isDisabled={!secret || !component}
+                style={{ marginRight: '0.5rem' }}
+              >
                 Unlink Secret
               </Button>
               <Button variant="tertiary" onClick={() => onReset()}>
