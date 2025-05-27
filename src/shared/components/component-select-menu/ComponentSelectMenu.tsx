@@ -10,6 +10,11 @@ import {
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten } from 'lodash-es';
+import {
+  DEFAULT_INPUT_ARIA_LABEL,
+  SEARCH_INPUT_PLACEHOLDER,
+  TOGGLE_TEXT,
+} from '../../../consts/selectmenu';
 import SelectComponentsDropdown from './SelectComponnetsDropdown';
 import './ComponentSelectMenu.scss';
 
@@ -28,10 +33,6 @@ type ComponentSelectMenuProps = {
   linkedSecrets?: (data?: string[] | string) => void;
 };
 
-const TOGGLETEXT = 'Select components';
-const SEARCHINPUTPLACEHOLDER = 'Search components...';
-const DEFAULTINPUTARIALABEL = 'Search components';
-
 export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   name,
   options,
@@ -39,10 +40,10 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   disableItem,
   sourceComponentName,
   includeSelectAll = false,
-  defaultToggleText = TOGGLETEXT,
-  selectedToggleText = TOGGLETEXT,
-  searchInputPlaceholder = SEARCHINPUTPLACEHOLDER,
-  defaultInputAriaLabel = DEFAULTINPUTARIALABEL,
+  defaultToggleText = TOGGLE_TEXT,
+  selectedToggleText = TOGGLE_TEXT,
+  searchInputPlaceholder = SEARCH_INPUT_PLACEHOLDER,
+  defaultInputAriaLabel = DEFAULT_INPUT_ARIA_LABEL,
   linkedSecrets,
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);

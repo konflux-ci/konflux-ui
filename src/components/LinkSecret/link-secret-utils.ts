@@ -1,13 +1,11 @@
 import { ComponentKind, SecretKind } from '~/types';
-import { linkSecretToBuildServiceAccount } from '../Secrets/utils/service-account-utils';
+import { linkSecretsToBuildServiceAccount } from '../Secrets/utils/service-account-utils';
 
 export const linkSecretsToComponent = (secrets: SecretKind[], component: ComponentKind) => {
-  secrets.map((item) => {
-    linkSecretToBuildServiceAccount(item, component)
-      .then()
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.warn(err);
-      });
-  });
+  linkSecretsToBuildServiceAccount(secrets, component)
+    .then()
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.warn(err);
+    });
 };
