@@ -35,7 +35,8 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
       {() => {
         return (
           <>
-            {secret?.metadata?.name} will be unlinked from {component?.metadata?.name}
+            <span style={{ fontWeight: 'bold' }}>{secret?.metadata?.name}</span> will be unlinked
+            from <span style={{ fontWeight: 'bold' }}>{component?.metadata?.name}</span>
             <div style={{ marginTop: '1rem' }}>
               <Button
                 variant="primary"
