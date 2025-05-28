@@ -44,7 +44,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
                 isDisabled={!secret || !component}
                 style={{ marginRight: '0.5rem' }}
               >
-                Unlink Secret
+                Unlink
               </Button>
               <Button variant="tertiary" onClick={() => onReset()}>
                 Cancel
@@ -61,6 +61,6 @@ export const createUnlinkSecretModalLauncher = () =>
   createModalLauncher(UnlinkSecret, {
     'data-test': `unlink-secret-modal`,
     variant: ModalVariant.small,
-    title: `Unlink Secrets?`,
+    title: `Unlink Secret from  a Component?`,
     titleIconVariant: 'warning',
   });
