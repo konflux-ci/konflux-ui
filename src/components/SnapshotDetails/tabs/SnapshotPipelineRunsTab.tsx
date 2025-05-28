@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
-import { PipelineRunsFilterContextProvider } from '../../Filter/utils/PipelineRunsFilterContext';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 
@@ -65,7 +65,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
   }
 
   return (
-    <PipelineRunsFilterContextProvider>
+    <FilterContextProvider filterParams={['name', 'status', 'type']}>
       <SnapshotPipelineRunsList
         snapshotPipelineRuns={SnapshotPipelineRuns}
         loaded={loaded}
@@ -73,7 +73,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
         getNextPage={getNextPage}
         nextPageProps={nextPageProps}
       />
-    </PipelineRunsFilterContextProvider>
+    </FilterContextProvider>
   );
 };
 

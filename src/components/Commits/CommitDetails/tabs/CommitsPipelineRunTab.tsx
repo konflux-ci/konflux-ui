@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
@@ -14,12 +17,11 @@ import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../../utils/pipelinerun-utils';
-import PipelineRunsFilterToolbar from '../../../Filter/PipelineRunsFilterToolbar';
+import PipelineRunsFilterToolbar from '../../../Filter/toolbars/PipelineRunsFilterToolbar';
 import {
-  createFilterObj,
   filterPipelineRuns,
+  PipelineRunsFilterState,
 } from '../../../Filter/utils/pipelineruns-filter-utils';
-import { PipelineRunsFilterContext } from '../../../Filter/utils/PipelineRunsFilterContext';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -29,7 +31,13 @@ const CommitsPipelineRunTab: React.FC = () => {
   const namespace = useNamespace();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsForCommit(namespace, applicationName, commitName);
-  const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters: PipelineRunsFilterState = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+    type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
+  });
+
   const { name, status, type } = filters;
 
   const statusFilterObj = React.useMemo(

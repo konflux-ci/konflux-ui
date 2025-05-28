@@ -1,17 +1,8 @@
 import * as React from 'react';
-import {
-  PageSection,
-  PageSectionVariants,
-  SearchInput,
-  Text,
-  Title,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
-} from '@patternfly/react-core';
-import { useSearchParam } from '../../../hooks/useSearchParam';
-import { Table } from '../../../shared';
+import { PageSection, PageSectionVariants, Text, Title } from '@patternfly/react-core';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { ComponentKind } from '../../../types';
 import SnapshotComponentsEmptyState from './SnapshotComponentsEmptyState';
@@ -27,18 +18,21 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
   applicationName,
   components,
 }) => {
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
 
   const filteredComponents = React.useMemo(
     () =>
       components.filter(
-        (component) => !nameFilter || component.metadata?.name.indexOf(nameFilter.trim()) !== -1,
+        (component) =>
+          !nameFilter ||
+          (component.metadata && component.metadata?.name.indexOf(nameFilter.trim()) !== -1),
       ),
     [nameFilter, components],
   );
-
-  const onClearFilters = () => setNameFilter('');
-  const onNameInput = (name: string) => setNameFilter(name);
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
@@ -51,25 +45,13 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
         ) : (
           <>
             <Text className="pf-u-mb-lg">Component builds that are included in this snapshot</Text>
-
-            <Toolbar data-test="component-list-toolbar" clearAllFilters={onClearFilters}>
-              <ToolbarContent>
-                <ToolbarGroup align={{ default: 'alignLeft' }}>
-                  <ToolbarItem className="pf-u-ml-0">
-                    <SearchInput
-                      name="nameInput"
-                      data-test="name-input-filter"
-                      type="search"
-                      aria-label="name filter"
-                      placeholder="Filter by name..."
-                      onChange={(_, name) => onNameInput(name)}
-                      value={nameFilter}
-                    />
-                  </ToolbarItem>
-                </ToolbarGroup>
-              </ToolbarContent>
-            </Toolbar>
-
+            <BaseTextFilterToolbar
+              text={nameFilter}
+              label="name"
+              setText={(name) => setFilters({ name })}
+              onClearFilters={onClearFilters}
+              dataTest="component-list-toolbar"
+            />
             {filteredComponents.length > 0 ? (
               <Table
                 data={filteredComponents}
@@ -82,7 +64,7 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
                 })}
               />
             ) : (
-              <FilteredEmptyState onClearFilters={onClearFilters} />
+              <FilteredEmptyState onClearFilters={() => onClearFilters()} />
             )}
           </>
         )}

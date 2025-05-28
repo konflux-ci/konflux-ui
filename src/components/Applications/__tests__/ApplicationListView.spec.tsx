@@ -2,6 +2,7 @@ import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { ApplicationKind } from '../../../types';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../utils/test-utils';
@@ -117,7 +118,11 @@ const applications: ApplicationKind[] = [
 const useSearchParamsMock = useSearchParams as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 
-const ApplicationList = ApplicationListView;
+const ApplicationList = (
+  <FilterContextProvider filterParams={['name']}>
+    <ApplicationListView />
+  </FilterContextProvider>
+);
 
 describe('Application List', () => {
   mockUseNamespaceHook('test-ns');
@@ -128,13 +133,13 @@ describe('Application List', () => {
 
   it('should render spinner if application data is not loaded', () => {
     watchResourceMock.mockReturnValue([[], false]);
-    renderWithQueryClient(<ApplicationList />);
+    renderWithQueryClient(ApplicationList);
     screen.getByRole('progressbar');
   });
 
   it('should render empty state if no application is present', () => {
     watchResourceMock.mockReturnValue([[], true]);
-    renderWithQueryClient(<ApplicationList />);
+    renderWithQueryClient(ApplicationList);
     screen.getByText('Easily onboard your applications');
     const button = screen.getByText('Create application');
     expect(button).toBeInTheDocument();
@@ -143,14 +148,14 @@ describe('Application List', () => {
 
   it('should render empty state with no card', () => {
     watchResourceMock.mockReturnValue([[], true]);
-    renderWithQueryClient(<ApplicationList />);
+    renderWithQueryClient(ApplicationList);
     screen.getByText('Easily onboard your applications');
     expect(screen.queryByText('Create and manage your applications.')).toBeNull();
   });
 
   it('should render application list when application(s) is(are) present', () => {
     watchResourceMock.mockReturnValue([applications, true]);
-    renderWithQueryClient(<ApplicationList />);
+    renderWithQueryClient(ApplicationList);
     screen.getByText('Create application');
     screen.getByText('Name');
     screen.getByText('Components');
@@ -159,16 +164,16 @@ describe('Application List', () => {
 
   it('should not contain applications breadcrumb link in the list view', () => {
     watchResourceMock.mockReturnValue([applications, true]);
-    renderWithQueryClient(<ApplicationList />);
+    renderWithQueryClient(ApplicationList);
     expect(screen.queryByTestId('applications-breadcrumb-link')).not.toBeInTheDocument();
   });
 
   it('should apply query params to the filter', async () => {
     watchResourceMock.mockReturnValue([applications, true]);
     useSearchParamsMock.mockImplementation(() =>
-      React.useState(new URLSearchParams('name=xyz-app')),
+      React.useState(new URLSearchParams(`name=${JSON.stringify('xyz-app')}`)),
     );
-    renderWithQueryClient(<ApplicationList />);
+    renderWithQueryClient(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).not.toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).not.toBeInTheDocument();
@@ -179,7 +184,7 @@ describe('Application List', () => {
 
   it('should filter applications by name', async () => {
     watchResourceMock.mockReturnValue([applications, true]);
-    const { rerender } = renderWithQueryClient(<ApplicationList />);
+    const { rerender } = renderWithQueryClient(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).toBeInTheDocument();
@@ -189,7 +194,7 @@ describe('Application List', () => {
 
     const filter = screen.getByPlaceholderText('Filter by name...');
     fireEvent.change(filter, { target: { value: 'xyz-app' } });
-    rerender(<ApplicationList />);
+    rerender(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).not.toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).not.toBeInTheDocument();
@@ -204,7 +209,7 @@ describe('Application List', () => {
       spec: { displayName: undefined },
     }));
     watchResourceMock.mockReturnValue([alteredApplications, true]);
-    const { rerender } = renderWithQueryClient(<ApplicationList />);
+    const { rerender } = renderWithQueryClient(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).toBeInTheDocument();
@@ -214,7 +219,7 @@ describe('Application List', () => {
 
     const filter = screen.getByPlaceholderText('Filter by name...');
     fireEvent.change(filter, { target: { value: 'xyz-app' } });
-    rerender(<ApplicationList />);
+    rerender(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).not.toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).not.toBeInTheDocument();
@@ -225,7 +230,7 @@ describe('Application List', () => {
 
   it('should filter case insensitive', async () => {
     watchResourceMock.mockReturnValue([applications, true]);
-    const { rerender } = renderWithQueryClient(<ApplicationList />);
+    const { rerender } = renderWithQueryClient(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).toBeInTheDocument();
@@ -235,7 +240,7 @@ describe('Application List', () => {
 
     const filter = screen.getByPlaceholderText('Filter by name...');
     fireEvent.change(filter, { target: { value: 'XYZ' } });
-    rerender(<ApplicationList />);
+    rerender(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).not.toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).not.toBeInTheDocument();
@@ -246,7 +251,7 @@ describe('Application List', () => {
 
   it('should clear the filter when clear button is clicked', async () => {
     watchResourceMock.mockReturnValue([applications, true]);
-    const { rerender } = renderWithQueryClient(<ApplicationList />);
+    const { rerender } = renderWithQueryClient(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).toBeInTheDocument();
@@ -256,7 +261,7 @@ describe('Application List', () => {
 
     const filter = screen.getByPlaceholderText('Filter by name...');
     fireEvent.change(filter, { target: { value: 'invalid-app' } });
-    rerender(<ApplicationList />);
+    rerender(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).not.toBeInTheDocument();
       expect(screen.queryByText('mno-app2')).not.toBeInTheDocument();
@@ -266,7 +271,7 @@ describe('Application List', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear all filters' }));
-    rerender(<ApplicationList />);
+    rerender(ApplicationList);
     await waitFor(() => {
       expect(screen.queryByText('mno-app')).toBeInTheDocument();
       expect(screen.queryByText('mno-app1')).toBeInTheDocument();
