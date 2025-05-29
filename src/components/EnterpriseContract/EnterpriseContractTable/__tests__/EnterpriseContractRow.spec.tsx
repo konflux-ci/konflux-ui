@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { UIEnterpriseContractData } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
@@ -36,7 +36,7 @@ const dumpFailRowData = {
   collection: ['abcd', 'efg'],
 };
 
-const cusmtomDummyData = {
+const customDummyData = {
   sortedECResult: [dummySuccessRowData, dumpFailRowData],
 };
 describe('EnterpriseContractRow', () => {
@@ -45,10 +45,10 @@ describe('EnterpriseContractRow', () => {
   it('should render the component', () => {
     render(
       <WrappedEnterpriseContractRow
-        customData={cusmtomDummyData}
+        customData={customDummyData}
         obj={dummySuccessRowData}
-        setExpandedRowIndex={mockSetExpandedRowIndex}
-        expandedRowIndex={1}
+        onToggleExpand={mockSetExpandedRowIndex}
+        isExpanded={false}
       />,
     );
     screen.getByText('dummyTitle');
@@ -61,27 +61,31 @@ describe('EnterpriseContractRow', () => {
     render(
       <>
         <WrappedEnterpriseContractRow
-          customData={cusmtomDummyData}
+          customData={customDummyData}
           obj={dumpFailRowData}
-          setExpandedRowIndex={mockSetExpandedRowIndex}
-          expandedRowIndex={1}
+          onToggleExpand={mockSetExpandedRowIndex}
+          isExpanded={true}
         />
-        <EnterpriseContractExpandedRowContent
-          customData={cusmtomDummyData}
-          obj={dumpFailRowData}
-          expandedRowIndex={1}
-        />
+        <EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={true} />
       </>,
     );
     screen.getByText('dummyTitle');
     screen.getByText('component-1');
     screen.getByText('Failed');
-    fireEvent.click(screen.queryAllByTestId('ec-expand-row')[0]);
+
     screen.getByText('Effective from');
     screen.getByText('Collection');
     screen.getByText('abcd, efg');
     screen.getByText('Rule Description');
     screen.getByText('dummy description');
     screen.getAllByText('Fail');
+  });
+
+  it('should not render expanded content if isExpanded is false', () => {
+    render(<EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={false} />);
+
+    // Should render nothing
+    expect(screen.queryByText('Rule Description')).not.toBeInTheDocument();
+    expect(screen.queryByText('Collection')).not.toBeInTheDocument();
   });
 });
