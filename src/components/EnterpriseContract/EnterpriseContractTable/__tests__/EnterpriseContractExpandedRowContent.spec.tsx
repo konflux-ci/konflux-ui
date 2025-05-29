@@ -1,15 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { UIEnterpriseContractData } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
 import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
-
-const dummySuccessRowData = {
-  title: 'dummyTitle',
-  status: ENTERPRISE_CONTRACT_STATUS.successes,
-  component: 'component-1',
-  description: 'dummy description',
-} as UIEnterpriseContractData;
 
 const dumpFailRowData = {
   title: 'dummyTitle',
@@ -21,21 +13,11 @@ const dumpFailRowData = {
   collection: ['abcd', 'efg'],
 };
 
-const cusmtomDummyData = {
-  sortedECResult: [dummySuccessRowData, dumpFailRowData],
-};
-
 describe('EnterpriseContractExpandedRowContent', () => {
   mockUseNamespaceHook('test-ns');
 
   it('should render the component', () => {
-    render(
-      <EnterpriseContractExpandedRowContent
-        customData={cusmtomDummyData}
-        obj={dumpFailRowData}
-        expandedRowIndex={1}
-      />,
-    );
+    render(<EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={true} />);
     screen.getByText('Effective from');
     screen.getByText('Collection');
     screen.getByText('abcd, efg');
@@ -44,13 +26,7 @@ describe('EnterpriseContractExpandedRowContent', () => {
   });
 
   it('should not render the component', () => {
-    render(
-      <EnterpriseContractExpandedRowContent
-        customData={cusmtomDummyData}
-        obj={dumpFailRowData}
-        expandedRowIndex={0}
-      />,
-    );
+    render(<EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={false} />);
     expect(screen.queryByText('Effective from')).not.toBeInTheDocument();
     expect(screen.queryByText('Collection')).not.toBeInTheDocument();
   });
