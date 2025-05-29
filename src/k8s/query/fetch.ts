@@ -2,9 +2,11 @@ import { K8sResourceCommon } from '../../types/k8s';
 import {
   k8sCreateResource,
   k8sDeleteResource,
+  k8sListResource,
   k8sPatchResource,
   K8sResourceDeleteOptions,
   K8sResourceListOptions,
+  K8sResourceListResult,
   K8sResourcePatchOptions,
   K8sResourceReadOptions,
   K8sResourceUpdateOptions,
@@ -25,6 +27,17 @@ export const K8sQueryListResourceItems = <TResource extends K8sResourceCommon[]>
   options?: TQueryOptions<TResource>,
 ): Promise<TResource> =>
   queryClient.ensureQueryData(createListqueryOptions<TResource>(resourceInit, options));
+
+export const K8sQueryListResource = <TResource extends K8sResourceCommon>(
+  resourceInit: K8sResourceListOptions,
+  options?: TQueryOptions<K8sResourceListResult<TResource>>,
+): Promise<K8sResourceListResult<TResource>> => {
+  return queryClient.ensureQueryData({
+    queryKey: createQueryKeys(resourceInit),
+    queryFn: () => k8sListResource(resourceInit),
+    ...options,
+  });
+};
 
 export const K8sQueryUpdateResource = <TResource extends K8sResourceCommon>(
   requestInit: K8sResourceUpdateOptions<TResource>,

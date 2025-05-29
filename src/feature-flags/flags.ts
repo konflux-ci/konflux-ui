@@ -40,6 +40,12 @@ export const FLAGS = {
     defaultEnabled: false,
     status: 'wip',
   } as const,
+  kubeArchiveRelease: {
+    key: 'kubeArchiveRelease',
+    description: 'Kube archive integration with Releases',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 } as const;
 
 export type FlagKey = keyof typeof FLAGS;
