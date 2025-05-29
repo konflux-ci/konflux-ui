@@ -12,26 +12,21 @@ import './EnterpriceContractTable.scss';
 
 interface Props {
   obj: UIEnterpriseContractData;
-  customData: { sortedECResult: UIEnterpriseContractData[] };
-  expandedRowIndex: number | null;
+  isExpanded: boolean;
 }
 
-export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({
-  obj,
-  customData,
-  expandedRowIndex,
-}) => {
-  const customECResult = customData?.sortedECResult;
-  const index = customECResult?.findIndex((item) => item === obj);
-  const isRowExpanded = expandedRowIndex === index;
-
-  if (!isRowExpanded) return null;
+export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj, isExpanded }) => {
+  if (!isExpanded) return null;
   if (!obj.description && !obj.collection?.length && !obj.solution && !obj.timestamp) return null;
 
   return (
-    <Tr className="rule-description" data-test="ec-expand-content">
+    <Tr className="ex-expanded-row" data-test="ec-expand-content">
       <ExpandableRowContent>
-        <DescriptionList isAutoColumnWidths columnModifier={{ default: '3Col' }}>
+        <DescriptionList
+          columnModifier={{ default: '3Col' }}
+          isAutoColumnWidths={false}
+          className="ec-description-list"
+        >
           <DescriptionListGroup>
             <DescriptionListTerm>Rule Description</DescriptionListTerm>
             <DescriptionListDescription>{obj.description ?? '-'}</DescriptionListDescription>
