@@ -9,6 +9,7 @@ import {
   linkSecretToBuildServiceAccount,
   unLinkSecretFromBuildServiceAccount,
   unLinkSecretFromServiceAccount,
+  isLinkableSecret,
 } from '../service-account-utils';
 
 const imagePullSecret = {
@@ -53,6 +54,35 @@ const testSecrets = [
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
+
+describe('isLinkableSecret', () => {
+  it('should return true for dockerjson/dockercfg/basicAuth', () => {
+    for (const validType of [
+      SecretType.dockercfg,
+      SecretType.dockerconfigjson,
+      SecretType.basicAuth,
+    ]) {
+      const validSecret = { ...imagePullSecret, type: validType };
+      expect(isLinkableSecret(validSecret)).toBe(true);
+    }
+  });
+
+  it('should return false for invalid secret types', () => {
+    for (const invalidType of [
+      SecretType.opaque,
+      SecretType.sshAuth,
+      SecretType.tls,
+      SecretType.serviceAccountToken,
+    ]) {
+      const invalidSecret = { ...imagePullSecret, type: invalidType };
+      expect(isLinkableSecret(invalidSecret)).toBe(false);
+    }
+  });
+
+  it('should return false when secret is undefined', () => {
+    expect(isLinkableSecret(undefined)).toBe(false);
+  });
+});
 
 describe('linkSecretToServiceAccount', () => {
   beforeEach(() => {
