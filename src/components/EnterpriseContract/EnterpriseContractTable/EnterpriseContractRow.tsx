@@ -10,6 +10,8 @@ import { UIEnterpriseContractData } from '../types';
 import { getRuleStatus } from '../utils';
 import { EnterpriseContractTableColumnClasses } from './EnterpriseContractHeader';
 
+import './EnterpriceContractTable.scss';
+
 type EnterpriseContractRowType = {
   data: UIEnterpriseContractData;
   rowIndex: number;
@@ -30,26 +32,32 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
       {/* Main row */}
       <TableData
         data-test="ec-expand-row"
-        className={`${EnterpriseContractTableColumnClasses.expand}`}
+        className={`${EnterpriseContractTableColumnClasses.expand} vertical-center-cell`}
       >
-        <button className="pf-v5-c-button pf-m-plain" onClick={() => onToggle?.(rowIndex)}>
+        <button
+          className="pf-v5-c-button pf-m-plain"
+          onClick={() => onToggle?.(rowIndex)}
+          style={{ display: 'flex' }}
+        >
           {rowExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
         </button>
       </TableData>
 
-      <TableData className={`${EnterpriseContractTableColumnClasses.rules}`}>
+      <TableData className={`${EnterpriseContractTableColumnClasses.rules} vertical-center-cell`}>
         {data.title ?? '-'}
       </TableData>
       <TableData
         data-test="rule-status"
-        className={`${EnterpriseContractTableColumnClasses.status}`}
+        className={`${EnterpriseContractTableColumnClasses.status} vertical-center-cell`}
       >
         {getRuleStatus(data.status)}
       </TableData>
-      <TableData className={`${EnterpriseContractTableColumnClasses.message}`}>
+      <TableData className={`${EnterpriseContractTableColumnClasses.message} vertical-center-cell`}>
         {data.msg ? <Truncate content={data.msg} /> : '-'}
       </TableData>
-      <TableData className={`${EnterpriseContractTableColumnClasses.component}`}>
+      <TableData
+        className={`${EnterpriseContractTableColumnClasses.component} vertical-center-cell`}
+      >
         <Link
           to={COMPONENT_LIST_PATH.createPath({
             workspaceName: namespace,

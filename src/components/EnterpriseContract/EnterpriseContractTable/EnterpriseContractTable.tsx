@@ -118,6 +118,7 @@ export const EnterpriseContractTable: React.FC<
             />
           );
         }}
+        getRowProps={() => ({ className: 'table-row-fixed-height' })}
         loaded
         customData={{ sortedECResult }}
         expand={true}
