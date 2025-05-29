@@ -37,8 +37,8 @@ jest.mock('../../../shared/components/table/TableComponent', () => {
                 customData={{
                   sortedECResult: data,
                 }}
-                expandedRowIndex={0}
-                setExpandedRowIndex={() => {}}
+                isExpanded={false}
+                onToggleExpand={() => {}}
               />
             </tr>
           ))}

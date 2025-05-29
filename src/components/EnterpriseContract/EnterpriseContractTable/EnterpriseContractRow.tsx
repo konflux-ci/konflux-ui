@@ -66,30 +66,28 @@ const EnterpriseContractRow: React.FC<EnterpriseContractRowType> = ({
 interface WrappedEnterpriseContractRowProps {
   obj: UIEnterpriseContractData;
   customData: { sortedECResult: UIEnterpriseContractData[] };
-  expandedRowIndex: number | null;
-  setExpandedRowIndex: (index: number | null) => void;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 export const WrappedEnterpriseContractRow: React.FC<WrappedEnterpriseContractRowProps> = ({
   obj,
   customData,
-  expandedRowIndex,
-  setExpandedRowIndex,
+  isExpanded,
+  onToggleExpand,
 }) => {
   const customECResult = customData?.sortedECResult;
 
   if (Array.isArray(customECResult) && customECResult.length > 0) {
-    const index = customECResult?.findIndex((item) => item === obj);
-    const isRowExpanded = expandedRowIndex === index;
+    const index = customECResult.findIndex((item) => item === obj);
 
     return (
       <EnterpriseContractRow
         data={obj}
         key={index}
         rowIndex={index}
-        rowExpanded={isRowExpanded}
-        // eslint-disable-next-line @typescript-eslint/no-shadow
-        onToggle={(index) => setExpandedRowIndex(isRowExpanded ? null : index)}
+        rowExpanded={isExpanded}
+        onToggle={() => onToggleExpand()}
       />
     );
   }
