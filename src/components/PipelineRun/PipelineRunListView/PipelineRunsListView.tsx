@@ -65,28 +65,34 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
       ),
     );
 
+  const sortedPipelineRuns = React.useMemo(
+    () => [...pipelineRuns].sort((a, b) => b.status?.startTime?.localeCompare(a.status?.startTime)),
+    [pipelineRuns],
+  );
+
   const statusFilterObj = React.useMemo(
-    () => createFilterObj(pipelineRuns, (plr) => pipelineRunStatus(plr), statuses, customFilter),
-    [pipelineRuns, customFilter],
+    () =>
+      createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses, customFilter),
+    [sortedPipelineRuns, customFilter],
   );
 
   const typeFilterObj = React.useMemo(
     () =>
       createFilterObj(
-        pipelineRuns,
+        sortedPipelineRuns,
         (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
         pipelineRunTypes,
         customFilter,
       ),
-    [pipelineRuns, customFilter],
+    [sortedPipelineRuns, customFilter],
   );
 
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(pipelineRuns, filters, customFilter),
-    [pipelineRuns, filters, customFilter],
+    () => filterPipelineRuns(sortedPipelineRuns, filters, customFilter),
+    [sortedPipelineRuns, filters, customFilter],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : sortedPipelineRuns);
 
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
@@ -106,7 +112,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   return (
     <>
-      {(isFiltered || pipelineRuns.length > 0) && (
+      {(isFiltered || sortedPipelineRuns.length > 0) && (
         <PipelineRunsFilterToolbar
           filters={filters}
           setFilters={setFilters}
@@ -117,7 +123,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
       )}
       <Table
         data={filteredPLRs}
-        unfilteredData={pipelineRuns}
+        unfilteredData={sortedPipelineRuns}
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         aria-label="Pipeline run List"
         customData={vulnerabilities}
