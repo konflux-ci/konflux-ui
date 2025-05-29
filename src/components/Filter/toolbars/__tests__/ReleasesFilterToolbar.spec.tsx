@@ -1,19 +1,19 @@
 import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { FilterToolbar } from '../FilterToolbar';
+import { ReleasesFilterToolbar } from '../ReleasesFilterToolbar';
 
-describe('FilterToolbar', () => {
+describe('ReleasesFilterToolbar', () => {
   it('should render filter toolbar accurately', () => {
     render(
-      <FilterToolbar
+      <ReleasesFilterToolbar
         value="test"
         dropdownItems={['Name']}
         onInput={jest.fn()}
         onFilterTypeChange={jest.fn()}
       />,
     );
-    expect(screen.getByTestId('filter-toolbar')).toBeVisible();
+    expect(screen.getByTestId('releases-filter-toolbar')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Name' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Reset' })).toBeVisible();
     expect(screen.getByRole('textbox', { name: 'Name filter' })).toBeVisible();
@@ -21,7 +21,7 @@ describe('FilterToolbar', () => {
 
   it('should update filter type on select', () => {
     render(
-      <FilterToolbar
+      <ReleasesFilterToolbar
         value="test"
         dropdownItems={['Name', 'Date']}
         onInput={jest.fn()}
@@ -36,7 +36,7 @@ describe('FilterToolbar', () => {
 
   it('should capitalize filter type items', async () => {
     render(
-      <FilterToolbar
+      <ReleasesFilterToolbar
         value="test"
         dropdownItems={['name', 'date']}
         onInput={jest.fn()}
@@ -55,7 +55,7 @@ describe('FilterToolbar', () => {
     const onInput = jest.fn();
     const onFilterChange = jest.fn();
     render(
-      <FilterToolbar
+      <ReleasesFilterToolbar
         value="test"
         dropdownItems={['name', 'date']}
         onInput={onInput}

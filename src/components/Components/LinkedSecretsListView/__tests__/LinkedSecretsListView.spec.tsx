@@ -1,6 +1,6 @@
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { mockedSecret } from '../../../../hooks/__data__/mock-data';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLinkedSecrets } from '../../../../hooks/useLinkedSecrets';
@@ -44,6 +44,14 @@ describe('LinkedSecretsListView', () => {
             deletionTimestamp: undefined,
           },
         },
+        {
+          ...mockedSecret,
+          metadata: {
+            ...mockedSecret.metadata,
+            name: 'build-pipeline-c7814-token-fbljb',
+            deletionTimestamp: undefined,
+          },
+        },
       ],
       true,
     ]);
@@ -81,5 +89,45 @@ describe('LinkedSecretsListView', () => {
   it('should render entire linkedSecrets list', () => {
     renderComponent();
     expect(screen.queryByText('build-pipeline-c7814-dockercfg-bksxm')).toBeInTheDocument();
+  });
+
+  it('should render filter toolbar and filter linked secrets based on name', () => {
+    renderComponent();
+    expect(screen.getByTestId('linked-secrets-list-toolbar')).toBeInTheDocument();
+    const nameSearchInput = screen.getByTestId('name-input-filter');
+    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    fireEvent.change(searchInput, { target: { value: 'pipeline' } });
+    const linkedSecretsList = screen.getByLabelText('Linked Secrets List');
+    const linkedSecretsListItems = within(linkedSecretsList).getAllByTestId(
+      'linked-secrets-list-item',
+    );
+    expect(linkedSecretsListItems.length).toBe(2);
+  });
+
+  it('should clear filters from empty state', async () => {
+    const view = renderComponent();
+    expect(screen.getAllByTestId('linked-secrets-list-item')).toHaveLength(2);
+
+    const nameSearchInput = screen.getByTestId('name-input-filter');
+    const textFilterInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    await act(() => fireEvent.change(textFilterInput, { target: { value: 'no match' } }));
+
+    view.rerender(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <LinkedSecretsListView />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryAllByTestId('linked-secrets-list-item')).toHaveLength(0);
+
+    const clearFilterButton = screen.getByRole('button', { name: 'Clear all filters' });
+    fireEvent.click(clearFilterButton);
+
+    view.rerender(
+      <QueryClientProvider client={createTestQueryClient()}>
+        <LinkedSecretsListView />
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getAllByTestId('linked-secrets-list-item')).toHaveLength(2);
   });
 });

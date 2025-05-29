@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Formik, FormikConfig } from 'formik';
 import { DropdownItemObject } from '../../dropdown/BasicDropdown';
 import DropdownField from '../DropdownField';
@@ -134,5 +134,34 @@ describe('DropdownField', () => {
     await waitFor(() => {
       expect(container.querySelectorAll('.dropdown-item').length).toEqual(0);
     });
+  });
+
+  it('renders empty dropdown menu if filtered items is empty', () => {
+    render(
+      <Wrapper initialValues={initialValues} onSubmit={jest.fn()}>
+        <DropdownField
+          name={fieldName}
+          label="label"
+          helpText="helpText"
+          items={items}
+          typeaheadThreshold={2}
+        />
+      </Wrapper>,
+    );
+
+    const input = screen.getByRole('combobox');
+    act(() => {
+      fireEvent.change(input, { target: { value: 'no-match' } });
+      fireEvent.click(screen.getByTestId('dropdown-toggle'));
+    });
+
+    expect(screen.getByText('No results found for "no-match"')).toBeInTheDocument();
+
+    const clearButton = screen.getByRole('button', { name: 'Clear input value' });
+    act(() => {
+      fireEvent.click(clearButton);
+    });
+
+    expect(screen.queryByText('No results found for "no-match"')).not.toBeInTheDocument();
   });
 });

@@ -20,6 +20,7 @@ import { LinkSecretView } from '~/components/LinkSecret/LinkSecretView';
 import emptyStateImgUrl from '../../../assets/secret.svg';
 import { useComponent } from '../../../hooks/useComponents';
 import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
+import { useSearchParam } from '../../../hooks/useSearchParam';
 import { useSortedResources } from '../../../hooks/useSortedResources';
 import { HttpError } from '../../../k8s/error';
 import {
@@ -31,12 +32,14 @@ import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared/components';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { SecretKind } from '../../../types';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';
+import { LinkedSecretsToolbar } from './LinkedSecretsToolbar';
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.secretName]: 'metadata.name',
@@ -57,6 +60,12 @@ export const LinkedSecretsListView: React.FC = () => {
     componentName,
   );
 
+  const [nameFilter, setNameFilter] = useSearchParam('name', '');
+
+  const onClearFilters = () => {
+    setNameFilter('');
+  };
+
   const LinkedSecretsListHeader = React.useMemo(
     () =>
       getListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
@@ -71,6 +80,14 @@ export const LinkedSecretsListView: React.FC = () => {
     activeSortIndex,
     activeSortDirection,
     sortPaths,
+  );
+
+  const filteredLinkedSecrets = React.useMemo(
+    () =>
+      sortedLinkedSecrets?.filter((linkedSecret) => {
+        return !nameFilter || linkedSecret.metadata.name.includes(nameFilter);
+      }),
+    [sortedLinkedSecrets, nameFilter],
   );
 
   if (!componentLoaded || !linkedSecretsLoaded) {
@@ -93,6 +110,13 @@ export const LinkedSecretsListView: React.FC = () => {
       />
     );
   }
+
+  const EmptyMessage = () => (
+    <FilteredEmptyState
+      onClearFilters={onClearFilters}
+      data-test="linked-secrets-list-view_filtered-empty-state"
+    />
+  );
 
   const NoDataEmptyMessage = () => (
     <AppEmptyState
@@ -171,15 +195,17 @@ export const LinkedSecretsListView: React.FC = () => {
 
           <Table
             virtualize={false}
-            data={sortedLinkedSecrets}
+            data={filteredLinkedSecrets}
             unfilteredData={sortedLinkedSecrets}
+            Toolbar={<LinkedSecretsToolbar />}
+            EmptyMsg={EmptyMessage}
             NoDataEmptyMsg={NoDataEmptyMessage}
             aria-label="Linked Secrets List"
             Header={LinkedSecretsListHeader}
             Row={LinkedSecretsListRow}
             loaded={linkedSecretsLoaded}
             getRowProps={(obj: SecretKind) => ({
-              id: `${obj.metadata.name}-linked-secret-list-item`,
+              id: `${obj.metadata.name}-linked-secrets-list-item`,
               'aria-label': obj.metadata.name,
             })}
           />

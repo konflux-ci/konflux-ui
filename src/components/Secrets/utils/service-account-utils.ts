@@ -8,8 +8,10 @@ import {
 } from '../../../consts/pipeline';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
-import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
+import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
 import { SecretForComponentOption } from './secret-utils';
+
+type SecretEntry = { name: string };
 
 export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
   if (!secret || (!namespace && !secret.metadata?.namespace)) {
@@ -20,33 +22,50 @@ export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: 
     queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace },
   });
 
-  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
+  // get list of existing IP secrets
+  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretEntry[];
+  // check whether existing IP secrets list already contains the secret name
+  const alreadyContainsIPSecret = existingIPSecrets?.includes({ name: secret.metadata?.name });
+
   const imagePullSecretList = existingIPSecrets
-    ? [...existingIPSecrets, { name: secret.metadata.name }]
+    ? alreadyContainsIPSecret
+      ? existingIPSecrets
+      : [...existingIPSecrets, { name: secret.metadata.name }]
     : [{ name: secret.metadata.name }];
-  const existingSecrets = serviceAccount?.secrets as SecretKind[];
+
+  // get list of existing secrets
+  const existingSecrets = serviceAccount?.secrets as SecretEntry[];
+  // check whether existing secrets list already contains the secret name
+  const alreadyContainsSecret = existingSecrets?.includes({ name: secret.metadata?.name });
+
   const secretList = existingSecrets
-    ? [...existingSecrets, { name: secret.metadata.name }]
+    ? alreadyContainsSecret
+      ? existingSecrets
+      : [...existingSecrets, { name: secret.metadata.name }]
     : [{ name: secret.metadata.name }];
-  return K8sQueryPatchResource({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
-      ns: namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: `/imagePullSecrets`,
-        value: imagePullSecretList,
+
+  if (!alreadyContainsIPSecret || !alreadyContainsSecret) {
+    return K8sQueryPatchResource({
+      model: ServiceAccountModel,
+      queryOptions: {
+        name: PIPELINE_SERVICE_ACCOUNT,
+        ns: namespace,
       },
-      {
-        op: 'replace',
-        path: `/secrets`,
-        value: secretList,
-      },
-    ],
-  });
+      patches: [
+        {
+          op: 'replace',
+          path: `/imagePullSecrets`,
+          value: imagePullSecretList,
+        },
+        {
+          op: 'replace',
+          path: `/secrets`,
+          value: secretList,
+        },
+      ],
+    });
+  }
+  return;
 };
 
 export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespace: string) => {
@@ -272,10 +291,27 @@ export const unLinkSecretFromBuildServiceAccount = async (
   });
 };
 
+export const filterLinkedServiceAccounts = (
+  secretName: string,
+  serviceAccounts: ServiceAccountKind[],
+): ServiceAccountKind[] => {
+  if (!secretName || !serviceAccounts) {
+    return [];
+  }
+
+  return serviceAccounts.filter((sa) => {
+    const isBuildServiceAccount = sa.metadata.name.startsWith(PIPELINE_SERVICE_ACCOUNT_PREFIX);
+    const hasSecret = sa.secrets?.some((s) => s.name === secretName);
+    const hasImagePullSecret = sa.imagePullSecrets?.some((s) => s.name === secretName);
+    return isBuildServiceAccount && (hasSecret || hasImagePullSecret);
+  });
+};
+
 export const getLinkedServiceAccounts = async (secret: SecretKind) => {
   if (!secret || !secret.metadata?.namespace) {
     return;
   }
+
   const allServiceAccounts: ServiceAccountKind[] = await K8sListResourceItems<ServiceAccountKind>({
     model: ServiceAccountModel,
     queryOptions: {
@@ -283,12 +319,7 @@ export const getLinkedServiceAccounts = async (secret: SecretKind) => {
     },
   });
 
-  const linkedServiceAccounts = allServiceAccounts.filter((sa) => {
-    const hasSecret = sa.secrets?.some((s) => s.name === secret.metadata.name);
-    const hasImagePullSecret = sa.imagePullSecrets?.some((s) => s.name === secret.metadata.name);
-    return hasSecret || hasImagePullSecret;
-  });
-  return linkedServiceAccounts;
+  return filterLinkedServiceAccounts(secret.metadata.name, allServiceAccounts);
 };
 
 export const unlinkSecretFromServiceAccounts = async (
@@ -370,4 +401,13 @@ export const linkCommonSecretsToServiceAccount = async (component: ComponentKind
   });
 
   await processWithPLimit(commonSecrets, 10, linkSecretToBuildServiceAccount, component);
+};
+
+export const isLinkableSecret = (secret: SecretKind): boolean => {
+  if (!secret) {
+    return false;
+  }
+
+  const linkableValues = Object.values(LinkableSecretType) as string[];
+  return linkableValues.includes(secret.type);
 };
