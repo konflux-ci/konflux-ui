@@ -56,7 +56,7 @@ export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & 
   onRowsRendered?: VirtualBodyProps<D>['onRowsRendered'];
   isInfiniteLoading?: boolean;
   infiniteLoaderProps?: InfiniteLoaderProps;
-  expandedRowIndex?: number;
+  expandedRowIndexes?: Set<number>;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = ({

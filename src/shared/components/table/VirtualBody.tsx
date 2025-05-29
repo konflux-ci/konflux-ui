@@ -24,7 +24,7 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
     startIndex: number;
     stopIndex: number;
   }) => void;
-  expandedRowIndex?: number;
+  expandedRowIndexes?: Set<number>;
 };
 
 export type RowFunctionArgs<T = unknown, C = unknown> = {
@@ -51,7 +51,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     getRowProps,
     onRowsRendered,
     ExpandedContent,
-    expandedRowIndex,
+    expandedRowIndexes,
   } = props;
 
   const cellMeasurementCache = React.useMemo(() => {
@@ -65,24 +65,33 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = React.useRef<any>(null);
-  const prevExpandedIndexRef = React.useRef<number | undefined>(undefined);
+  const prevExpandedRowIndexes = React.useRef<Set<number>>(new Set());
 
-  // clears cached row heights and recomputes them when the expanded row changes.
   React.useEffect(() => {
-    const prevIndex = prevExpandedIndexRef.current;
+    const prev = prevExpandedRowIndexes.current;
+    const next = expandedRowIndexes ?? new Set();
 
-    if (prevIndex !== undefined) {
-      cellMeasurementCache.clear(prevIndex);
-    }
+    const collapsed = [...prev].filter((idx) => !next.has(idx));
+    const expanded = [...next];
 
-    if (expandedRowIndex !== undefined) {
-      cellMeasurementCache.clear(expandedRowIndex);
-    }
+    // Clear both collapsed and newly expanded rows
+    [...collapsed, ...expanded].forEach((index) => {
+      cellMeasurementCache.clear(index);
+    });
 
-    listRef.current?.recomputeRowHeights();
+    [...collapsed, ...expanded].forEach((index) => {
+      listRef.current?.recomputeRowHeights(index);
+    });
 
-    prevExpandedIndexRef.current = expandedRowIndex;
-  }, [cellMeasurementCache, expandedRowIndex]);
+    // Update ref for next comparison
+    prevExpandedRowIndexes.current = new Set(next);
+
+    // ⚠️ DO NOT include `cellMeasurementCache` in the deps array.
+    // It's a stable instance from `useMemo` and only meant to be recreated when `data` changes.
+    // Including it would re-run this effect unnecessarily when the cache is regenerated,
+    // causing visible glitches like jumping or incorrect row positions
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedRowIndexes]);
 
   const rowRenderer = React.useCallback(
     ({ index, isVisible, key, style, parent }) => {
@@ -99,7 +108,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
 
       const rowProps = getRowProps?.(rowArgs.obj);
       const rowId = rowProps?.id ?? key;
-      const isExpanded = expandedRowIndex === index;
+      const isExpanded = expandedRowIndexes?.has(index as number);
 
       return (
         <>
@@ -116,7 +125,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
               </TableRow>
               {ExpandedContent && isExpanded && (
                 <div key={`expanded-${key}`}>
-                  <ExpandedContent {...rowArgs} />
+                  <ExpandedContent key={`expanded-content-${key}`} {...rowArgs} />
                 </div>
               )}
             </div>
@@ -131,7 +140,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
       columns,
       customData,
       data,
-      expandedRowIndex,
+      expandedRowIndexes,
       getRowProps,
     ],
   );

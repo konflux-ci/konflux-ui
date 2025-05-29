@@ -69,7 +69,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   onRowsRendered,
   infiniteLoaderProps,
   isInfiniteLoading,
-  expandedRowIndex,
+  expandedRowIndexes,
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
@@ -104,7 +104,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                         getRowProps={getRowProps}
                         onRowsRendered={handleRowsRendered}
                         ExpandedContent={ExpandedContent}
-                        expandedRowIndex={expandedRowIndex}
+                        expandedRowIndexes={expandedRowIndexes}
                       />
                     </div>
                   );
@@ -126,7 +126,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                   getRowProps={getRowProps}
                   onRowsRendered={onRowsRendered}
                   ExpandedContent={ExpandedContent}
-                  expandedRowIndex={expandedRowIndex}
+                  expandedRowIndexes={expandedRowIndexes}
                 />
               </div>
             )
