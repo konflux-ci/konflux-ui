@@ -28,6 +28,7 @@ describe('RBListRow', () => {
 
     expect(cells[0]).toHaveTextContent('user1');
     expect(cells[1]).toHaveTextContent('Contributor');
+    expect(cells[2]).toHaveTextContent('metadata-name');
   });
 
   it('should render spinner', () => {
