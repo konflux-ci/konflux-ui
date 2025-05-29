@@ -36,10 +36,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   });
   const { name: nameFilter } = filters;
 
-  namespaces?.sort(
-    (app1, app2) =>
-      +new Date(app2.metadata?.creationTimestamp) - +new Date(app1.metadata?.creationTimestamp),
-  );
+  namespaces?.sort((app1, app2) => app1.metadata.name.localeCompare(app2.metadata.name));
   const filteredNamespaces = React.useMemo(() => {
     const lowerCaseNameFilter = nameFilter.toLowerCase();
     return namespaces?.filter((app) => app.metadata.name.includes(lowerCaseNameFilter));
