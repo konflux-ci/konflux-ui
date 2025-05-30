@@ -22,11 +22,7 @@ export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj, isE
   return (
     <Tr className="ex-expanded-row" data-test="ec-expand-content">
       <ExpandableRowContent>
-        <DescriptionList
-          columnModifier={{ default: '3Col' }}
-          isAutoColumnWidths={false}
-          className="ec-description-list"
-        >
+        <DescriptionList className="ec-description-list">
           <DescriptionListGroup>
             <DescriptionListTerm>Rule Description</DescriptionListTerm>
             <DescriptionListDescription>{obj.description ?? '-'}</DescriptionListDescription>
