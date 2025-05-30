@@ -30,7 +30,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRunsForCommit(namespace, applicationName, commitName);
+    usePipelineRunsForCommit(namespace, applicationName, commitName, undefined, false);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',

@@ -14,7 +14,8 @@ export const statuses = [
 export const getCommitSha = (pipelineRun: PipelineRunKind) =>
   pipelineRun?.metadata.labels?.[PipelineRunLabel.COMMIT_LABEL] ||
   pipelineRun?.metadata.labels?.[PipelineRunLabel.TEST_SERVICE_COMMIT] ||
-  pipelineRun?.metadata.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION];
+  pipelineRun?.metadata.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION] ||
+  pipelineRun?.metadata?.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT];
 
 export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   if (!plr || !getCommitSha(plr)) {
