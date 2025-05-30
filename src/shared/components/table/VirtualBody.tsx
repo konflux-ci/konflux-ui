@@ -74,6 +74,9 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     const collapsed = [...prev].filter((idx) => !next.has(idx));
     const expanded = [...next];
 
+    const list = listRef.current;
+    const currentScrollTop = list?.Grid?.state?.scrollTop ?? 0;
+
     // Clear both collapsed and newly expanded rows
     [...collapsed, ...expanded].forEach((index) => {
       cellMeasurementCache.clear(index);
@@ -81,6 +84,13 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
 
     [...collapsed, ...expanded].forEach((index) => {
       listRef.current?.recomputeRowHeights(index);
+    });
+
+    // restore previous scrollTop after row height changes
+    requestAnimationFrame(() => {
+      if (list?.Grid?.scrollToPosition) {
+        list.Grid.scrollToPosition(currentScrollTop);
+      }
     });
 
     // Update ref for next comparison
