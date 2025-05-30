@@ -10,8 +10,13 @@ import {
   Spinner,
   EmptyStateBody,
   Button,
+  SearchInput,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { LinkSecretView } from '~/components/LinkSecret/LinkSecretView';
 import emptyStateImgUrl from '../../../assets/secret.svg';
 import { useComponent } from '../../../hooks/useComponents';
 import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
@@ -170,6 +175,23 @@ export const LinkedSecretsListView: React.FC = () => {
           <TextContent>
             <Text component={TextVariants.p}>Linked secrets</Text>
           </TextContent>
+
+          <Toolbar usePageInsets>
+            <ToolbarContent>
+              <ToolbarItem className="pf-v5-u-ml-0">
+                <SearchInput
+                  name="nameInput"
+                  data-test="name-input-filter"
+                  type="search"
+                  aria-label="name filter"
+                  placeholder="Filter by name..."
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <LinkSecretView />
+              </ToolbarItem>
+            </ToolbarContent>
+          </Toolbar>
 
           <Table
             virtualize={false}
