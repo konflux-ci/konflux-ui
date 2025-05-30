@@ -51,7 +51,7 @@ export const ActivityTab: React.FC = () => {
   return (
     <>
       <Title size="xl" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Activity By
+        Activity by
       </Title>
       <Text className="pf-v5-u-mb-sm">
         Monitor your commits and their pipeline progression across all components.

@@ -229,6 +229,31 @@ export const conditionsRunStatus = (conditions: Condition[], specStatus?: string
   }
 };
 
+type TaskTestResult = {
+  result: string;
+  note?: string;
+};
+export const taskTestResultStatus = (
+  taskResults: TektonResultsRun[],
+): TaskTestResult | undefined => {
+  const testOutput = taskResults?.find(
+    (result) => result.name === 'HACBS_TEST_OUTPUT' || result.name === 'TEST_OUTPUT',
+  );
+
+  if (!testOutput) return;
+
+  try {
+    const outputValues = JSON.parse(testOutput.value);
+    if (!outputValues.result) return;
+    return { result: outputValues.result, note: outputValues.note ?? undefined };
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('Error when trying to parse testOutput.value');
+  }
+
+  return;
+};
+
 export const taskResultsStatus = (taskResults: TektonResultsRun[]): runStatus => {
   const testOutput = taskResults?.find(
     (result) => result.name === 'HACBS_TEST_OUTPUT' || result.name === 'TEST_OUTPUT',
