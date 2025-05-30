@@ -1,6 +1,7 @@
 export {
   K8sQueryCreateResource,
   K8sQueryListResourceItems,
+  K8sQueryReleaseListItems,
   K8sQueryDeleteResource,
   K8sQueryPatchResource,
   K8sQueryUpdateResource,
