@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { Label, Popover, Spinner } from '@patternfly/react-core';
+import { Alert, AlertVariant, Label, Popover, Spinner } from '@patternfly/react-core';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { SecretKind } from '../../../types/secret';
@@ -9,6 +10,13 @@ import { useSecretActions } from '../secret-actions';
 import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
+
+export enum LinkSecretStatus {
+  Succeeded = 'Succeeded',
+  Failed = 'Failed',
+  Running = 'Running',
+  Pending = 'Pending',
+}
 
 type SecretsListRowProps = RowFunctionArgs<SecretKind>;
 
@@ -29,6 +37,14 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
     obj.metadata.name,
     true,
   );
+
+  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
+
+  const taskStatus = !task ? LinkSecretStatus.Succeeded : task?.status;
+
+  const taskErrors = task?.error
+    ? task.error.split('\n').map((line) => line.replace(/^"(.*)"$/, '$1'))
+    : [];
 
   return (
     <>
@@ -54,6 +70,37 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           <span>{linkedServiceAccounts.length}</span>
         )}
       </TableData>
+      <TableData className={secretsTableColumnClasses.status} data-test="components-status">
+        {taskStatus === LinkSecretStatus.Failed ? (
+          <Popover
+            triggerAction="hover"
+            aria-label="Hoverable popover"
+            headerContent={
+              <Alert
+                isInline
+                variant={AlertVariant.warning}
+                title="This error is only available in this browser."
+              />
+            }
+            bodyContent={
+              taskErrors.length > 0 ? (
+                <ul style={{ paddingLeft: '1.5rem', margin: 0 }}>
+                  {taskErrors.map((line, index) => (
+                    <li key={index}>- {line}</li>
+                  ))}
+                </ul>
+              ) : (
+                <div>{error?.message || 'Unknown Error'}</div>
+              )
+            }
+          >
+            <span>Error</span>
+          </Popover>
+        ) : (
+          <span>{taskStatus}</span>
+        )}
+      </TableData>
+
       <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
       <TableData className={secretsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />

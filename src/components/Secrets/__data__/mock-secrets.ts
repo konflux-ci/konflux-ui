@@ -183,6 +183,8 @@ export const secretFormValues: SecretFormValues = {
       },
     ],
   },
+  relatedComponents: [],
+  secretForComponentOption: null,
   existingSecrets,
 };
 
@@ -194,5 +196,7 @@ export const secretFormValuesForSourceSecret: SecretFormValues = {
     username: 'username-test',
     password: 'password-test',
   },
+  relatedComponents: [],
+  secretForComponentOption: null,
   existingSecrets,
 };
