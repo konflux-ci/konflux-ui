@@ -9,7 +9,7 @@ import {
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
 import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
-import { SecretForComponentOption } from './secret-utils';
+import { isImagePullSecret, SecretForComponentOption } from './secret-utils';
 
 type SecretEntry = { name: string };
 
@@ -140,35 +140,52 @@ export const linkSecretToBuildServiceAccount = async (
     queryOptions: { name: serviceAccountName, ns: namespace },
   });
 
-  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
-  const imagePullSecretList = existingIPSecrets
-    ? [...existingIPSecrets, { name: secret.metadata.name }]
-    : [{ name: secret.metadata.name }];
+  // get list of existing IP secrets
+  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretEntry[];
+  // check whether existing IP secrets list already contains the secret name
+  const alreadyContainsIPSecret = existingIPSecrets?.includes({ name: secret.metadata?.name });
 
-  const existingSecrets = serviceAccount?.secrets as SecretKind[];
+  const imagePullSecretList = isImagePullSecret(secret)
+    ? existingIPSecrets
+      ? alreadyContainsIPSecret
+        ? existingIPSecrets
+        : [...existingIPSecrets, { name: secret.metadata.name }]
+      : [{ name: secret.metadata.name }]
+    : existingIPSecrets;
+
+  // get list of existing secrets
+  const existingSecrets = serviceAccount?.secrets as SecretEntry[];
+  // check whether existing secrets list already contains the secret name
+  const alreadyContainsSecret = existingSecrets?.includes({ name: secret.metadata?.name });
+
   const secretList = existingSecrets
-    ? [...existingSecrets, { name: secret.metadata.name }]
+    ? alreadyContainsSecret
+      ? existingSecrets
+      : [...existingSecrets, { name: secret.metadata.name }]
     : [{ name: secret.metadata.name }];
 
-  return K8sQueryPatchResource({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: serviceAccountName,
-      ns: namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: `/imagePullSecrets`,
-        value: imagePullSecretList,
+  if (!alreadyContainsIPSecret || !alreadyContainsSecret) {
+    return K8sQueryPatchResource({
+      model: ServiceAccountModel,
+      queryOptions: {
+        name: serviceAccountName,
+        ns: namespace,
       },
-      {
-        op: 'replace',
-        path: `/secrets`,
-        value: secretList,
-      },
-    ],
-  });
+      patches: [
+        {
+          op: 'replace',
+          path: `/imagePullSecrets`,
+          value: imagePullSecretList,
+        },
+        {
+          op: 'replace',
+          path: `/secrets`,
+          value: secretList,
+        },
+      ],
+    });
+  }
+  return;
 };
 
 export const unLinkSecretFromBuildServiceAccount = async (
@@ -356,4 +373,43 @@ export const isLinkableSecret = (secret: SecretKind): boolean => {
 
   const linkableValues = Object.values(LinkableSecretType) as string[];
   return linkableValues.includes(secret.type);
+};
+
+export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {
+  if (!secret || !secret.metadata?.name || !secret.metadata?.namespace) {
+    return;
+  }
+
+  const createdSecret = await K8sGetResource<SecretKind>({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata?.namespace,
+    },
+  });
+
+  const currentLabels = createdSecret.metadata.labels || {};
+  if (currentLabels[COMMON_SECRETS_LABEL] === 'true') {
+    return;
+  }
+
+  const updatedLabels = {
+    ...currentLabels,
+    [COMMON_SECRETS_LABEL]: 'true',
+  };
+
+  await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: '/metadata/labels',
+        value: updatedLabels,
+      },
+    ],
+  });
 };

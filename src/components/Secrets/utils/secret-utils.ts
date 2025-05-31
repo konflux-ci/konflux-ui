@@ -1,6 +1,7 @@
 import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
 import { SECRET_LIST_PATH } from '@routes/paths';
+import { IMAGE_PULL_SECRET_TYPES } from '~/consts/secrets';
 import { K8sQueryCreateResource } from '../../../k8s';
 import { SecretModel } from '../../../models';
 import {
@@ -19,6 +20,10 @@ import {
   SourceSecretType,
   BuildTimeSecret,
 } from '../../../types';
+
+export const isImagePullSecret = (secret: SecretKind): boolean => {
+  return IMAGE_PULL_SECRET_TYPES.includes(secret.type as (typeof IMAGE_PULL_SECRET_TYPES)[number]);
+};
 
 export enum SecretForComponentOption {
   all = 'all',
