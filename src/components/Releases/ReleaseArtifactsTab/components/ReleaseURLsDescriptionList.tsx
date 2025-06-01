@@ -42,7 +42,7 @@ export const ReleaseURLsDescriptionList: React.FC<Props> = ({ release }) => {
 
   return (
     <>
-      <DetailsSection title="Released urls">
+      <DetailsSection title="Released URLs">
         <DescriptionList columnModifier={{ default: '1Col' }} style={{ marginTop: 20 }}>
           {!!releaseNotesReferences && (
             <DescriptionListGroup>
