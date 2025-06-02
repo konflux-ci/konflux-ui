@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useNotifications } from '../../hooks/useUIInstance';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
@@ -19,7 +20,7 @@ import { formValidationSchema } from './validation.utils';
 import './GitImportForm.scss';
 
 export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const track = useTrackEvent();
   const navigate = useNavigate();
   const namespace = useNamespace();

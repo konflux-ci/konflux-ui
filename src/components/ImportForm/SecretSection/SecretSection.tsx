@@ -4,6 +4,7 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Base64 } from 'js-base64';
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
@@ -20,7 +21,7 @@ import { ImportFormValues } from '../type';
 const accessReviewResources: AccessReviewResources = [{ model: SecretModel, verb: 'create' }];
 
 const SecretSection = () => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const [canCreateSecret] = useAccessReviewForModels(accessReviewResources);
   const showModal = useModalLauncher();
   const { values, setFieldValue } = useFormikContext<ImportFormValues>();

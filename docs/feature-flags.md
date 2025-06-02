@@ -74,9 +74,10 @@ src/
    *Inside business logic*
 
    ```tsx
+   import { FLAGS } from '~/feature-flags/flags';
    import { useIsOnFeatureFlag } from '@/feature-flags/react';
 
-   const isNew = useIsOnFeatureFlag('buildServiceAccount');
+   const isNew = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
    if (isNew) showNew(); else showOld();
    ```
 
