@@ -162,6 +162,12 @@ export enum SecretType {
   tls = 'kubernetes.io/tls',
 }
 
+export enum LinkableSecretType {
+  dockerconfigjson = 'kubernetes.io/dockerconfigjson',
+  basicAuth = 'kubernetes.io/basic-auth',
+  dockercfg = 'kubernetes.io/dockercfg',
+}
+
 export type ServiceAccountKind = {
   automountServiceAccountToken?: boolean;
   imagePullSecrets?: SecretKind[] | { [key: string]: string }[];

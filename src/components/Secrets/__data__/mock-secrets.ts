@@ -1,5 +1,5 @@
 import { omit } from 'lodash-es';
-import { ApplicationModel, ComponentModel } from '../../../models';
+import { ApplicationModel, ComponentModel, ServiceAccountModel } from '../../../models';
 import {
   AddSecretFormValues,
   BuildTimeSecret,
@@ -7,6 +7,7 @@ import {
   ComponentSpecs,
   SecretFor,
   SecretFormValues,
+  SecretKind,
   SecretType,
   SecretTypeDropdownLabel,
   SourceSecretType,
@@ -22,6 +23,30 @@ export const mockApplicationRequestData = {
   spec: {
     displayName: 'test-application',
   },
+};
+
+export const mockServiceAccounts = [
+  {
+    apiVersion: `${ServiceAccountModel.apiGroup}/${ServiceAccountModel.apiVersion}`,
+    kind: ServiceAccountModel.kind,
+    metadata: { name: 'sa-1' },
+  },
+  {
+    apiVersion: `${ServiceAccountModel.apiGroup}/${ServiceAccountModel.apiVersion}`,
+    kind: ServiceAccountModel.kind,
+    metadata: { name: 'sa-2' },
+  },
+];
+
+export const mockSecret: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'my-secret',
+    namespace: 'my-namespace',
+  },
+  data: {},
+  type: 'Opaque',
 };
 
 export const mockComponent: ComponentSpecs = {
