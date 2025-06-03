@@ -1,13 +1,15 @@
 import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import { LinkSecretStatus } from '~/components/Secrets/SecretsListView/SecretsListRowWithComponents';
 import {
   addCommonSecretLabelToBuildSecret,
+  annotateSecretWithLinkError,
   linkSecretToBuildServiceAccount,
   linkSecretToServiceAccount,
   linkSecretToServiceAccounts,
 } from '~/components/Secrets/utils/service-account-utils';
+import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
+import { HttpError } from '~/k8s/error';
 import {
   getAnnotationForSecret,
   getLabelsForSecret,
@@ -50,7 +52,7 @@ import {
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
-import { useTaskStore } from './task-store';
+import { BackgroundJobStatus, useTaskStore } from './task-store';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 /**
@@ -402,10 +404,10 @@ export const enqueueLinkingTask = (
 ) => {
   const { setTaskStatus, clearTask } = useTaskStore.getState();
   const taskId = `${secret.metadata.name}`;
-  setTaskStatus(taskId, LinkSecretStatus.Pending);
+  setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Pending);
 
   queueInstance.enqueue(async () => {
-    setTaskStatus(taskId, LinkSecretStatus.Running);
+    setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Running);
 
     try {
       await linkSecretToServiceAccounts(secret, relatedComponents, option);
@@ -425,23 +427,33 @@ export const enqueueLinkingTask = (
         await linkSecretToBuildServiceAccount(secret, createdComponent);
       }
 
-      setTaskStatus(taskId, LinkSecretStatus.Succeeded);
+      setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Succeeded);
+      // remove annotation error for editing secrets in the furture
+      await annotateSecretWithLinkError(secret);
       clearTask(taskId);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to link secret:', err);
-      const errMessage =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' &&
-              err !== null &&
-              'message' in err &&
-              typeof err.message === 'string'
-            ? err.message
-            : typeof err === 'string'
-              ? err
-              : 'Unknown error';
-      setTaskStatus(taskId, LinkSecretStatus.Failed, errMessage as string);
+      const httpError = err as HttpError;
+
+      const errMessage = Array.isArray(httpError)
+        ? httpError.map((e) => e.error?.json?.message).join('\n')
+        : httpError?.message || 'Unkown Error';
+
+      setTaskStatus(
+        taskId,
+        BackgroundTaskInfo.SecretTask.action,
+        BackgroundJobStatus.Failed,
+        errMessage,
+      );
+
+      // add annotation error
+      try {
+        await annotateSecretWithLinkError(secret, errMessage);
+      } catch (annotateErr) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to annotate secret with error:', annotateErr);
+      }
     }
   });
 };
@@ -517,28 +529,22 @@ export const createSecretWithLinkingComponents = async (
 ) => {
   const secretResource = getSecretObject(secret, namespace);
 
-  return K8sQueryCreateResource({
+  const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
     resource: secretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
-  }).then(async () => {
-    if (dryRun) return;
-    const createdSecret = await K8sGetResource<SecretKind>({
-      model: SecretModel,
-      queryOptions: {
-        name: secretResource.metadata.name,
-        ns: namespace,
-      },
-    });
-    if (secret.secretForComponentOption) {
-      enqueueLinkingTask(
-        createdSecret,
-        secret.relatedComponents,
-        secret.secretForComponentOption,
-        componentName,
-      );
-    }
   });
+
+  if (!dryRun && secret.secretForComponentOption) {
+    enqueueLinkingTask(
+      createdSecret,
+      secret.relatedComponents,
+      secret.secretForComponentOption,
+      componentName,
+    );
+  }
+
+  return createdSecret;
 };
 
 type CreateImageRepositoryType = {

@@ -1,6 +1,7 @@
-import { ServiceAccountModel } from '../../../../models';
+import { SecretModel, ServiceAccountModel } from '../../../../models';
 import { SecretKind, SecretType } from '../../../../types';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
+import { mockSecret } from '../../__data__/mock-secrets';
 import { SecretForComponentOption } from '../secret-utils';
 import {
   linkCommonSecretsToServiceAccount,
@@ -10,6 +11,7 @@ import {
   unLinkSecretFromBuildServiceAccount,
   unLinkSecretFromServiceAccount,
   isLinkableSecret,
+  annotateSecretWithLinkError,
 } from '../service-account-utils';
 
 const imagePullSecret = {
@@ -566,5 +568,67 @@ describe('linkSecretToAllServiceAccounts', () => {
       SecretForComponentOption.partial,
     );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('annotateSecretWithError', () => {
+  const LINKING_ERROR_ANNOTATION = 'konflux-ui/linking-secret-action-error';
+  const annotationPath = `/metadata/annotations/${LINKING_ERROR_ANNOTATION.replace(/\//g, '~1')}`;
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should add annotation if not present', async () => {
+    const errorMessage = 'Link failed';
+
+    await annotateSecretWithLinkError(mockSecret, errorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'add',
+          path: '/metadata/annotations',
+          value: {
+            'konflux-ui/linking-secret-action-error': 'Link failed',
+          },
+        },
+      ],
+    });
+  });
+
+  it('should replace annotation if already present', async () => {
+    const secretWithAnnotation: SecretKind = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        annotations: {
+          [LINKING_ERROR_ANNOTATION]: 'old message',
+        },
+      },
+    };
+    const newErrorMessage = 'Updated failure message';
+
+    await annotateSecretWithLinkError(secretWithAnnotation, newErrorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: annotationPath,
+          value: newErrorMessage,
+        },
+      ],
+    });
   });
 });

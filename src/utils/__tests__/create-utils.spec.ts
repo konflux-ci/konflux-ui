@@ -533,6 +533,11 @@ jest.mock('../task-store', () => ({
       clearTask: jest.fn(),
     })),
   },
+  BackgroundJobStatus: {
+    Running: 'Running',
+    Successed: 'Successed',
+    Pending: 'Pending',
+  },
 }));
 
 const enqueueSpy = jest.spyOn(queueInstance, 'enqueue').mockImplementation(async (task) => {

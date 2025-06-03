@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Alert, AlertVariant, Label, Popover, Spinner } from '@patternfly/react-core';
+import { Label, Popover, Spinner } from '@patternfly/react-core';
+import { LINKING_ERROR_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { useTaskStore } from '~/utils/task-store';
+import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { SecretKind } from '../../../types/secret';
@@ -10,13 +11,6 @@ import { useSecretActions } from '../secret-actions';
 import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
-
-export enum LinkSecretStatus {
-  Succeeded = 'Succeeded',
-  Failed = 'Failed',
-  Running = 'Running',
-  Pending = 'Pending',
-}
 
 type SecretsListRowProps = RowFunctionArgs<SecretKind>;
 
@@ -40,11 +34,14 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
 
   const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
 
-  const taskStatus = !task ? LinkSecretStatus.Succeeded : task?.status;
+  const annotations = obj.metadata?.annotations;
+  const hasLinkError = annotations && LINKING_ERROR_ANNOTATION in annotations;
 
-  const taskErrors = task?.error
-    ? task.error.split('\n').map((line) => line.replace(/^"(.*)"$/, '$1'))
-    : [];
+  const taskStatus = !task ? BackgroundJobStatus.Succeeded : task.status;
+  const taskError = hasLinkError ? annotations[LINKING_ERROR_ANNOTATION] : task?.error;
+
+  const finalStatus =
+    typeof taskError === 'string' && taskError.length > 0 ? BackgroundJobStatus.Failed : taskStatus;
 
   return (
     <>
@@ -71,33 +68,17 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
         )}
       </TableData>
       <TableData className={secretsTableColumnClasses.status} data-test="components-status">
-        {taskStatus === LinkSecretStatus.Failed ? (
+        {finalStatus === BackgroundJobStatus.Failed ? (
           <Popover
             triggerAction="hover"
-            aria-label="Hoverable popover"
-            headerContent={
-              <Alert
-                isInline
-                variant={AlertVariant.warning}
-                title="This error is only available in this browser."
-              />
-            }
-            bodyContent={
-              taskErrors.length > 0 ? (
-                <ul style={{ paddingLeft: '1.5rem', margin: 0 }}>
-                  {taskErrors.map((line, index) => (
-                    <li key={index}>- {line}</li>
-                  ))}
-                </ul>
-              ) : (
-                <div>{error?.message || 'Unknown Error'}</div>
-              )
-            }
+            aria-label="Error details"
+            headerContent="Error when linking secret:"
+            bodyContent={<div style={{ whiteSpace: 'pre-line' }}>{taskError}</div>}
           >
             <span>Error</span>
           </Popover>
         ) : (
-          <span>{taskStatus}</span>
+          <span>{finalStatus}</span>
         )}
       </TableData>
 
