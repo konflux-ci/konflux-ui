@@ -100,6 +100,20 @@ const resultMock3 = [
   },
 ];
 
+const resultMock4 = [
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'fifth',
+      creationTimestamp: '2022-04-11T19:36:25Z',
+      labels: {
+        'pac.test.appstudio.openshift.io/sha': 'sample-sha',
+        'appstudio.openshift.io/component': 'test-component-2',
+      },
+    },
+  },
+];
+
 const resultMockPush = [
   {
     kind: PipelineRunGroupVersionKind.kind,
@@ -485,6 +499,46 @@ describe('usePipelineRuns', () => {
         usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha'),
       );
       expect(result.current).toEqual([[...resultMock, ...resultMock2], true, undefined, undefined]);
+    });
+
+    it('should return pipeline runs without filtering by components', () => {
+      useComponentsMock.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      useK8sWatchResourceMock.mockReturnValueOnce([
+        [...resultMock, ...resultMock2, ...resultMock3, ...resultMock4],
+        true,
+      ]);
+      useTRPipelineRunsMock.mockReturnValue([[], true]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha', undefined, false),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock4, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        undefined,
+      ]);
+    });
+
+    it('should return pipeline runs filtering by components', () => {
+      useComponentsMock.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      useK8sWatchResourceMock.mockReturnValueOnce([
+        [...resultMock, ...resultMock2, ...resultMock3, ...resultMock4],
+        true,
+      ]);
+      useTRPipelineRunsMock.mockReturnValue([[], true]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha', undefined, true),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        undefined,
+      ]);
     });
   });
 
