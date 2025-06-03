@@ -62,8 +62,8 @@ export const TriggerReleaseForm: React.FC<Props> = ({
 
   return (
     <PageLayout
-      title="Trigger release plan"
-      description="A release plan schedules when to send your code to production."
+      title="Trigger release"
+      description="Provide the metadata to be included in this release."
       breadcrumbs={[
         {
           path: RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }),
@@ -71,7 +71,7 @@ export const TriggerReleaseForm: React.FC<Props> = ({
         },
         {
           path: '#',
-          name: 'Trigger release plan',
+          name: 'Trigger release',
         },
       ]}
       footer={
@@ -89,14 +89,14 @@ export const TriggerReleaseForm: React.FC<Props> = ({
         <Form style={{ maxWidth: '70%' }}>
           <ReleasePlanDropdown
             name="releasePlan"
-            helpText="The release you want to release to the environments in your target namespace."
+            helpText="Which release plan would you like to use for the release?"
             releasePlans={releasePlans}
             loaded={loaded}
             required
           />
           <SnapshotDropdown
             name="snapshot"
-            helpText="The release you want to release to the environments in your target namespace."
+            helpText="Which snapshot would you like to release?"
             required
             applicationName={applicationName}
           />
@@ -124,6 +124,7 @@ export const TriggerReleaseForm: React.FC<Props> = ({
           <TextColumnField
             name="references"
             label="References"
+            helpText="Any URLs entered must be separated by commas."
             noFooter
             isReadOnly
             onChange={(v) => setValue(references.value.filter?.((r) => v.includes(r)))}
