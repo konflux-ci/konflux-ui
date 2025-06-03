@@ -14,11 +14,14 @@ describe('ScanStatus', () => {
 
   it('shows scan results after values are fetched', () => {
     render(
-      <ScanStatus scanResults={{ vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4 } }} />,
+      <ScanStatus
+        scanResults={{ vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4, unknown: 5 } }}
+      />,
     );
     expect(screen.getByTestId('scan-status-critical-test-id')).toHaveTextContent('Critical1');
     expect(screen.getByTestId('scan-status-high-test-id')).toHaveTextContent('High2');
     expect(screen.getByTestId('scan-status-medium-test-id')).toHaveTextContent('Medium3');
     expect(screen.getByTestId('scan-status-low-test-id')).toHaveTextContent('Low4');
+    expect(screen.getByTestId('scan-status-unknown-test-id')).toHaveTextContent('Unknown5');
   });
 });
