@@ -86,3 +86,11 @@ export const useNotifications = (): SBOMEventNotification[] => {
   }
   return [];
 };
+
+export const useInstanceVisibility = (): 'public' | 'private' => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.visibility;
+  }
+  return 'public';
+};

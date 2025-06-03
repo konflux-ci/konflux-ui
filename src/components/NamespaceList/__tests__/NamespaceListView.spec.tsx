@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, fireEvent, waitFor, render } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useInstanceVisibility } from '~/hooks/useUIInstance';
 import { NamespaceKind } from '~/types';
 import { mockNamespaceHooks, mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
@@ -17,6 +18,11 @@ jest.useFakeTimers();
 
 jest.mock('~/hooks/useApplications', () => ({
   useApplications: jest.fn(() => [[], true]),
+}));
+
+jest.mock('~/hooks/useUIInstance', () => ({
+  ...jest.requireActual('~/hooks/useUIInstance'),
+  useInstanceVisibility: jest.fn(),
 }));
 
 jest.mock('~/shared/components/table', () => {
@@ -43,6 +49,8 @@ jest.mock('~/shared/components/table', () => {
   };
 });
 
+const mockUseInstanceVisibility = useInstanceVisibility as jest.Mock;
+
 const mockNamespaceData = {
   namespace: '',
   namespaceResource: undefined,
@@ -66,6 +74,7 @@ describe('NamespaceListView', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseInstanceVisibility.mockReturnValue('private');
   });
 
   it('should render a spinner while loading namespaces', () => {
@@ -191,5 +200,48 @@ describe('NamespaceListView', () => {
       expect(screen.queryByText('namespace-2')).not.toBeInTheDocument();
       expect(screen.getByText('No results found')).toBeInTheDocument();
     });
+  });
+
+  it('should display the create namespace button when the instance is private', async () => {
+    const mockNamespaces = [
+      { metadata: { name: 'namespace-1', creationTimestamp: '2023-12-01T00:00:00Z' } },
+      { metadata: { name: 'namespace-2', creationTimestamp: '2023-11-01T00:00:00Z' } },
+    ] as NamespaceKind[];
+
+    mockUseNamespaceInfo.mockReturnValue({
+      ...mockNamespaceData,
+      namespaces: mockNamespaces,
+      namespacesLoaded: true,
+    });
+
+    render(NamespaceList);
+
+    await waitFor(() =>
+      expect(screen.getByText('Go to create namespace instructions')).toBeInTheDocument(),
+    );
+  });
+
+  it('should display the create namespace tooltip when the instance is public', () => {
+    const mockNamespaces = [
+      { metadata: { name: 'namespace-1', creationTimestamp: '2023-12-01T00:00:00Z' } },
+      { metadata: { name: 'namespace-2', creationTimestamp: '2023-11-01T00:00:00Z' } },
+    ] as NamespaceKind[];
+
+    mockUseNamespaceInfo.mockReturnValue({
+      ...mockNamespaceData,
+      namespaces: mockNamespaces,
+      namespacesLoaded: true,
+    });
+    mockUseInstanceVisibility.mockReturnValue('public');
+
+    render(
+      <MemoryRouter>
+        <FilterContextProvider filterParams={['name']}>
+          <NamespaceListView />
+        </FilterContextProvider>
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByText('Go to create namespace instructions')).not.toBeInTheDocument();
   });
 });
