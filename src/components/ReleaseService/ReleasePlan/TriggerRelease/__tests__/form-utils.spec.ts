@@ -36,7 +36,7 @@ describe('triggerReleasePlan', () => {
         releasePlan: 'test-releasePlan',
         description: 'short description',
         topic: 'topic of release',
-        references: 'references',
+        references: ['reference1', 'reference2'],
         labels: [],
       },
       'test-ns',
@@ -46,6 +46,7 @@ describe('triggerReleasePlan', () => {
         synopsis: 'synopsis',
         topic: 'topic of release',
         description: 'short description',
+        references: ['reference1', 'reference2'],
       }),
     );
   });
@@ -58,7 +59,7 @@ describe('triggerReleasePlan', () => {
         releasePlan: 'test-releasePlan',
         description: 'short description',
         topic: 'topic of release',
-        references: 'references',
+        references: ['reference1', 'reference2'],
         issues: [
           { id: 'RHTAP-5560', summary: 'summary1', source: 'test-url' },
           { id: 'RHTAP-5561', summary: 'summary2', source: 'test-url2' },
@@ -87,7 +88,7 @@ describe('triggerReleasePlan', () => {
         releasePlan: 'test-releasePlan',
         description: 'short description',
         topic: 'topic of release',
-        references: 'references',
+        references: ['reference1', 'reference2'],
         cves: [
           {
             issueKey: 'cve1',

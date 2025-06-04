@@ -10,6 +10,7 @@ jest.mock('react-router-dom', () => {
   return {
     ...actual,
     useNavigate: jest.fn(),
+    useLocation: () => ({ pathname: '/ns/test-ns' }),
   };
 });
 
@@ -33,7 +34,7 @@ describe('NoAccessState', () => {
     screen.getByTestId('no-access-state');
     screen.getByText(`Let's get you access`);
     screen.getByText(
-      `Ask the administrator or the owner of the test-ns namespace for access permissions.`,
+      `Ask the administrator or the owner of the 'test-ns' namespace for access permissions.`,
     );
     screen.getByText('Go to Overview page');
   });

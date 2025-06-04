@@ -14,6 +14,7 @@ import { ReleaseKind } from '../../types';
 import { calculateDuration } from '../../utils/pipeline-utils';
 import {
   getNamespaceAndPRName,
+  getTenantCollectorPipelineRunFromRelease,
   getManagedPipelineRunFromRelease,
   getTenantPipelineRunFromRelease,
   getFinalPipelineRunFromRelease,
@@ -32,6 +33,9 @@ const ReleasesListRow: React.FC<
   );
   const [tenantPrNamespace, tenantPipelineRun] = getNamespaceAndPRName(
     getTenantPipelineRunFromRelease(obj),
+  );
+  const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = getNamespaceAndPRName(
+    getTenantCollectorPipelineRunFromRelease(obj),
   );
   const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
     getFinalPipelineRunFromRelease(obj),
@@ -78,6 +82,21 @@ const ReleasesListRow: React.FC<
         >
           {obj.spec.snapshot}
         </Link>
+      </TableData>
+      <TableData className={releasesTableColumnClasses.tenantCollectorPipelineRun}>
+        {tenantCollectorPipelineRun && tenantCollectorPrNamespace ? (
+          <Link
+            to={PIPELINERUN_DETAILS_PATH.createPath({
+              workspaceName: tenantCollectorPrNamespace,
+              applicationName,
+              pipelineRunName: tenantCollectorPipelineRun,
+            })}
+          >
+            {tenantCollectorPipelineRun}
+          </Link>
+        ) : (
+          '-'
+        )}
       </TableData>
       <TableData className={releasesTableColumnClasses.tenantPipelineRun}>
         {tenantPipelineRun && tenantPrNamespace ? (

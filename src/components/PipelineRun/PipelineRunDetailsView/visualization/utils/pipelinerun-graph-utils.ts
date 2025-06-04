@@ -270,7 +270,8 @@ export const getTaskBadgeCount = (data: PipelineRunNodeData): number =>
   (data.scanResults?.vulnerabilities?.critical ?? 0) +
     (data.scanResults?.vulnerabilities?.high ?? 0) +
     (data.scanResults?.vulnerabilities?.medium ?? 0) +
-    (data.scanResults?.vulnerabilities?.low ?? 0);
+    (data.scanResults?.vulnerabilities?.low ?? 0) +
+    (data.scanResults?.vulnerabilities?.unknown ?? 0);
 
 const getBadgeWidth = (data: PipelineRunNodeData, font: string = '0.875rem RedHatText'): number => {
   const BADGE_PADDING = 24; // 8 before the badge and 8 on each side of the text inside the badge

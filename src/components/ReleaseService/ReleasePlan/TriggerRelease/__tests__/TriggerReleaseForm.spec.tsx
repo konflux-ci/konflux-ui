@@ -62,7 +62,9 @@ describe('TriggerReleaseForm', () => {
     expect(result.getByRole('textbox', { name: 'Synopsis' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Description' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Topic' })).toBeVisible();
-    expect(result.getByRole('textbox', { name: 'References' })).toBeVisible();
+
+    screen.getByText('References');
+    screen.getByTestId('add-reference-button');
   });
 
   it('should show release & snapshot dropdown in loading state', () => {

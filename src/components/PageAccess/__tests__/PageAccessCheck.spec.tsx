@@ -9,6 +9,7 @@ jest.mock('react-router-dom', () => {
   return {
     ...actual,
     useNavigate: jest.fn(),
+    useLocation: () => ({ pathname: '/ns/test-ns' }),
   };
 });
 

@@ -42,7 +42,7 @@ describe('ReleaseOverviewTab', () => {
     expect(screen.getByText('Snapshot')).toBeVisible();
     expect(screen.getByText('test-snapshot')).toBeVisible();
 
-    expect(screen.getByText('Release Target (Managed rkspace)')).toBeVisible();
+    expect(screen.getByText('Release Target (Managed Workspace)')).toBeVisible();
     expect(screen.getByText('test-target')).toBeVisible();
   });
 });

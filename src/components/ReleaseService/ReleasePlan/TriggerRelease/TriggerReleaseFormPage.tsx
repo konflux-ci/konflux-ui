@@ -68,7 +68,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
     synopsis: '',
     description: '',
     topic: '',
-    references: '',
+    references: [],
     labels: [{ key: '', value: '' }],
   };
 

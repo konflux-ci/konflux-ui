@@ -57,7 +57,7 @@ describe('TriggerReleaseFormPage', () => {
       expect.objectContaining({
         description: '',
         labels: [{ key: '', value: '' }],
-        references: '',
+        references: [],
         releasePlan: 'rp1',
         snapshot: '',
         synopsis: '',

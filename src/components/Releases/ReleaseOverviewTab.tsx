@@ -69,7 +69,7 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
-              <DescriptionListTerm>Release Target (Managed rkspace)</DescriptionListTerm>
+              <DescriptionListTerm>Release Target (Managed Workspace)</DescriptionListTerm>
               <DescriptionListDescription>
                 <>{release.status?.target ?? '-'}</>
               </DescriptionListDescription>
@@ -106,8 +106,8 @@ const ReleaseOverviewTab: React.FC = () => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
-                <DescriptionListTerm>Release trigger</DescriptionListTerm>
-                <DescriptionListDescription>-</DescriptionListDescription>
+                <DescriptionListTerm>Release Trigger</DescriptionListTerm>
+                <DescriptionListDescription>{release.status?.automated ? 'Automatic' : 'Manual'}</DescriptionListDescription>
               </DescriptionListGroup>
               {release.spec.snapshot && releasePlanLoaded && (
                 <DescriptionListGroup>

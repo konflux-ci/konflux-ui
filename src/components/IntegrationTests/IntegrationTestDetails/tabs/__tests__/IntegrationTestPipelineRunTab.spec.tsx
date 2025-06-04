@@ -18,25 +18,49 @@ describe('Integration Pipelinerun List', () => {
   });
 
   it('should render the progressbar if it is still loading', () => {
-    usePipelineRunsMock.mockReturnValue([[], false]);
+    usePipelineRunsMock.mockReturnValue([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<IntegrationTestPipelineRunTab />);
     screen.getByRole('progressbar');
   });
 
   it('should render the error state incase of any API errors', () => {
-    usePipelineRunsMock.mockReturnValue([[], false, new Error('500: Internal server error')]);
+    usePipelineRunsMock.mockReturnValue([
+      [],
+      false,
+      new Error('500: Internal server error'),
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<IntegrationTestPipelineRunTab />);
     screen.getByText('Unable to load pipeline runs');
   });
 
   it('should render the empty state if there is not any pipelineruns available', () => {
-    usePipelineRunsMock.mockReturnValue([[], true]);
+    usePipelineRunsMock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<IntegrationTestPipelineRunTab />);
     screen.getByText('Add component');
   });
 
   it('should render the pipelineruns list', () => {
-    usePipelineRunsMock.mockReturnValue([mockTestPipelinesData, true]);
+    usePipelineRunsMock.mockReturnValue([
+      mockTestPipelinesData,
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<IntegrationTestPipelineRunTab />);
     screen.getByLabelText('Pipeline run List');
   });

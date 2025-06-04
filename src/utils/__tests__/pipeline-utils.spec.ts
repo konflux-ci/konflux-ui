@@ -1,5 +1,5 @@
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
-import { PipelineRunKind, TaskRunKind } from '../../types';
+import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
 import {
   calculateDuration,
   getDuration,
@@ -12,6 +12,7 @@ import {
   taskName,
   isPipelineV1Beta1,
   isTaskV1Beta1,
+  taskTestResultStatus,
 } from '../pipeline-utils';
 
 const samplePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
@@ -246,5 +247,49 @@ describe('isPipelineV1Beta1', () => {
   it('should identify correct api version', () => {
     expect(isPipelineV1Beta1({ apiVersion: 'tekton.dev/v1beta1' } as PipelineRunKind)).toBe(true);
     expect(isPipelineV1Beta1({ apiVersion: 'tekton.dev/v1' } as PipelineRunKind)).toBe(false);
+  });
+});
+
+describe('taskTestResultStatus', () => {
+  it('should return ERROR status', () => {
+    const resultsWithTestOutputError =
+      testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_ERROR].status.results;
+    expect(taskTestResultStatus(resultsWithTestOutputError as TektonResultsRun[])).toMatchObject({
+      result: 'ERROR',
+      note: 'Simulated failure for testing TEST_OUTPUT reporting',
+    });
+  });
+
+  it('should return undefined if neither HACBS_TEST_OUTPUT nor TEST_OUTPUT results are present', () => {
+    const resultsWithoutTestOutputInfo =
+      testPipelineRuns[DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO].status.results;
+    expect(
+      taskTestResultStatus(resultsWithoutTestOutputInfo as TektonResultsRun[]),
+    ).toBeUndefined();
+  });
+
+  it('should return undefined if no valid status/result is provided from TEST_OUTPUT', () => {
+    const resultsWithInvalidTestOutputResult =
+      testPipelineRuns[DataState.STATUS_WITH_INVALID_TEST_OUTPUT_RESULT].status.results;
+    expect(
+      taskTestResultStatus(resultsWithInvalidTestOutputResult as TektonResultsRun[]),
+    ).toBeUndefined();
+  });
+
+  it('should return SUCCESS for a successful TEST_OUTPUT result', () => {
+    const resultsWithTestOutputSuccess =
+      testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS].status.results;
+    expect(taskTestResultStatus(resultsWithTestOutputSuccess as TektonResultsRun[])).toMatchObject({
+      note: 'Simulated success for testing TEST_OUTPUT reporting',
+      result: 'SUCCESS',
+    });
+  });
+
+  it('should return undefined for invalid JSON in TEST_OUTPUT value', () => {
+    const resultsWithInvalidTestOutputJsonValue =
+      testPipelineRuns[DataState.STATUS_WITH_INVALID_TEST_OUTPUT_JSON_VALUE].status.results;
+    expect(
+      taskTestResultStatus(resultsWithInvalidTestOutputJsonValue as TektonResultsRun[]),
+    ).toBeUndefined();
   });
 });
