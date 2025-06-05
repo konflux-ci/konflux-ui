@@ -41,6 +41,7 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
     linkSecretToServiceAccount: jest.fn(),
     linkSecretToBuildServiceAccount: jest.fn(),
     linkSecretToServiceAccounts: jest.fn(),
+    updateAnnotateForSecret: jest.fn(),
   };
 });
 

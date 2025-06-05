@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Label, Popover, Spinner } from '@patternfly/react-core';
-import { LINKING_ERROR_ANNOTATION } from '~/consts/secrets';
+import HelpPopover from '~/components/HelpPopover';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
+import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
@@ -26,22 +28,18 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
       ? secretLabels.split(', ').map((s) => <Label key={s}>{s}</Label>)
       : secretLabels;
 
+  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
+  const taskError = task?.error ?? obj.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
+  const taskStatus =
+    task?.status ??
+    obj.metadata?.annotations?.[LINKING_STATUS_ANNOTATION] ??
+    BackgroundJobStatus.Succeeded;
+
   const { linkedServiceAccounts, isLoading, error } = useLinkedServiceAccounts(
     obj.metadata?.namespace || namespace,
-    obj.metadata.name,
+    obj,
     true,
   );
-
-  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
-
-  const annotations = obj.metadata?.annotations;
-  const hasLinkError = annotations && LINKING_ERROR_ANNOTATION in annotations;
-
-  const taskStatus = !task ? BackgroundJobStatus.Succeeded : task.status;
-  const taskError = hasLinkError ? annotations[LINKING_ERROR_ANNOTATION] : task?.error;
-
-  const finalStatus =
-    typeof taskError === 'string' && taskError.length > 0 ? BackgroundJobStatus.Failed : taskStatus;
 
   return (
     <>
@@ -56,7 +54,7 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           <Popover
             triggerAction="hover"
             aria-label="Hoverable popover"
-            bodyContent={error?.message || 'Unknown Error'}
+            bodyContent={(error as HttpError)?.message || 'Unknown Error'}
           >
             <span>Error</span>
           </Popover>
@@ -68,17 +66,12 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
         )}
       </TableData>
       <TableData className={secretsTableColumnClasses.status} data-test="components-status">
-        {finalStatus === BackgroundJobStatus.Failed ? (
-          <Popover
-            triggerAction="hover"
-            aria-label="Error details"
-            headerContent="Error when linking secret:"
+        <span>{taskStatus}</span>
+        {taskStatus === BackgroundJobStatus.Failed && taskError && (
+          <HelpPopover
+            headerContent="Error when linking secret"
             bodyContent={<div style={{ whiteSpace: 'pre-line' }}>{taskError}</div>}
-          >
-            <span>Error</span>
-          </Popover>
-        ) : (
-          <span>{finalStatus}</span>
+          />
         )}
       </TableData>
 

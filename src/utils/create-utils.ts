@@ -3,12 +3,13 @@ import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import {
   addCommonSecretLabelToBuildSecret,
-  annotateSecretWithLinkError,
   linkSecretToBuildServiceAccount,
   linkSecretToServiceAccount,
   linkSecretToServiceAccounts,
+  updateAnnotateForSecret,
 } from '~/components/Secrets/utils/service-account-utils';
 import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { HttpError } from '~/k8s/error';
 import {
   getAnnotationForSecret,
@@ -396,18 +397,20 @@ export const createSecretResource = async (
   });
 };
 
-export const enqueueLinkingTask = (
+export const enqueueLinkingTask = async (
   secret: SecretKind,
   relatedComponents: string[],
   option: SecretForComponentOption,
   componentName?: string,
 ) => {
-  const { setTaskStatus, clearTask } = useTaskStore.getState();
+  const { setTaskStatus } = useTaskStore.getState();
   const taskId = `${secret.metadata.name}`;
   setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Pending);
+  await updateAnnotateForSecret(secret, LINKING_STATUS_ANNOTATION, BackgroundJobStatus.Pending);
 
   queueInstance.enqueue(async () => {
     setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Running);
+    await updateAnnotateForSecret(secret, LINKING_STATUS_ANNOTATION, BackgroundJobStatus.Running);
 
     try {
       await linkSecretToServiceAccounts(secret, relatedComponents, option);
@@ -429,8 +432,12 @@ export const enqueueLinkingTask = (
 
       setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Succeeded);
       // remove annotation error for editing secrets in the furture
-      await annotateSecretWithLinkError(secret);
-      clearTask(taskId);
+      await updateAnnotateForSecret(secret, LINKING_ERROR_ANNOTATION);
+      await updateAnnotateForSecret(
+        secret,
+        LINKING_STATUS_ANNOTATION,
+        BackgroundJobStatus.Succeeded,
+      );
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Failed to link secret:', err);
@@ -447,9 +454,13 @@ export const enqueueLinkingTask = (
         errMessage,
       );
 
-      // add annotation error
       try {
-        await annotateSecretWithLinkError(secret, errMessage);
+        await updateAnnotateForSecret(
+          secret,
+          LINKING_STATUS_ANNOTATION,
+          BackgroundJobStatus.Failed,
+        );
+        await updateAnnotateForSecret(secret, LINKING_ERROR_ANNOTATION, errMessage);
       } catch (annotateErr) {
         // eslint-disable-next-line no-console
         console.error('Failed to annotate secret with error:', annotateErr);
@@ -489,7 +500,11 @@ export const createSecretResourceWithLinkingComponents = async (
   if (!createdSecret || dryRun) return createdSecret;
 
   if (values.secretForComponentOption) {
-    enqueueLinkingTask(secretResource, values.relatedComponents, values.secretForComponentOption);
+    void enqueueLinkingTask(
+      secretResource,
+      values.relatedComponents,
+      values.secretForComponentOption,
+    );
   }
 
   return createdSecret;
@@ -536,9 +551,9 @@ export const createSecretWithLinkingComponents = async (
   });
 
   if (!dryRun && secret.secretForComponentOption) {
-    enqueueLinkingTask(
+    void enqueueLinkingTask(
       createdSecret,
-      secret.relatedComponents,
+      secret.relatedComponents as string[],
       secret.secretForComponentOption,
       componentName,
     );

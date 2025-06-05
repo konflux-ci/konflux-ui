@@ -1,4 +1,4 @@
-import { LINKING_ERROR_ANNOTATION, MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
+import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
 import { ComponentModel } from '~/models';
 import { SecretModel } from '~/models/secret';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
@@ -416,47 +416,46 @@ export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {
 };
 
 //Updates the linking error message annotation for the Secret
-export const annotateSecretWithLinkError = async (
+export const updateAnnotateForSecret = async (
   secret: SecretKind,
-  errorMessage?: string,
+  annotationKey: string,
+  annotationValue?: string,
 ): Promise<void> => {
   const namespace = secret.metadata?.namespace;
   const name = secret.metadata?.name;
 
   if (!namespace || !name) {
-    throw new Error('Secret must have metadata.namespace and metadata.name');
+    return;
   }
 
-  const annotationKey = LINKING_ERROR_ANNOTATION;
   const annotationPath = `/metadata/annotations/${annotationKey.replace(/\//g, '~1')}`;
-
   const patches = [];
 
-  if (errorMessage !== undefined) {
-    const safeErrorMessage =
-      errorMessage.length > MAX_ANNOTATION_LENGTH
-        ? `${errorMessage.slice(0, MAX_ANNOTATION_LENGTH - 3)}...`
-        : errorMessage;
+  if (annotationValue !== undefined) {
+    const safeAnnotationValue =
+      annotationValue.length > MAX_ANNOTATION_LENGTH
+        ? `${annotationValue.slice(0, MAX_ANNOTATION_LENGTH - 3)}...`
+        : annotationValue;
 
     if (secret.metadata.annotations && secret.metadata.annotations[annotationKey]) {
       patches.push({
         op: 'replace' as const,
         path: annotationPath,
-        value: safeErrorMessage,
+        value: safeAnnotationValue,
       });
     } else {
       if (secret.metadata.annotations) {
         patches.push({
           op: 'add' as const,
           path: annotationPath,
-          value: safeErrorMessage,
+          value: safeAnnotationValue,
         });
       } else {
         patches.push({
           op: 'add' as const,
           path: '/metadata/annotations',
           value: {
-            [annotationKey]: safeErrorMessage,
+            [annotationKey]: safeAnnotationValue,
           },
         });
       }

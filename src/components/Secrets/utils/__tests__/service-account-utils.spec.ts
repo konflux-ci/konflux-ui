@@ -11,7 +11,7 @@ import {
   unLinkSecretFromBuildServiceAccount,
   unLinkSecretFromServiceAccount,
   isLinkableSecret,
-  annotateSecretWithLinkError,
+  updateAnnotateForSecret,
 } from '../service-account-utils';
 
 const imagePullSecret = {
@@ -582,7 +582,7 @@ describe('annotateSecretWithError', () => {
   it('should add annotation if not present', async () => {
     const errorMessage = 'Link failed';
 
-    await annotateSecretWithLinkError(mockSecret, errorMessage);
+    await updateAnnotateForSecret(mockSecret, LINKING_ERROR_ANNOTATION, errorMessage);
 
     expect(k8sPatchResourceMock).toHaveBeenCalledWith({
       model: SecretModel,
@@ -614,7 +614,7 @@ describe('annotateSecretWithError', () => {
     };
     const newErrorMessage = 'Updated failure message';
 
-    await annotateSecretWithLinkError(secretWithAnnotation, newErrorMessage);
+    await updateAnnotateForSecret(secretWithAnnotation, LINKING_ERROR_ANNOTATION, newErrorMessage);
 
     expect(k8sPatchResourceMock).toHaveBeenCalledWith({
       model: SecretModel,

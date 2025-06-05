@@ -15,15 +15,8 @@ const RunningTasksAlert: React.FC = () => {
   }
 
   return (
-    <Alert title="Background tasks are running" variant={AlertVariant.warning} isInline>
-      <p>Please do not close the window. The following tasks are still running:</p>
-      <ul>
-        {activePages.map((page) => (
-          <li key={page.action}>
-            <strong>{page.pageName}</strong>: {page.action}
-          </li>
-        ))}
-      </ul>
+    <Alert title="Tasks running in background" variant={AlertVariant.warning} isInline>
+      <p>Please keep this window open while we link secrets to the service accounts.</p>
     </Alert>
   );
 };
