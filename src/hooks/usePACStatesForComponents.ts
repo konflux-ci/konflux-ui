@@ -83,7 +83,6 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.APPLICATION]: applicationName,
-            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
           matchExpressions: [
             { key: PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL, operator: 'DoesNotExist' },
@@ -109,6 +108,8 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>
             p.metadata.labels?.[PipelineRunLabel.COMPONENT] === componentName &&
+            p.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]?.toLowerCase() ===
+              PipelineRunEventType.PUSH &&
             (configurationTime
               ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
               : true),
