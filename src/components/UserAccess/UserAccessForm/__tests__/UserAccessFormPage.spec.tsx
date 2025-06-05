@@ -95,4 +95,13 @@ describe('UserAccessFormPage', () => {
       mockRoleBinding,
     );
   });
+
+  it('should handle undefined subjects in role bindings', () => {
+    namespaceRenderer(
+      <UserAccessFormPage existingRb={{ ...mockRoleBinding, subjects: undefined }} edit />,
+      'test-ns',
+    );
+    expect(screen.getByText('Edit access to namespace, test-ns')).toBeVisible();
+    expect(screen.getByRole('searchbox')).not.toBeDisabled();
+  });
 });
