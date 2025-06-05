@@ -1,4 +1,4 @@
-import { Flex, Label, Text, TextVariants } from '@patternfly/react-core';
+import { Label, Text, TextVariants } from '@patternfly/react-core';
 import UnlinkSecretView from '~/components/Components/UnlinkSecret/UnlinkSecretView';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import { SecretKind } from '../../../types';
@@ -34,10 +34,6 @@ export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ ob
 
       <TableData className={linkedSecretsTableColumnClasses.actions}>
         <UnlinkSecretView secret={secret} />
-      </TableData>
-
-      <TableData className={linkedSecretsTableColumnClasses.kebab}>
-        <Flex direction={{ default: 'column' }} />
       </TableData>
     </>
   );
