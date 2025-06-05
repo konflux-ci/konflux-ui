@@ -30,6 +30,7 @@ export type ScanResults = {
     high: number;
     medium: number;
     low: number;
+    unknown: number;
   };
 };
 
@@ -48,6 +49,7 @@ export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKi
           acc[0].vulnerabilities.high += resultObj.vulnerabilities?.high ?? 0;
           acc[0].vulnerabilities.medium += resultObj.vulnerabilities?.medium ?? 0;
           acc[0].vulnerabilities.low += resultObj.vulnerabilities?.low ?? 0;
+          acc[0].vulnerabilities.unknown += resultObj.vulnerabilities?.unknown ?? 0;
         } catch (e) {
           // ignore
         }
@@ -61,6 +63,7 @@ export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKi
           high: 0,
           medium: 0,
           low: 0,
+          unknown: 0,
         },
       },
       [],
@@ -120,6 +123,7 @@ export const getScanResultsMap = (
             high: 0,
             medium: 0,
             low: 0,
+            unknown: 0,
           },
         },
         [],
@@ -135,6 +139,7 @@ export const getScanResultsMap = (
         acc[pipelineRunName][0].vulnerabilities.high += resultObj.vulnerabilities?.high ?? 0;
         acc[pipelineRunName][0].vulnerabilities.medium += resultObj.vulnerabilities?.medium ?? 0;
         acc[pipelineRunName][0].vulnerabilities.low += resultObj.vulnerabilities?.low ?? 0;
+        acc[pipelineRunName][0].vulnerabilities.unknown += resultObj.vulnerabilities?.unknown ?? 0;
       } catch (e) {
         // ignore
       }

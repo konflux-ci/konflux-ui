@@ -19,20 +19,21 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   const namespace = useNamespace();
 
   // Todo add errors here
-  const [pipelineRuns, loaded, error, getNextPage] = usePipelineRuns(
-    namespace,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: {
-            [PipelineRunLabel.APPLICATION]: applicationName,
-            [IntegrationTestLabels.SCENARIO]: integrationTestName,
+  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
+    usePipelineRuns(
+      namespace,
+      React.useMemo(
+        () => ({
+          selector: {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+              [IntegrationTestLabels.SCENARIO]: integrationTestName,
+            },
           },
-        },
-      }),
-      [applicationName, integrationTestName],
-    ),
-  );
+        }),
+        [applicationName, integrationTestName],
+      ),
+    );
 
   if (error) {
     const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
@@ -72,7 +73,12 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
           id: obj.metadata.name,
         })}
         onRowsRendered={({ stopIndex }) => {
-          if (loaded && stopIndex === pipelineRuns.length - 1) {
+          if (
+            loaded &&
+            stopIndex === pipelineRuns.length - 1 &&
+            hasNextPage &&
+            !isFetchingNextPage
+          ) {
             getNextPage?.();
           }
         }}
