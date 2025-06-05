@@ -34,6 +34,7 @@ export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & 
   Header: HeaderFunc;
   loadError?: string | object;
   Row?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
+  ExpandedContent?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   'aria-label': string;
   onSelect?: OnSelect;
   NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;
