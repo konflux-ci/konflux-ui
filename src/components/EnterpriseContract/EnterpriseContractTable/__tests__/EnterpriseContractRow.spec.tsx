@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { UIEnterpriseContractData } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
+import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
 import { WrappedEnterpriseContractRow } from '../EnterpriseContractRow';
 
 jest.mock('react-router-dom', () => {
@@ -16,7 +17,6 @@ jest.mock('react-router-dom', () => {
     useParams: jest.fn(() => ({ appName: 'application' })),
   };
 });
-const mockSetExpandedRowIndex = jest.fn();
 
 const dummySuccessRowData = {
   title: 'dummyTitle',
@@ -35,21 +35,14 @@ const dumpFailRowData = {
   collection: ['abcd', 'efg'],
 };
 
-const cusmtomDummyData = {
+const customDummyData = {
   sortedECResult: [dummySuccessRowData, dumpFailRowData],
 };
 describe('EnterpriseContractRow', () => {
   mockUseNamespaceHook('test-ns');
 
   it('should render the component', () => {
-    render(
-      <WrappedEnterpriseContractRow
-        customData={cusmtomDummyData}
-        obj={dummySuccessRowData}
-        setExpandedRowIndex={mockSetExpandedRowIndex}
-        expandedRowIndex={1}
-      />,
-    );
+    render(<WrappedEnterpriseContractRow customData={customDummyData} obj={dummySuccessRowData} />);
     screen.getByText('dummyTitle');
     screen.getByText('component-1');
     screen.getByText('Success');
@@ -58,17 +51,15 @@ describe('EnterpriseContractRow', () => {
 
   it('should render Failed rule and failure message in table', () => {
     render(
-      <WrappedEnterpriseContractRow
-        customData={cusmtomDummyData}
-        obj={dumpFailRowData}
-        setExpandedRowIndex={mockSetExpandedRowIndex}
-        expandedRowIndex={1}
-      />,
+      <>
+        <WrappedEnterpriseContractRow customData={customDummyData} obj={dumpFailRowData} />
+        <EnterpriseContractExpandedRowContent obj={dumpFailRowData} />
+      </>,
     );
     screen.getByText('dummyTitle');
     screen.getByText('component-1');
     screen.getByText('Failed');
-    fireEvent.click(screen.queryAllByTestId('ec-expand-row')[0]);
+
     screen.getByText('Effective from');
     screen.getByText('Collection');
     screen.getByText('abcd, efg');

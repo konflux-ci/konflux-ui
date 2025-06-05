@@ -2,6 +2,7 @@ import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { Table } from '~/shared';
 import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
+import { EnterpriseContractExpandedRowContent } from './EnterpriseContractExpandedRowContent';
 import getEnterpriseContractHeader from './EnterpriseContractHeader';
 import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
 import './EnterpriceContractTable.scss';
@@ -69,8 +70,6 @@ export const EnterpriseContractTable: React.FC<
       : undefined;
   }, [activeSortDirection, activeSortIndex, ecResult]);
 
-  // We have to add the expand control here to ensure it works for every row.
-  const [expandedRowIndex, setExpandedRowIndex] = React.useState<number | null>(null);
   return sortedECResult ? (
     <div className="pf-v5-c-table pf-m-compact pf-m-grid-md">
       <Table
@@ -78,21 +77,20 @@ export const EnterpriseContractTable: React.FC<
         data={sortedECResult}
         aria-label="ec table"
         Header={EnterpriseContractHeader}
+        ExpandedContent={(props) => {
+          const obj = props.obj as UIEnterpriseContractData;
+          return <EnterpriseContractExpandedRowContent {...props} obj={obj} />;
+        }}
         Row={(props) => {
           const obj = props.obj as UIEnterpriseContractData;
+
           return (
-            <WrappedEnterpriseContractRow
-              {...props}
-              expandedRowIndex={expandedRowIndex}
-              setExpandedRowIndex={setExpandedRowIndex}
-              obj={obj}
-              customData={{ sortedECResult }}
-            />
+            <WrappedEnterpriseContractRow {...props} obj={obj} customData={{ sortedECResult }} />
           );
         }}
         loaded
         customData={{ sortedECResult }}
-        expand={true}
+        expand
       />
     </div>
   ) : null;
