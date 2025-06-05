@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '../../feature-flags/hooks';
 import { ComponentModel, ServiceAccountModel } from '../../models';
 import { COMPONENT_LINKED_SECRETS_PATH } from '../../routes/paths';
@@ -19,7 +20,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   const [canDeleteComponent] = useAccessReviewForModel(ComponentModel, 'delete');
   const [canManageLinkedSecrets] = useAccessReviewForModel(ServiceAccountModel, 'patch');
 
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
 
   const actions: Action[] = React.useMemo(() => {
     if (!component) {
