@@ -5,10 +5,10 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   Flex,
+  Title,
 } from '@patternfly/react-core';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { ReleaseKind } from '../../../../types';
-import { DetailsSection } from '../../../DetailsPage';
 import { getImageLink } from '../utils/url';
 
 type Props = {
@@ -42,38 +42,39 @@ export const ReleaseURLsDescriptionList: React.FC<Props> = ({ release }) => {
 
   return (
     <>
-      <DetailsSection title="Released URLs">
-        <DescriptionList columnModifier={{ default: '1Col' }} style={{ marginTop: 20 }}>
-          {!!releaseNotesReferences && (
-            <DescriptionListGroup>
-              <DescriptionListTerm>Release notes</DescriptionListTerm>
-              <DescriptionListDescription>
-                <Flex direction={{ default: 'column' }}>
-                  {releaseNotesReferences.map((ref) => (
-                    <ExternalLink href={ref} text={ref} key={ref} />
-                  ))}
-                </Flex>
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          )}
-          {!!indexImage && (
-            <DescriptionListGroup>
-              <DescriptionListTerm>Index image</DescriptionListTerm>
-              <DescriptionListDescription>
-                <ExternalLink href={getImageLink(indexImage)} text={indexImage} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          )}
-          {!!githubReleaseUrl && (
-            <DescriptionListGroup>
-              <DescriptionListTerm>Github release URL</DescriptionListTerm>
-              <DescriptionListDescription>
-                <ExternalLink href={getImageLink(githubReleaseUrl)} text={githubReleaseUrl} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          )}
-        </DescriptionList>
-      </DetailsSection>
+      <Title headingLevel="h5" size="md">
+        Released URLs
+      </Title>
+      <DescriptionList columnModifier={{ default: '1Col' }} style={{ marginTop: 20 }}>
+        {!!releaseNotesReferences && (
+          <DescriptionListGroup>
+            <DescriptionListTerm>Release notes</DescriptionListTerm>
+            <DescriptionListDescription>
+              <Flex direction={{ default: 'column' }}>
+                {releaseNotesReferences.map((ref) => (
+                  <ExternalLink href={ref} text={ref} key={ref} />
+                ))}
+              </Flex>
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        )}
+        {!!indexImage && (
+          <DescriptionListGroup>
+            <DescriptionListTerm>Index image</DescriptionListTerm>
+            <DescriptionListDescription>
+              <ExternalLink href={getImageLink(indexImage)} text={indexImage} />
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        )}
+        {!!githubReleaseUrl && (
+          <DescriptionListGroup>
+            <DescriptionListTerm>Github release URL</DescriptionListTerm>
+            <DescriptionListDescription>
+              <ExternalLink href={getImageLink(githubReleaseUrl)} text={githubReleaseUrl} />
+            </DescriptionListDescription>
+          </DescriptionListGroup>
+        )}
+      </DescriptionList>
     </>
   );
 };

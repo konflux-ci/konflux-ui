@@ -1,5 +1,5 @@
+import { Title } from '@patternfly/react-core';
 import { ReleaseArtifacts } from '../../../../types';
-import { DetailsSection } from '../../../DetailsPage';
 import { renderKeyValueList } from '../utils/generic-key-value-rendering-utils';
 
 type Props = {
@@ -17,9 +17,10 @@ export const AdditionalArtifactsList: React.FC<Props> = ({ artifacts }) => {
 
   return (
     <div style={{ marginTop: 40 }}>
-      <DetailsSection title="Additional release artifacts">
-        <div style={{ marginTop: 20 }}>{renderKeyValueList(entries)}</div>
-      </DetailsSection>
+      <Title headingLevel="h5" size="md">
+        Additional release artifacts
+      </Title>
+      <div style={{ marginTop: 20 }}>{renderKeyValueList(entries)}</div>
     </div>
   );
 };
