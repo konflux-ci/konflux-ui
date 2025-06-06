@@ -154,7 +154,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
         style={{}}
         {...rowProps}
       >
-        <Row obj={obj} columns={columns} customData={customData} />
+        <Row obj={obj} columns={columns} customData={customData} index={index} />
       </TableRow>
     );
   };

@@ -77,6 +77,11 @@ const ReleaseDetailsView: React.FC = () => {
           label: 'Overview',
           isFilled: true,
         },
+        {
+          key: 'artifacts',
+          label: 'Release artifacts',
+          isFilled: true,
+        },
       ]}
     />
   );

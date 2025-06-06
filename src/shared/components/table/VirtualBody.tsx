@@ -35,6 +35,7 @@ export type RowFunctionArgs<T = unknown, C = unknown> = {
   obj: T;
   columns: unknown[];
   customData?: C;
+  index?: number;
 };
 
 const RowMemo = React.memo<
@@ -62,7 +63,7 @@ const RowMemo = React.memo<
             {isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
           </Button>
         </TableData>
-        <Row {...props} />
+        <Row {...props} index={index} />
       </>
     );
   }
@@ -176,7 +177,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
               </TableRow>
               {ExpandedContent && isExpanded && (
                 <div key={`expanded-${key}`}>
-                  <ExpandedContent key={`expanded-content-${key}`} {...rowArgs} />
+                  <ExpandedContent key={`expanded-content-${key}`} {...rowArgs} index={index} />
                 </div>
               )}
             </div>
