@@ -6,6 +6,7 @@ import {
   PageSectionVariants,
   Spinner,
 } from '@patternfly/react-core';
+import { isInternalInstance } from '~/hooks/useUIInstance';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -18,14 +19,15 @@ import PageLayout from '../PageLayout/PageLayout';
 import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
 
-const NamespaceCreateButton = () => (
-  <ExternalLink
-    variant="primary"
-    href="https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html"
-  >
-    Go to create namespace instructions
-  </ExternalLink>
-);
+const NamespaceCreateButton = () =>
+  isInternalInstance && (
+    <ExternalLink
+      variant="primary"
+      href={'https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html'}
+    >
+      Go to create namespace instructions
+    </ExternalLink>
+  );
 
 const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
