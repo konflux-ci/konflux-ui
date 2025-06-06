@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, debounce, Spinner, Stack, StackItem } from '@patternfly/react-core';
+import { Bullseye, debounce, Spinner, Stack, StackItem, Title } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { useRelease } from '../../../hooks/useReleases';
 import { useSearchParam } from '../../../hooks/useSearchParam';
@@ -81,12 +81,15 @@ const ReleaseArtifactsTab: React.FC = () => {
 
   return (
     <>
-      <Stack>
-        <StackItem>
-          <ReleaseURLsDescriptionList release={release} />
-        </StackItem>
-        <StackItem style={{ paddingTop: 30 }}>
-          <DetailsSection title="Components">
+      <DetailsSection title="Release artifacts">
+        <Stack style={{ marginTop: 40 }}>
+          <StackItem>
+            <ReleaseURLsDescriptionList release={release} />
+          </StackItem>
+          <StackItem style={{ paddingTop: 30 }}>
+            <Title headingLevel="h5" size="md">
+              Components
+            </Title>
             <Table
               virtualize
               data={filteredArtifactsImages}
@@ -117,13 +120,13 @@ const ReleaseArtifactsTab: React.FC = () => {
                 );
               }}
             />
-          </DetailsSection>
-        </StackItem>
+          </StackItem>
 
-        <StackItem>
-          <AdditionalArtifactsList artifacts={release?.status?.artifacts} />
-        </StackItem>
-      </Stack>
+          <StackItem>
+            <AdditionalArtifactsList artifacts={release?.status?.artifacts} />
+          </StackItem>
+        </Stack>
+      </DetailsSection>
     </>
   );
 };
