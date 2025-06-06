@@ -158,7 +158,7 @@ describe('Secrets List', () => {
   });
 });
 
-describe('Secrets List With Components', () => {
+describe('Secrets List With Components and Status', () => {
   beforeEach(() => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     useSecretsMock.mockReturnValue([
@@ -198,6 +198,7 @@ describe('Secrets List With Components', () => {
     screen.getByText('Image pull');
     screen.getByText('Components');
     expect(screen.getByTestId('components-content')).toHaveTextContent('2');
+    screen.getByText('Status');
   });
 
   it('should render all the remote secrets with loading components in the namespace', () => {
@@ -208,6 +209,7 @@ describe('Secrets List With Components', () => {
     });
     render(SecretsList);
     screen.getByText('Components');
+    screen.getByText('Status');
     screen.getByRole('progressbar');
   });
 

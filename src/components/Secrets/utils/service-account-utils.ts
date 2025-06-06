@@ -1,3 +1,4 @@
+import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
 import { ComponentModel } from '~/models';
 import { SecretModel } from '~/models/secret';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
@@ -411,5 +412,73 @@ export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {
         value: updatedLabels,
       },
     ],
+  });
+};
+
+//Updates the linking error message annotation for the Secret
+export const updateAnnotateForSecret = async (
+  secret: SecretKind,
+  annotationKey: string,
+  annotationValue?: string,
+): Promise<void> => {
+  const namespace = secret.metadata?.namespace;
+  const name = secret.metadata?.name;
+
+  if (!namespace || !name) {
+    return;
+  }
+
+  const annotationPath = `/metadata/annotations/${annotationKey.replace(/\//g, '~1')}`;
+  const patches = [];
+
+  if (annotationValue !== undefined) {
+    const safeAnnotationValue =
+      annotationValue.length > MAX_ANNOTATION_LENGTH
+        ? `${annotationValue.slice(0, MAX_ANNOTATION_LENGTH - 3)}...`
+        : annotationValue;
+
+    if (secret.metadata.annotations && secret.metadata.annotations[annotationKey]) {
+      patches.push({
+        op: 'replace' as const,
+        path: annotationPath,
+        value: safeAnnotationValue,
+      });
+    } else {
+      if (secret.metadata.annotations) {
+        patches.push({
+          op: 'add' as const,
+          path: annotationPath,
+          value: safeAnnotationValue,
+        });
+      } else {
+        patches.push({
+          op: 'add' as const,
+          path: '/metadata/annotations',
+          value: {
+            [annotationKey]: safeAnnotationValue,
+          },
+        });
+      }
+    }
+  } else {
+    if (secret.metadata.annotations?.[annotationKey]) {
+      patches.push({
+        op: 'remove' as const,
+        path: annotationPath,
+      });
+    }
+  }
+
+  if (patches.length === 0) {
+    return;
+  }
+
+  await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name,
+      ns: namespace,
+    },
+    patches,
   });
 };
