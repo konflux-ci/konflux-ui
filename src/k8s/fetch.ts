@@ -68,7 +68,7 @@ const basicFetch = async (url: string, requestInit: RequestInit = {}): Promise<R
 };
 
 export type FetchOptionArgs = [
-  requestInit?: RequestInit,
+  requestInit?: RequestInit & { wsPrefix?: string; pathPrefix?: string },
   timeout?: number,
   isK8sApiRequest?: boolean,
 ];
@@ -80,8 +80,11 @@ const defaultTimeout = 60_000;
 export const commonFetch = async (
   ...[apiUrl, requestInit = {}, timeout = defaultTimeout]: ResourceReadArgs
 ): Promise<Response> => {
-  const url = `/api/k8s${apiUrl}`;
-  const fetchPromise = basicFetch(url, applyDefaults(requestInit, { method: 'GET' }));
+  const { pathPrefix, ...cleanRequestInit } = requestInit as RequestInit & { pathPrefix?: string };
+
+  const url = pathPrefix ? `/api/k8s/${pathPrefix}${apiUrl}` : `/api/k8s${apiUrl}`;
+
+  const fetchPromise = basicFetch(url, applyDefaults(cleanRequestInit, { method: 'GET' }));
 
   if (timeout <= 0) {
     return fetchPromise;
