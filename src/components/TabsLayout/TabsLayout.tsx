@@ -34,8 +34,8 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
   const basePath = baseURL ?? resolveBase.pathname;
   const currentTab = tabs
     // @ts-expect-error Array types doesn't include toReversed
-    .toReversed()
-    .find((t: TabProps) =>
+    ?.toReversed()
+    ?.find?.((t: TabProps) =>
       location.pathname.includes(resolvePath(getRouteFromKey(t.key), basePath).pathname),
     )?.key;
 
