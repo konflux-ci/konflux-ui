@@ -8,6 +8,7 @@ export type TableRowProps = {
   trKey: string;
   style: object;
   className?: string;
+  isExpanded?: boolean;
 };
 
 export const TableRow: React.FC<React.PropsWithChildren<TableRowProps>> = ({
