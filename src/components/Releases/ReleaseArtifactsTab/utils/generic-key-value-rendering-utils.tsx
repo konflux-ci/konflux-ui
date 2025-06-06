@@ -6,15 +6,31 @@ import {
   DescriptionListDescription,
 } from '@patternfly/react-core';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import './generic-key-value-rendering-utils.scss';
 import { getImageLink, isUrl } from './url';
+
+/**
+ * converts a technicl key (e.g. `build_id`, `commitHash`) into a more readable label
+ * by adding spaces and capitalizing only the first word.
+ *
+ * Examples:
+ * - "build_id"     -> "Build id"
+ * - "commitHash"   -> "Commit hash"
+ * - "last_updated" -> "Last updated"
+ */
+function humanizeKey(key: string): string {
+  const spaced = key
+    .replace(/_/g, ' ') // Replace underscores with spaces
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2'); // Add space between camelCase words
+
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLocaleLowerCase(); // Capitalize only the first letter
+}
 
 export function renderKeyValueList(data: Record<string, unknown>) {
   return (
     <DescriptionList columnModifier={{ default: '2Col', md: '3Col' }}>
       {Object.entries(data).map(([key, value]) => (
         <DescriptionListGroup key={key}>
-          <DescriptionListTerm>{key}</DescriptionListTerm>
+          <DescriptionListTerm>{humanizeKey(key)}</DescriptionListTerm>
           <DescriptionListDescription>{renderValue(value)}</DescriptionListDescription>
         </DescriptionListGroup>
       ))}
@@ -36,7 +52,7 @@ function renderValue(value: unknown): React.ReactNode {
             <li key={idx} style={{ marginBottom: '0.5rem' }}>
               {Object.entries(obj as Record<string, unknown>).map(([k, v]) => (
                 <div key={k}>
-                  <strong>{k}:</strong> {renderValuee(v)}
+                  <strong>{humanizeKey(k)}:</strong> {renderValuee(v)}
                 </div>
               ))}
             </li>
@@ -60,7 +76,7 @@ function renderValue(value: unknown): React.ReactNode {
       <div>
         {Object.entries(value).map(([k, v]) => (
           <div key={k} style={{ marginBottom: '0.25rem' }}>
-            <strong>{k}:</strong> {renderValuee(v)}
+            <strong>{humanizeKey(k)}:</strong> {renderValuee(v)}
           </div>
         ))}
       </div>

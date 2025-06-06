@@ -4,7 +4,7 @@ import { renderKeyValueList } from '../generic-key-value-rendering-utils';
 describe('renderKeyValueList', () => {
   it('renders simple key-value pairs', () => {
     render(<>{renderKeyValueList({ name: 'Rodrigo' })}</>);
-    expect(screen.getByText('name')).toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText(/Rodrigo/i)).toBeInTheDocument();
   });
 
@@ -23,16 +23,16 @@ describe('renderKeyValueList', () => {
 
   it('renders nested object structures', () => {
     render(<>{renderKeyValueList({ metadata: { version: '1.0.0', commit: 'abc123' } })}</>);
-    expect(screen.getByText('metadata')).toBeInTheDocument();
-    expect(screen.getByText(/version/i)).toBeInTheDocument();
+    expect(screen.getByText('Metadata')).toBeInTheDocument();
+    expect(screen.getByText(/Version/i)).toBeInTheDocument();
     expect(screen.getByText(/1.0.0/i)).toBeInTheDocument();
-    expect(screen.getByText(/commit/i)).toBeInTheDocument();
+    expect(screen.getByText(/Commit/i)).toBeInTheDocument();
     expect(screen.getByText(/abc123/i)).toBeInTheDocument();
   });
 
   it('renders array of primitive values', () => {
     render(<>{renderKeyValueList({ items: ['a', 'b', 'c'] })}</>);
-    expect(screen.getByText('items')).toBeInTheDocument();
+    expect(screen.getByText('Items')).toBeInTheDocument();
     expect(screen.getByText(/a/i)).toBeInTheDocument();
     expect(screen.getByText(/b/i)).toBeInTheDocument();
     expect(screen.getByText(/c/i)).toBeInTheDocument();
@@ -44,15 +44,15 @@ describe('renderKeyValueList', () => {
       { name: 'file2.txt', size: '3MB' },
     ];
     render(<>{renderKeyValueList({ files: arr })}</>);
-    expect(screen.getByText('files')).toBeInTheDocument();
-    expect(screen.getAllByText(/name/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('Files')).toBeInTheDocument();
+    expect(screen.getAllByText(/Name/i).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText(/file1.txt/i)).toBeInTheDocument();
     expect(screen.getByText(/file2.txt/i)).toBeInTheDocument();
   });
 
   it('handles null values gracefully', () => {
     render(<>{renderKeyValueList({ nullValue: null })}</>);
-    expect(screen.getByText('nullValue')).toBeInTheDocument();
+    expect(screen.getByText('Null value')).toBeInTheDocument();
   });
 
   it('renders deeply nested structures', () => {
@@ -64,8 +64,8 @@ describe('renderKeyValueList', () => {
         },
       },
     };
-    render(<>{renderKeyValueList({ 'build Info': data })}</>);
-    expect(screen.getByText('build Info')).toBeInTheDocument();
+    render(<>{renderKeyValueList({ 'Build Info': data })}</>);
+    expect(screen.getByText('Build info')).toBeInTheDocument();
     expect(screen.getByText(/commit/i)).toBeInTheDocument();
     expect(screen.getByText(/abc123/i)).toBeInTheDocument();
   });
