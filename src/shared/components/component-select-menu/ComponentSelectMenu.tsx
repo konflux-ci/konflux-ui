@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Divider,
   MenuGroup,
@@ -9,7 +9,7 @@ import {
   SearchInput,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { flatten } from 'lodash-es';
+import { flatten, isArray } from 'lodash-es';
 import SelectComponentsDropdown from './SelectComponnetsDropdown';
 import './ComponentSelectMenu.scss';
 
@@ -23,6 +23,10 @@ type ComponentSelectMenuProps = {
   defaultToggleText?: string;
   selectedToggleText?: string | ((value: string | string[]) => string);
   title?: string;
+  defaultPlaceholderText?: string;
+  defaultAriaLabel?: string;
+  linkedSecrets?: (data: string[]) => void;
+  entity?: string;
 };
 
 export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
@@ -34,10 +38,18 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   includeSelectAll = false,
   defaultToggleText = 'Select components',
   selectedToggleText = 'Select components',
+  defaultPlaceholderText = 'Search components...',
+  defaultAriaLabel = 'Search components',
+  linkedSecrets,
+  entity,
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const isGrouped = typeof options === 'object' && !Array.isArray(options);
+
+  useEffect(() => {
+    if (isArray(value) && entity === 'secret') linkedSecrets(value);
+  }, [value, linkedSecrets, entity]);
 
   const allItems = React.useMemo(() => {
     if (isGrouped) {
@@ -54,9 +66,9 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
     if (includeSelectAll && item === 'select-all') {
       if (!isMulti) return;
       const selectable = allItems?.filter((v) => !isItemDisabled(v));
-      const selectedCount = Array.isArray(value) ? value.length : 0;
+      const selectedCount = Array.isArray(value) ? value?.length : 0;
 
-      if (selectedCount === selectable.length) {
+      if (selectedCount === selectable?.length) {
         void setValue([]);
       } else {
         void setValue(selectable);
@@ -113,8 +125,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               type="text"
               value={searchQuery}
               onChange={(_, v) => setSearchQuery(v)}
-              placeholder="Search components..."
-              aria-label="Search components"
+              placeholder={defaultPlaceholderText}
+              aria-label={defaultAriaLabel}
             />
           </MenuSearchInput>
         </MenuSearch>
@@ -167,6 +179,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               <MenuItem
                 key={item}
                 itemId={item}
+                hasCheckbox={isMulti}
+                isSelected={isSelected(item)}
                 selected={!isMulti && isSelected(item)}
                 isDisabled={isItemDisabled(item)}
               >
