@@ -7,61 +7,110 @@ export const pipelineRunTableColumnClasses = {
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  workspace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   kebab: 'pf-v5-c-table__action',
 };
 
-const createPipelineRunListHeader = (showVulnerabilities: boolean) => () => {
-  return [
-    {
-      title: 'Name',
-      props: {
-        className: pipelineRunTableColumnClasses.name,
-      },
-    },
-    {
-      title: 'Started',
-      props: { className: pipelineRunTableColumnClasses.started },
-    },
-    ...(showVulnerabilities
-      ? [
-          {
-            title: 'Fixable vulnerabilities',
-            props: { className: pipelineRunTableColumnClasses.vulnerabilities },
-          },
-        ]
-      : []),
-    {
-      title: 'Duration',
-      props: { className: pipelineRunTableColumnClasses.duration },
-    },
-    {
-      title: 'Status',
-      props: { className: pipelineRunTableColumnClasses.status },
-    },
-    {
-      title: <div>Test result</div>,
-      props: {
-        className: 'pf-m-width-10 pf-m-width-5-on-xl',
-        info: {
-          popover: 'The test result is the TEST_OUTPUT of the pipeline run integration test.',
+const createPipelineRunListHeader =
+  (
+    showVulnerabilities: boolean,
+    showWorkspace: boolean,
+    showTestResult: boolean,
+    showComponent: boolean,
+    showSnapshot: boolean,
+  ) =>
+  () => {
+    return [
+      {
+        title: 'Name',
+        props: {
+          className: pipelineRunTableColumnClasses.name,
         },
       },
-    },
-    {
-      title: 'Type',
-      props: { className: pipelineRunTableColumnClasses.type },
-    },
-    {
-      title: 'Component',
-      props: { className: pipelineRunTableColumnClasses.component },
-    },
-    {
-      title: ' ',
-      props: { className: pipelineRunTableColumnClasses.kebab },
-    },
-  ];
-};
+      {
+        title: 'Started',
+        props: { className: pipelineRunTableColumnClasses.started },
+      },
+      ...(showVulnerabilities
+        ? [
+            {
+              title: 'Fixable vulnerabilities',
+              props: { className: pipelineRunTableColumnClasses.vulnerabilities },
+            },
+          ]
+        : []),
+      {
+        title: 'Duration',
+        props: { className: pipelineRunTableColumnClasses.duration },
+      },
+      {
+        title: 'Status',
+        props: { className: pipelineRunTableColumnClasses.status },
+      },
+      ...(showTestResult
+        ? [
+            {
+              title: <div>Test result</div>,
+              props: {
+                className: 'pf-m-width-10 pf-m-width-5-on-xl',
+                info: {
+                  popover:
+                    'The test result is the TEST_OUTPUT of the pipeline run integration test.',
+                },
+              },
+            },
+          ]
+        : []),
+      {
+        title: 'Type',
+        props: { className: pipelineRunTableColumnClasses.type },
+      },
+      ...(showComponent
+        ? [
+            {
+              title: 'Component',
+              props: { className: pipelineRunTableColumnClasses.component },
+            },
+          ]
+        : []),
+      ...(showSnapshot
+        ? [
+            {
+              title: 'Snapshot',
+              props: { className: pipelineRunTableColumnClasses.snapshot },
+            },
+          ]
+        : []),
+      ...(showWorkspace
+        ? [
+            {
+              title: 'Workspace',
+              props: { className: pipelineRunTableColumnClasses.workspace },
+            },
+          ]
+        : []),
+      {
+        title: ' ',
+        props: { className: pipelineRunTableColumnClasses.kebab },
+      },
+    ];
+  };
 
-export const PipelineRunListHeader = createPipelineRunListHeader(false);
+export const PipelineRunListHeader = createPipelineRunListHeader(false, false, true, true, false);
 
-export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHeader(true);
+export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHeader(
+  true,
+  false,
+  true,
+  true,
+  false,
+);
+
+export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
+  false,
+  true,
+  false,
+  false,
+  true,
+);

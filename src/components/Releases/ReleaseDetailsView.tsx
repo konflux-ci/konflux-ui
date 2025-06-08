@@ -77,6 +77,10 @@ const ReleaseDetailsView: React.FC = () => {
           label: 'Overview',
           isFilled: true,
         },
+        {
+          key: 'pipelineruns',
+          label: 'Pipeline runs',
+        },
       ]}
     />
   );
