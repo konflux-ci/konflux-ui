@@ -180,7 +180,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showComponent ? (
         <TableData className={pipelineRunTableColumnClasses.component}>
-          {capitalize(namespace)}
+          {capitalize(release.metadata.name)}
         </TableData>
       ) : null}
 
