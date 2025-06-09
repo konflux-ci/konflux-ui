@@ -121,6 +121,24 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     [componentsWithLatestBuild, statusFilter, nameFilter],
   );
 
+  // Sort the components by completion time - new to old
+  const sortedFilteredComponents = React.useMemo(() => {
+    return filteredComponents.sort((a, b) => {
+      const dateA = a.latestBuildPipelineRun?.status?.completionTime;
+      const dateB = b.latestBuildPipelineRun?.status?.completionTime;
+
+      // If both dates are undefined, maintain original order
+      if (!dateA && !dateB) return 0;
+      // If only dateA is undefined, move it to the end
+      if (!dateA) return 1;
+      // If only dateB is undefined, move it to the end
+      if (!dateB) return -1;
+
+      // Both dates exist, compare them using string comparison for ISO 8601 timestamps
+      return dateB.localeCompare(dateA);
+    });
+  }, [filteredComponents]);
+
   const statusFilterObj = React.useMemo(
     () =>
       createFilterObj(
@@ -297,7 +315,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       <div data-test="component-list">
         <Table
           virtualize={false}
-          data={filteredComponents}
+          data={sortedFilteredComponents}
           unfilteredData={componentsWithLatestBuild}
           EmptyMsg={EmptyMessage}
           NoDataEmptyMsg={NoDataEmptyMessage}
