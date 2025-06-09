@@ -2,6 +2,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, render, fireEvent, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { useSecrets } from '../../../hooks/useSecrets';
@@ -51,7 +52,7 @@ jest.mock('../../../shared/components/table', () => {
       const { data, filters, selected, match, kindObj } = props;
       const cProps = { data, filters, selected, match, kindObj };
       const columns = props.Header(cProps);
-      const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
+      const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
 
       return (
         <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
@@ -157,7 +158,7 @@ describe('Secrets List', () => {
   });
 });
 
-describe('Secrets List With Components', () => {
+describe('Secrets List With Components and Status', () => {
   beforeEach(() => {
     mockUseIsOnFeatureFlag.mockReturnValue(true);
     useSecretsMock.mockReturnValue([
@@ -197,6 +198,7 @@ describe('Secrets List With Components', () => {
     screen.getByText('Image pull');
     screen.getByText('Components');
     expect(screen.getByTestId('components-content')).toHaveTextContent('2');
+    screen.getByText('Status');
   });
 
   it('should render all the remote secrets with loading components in the namespace', () => {
@@ -207,6 +209,7 @@ describe('Secrets List With Components', () => {
     });
     render(SecretsList);
     screen.getByText('Components');
+    screen.getByText('Status');
     screen.getByRole('progressbar');
   });
 

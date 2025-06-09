@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Button,
   ButtonVariant,
@@ -13,7 +13,6 @@ import {
 } from '@patternfly/react-core';
 import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import { css } from '@patternfly/react-styles';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { HttpError } from '../../k8s/error';
 
 import '../../shared/components/empty-state/EmptyState.scss';
@@ -25,6 +24,11 @@ type NoAccessStateProps = {
   children?: React.ReactNode;
 } & Omit<EmptyStateProps, 'children'>;
 
+const getAccessedNamespace = (pathname: string) => {
+  const pathnameParts = pathname.split('/');
+  return pathnameParts.length >= 3 && pathnameParts[1] === 'ns' ? pathnameParts[2] : undefined;
+};
+
 const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
   title,
   body,
@@ -33,7 +37,9 @@ const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
   ...props
 }) => {
   const navigate = useNavigate();
-  const namespace = useNamespace();
+  const { pathname } = useLocation();
+  const accessedNamespace = getAccessedNamespace(pathname);
+
   return (
     <EmptyState
       className={css('app-empty-state', className)}
@@ -48,7 +54,9 @@ const NoAccessState: React.FC<React.PropsWithChildren<NoAccessStateProps>> = ({
       />
       <EmptyStateBody>
         {body ||
-          `Ask the administrator or the owner of the ${namespace} namespace for access permissions.`}
+          (accessedNamespace
+            ? `Ask the administrator or the owner of the '${accessedNamespace}' namespace for access permissions.`
+            : "You don't have access to this page.")}
       </EmptyStateBody>
       <EmptyStateFooter>
         {children || (

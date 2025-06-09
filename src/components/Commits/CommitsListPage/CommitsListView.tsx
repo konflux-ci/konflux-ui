@@ -23,6 +23,7 @@ interface CommitsListViewProps {
 
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
+  componentName,
 }) => {
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -34,7 +35,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const { name: nameFilter, status: statusFilter } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    useBuildPipelines(namespace, applicationName, undefined);
+    useBuildPipelines(
+      namespace,
+      applicationName,
+      undefined,
+      !!componentName,
+      componentName ? [componentName] : undefined,
+    );
 
   const commits = React.useMemo(
     () => (loaded && pipelineRuns && getCommitsFromPLRs(pipelineRuns)) || [],

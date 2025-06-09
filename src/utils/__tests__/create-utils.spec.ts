@@ -19,6 +19,7 @@ import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
 import { SecretTypeDropdownLabel, SourceSecretType } from '../../types';
+import { queueInstance } from '../async-queue';
 import {
   createApplication,
   createComponent,
@@ -40,6 +41,7 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
     linkSecretToServiceAccount: jest.fn(),
     linkSecretToBuildServiceAccount: jest.fn(),
     linkSecretToServiceAccounts: jest.fn(),
+    updateAnnotateForSecret: jest.fn(),
   };
 });
 
@@ -525,17 +527,39 @@ describe('create-utils addSecrets', () => {
   });
 });
 
-describe('create-utils addSecretWithLinkingComponents', () => {
-  it('should not call linkToServiceAccounts without secret link option and components', async () => {
-    linkSecretToServiceAccountsMock.mockClear();
-    await addSecretWithLinkingComponents(addSecretFormValues, 'test-ns');
-    expect(createResourceMock).toHaveBeenCalled();
+jest.mock('../task-store', () => ({
+  useTaskStore: {
+    getState: jest.fn(() => ({
+      setTaskStatus: jest.fn(),
+      clearTask: jest.fn(),
+    })),
+  },
+  BackgroundJobStatus: {
+    Running: 'Running',
+    Successed: 'Successed',
+    Pending: 'Pending',
+  },
+}));
 
-    expect(linkSecretToServiceAccountsMock).not.toHaveBeenCalled();
+const enqueueSpy = jest.spyOn(queueInstance, 'enqueue').mockImplementation(async (task) => {
+  await task(); // simulate task execution
+});
+
+describe('create-utils addSecretWithLinkingComponents', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    createResourceMock.mockResolvedValue({
+      metadata: { name: 'test-secret' },
+    });
+  });
+
+  it('should not call linkToServiceAccounts without secret link option and components', async () => {
+    await addSecretWithLinkingComponents({ ...addSecretFormValues }, 'test-ns');
+    expect(createResourceMock).toHaveBeenCalled();
+    expect(enqueueSpy).not.toHaveBeenCalled();
   });
 
   it('should call linkToServiceAccounts with secret link option', async () => {
-    linkSecretToServiceAccountsMock.mockClear();
     const updatedAddSecretFormValues = {
       ...addSecretFormValues,
       secretForComponentOption: SecretForComponentOption.all,
@@ -543,8 +567,10 @@ describe('create-utils addSecretWithLinkingComponents', () => {
     };
 
     await addSecretWithLinkingComponents(updatedAddSecretFormValues, 'test-ns');
+
     expect(createResourceMock).toHaveBeenCalled();
-    expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
+    expect(enqueueSpy).toHaveBeenCalled();
+    expect(enqueueSpy).toHaveBeenCalledWith(expect.any(Function));
   });
 
   it('should call linkToServiceAccounts with relatedComponents', async () => {
@@ -557,7 +583,8 @@ describe('create-utils addSecretWithLinkingComponents', () => {
 
     await addSecretWithLinkingComponents(updatedAddSecretFormValues, 'test-ns');
     expect(createResourceMock).toHaveBeenCalled();
-    expect(linkSecretToServiceAccountsMock).toHaveBeenCalled();
+    expect(enqueueSpy).toHaveBeenCalled();
+    expect(enqueueSpy).toHaveBeenCalledWith(expect.any(Function));
   });
 });
 

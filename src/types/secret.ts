@@ -21,6 +21,8 @@ export type ImportSecret = {
       readOnlyKey?: boolean;
     }[];
   };
+  relatedComponents?: [];
+  secretForComponentOption?: null | SecretForComponentOption;
 };
 
 export enum SecretSPILabel {

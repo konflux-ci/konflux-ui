@@ -249,4 +249,20 @@ describe('CommitsListView', () => {
     render(<CommitsList />);
     expect(screen.getByTestId('data-table-skeleton')).toBeVisible();
   });
+
+  it('should call useBuildPipelines with componentName when provided', () => {
+    render(
+      <FilterContextProvider filterParams={['name', 'status']}>
+        <CommitsListView applicationName="purple-mermaid-app" componentName="sample-component" />
+      </FilterContextProvider>,
+    );
+
+    expect(useBuildPipelinesMock).toHaveBeenCalledWith(
+      'test-ns', // namespace
+      'purple-mermaid-app', // applicationName
+      undefined, // commit
+      true, // includeComponents
+      ['sample-component'], // componentNames
+    );
+  });
 });

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { Table } from '../../../shared';
 import { SecretKind } from '../../../types';
@@ -12,7 +13,7 @@ type SecretsListProps = {
 };
 
 const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secrets }) => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const Header = isBuildServiceAccountFeatureOn
     ? SecretsListHeaderWithComponents
     : SecretsListHeader;
