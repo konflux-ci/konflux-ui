@@ -14,7 +14,7 @@ import {
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
-import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
+import { APPLICATION_RELEASE_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -23,6 +23,7 @@ import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 
 const ReleaseOverviewTab: React.FC = () => {
+  const { applicationName } = useParams<RouterParams>();
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release] = useRelease(namespace, releaseName);
@@ -66,7 +67,17 @@ const ReleaseOverviewTab: React.FC = () => {
             </DescriptionListGroup>
             <DescriptionListGroup>
               <DescriptionListTerm>Release Plan</DescriptionListTerm>
-              <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
+              <DescriptionListDescription>
+                <Link
+                  to={APPLICATION_RELEASE_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName,
+                    releaseName: release.metadata.name,
+                  })}
+                >
+                  {release.spec.releasePlan}
+                </Link>
+              </DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
               <DescriptionListTerm>Release Target (Managed Workspace)</DescriptionListTerm>
@@ -107,7 +118,9 @@ const ReleaseOverviewTab: React.FC = () => {
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Release Trigger</DescriptionListTerm>
-                <DescriptionListDescription>{release.status?.automated ? 'Automatic' : 'Manual'}</DescriptionListDescription>
+                <DescriptionListDescription>
+                  {release.status?.automated ? 'Automatic' : 'Manual'}
+                </DescriptionListDescription>
               </DescriptionListGroup>
               {release.spec.snapshot && releasePlanLoaded && (
                 <DescriptionListGroup>
