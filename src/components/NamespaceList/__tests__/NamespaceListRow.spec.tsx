@@ -50,4 +50,27 @@ describe('NamespaceListRow', () => {
 
     expect(screen.getByText('Loading application count')).toBeInTheDocument();
   });
+
+  it('should pluralize application count ', () => {
+    (useApplications as jest.Mock).mockReturnValueOnce([[{}], true]);
+
+    const { rerender } = routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    expect(screen.getByText('1 Application')).toBeInTheDocument();
+    (useApplications as jest.Mock).mockReturnValueOnce([[{}, {}], true]);
+
+    rerender(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    expect(screen.getByText('2 Applications')).toBeInTheDocument();
+  });
+
+  it('should make the namespace name a clickable link to the correct target', () => {
+    (useApplications as jest.Mock).mockReturnValue([[], true]);
+
+    routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    const namespaceName = screen.getByText('test-namespace');
+    expect(namespaceName.closest('a')).toHaveAttribute('href', '/ns/test-namespace/applications');
+    expect(namespaceName.closest('a')).toHaveAttribute('title', 'Go to this namespace');
+  });
 });
