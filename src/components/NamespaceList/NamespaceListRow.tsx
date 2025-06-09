@@ -48,7 +48,12 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
   return (
     <>
       <TableData className={namespaceTableColumnClasses.name} data-test="app-row-test-id">
-        {obj.metadata.name}
+        <Link
+          to={APPLICATION_LIST_PATH.createPath({ workspaceName: obj.metadata.name })}
+          title="Go to this namespace"
+        >
+          {obj.metadata.name}
+        </Link>
       </TableData>
       <TableData className={namespaceTableColumnClasses.applications}>
         {loaded ? (

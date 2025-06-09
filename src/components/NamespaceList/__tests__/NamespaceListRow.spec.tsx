@@ -64,6 +64,19 @@ describe('NamespaceListRow', () => {
 
     expect(screen.getByText('Go to the namespace')).toBeInTheDocument();
   });
+
+  it('should make the namespace name a clickable link to the same target as the button', () => {
+    (useApplications as jest.Mock).mockReturnValue([[], true]);
+
+    routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    // Debug: log the DOM output
+    screen.debug();
+
+    const namespaceName = screen.getByText('test-namespace');
+    expect(namespaceName.closest('a')).toHaveAttribute('href', '/ns/test-namespace/applications');
+    expect(namespaceName.closest('a')).toHaveAttribute('title', 'Go to this namespace');
+  });
 });
 
 describe('NamespaceButton', () => {
