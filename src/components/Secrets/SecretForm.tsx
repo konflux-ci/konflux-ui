@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
-import { FIELD_SECRET_FOR_COMPONENT_OPTION } from '~/consts/secrets';
+import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { DropdownItemObject } from '../../shared/components/dropdown';
@@ -150,6 +150,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
         <SecretLinkOptions
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}
+          radioLabels={SecretLinkOptionLabels.forImportSecret}
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
