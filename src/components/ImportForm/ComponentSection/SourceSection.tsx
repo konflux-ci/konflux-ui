@@ -11,14 +11,30 @@ import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
 export const SourceSection = () => {
-  const [, { touched, error }] = useField('source.git.url');
+  const [field, { touched, error }] = useField('source.git.url');
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(true);
-  const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
+  const { touched: touchedValues, setFieldValue,setFieldError } = useFormikContext<ImportFormValues>();
   const validated = touched
     ? touched && !error
       ? ValidatedOptions.success
       : ValidatedOptions.error
     : ValidatedOptions.default;
+
+
+  React.useEffect(()=>{
+    if(!field.value){
+      setFieldError("source.git.url","Required")
+    }
+    else if(!(/^https?:\/\//).test(field.value)){
+      setFieldError("source.git.url","Must include a protocol (https://)")
+    }
+    else if(!(/^(https?:\/\/)?(github|gitlab|bitbucket)\.com/).test(field.value)){
+        setFieldError("source.git.url","Must include a domain (github/gitlab)")
+    }
+    else if(!(/^https?:\/\/(github|gitlab|bitbucket)\.com\/[\w.-]+\/[\w.-]/).test(field.value)){
+        setFieldError("source.git.url","User or repository name is missing")
+    }
+  },[error,field,setFieldError])
 
   function generateRandomString(): string {
     let uniqueName: string;
