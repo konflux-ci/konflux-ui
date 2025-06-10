@@ -1,4 +1,5 @@
 import { SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import { LinkSecretView } from '~/components/Components/LinkSecret/LinkSecretView';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 
 export const LinkedSecretsToolbar: React.FC = () => {
@@ -21,6 +22,9 @@ export const LinkedSecretsToolbar: React.FC = () => {
             onChange={(_, name) => setNameFilter(name)}
             value={nameFilter}
           />
+        </ToolbarItem>
+        <ToolbarItem>
+          <LinkSecretView />
         </ToolbarItem>
       </ToolbarContent>
     </Toolbar>

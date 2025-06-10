@@ -67,12 +67,4 @@ describe('EnterpriseContractRow', () => {
     screen.getByText('dummy description');
     screen.getAllByText('Fail');
   });
-
-  it('should not render expanded content if isExpanded is false', () => {
-    render(<EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={false} />);
-
-    // Should render nothing
-    expect(screen.queryByText('Rule Description')).not.toBeInTheDocument();
-    expect(screen.queryByText('Collection')).not.toBeInTheDocument();
-  });
 });

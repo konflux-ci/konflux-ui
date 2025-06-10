@@ -3,11 +3,14 @@ import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import {
   addCommonSecretLabelToBuildSecret,
-  isLinkableSecret,
   linkSecretToBuildServiceAccount,
   linkSecretToServiceAccount,
   linkSecretToServiceAccounts,
+  updateAnnotateForSecret,
 } from '~/components/Secrets/utils/service-account-utils';
+import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
+import { HttpError } from '~/k8s/error';
 import {
   getAnnotationForSecret,
   getLabelsForSecret,
@@ -43,12 +46,14 @@ import {
 } from '../types';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
+import { queueInstance } from './async-queue';
 import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
+import { BackgroundJobStatus, useTaskStore } from './task-store';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 /**
@@ -392,6 +397,78 @@ export const createSecretResource = async (
   });
 };
 
+export const enqueueLinkingTask = async (
+  secret: SecretKind,
+  relatedComponents: string[],
+  option: SecretForComponentOption,
+  componentName?: string,
+) => {
+  const { setTaskStatus } = useTaskStore.getState();
+  const taskId = `${secret.metadata.name}`;
+  setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Pending);
+  await updateAnnotateForSecret(secret, LINKING_STATUS_ANNOTATION, BackgroundJobStatus.Pending);
+
+  queueInstance.enqueue(async () => {
+    setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Running);
+    await updateAnnotateForSecret(secret, LINKING_STATUS_ANNOTATION, BackgroundJobStatus.Running);
+
+    try {
+      await linkSecretToServiceAccounts(secret, relatedComponents, option);
+
+      // If it is a imported build secret, we need to add label & link to
+      // just created component
+      if (option === SecretForComponentOption.all && componentName) {
+        await addCommonSecretLabelToBuildSecret(secret);
+      }
+
+      const createdComponent = await K8sGetResource<ComponentKind>({
+        model: ComponentModel,
+        queryOptions: { name: componentName, ns: secret.metadata.namespace },
+      });
+
+      if (createdComponent) {
+        await linkSecretToBuildServiceAccount(secret, createdComponent);
+      }
+
+      setTaskStatus(taskId, BackgroundTaskInfo.SecretTask.action, BackgroundJobStatus.Succeeded);
+      // remove annotation error for editing secrets in the furture
+      await updateAnnotateForSecret(secret, LINKING_ERROR_ANNOTATION);
+      await updateAnnotateForSecret(
+        secret,
+        LINKING_STATUS_ANNOTATION,
+        BackgroundJobStatus.Succeeded,
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to link secret:', err);
+      const httpError = err as HttpError;
+
+      const errMessage = Array.isArray(httpError)
+        ? httpError.map((e) => e.error?.json?.message).join('\n')
+        : httpError?.message || 'Unkown Error';
+
+      setTaskStatus(
+        taskId,
+        BackgroundTaskInfo.SecretTask.action,
+        BackgroundJobStatus.Failed,
+        errMessage,
+      );
+
+      try {
+        await updateAnnotateForSecret(
+          secret,
+          LINKING_STATUS_ANNOTATION,
+          BackgroundJobStatus.Failed,
+        );
+        await updateAnnotateForSecret(secret, LINKING_ERROR_ANNOTATION, errMessage);
+      } catch (annotateErr) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to annotate secret with error:', annotateErr);
+      }
+    }
+  });
+};
+
 export const createSecretResourceWithLinkingComponents = async (
   values: AddSecretFormValues,
   namespace: string,
@@ -414,19 +491,23 @@ export const createSecretResourceWithLinkingComponents = async (
     },
   };
 
+  const createdSecret = await K8sQueryCreateResource({
+    model: SecretModel,
+    resource: k8sSecretResource,
+    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
+  });
+
+  if (!createdSecret || dryRun) return createdSecret;
+
   if (values.secretForComponentOption) {
-    await linkSecretToServiceAccounts(
+    void enqueueLinkingTask(
       secretResource,
       values.relatedComponents,
       values.secretForComponentOption,
     );
   }
 
-  return await K8sQueryCreateResource({
-    model: SecretModel,
-    resource: k8sSecretResource,
-    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
-  });
+  return createdSecret;
 };
 
 export const addSecret = async (values: AddSecretFormValues, namespace: string) => {
@@ -469,32 +550,13 @@ export const createSecretWithLinkingComponents = async (
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
 
-  if (!createdSecret || dryRun) {
-    return createdSecret;
-  }
-
-  if (secret.secretForComponentOption) {
-    await linkSecretToServiceAccounts(
+  if (!dryRun && secret.secretForComponentOption) {
+    void enqueueLinkingTask(
       createdSecret,
-      secret.relatedComponents,
+      secret.relatedComponents as string[],
       secret.secretForComponentOption,
+      componentName,
     );
-  }
-
-  if (secret.secretForComponentOption === SecretForComponentOption.all) {
-    await addCommonSecretLabelToBuildSecret(createdSecret);
-  }
-
-  if (isLinkableSecret(createdSecret)) {
-    const createdComponent = await K8sGetResource<ComponentKind>({
-      model: ComponentModel,
-      queryOptions: { name: componentName, ns: namespace },
-    });
-
-    // As default, importing linkable secret would link to the created component build sa.
-    if (createdComponent) {
-      await linkSecretToBuildServiceAccount(createdSecret, createdComponent);
-    }
   }
 
   return createdSecret;
