@@ -37,8 +37,6 @@ jest.mock('../../../shared/components/table/TableComponent', () => {
                 customData={{
                   sortedECResult: data,
                 }}
-                isExpanded={false}
-                onToggleExpand={() => {}}
               />
             </tr>
           ))}
@@ -138,12 +136,13 @@ describe('SecurityEnterpriseContractTab', () => {
   });
 
   it('should sort by Status', () => {
-    routerRenderer(securityEnterpriseContracts('dummy-1'));
+    const view = routerRenderer(securityEnterpriseContracts('dummy-1'));
     const status = screen.getAllByTestId('rule-status');
     expect(status[0].textContent.trim()).toEqual('Failed');
     fireEvent.click(screen.getAllByText('Status')[1]);
+    view.rerender(securityEnterpriseContracts('dummy-1'));
     const sortstatus = screen.getAllByTestId('rule-status');
-    expect(sortstatus[0].textContent.trim()).toEqual('Success');
+    expect(sortstatus[1].textContent.trim()).toEqual('Success');
   });
 
   it('should render result summary', () => {

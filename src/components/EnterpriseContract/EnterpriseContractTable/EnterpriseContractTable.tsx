@@ -70,23 +70,6 @@ export const EnterpriseContractTable: React.FC<
       : undefined;
   }, [activeSortDirection, activeSortIndex, ecResult]);
 
-  // We have to add the expand control here to ensure it works for every row.
-  // const [expandedRowIndex, setExpandedRowIndex] = React.useState<number | null>(null);
-
-  const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
-
-  const toggleRow = (index: number) => {
-    setExpandedRowIndexes((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
-
   return sortedECResult ? (
     <div className="pf-v5-c-table pf-m-compact pf-m-grid-md">
       <Table
@@ -94,33 +77,20 @@ export const EnterpriseContractTable: React.FC<
         data={sortedECResult}
         aria-label="ec table"
         Header={EnterpriseContractHeader}
-        expandedRowIndexes={expandedRowIndexes}
         ExpandedContent={(props) => {
           const obj = props.obj as UIEnterpriseContractData;
-          const rowIndex = sortedECResult.findIndex((r) => r === obj);
-          const isExpanded = expandedRowIndexes.has(rowIndex);
-          return isExpanded ? (
-            <EnterpriseContractExpandedRowContent {...props} obj={obj} isExpanded={isExpanded} />
-          ) : null;
+          return <EnterpriseContractExpandedRowContent {...props} obj={obj} />;
         }}
         Row={(props) => {
           const obj = props.obj as UIEnterpriseContractData;
-          const rowIndex = sortedECResult.findIndex((r) => r === obj);
-          const isExpanded = expandedRowIndexes.has(rowIndex);
 
           return (
-            <WrappedEnterpriseContractRow
-              {...props}
-              obj={obj}
-              isExpanded={isExpanded}
-              onToggleExpand={() => toggleRow(rowIndex)}
-              customData={{ sortedECResult }}
-            />
+            <WrappedEnterpriseContractRow {...props} obj={obj} customData={{ sortedECResult }} />
           );
         }}
         loaded
         customData={{ sortedECResult }}
-        expand={true}
+        expand
       />
     </div>
   ) : null;

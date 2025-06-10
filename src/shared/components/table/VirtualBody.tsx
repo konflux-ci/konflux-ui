@@ -1,9 +1,14 @@
 import * as React from 'react';
 import { CellMeasurerCache, CellMeasurer } from 'react-virtualized';
+import { Button } from '@patternfly/react-core';
+import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
+import { AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons/angle-right-icon';
 import { VirtualTableBody } from '@patternfly/react-virtualized-extension';
 import { Scroll } from '@patternfly/react-virtualized-extension/dist/js/components/Virtualized/types';
 import { K8sResourceCommon } from '../../../types/k8s';
+import { TableData } from './TableData';
 import { TableRow, TableRowProps } from './TableRow';
+import './Table.scss';
 
 export type VirtualBodyProps<D = unknown, C = unknown> = {
   customData?: C;
@@ -33,9 +38,37 @@ export type RowFunctionArgs<T = unknown, C = unknown> = {
   customData?: C;
 };
 
-const RowMemo = React.memo<RowFunctionArgs & { Row: React.FC<RowFunctionArgs> }>(
-  ({ Row, ...props }) => <Row {...props} />,
-);
+const RowMemo = React.memo<
+  RowFunctionArgs & {
+    Row: React.FC<RowFunctionArgs>;
+    expand: boolean;
+    isExpanded: boolean;
+    onToggle: (index: number) => void;
+    index: number;
+  }
+>(({ Row, expand, isExpanded, onToggle, index, ...props }) => {
+  if (expand) {
+    return (
+      <>
+        <TableData
+          data-test="virtual-body-expand-row"
+          className="pf-m-width-5 virtual-body-expanded-row-vertical-center-cell"
+        >
+          <Button
+            className="pf-v5-c-button pf-m-plain"
+            variant="plain"
+            onClick={() => onToggle?.(index)}
+            style={{ display: 'flex' }}
+          >
+            {isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
+          </Button>
+        </TableData>
+        <Row {...props} />
+      </>
+    );
+  }
+  return <Row {...props} />;
+});
 
 export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = (props) => {
   const {
@@ -51,7 +84,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     getRowProps,
     onRowsRendered,
     ExpandedContent,
-    expandedRowIndexes,
+    expand,
   } = props;
 
   const cellMeasurementCache = React.useMemo(() => {
@@ -63,6 +96,20 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     });
   }, [props?.data]);
 
+  const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
+
+  const toggleRow = (index: number) => {
+    setExpandedRowIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const listRef = React.useRef<any>(null);
   const prevExpandedRowIndexes = React.useRef<Set<number>>(new Set());
@@ -71,19 +118,17 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     const prev = prevExpandedRowIndexes.current;
     const next = expandedRowIndexes ?? new Set();
 
+    // determine what's changed
     const collapsed = [...prev].filter((idx) => !next.has(idx));
-    const expanded = [...next];
+    const expanded = [...next].filter((idx) => !prev.has(idx));
+    const changedIndexes = [...collapsed, ...expanded];
 
-    // Clear both collapsed and newly expanded rows
-    [...collapsed, ...expanded].forEach((index) => {
+    changedIndexes.forEach((index) => {
       cellMeasurementCache.clear(index);
-    });
-
-    [...collapsed, ...expanded].forEach((index) => {
       listRef.current?.recomputeRowHeights(index);
     });
 
-    // Update ref for next comparison
+    // update ref for next comparison
     prevExpandedRowIndexes.current = new Set(next);
 
     // ⚠️ DO NOT include `cellMeasurementCache` in the deps array.
@@ -121,7 +166,14 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
           >
             <div style={style}>
               <TableRow {...rowProps} id={rowId} index={index} trKey={key} style={{}}>
-                <RowMemo Row={Row} {...rowArgs} />
+                <RowMemo
+                  Row={Row}
+                  {...rowArgs}
+                  expand={expand}
+                  index={index}
+                  onToggle={toggleRow}
+                  isExpanded={isExpanded}
+                />
               </TableRow>
               {ExpandedContent && isExpanded && (
                 <div key={`expanded-${key}`}>
@@ -140,6 +192,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
       columns,
       customData,
       data,
+      expand,
       expandedRowIndexes,
       getRowProps,
     ],

@@ -12,21 +12,15 @@ import './EnterpriceContractTable.scss';
 
 interface Props {
   obj: UIEnterpriseContractData;
-  isExpanded: boolean;
 }
 
-export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj, isExpanded }) => {
-  if (!isExpanded) return null;
+export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj }) => {
   if (!obj.description && !obj.collection?.length && !obj.solution && !obj.timestamp) return null;
 
   return (
     <Tr className="ex-expanded-row" data-test="ec-expand-content">
       <ExpandableRowContent>
-        <DescriptionList
-          columnModifier={{ default: '3Col' }}
-          isAutoColumnWidths={false}
-          className="ec-description-list"
-        >
+        <DescriptionList className="ec-description-list">
           <DescriptionListGroup>
             <DescriptionListTerm>Rule Description</DescriptionListTerm>
             <DescriptionListDescription>{obj.description ?? '-'}</DescriptionListDescription>

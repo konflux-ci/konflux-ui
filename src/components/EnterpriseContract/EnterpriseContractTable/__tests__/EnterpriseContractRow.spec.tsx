@@ -17,7 +17,6 @@ jest.mock('react-router-dom', () => {
     useParams: jest.fn(() => ({ appName: 'application' })),
   };
 });
-const mockSetExpandedRowIndex = jest.fn();
 
 const dummySuccessRowData = {
   title: 'dummyTitle',
@@ -43,14 +42,7 @@ describe('EnterpriseContractRow', () => {
   mockUseNamespaceHook('test-ns');
 
   it('should render the component', () => {
-    render(
-      <WrappedEnterpriseContractRow
-        customData={customDummyData}
-        obj={dummySuccessRowData}
-        onToggleExpand={mockSetExpandedRowIndex}
-        isExpanded={false}
-      />,
-    );
+    render(<WrappedEnterpriseContractRow customData={customDummyData} obj={dummySuccessRowData} />);
     screen.getByText('dummyTitle');
     screen.getByText('component-1');
     screen.getByText('Success');
@@ -60,13 +52,8 @@ describe('EnterpriseContractRow', () => {
   it('should render Failed rule and failure message in table', () => {
     render(
       <>
-        <WrappedEnterpriseContractRow
-          customData={customDummyData}
-          obj={dumpFailRowData}
-          onToggleExpand={mockSetExpandedRowIndex}
-          isExpanded={true}
-        />
-        <EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={true} />
+        <WrappedEnterpriseContractRow customData={customDummyData} obj={dumpFailRowData} />
+        <EnterpriseContractExpandedRowContent obj={dumpFailRowData} />
       </>,
     );
     screen.getByText('dummyTitle');

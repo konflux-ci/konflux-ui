@@ -4,7 +4,6 @@
   padding-bottom: var(--pf-v5-global--spacer--md);
   padding-right: var(--pf-v5-global--spacer--md);
   padding-left: 4%; // to align with the "first content" column
-  background-color: var(--pf-v5-global--BackgroundColor--200);
 }
 
 .ec-description-list {
@@ -17,4 +16,13 @@
     white-space: normal;
     word-break: break-word;
   }
+}
+
+// ensures the expandable row content stretches to fill the remaining horizontal space
+.pf-v5-c-table__expandable-row-content {
+  flex: 1;
+}
+
+.vertical-center-cell {
+  align-self: center;
 }

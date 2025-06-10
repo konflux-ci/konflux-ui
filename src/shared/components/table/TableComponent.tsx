@@ -69,15 +69,23 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   onRowsRendered,
   infiniteLoaderProps,
   isInfiniteLoading,
-  expandedRowIndexes,
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
   //const [, setWindowWidth] = React.useState(window.innerWidth);
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
-    return [getActiveColumns(Header, cProps), cProps];
-  }, [data, unfilteredData, filters, selected, match, kindObj, Header]);
+    const expandColumn = [];
+    if (expand) {
+      expandColumn.push({
+        title: '',
+        props: {
+          style: { paddingLeft: '5%' },
+        },
+      });
+    }
+    return [[...expandColumn, ...getActiveColumns(Header, cProps)], cProps];
+  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header]);
 
   const ariaRowCount = data && data.length;
   const renderVirtualizedTable = (scrollContainer) => (
@@ -104,7 +112,6 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                         getRowProps={getRowProps}
                         onRowsRendered={handleRowsRendered}
                         ExpandedContent={ExpandedContent}
-                        expandedRowIndexes={expandedRowIndexes}
                       />
                     </div>
                   );
@@ -126,7 +133,6 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                   getRowProps={getRowProps}
                   onRowsRendered={onRowsRendered}
                   ExpandedContent={ExpandedContent}
-                  expandedRowIndexes={expandedRowIndexes}
                 />
               </div>
             )

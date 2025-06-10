@@ -3,7 +3,7 @@ import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
 import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
 
-const dumpFailRowData = {
+const rowContent = {
   title: 'dummyTitle',
   status: ENTERPRISE_CONTRACT_STATUS.violations,
   component: 'component-1',
@@ -13,11 +13,21 @@ const dumpFailRowData = {
   collection: ['abcd', 'efg'],
 };
 
+const invalidContent = {
+  title: null,
+  status: null,
+  component: null,
+  description: null,
+  msg: null,
+  timestamp: null,
+  collection: null,
+};
+
 describe('EnterpriseContractExpandedRowContent', () => {
   mockUseNamespaceHook('test-ns');
 
   it('should render the component', () => {
-    render(<EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={true} />);
+    render(<EnterpriseContractExpandedRowContent obj={rowContent} />);
     screen.getByText('Effective from');
     screen.getByText('Collection');
     screen.getByText('abcd, efg');
@@ -26,7 +36,7 @@ describe('EnterpriseContractExpandedRowContent', () => {
   });
 
   it('should not render the component', () => {
-    render(<EnterpriseContractExpandedRowContent obj={dumpFailRowData} isExpanded={false} />);
+    render(<EnterpriseContractExpandedRowContent obj={invalidContent} />);
     expect(screen.queryByText('Effective from')).not.toBeInTheDocument();
     expect(screen.queryByText('Collection')).not.toBeInTheDocument();
   });
