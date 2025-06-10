@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { Label, Popover, Spinner } from '@patternfly/react-core';
+import HelpPopover from '~/components/HelpPopover';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
+import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { SecretKind } from '../../../types/secret';
@@ -24,9 +28,16 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
       ? secretLabels.split(', ').map((s) => <Label key={s}>{s}</Label>)
       : secretLabels;
 
+  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
+  const taskError = task?.error ?? obj.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
+  const taskStatus =
+    task?.status ??
+    obj.metadata?.annotations?.[LINKING_STATUS_ANNOTATION] ??
+    BackgroundJobStatus.Succeeded;
+
   const { linkedServiceAccounts, isLoading, error } = useLinkedServiceAccounts(
     obj.metadata?.namespace || namespace,
-    obj.metadata.name,
+    obj,
     true,
   );
 
@@ -43,7 +54,7 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           <Popover
             triggerAction="hover"
             aria-label="Hoverable popover"
-            bodyContent={error?.message || 'Unknown Error'}
+            bodyContent={(error as HttpError)?.message || 'Unknown Error'}
           >
             <span>Error</span>
           </Popover>
@@ -54,6 +65,16 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           <span>{linkedServiceAccounts.length}</span>
         )}
       </TableData>
+      <TableData className={secretsTableColumnClasses.status} data-test="components-status">
+        <span>{taskStatus}</span>
+        {taskStatus === BackgroundJobStatus.Failed && taskError && (
+          <HelpPopover
+            headerContent="Error when linking secret"
+            bodyContent={<div style={{ whiteSpace: 'pre-line' }}>{taskError}</div>}
+          />
+        )}
+      </TableData>
+
       <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
       <TableData className={secretsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />

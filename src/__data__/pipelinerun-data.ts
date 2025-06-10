@@ -125,6 +125,10 @@ const samplePipelineSpec: PipelineSpec = {
   ],
 };
 
+const sampleAnnotations = {
+  'pipelinesascode.tekton.dev/git-provider': 'github',
+};
+
 const sampleLabels = {
   'app.kubernetes.io/managed-by': 'pipelinesascode.tekton.dev',
   'app.kubernetes.io/version': '0.10.2',
@@ -156,6 +160,7 @@ const samplePipelineRun: PipelineRunKind = {
     creationTimestamp: '2022-11-28T12:08:22Z',
     generateName: 'test-case',
     labels: sampleLabels,
+    annotations: sampleAnnotations,
     name: 'test-caseqfvdj',
     namespace: 'test-ns',
     uid: '21f9d031-528a-449b-90eb-106e22fcfa39',

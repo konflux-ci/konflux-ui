@@ -51,6 +51,8 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
       authType: SourceSecretType.basic,
     },
     existingSecrets,
+    relatedComponents: [],
+    secretForComponentOption: null,
   };
 
   return (

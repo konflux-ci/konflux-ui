@@ -3,7 +3,10 @@ import { useK8sWatchResource } from '../k8s';
 import { SecretGroupVersionKind, SecretModel } from '../models';
 import { SecretKind } from '../types';
 
-export const useSecrets = (namespace: string): [SecretKind[], boolean, unknown] => {
+export const useSecrets = (
+  namespace: string,
+  watch?: boolean,
+): [SecretKind[], boolean, unknown] => {
   const {
     data: secrets,
     isLoading,
@@ -13,6 +16,7 @@ export const useSecrets = (namespace: string): [SecretKind[], boolean, unknown] 
       groupVersionKind: SecretGroupVersionKind,
       namespace,
       isList: true,
+      watch,
     },
     SecretModel,
   );

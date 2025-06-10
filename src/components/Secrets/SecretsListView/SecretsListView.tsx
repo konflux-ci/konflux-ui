@@ -18,7 +18,7 @@ import SecretsList from './SecretsList';
 const SecretsListView: React.FC = () => {
   const namespace = useNamespace();
 
-  const [secrets, secretsLoaded] = useSecrets(namespace);
+  const [secrets, secretsLoaded] = useSecrets(namespace, true);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',

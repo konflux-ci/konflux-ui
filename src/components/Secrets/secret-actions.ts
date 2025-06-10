@@ -1,3 +1,4 @@
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { SecretModel } from '../../models';
 import { Action } from '../../shared/components/action-menu/types';
@@ -9,7 +10,7 @@ import { secretDeleteModal } from './secret-modal';
 export const useSecretActions = (secret: SecretKind): Action[] => {
   const showModal = useModalLauncher();
   const [canDelete] = useAccessReviewForModel(SecretModel, 'delete');
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   return [
     {
       cta: () => showModal(secretDeleteModal(secret, isBuildServiceAccountFeatureOn)),

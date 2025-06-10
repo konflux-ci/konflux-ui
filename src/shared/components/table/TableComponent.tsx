@@ -57,6 +57,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   kindObj,
   Header: initHeader,
   Row,
+  ExpandedContent,
   expand,
   'aria-label': ariaLabel,
   customData,
@@ -74,8 +75,17 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   //const [, setWindowWidth] = React.useState(window.innerWidth);
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
-    return [getActiveColumns(Header, cProps), cProps];
-  }, [data, unfilteredData, filters, selected, match, kindObj, Header]);
+    const expandColumn = [];
+    if (expand) {
+      expandColumn.push({
+        title: '',
+        props: {
+          style: { paddingLeft: '5%' },
+        },
+      });
+    }
+    return [[...expandColumn, ...getActiveColumns(Header, cProps)], cProps];
+  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header]);
 
   const ariaRowCount = data && data.length;
   const renderVirtualizedTable = (scrollContainer) => (
@@ -101,6 +111,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                         expand={expand}
                         getRowProps={getRowProps}
                         onRowsRendered={handleRowsRendered}
+                        ExpandedContent={ExpandedContent}
                       />
                     </div>
                   );
@@ -121,6 +132,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                   expand={expand}
                   getRowProps={getRowProps}
                   onRowsRendered={onRowsRendered}
+                  ExpandedContent={ExpandedContent}
                 />
               </div>
             )

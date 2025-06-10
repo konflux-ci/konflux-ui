@@ -1,8 +1,8 @@
-import { Button, Flex, Label, Text, TextVariants } from '@patternfly/react-core';
+import { Label, Text, TextVariants } from '@patternfly/react-core';
+import UnlinkSecretView from '~/components/Components/UnlinkSecret/UnlinkSecretView';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import { SecretKind } from '../../../types';
 import { linkedSecretsTableColumnClasses } from './LinkedSecretsListHeader';
-
 import './LinkedSecretsListView.scss';
 
 export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ obj: secret }) => {
@@ -33,15 +33,7 @@ export const LinkedSecretsListRow: React.FC<RowFunctionArgs<SecretKind>> = ({ ob
       </TableData>
 
       <TableData className={linkedSecretsTableColumnClasses.actions}>
-        {/* TODO: onClick logic will be implemented in another ticket*/}
-        {/* eslint-disable-next-line no-alert */}
-        <Button variant="secondary" onClick={() => alert('TODO')}>
-          Unlink
-        </Button>
-      </TableData>
-
-      <TableData className={linkedSecretsTableColumnClasses.kebab}>
-        <Flex direction={{ default: 'column' }} />
+        <UnlinkSecretView secret={secret} />
       </TableData>
     </>
   );

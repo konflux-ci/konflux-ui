@@ -1,0 +1,28 @@
+.ex-expanded-row {
+  display: flex;
+  padding-top: var(--pf-v5-global--spacer--md);
+  padding-bottom: var(--pf-v5-global--spacer--md);
+  padding-right: var(--pf-v5-global--spacer--md);
+  padding-left: 4%; // to align with the "first content" column
+}
+
+.ec-description-list {
+  // means the grid will have 3 equal-width columns,
+  // each taking up one fraction (1fr) of the available space.
+  --pf-v5-c-description-list--GridTemplateColumns: repeat(3, 1fr);
+
+  .pf-v5-c-description-list__term,
+  .pf-v5-c-description-list__description {
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+// ensures the expandable row content stretches to fill the remaining horizontal space
+.pf-v5-c-table__expandable-row-content {
+  flex: 1;
+}
+
+.vertical-center-cell {
+  align-self: center;
+}
