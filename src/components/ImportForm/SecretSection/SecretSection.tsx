@@ -10,7 +10,12 @@ import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { BuildTimeSecret, SecretType, SecretTypeDropdownLabel } from '../../../types';
+import {
+  BuildTimeSecret,
+  CurrentComponentRef,
+  SecretType,
+  SecretTypeDropdownLabel,
+} from '../../../types';
 import { AccessReviewResources } from '../../../types/rbac';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -20,7 +25,11 @@ import { ImportFormValues } from '../type';
 
 const accessReviewResources: AccessReviewResources = [{ model: SecretModel, verb: 'create' }];
 
-const SecretSection = () => {
+type SecretSectionProps = {
+  currentComponent?: null | CurrentComponentRef;
+};
+
+const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
   const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const [canCreateSecret] = useAccessReviewForModels(accessReviewResources);
   const showModal = useModalLauncher();
@@ -103,7 +112,14 @@ const SecretSection = () => {
         data-test="add-secret-button"
         icon={<PlusCircleIcon />}
         onClick={() =>
-          showModal(SecretModalLauncher([...partnerTaskSecrets, ...values.newSecrets], onSubmit))
+          showModal(
+            SecretModalLauncher(
+              [...partnerTaskSecrets, ...values.newSecrets], // existingSecrets
+              onSubmit,
+              undefined, // onClose
+              currentComponent, // currentComponent
+            ),
+          )
         }
         isDisabled={!canCreateSecret}
         tooltip="You don't have access to add a secret"

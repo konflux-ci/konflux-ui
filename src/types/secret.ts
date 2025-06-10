@@ -3,6 +3,11 @@ import { K8sResourceCommon } from './k8s';
 
 export const SecretByUILabel = 'ui.appstudio.redhat.com/secret-for';
 
+export type CurrentComponentRef = {
+  componentName: null | string;
+  applicationName: null | string;
+};
+
 export type ImportSecret = {
   secretName: string;
   type: string;
@@ -21,6 +26,7 @@ export type ImportSecret = {
       readOnlyKey?: boolean;
     }[];
   };
+  currentComponent?: null | CurrentComponentRef;
   relatedComponents?: [];
   secretForComponentOption?: null | SecretForComponentOption;
 };
