@@ -21,7 +21,7 @@ export function parseUrlForFeatureFlags(search: string): Partial<FlagState> {
 
   params.forEach((v, k) => {
     if (k.startsWith('ff_')) {
-      result[k.slice(3) as FlagKey] = v !== 'false';
+      result[k.slice(3)] = v !== 'false';
     }
   });
 
@@ -44,10 +44,7 @@ function compose(search: string): FlagState {
   const url = parseUrlForFeatureFlags(search);
   const ls = parseStorage();
   return Object.fromEntries(
-    Object.entries(FLAGS).map(([k, meta]) => [
-      k,
-      url[k as FlagKey] ?? ls[k as FlagKey] ?? meta.defaultEnabled,
-    ]),
+    Object.entries(FLAGS).map(([k, meta]) => [k, url[k] ?? ls[k] ?? meta.defaultEnabled]),
   ) as FlagState;
 }
 
