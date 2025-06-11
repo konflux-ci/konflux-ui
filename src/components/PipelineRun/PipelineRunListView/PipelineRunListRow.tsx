@@ -81,11 +81,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
         <Link
-          to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+          to={`${PIPELINE_RUNS_DETAILS_PATH.createPath({
             workspaceName: namespace,
             applicationName,
             pipelineRunName: obj.metadata?.name,
-          })}
+          })}?releaseName=${releaseName}`}
           title={obj.metadata?.name}
         >
           {obj.metadata?.name}

@@ -1,8 +1,6 @@
 import * as React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { PIPELINE_RUNS_LIST_PATH, PIPELINE_RUNS_DETAILS_PATH } from '~/routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
@@ -17,9 +15,14 @@ import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
 import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';
+import { useNamespace } from '../../../shared/providers/Namespace';
+import { PIPELINE_RUNS_DETAILS_PATH, PIPELINE_RUNS_LIST_PATH, RELEASE_PIPELINE_LIST_PATH } from '../../../routes/paths';
 
 export const PipelineRunDetailsView: React.FC = () => {
   const { pipelineRunName } = useParams<RouterParams>();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const releaseName = queryParams.get('releaseName') || '';
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
@@ -63,7 +66,7 @@ export const PipelineRunDetailsView: React.FC = () => {
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
-          path: PIPELINE_RUNS_LIST_PATH.createPath({ workspaceName: namespace, applicationName }),
+          path: (releaseName ? RELEASE_PIPELINE_LIST_PATH :  PIPELINE_RUNS_LIST_PATH).createPath({ workspaceName: namespace, applicationName, ...(releaseName ? { releaseName } : {}) }),
           name: 'Pipeline runs',
         },
         {
