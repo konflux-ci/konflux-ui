@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useTaskRun } from '../../../hooks/usePipelineRuns';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
@@ -12,5 +13,9 @@ export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
   const [taskRun] = useTaskRun(namespace, taskRunName);
   const plrName = taskRun.metadata?.labels[TektonResourceLabel.pipelinerun];
 
-  return <SecurityEnterpriseContractTab pipelineRun={plrName} />;
+  return (
+    <FilterContextProvider filterParams={['rule', 'status', 'component']}>
+      <SecurityEnterpriseContractTab pipelineRun={plrName} />
+    </FilterContextProvider>
+  );
 };

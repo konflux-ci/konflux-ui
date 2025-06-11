@@ -1,6 +1,7 @@
-import { ServiceAccountModel } from '../../../../models';
+import { SecretModel, ServiceAccountModel } from '../../../../models';
 import { SecretKind, SecretType } from '../../../../types';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
+import { mockSecret } from '../../__data__/mock-secrets';
 import { SecretForComponentOption } from '../secret-utils';
 import {
   linkCommonSecretsToServiceAccount,
@@ -9,6 +10,8 @@ import {
   linkSecretToBuildServiceAccount,
   unLinkSecretFromBuildServiceAccount,
   unLinkSecretFromServiceAccount,
+  isLinkableSecret,
+  updateAnnotateForSecret,
 } from '../service-account-utils';
 
 const imagePullSecret = {
@@ -53,6 +56,35 @@ const testSecrets = [
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
+
+describe('isLinkableSecret', () => {
+  it('should return true for dockerjson/dockercfg/basicAuth', () => {
+    for (const validType of [
+      SecretType.dockercfg,
+      SecretType.dockerconfigjson,
+      SecretType.basicAuth,
+    ]) {
+      const validSecret = { ...imagePullSecret, type: validType };
+      expect(isLinkableSecret(validSecret)).toBe(true);
+    }
+  });
+
+  it('should return false for invalid secret types', () => {
+    for (const invalidType of [
+      SecretType.opaque,
+      SecretType.sshAuth,
+      SecretType.tls,
+      SecretType.serviceAccountToken,
+    ]) {
+      const invalidSecret = { ...imagePullSecret, type: invalidType };
+      expect(isLinkableSecret(invalidSecret)).toBe(false);
+    }
+  });
+
+  it('should return false when secret is undefined', () => {
+    expect(isLinkableSecret(undefined)).toBe(false);
+  });
+});
 
 describe('linkSecretToServiceAccount', () => {
   beforeEach(() => {
@@ -536,5 +568,67 @@ describe('linkSecretToAllServiceAccounts', () => {
       SecretForComponentOption.partial,
     );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('annotateSecretWithError', () => {
+  const LINKING_ERROR_ANNOTATION = 'konflux-ui/linking-secret-action-error';
+  const annotationPath = `/metadata/annotations/${LINKING_ERROR_ANNOTATION.replace(/\//g, '~1')}`;
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should add annotation if not present', async () => {
+    const errorMessage = 'Link failed';
+
+    await updateAnnotateForSecret(mockSecret, LINKING_ERROR_ANNOTATION, errorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'add',
+          path: '/metadata/annotations',
+          value: {
+            'konflux-ui/linking-secret-action-error': 'Link failed',
+          },
+        },
+      ],
+    });
+  });
+
+  it('should replace annotation if already present', async () => {
+    const secretWithAnnotation: SecretKind = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        annotations: {
+          [LINKING_ERROR_ANNOTATION]: 'old message',
+        },
+      },
+    };
+    const newErrorMessage = 'Updated failure message';
+
+    await updateAnnotateForSecret(secretWithAnnotation, LINKING_ERROR_ANNOTATION, newErrorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: annotationPath,
+          value: newErrorMessage,
+        },
+      ],
+    });
   });
 });

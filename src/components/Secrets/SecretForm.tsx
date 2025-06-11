@@ -1,7 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
-import { useFormikContext } from 'formik';
+import { useField, useFormikContext } from 'formik';
+import { FIELD_SECRET_FOR_COMPONENT_OPTION } from '~/consts/secrets';
+import { FLAGS } from '~/feature-flags/flags';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { DropdownItemObject } from '../../shared/components/dropdown';
 import KeyValueFileInputField from '../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import SelectInputField from '../../shared/components/formik-fields/SelectInputField';
@@ -10,14 +13,17 @@ import {
   SecretTypeDropdownLabel,
   K8sSecretType,
   BuildTimeSecret,
+  SourceSecretType,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
+import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
 import { SourceSecretForm } from './SecretsForm/SourceSecretForm';
 import SecretTypeSelector from './SecretTypeSelector';
 import {
   supportedPartnerTasksSecrets,
   getSupportedPartnerTaskKeyValuePairs,
   isPartnerTask,
+  SecretForComponentOption,
 } from './utils/secret-utils';
 
 type SecretFormProps = RawComponentProps & {
@@ -25,10 +31,14 @@ type SecretFormProps = RawComponentProps & {
 };
 
 const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existingSecrets }) => {
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
-  const [currentType, setType] = React.useState(values.type);
+  const [currentType, setCurrentType] = useState(values.type);
   const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
   const defaultImageKeyValues = [{ key: '.dockerconfigjson', value: '', readOnlyKey: true }];
+  const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
+    FIELD_SECRET_FOR_COMPONENT_OPTION,
+  );
 
   let options = useMemo(() => {
     return existingSecrets
@@ -77,12 +87,18 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
     [],
   );
 
+  const shouldShowSecretLinkOptions =
+    (values?.source?.authType === SourceSecretType.basic &&
+      currentType === SecretTypeDropdownLabel.source) ||
+    currentType === SecretTypeDropdownLabel.image;
+
   return (
     <Form data-test="secret-form">
       <SecretTypeSelector
         dropdownItems={dropdownItems}
         onChange={(type) => {
-          setType(type);
+          setCurrentType(type);
+          void setValue(null);
           if (type === SecretTypeDropdownLabel.image) {
             resetKeyValues();
             values.secretName &&
@@ -130,6 +146,12 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
           void setFieldValue('secretName', value);
         }}
       />
+      {isBuildServiceAccountFeatureOn && shouldShowSecretLinkOptions && (
+        <SecretLinkOptions
+          secretForComponentOption={secretForComponentOption}
+          onOptionChange={(option) => setValue(option)}
+        />
+      )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
       {currentType !== SecretTypeDropdownLabel.source && (
         <KeyValueFileInputField

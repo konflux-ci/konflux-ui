@@ -22,7 +22,7 @@ export type TriggerReleaseFormValues = {
   topic: string;
   description?: string;
   solution?: string;
-  references?: string;
+  references?: string[];
   issues?: object[];
   cves?: CVE[];
   labels?: { key: string; value: string }[];

@@ -4,6 +4,7 @@ import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { SECRET_LIST_PATH } from '@routes/paths';
+import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useNamespace } from '~/shared/providers/Namespace';
 import FormFooter from '../../../shared/components/form-components/FormFooter';
@@ -18,7 +19,7 @@ import { SecretTypeSubForm } from './SecretTypeSubForm';
 const AddSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  const isNew = useIsOnFeatureFlag('buildServiceAccount');
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const initialValues: AddSecretFormValues = {
     type: SecretTypeDropdownLabel.opaque,
     name: '',
@@ -50,7 +51,10 @@ const AddSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        (!isNew ? addSecret(values, namespace) : addSecretWithLinkingComponents(values, namespace))
+        (!isBuildServiceAccountFeatureOn
+          ? addSecret(values, namespace)
+          : addSecretWithLinkingComponents(values, namespace)
+        )
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })

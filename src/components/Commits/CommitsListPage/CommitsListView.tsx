@@ -1,22 +1,11 @@
 import * as React from 'react';
-import {
-  SearchInput,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
-} from '@patternfly/react-core';
-import {
-  Select,
-  SelectGroup,
-  SelectOption,
-  SelectVariant,
-} from '@patternfly/react-core/deprecated';
-import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
-import { useSearchParam } from '../../../hooks/useSearchParam';
 import { HttpError } from '../../../k8s/error';
-import { Table } from '../../../shared';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
@@ -34,46 +23,35 @@ interface CommitsListViewProps {
 
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
+  componentName,
 }) => {
   const namespace = useNamespace();
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
-  const [statusFilterExpanded, setStatusFilterExpanded] = React.useState<boolean>(false);
-  const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+  });
 
-  const [pipelineRuns, loaded, error, getNextPage] = useBuildPipelines(
-    namespace,
-    applicationName,
-    undefined,
-  );
+  const { name: nameFilter, status: statusFilter } = filters;
+
+  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
+    useBuildPipelines(
+      namespace,
+      applicationName,
+      undefined,
+      !!componentName,
+      componentName ? [componentName] : undefined,
+    );
 
   const commits = React.useMemo(
     () => (loaded && pipelineRuns && getCommitsFromPLRs(pipelineRuns)) || [],
     [loaded, pipelineRuns],
   );
 
-  const statusFilters = React.useMemo(
-    () => (statusFiltersParam ? statusFiltersParam.split(',') : []),
-    [statusFiltersParam],
+  const statusFilterObj = React.useMemo(
+    () => createFilterObj(commits, (c) => pipelineRunStatus(c.pipelineRuns[0]), statuses),
+    [commits],
   );
-
-  const setStatusFilters = React.useCallback(
-    (filters: string[]) => setStatusFiltersParam(filters.join(',')),
-    [setStatusFiltersParam],
-  );
-
-  const statusFilterObj = React.useMemo(() => {
-    return commits.reduce((acc, c) => {
-      const stat = pipelineRunStatus(c.pipelineRuns[0]);
-      if (statuses.includes(stat)) {
-        if (acc[stat] !== undefined) {
-          acc[stat] = acc[stat] + 1;
-        } else {
-          acc[stat] = 1;
-        }
-      }
-      return acc;
-    }, {});
-  }, [commits]);
 
   const filteredCommits = React.useMemo(
     () =>
@@ -88,74 +66,31 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               .toLowerCase()
               .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
             commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
-          (!statusFilters.length ||
-            statusFilters.includes(pipelineRunStatus(commit.pipelineRuns[0]))),
+          (!statusFilter.length ||
+            statusFilter.includes(pipelineRunStatus(commit.pipelineRuns[0]))),
       ),
-    [commits, nameFilter, statusFilters],
+    [commits, nameFilter, statusFilter],
   );
 
-  const onClearFilters = () => {
-    setNameFilter('');
-    setStatusFilters([]);
-  };
-  const onNameInput = (name: string) => setNameFilter(name);
-
   const NoDataEmptyMessage = () => <CommitsEmptyState applicationName={applicationName} />;
-  const EmptyMessage = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
+  const EmptyMessage = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
 
   const DataToolbar = (
-    <Toolbar data-test="commit-list-toolbar" clearAllFilters={onClearFilters}>
-      <ToolbarContent>
-        <ToolbarGroup align={{ default: 'alignLeft' }}>
-          <ToolbarItem className="pf-v5-u-ml-0">
-            <SearchInput
-              name="nameInput"
-              data-test="name-input-filter"
-              type="search"
-              aria-label="name filter"
-              placeholder="Filter by name..."
-              onChange={(_, name) => onNameInput(name)}
-              value={nameFilter}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Select
-              placeholderText="Status"
-              toggleIcon={<FilterIcon />}
-              toggleAriaLabel="Status filter menu"
-              variant={SelectVariant.checkbox}
-              isOpen={statusFilterExpanded}
-              onToggle={(_event, expanded) => setStatusFilterExpanded(expanded)}
-              onSelect={(event, selection) => {
-                const checked = (event.target as HTMLInputElement).checked;
-                setStatusFilters(
-                  checked
-                    ? [...statusFilters, String(selection)]
-                    : statusFilters.filter((value) => value !== selection),
-                );
-              }}
-              selections={statusFilters}
-              isGrouped
-            >
-              {[
-                <SelectGroup label="Status" key="status">
-                  {Object.keys(statusFilterObj).map((filter) => (
-                    <SelectOption
-                      key={filter}
-                      value={filter}
-                      isChecked={statusFilters.includes(filter)}
-                      itemCount={statusFilterObj[filter] ?? 0}
-                    >
-                      {filter}
-                    </SelectOption>
-                  ))}
-                </SelectGroup>,
-              ]}
-            </Select>
-          </ToolbarItem>
-        </ToolbarGroup>
-      </ToolbarContent>
-    </Toolbar>
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="name"
+      setText={(name) => setFilters({ ...filters, name })}
+      onClearFilters={onClearFilters}
+      data-test="commit-list-toolbar"
+    >
+      <MultiSelect
+        label="Status"
+        filterKey="status"
+        values={statusFilter}
+        setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
+        options={statusFilterObj}
+      />
+    </BaseTextFilterToolbar>
   );
 
   if (error) {
@@ -184,7 +119,12 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         id: obj.sha,
       })}
       onRowsRendered={({ stopIndex }) => {
-        if (loaded && stopIndex === filteredCommits.length - 1) {
+        if (
+          loaded &&
+          stopIndex === filteredCommits.length - 1 &&
+          hasNextPage &&
+          !isFetchingNextPage
+        ) {
           getNextPage?.();
         }
       }}

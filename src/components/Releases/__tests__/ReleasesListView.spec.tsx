@@ -1,19 +1,18 @@
-import * as React from 'react';
 import '@testing-library/jest-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useApplicationReleases } from '../../../hooks/useApplicationReleases';
 import { createUseParamsMock } from '../../../utils/test-utils';
 import { mockReleases } from '../__data__/mock-release-data';
 import ReleasesListRow from '../ReleasesListRow';
 import ReleasesListView from '../ReleasesListView';
 
+jest.useFakeTimers();
+
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
-}));
-
-jest.mock('../../../hooks/useSearchParam', () => ({
-  useSearchParam: () => [...React.useState(''), jest.fn()],
 }));
 
 jest.mock('../../../hooks/useApplicationReleases', () => ({
@@ -58,18 +57,26 @@ jest.mock('../../../shared/components/table', () => {
 
 const useMockReleases = useApplicationReleases as jest.Mock;
 
+const ReleasesList = (
+  <MemoryRouter>
+    <FilterContextProvider filterParams={['name', 'release plan', 'release snapshot']}>
+      <ReleasesListView />
+    </FilterContextProvider>
+  </MemoryRouter>
+);
+
 describe('ReleasesListView', () => {
   createUseParamsMock({ applicationName: 'test-app' });
 
   it('should render progress indicator while loading', async () => {
     useMockReleases.mockReturnValue([[], false]);
-    const wrapper = render(<ReleasesListView />);
+    const wrapper = render(ReleasesList);
     expect(await wrapper.findByRole('progressbar')).toBeTruthy();
   });
 
   it('should render all columns', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    render(<ReleasesListView />);
+    render(ReleasesList);
     expect(screen.getByRole('columnheader', { name: 'Name' })).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Created' })).toBeVisible();
     expect(screen.getByRole('columnheader', { name: 'Status' })).toBeVisible();
@@ -79,28 +86,28 @@ describe('ReleasesListView', () => {
 
   it('should render empty state when no releases present', () => {
     useMockReleases.mockReturnValue([[], true]);
-    const wrapper = render(<ReleasesListView />);
-    expect(wrapper.findByText('No Releases found')).toBeTruthy();
+    render(ReleasesList);
+    expect(screen.queryByText('Learn more about setting up release plans')).toBeInTheDocument();
   });
 
   it('should render table', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    const wrapper = render(<ReleasesListView />);
+    const wrapper = render(ReleasesList);
     const table = wrapper.container.getElementsByTagName('table');
     expect(table).toHaveLength(1);
   });
 
   it('should render filter toolbar', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    const wrapper = render(<ReleasesListView />);
-    screen.getByTestId('filter-toolbar');
+    const wrapper = render(ReleasesList);
+    screen.getByTestId('releases-filter-toolbar');
     expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
     expect(wrapper.container.getElementsByTagName('tr')).toHaveLength(4);
   });
 
   it('should sort by creation date by default', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    render(<ReleasesListView />);
+    render(ReleasesList);
     expect(screen.getByRole('columnheader', { name: 'Created' })).toHaveAttribute(
       'aria-sort',
       'descending',
@@ -114,7 +121,7 @@ describe('ReleasesListView', () => {
 
   it('should sort by name on click', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    render(<ReleasesListView />);
+    render(ReleasesList);
     const table = screen.getByRole('table');
     fireEvent.click(within(table).getByRole('button', { name: 'Name' }));
     expect(screen.getByRole('columnheader', { name: 'Name' })).toHaveAttribute(
@@ -142,7 +149,7 @@ describe('ReleasesListView', () => {
 
   it('should allow filtering by name', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    render(<ReleasesListView />);
+    render(ReleasesList);
     fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-release-2' } });
     const rows = screen.getAllByRole('row');
     expect(rows.length).toBe(2);
@@ -151,7 +158,7 @@ describe('ReleasesListView', () => {
 
   it('should allow filtering by release plan', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    render(<ReleasesListView />);
+    render(ReleasesList);
     fireEvent.click(screen.getAllByRole('button')[0], { name: 'Name' });
     fireEvent.click(screen.getByRole('option', { name: 'Release plan' }));
     fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-plan-2' } });
@@ -162,7 +169,7 @@ describe('ReleasesListView', () => {
 
   it('should allow filtering by release snapshot', () => {
     useMockReleases.mockReturnValue([mockReleases, true]);
-    render(<ReleasesListView />);
+    render(ReleasesList);
     fireEvent.click(screen.getAllByRole('button')[0], { name: 'Name' });
     fireEvent.click(screen.getByRole('option', { name: 'Release snapshot' }));
     fireEvent.input(screen.getByRole('textbox'), { target: { value: 'test-snapshot-2' } });

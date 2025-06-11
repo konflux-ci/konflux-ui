@@ -2,6 +2,8 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
+import { FLAGS } from '~/feature-flags/flags';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useNotifications } from '../../hooks/useUIInstance';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -12,12 +14,13 @@ import { getErrorMessage } from './error-utils';
 import GitImportActions from './GitImportActions';
 import { PipelineSection } from './PipelineSection/PipelineSection';
 import SecretSection from './SecretSection/SecretSection';
-import { createResources } from './submit-utils';
+import { createResources, createResourcesWithLinkingComponents } from './submit-utils';
 import { ImportFormValues } from './type';
 import { formValidationSchema } from './validation.utils';
 import './GitImportForm.scss';
 
 export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {
+  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const track = useTrackEvent();
   const navigate = useNavigate();
   const namespace = useNamespace();
@@ -42,8 +45,11 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
 
   const handleSubmit = React.useCallback(
     (values: ImportFormValues, formikHelpers: FormikHelpers<ImportFormValues>) => {
+      const createResourcesFunction = isBuildServiceAccountFeatureOn
+        ? createResourcesWithLinkingComponents(values, namespace, notifications)
+        : createResources(values, namespace, notifications);
       track(TrackEvents.ButtonClicked, { link_name: 'import-submit', namespace });
-      createResources(values, namespace, notifications)
+      createResourcesFunction
         .then(({ applicationName: appName, application, component }) => {
           if (application) {
             track('Application Create', {
@@ -80,7 +86,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
           formikHelpers.setStatus({ submitError: errorMessage });
         });
     },
-    [notifications, namespace, navigate, track],
+    [isBuildServiceAccountFeatureOn, namespace, notifications, track, navigate],
   );
 
   const handleReset = React.useCallback(() => {
