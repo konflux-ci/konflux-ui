@@ -86,6 +86,11 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
           },
           matchExpressions: [
             { key: PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL, operator: 'DoesNotExist' },
+            {
+              key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+              operator: 'In',
+              values: [PipelineRunEventType.PUSH, PipelineRunEventType.GITLAB_PUSH],
+            },
           ],
         },
       }),
@@ -108,8 +113,6 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>
             p.metadata.labels?.[PipelineRunLabel.COMPONENT] === componentName &&
-            p.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]?.toLowerCase() ===
-              PipelineRunEventType.PUSH &&
             (configurationTime
               ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
               : true),
