@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
-import { FIELD_SECRET_FOR_COMPONENT_OPTION } from '~/consts/secrets';
+import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { DropdownItemObject } from '../../shared/components/dropdown';
@@ -14,6 +14,7 @@ import {
   K8sSecretType,
   BuildTimeSecret,
   SourceSecretType,
+  CurrentComponentRef,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
@@ -28,9 +29,13 @@ import {
 
 type SecretFormProps = RawComponentProps & {
   existingSecrets: BuildTimeSecret[];
+  currentComponent?: null | CurrentComponentRef;
 };
 
-const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existingSecrets }) => {
+const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
+  existingSecrets,
+  currentComponent,
+}) => {
   const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
@@ -148,8 +153,10 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
       />
       {isBuildServiceAccountFeatureOn && shouldShowSecretLinkOptions && (
         <SecretLinkOptions
+          currentComponent={currentComponent}
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}
+          radioLabels={SecretLinkOptionLabels.forImportSecret}
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}

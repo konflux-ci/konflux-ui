@@ -1,17 +1,27 @@
 import React from 'react';
 import { RadioGroupField } from 'formik-pf';
+import { CurrentComponentRef } from '~/types';
 import HelpPopover from '../../HelpPopover';
 import { SecretForComponentOption } from '../utils/secret-utils';
 import { ComponentSelector } from './ComponentSelector';
 
+import './SecretLinkOptionForm.scss';
+
 type SecretLinkOptionsProps = {
   secretForComponentOption: SecretForComponentOption;
   onOptionChange: (option: SecretForComponentOption) => void;
+  radioLabels: {
+    all: string;
+    partial: string;
+  };
+  currentComponent?: null | CurrentComponentRef;
 };
 
 export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
   secretForComponentOption,
   onOptionChange,
+  radioLabels,
+  currentComponent,
 }) => {
   return (
     <>
@@ -26,11 +36,11 @@ export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
         options={[
           {
             value: SecretForComponentOption.all,
-            label: 'All existing and future components in the namespace',
+            label: radioLabels.all,
           },
           {
             value: SecretForComponentOption.partial,
-            label: 'Select components in the namespace',
+            label: radioLabels.partial,
           },
         ]}
         required={false}
@@ -38,7 +48,9 @@ export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
       />
 
       {/* Secret Component Dropdown */}
-      {secretForComponentOption === SecretForComponentOption.partial && <ComponentSelector />}
+      {secretForComponentOption === SecretForComponentOption.partial && (
+        <ComponentSelector currentComponent={currentComponent} />
+      )}
     </>
   );
 };

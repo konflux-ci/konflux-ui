@@ -6,3 +6,13 @@ export const IMAGE_PULL_SECRET_TYPES = [
 export const LINKING_ERROR_ANNOTATION = 'konflux-ui/linking-secret-action-error';
 export const MAX_ANNOTATION_LENGTH = 2048;
 export const LINKING_STATUS_ANNOTATION = 'konflux-ui/linking-secret-action-status';
+export const SecretLinkOptionLabels = {
+  default: {
+    all: 'All existing and future components in the namespace',
+    partial: 'Select components in the namespace',
+  },
+  forImportSecret: {
+    all: 'Current component, all existing and future components in the namespace',
+    partial: 'Select components in the namespace',
+  },
+} as const;
