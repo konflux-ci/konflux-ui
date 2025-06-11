@@ -61,9 +61,9 @@ jest.mock('../../../shared/components/table', () => {
             {data.map((d, i) => (
               <tr key={i}>
                 {isBuildServiceAccountFeatureOn ? (
-                  <SecretsListRowWithComponents obj={d} />
+                  <SecretsListRowWithComponents obj={d} columns={columns} />
                 ) : (
-                  <SecretsListRow obj={d} />
+                  <SecretsListRow obj={d} columns={columns} />
                 )}
               </tr>
             ))}

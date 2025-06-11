@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { RowFunctionArgs, Table } from '../../../shared';
+import { Table } from '../../../shared';
 import { SecretKind } from '../../../types';
 import SecretsListHeader from './SecretsListHeader';
 import SecretsListHeaderWithComponents from './SecretsListHeaderWithComponents';
@@ -18,39 +18,18 @@ const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secr
     ? SecretsListHeaderWithComponents
     : SecretsListHeader;
   const Row = isBuildServiceAccountFeatureOn ? SecretsListRowWithComponents : SecretsListRow;
-  const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
-
-  const toggleRow = (index: number) => {
-    setExpandedRowIndexes((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
 
   return (
-    <>
-      <Table
-        data={secrets}
-        aria-label="Secret List"
-        Header={Header}
-        Row={(props: RowFunctionArgs<SecretKind>) => {
-          const rowIndex = secrets.findIndex((r) => r === props.obj);
-          const isExpanded = expandedRowIndexes.has(rowIndex);
-
-          return Row({ obj: props.obj, isExpanded, onToggleExpand: () => toggleRow(rowIndex) });
-        }}
-        expandedRowIndexes={expandedRowIndexes}
-        loaded
-        getRowProps={(obj: SecretKind) => ({
-          id: obj.metadata.name,
-        })}
-      />
-    </>
+    <Table
+      data={secrets}
+      aria-label="Secret List"
+      Header={Header}
+      Row={Row}
+      loaded
+      getRowProps={(obj: SecretKind) => ({
+        id: obj.metadata.name,
+      })}
+    />
   );
 };
 

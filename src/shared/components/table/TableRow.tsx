@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Tr } from '@patternfly/react-table';
+import { useResizeObserver } from '~/shared/hooks';
 
 export type TableRowProps = {
   id: React.ReactText;
@@ -9,6 +10,7 @@ export type TableRowProps = {
   style: object;
   className?: string;
   isExpanded?: boolean;
+  recompute?: () => void;
 };
 
 export const TableRow: React.FC<React.PropsWithChildren<TableRowProps>> = ({
@@ -17,11 +19,20 @@ export const TableRow: React.FC<React.PropsWithChildren<TableRowProps>> = ({
   trKey,
   style,
   className,
+  recompute,
   ...props
 }) => {
+  const ref = React.useRef<HTMLTableRowElement>(null);
+  useResizeObserver(() => {
+    window.requestAnimationFrame(() => {
+      recompute && recompute();
+    });
+  }, ref.current);
+
   return (
     <Tr
       {...props}
+      ref={ref}
       data-id={id}
       data-index={index}
       data-test-rows="resource-row"

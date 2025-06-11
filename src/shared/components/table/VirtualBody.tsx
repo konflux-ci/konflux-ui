@@ -155,6 +155,11 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
       const rowId = rowProps?.id ?? key;
       const isExpanded = expandedRowIndexes?.has(index as number);
 
+      const reComputeRowHeights = () => {
+        cellMeasurementCache.clear(index);
+        listRef.current?.recomputeRowHeights(index);
+      };
+
       return (
         <>
           <CellMeasurer
@@ -165,7 +170,14 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
             rowIndex={index}
           >
             <div style={style}>
-              <TableRow {...rowProps} id={rowId} index={index} trKey={key} style={{}}>
+              <TableRow
+                {...rowProps}
+                recompute={reComputeRowHeights}
+                id={rowId}
+                index={index}
+                trKey={key}
+                style={{}}
+              >
                 <RowMemo
                   Row={Row}
                   {...rowArgs}

@@ -4,47 +4,43 @@ import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/se
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { SecretKind } from '~/types';
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
-import { TableData } from '../../../shared';
+import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { useSecretActions } from '../secret-actions';
 import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { SecretLabels } from './SecretLabels';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
-import { SecretsListRowProps } from './SecretsListRow';
 
-const SecretsListRowWithComponents = ({
-  obj,
-  isExpanded = false,
-  onToggleExpand = () => {},
-}: SecretsListRowProps) => {
-  const actions = useSecretActions(obj);
+const SecretsListRowWithComponents: React.FC<RowFunctionArgs<SecretKind>> = ({ obj: secret }) => {
+  const actions = useSecretActions(secret);
   const namespace = useNamespace();
 
-  const { secretLabels } = getSecretRowLabels(obj);
+  const { secretLabels } = getSecretRowLabels(secret);
   const labels = secretLabels !== '-' ? secretLabels.split(', ') : [secretLabels];
 
-  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
-  const taskError = task?.error ?? obj.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
+  const task = useTaskStore((state) => state.tasks[secret.metadata.name]);
+  const taskError = task?.error ?? secret.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
   const taskStatus =
     task?.status ??
-    obj.metadata?.annotations?.[LINKING_STATUS_ANNOTATION] ??
+    secret.metadata?.annotations?.[LINKING_STATUS_ANNOTATION] ??
     BackgroundJobStatus.Succeeded;
 
   const { linkedServiceAccounts, isLoading, error } = useLinkedServiceAccounts(
-    obj.metadata?.namespace || namespace,
-    obj,
+    secret.metadata?.namespace || namespace,
+    secret,
     true,
   );
 
   return (
     <>
       <TableData className={`${secretsTableColumnClasses.secretType} vertical-cell-align`}>
-        {getSecretTypetoLabel(obj) ?? '-'}
+        {getSecretTypetoLabel(secret) ?? '-'}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.name} vertical-cell-align`}>
-        {obj.metadata?.name}
+        {secret.metadata?.name}
       </TableData>
       <TableData
         className={`${secretsTableColumnClasses.components} vertical-cell-align`}
@@ -60,7 +56,7 @@ const SecretsListRowWithComponents = ({
           >
             <span>Error</span>
           </Popover>
-        ) : !isLinkableSecret(obj) ? (
+        ) : !isLinkableSecret(secret) ? (
           '-'
         ) : (
           // The linkedServiceAccounts returns [] or [sa1, sa2...].
@@ -68,7 +64,10 @@ const SecretsListRowWithComponents = ({
         )}
       </TableData>
 
-      <TableData className={secretsTableColumnClasses.status} data-test="components-status">
+      <TableData
+        className={`${secretsTableColumnClasses.status} vertical-cell-align`}
+        data-test="components-status"
+      >
         <span>{taskStatus}</span>
         {taskStatus === BackgroundJobStatus.Failed && taskError && (
           <HelpPopover
@@ -78,7 +77,7 @@ const SecretsListRowWithComponents = ({
         )}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.labels} vertical-cell-align`}>
-        <SecretLabels labels={labels} isExpanded={isExpanded} onToggle={onToggleExpand} />
+        <SecretLabels labels={labels} />
       </TableData>
 
       <TableData className={`${secretsTableColumnClasses.kebab} vertical-cell-align`}>
