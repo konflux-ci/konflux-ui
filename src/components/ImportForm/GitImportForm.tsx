@@ -4,6 +4,7 @@ import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { CurrentComponentRef } from '~/types';
 import { useNotifications } from '../../hooks/useUIInstance';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -110,7 +111,14 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                 <>
                   <ComponentSection />
                   <PipelineSection />
-                  <SecretSection />
+                  <SecretSection
+                    currentComponent={
+                      {
+                        componentName: formikProps.values.componentName,
+                        applicationName: formikProps.values.application,
+                      } as CurrentComponentRef
+                    }
+                  />
                 </>
               ) : null}
             </PageSection>
