@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, ModalVariant } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, ModalVariant, Text } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
-import './UnlinkSecret.scss';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;
@@ -32,18 +31,22 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   };
 
   return (
-    <>
-      <strong>{secret?.metadata?.name}</strong>
-      will be unlinked from <strong>{component?.metadata?.name}</strong>
-      <div>
+    <Flex direction={{ default: 'column' }}>
+      <FlexItem>
+        <Text component="p">
+          <strong>{secret?.metadata?.name}</strong> will be unlinked from{' '}
+          <strong>{component?.metadata?.name}</strong>
+        </Text>
+      </FlexItem>
+      <Flex>
         <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
           Unlink
         </Button>
         <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
           Cancel
         </Button>
-      </div>
-    </>
+      </Flex>
+    </Flex>
   );
 };
 
