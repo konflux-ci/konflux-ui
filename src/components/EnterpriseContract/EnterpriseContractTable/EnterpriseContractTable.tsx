@@ -1,7 +1,11 @@
 import * as React from 'react';
-import { Table /* data-codemods */, Th, Thead, ThProps, Tr } from '@patternfly/react-table';
+import { SortByDirection } from '@patternfly/react-table';
+import { Table } from '~/shared';
 import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
-import { EnterpriseContractRow } from './EnterpriseContractRow';
+import { EnterpriseContractExpandedRowContent } from './EnterpriseContractExpandedRowContent';
+import getEnterpriseContractHeader from './EnterpriseContractHeader';
+import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
+import './EnterpriceContractTable.scss';
 
 type EnterpriseContractTableProps = {
   ecResult: UIEnterpriseContractData[];
@@ -47,8 +51,17 @@ export const EnterpriseContractTable: React.FC<
   React.PropsWithChildren<EnterpriseContractTableProps>
 > = ({ ecResult }) => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | null>(2);
-  const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | null>(
-    'asc',
+  const [activeSortDirection, setActiveSortDirection] = React.useState<
+    SortByDirection.asc | SortByDirection.desc | null
+  >(SortByDirection.asc);
+
+  const EnterpriseContractHeader = React.useMemo(
+    () =>
+      getEnterpriseContractHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
+        setActiveSortIndex(index);
+        setActiveSortDirection(direction);
+      }),
+    [activeSortDirection, activeSortIndex],
   );
 
   const sortedECResult = React.useMemo(() => {
@@ -57,39 +70,28 @@ export const EnterpriseContractTable: React.FC<
       : undefined;
   }, [activeSortDirection, activeSortIndex, ecResult]);
 
-  const getSortParams = (columnIndex: number): ThProps['sort'] => ({
-    sortBy: {
-      index: activeSortIndex,
-      direction: activeSortDirection,
-    },
-    onSort: (_event, index, direction) => {
-      setActiveSortIndex(index);
-      setActiveSortDirection(direction);
-    },
-    columnIndex,
-  });
   return sortedECResult ? (
-    <Table variant="compact">
-      <Thead>
-        <Tr>
-          <Th width={10} aria-label="expand toggle" />
-          <Th width={30} sort={getSortParams(1)}>
-            Rules
-          </Th>
-          <Th width={10} sort={getSortParams(2)}>
-            Status
-          </Th>
-          <Th width={30}>Message</Th>
-          <Th width={20} sort={getSortParams(4)}>
-            Component
-          </Th>
-        </Tr>
-      </Thead>
-      {sortedECResult
-        ? sortedECResult.map((rule, i) => {
-            return <EnterpriseContractRow rowIndex={i} key={i} data={rule} />;
-          })
-        : null}
-    </Table>
+    <div className="pf-v5-c-table pf-m-compact pf-m-grid-md">
+      <Table
+        virtualize
+        data={sortedECResult}
+        aria-label="ec table"
+        Header={EnterpriseContractHeader}
+        ExpandedContent={(props) => {
+          const obj = props.obj as UIEnterpriseContractData;
+          return <EnterpriseContractExpandedRowContent {...props} obj={obj} />;
+        }}
+        Row={(props) => {
+          const obj = props.obj as UIEnterpriseContractData;
+
+          return (
+            <WrappedEnterpriseContractRow {...props} obj={obj} customData={{ sortedECResult }} />
+          );
+        }}
+        loaded
+        customData={{ sortedECResult }}
+        expand
+      />
+    </div>
   ) : null;
 };

@@ -103,7 +103,7 @@ export type ReleaseSpec = {
       fixed: { id: string; source: string }[];
       cves: CVE[];
       solution?: string;
-      references?: string;
+      references?: string[];
     };
   };
 };

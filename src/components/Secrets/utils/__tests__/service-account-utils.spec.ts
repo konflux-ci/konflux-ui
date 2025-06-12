@@ -1,14 +1,15 @@
-import { ServiceAccountModel } from '../../../../models';
+import { SecretModel, ServiceAccountModel } from '../../../../models';
 import { SecretKind, SecretType } from '../../../../types';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
+import { mockSecret } from '../../__data__/mock-secrets';
 import { SecretForComponentOption } from '../secret-utils';
 import {
   linkCommonSecretsToServiceAccount,
   linkSecretToServiceAccounts,
-  linkSecretToServiceAccount,
   linkSecretToBuildServiceAccount,
   unLinkSecretFromBuildServiceAccount,
-  unLinkSecretFromServiceAccount,
+  isLinkableSecret,
+  updateAnnotateForSecret,
 } from '../service-account-utils';
 
 const imagePullSecret = {
@@ -54,197 +55,32 @@ const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
 
-describe('linkSecretToServiceAccount', () => {
-  beforeEach(() => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'test-cdq' },
-      imagePullSecrets: [
-        { name: 'ip-secret1' },
-        { name: 'ip-secret2' },
-        { name: 'ip-secret3' },
-        { name: 'ip-secret4' },
-      ],
-      secrets: [{ name: 'secret1' }, { name: 'secret2' }],
-    });
-  });
-  it('should return early if no namespace ', async () => {
-    await linkSecretToServiceAccount(imagePullSecret, null);
-    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+describe('isLinkableSecret', () => {
+  it('should return true for dockerjson/dockercfg/basicAuth', () => {
+    for (const validType of [
+      SecretType.dockercfg,
+      SecretType.dockerconfigjson,
+      SecretType.basicAuth,
+    ]) {
+      const validSecret = { ...imagePullSecret, type: validType };
+      expect(isLinkableSecret(validSecret)).toBe(true);
+    }
   });
 
-  it('should call k8sPatchResource and create an imagePull entry', async () => {
-    k8sPatchResourceMock.mockClear();
-    k8sGetResourceMock.mockReturnValueOnce({
-      metadata: { name: 'test-cdq' },
-      imagePullSecrets: [],
-      secrets: [],
-    });
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
-    expect(k8sPatchResourceMock).toHaveBeenCalled();
-    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: ServiceAccountModel,
-        patches: [
-          {
-            op: 'replace',
-            path: '/imagePullSecrets',
-            value: [{ name: 'test-secret' }],
-          },
-          {
-            op: 'replace',
-            path: '/secrets',
-            value: [{ name: 'test-secret' }],
-          },
-        ],
-      }),
-    );
+  it('should return false for invalid secret types', () => {
+    for (const invalidType of [
+      SecretType.opaque,
+      SecretType.sshAuth,
+      SecretType.tls,
+      SecretType.serviceAccountToken,
+    ]) {
+      const invalidSecret = { ...imagePullSecret, type: invalidType };
+      expect(isLinkableSecret(invalidSecret)).toBe(false);
+    }
   });
 
-  it('should append to imagePull secrets list ', async () => {
-    k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
-    expect(k8sPatchResourceMock).toHaveBeenCalled();
-    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: ServiceAccountModel,
-        patches: [
-          {
-            op: 'replace',
-            path: '/imagePullSecrets',
-            value: [
-              { name: 'ip-secret1' },
-              { name: 'ip-secret2' },
-              { name: 'ip-secret3' },
-              { name: 'ip-secret4' },
-              { name: 'test-secret' },
-            ],
-          },
-          {
-            op: 'replace',
-            path: '/secrets',
-            value: [{ name: 'secret1' }, { name: 'secret2' }, { name: 'test-secret' }],
-          },
-        ],
-      }),
-    );
-  });
-  it('should create new array for empty list', async () => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'test-cdq' },
-    });
-    k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, 'test-ns');
-    expect(k8sPatchResourceMock).toHaveBeenCalled();
-    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: ServiceAccountModel,
-        patches: [
-          {
-            op: 'replace',
-            path: '/imagePullSecrets',
-            value: [{ name: 'test-secret' }],
-          },
-          {
-            op: 'replace',
-            path: '/secrets',
-            value: [{ name: 'test-secret' }],
-          },
-        ],
-      }),
-    );
-  });
-});
-
-describe('UnLinkSecretFromServiceAccount', () => {
-  beforeEach(() => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'test-cdq' },
-      imagePullSecrets: [
-        { name: 'ip-secret1' },
-        { name: 'ip-secret2' },
-        { name: 'ip-secret3' },
-        { name: 'ip-secret4' },
-      ],
-      secrets: [{ name: 'secret1' }, { name: 'secret2' }],
-    });
-  });
-  it('should return early if no namespace ', async () => {
-    k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(imagePullSecret, null);
-    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
-  });
-  it('should return early if no secrets array in service account ', async () => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'test-cdq' },
-    });
-    k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(imagePullSecret, null);
-    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
-  });
-  it('should return [] when no resources found ', async () => {
-    k8sGetResourceMock.mockReturnValue({
-      metadata: { name: 'test-cdq' },
-      imagePullSecrets: [{ name: 'random-secret' }],
-      secrets: [],
-    });
-    k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(
-      {
-        metadata: { name: 'ip-secret3' },
-        type: imagePullSecret.type,
-        kind: imagePullSecret.kind,
-        apiVersion: imagePullSecret.apiVersion,
-      },
-      'test-ns',
-    );
-    expect(k8sPatchResourceMock).toHaveBeenCalled();
-    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: ServiceAccountModel,
-        patches: [
-          {
-            op: 'replace',
-            path: '/imagePullSecrets',
-            value: [{ name: 'random-secret' }],
-          },
-          {
-            op: 'replace',
-            path: '/secrets',
-            value: [],
-          },
-        ],
-      }),
-    );
-  });
-  it('should remove correct imagePull secrets list ', async () => {
-    k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(
-      {
-        metadata: { name: 'ip-secret3' },
-        type: imagePullSecret.type,
-        kind: imagePullSecret.kind,
-        apiVersion: imagePullSecret.apiVersion,
-      },
-      'test-ns',
-    );
-    expect(k8sPatchResourceMock).toHaveBeenCalled();
-    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: ServiceAccountModel,
-        patches: [
-          {
-            op: 'replace',
-            path: '/imagePullSecrets',
-            value: [{ name: 'ip-secret1' }, { name: 'ip-secret2' }, { name: 'ip-secret4' }],
-          },
-          {
-            op: 'replace',
-            path: '/secrets',
-            value: [{ name: 'secret1' }, { name: 'secret2' }],
-          },
-        ],
-      }),
-    );
+  it('should return false when secret is undefined', () => {
+    expect(isLinkableSecret(undefined)).toBe(false);
   });
 });
 
@@ -536,5 +372,67 @@ describe('linkSecretToAllServiceAccounts', () => {
       SecretForComponentOption.partial,
     );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('annotateSecretWithError', () => {
+  const LINKING_ERROR_ANNOTATION = 'konflux-ui/linking-secret-action-error';
+  const annotationPath = `/metadata/annotations/${LINKING_ERROR_ANNOTATION.replace(/\//g, '~1')}`;
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should add annotation if not present', async () => {
+    const errorMessage = 'Link failed';
+
+    await updateAnnotateForSecret(mockSecret, LINKING_ERROR_ANNOTATION, errorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'add',
+          path: '/metadata/annotations',
+          value: {
+            'konflux-ui/linking-secret-action-error': 'Link failed',
+          },
+        },
+      ],
+    });
+  });
+
+  it('should replace annotation if already present', async () => {
+    const secretWithAnnotation: SecretKind = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        annotations: {
+          [LINKING_ERROR_ANNOTATION]: 'old message',
+        },
+      },
+    };
+    const newErrorMessage = 'Updated failure message';
+
+    await updateAnnotateForSecret(secretWithAnnotation, LINKING_ERROR_ANNOTATION, newErrorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: annotationPath,
+          value: newErrorMessage,
+        },
+      ],
+    });
   });
 });

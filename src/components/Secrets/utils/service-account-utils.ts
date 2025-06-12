@@ -1,108 +1,14 @@
+import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
 import { ComponentModel } from '~/models';
 import { SecretModel } from '~/models/secret';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
-import {
-  COMMON_SECRETS_LABEL,
-  PIPELINE_SERVICE_ACCOUNT,
-  PIPELINE_SERVICE_ACCOUNT_PREFIX,
-} from '../../../consts/pipeline';
+import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../../../consts/pipeline';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
-import { ComponentKind, SecretKind, ServiceAccountKind } from '../../../types';
-import { SecretForComponentOption } from './secret-utils';
+import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
+import { isImagePullSecret, SecretForComponentOption } from './secret-utils';
 
-export const linkSecretToServiceAccount = async (secret: SecretKind, namespace: string) => {
-  if (!secret || (!namespace && !secret.metadata?.namespace)) {
-    return;
-  }
-  const serviceAccount = await K8sGetResource<ServiceAccountKind>({
-    model: ServiceAccountModel,
-    queryOptions: { name: PIPELINE_SERVICE_ACCOUNT, ns: namespace },
-  });
-
-  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
-  const imagePullSecretList = existingIPSecrets
-    ? [...existingIPSecrets, { name: secret.metadata.name }]
-    : [{ name: secret.metadata.name }];
-  const existingSecrets = serviceAccount?.secrets as SecretKind[];
-  const secretList = existingSecrets
-    ? [...existingSecrets, { name: secret.metadata.name }]
-    : [{ name: secret.metadata.name }];
-  return K8sQueryPatchResource({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
-      ns: namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: `/imagePullSecrets`,
-        value: imagePullSecretList,
-      },
-      {
-        op: 'replace',
-        path: `/secrets`,
-        value: secretList,
-      },
-    ],
-  });
-};
-
-export const unLinkSecretFromServiceAccount = async (secret: SecretKind, namespace: string) => {
-  if (!secret || (!namespace && !secret.metadata?.namespace)) {
-    return;
-  }
-  const serviceAccount = await K8sGetResource<ServiceAccountKind>({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
-      ns: namespace ?? secret.metadata?.namespace,
-    },
-  });
-
-  const existingIPSecrets = serviceAccount?.imagePullSecrets;
-  const existingSecrets = serviceAccount?.secrets;
-  if (
-    Array.isArray(existingIPSecrets) &&
-    existingIPSecrets.length === 0 &&
-    Array.isArray(existingSecrets) &&
-    existingSecrets.length === 0
-  ) {
-    return;
-  }
-  const imagePullSecretsList =
-    Array.isArray(existingIPSecrets) && existingIPSecrets.length >= 0
-      ? (existingIPSecrets as { [key: string]: string }[]).filter(
-          (s) => s.name !== secret.metadata?.name,
-        )
-      : [];
-  const secretsList =
-    Array.isArray(existingSecrets) && existingSecrets.length >= 0
-      ? (existingSecrets as { [key: string]: string }[]).filter(
-          (s) => s.name !== secret.metadata?.name,
-        )
-      : [];
-  return K8sQueryPatchResource({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: PIPELINE_SERVICE_ACCOUNT,
-      ns: namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: `/imagePullSecrets`,
-        value: imagePullSecretsList,
-      },
-      {
-        op: 'replace',
-        path: `/secrets`,
-        value: secretsList,
-      },
-    ],
-  });
-};
+type SecretEntry = { name: string };
 
 export const linkSecretToBuildServiceAccount = async (
   secret: SecretKind,
@@ -121,15 +27,85 @@ export const linkSecretToBuildServiceAccount = async (
     queryOptions: { name: serviceAccountName, ns: namespace },
   });
 
-  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
-  const imagePullSecretList = existingIPSecrets
-    ? [...existingIPSecrets, { name: secret.metadata.name }]
+  // get list of existing IP secrets
+  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretEntry[];
+  // check whether existing IP secrets list already contains the secret name
+  const alreadyContainsIPSecret = existingIPSecrets?.includes({ name: secret.metadata?.name });
+
+  const imagePullSecretList = isImagePullSecret(secret)
+    ? existingIPSecrets
+      ? alreadyContainsIPSecret
+        ? existingIPSecrets
+        : [...existingIPSecrets, { name: secret.metadata.name }]
+      : [{ name: secret.metadata.name }]
+    : existingIPSecrets;
+
+  // get list of existing secrets
+  const existingSecrets = serviceAccount?.secrets as SecretEntry[];
+  // check whether existing secrets list already contains the secret name
+  const alreadyContainsSecret = existingSecrets?.includes({ name: secret.metadata?.name });
+
+  const secretList = existingSecrets
+    ? alreadyContainsSecret
+      ? existingSecrets
+      : [...existingSecrets, { name: secret.metadata.name }]
     : [{ name: secret.metadata.name }];
 
+  if (!alreadyContainsIPSecret || !alreadyContainsSecret) {
+    return K8sQueryPatchResource({
+      model: ServiceAccountModel,
+      queryOptions: {
+        name: serviceAccountName,
+        ns: namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: `/imagePullSecrets`,
+          value: imagePullSecretList,
+        },
+        {
+          op: 'replace',
+          path: `/secrets`,
+          value: secretList,
+        },
+      ],
+    });
+  }
+  return;
+};
+
+export const linkSecretsToBuildServiceAccount = async (
+  secrets: SecretKind[],
+  component: ComponentKind,
+) => {
+  // When there is no secret/component or they are not in the same namespace, return
+  if (
+    !secrets ||
+    !component ||
+    secrets.find((secret) => secret.metadata.namespace !== component?.metadata?.namespace)
+  ) {
+    return;
+  }
+
+  const secretListString = secrets.map((item: SecretKind) => {
+    return { name: item?.metadata?.name };
+  });
+  const serviceAccountName = `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${component.metadata.name}`;
+  const namespace = component.metadata.namespace;
+
+  const serviceAccount = await K8sGetResource<ServiceAccountKind>({
+    model: ServiceAccountModel,
+    queryOptions: { name: serviceAccountName, ns: namespace },
+  });
+
+  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
+  const imagePullSecretList = existingIPSecrets
+    ? [...existingIPSecrets, ...secretListString]
+    : secretListString;
+
   const existingSecrets = serviceAccount?.secrets as SecretKind[];
-  const secretList = existingSecrets
-    ? [...existingSecrets, { name: secret.metadata.name }]
-    : [{ name: secret.metadata.name }];
+  const secretList = existingSecrets ? [...existingSecrets, ...secretListString] : secretListString;
 
   return K8sQueryPatchResource({
     model: ServiceAccountModel,
@@ -218,10 +194,27 @@ export const unLinkSecretFromBuildServiceAccount = async (
   });
 };
 
+export const filterLinkedServiceAccounts = (
+  secretName: string,
+  serviceAccounts: ServiceAccountKind[],
+): ServiceAccountKind[] => {
+  if (!secretName || !serviceAccounts) {
+    return [];
+  }
+
+  return serviceAccounts.filter((sa) => {
+    const isBuildServiceAccount = sa.metadata.name.startsWith(PIPELINE_SERVICE_ACCOUNT_PREFIX);
+    const hasSecret = sa.secrets?.some((s) => s.name === secretName);
+    const hasImagePullSecret = sa.imagePullSecrets?.some((s) => s.name === secretName);
+    return isBuildServiceAccount && (hasSecret || hasImagePullSecret);
+  });
+};
+
 export const getLinkedServiceAccounts = async (secret: SecretKind) => {
   if (!secret || !secret.metadata?.namespace) {
     return;
   }
+
   const allServiceAccounts: ServiceAccountKind[] = await K8sListResourceItems<ServiceAccountKind>({
     model: ServiceAccountModel,
     queryOptions: {
@@ -229,12 +222,7 @@ export const getLinkedServiceAccounts = async (secret: SecretKind) => {
     },
   });
 
-  const linkedServiceAccounts = allServiceAccounts.filter((sa) => {
-    const hasSecret = sa.secrets?.some((s) => s.name === secret.metadata.name);
-    const hasImagePullSecret = sa.imagePullSecrets?.some((s) => s.name === secret.metadata.name);
-    return hasSecret || hasImagePullSecret;
-  });
-  return linkedServiceAccounts;
+  return filterLinkedServiceAccounts(secret.metadata.name, allServiceAccounts);
 };
 
 export const unlinkSecretFromServiceAccounts = async (
@@ -316,4 +304,120 @@ export const linkCommonSecretsToServiceAccount = async (component: ComponentKind
   });
 
   await processWithPLimit(commonSecrets, 10, linkSecretToBuildServiceAccount, component);
+};
+
+export const isLinkableSecret = (secret: SecretKind): boolean => {
+  if (!secret) {
+    return false;
+  }
+
+  const linkableValues = Object.values(LinkableSecretType) as string[];
+  return linkableValues.includes(secret.type);
+};
+
+export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {
+  if (!secret || !secret.metadata?.name || !secret.metadata?.namespace) {
+    return;
+  }
+
+  const createdSecret = await K8sGetResource<SecretKind>({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata?.namespace,
+    },
+  });
+
+  const currentLabels = createdSecret.metadata.labels || {};
+  if (currentLabels[COMMON_SECRETS_LABEL] === 'true') {
+    return;
+  }
+
+  const updatedLabels = {
+    ...currentLabels,
+    [COMMON_SECRETS_LABEL]: 'true',
+  };
+
+  await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: '/metadata/labels',
+        value: updatedLabels,
+      },
+    ],
+  });
+};
+
+//Updates the linking error message annotation for the Secret
+export const updateAnnotateForSecret = async (
+  secret: SecretKind,
+  annotationKey: string,
+  annotationValue?: string,
+): Promise<void> => {
+  const namespace = secret.metadata?.namespace;
+  const name = secret.metadata?.name;
+
+  if (!namespace || !name) {
+    return;
+  }
+
+  const annotationPath = `/metadata/annotations/${annotationKey.replace(/\//g, '~1')}`;
+  const patches = [];
+
+  if (annotationValue !== undefined) {
+    const safeAnnotationValue =
+      annotationValue.length > MAX_ANNOTATION_LENGTH
+        ? `${annotationValue.slice(0, MAX_ANNOTATION_LENGTH - 3)}...`
+        : annotationValue;
+
+    if (secret.metadata.annotations && secret.metadata.annotations[annotationKey]) {
+      patches.push({
+        op: 'replace' as const,
+        path: annotationPath,
+        value: safeAnnotationValue,
+      });
+    } else {
+      if (secret.metadata.annotations) {
+        patches.push({
+          op: 'add' as const,
+          path: annotationPath,
+          value: safeAnnotationValue,
+        });
+      } else {
+        patches.push({
+          op: 'add' as const,
+          path: '/metadata/annotations',
+          value: {
+            [annotationKey]: safeAnnotationValue,
+          },
+        });
+      }
+    }
+  } else {
+    if (secret.metadata.annotations?.[annotationKey]) {
+      patches.push({
+        op: 'remove' as const,
+        path: annotationPath,
+      });
+    }
+  }
+
+  if (patches.length === 0) {
+    return;
+  }
+
+  await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name,
+      ns: namespace,
+    },
+    patches,
+  });
 };

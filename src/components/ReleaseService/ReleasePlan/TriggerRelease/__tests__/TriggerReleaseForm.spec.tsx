@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { FormikProps } from 'formik';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
@@ -35,6 +36,12 @@ jest.mock('../../../../../shared/hooks/useScrollShadows', () => ({
 const useSnapshotsMock = useSnapshotsForApplication as jest.Mock;
 const useReleasePlansMock = useReleasePlans as jest.Mock;
 
+const TriggerRelease = (props) => (
+  <MemoryRouter>
+    <TriggerReleaseForm {...props} />
+  </MemoryRouter>
+);
+
 describe('TriggerReleaseForm', () => {
   beforeEach(() => {
     useReleasePlansMock.mockReturnValue([[], false]);
@@ -43,7 +50,7 @@ describe('TriggerReleaseForm', () => {
   it('should show trigger release button and heading', () => {
     const values = {};
     const props = { values } as FormikProps<TriggerReleaseFormValues>;
-    const result = formikRenderer(<TriggerReleaseForm {...props} />, values);
+    const result = formikRenderer(TriggerRelease(props), values);
     expect(result.getByRole('heading', { name: 'Trigger release plan' })).toBeVisible();
     expect(result.getByRole('button', { name: 'Trigger' })).toBeVisible();
   });
@@ -51,17 +58,19 @@ describe('TriggerReleaseForm', () => {
   it('should show trigger release input fields', () => {
     const values = {};
     const props = { values } as FormikProps<TriggerReleaseFormValues>;
-    const result = formikRenderer(<TriggerReleaseForm {...props} />, values);
+    const result = formikRenderer(TriggerRelease(props), values);
     expect(result.getByRole('textbox', { name: 'Synopsis' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Description' })).toBeVisible();
     expect(result.getByRole('textbox', { name: 'Topic' })).toBeVisible();
-    expect(result.getByRole('textbox', { name: 'References' })).toBeVisible();
+
+    screen.getByText('References');
+    screen.getByTestId('add-reference-button');
   });
 
   it('should show release & snapshot dropdown in loading state', () => {
     const values = {};
     const props = { values } as FormikProps<TriggerReleaseFormValues>;
-    formikRenderer(<TriggerReleaseForm {...props} />, values);
+    formikRenderer(TriggerRelease(props), values);
     expect(screen.getByText('Loading release plans...')).toBeVisible();
     expect(screen.getByText('Loading snapshots...')).toBeVisible();
   });

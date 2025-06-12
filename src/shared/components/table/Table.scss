@@ -205,3 +205,15 @@
   flex-direction: column;
   gap: var(--pf-v5-global--spacer--md);
 }
+
+.table .pf-v5-c-table {
+  --expand-cell-width: 5%;
+
+  tr > td[data-test='virtual-body-expand-row'] {
+    width: var(--expand-cell-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+  }
+}

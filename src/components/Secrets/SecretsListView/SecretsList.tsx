@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Table } from '../../../shared';
 import { SecretKind } from '../../../types';
-import SecretsListHeader from './SecretsListHeader';
-import SecretsListRow from './SecretsListRow';
+import SecretsListHeaderWithComponents from './SecretsListHeaderWithComponents';
+import SecretsListRowWithComponents from './SecretsListRowWithComponents';
 
 type SecretsListProps = {
   secrets: SecretKind[];
@@ -14,8 +14,8 @@ const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secr
       <Table
         data={secrets}
         aria-label="Secret List"
-        Header={SecretsListHeader}
-        Row={SecretsListRow}
+        Header={SecretsListHeaderWithComponents}
+        Row={SecretsListRowWithComponents}
         loaded
         getRowProps={(obj: SecretKind) => ({
           id: obj.metadata.name,

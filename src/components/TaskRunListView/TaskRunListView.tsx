@@ -1,26 +1,21 @@
 import * as React from 'react';
-import {
-  Bullseye,
-  EmptyState,
-  EmptyStateBody,
-  SearchInput,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
-} from '@patternfly/react-core';
-import { useSearchParam } from '../../hooks/useSearchParam';
-import { Table } from '../../shared';
+import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
+import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { TaskRunKind } from '../../types';
+import { FilterContext } from '../Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { TaskRunListHeader } from './TaskRunListHeader';
 import TaskRunListRow from './TaskRunListRow';
 
 type Props = { taskRuns: TaskRunKind[]; loaded: boolean };
 
 const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, loaded }) => {
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
 
   const sortedTaskRuns = React.useMemo(
     () =>
@@ -36,14 +31,12 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, l
         ? sortedTaskRuns.filter(
             (taskrun) =>
               taskrun.metadata.name.indexOf(nameFilter) !== -1 ||
-              taskrun.spec?.taskRef?.name?.indexOf(nameFilter) !== -1,
+              (taskrun.spec?.taskRef?.name &&
+                taskrun.spec?.taskRef?.name?.indexOf(nameFilter) !== -1),
           )
         : sortedTaskRuns,
     [nameFilter, sortedTaskRuns],
   );
-
-  const onClearFilters = () => setNameFilter('');
-  const onNameInput = (name: string) => setNameFilter(name);
 
   if (!loaded) {
     return (
@@ -63,23 +56,13 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, l
 
   return (
     <>
-      <Toolbar data-test="taskrun-list-toolbar" clearAllFilters={onClearFilters}>
-        <ToolbarContent>
-          <ToolbarGroup align={{ default: 'alignLeft' }}>
-            <ToolbarItem className="pf-v5-u-ml-0">
-              <SearchInput
-                name="nameInput"
-                data-test="name-input-filter"
-                type="search"
-                aria-label="name filter"
-                placeholder="Filter by name..."
-                onChange={(_, name) => onNameInput(name)}
-                value={nameFilter}
-              />
-            </ToolbarItem>
-          </ToolbarGroup>
-        </ToolbarContent>
-      </Toolbar>
+      <BaseTextFilterToolbar
+        text={nameFilter}
+        label="name"
+        setText={(name) => setFilters({ name })}
+        onClearFilters={onClearFilters}
+        dataTest="taskrun-list-toolbar"
+      />
       {filteredTaskRun.length > 0 ? (
         <Table
           data={filteredTaskRun}
@@ -89,7 +72,7 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, l
           loaded={loaded}
         />
       ) : (
-        <FilteredEmptyState onClearFilters={onClearFilters} />
+        <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}
     </>
   );

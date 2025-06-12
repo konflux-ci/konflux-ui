@@ -125,6 +125,10 @@ const samplePipelineSpec: PipelineSpec = {
   ],
 };
 
+const sampleAnnotations = {
+  'pipelinesascode.tekton.dev/git-provider': 'github',
+};
+
 const sampleLabels = {
   'app.kubernetes.io/managed-by': 'pipelinesascode.tekton.dev',
   'app.kubernetes.io/version': '0.10.2',
@@ -156,6 +160,7 @@ const samplePipelineRun: PipelineRunKind = {
     creationTimestamp: '2022-11-28T12:08:22Z',
     generateName: 'test-case',
     labels: sampleLabels,
+    annotations: sampleAnnotations,
     name: 'test-caseqfvdj',
     namespace: 'test-ns',
     uid: '21f9d031-528a-449b-90eb-106e22fcfa39',
@@ -191,6 +196,11 @@ export enum DataState {
   STATUS_WITH_EMPTY_CONDITIONS = 'StatusWithEmptyCondition',
   STATUS_WITHOUT_CONDITION_TYPE = 'StatusWithoutConditionType',
   STATUS_WITH_UNKNOWN_REASON = 'StatusWithUnknownReason',
+  STATUS_WITH_TEST_OUTPUT_ERROR = 'StatusWithTestOutputError',
+  STATUS_WITHOUT_TEST_OUTPUT_INFO = 'StatusWithoutTestOutputInfo',
+  STATUS_WITH_INVALID_TEST_OUTPUT_RESULT = 'StatusWithInvalidTestOutputResult',
+  STATUS_WITH_TEST_OUTPUT_SUCCESS = 'StatusWithTestOutputSuccess',
+  STATUS_WITH_INVALID_TEST_OUTPUT_JSON_VALUE = 'StatusWithInvalidTestOutputJsonValue',
 }
 
 type TestPipelineRuns = { [key in DataState]?: PipelineRunKind };
@@ -927,6 +937,69 @@ export const testPipelineRuns: TestPipelineRuns = {
     status: {
       pipelineSpec: samplePipelineSpec,
       conditions: [{ type: 'Succeeded', status: 'False', reason: 'Unknown' }],
+    },
+  },
+  [DataState.STATUS_WITH_TEST_OUTPUT_ERROR]: {
+    ...samplePipelineRun,
+    status: {
+      ...samplePipelineRun.status,
+      results: [
+        {
+          name: 'TEST_OUTPUT',
+          value:
+            '{ "result": "ERROR", "namespace": "example-namespace", "timestamp": "2025-05-05T10:24:33Z", "successes": 0, "failures": 1, "warnings": 0, "note": "Simulated failure for testing TEST_OUTPUT reporting" }',
+        },
+      ],
+    },
+  },
+  [DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO]: {
+    ...samplePipelineRun,
+    status: {
+      ...samplePipelineRun.status,
+      results: [
+        {
+          name: 'RANDOM_RESULT',
+          value: 'random result value',
+        },
+      ],
+    },
+  },
+  [DataState.STATUS_WITH_INVALID_TEST_OUTPUT_RESULT]: {
+    ...samplePipelineRun,
+    status: {
+      ...samplePipelineRun.status,
+      results: [
+        {
+          name: 'TEST_OUTPUT',
+          value:
+            '{ "result": null, "namespace": "example-namespace", "timestamp": "2025-05-05T10:24:33Z", "successes": 0, "failures": 1, "warnings": 0, "note": "Simulated failure for testing TEST_OUTPUT reporting" }',
+        },
+      ],
+    },
+  },
+  [DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS]: {
+    ...samplePipelineRun,
+    status: {
+      ...samplePipelineRun.status,
+      results: [
+        {
+          name: 'TEST_OUTPUT',
+          value:
+            '{ "result": "SUCCESS", "namespace": "example-namespace", "timestamp": "2025-05-05T10:24:33Z", "successes": 1, "failures": 0, "warnings": 0, "note": "Simulated success for testing TEST_OUTPUT reporting" }',
+        },
+      ],
+    },
+  },
+  [DataState.STATUS_WITH_INVALID_TEST_OUTPUT_JSON_VALUE]: {
+    ...samplePipelineRun,
+    status: {
+      ...samplePipelineRun.status,
+      results: [
+        {
+          name: 'TEST_OUTPUT',
+          value: '{ invalid json',
+        },
+      ],
     },
   },
 };

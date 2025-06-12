@@ -247,6 +247,7 @@ export const usePipelineRunsForCommit = (
   applicationName: string,
   commit: string,
   limit?: number,
+  filterByComponents = true,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
@@ -286,7 +287,9 @@ export const usePipelineRunsForCommit = (
     return [
       pipelineRuns
         .filter((plr) =>
-          componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]),
+          filterByComponents
+            ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
+            : true,
         )
         .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
         .slice(0, limit ? limit : undefined),
@@ -295,7 +298,16 @@ export const usePipelineRunsForCommit = (
       getNextPage,
       nextPageProps,
     ];
-  }, [componentNames, getNextPage, limit, loaded, nextPageProps, pipelineRuns, plrError]);
+  }, [
+    componentNames,
+    filterByComponents,
+    getNextPage,
+    limit,
+    loaded,
+    nextPageProps,
+    pipelineRuns,
+    plrError,
+  ]);
 };
 
 export const usePipelineRun = (

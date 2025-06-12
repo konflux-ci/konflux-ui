@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { K8sQueryListResourceItems } from '../../../k8s';
 import { ComponentModel } from '../../../models';
 import { RouterParams } from '../../../routes/utils';
@@ -18,5 +19,9 @@ export const componentsTabLoader = createLoaderWithAccessCheck(
 
 export const ComponentListTab: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
-  return <ComponentListView applicationName={applicationName} />;
+  return (
+    <FilterContextProvider filterParams={['name', 'status']}>
+      <ComponentListView applicationName={applicationName} />
+    </FilterContextProvider>
+  );
 };

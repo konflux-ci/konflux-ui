@@ -27,7 +27,7 @@ describe('Pipeline run Row', () => {
       <PipelineRunListRowWithVulnerabilities obj={runningPipelineRun} columns={[]} />,
     );
 
-    expect(row.getByText('-')).toBeDefined();
+    expect(row.getAllByText('-')).toBeDefined();
     expect(row.getByText('Running')).toBeDefined();
   });
 
@@ -45,7 +45,7 @@ describe('Pipeline run Row', () => {
       />,
     );
 
-    expect(row.getByText('-')).toBeDefined();
+    expect(row.getAllByText('-')).toBeDefined();
     expect(row.getByText('Succeeded')).toBeDefined();
   });
 
@@ -118,5 +118,39 @@ describe('Pipeline run Row', () => {
       row.getByText('Stop');
       row.getByText('Cancel');
     });
+  });
+
+  it('should return "ERROR" when test output result is ERROR', () => {
+    const plrWithTestOutputError = testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_ERROR];
+    const plrName = plrWithTestOutputError.metadata.name;
+    const row = render(
+      <PipelineRunListRowWithVulnerabilities
+        obj={plrWithTestOutputError}
+        customData={{
+          fetchedPipelineRuns: [plrName],
+          vulnerabilities: [{ [plrName]: {} }] as any,
+        }}
+        columns={[]}
+      />,
+    );
+
+    expect(row.getByText('ERROR')).toBeDefined();
+  });
+
+  it('should return "SUCCESS" when test output result is SUCCESS', () => {
+    const plrWithTestOutputError = testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS];
+    const plrName = plrWithTestOutputError.metadata.name;
+    const row = render(
+      <PipelineRunListRowWithVulnerabilities
+        obj={plrWithTestOutputError}
+        customData={{
+          fetchedPipelineRuns: [plrName],
+          vulnerabilities: [{ [plrName]: {} }] as any,
+        }}
+        columns={[]}
+      />,
+    );
+
+    expect(row.getByText('SUCCESS')).toBeDefined();
   });
 });

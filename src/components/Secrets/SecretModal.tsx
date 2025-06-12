@@ -7,6 +7,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   BuildTimeSecret,
+  CurrentComponentRef,
 } from '../../types';
 import { SecretFromSchema } from '../../utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
@@ -30,12 +31,14 @@ export type SecretModalValues = ImportSecret & {
 type SecretModalProps = RawComponentProps & {
   existingSecrets: BuildTimeSecret[];
   onSubmit: (value: SecretModalValues) => void;
+  currentComponent?: null | CurrentComponentRef;
 };
 
 const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
   modalProps,
   onSubmit,
   existingSecrets,
+  currentComponent,
 }) => {
   const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
   const initialValues: SecretModalValues = {
@@ -51,6 +54,9 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
       authType: SourceSecretType.basic,
     },
     existingSecrets,
+    currentComponent,
+    relatedComponents: [],
+    secretForComponentOption: null,
   };
 
   return (
@@ -85,7 +91,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
           ]}
         >
           <ModalBoxBody>
-            <SecretForm existingSecrets={existingSecrets} />
+            <SecretForm existingSecrets={existingSecrets} currentComponent={currentComponent} />
           </ModalBoxBody>
         </Modal>
       )}

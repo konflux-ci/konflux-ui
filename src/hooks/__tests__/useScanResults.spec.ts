@@ -21,7 +21,8 @@ const taskRunData = [
       results: [
         {
           name: 'CVE_SCAN_RESULT',
-          value: '{ "vulnerabilities": { "critical": 1, "high": 2, "medium": 3, "low": 4 } }',
+          value:
+            '{ "vulnerabilities": { "critical": 1, "high": 2, "medium": 3, "low": 4, "unknown": 5 } }',
         },
       ],
     },
@@ -35,7 +36,8 @@ const taskRunData = [
       results: [
         {
           name: 'CLAIR_SCAN_RESULT',
-          value: '{ "vulnerabilities": { "critical": 5, "high": 2, "medium": 0, "low": 4 } }',
+          value:
+            '{ "vulnerabilities": { "critical": 5, "high": 2, "medium": 0, "low": 4, "unknown": 1 } }',
         },
       ],
     },
@@ -61,7 +63,7 @@ describe('useScanResults', () => {
     useTRTaskRunsMock.mockReturnValue([[taskRunData[0]], true]);
     const { result } = renderHook(() => useScanResults('test'));
     expect(result.current).toEqual([
-      { vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4 } },
+      { vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4, unknown: 5 } },
       true,
     ]);
   });
@@ -100,6 +102,7 @@ describe('usePLRScanResults', () => {
       high: 2,
       low: 4,
       medium: 3,
+      unknown: 5,
     });
     const [map2] = vulnerabilities[1] as { vulnerabilities: Record<string, unknown> }[];
     expect(map2.vulnerabilities).toEqual({
@@ -107,6 +110,7 @@ describe('usePLRScanResults', () => {
       high: 2,
       low: 4,
       medium: 0,
+      unknown: 1,
     });
     expect(loaded).toBe(true);
   });
@@ -130,7 +134,7 @@ describe('usePLRVulnerabilities', () => {
     expect(result.current.vulnerabilities).toEqual(
       expect.objectContaining({
         test: expect.arrayContaining([
-          { vulnerabilities: { critical: 1, high: 2, low: 4, medium: 3 } },
+          { vulnerabilities: { critical: 1, high: 2, low: 4, medium: 3, unknown: 5 } },
         ]),
       }),
     );
