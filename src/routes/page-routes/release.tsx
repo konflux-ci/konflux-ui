@@ -4,6 +4,7 @@ import {
   ReleaseOverviewTab,
   ReleasePipelineRunTab,
 } from '../../components/Releases';
+import ReleaseArtifactsTab from '../../components/Releases/ReleaseArtifactsTab';
 import { APPLICATION_RELEASE_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
@@ -22,6 +23,10 @@ const releaseRoutes = [
       {
         path: 'pipelineruns',
         element: <ReleasePipelineRunTab />,
+      },
+      {
+        path: 'artifacts',
+        element: <ReleaseArtifactsTab />,
       },
     ],
   },

@@ -4,13 +4,17 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Base64 } from 'js-base64';
-import { FLAGS } from '~/feature-flags/flags';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { BuildTimeSecret, SecretType, SecretTypeDropdownLabel } from '../../../types';
+import {
+  BuildTimeSecret,
+  CurrentComponentRef,
+  SecretType,
+  SecretTypeDropdownLabel,
+} from '../../../types';
 import { AccessReviewResources } from '../../../types/rbac';
 import { useAccessReviewForModels } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
@@ -20,18 +24,17 @@ import { ImportFormValues } from '../type';
 
 const accessReviewResources: AccessReviewResources = [{ model: SecretModel, verb: 'create' }];
 
-const SecretSection = () => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
+type SecretSectionProps = {
+  currentComponent?: null | CurrentComponentRef;
+};
+
+const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
   const [canCreateSecret] = useAccessReviewForModels(accessReviewResources);
   const showModal = useModalLauncher();
   const { values, setFieldValue } = useFormikContext<ImportFormValues>();
   const namespace = useNamespace();
 
   const [secrets, secretsLoaded] = useSecrets(namespace);
-  const secretHelpText =
-    isBuildServiceAccountFeatureOn === true
-      ? 'Keep your data secure by defining a build time secret. Secrets are stored at the component level, allowing both this component and any linking components to access them.'
-      : 'Keep your data secure by defining a build time secret. Secrets are stored at a namespace level so applications within namespace will have access to these secrets.';
 
   const partnerTaskSecrets: BuildTimeSecret[] =
     secrets && secretsLoaded
@@ -75,7 +78,7 @@ const SecretSection = () => {
         label="Build time secret"
         addLabel="Add secret"
         placeholder="Secret"
-        helpText={secretHelpText}
+        helpText={IMPORT_SECRET_HELP_TEXT}
         noFooter
         isReadOnly
         onChange={(v) =>
@@ -103,7 +106,14 @@ const SecretSection = () => {
         data-test="add-secret-button"
         icon={<PlusCircleIcon />}
         onClick={() =>
-          showModal(SecretModalLauncher([...partnerTaskSecrets, ...values.newSecrets], onSubmit))
+          showModal(
+            SecretModalLauncher(
+              [...partnerTaskSecrets, ...values.newSecrets], // existingSecrets
+              onSubmit,
+              undefined, // onClose
+              currentComponent, // currentComponent
+            ),
+          )
         }
         isDisabled={!canCreateSecret}
         tooltip="You don't have access to add a secret"
