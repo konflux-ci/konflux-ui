@@ -1,5 +1,5 @@
 export const pipelineRunTableColumnClasses = {
-  name: 'pf-m-width-30 pf-m-width-20-on-xl wrap-column',
+  name: 'pf-m-width-10 pf-m-width-20-on-xl wrap-column',
   status: 'pf-m-width-10 pf-m-width-5-on-xl',
   testResultStatus: 'pf-m-width-10 pf-m-width-5-on-xl',
   started: 'pf-m-width-20 pf-m-width-10-on-xl',
@@ -9,6 +9,8 @@ export const pipelineRunTableColumnClasses = {
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   workspace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
+  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -19,6 +21,8 @@ const createPipelineRunListHeader =
     showTestResult: boolean,
     showComponent: boolean,
     showSnapshot: boolean,
+    showTrigger: boolean = true,
+    showReference: boolean = true,
   ) =>
   () => {
     return [
@@ -90,6 +94,22 @@ const createPipelineRunListHeader =
             },
           ]
         : []),
+      ...(showTrigger
+        ? [
+            {
+              title: 'Trigger',
+              props: { className: pipelineRunTableColumnClasses.trigger },
+            },
+          ]
+        : []),
+      ...(showReference
+        ? [
+            {
+              title: 'Reference',
+              props: { className: pipelineRunTableColumnClasses.reference },
+            },
+          ]
+        : []),
       {
         title: ' ',
         props: { className: pipelineRunTableColumnClasses.kebab },
@@ -97,14 +117,24 @@ const createPipelineRunListHeader =
     ];
   };
 
-export const PipelineRunListHeader = createPipelineRunListHeader(false, false, true, true, false);
+export const PipelineRunListHeader = createPipelineRunListHeader(
+  false,
+  false,
+  true,
+  true,
+  false,
+  true,
+  true,
+);
 
 export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHeader(
   true,
   false,
-  true,
-  true,
   false,
+  false,
+  false,
+  true,
+  true,
 );
 
 export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
@@ -113,4 +143,6 @@ export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
   false,
   false,
   true,
+  false,
+  false,
 );
