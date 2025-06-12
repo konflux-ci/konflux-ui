@@ -4,7 +4,7 @@ import { screen, render, fireEvent, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
+import { useLinkedServiceAccounts } from '../../../hooks/useLinkedServiceAccounts';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { RemoteSecretStatusReason } from '../../../types';
 import { mockServiceAccounts } from '../__data__/mock-secrets';
