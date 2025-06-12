@@ -51,7 +51,7 @@ RUN slnodejs scan \
     --instrumentForBrowsers
 ###############################################################################
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:31e5b607c2f7e80477c909530cec406707429a6e24f08a9925df94ec5be4df0b
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:7780f65bb941e76560b5f6870d2bb1f6c65305c6ef56e573ed6dfafe61ded3ef
 
 ENV SL_BUILD_DIR=sl_dist NODE_DEBUG=sl
 COPY --from=builder /opt/app-root/src/${SL_BUILD_DIR}/* /opt/app-root/src/
