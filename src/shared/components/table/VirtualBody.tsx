@@ -50,16 +50,8 @@ const RowMemo = React.memo<
   if (expand) {
     return (
       <>
-        <TableData
-          data-test="virtual-body-expand-row"
-          className="pf-m-width-5 virtual-body-expanded-row-vertical-center-cell"
-        >
-          <Button
-            className="pf-v5-c-button pf-m-plain"
-            variant="plain"
-            onClick={() => onToggle?.(index)}
-            style={{ display: 'flex' }}
-          >
+        <TableData data-test="virtual-body-expand-row">
+          <Button variant="plain" onClick={() => onToggle?.(index)}>
             {isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
           </Button>
         </TableData>
