@@ -15,6 +15,8 @@ import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils'
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
 
+import './SecretsListRow.scss';
+
 type SecretsListRowProps = RowFunctionArgs<SecretKind>;
 
 const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsListRowProps>> = ({
@@ -77,11 +79,11 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
         <BackgroundStatusIconWithText status={taskStatus as BackgroundJobStatus} />
         {taskStatus === BackgroundJobStatus.Failed && taskError && (
           <>
-            <Button onClick={handleErrorModalToggle} variant="link" style={{ marginLeft: '4rem' }}>
+            <Button onClick={handleErrorModalToggle} variant="link" className="error-button">
               View Error
             </Button>
             <ErrorModal
-              title="Secert link task failed:"
+              title="Secret link task failed:"
               errorMessage={taskError}
               isOpen={isErrorModalOpen}
               onClose={handleErrorModalToggle}
