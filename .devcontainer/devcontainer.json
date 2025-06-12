@@ -43,7 +43,7 @@
   "postCreateCommand": "yarn install",
 
   // Use 'postStartCommand' to run commands after the container is started
-  "postStartCommand": "echo 'Welcome to Konflux UI development environment! Run yarn start to begin development.' && .devcontainer/post-start-files/setup-git-config.sh && .devcontainer/post-start-files/setup-gpg.sh",
+  "postStartCommand": "echo 'Welcome to Konflux UI development environment! Run yarn start to begin development.' && /container-files/setup-gitconfig.sh && /container-files/test-gpg.sh",
 
   // Set the default user to vscode (non-root)
   "remoteUser": "vscode",
@@ -60,7 +60,7 @@
   "workspaceFolder": "/workspaces/konflux-ui",
 
   // Lifecycle scripts
-  "initializeCommand": "echo 'Initializing Konflux UI devcontainer...' && echo 'Copying git configuration files...' && cp ~/.gitconfig* .devcontainer/container-files/ 2>/dev/null || echo 'No gitconfig files found in home directory'",
+  "initializeCommand": "echo 'Initializing Konflux UI devcontainer...' && echo 'Copying git configuration files...' && mkdir -p .devcontainer/.gitconfig-dir && cp ~/.gitconfig* .devcontainer/.gitconfig-dir/ 2>/dev/null || echo 'No gitconfig files found in home directory'",
 
   // Development server configuration
   "portsAttributes": {
