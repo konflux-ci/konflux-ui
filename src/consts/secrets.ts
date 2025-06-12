@@ -16,3 +16,5 @@ export const SecretLinkOptionLabels = {
     partial: 'Select components in the namespace',
   },
 } as const;
+export const IMPORT_SECRET_HELP_TEXT =
+  'Keep your data secure by defining a build time secret. Secrets are stored at a namespace level so applications within namespace will have access to these secrets.';
