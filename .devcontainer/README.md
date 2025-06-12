@@ -2,9 +2,11 @@
 
 This directory contains the DevContainer configuration for the Konflux UI project, allowing you to develop without installing Node.js, Yarn, and other dependencies locally.
 
+While this documentation highlights the installation process for VS Code and other editors built upon it like Cursor, other editors also [support DevContainers](https://containers.dev/supporting).
+
 ## Prerequisites
 
-**Option 1: Podman (Recommended for Linux)**
+**Option 1: Podman**
 
 - [Podman](https://podman.io/getting-started/installation)
 - [Visual Studio Code](https://code.visualstudio.com/)
@@ -112,7 +114,7 @@ The devcontainer automatically forwards these ports:
 
 ## Git Configuration
 
-This devcontainer uses a hybrid approach combining VS Code's [standard Git credential sharing](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) with enhanced multi-forge support:
+This devcontainer uses a hybrid approach combining VS Code's [standard Git credential sharing](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) with enhanced multi-forge identity support:
 
 - **Git config**: Enhanced forge-specific identity detection (see below) + VS Code's standard `.gitconfig` copying
 - **SSH keys**: VS Code's standard SSH agent forwarding (automatic if SSH agent is running)
