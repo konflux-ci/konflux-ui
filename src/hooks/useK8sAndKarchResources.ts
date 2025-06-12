@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/fetch-utils';
+import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 import { useK8sWatchResource } from '../k8s';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
