@@ -29,7 +29,6 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
     startIndex: number;
     stopIndex: number;
   }) => void;
-  expandedRowIndexes?: Set<number>;
 };
 
 export type RowFunctionArgs<T = unknown, C = unknown> = {
@@ -169,7 +168,6 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
                 id={rowId}
                 index={index}
                 trKey={key}
-                style={{}}
               >
                 <RowMemo
                   Row={Row}

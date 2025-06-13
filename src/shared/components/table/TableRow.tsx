@@ -7,7 +7,7 @@ export type TableRowProps = {
   index: number;
   title?: string;
   trKey: string;
-  style: object;
+  style?: object;
   className?: string;
   isExpanded?: boolean;
   recompute?: () => void;
@@ -25,7 +25,7 @@ export const TableRow: React.FC<React.PropsWithChildren<TableRowProps>> = ({
   const ref = React.useRef<HTMLTableRowElement>(null);
   useResizeObserver(() => {
     window.requestAnimationFrame(() => {
-      recompute && recompute();
+      recompute?.();
     });
   }, ref.current);
 
