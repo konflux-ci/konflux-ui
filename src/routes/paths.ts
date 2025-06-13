@@ -80,6 +80,10 @@ export const PIPELINE_RUNS_LIST_PATH = ACTIVITY_PATH.extend('pipelineruns');
 
 export const PLR_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
 
+export const RELEASE_PIPELINE_LIST_PATH = APPLICATION_RELEASE_LIST_PATH.extend(
+  `:${RouterParams.releaseName}/pipelineruns`,
+);
+
 export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.pipelineRunName}`);
 
 export const PIPELINE_RUNS_LOG_PATH = PIPELINE_RUNS_DETAILS_PATH.extend('logs');
