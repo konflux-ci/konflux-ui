@@ -195,27 +195,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
       </TableData>
 
-      {showVulnerabilities ? (
-        <TableData className={pipelineRunTableColumnClasses.component}>
-          {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
-            obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
-              <Link
-                to={COMPONENT_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
-                })}
-              >
-                {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
-              </Link>
-            ) : (
-              obj.metadata?.labels[PipelineRunLabel.COMPONENT]
-            )
-          ) : (
-            '-'
-          )}
-        </TableData>
-      ) : null}
       {showSnapshot ? (
         <TableData className={pipelineRunTableColumnClasses.snapshot}>
           <Link
@@ -234,7 +213,23 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showComponent ? (
         <TableData className={pipelineRunTableColumnClasses.component}>
-          {release?.metadata?.name || ''}
+          {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
+            obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
+              <Link
+                to={COMPONENT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
+                })}
+              >
+                {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
+              </Link>
+            ) : (
+              obj.metadata?.labels[PipelineRunLabel.COMPONENT]
+            )
+          ) : (
+            '-'
+          )}
         </TableData>
       ) : null}
       {showTrigger ? (
@@ -256,7 +251,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
 
 export const PipelineRunListRow: React.FC<React.PropsWithChildren<PipelineRunListRowProps>> = (
   props,
-) => <BasePipelineRunListRow {...props} showComponent />;
+) => <BasePipelineRunListRow {...props} showComponent showTestResult showReference showTrigger />;
 
 export const PipelineRunListRowWithVulnerabilities: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
