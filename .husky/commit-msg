@@ -1,1 +1,43 @@
+#!/bin/bash
+set -euo pipefail
+
 npx --no -- commitlint --edit $1
+
+COMMIT_MSG_FILE="$1" 
+
+# If the commit message is fixup! or squash! or Merge, exit without changing it.
+grep -qE '^(fixup!|squash!|Merge)' "$COMMIT_MSG_FILE" && exit 0
+
+# Define array of authorized emails which are loaded from AI_authorized_emails.txt
+AUTHORIZED_EMAILS=()
+while IFS= read -r line; do
+    AUTHORIZED_EMAILS+=("$line")
+done < AI_authorized_emails.txt
+
+# Get current user's email
+CURRENT_EMAIL=$(git config user.email)
+
+# Throw error if the email is not set
+if [ -z "$CURRENT_EMAIL" ]; then
+    echo "Error: Current email is not set"
+    exit 1
+fi
+
+# Check if the email is in the authorized list
+is_authorized=0
+for email in "${AUTHORIZED_EMAILS[@]}"; do
+    if [ "$CURRENT_EMAIL" = "$email" ]; then
+        is_authorized=1
+        break
+    fi
+done
+
+echo "is_authorized: $is_authorized"
+
+if [ $is_authorized -eq 1 ]; then
+    # Use a fixed trailer string.
+    TRAILER="Assisted-by: Cursor"
+    # Add the trailer if it doesn't already exist.
+    grep -qs "^$TRAILER" "$COMMIT_MSG_FILE" ||
+        git interpret-trailers --in-place --trailer "$TRAILER" "$COMMIT_MSG_FILE"
+fi

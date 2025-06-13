@@ -1,0 +1,14 @@
+.artifacts-images-expanded-row {
+  padding-top: var(--pf-v5-global--spacer--md);
+  padding-bottom: var(--pf-v5-global--spacer--md);
+  padding-right: var(--pf-v5-global--spacer--md);
+}
+
+// ensures the expandable row content stretches to fill the remaining horizontal space
+.pf-v5-c-table__expandable-row-content {
+  flex: 1;
+}
+
+.vertical-center-cell {
+  align-self: center;
+}

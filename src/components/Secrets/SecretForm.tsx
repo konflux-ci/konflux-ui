@@ -3,8 +3,6 @@ import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
-import { FLAGS } from '~/feature-flags/flags';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { DropdownItemObject } from '../../shared/components/dropdown';
 import KeyValueFileInputField from '../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import SelectInputField from '../../shared/components/formik-fields/SelectInputField';
@@ -36,7 +34,6 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   existingSecrets,
   currentComponent,
 }) => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
   const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
@@ -151,7 +148,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           void setFieldValue('secretName', value);
         }}
       />
-      {isBuildServiceAccountFeatureOn && shouldShowSecretLinkOptions && (
+      {shouldShowSecretLinkOptions && (
         <SecretLinkOptions
           currentComponent={currentComponent}
           secretForComponentOption={secretForComponentOption}

@@ -9,9 +9,15 @@ import { FeatureFlagsStore } from './store';
 export const FeatureFlagPanel: React.FC = () => {
   const [flags, setFlag] = useFeatureFlags();
 
+  const flagList = Object.values(FLAGS);
+
+  if (flagList.length === 0) {
+    return <p>No experimental features found.</p>;
+  }
+
   return (
     <Stack hasGutter>
-      {Object.values(FLAGS).map(({ key, description, status }) => (
+      {flagList.map(({ key, description, status }) => (
         <StackItem key={key}>
           <Switch
             id={key}

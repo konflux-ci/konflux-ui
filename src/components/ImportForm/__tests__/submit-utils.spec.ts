@@ -3,11 +3,10 @@ import {
   createApplication,
   createComponent,
   createImageRepository,
-  createSecret,
   createSecretWithLinkingComponents,
 } from '../../../utils/create-utils';
 import { createIntegrationTest } from '../../IntegrationTests/IntegrationTestForm/utils/create-utils';
-import { createResources, createResourcesWithLinkingComponents } from '../submit-utils';
+import { createResourcesWithLinkingComponents } from '../submit-utils';
 
 jest.mock('../../../utils/create-utils', () => ({
   ...jest.requireActual('../../../utils/create-utils'),
@@ -28,7 +27,6 @@ const createComponentMock = createComponent as jest.Mock;
 const createIntegrationTestMock = createIntegrationTest as jest.Mock;
 const createImageRepositoryMock = createImageRepository as jest.Mock;
 const createSecretWithLinkingComponentsMock = createSecretWithLinkingComponents as jest.Mock;
-const createSecretMock = createSecret as jest.Mock;
 const mockSecret = {
   existingSecrets: [],
   type: 'Opaque',
@@ -42,7 +40,7 @@ describe('Submit Utils: createResources', () => {
   it('should create application and components', async () => {
     createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
     createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
-    await createResources(
+    await createResourcesWithLinkingComponents(
       {
         application: 'test-app',
         inAppContext: false,
@@ -68,7 +66,7 @@ describe('Submit Utils: createResources', () => {
   it('should create application but not components', async () => {
     createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
     createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
-    await createResources(
+    await createResourcesWithLinkingComponents(
       {
         application: 'test-app',
         inAppContext: false,
@@ -94,7 +92,7 @@ describe('Submit Utils: createResources', () => {
   it('should not create application but create components without secrets', async () => {
     createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
     createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
-    await createResources(
+    await createResourcesWithLinkingComponents(
       {
         application: 'test-app',
         inAppContext: true,
@@ -144,7 +142,7 @@ describe('Submit Utils: createResources', () => {
   it('should not create application, create components and secret', async () => {
     createApplicationMock.mockResolvedValue({ metadata: { name: 'test-app' } });
     createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
-    await createResources(
+    await createResourcesWithLinkingComponents(
       {
         application: 'test-app',
         inAppContext: true,
@@ -189,7 +187,6 @@ describe('Submit Utils: createResources', () => {
     );
 
     expect(createSecretWithLinkingComponentsMock).toHaveBeenCalledTimes(2);
-    expect(createSecretMock).toHaveBeenCalledTimes(0);
   });
 
   it('should skip secret creation for already existing secrets', async () => {
@@ -223,7 +220,6 @@ describe('Submit Utils: createResources', () => {
     );
 
     expect(createSecretWithLinkingComponentsMock).not.toHaveBeenCalled();
-    expect(createSecretMock).not.toHaveBeenCalled();
   });
 
   afterEach(() => {
