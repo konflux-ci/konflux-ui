@@ -58,7 +58,7 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
           defaultAriaLabel="Search secrets"
         />
       </div>
-      <div style={{ marginTop: '2rem' }}>
+      <div>
         <Button onClick={handleSubmit} isDisabled={linkedSecretsList.length === 0}>
           Link Secrets
         </Button>

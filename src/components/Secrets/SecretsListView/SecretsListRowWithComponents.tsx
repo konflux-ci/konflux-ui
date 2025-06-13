@@ -1,5 +1,7 @@
-import { Popover, Spinner } from '@patternfly/react-core';
-import HelpPopover from '~/components/HelpPopover';
+import * as React from 'react';
+import { Button, Popover, Spinner } from '@patternfly/react-core';
+import ErrorModal from '~/components/modal/ErrorModal';
+import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
@@ -14,33 +16,45 @@ import { isLinkableSecret } from '../utils/service-account-utils';
 import { SecretLabels } from './SecretLabels';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
 
-const SecretsListRowWithComponents: React.FC<RowFunctionArgs<SecretKind>> = ({ obj: secret }) => {
-  const actions = useSecretActions(secret);
+import './SecretsListRow.scss';
+
+type SecretsListRowProps = RowFunctionArgs<SecretKind>;
+
+const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsListRowProps>> = ({
+  obj,
+}) => {
+  const actions = useSecretActions(obj);
   const namespace = useNamespace();
 
-  const { secretLabels } = getSecretRowLabels(secret);
+  const { secretLabels } = getSecretRowLabels(obj);
   const labels = secretLabels !== '-' ? secretLabels.split(', ') : [secretLabels];
 
-  const task = useTaskStore((state) => state.tasks[secret.metadata.name]);
-  const taskError = task?.error ?? secret.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
+  const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
+  const taskError = task?.error ?? obj.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
   const taskStatus =
     task?.status ??
-    secret.metadata?.annotations?.[LINKING_STATUS_ANNOTATION] ??
+    obj.metadata?.annotations?.[LINKING_STATUS_ANNOTATION] ??
     BackgroundJobStatus.Succeeded;
 
   const { linkedServiceAccounts, isLoading, error } = useLinkedServiceAccounts(
-    secret.metadata?.namespace || namespace,
-    secret,
+    obj.metadata?.namespace || namespace,
+    obj,
     true,
   );
+
+  const [isErrorModalOpen, setIsErrorModalOpen] = React.useState(false);
+
+  const handleErrorModalToggle = () => {
+    setIsErrorModalOpen(!isErrorModalOpen);
+  };
 
   return (
     <>
       <TableData className={`${secretsTableColumnClasses.secretType} vertical-cell-align`}>
-        {getSecretTypetoLabel(secret) ?? '-'}
+        {getSecretTypetoLabel(obj) ?? '-'}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.name} vertical-cell-align`}>
-        {secret.metadata?.name}
+        {obj.metadata?.name}
       </TableData>
       <TableData
         className={`${secretsTableColumnClasses.components} vertical-cell-align`}
@@ -56,30 +70,35 @@ const SecretsListRowWithComponents: React.FC<RowFunctionArgs<SecretKind>> = ({ o
           >
             <span>Error</span>
           </Popover>
-        ) : !isLinkableSecret(secret) ? (
+        ) : !isLinkableSecret(obj) ? (
           '-'
         ) : (
           // The linkedServiceAccounts returns [] or [sa1, sa2...].
           <span>{linkedServiceAccounts.length}</span>
         )}
       </TableData>
-
+      <TableData className={`${secretsTableColumnClasses.labels} vertical-cell-align`}>
+        <SecretLabels labels={labels} />
+      </TableData>
       <TableData
         className={`${secretsTableColumnClasses.status} vertical-cell-align`}
         data-test="components-status"
       >
-        <span>{taskStatus}</span>
+        <BackgroundStatusIconWithText status={taskStatus as BackgroundJobStatus} />
         {taskStatus === BackgroundJobStatus.Failed && taskError && (
-          <HelpPopover
-            headerContent="Error when linking secret"
-            bodyContent={<div style={{ whiteSpace: 'pre-line' }}>{taskError}</div>}
-          />
+          <>
+            <Button onClick={handleErrorModalToggle} variant="link" className="error-button">
+              View Error
+            </Button>
+            <ErrorModal
+              title="Secret link task failed:"
+              errorMessage={taskError}
+              isOpen={isErrorModalOpen}
+              onClose={handleErrorModalToggle}
+            />
+          </>
         )}
       </TableData>
-      <TableData className={`${secretsTableColumnClasses.labels} vertical-cell-align`}>
-        <SecretLabels labels={labels} />
-      </TableData>
-
       <TableData className={`${secretsTableColumnClasses.kebab} vertical-cell-align`}>
         <ActionMenu actions={actions} />
       </TableData>

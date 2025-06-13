@@ -4,8 +4,7 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Base64 } from 'js-base64';
-import { FLAGS } from '~/feature-flags/flags';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
@@ -30,17 +29,12 @@ type SecretSectionProps = {
 };
 
 const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
   const [canCreateSecret] = useAccessReviewForModels(accessReviewResources);
   const showModal = useModalLauncher();
   const { values, setFieldValue } = useFormikContext<ImportFormValues>();
   const namespace = useNamespace();
 
   const [secrets, secretsLoaded] = useSecrets(namespace);
-  const secretHelpText =
-    isBuildServiceAccountFeatureOn === true
-      ? 'Keep your data secure by defining a build time secret. Secrets are stored at the component level, allowing both this component and any linking components to access them.'
-      : 'Keep your data secure by defining a build time secret. Secrets are stored at a namespace level so applications within namespace will have access to these secrets.';
 
   const partnerTaskSecrets: BuildTimeSecret[] =
     secrets && secretsLoaded
@@ -84,7 +78,7 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
         label="Build time secret"
         addLabel="Add secret"
         placeholder="Secret"
-        helpText={secretHelpText}
+        helpText={IMPORT_SECRET_HELP_TEXT}
         noFooter
         isReadOnly
         onChange={(v) =>
