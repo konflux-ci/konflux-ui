@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react';
-import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { componentCRMocks, mockedActions } from '../__data__/mock-data';
 import { useComponentActions } from '../component-actions';
@@ -7,12 +6,8 @@ import { useComponentActions } from '../component-actions';
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
-jest.mock('../../../feature-flags/hooks', () => ({
-  useIsOnFeatureFlag: jest.fn(() => [true, true]),
-}));
 
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
-const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
 
 const mockedComponent = componentCRMocks[0];
 
@@ -32,7 +27,6 @@ describe('component-actions', () => {
   describe('useComponentActions', () => {
     beforeEach(() => {
       useAccessReviewForModelMock.mockReturnValue([true, true]);
-      useIsOnFeatureFlagMock.mockReturnValue(true);
     });
 
     it('should contain all actions', () => {
@@ -53,7 +47,6 @@ describe('component-actions', () => {
     });
 
     it('should hide "Manage linked secrets" action if feature flag is disabled', () => {
-      useIsOnFeatureFlagMock.mockReturnValue(false);
       const { result } = renderHook(() =>
         useComponentActions(mockedComponent, mockedComponent.metadata.name),
       );

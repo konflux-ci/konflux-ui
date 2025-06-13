@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { Label, Popover, Spinner } from '@patternfly/react-core';
-import HelpPopover from '~/components/HelpPopover';
+import { Button, Label, Popover, Spinner } from '@patternfly/react-core';
+import ErrorModal from '~/components/modal/ErrorModal';
+import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
@@ -13,6 +14,8 @@ import { useSecretActions } from '../secret-actions';
 import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
+
+import './SecretsListRow.scss';
 
 type SecretsListRowProps = RowFunctionArgs<SecretKind>;
 
@@ -41,6 +44,12 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
     true,
   );
 
+  const [isErrorModalOpen, setIsErrorModalOpen] = React.useState(false);
+
+  const handleErrorModalToggle = () => {
+    setIsErrorModalOpen(!isErrorModalOpen);
+  };
+
   return (
     <>
       <TableData className={secretsTableColumnClasses.secretType}>
@@ -65,17 +74,23 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           <span>{linkedServiceAccounts.length}</span>
         )}
       </TableData>
+      <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
       <TableData className={secretsTableColumnClasses.status} data-test="components-status">
-        <span>{taskStatus}</span>
+        <BackgroundStatusIconWithText status={taskStatus as BackgroundJobStatus} />
         {taskStatus === BackgroundJobStatus.Failed && taskError && (
-          <HelpPopover
-            headerContent="Error when linking secret"
-            bodyContent={<div style={{ whiteSpace: 'pre-line' }}>{taskError}</div>}
-          />
+          <>
+            <Button onClick={handleErrorModalToggle} variant="link" className="error-button">
+              View Error
+            </Button>
+            <ErrorModal
+              title="Secret link task failed:"
+              errorMessage={taskError}
+              isOpen={isErrorModalOpen}
+              onClose={handleErrorModalToggle}
+            />
+          </>
         )}
       </TableData>
-
-      <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
       <TableData className={secretsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>

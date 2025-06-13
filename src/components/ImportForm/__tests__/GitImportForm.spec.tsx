@@ -4,7 +4,7 @@ import { useBuildPipelineConfig } from '../../../hooks/useBuildPipelineConfig';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { routerRenderer } from '../../../utils/test-utils';
 import { GitImportForm } from '../GitImportForm';
-import { createResources } from '../submit-utils';
+import { createResourcesWithLinkingComponents } from '../submit-utils';
 
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
@@ -16,7 +16,7 @@ jest.mock('../../../hooks/useSecrets', () => ({
 }));
 
 jest.mock('../submit-utils', () => ({
-  createResources: jest.fn(),
+  createResourcesWithLinkingComponents: jest.fn(),
 }));
 
 jest.mock('../../../hooks/useUIInstance', () => {
@@ -34,7 +34,7 @@ jest.mock('../../../hooks/useBuildPipelineConfig', () => ({
 
 const mockUseBuildPipelineConfig = useBuildPipelineConfig as jest.Mock;
 const mockUseSecrets = useSecrets as jest.Mock;
-const mockCreateResources = createResources as jest.Mock;
+const mockCreateResources = createResourcesWithLinkingComponents as jest.Mock;
 const mockUseQuery = useQuery as jest.Mock;
 
 describe('GitImportForm', () => {
