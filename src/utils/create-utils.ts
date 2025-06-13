@@ -4,7 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   addCommonSecretLabelToBuildSecret,
   linkSecretToBuildServiceAccount,
-  linkSecretToServiceAccount,
   linkSecretToServiceAccounts,
   updateAnnotateForSecret,
 } from '~/components/Secrets/utils/service-account-utils';
@@ -16,7 +15,6 @@ import {
   getLabelsForSecret,
   getSecretFormData,
   SecretForComponentOption,
-  typeToLabel,
 } from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sGetResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
@@ -42,7 +40,6 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   SecretFormValues,
-  SecretTypeDisplayLabel,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
@@ -363,40 +360,6 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
   return secretResource;
 };
 
-export const createSecretResource = async (
-  values: AddSecretFormValues,
-  namespace: string,
-  dryRun: boolean,
-) => {
-  const secretResource: SecretKind = getSecretFormData(values, namespace);
-
-  const labels = {
-    secret: getLabelsForSecret(values),
-  };
-  const annotations = getAnnotationForSecret(values);
-  const k8sSecretResource = {
-    ...secretResource,
-    metadata: {
-      ...secretResource.metadata,
-      labels: {
-        ...labels?.secret,
-      },
-      annotations,
-    },
-  };
-
-  return K8sQueryCreateResource({
-    model: SecretModel,
-    resource: k8sSecretResource,
-    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
-  }).then(async () => {
-    // if image pull secret & created succesfully then link to service account
-    if (typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-      return await linkSecretToServiceAccount(secretResource, namespace);
-    }
-  });
-};
-
 export const enqueueLinkingTask = async (
   secret: SecretKind,
   relatedComponents: string[],
@@ -510,30 +473,11 @@ export const createSecretResourceWithLinkingComponents = async (
   return createdSecret;
 };
 
-export const addSecret = async (values: AddSecretFormValues, namespace: string) => {
-  return await createSecretResource(values, namespace, false);
-};
-
 export const addSecretWithLinkingComponents = async (
   values: AddSecretFormValues,
   namespace: string,
 ) => {
   return await createSecretResourceWithLinkingComponents(values, namespace, false);
-};
-
-export const createSecret = async (secret: ImportSecret, namespace: string, dryRun: boolean) => {
-  const secretResource = getSecretObject(secret, namespace);
-
-  return K8sQueryCreateResource({
-    model: SecretModel,
-    resource: secretResource,
-    queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
-  }).then(async () => {
-    // if image pull secret & created succesfully then link to service account
-    if (!dryRun && typeToLabel(secretResource.type) === SecretTypeDisplayLabel.imagePull) {
-      await linkSecretToServiceAccount(secretResource, namespace);
-    }
-  });
 };
 
 export const createSecretWithLinkingComponents = async (
@@ -550,7 +494,7 @@ export const createSecretWithLinkingComponents = async (
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
 
-  if (!dryRun && secret.secretForComponentOption) {
+  if (!dryRun && (secret.secretForComponentOption || componentName)) {
     void enqueueLinkingTask(
       createdSecret,
       secret.relatedComponents as string[],

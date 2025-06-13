@@ -35,6 +35,7 @@ export type RowFunctionArgs<T = unknown, C = unknown> = {
   obj: T;
   columns: unknown[];
   customData?: C;
+  index?: number;
 };
 
 const RowMemo = React.memo<
@@ -49,20 +50,12 @@ const RowMemo = React.memo<
   if (expand) {
     return (
       <>
-        <TableData
-          data-test="virtual-body-expand-row"
-          className="pf-m-width-5 virtual-body-expanded-row-vertical-center-cell"
-        >
-          <Button
-            className="pf-v5-c-button pf-m-plain"
-            variant="plain"
-            onClick={() => onToggle?.(index)}
-            style={{ display: 'flex' }}
-          >
+        <TableData data-test="virtual-body-expand-row">
+          <Button variant="plain" onClick={() => onToggle?.(index)}>
             {isExpanded ? <AngleDownIcon /> : <AngleRightIcon />}
           </Button>
         </TableData>
-        <Row {...props} />
+        <Row {...props} index={index} />
       </>
     );
   }
@@ -176,7 +169,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
               </TableRow>
               {ExpandedContent && isExpanded && (
                 <div key={`expanded-${key}`}>
-                  <ExpandedContent key={`expanded-content-${key}`} {...rowArgs} />
+                  <ExpandedContent key={`expanded-content-${key}`} {...rowArgs} index={index} />
                 </div>
               )}
             </div>

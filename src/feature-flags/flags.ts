@@ -33,19 +33,13 @@ export interface FeatureMeta {
   status: FlagStatus;
 }
 
-export const FLAGS = {
-  buildServiceAccount: {
-    key: 'buildServiceAccount',
-    description: 'New build service account model for secrets linking to components',
-    defaultEnabled: false,
-    status: 'wip',
-  } as const,
-  kubeArchiveRelease: {
-    key: 'kubeArchiveRelease',
-    description: 'Kube archive integration with Releases',
-    defaultEnabled: false,
-    status: 'wip',
-  },
-} as const;
+type FeatureFlagDefinition = {
+  key: string;
+  description: string;
+  defaultEnabled: boolean;
+  status: 'wip' | 'enabled';
+};
+
+export const FLAGS: Record<string, FeatureFlagDefinition> = {};
 
 export type FlagKey = keyof typeof FLAGS;

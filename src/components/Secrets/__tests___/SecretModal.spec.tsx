@@ -1,6 +1,5 @@
 import { act } from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { SecretTypeDropdownLabel, SecretType, SourceSecretType } from '../../../types';
 import { formikRenderer } from '../../../utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
@@ -14,12 +13,6 @@ const initialValues: SecretModalValues = {
   relatedComponents: [],
   secretForComponentOption: null,
 };
-
-jest.mock('~/feature-flags/hooks', () => ({
-  useIsOnFeatureFlag: jest.fn(),
-}));
-
-const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 
 const snykSecret = {
   type: SecretType.opaque,
@@ -87,9 +80,6 @@ const clickButtonAndVerifyCallback = async (buttonName: string, callback: jest.M
 };
 
 describe('SecretModal', () => {
-  beforeEach(() => {
-    mockUseIsOnFeatureFlag.mockReturnValue(true);
-  });
   it('should show SecretLinkOptions when authType is basic and secret type is source', async () => {
     await renderSecretModal(initialValues);
     await selectSecretTypeAndVerifyLinkOptions('Source secret');
