@@ -1,5 +1,5 @@
 import { Label, LabelGroup } from '@patternfly/react-core';
-import { SECRET_MAX_LABELS } from '~/consts/constants';
+import { SECRET_MAX_LABELS } from '~/consts/secrets';
 import './SecretsListRow.scss';
 
 type SecretLabelsProps = {
