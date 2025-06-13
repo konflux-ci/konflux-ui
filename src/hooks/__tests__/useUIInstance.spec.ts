@@ -7,6 +7,7 @@ import {
   useSbomUrl,
   useBombinoUrl,
   useUIInstance,
+  useInstanceVisibility,
 } from '../useUIInstance';
 
 jest.mock('../useKonfluxPublicInfo');
@@ -126,5 +127,14 @@ describe('useBombinoUrl', () => {
 
     const { result } = renderHook(() => useBombinoUrl());
     expect(result.current).toBe('https://custom-bombino-url.com');
+  });
+
+  describe('useInstanceVisibility', () => {
+    it('should return the correct instance visibility', () => {
+      (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{ visibility: 'public' }, true, null]);
+
+      const { result } = renderHook(() => useInstanceVisibility());
+      expect(result.current).toBe('public');
+    });
   });
 });
