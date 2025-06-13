@@ -12,6 +12,7 @@ export type BuildPipelineConfigConfigMap = ConfigMap & {
 export type PipelineItem = {
   name: string;
   description?: string;
+  detail?: string;
   bundle: string;
   'additional-params'?: string[];
 };
