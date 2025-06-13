@@ -10,18 +10,16 @@ type SecretsListProps = {
 
 const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secrets }) => {
   return (
-    <>
-      <Table
-        data={secrets}
-        aria-label="Secret List"
-        Header={SecretsListHeaderWithComponents}
-        Row={SecretsListRowWithComponents}
-        loaded
-        getRowProps={(obj: SecretKind) => ({
-          id: obj.metadata.name,
-        })}
-      />
-    </>
+    <Table
+      data={secrets}
+      aria-label="Secret List"
+      Header={SecretsListHeaderWithComponents}
+      Row={SecretsListRowWithComponents}
+      loaded
+      getRowProps={(obj: SecretKind) => ({
+        id: obj.metadata.name,
+      })}
+    />
   );
 };
 
