@@ -1,9 +1,4 @@
-import {
-  PLACEHOLDER,
-  REPO_PUSH,
-  SBOM_EVENT_TO_BOMBINO,
-  INTERNAL_INSTANCE_REGEX,
-} from '../consts/constants';
+import { PLACEHOLDER, REPO_PUSH, SBOM_EVENT_TO_BOMBINO } from '../consts/constants';
 import { SBOMEventNotification } from '../types/konflux-public-info';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
@@ -22,10 +17,6 @@ export const getEnv = (): ConsoleDotEnvironments => ConsoleDotEnvironments.prod;
 
 const internalInstance = (host: string) => (env: 'prod' | 'stage') =>
   new RegExp(`stone-${env}-([A-Za-z0-9]+).([a-z]+).([a-z0-9]+).openshiftapps.com`, 'g').test(host);
-
-export const isInternalInstance =
-  window.location.hostname === 'localhost' ||
-  INTERNAL_INSTANCE_REGEX.test(window.location.hostname);
 
 export const getInternalInstance = () => {
   const matchInternalInstance = internalInstance(window.location.hostname);
@@ -94,4 +85,12 @@ export const useNotifications = (): SBOMEventNotification[] => {
     return konfluxPublicInfo.integrations.image_controller.notifications || [];
   }
   return [];
+};
+
+export const useInstanceVisibility = (): 'public' | 'private' => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.visibility;
+  }
+  return 'public';
 };
