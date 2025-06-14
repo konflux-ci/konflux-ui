@@ -18,3 +18,10 @@ export const SecretLinkOptionLabels = {
 } as const;
 export const IMPORT_SECRET_HELP_TEXT =
   'Keep your data secure by defining a build time secret. Secrets are stored at a namespace level so applications within namespace will have access to these secrets.';
+
+export const SecretLinkOptionHelpPopoverContent = {
+  createSecret:
+    'Select an option that allow you to link your desired components in this namespace while creating the secrets.',
+  importSecret:
+    'Select an option that allows you to link your desired components in the namespace to the new build secret.',
+};
