@@ -10,6 +10,7 @@ import './SecretLinkOptionForm.scss';
 type SecretLinkOptionsProps = {
   secretForComponentOption: SecretForComponentOption;
   onOptionChange: (option: SecretForComponentOption) => void;
+  helpPopoverText?: string;
   radioLabels: {
     all: string;
     partial: string;
@@ -20,6 +21,7 @@ type SecretLinkOptionsProps = {
 export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
   secretForComponentOption,
   onOptionChange,
+  helpPopoverText,
   radioLabels,
   currentComponent,
 }) => {
@@ -29,8 +31,7 @@ export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
         name="secretForComponentOption"
         label={
           <b>
-            Link secret options{' '}
-            <HelpPopover bodyContent="Select an option that allow you to link your desired components in this namespace while creating the secrets." />
+            Link secret options {helpPopoverText && <HelpPopover bodyContent={helpPopoverText} />}
           </b>
         }
         options={[
