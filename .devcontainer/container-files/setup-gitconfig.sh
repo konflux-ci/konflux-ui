@@ -2,22 +2,16 @@
 
 # Check if we're running inside a devcontainer
 if [ -z "$REMOTE_CONTAINERS" ] && [ -z "$CODESPACES" ]; then
-    echo "⚠️  This script is designed to run inside a devcontainer"
+    echo "⚠️ This script is designed to run inside a devcontainer"
     echo "💡 Make sure you're running this from within the VS Code devcontainer"
     echo ""
 fi
 
 GITCONFIG_INPUT_DIR=".devcontainer/.gitconfig-dir"
 
-# Copy .gitconfig if it exists
-if [ -f "$GITCONFIG_INPUT_DIR/.gitconfig" ]; then
-    echo "Copying .gitconfig to /home/vscode/.gitconfig"
-    cp "$GITCONFIG_INPUT_DIR/.gitconfig" /home/vscode/.gitconfig
-    chown vscode:vscode /home/vscode/.gitconfig
-fi
-
-# Copy any additional gitconfig files
-for file in "$GITCONFIG_INPUT_DIR/.gitconfig*"*; do
+# Copy any gitconfig files
+echo "Copying gitconfig files..." 
+for file in "$GITCONFIG_INPUT_DIR/.gitconfig"*; do
     if [ -f "$file" ]; then
         filename=$(basename "$file")
         echo "Copying $filename to /home/vscode/$filename"
@@ -25,8 +19,6 @@ for file in "$GITCONFIG_INPUT_DIR/.gitconfig*"*; do
         chown vscode:vscode "/home/vscode/$filename"
     fi
 done
-
-echo "Git configuration files copied successfully" 
 
 # Setup Git configuration in devcontainer based on remote URL
 echo "🔧 Setting up Git configuration for devcontainer..."
