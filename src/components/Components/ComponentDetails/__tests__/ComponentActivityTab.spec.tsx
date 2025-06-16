@@ -45,6 +45,7 @@ describe('ComponentActivityTab', () => {
   beforeEach(() => {
     useBuildPipelinesMock.mockReturnValue([
       pipelineWithCommits.slice(0, 4),
+      [],
       true,
       undefined,
       undefined,

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -34,18 +35,24 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   const { name: nameFilter, status: statusFilter } = filters;
 
-  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    useBuildPipelines(
-      namespace,
-      applicationName,
-      undefined,
-      !!componentName,
-      componentName ? [componentName] : undefined,
-    );
+  const [
+    allPipelineRuns,
+    buildPipelineRuns,
+    loaded,
+    error,
+    getNextPage,
+    { isFetchingNextPage, hasNextPage },
+  ] = useBuildPipelines(
+    namespace,
+    applicationName,
+    undefined,
+    !!componentName,
+    componentName ? [componentName] : undefined,
+  );
 
   const commits = React.useMemo(
-    () => (loaded && pipelineRuns && getCommitsFromPLRs(pipelineRuns)) || [],
-    [loaded, pipelineRuns],
+    () => (loaded && buildPipelineRuns && getCommitsFromPLRs(buildPipelineRuns)) || [],
+    [loaded, buildPipelineRuns],
   );
 
   const statusFilterObj = React.useMemo(
@@ -93,6 +100,24 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     </BaseTextFilterToolbar>
   );
 
+  // automatically fetch the next page of pipeline runs when:
+  // - Initial data is loaded
+  // - Current page is empt
+  // - More pages are available
+  // - Not currently fetching the next page
+  // This prevents showing the empty state message while more data is being loaded
+  React.useEffect(() => {
+    if (
+      loaded &&
+      buildPipelineRuns?.length === 0 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      getNextPage
+    ) {
+      getNextPage();
+    }
+  }, [getNextPage, hasNextPage, isFetchingNextPage, loaded, buildPipelineRuns]);
+
   if (error) {
     const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
     return (
@@ -103,32 +128,62 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       />
     );
   }
+
   return (
-    <Table
-      virtualize
-      data={filteredCommits}
-      unfilteredData={commits}
-      EmptyMsg={EmptyMessage}
-      NoDataEmptyMsg={NoDataEmptyMessage}
-      Toolbar={DataToolbar}
-      aria-label="Commit List"
-      Header={CommitsListHeader}
-      Row={CommitsListRow}
-      loaded={loaded}
-      getRowProps={(obj: Commit) => ({
-        id: obj.sha,
-      })}
-      onRowsRendered={({ stopIndex }) => {
-        if (
-          loaded &&
-          stopIndex === filteredCommits.length - 1 &&
-          hasNextPage &&
-          !isFetchingNextPage
-        ) {
-          getNextPage?.();
-        }
-      }}
-    />
+    <>
+      <Table
+        virtualize
+        data={filteredCommits}
+        unfilteredData={commits}
+        EmptyMsg={EmptyMessage}
+        NoDataEmptyMsg={NoDataEmptyMessage}
+        Toolbar={DataToolbar}
+        aria-label="Commit List"
+        Header={CommitsListHeader}
+        Row={(props) => {
+          const commit = props.obj as Commit;
+          return (
+            <CommitsListRow
+              {...props}
+              obj={{
+                commit,
+                pipelineRuns: allPipelineRuns,
+              }}
+            />
+          );
+        }}
+        loaded={loaded && !(hasNextPage && buildPipelineRuns?.length === 0)}
+        getRowProps={(obj: Commit) => ({
+          id: obj.sha,
+        })}
+        onRowsRendered={({ stopIndex }) => {
+          if (
+            loaded &&
+            stopIndex === filteredCommits.length - 1 &&
+            hasNextPage &&
+            !isFetchingNextPage
+          ) {
+            getNextPage?.();
+          }
+        }}
+      />
+      {isFetchingNextPage ? (
+        <div
+          style={{
+            marginTop: 'var(--pf-v5-global--spacer--2xl)',
+            marginBottom: 'var(--pf-v5-global--spacer--2xl)',
+          }}
+        >
+          <Bullseye>
+            <Spinner
+              size="lg"
+              aria-label="Loading more commits"
+              data-test="commits-list-next-page-loading-spinner"
+            />
+          </Bullseye>
+        </div>
+      ) : null}
+    </>
   );
 };
 
