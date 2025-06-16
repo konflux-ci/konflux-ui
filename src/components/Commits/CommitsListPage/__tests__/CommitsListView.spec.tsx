@@ -1,14 +1,14 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
-import { useBuildPipelines } from '../../../../hooks/useBuildPipelines';
 import { useComponents } from '../../../../hooks/useComponents';
+import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
-import { createUseApplicationMock } from '../../../../utils/test-utils';
+import { createUseApplicationMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
@@ -47,7 +47,7 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         <tbody>
           {props.data.map((d, i) => (
             <tr key={i}>
-              <CommitsListRow obj={d} />
+              <CommitsListRow obj={d} pipelineRuns={props.pipelineRuns || []} />
             </tr>
           ))}
         </tbody>
@@ -64,14 +64,14 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useBuildPipelines', () => ({
-  useBuildPipelines: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRuns', () => ({
+  usePipelineRuns: jest.fn(),
 }));
 
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
-const useBuildPipelinesMock = useBuildPipelines as jest.Mock;
+const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
@@ -83,7 +83,7 @@ const CommitsList = () => (
 
 describe('CommitsListView', () => {
   beforeEach(() => {
-    useBuildPipelinesMock.mockReturnValue([
+    usePipelineRunsMock.mockReturnValue([
       pipelineWithCommits.slice(0, 4),
       true,
       undefined,
@@ -95,26 +95,26 @@ describe('CommitsListView', () => {
   });
 
   it('should render error state when there is an API error', () => {
-    useBuildPipelinesMock.mockReturnValue([
+    usePipelineRunsMock.mockReturnValue([
       [],
       true,
       new Error('500: Internal server error'),
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<CommitsList />);
+    renderWithQueryClient(<CommitsList />);
     screen.getByText('Unable to load commits');
   });
 
   it('should render empty state if no commits are present', () => {
-    useBuildPipelinesMock.mockReturnValue([
+    usePipelineRunsMock.mockReturnValue([
       [],
       true,
       undefined,
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<CommitsList />);
+    renderWithQueryClient(<CommitsList />);
     expect(
       screen.getByText(
         /To get started, add a component and merge its pull request for a build pipeline./,
@@ -128,8 +128,8 @@ describe('CommitsListView', () => {
   });
 
   it('renders correct commit data', () => {
-    const { getByText, queryByText, container } = render(
-      <CommitsListRow obj={commits[0]} />,
+    const { getByText, queryByText, container } = renderWithQueryClient(
+      <CommitsListRow obj={commits[0]} pipelineRuns={[]} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
     expect(queryByText('commit1')).toBeInTheDocument();
@@ -140,30 +140,30 @@ describe('CommitsListView', () => {
   });
 
   it('should filter present in the view', async () => {
-    render(<CommitsList />);
+    renderWithQueryClient(<CommitsList />);
     await waitFor(() => screen.getAllByText('Status'));
     await waitFor(() => screen.getAllByPlaceholderText<HTMLInputElement>('Filter by name...'));
   });
 
   it('should match the commit if it is filtered by name', () => {
-    const view = render(<CommitsList />);
+    const view = renderWithQueryClient(<CommitsList />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
     act(() => {
       fireEvent.change(filter, {
-        target: { value: 'test-title-2' },
+        target: { value: 'test-title' },
       });
     });
     act(() => {
       jest.advanceTimersByTime(700);
     });
     view.rerender(<CommitsList />);
-    expect(screen.getByText('#11 test-title-2')).toBeInTheDocument();
-    expect(screen.queryByText('#11 test-title')).not.toBeInTheDocument();
+    expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
+    expect(screen.getByText('#12 test-title-3')).toBeInTheDocument();
   });
 
   it('should match the commits if it is filtered by pr number', () => {
-    const view = render(<CommitsList />);
+    const view = renderWithQueryClient(<CommitsList />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
     act(() => {
@@ -175,34 +175,34 @@ describe('CommitsListView', () => {
       jest.advanceTimersByTime(700);
     });
     view.rerender(<CommitsList />);
-    expect(screen.queryByText('#11 test-title-2')).toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).not.toBeInTheDocument();
     expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
   });
 
   it('should perform case insensitive filter by name', () => {
-    const view = render(<CommitsList />);
+    const view = renderWithQueryClient(<CommitsList />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
     act(() => {
       fireEvent.change(filter, {
-        target: { value: 'TEST-TITLE-2' },
+        target: { value: 'TEST-TITLE-3' },
       });
     });
     act(() => {
       jest.advanceTimersByTime(700);
     });
     view.rerender(<CommitsList />);
-    expect(screen.queryByText('#11 test-title-2')).toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
     expect(screen.queryByText('#11 test-title')).not.toBeInTheDocument();
   });
 
   it('should not match the commit if filtered by unmatched name', () => {
-    const view = render(<CommitsList />);
+    const view = renderWithQueryClient(<CommitsList />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
     act(() => {
       fireEvent.change(filter, {
-        target: { value: 'invalid-test-title-2' },
+        target: { value: 'invalid-test-title-3' },
       });
     });
     act(() => {
@@ -210,18 +210,18 @@ describe('CommitsListView', () => {
     });
     view.rerender(<CommitsList />);
     expect(screen.queryByText('#11 test-title')).not.toBeInTheDocument();
-    expect(screen.queryByText('#11 test-title-2')).not.toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).not.toBeInTheDocument();
 
     // clear the filter
     const clearFilterButton = view.getAllByRole('button', { name: 'Clear all filters' })[0];
     fireEvent.click(clearFilterButton);
     view.rerender(<CommitsList />);
     expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
-    expect(screen.queryByText('#11 test-title-2')).toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
   });
 
   it('should filter by commit status', () => {
-    const view = render(<CommitsList />);
+    const view = renderWithQueryClient(<CommitsList />);
 
     const filterMenuButton = view.getByRole('button', { name: /filter/i });
     fireEvent.click(filterMenuButton);
@@ -233,11 +233,11 @@ describe('CommitsListView', () => {
 
     view.rerender(<CommitsList />);
     expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
-    expect(screen.queryByText('#11 test-title-2')).not.toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
   });
 
   it('should render skeleton while data is not loaded', () => {
-    useBuildPipelinesMock.mockReturnValue([
+    usePipelineRunsMock.mockReturnValue([
       [],
       false,
       undefined,
@@ -246,23 +246,46 @@ describe('CommitsListView', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], false]);
     useComponentsMock.mockReturnValue([[], false]);
-    render(<CommitsList />);
+    renderWithQueryClient(<CommitsList />);
     expect(screen.getByTestId('data-table-skeleton')).toBeVisible();
   });
 
-  it('should call useBuildPipelines with componentName when provided', () => {
-    render(
+  it('should call usePipelineRuns with componentName when provided', () => {
+    renderWithQueryClient(
       <FilterContextProvider filterParams={['name', 'status']}>
         <CommitsListView applicationName="purple-mermaid-app" componentName="sample-component" />
       </FilterContextProvider>,
     );
 
-    expect(useBuildPipelinesMock).toHaveBeenCalledWith(
+    expect(usePipelineRunsMock).toHaveBeenCalledWith(
       'test-ns', // namespace
-      'purple-mermaid-app', // applicationName
-      undefined, // commit
-      true, // includeComponents
-      ['sample-component'], // componentNames
+      {
+        selector: {
+          filterByCreationTimestampAfter: undefined,
+          matchLabels: {
+            'appstudio.openshift.io/application': 'purple-mermaid-app',
+            'appstudio.openshift.io/component': 'sample-component',
+          },
+        },
+      },
     );
+  });
+
+  it('should show loader if next page is loading', () => {
+    usePipelineRunsMock.mockReturnValue([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: true, hasNextPage: true },
+    ]);
+
+    renderWithQueryClient(
+      <FilterContextProvider filterParams={['name', 'status']}>
+        <CommitsListView applicationName="purple-mermaid-app" componentName="sample-component" />
+      </FilterContextProvider>,
+    );
+
+    expect(screen.getByTestId('commits-list-next-page-loading-spinner')).toBeVisible();
   });
 });
