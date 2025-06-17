@@ -13,6 +13,10 @@ if (typeof Request !== 'function') {
 }
 
 jest.mock('../src/k8s', () => ({ __esModule: true, ...jest.requireActual('../src/k8s') }));
+jest.mock('../src/kubearchive/fetch-utils', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/kubearchive/fetch-utils'),
+}));
 
 jest.mock('react-router-dom', () => ({
   __esModule: true,
