@@ -13,14 +13,7 @@ export const useBuildPipelines = (
   includeComponents?: boolean,
   componentNames?: string[],
   limit?: number,
-): [
-  PipelineRunKind[], // ALL pipeline runs
-  PipelineRunKind[], // BUILD pipeline runs
-  boolean, // loaded
-  unknown, // error
-  GetNextPage, // getNextPage callback
-  NextPageProps, // next page props
-] => {
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const [pipelineRuns, loaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRuns(
@@ -31,6 +24,7 @@ export const useBuildPipelines = (
             filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
+              [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             },
             filterByCommit: commit ? commit : undefined,
           },
@@ -44,30 +38,23 @@ export const useBuildPipelines = (
   // TODO: Remove this if/when tekton results are really filtered by component names above: https://github.com/tektoncd/results/issues/620
   return React.useMemo(() => {
     if (!loaded || plrError) {
-      return [[], [], loaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }];
+      return [[], loaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }];
     }
 
     // when filtering by commit, both PipelineRun and TaskRun objects are returned: https://github.com/tektoncd/results/issues/620
-    const allRuns = pipelineRuns.filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind);
-    const buildRuns =
-      allRuns?.filter(
-        (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-      ) || [];
+    const runs = pipelineRuns.filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind);
 
     if (!includeComponents || !componentNames?.length) {
       return [
-        allRuns.slice(0, limit ? limit : undefined),
-        buildRuns.slice(0, limit ? limit : undefined),
+        runs.slice(0, limit ? limit : undefined),
         loaded,
         plrError,
         getNextPage,
         { isFetchingNextPage, hasNextPage },
       ];
     }
-
     return [
-      allRuns.slice(0, limit ? limit : undefined),
-      buildRuns
+      runs
         .filter((plr) =>
           componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]),
         )

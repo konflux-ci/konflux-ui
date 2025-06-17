@@ -25,7 +25,6 @@ describe('useBuildPipelines', () => {
 
     expect(result.current).toEqual([
       [],
-      [],
       false,
       undefined,
       undefined,
@@ -48,9 +47,9 @@ describe('useBuildPipelines', () => {
     ]);
     const { result } = renderHook(() => useBuildPipelines('test-ns', 'test-pipelinerun', null));
 
-    const [, buildPipelineRuns, loaded] = result.current;
+    const [pipelineRuns, loaded] = result.current;
     expect(loaded).toBe(true);
-    expect(buildPipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
+    expect(pipelineRuns.map((tr) => tr.metadata?.name)).toEqual(['test-caseqfvdj']);
   });
 
   it('should filter build pipelines by component name when includeComponents is true', () => {
@@ -77,7 +76,6 @@ describe('useBuildPipelines', () => {
               'appstudio.openshift.io/component': 'component-b',
               'appstudio.openshift.io/application': 'test',
               'pipelinesascode.tekton.dev/event-type': 'push',
-              'pipelines.appstudio.openshift.io/type': 'build',
             },
           },
         },
@@ -98,10 +96,10 @@ describe('useBuildPipelines', () => {
       ),
     );
 
-    const [, buildPipelineRuns, loaded] = result.current;
+    const [pipelineRuns, loaded] = result.current;
 
     expect(loaded).toBe(true);
-    expect(buildPipelineRuns).toHaveLength(1);
-    expect(buildPipelineRuns[0].metadata?.name).toBe('pipeline-b');
+    expect(pipelineRuns).toHaveLength(1);
+    expect(pipelineRuns[0].metadata?.name).toBe('pipeline-b');
   });
 });

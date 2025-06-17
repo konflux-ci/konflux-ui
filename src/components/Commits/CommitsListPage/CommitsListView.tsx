@@ -4,7 +4,10 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
+import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
+import { useApplication } from '../../../hooks/useApplications';
+import { useComponents } from '../../../hooks/useComponents';
+import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -35,19 +38,52 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   const { name: nameFilter, status: statusFilter } = filters;
 
-  const [
-    allPipelineRuns,
-    buildPipelineRuns,
-    loaded,
-    error,
-    getNextPage,
-    { isFetchingNextPage, hasNextPage },
-  ] = useBuildPipelines(
-    namespace,
-    applicationName,
-    undefined,
-    !!componentName,
-    componentName ? [componentName] : undefined,
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
+  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
+    usePipelineRuns(
+      applicationLoaded ? namespace : null,
+      React.useMemo(
+        () => ({
+          selector: {
+            filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+              ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
+            },
+          },
+        }),
+        [application?.metadata?.creationTimestamp, applicationName, componentName],
+      ),
+    );
+
+  // filter to only BUILD type PLRs for the list display
+  const buildPipelineRuns = React.useMemo(() => {
+    return (
+      pipelineRuns
+        ?.filter((plr) =>
+          componentName
+            ? componentName === plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]
+            : true,
+        )
+        ?.filter(
+          (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+        ) || []
+    );
+  }, [componentName, pipelineRuns]);
+
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const componentNames = React.useMemo(
+    () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
+    [components, componentsLoaded],
+  );
+
+  // used in CommitListRow to calculate the correct latest PLR status
+  const allPipelineRunsFilteredByComponents = React.useMemo(
+    () =>
+      pipelineRuns?.filter((plr) =>
+        componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]),
+      ),
+    [componentNames, pipelineRuns],
   );
 
   const commits = React.useMemo(
@@ -147,7 +183,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               {...props}
               obj={{
                 commit,
-                pipelineRuns: allPipelineRuns,
+                pipelineRuns: allPipelineRunsFilteredByComponents,
               }}
             />
           );

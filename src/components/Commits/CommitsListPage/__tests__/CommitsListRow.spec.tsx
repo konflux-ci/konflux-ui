@@ -1,7 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { useComponents } from '../../../../hooks/useComponents';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
+import { renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import CommitsListRow from '../CommitsListRow';
 
@@ -13,11 +15,20 @@ jest.mock('../../commit-status', () => ({
   useCommitStatus: () => ['-', true],
 }));
 
+jest.mock('../../../../hooks/useComponents', () => ({
+  useComponents: jest.fn(),
+}));
+
+const useComponentsMock = useComponents as jest.Mock;
+
 const commits = getCommitsFromPLRs(pipelineWithCommits);
 
 describe('CommitsListRow', () => {
+  beforeEach(() => {
+    useComponentsMock.mockReturnValue([[{ metadata: { name: 'sample-component' } }], true]);
+  });
   it('lists correct Commit details', () => {
-    const { getAllByText, queryByText, container } = render(
+    const { getAllByText, queryByText, container } = renderWithQueryClient(
       <CommitsListRow
         columns={null}
         obj={{ commit: commits[1], pipelineRuns: pipelineWithCommits }}
@@ -32,7 +43,7 @@ describe('CommitsListRow', () => {
   });
 
   it('lists correct Commit details for manual builds', () => {
-    const { getAllByText, queryByText, container } = render(
+    const { getAllByText, queryByText, container } = renderWithQueryClient(
       <CommitsListRow
         columns={null}
         obj={{ commit: commits[0], pipelineRuns: pipelineWithCommits }}
@@ -46,7 +57,7 @@ describe('CommitsListRow', () => {
   });
 
   it('should show commit icon for commits', () => {
-    render(
+    renderWithQueryClient(
       <CommitsListRow
         columns={null}
         obj={{ commit: commits[3], pipelineRuns: pipelineWithCommits }}
@@ -58,7 +69,7 @@ describe('CommitsListRow', () => {
   it('should show pull request icon for pull requests', () => {
     commits[0].isPullRequest = true;
     commits[0].pullRequestNumber = '23';
-    render(
+    renderWithQueryClient(
       <CommitsListRow
         columns={null}
         obj={{ commit: commits[0], pipelineRuns: pipelineWithCommits }}
@@ -68,13 +79,17 @@ describe('CommitsListRow', () => {
     screen.getAllByText(`#23 ${commits[0].shaTitle}`);
   });
 
-  it('should show plr status on the row', () => {});
-  const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
-  render(
-    <CommitsListRow
-      columns={null}
-      obj={{ commit: commits[0], pipelineRuns: pipelineWithCommits }}
-    />,
-  );
-  screen.getByText(status);
+  it('should show plr status on the row', () => {
+    const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
+    renderWithQueryClient(
+      <CommitsListRow
+        columns={null}
+        obj={{
+          commit: commits[1],
+          pipelineRuns: [pipelineWithCommits[0]],
+        }}
+      />,
+    );
+    screen.getByText(status);
+  });
 });
