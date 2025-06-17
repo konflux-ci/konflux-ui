@@ -1,9 +1,8 @@
 import * as React from 'react';
-import { ModalVariant } from '@patternfly/react-core';
+import { ModalVariant, Stack, StackItem } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { SecretSelector } from './SecretSelector';
-import './LinkSecret.scss';
 
 type LinkSecretModalProps = ComponentProps & {
   onClose: () => void;
@@ -20,9 +19,11 @@ export const LinkSecret: React.FC<React.PropsWithChildren<LinkSecretModalProps>>
     <Formik onSubmit={() => {}} initialValues={{ resourceName: '' }} onReset={onReset}>
       {() => {
         return (
-          <div className="link-secret">
-            <SecretSelector onClose={onReset} />
-          </div>
+          <Stack hasGutter={true}>
+            <StackItem>
+              <SecretSelector onClose={onReset} />
+            </StackItem>
+          </Stack>
         );
       }}
     </Formik>
