@@ -31,6 +31,6 @@ export const LinkSecret: React.FC<React.PropsWithChildren<LinkSecretModalProps>>
 export const createLinkSecretModalLauncher = () =>
   createModalLauncher(LinkSecret, {
     'data-test': `link-secret-modal`,
-    variant: ModalVariant.medium,
+    variant: ModalVariant.small,
     title: `Link Secrets?`,
   });
