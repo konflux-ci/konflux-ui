@@ -13,6 +13,7 @@ import {
 import { FormikValues, Formik } from 'formik';
 import * as ApplicationHook from '../hooks/useApplications';
 import * as k8s from '../k8s';
+import * as kubearchiveFetchUtil from '../kubearchive/fetch-utils';
 import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
 
 export function createTestQueryClient() {
@@ -157,6 +158,14 @@ export const createK8sUtilMock = (name) => {
   const mockFn = jest.fn();
 
   jest.spyOn(k8s, name).mockImplementation((...args) => mockFn(...args));
+
+  return mockFn;
+};
+
+export const createKubearchiveUtilMock = (name) => {
+  const mockFn = jest.fn();
+
+  jest.spyOn(kubearchiveFetchUtil, name).mockImplementation((...args) => mockFn(...args));
 
   return mockFn;
 };
