@@ -8,7 +8,6 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
-import './UnlinkSecret.scss';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;
@@ -41,6 +40,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
           <strong>{component?.metadata?.name}</strong>
         </Text>
       </FlexItem>
+<<<<<<< HEAD
       {isCommonSecret && (
         <FlexItem>
           <Text>
@@ -56,6 +56,19 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
         <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
           Cancel
         </Button>
+=======
+      <Flex gap={{ default: 'gapSm' }}>
+        <FlexItem>
+          <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
+            Unlink
+          </Button>
+        </FlexItem>
+        <FlexItem>
+          <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
+            Cancel
+          </Button>
+        </FlexItem>
+>>>>>>> e9fe5ed (style(link-unlink-secret): refactor style)
       </Flex>
     </Flex>
   );
