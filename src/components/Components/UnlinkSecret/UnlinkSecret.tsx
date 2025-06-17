@@ -8,6 +8,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
+import './UnlinkSecret.scss';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;

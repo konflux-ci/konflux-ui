@@ -3,6 +3,7 @@ import { ModalVariant } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { SecretSelector } from './SecretSelector';
+import './LinkSecret.scss';
 
 type LinkSecretModalProps = ComponentProps & {
   onClose: () => void;
@@ -19,9 +20,9 @@ export const LinkSecret: React.FC<React.PropsWithChildren<LinkSecretModalProps>>
     <Formik onSubmit={() => {}} initialValues={{ resourceName: '' }} onReset={onReset}>
       {() => {
         return (
-          <>
+          <div className="link-secret">
             <SecretSelector onClose={onReset} />
-          </>
+          </div>
         );
       }}
     </Formik>
