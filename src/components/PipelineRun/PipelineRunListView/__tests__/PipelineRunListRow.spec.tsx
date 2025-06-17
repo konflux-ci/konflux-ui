@@ -119,38 +119,4 @@ describe('Pipeline run Row', () => {
       row.getByText('Cancel');
     });
   });
-
-  it('should return "ERROR" when test output result is ERROR', () => {
-    const plrWithTestOutputError = testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_ERROR];
-    const plrName = plrWithTestOutputError.metadata.name;
-    const row = render(
-      <PipelineRunListRowWithVulnerabilities
-        obj={plrWithTestOutputError}
-        customData={{
-          fetchedPipelineRuns: [plrName],
-          vulnerabilities: [{ [plrName]: {} }] as any,
-        }}
-        columns={[]}
-      />,
-    );
-
-    expect(row.getByText('ERROR')).toBeDefined();
-  });
-
-  it('should return "SUCCESS" when test output result is SUCCESS', () => {
-    const plrWithTestOutputError = testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS];
-    const plrName = plrWithTestOutputError.metadata.name;
-    const row = render(
-      <PipelineRunListRowWithVulnerabilities
-        obj={plrWithTestOutputError}
-        customData={{
-          fetchedPipelineRuns: [plrName],
-          vulnerabilities: [{ [plrName]: {} }] as any,
-        }}
-        columns={[]}
-      />,
-    );
-
-    expect(row.getByText('SUCCESS')).toBeDefined();
-  });
 });
