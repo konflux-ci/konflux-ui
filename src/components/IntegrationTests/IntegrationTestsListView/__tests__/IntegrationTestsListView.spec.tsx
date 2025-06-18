@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
-import IntegrationTestsListView from '../IntegrationTestsListView';
+import { IntegrationTestsListView } from '../IntegrationTestsListView';
 
 const navigateMock = jest.fn();
 jest.useFakeTimers();
@@ -39,10 +39,18 @@ const IntegrationTestsList = (
 );
 
 describe('IntegrationTestsListView', () => {
-  it('should render the empty state if there are no integration tests', () => {
+  it('should render the empty state if there are no integration tests', async () => {
     useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
-    const wrapper = render(IntegrationTestsList);
-    expect(wrapper.findByText('Test any code changes')).toBeTruthy();
+    render(IntegrationTestsList);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText((content) =>
+          content.includes('No integration tests found for application'),
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText('test-app')).toBeInTheDocument();
+    });
   });
 
   it('should render a table when there are integration tests', () => {
@@ -85,13 +93,6 @@ describe('IntegrationTestsListView', () => {
 
     expect(screen.queryByText('test-app-test-1')).not.toBeInTheDocument();
     expect(screen.queryByText('test-app-test-2')).not.toBeInTheDocument();
-
-    // clear the filter
-    const clearFilterButton = screen.getAllByRole('button', { name: 'Clear all filters' })[0];
-    fireEvent.click(clearFilterButton);
-
-    expect(screen.queryByText('test-app-test-1')).toBeInTheDocument();
-    expect(screen.queryByText('test-app-test-2')).toBeInTheDocument();
   });
 
   it('should show button to add integration test and it should redirect to add integration page', async () => {
@@ -117,5 +118,58 @@ describe('IntegrationTestsListView', () => {
         '/ns/test-ns/applications/test-app/integrationtests/add',
       ),
     );
+  });
+
+  it('should filter integration tests by name correctly', () => {
+    useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
+    render(IntegrationTestsList);
+
+    // Initially both tests should be visible
+    expect(screen.getByText('test-app-test-1')).toBeInTheDocument();
+    expect(screen.getByText('test-app-test-2')).toBeInTheDocument();
+
+    // Filter by first test name
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    fireEvent.change(filter, {
+      target: { value: 'test-app-test-1' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    // Only first test should be visible
+    expect(screen.getByText('test-app-test-1')).toBeInTheDocument();
+    expect(screen.queryByText('test-app-test-2')).not.toBeInTheDocument();
+
+    // Clear filter
+    fireEvent.change(filter, {
+      target: { value: '' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    // Both tests should be visible again
+    expect(screen.getByText('test-app-test-1')).toBeInTheDocument();
+    expect(screen.getByText('test-app-test-2')).toBeInTheDocument();
+  });
+
+  it('should handle case-insensitive filtering', () => {
+    useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
+    render(IntegrationTestsList);
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+
+    // Test with uppercase
+    fireEvent.change(filter, {
+      target: { value: 'TEST-APP-TEST-1' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    // Should still find the test (case-insensitive)
+    expect(screen.getByText('test-app-test-1')).toBeInTheDocument();
+    expect(screen.queryByText('test-app-test-2')).not.toBeInTheDocument();
   });
 });

@@ -17,7 +17,12 @@ import {
   SecretForComponentOption,
 } from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sGetResource, K8sListResourceItems } from '../k8s/k8s-fetch';
-import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
+import {
+  K8sQueryCreateResource,
+  K8sQueryUpdateResource,
+  K8sQueryDeleteResource,
+  K8sQueryListResourceItems,
+} from '../k8s/query/fetch';
 import {
   ApplicationModel,
   ComponentModel,
@@ -25,6 +30,7 @@ import {
   SPIAccessTokenBindingModel,
   SecretModel,
   ImageRepositoryModel,
+  CronJobModel,
 } from '../models';
 import {
   ComponentKind,
@@ -40,7 +46,9 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   SecretFormValues,
+  CronJob,
 } from '../types';
+import { K8sResourceCommon } from '../types/k8s';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
 import { queueInstance } from './async-queue';
@@ -559,5 +567,58 @@ export const createImageRepository = async (
       ns: namespace,
       ...(dryRun && { queryParams: { dryRun: 'All' } }),
     },
+  });
+};
+
+export const createPeriodicIntegrationTestCronJob = (
+  cronJob: CronJob,
+  namespace: string,
+  dryRun?: boolean,
+): Promise<CronJob> => {
+  return K8sQueryCreateResource<CronJob>({
+    model: CronJobModel,
+    queryOptions: {
+      name: cronJob.metadata?.name,
+      ns: namespace,
+      ...(dryRun && { queryParams: { dryRun: 'All' } }),
+    },
+    resource: cronJob,
+  });
+};
+
+export const deletePeriodicIntegrationTestCronJob = (
+  name: string,
+  namespace: string,
+): Promise<K8sResourceCommon> => {
+  return K8sQueryDeleteResource({
+    model: CronJobModel,
+    queryOptions: {
+      name,
+      ns: namespace,
+    },
+  });
+};
+
+export const listPeriodicIntegrationTestCronJobs = (
+  namespace: string,
+  labelSelector?: string,
+): Promise<CronJob[]> => {
+  return K8sQueryListResourceItems<CronJob[]>({
+    model: CronJobModel,
+    queryOptions: {
+      ns: namespace,
+      ...(labelSelector && { queryParams: { labelSelector } as Record<string, string> }),
+    },
+  }).then((result: CronJob[] | { items: CronJob[] } | undefined) => {
+    if (!result) {
+      return [];
+    }
+    if (Array.isArray(result)) {
+      return result;
+    }
+    if ('items' in result && Array.isArray(result.items)) {
+      return result.items;
+    }
+    return [];
   });
 };
