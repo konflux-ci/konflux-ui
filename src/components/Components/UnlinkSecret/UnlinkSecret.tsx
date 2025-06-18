@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, Flex, FlexItem, ModalVariant, Text } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
@@ -19,6 +20,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   const namespace = useNamespace();
   const { componentName } = useParams<RouterParams>();
   const component: ComponentKind = useComponent(namespace, componentName)[0];
+  const isCommonSecret = secret?.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true';
 
   const handleSubmit = () => {
     unLinkSecretFromBuildServiceAccount(secret, component)
@@ -38,6 +40,14 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
           <strong>{component?.metadata?.name}</strong>
         </Text>
       </FlexItem>
+      {isCommonSecret && (
+        <FlexItem>
+          <Text>
+            <strong>Note:</strong> This is a common secret. Unlinking will remove its common secret
+            label and prevent automatic linking to new components.
+          </Text>
+        </FlexItem>
+      )}
       <Flex>
         <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
           Unlink
@@ -54,6 +64,6 @@ export const createUnlinkSecretModalLauncher = () =>
   createModalLauncher(UnlinkSecret, {
     'data-test': `unlink-secret-modal`,
     variant: ModalVariant.small,
-    title: `Unlink Secret from  a Component?`,
+    title: `Unlink Secret from a Component?`,
     titleIconVariant: 'warning',
   });

@@ -6,7 +6,11 @@ import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../../../
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
 import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
-import { isImagePullSecret, SecretForComponentOption } from './secret-utils';
+import {
+  isImagePullSecret,
+  SecretForComponentOption,
+  patchCommonSecretLabel,
+} from './secret-utils';
 
 type SecretEntry = { name: string };
 
@@ -173,6 +177,11 @@ export const unLinkSecretFromBuildServiceAccount = async (
         )
       : [];
 
+  // Remove common secret label if present
+  if (secret.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true') {
+    await patchCommonSecretLabel(secret, false);
+  }
+
   return K8sQueryPatchResource({
     model: ServiceAccountModel,
     queryOptions: {
@@ -319,39 +328,7 @@ export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {
   if (!secret || !secret.metadata?.name || !secret.metadata?.namespace) {
     return;
   }
-
-  const createdSecret = await K8sGetResource<SecretKind>({
-    model: SecretModel,
-    queryOptions: {
-      name: secret.metadata.name,
-      ns: secret.metadata?.namespace,
-    },
-  });
-
-  const currentLabels = createdSecret.metadata.labels || {};
-  if (currentLabels[COMMON_SECRETS_LABEL] === 'true') {
-    return;
-  }
-
-  const updatedLabels = {
-    ...currentLabels,
-    [COMMON_SECRETS_LABEL]: 'true',
-  };
-
-  await K8sQueryPatchResource({
-    model: SecretModel,
-    queryOptions: {
-      name: secret.metadata.name,
-      ns: secret.metadata.namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: '/metadata/labels',
-        value: updatedLabels,
-      },
-    ],
-  });
+  return patchCommonSecretLabel(secret, true);
 };
 
 //Updates the linking error message annotation for the Secret

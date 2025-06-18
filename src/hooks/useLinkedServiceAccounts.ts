@@ -26,8 +26,12 @@ export const useLinkedServiceAccounts = (namespace: string, secert: SecretKind, 
   const linkedServiceAccounts: ServiceAccountKind[] = useMemo(() => {
     if (isLoading || !serviceAccounts) return [];
     const taskStatus = secert.metadata?.annotations?.[LINKING_STATUS_ANNOTATION];
-    // Let us ingore sync during running to avoid requests hits to cluster.
-    if (taskStatus !== BackgroundJobStatus.Succeeded) return [];
+    const isFinished = [BackgroundJobStatus.Succeeded, BackgroundJobStatus.Failed].includes(
+      taskStatus as BackgroundJobStatus,
+    );
+    if (!isFinished) {
+      return [];
+    }
     return filterLinkedServiceAccounts(secert.metadata?.name, serviceAccounts);
   }, [secert, serviceAccounts, isLoading]);
 
