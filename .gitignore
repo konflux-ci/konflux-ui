@@ -7,18 +7,53 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dependency directories
+node_modules/
+
+# Build output
+build/
+dist/
+dist-ssr/
+out/
+
+# Coverage reports
+coverage/
+
+# Environment files
+.env*
 
 # Editor directories and files
-.vscode/*
+.vscode/
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# System files
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Miscellaneous
+*.tgz
+package-lock.json
+yarn.lock
+
+# Generated reports
+*.lcov
+*.lcov-report/
+
+# Ignore Cypress screenshots/videos
+cypress/screenshots/
+cypress/videos/
+
+# Ignore Jest cache
+jest-cache/
+
+# Ignore storybook static build
+storybook-static/

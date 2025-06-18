@@ -30,7 +30,9 @@
   },
   "include": [
     "src/",
-    "@types"
+    "@types",
+    "src/models/cronjob.ts",
+    "src/types/cronjob.ts"
   ],
   "exclude": [
     "*.config.js",

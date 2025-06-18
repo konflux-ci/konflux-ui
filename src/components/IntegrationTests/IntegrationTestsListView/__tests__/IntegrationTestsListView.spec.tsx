@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { MockIntegrationTests } from '../__data__/mock-integration-tests';
-import IntegrationTestsListView from '../IntegrationTestsListView';
+import { IntegrationTestsListView } from '../IntegrationTestsListView';
 
 const navigateMock = jest.fn();
 jest.useFakeTimers();

@@ -1,4 +1,3 @@
-import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import {
   addSecretFormValues,
   mockApplicationRequestData,
@@ -10,8 +9,14 @@ import {
   mockComponentWithDevfile,
   secretFormValues,
 } from '../../components/Secrets/__data__/mock-secrets';
+import { SecretForComponentOption } from '../../components/Secrets/utils/secret-utils';
 import { linkSecretToServiceAccounts } from '../../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
+import {
+  K8sQueryCreateResource,
+  K8sQueryDeleteResource,
+  K8sQueryListResourceItems,
+} from '../../k8s/query/fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
@@ -22,12 +27,24 @@ import {
   sanitizeName,
   getSecretObject,
   addSecretWithLinkingComponents,
+  createPeriodicIntegrationTestCronJob,
+  deletePeriodicIntegrationTestCronJob,
+  listPeriodicIntegrationTestCronJobs,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(() => Promise.resolve()),
   k8sUpdateResource: jest.fn(() => Promise.resolve()),
+  k8sDeleteResource: jest.fn(() => Promise.resolve()),
+  K8sListResourceItems: jest.fn(() => Promise.resolve([])),
+}));
+
+jest.mock('../../k8s/query/fetch', () => ({
+  K8sQueryCreateResource: jest.fn(() => Promise.resolve()),
+  K8sQueryUpdateResource: jest.fn(() => Promise.resolve()),
+  K8sQueryDeleteResource: jest.fn(() => Promise.resolve()),
+  K8sQueryListResourceItems: jest.fn(() => Promise.resolve([])),
 }));
 
 jest.mock('../../components/Secrets/utils/service-account-utils', () => {
@@ -40,6 +57,9 @@ jest.mock('../../components/Secrets/utils/service-account-utils', () => {
 });
 
 const createResourceMock = k8sCreateResource as jest.Mock;
+const deleteResourceMock = K8sQueryDeleteResource as jest.Mock;
+const listResourceMock = K8sQueryListResourceItems as jest.Mock;
+const createQueryResourceMock = K8sQueryCreateResource as jest.Mock;
 const linkSecretToServiceAccountsMock = linkSecretToServiceAccounts as jest.Mock;
 
 describe('Create Utils', () => {
@@ -391,5 +411,254 @@ describe('create-utils getSecretObject', () => {
   it('should create a correct fields', () => {
     const obj = getSecretObject(secretFormValues, 'test-ns');
     expect(obj.stringData).toEqual({ test: 'dGVzdA==' });
+  });
+});
+
+describe('CronJob Utilities', () => {
+  const mockCronJob = {
+    apiVersion: 'batch/v1',
+    kind: 'CronJob',
+    metadata: {
+      name: 'test-cronjob',
+      namespace: 'test-ns',
+      labels: {
+        integrationTest: 'test-integration',
+        application: 'test-app',
+      },
+      annotations: {
+        'job.openshift.io/display-name': 'Test Job',
+      },
+    },
+    spec: {
+      schedule: '0 9 * * *',
+      suspend: false,
+      jobTemplate: {
+        spec: {
+          template: {
+            spec: {
+              containers: [
+                {
+                  name: 'integration-test',
+                  image: 'busybox',
+                  command: ['echo', 'Run integration test'],
+                },
+              ],
+              restartPolicy: 'Never',
+            },
+          },
+        },
+      },
+    },
+  };
+
+  describe('createPeriodicIntegrationTestCronJob', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should create cronJob with correct metadata', async () => {
+      createQueryResourceMock.mockResolvedValue(mockCronJob);
+
+      const result = await createPeriodicIntegrationTestCronJob(mockCronJob, 'test-ns');
+
+      expect(createQueryResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          name: 'test-cronjob',
+          ns: 'test-ns',
+        },
+        resource: mockCronJob,
+      });
+      expect(result).toEqual(mockCronJob);
+    });
+
+    it('should handle dry-run parameter', async () => {
+      createQueryResourceMock.mockResolvedValue(mockCronJob);
+
+      await createPeriodicIntegrationTestCronJob(mockCronJob, 'test-ns', true);
+
+      expect(createQueryResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          name: 'test-cronjob',
+          ns: 'test-ns',
+          queryParams: { dryRun: 'All' },
+        },
+        resource: mockCronJob,
+      });
+    });
+
+    it('should reject when creation fails', async () => {
+      const error = new Error('Creation failed');
+      createQueryResourceMock.mockRejectedValue(error);
+
+      await expect(createPeriodicIntegrationTestCronJob(mockCronJob, 'test-ns')).rejects.toThrow(
+        'Creation failed',
+      );
+    });
+
+    it('should handle cronJob without metadata name', async () => {
+      const cronJobWithoutName = {
+        ...mockCronJob,
+        metadata: { ...mockCronJob.metadata, name: undefined },
+      };
+      createQueryResourceMock.mockResolvedValue(cronJobWithoutName);
+
+      await createPeriodicIntegrationTestCronJob(cronJobWithoutName, 'test-ns');
+
+      expect(createQueryResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          name: undefined,
+          ns: 'test-ns',
+        },
+        resource: cronJobWithoutName,
+      });
+    });
+  });
+
+  describe('deletePeriodicIntegrationTestCronJob', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should delete cronJob by name and namespace', async () => {
+      const mockResponse = { kind: 'Status', status: 'Success' };
+      deleteResourceMock.mockResolvedValue(mockResponse);
+
+      const result = await deletePeriodicIntegrationTestCronJob('test-cronjob', 'test-ns');
+
+      expect(deleteResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          name: 'test-cronjob',
+          ns: 'test-ns',
+        },
+      });
+      expect(result).toEqual(mockResponse);
+    });
+
+    it('should handle deletion of non-existent job gracefully', async () => {
+      const error = new Error('Not found');
+      deleteResourceMock.mockRejectedValue(error);
+
+      await expect(
+        deletePeriodicIntegrationTestCronJob('non-existent-job', 'test-ns'),
+      ).rejects.toThrow('Not found');
+    });
+
+    it('should handle empty job name', async () => {
+      const mockResponse = { kind: 'Status', status: 'Success' };
+      deleteResourceMock.mockResolvedValue(mockResponse);
+
+      await deletePeriodicIntegrationTestCronJob('', 'test-ns');
+
+      expect(deleteResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          name: '',
+          ns: 'test-ns',
+        },
+      });
+    });
+  });
+
+  describe('listPeriodicIntegrationTestCronJobs', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should list cronJobs with labelSelector', async () => {
+      const mockJobs = [mockCronJob];
+      listResourceMock.mockResolvedValue({ items: mockJobs });
+
+      const result = await listPeriodicIntegrationTestCronJobs('test-ns', 'application=test-app');
+
+      expect(listResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          ns: 'test-ns',
+          queryParams: { labelSelector: 'application=test-app' },
+        },
+      });
+      expect(result).toEqual(mockJobs);
+    });
+
+    it('should handle response with items array', async () => {
+      const mockJobs = [mockCronJob];
+      listResourceMock.mockResolvedValue({ items: mockJobs });
+
+      const result = await listPeriodicIntegrationTestCronJobs('test-ns');
+
+      expect(result).toEqual(mockJobs);
+    });
+
+    it('should handle direct array response', async () => {
+      const mockJobs = [mockCronJob];
+      listResourceMock.mockResolvedValue(mockJobs);
+
+      const result = await listPeriodicIntegrationTestCronJobs('test-ns');
+
+      expect(result).toEqual(mockJobs);
+    });
+
+    it('should return empty array for undefined result', async () => {
+      listResourceMock.mockResolvedValue(undefined);
+
+      const result = await listPeriodicIntegrationTestCronJobs('test-ns');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array for null result', async () => {
+      listResourceMock.mockResolvedValue(null);
+
+      const result = await listPeriodicIntegrationTestCronJobs('test-ns');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle unexpected response format', async () => {
+      listResourceMock.mockResolvedValue({ unexpected: 'format' });
+
+      const result = await listPeriodicIntegrationTestCronJobs('test-ns');
+
+      expect(result).toEqual([]);
+    });
+
+    it('should handle API errors', async () => {
+      const error = new Error('API Error');
+      listResourceMock.mockRejectedValue(error);
+
+      await expect(listPeriodicIntegrationTestCronJobs('test-ns')).rejects.toThrow('API Error');
+    });
+
+    it('should call without labelSelector when not provided', async () => {
+      const mockJobs = [mockCronJob];
+      listResourceMock.mockResolvedValue({ items: mockJobs });
+
+      await listPeriodicIntegrationTestCronJobs('test-ns');
+
+      expect(listResourceMock).toHaveBeenCalledWith({
+        model: expect.objectContaining({
+          kind: 'CronJob',
+        }),
+        queryOptions: {
+          ns: 'test-ns',
+        },
+      });
+    });
   });
 });
