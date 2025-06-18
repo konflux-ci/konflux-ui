@@ -21,41 +21,44 @@ const SelectComponentsDropdown: React.FC<SelectComponentsDropdownProps> = ({
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   return (
-    <MenuContainer
-      isOpen={isOpen}
-      onOpenChange={(open) => setIsOpen(open)}
-      toggle={
-        <MenuToggle
-          ref={toggleRef}
-          isExpanded={isOpen}
-          onClick={() => setIsOpen(!isOpen)}
-          id="toggle-component-menu"
-          aria-label="toggle component menu"
-          badge={badgeValue ? <Badge isRead>{badgeValue}</Badge> : null}
-          isFullWidth
-        >
-          {toggleText}
-        </MenuToggle>
-      }
-      menu={
-        <Menu
-          title="Components"
-          ref={menuRef}
-          id="component-menu"
-          isScrollable
-          onSelect={(_, itemId) => {
-            onSelect(itemId as string);
-            if (closeOnSelect) {
-              setIsOpen(false);
-            }
-          }}
-        >
-          <MenuContent>{children}</MenuContent>
-        </Menu>
-      }
-      toggleRef={toggleRef}
-      menuRef={menuRef}
-    />
+    <>
+      <MenuContainer
+        isOpen={isOpen}
+        onOpenChange={(open) => setIsOpen(open)}
+        toggle={
+          <MenuToggle
+            ref={toggleRef}
+            isExpanded={isOpen}
+            onClick={() => setIsOpen(!isOpen)}
+            id="toggle-component-menu"
+            aria-label="toggle component menu"
+            badge={badgeValue ? <Badge isRead>{badgeValue}</Badge> : null}
+            style={{ width: '100%' }}
+          >
+            {toggleText}
+          </MenuToggle>
+        }
+        menu={
+          <Menu
+            title="Components"
+            ref={menuRef}
+            id="component-menu"
+            isScrollable
+            style={{ width: '90%' }}
+            onSelect={(_, itemId) => {
+              onSelect(itemId as string);
+              if (closeOnSelect) {
+                setIsOpen(false);
+              }
+            }}
+          >
+            <MenuContent>{children}</MenuContent>
+          </Menu>
+        }
+        toggleRef={toggleRef}
+        menuRef={menuRef}
+      />
+    </>
   );
 };
 
