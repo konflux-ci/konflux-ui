@@ -1,7 +1,9 @@
 import * as React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Flex,
   FlexItem,
+  Icon,
   PageGroup,
   PageSection,
   PageSectionVariants,
@@ -15,12 +17,12 @@ import {
   DropdownSeparator,
   DropdownToggle,
 } from '@patternfly/react-core/deprecated';
+import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
 import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
 import { css } from '@patternfly/react-styles';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
-
 import './DetailsPage.scss';
 
 type DetailsPageProps = {
@@ -49,6 +51,10 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   baseURL,
   onTabSelect,
 }) => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const showBackToRelease =
+    state?.type?.includes('snapshot') || state?.type?.includes('managed') || false;
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -117,7 +123,19 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   return (
     <PageGroup data-test="details" className="app-details">
       <PageSection type="breadcrumb">
-        {breadcrumbs && <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />}
+        {!showBackToRelease && breadcrumbs && (
+          <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
+        )}
+        {showBackToRelease ? (
+          <a onClick={() => navigate(-1)} className="pf-c-button pf-m-link">
+            <Icon>
+              <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
+            </Icon>
+            {'Back to release details'}
+          </a>
+        ) : (
+          ''
+        )}
         <Flex style={{ paddingTop: 'var(--pf-v5-global--spacer--lg)' }}>
           <FlexItem>
             <TextContent>
