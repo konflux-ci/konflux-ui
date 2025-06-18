@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Flex, FlexItem, ModalVariant, Text } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Text, ModalVariant } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
@@ -48,13 +48,17 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
           </Text>
         </FlexItem>
       )}
-      <Flex>
-        <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
-          Unlink
-        </Button>
-        <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
-          Cancel
-        </Button>
+      <Flex gap={{ default: 'gapSm' }}>
+        <FlexItem>
+          <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
+            Unlink
+          </Button>
+        </FlexItem>
+        <FlexItem>
+          <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
+            Cancel
+          </Button>
+        </FlexItem>
       </Flex>
     </Flex>
   );
