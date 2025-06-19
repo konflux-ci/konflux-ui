@@ -8,9 +8,10 @@ import { ComponentSelector } from './ComponentSelector';
 import './SecretLinkOptionForm.scss';
 
 type SecretLinkOptionsProps = {
-  secretForComponentOption: SecretForComponentOption;
+  secretForComponentOption: SecretForComponentOption | null;
   onOptionChange: (option: SecretForComponentOption) => void;
   radioLabels: {
+    none: string;
     all: string;
     partial: string;
   };
@@ -41,6 +42,10 @@ export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
           {
             value: SecretForComponentOption.partial,
             label: radioLabels.partial,
+          },
+          {
+            value: SecretForComponentOption.none,
+            label: radioLabels.none,
           },
         ]}
         required={false}

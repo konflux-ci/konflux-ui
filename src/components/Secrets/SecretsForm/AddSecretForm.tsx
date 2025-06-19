@@ -10,7 +10,7 @@ import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../../types';
 import { addSecretWithLinkingComponents } from '../../../utils/create-utils';
 import PageLayout from '../../PageLayout/PageLayout';
-import { getAddSecretBreadcrumbs } from '../utils/secret-utils';
+import { getAddSecretBreadcrumbs, SecretForComponentOption } from '../utils/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
@@ -39,7 +39,7 @@ const AddSecretForm: React.FC = () => {
       authType: 'Basic authentication',
     },
     relatedComponents: [],
-    secretForComponentOption: null,
+    secretForComponentOption: SecretForComponentOption.none,
   };
   return (
     <Formik
