@@ -72,9 +72,10 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
   const [currentType, setCurrentType] = useState(secretType);
   const [currentAuthType, setCurrentAuthType] = useState<string | null>(null);
 
-  const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
+  const [{ value: rawOptionValue }, , { setValue }] = useField<SecretForComponentOption>(
     'secretForComponentOption',
   );
+  const currentSecretForComponentOption = rawOptionValue ?? SecretForComponentOption.none;
 
   const selectedForm = React.useMemo(() => {
     const form = secretTypes.find((t) => t.label === currentType);
@@ -124,7 +125,12 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
           setTimeout(() => validateForm());
           setCurrentType(type);
           setCurrentAuthType(null);
-          void setValue(null);
+          // Ensure the default value always works when loading the page or refreshing
+          // the secret type.
+          // If we would like to keep the option when we switch the secret type,
+          // we can get the secretForComponentOption from initial values and
+          // setValue(secretForComponentOption);
+          void setValue(SecretForComponentOption.none as SecretForComponentOption);
           if (type !== SecretTypeDropdownLabel.opaque) {
             resetKeyValues();
             name && isPartnerTask(name) && void setFieldValue('name', '');
@@ -179,7 +185,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
       {/* Just for image pull secret and basic auth */}
       {shouldShowSecretLinkOptions && (
         <SecretLinkOptions
-          secretForComponentOption={secretForComponentOption}
+          secretForComponentOption={currentSecretForComponentOption}
           radioLabels={SecretLinkOptionLabels.default}
           onOptionChange={(option) => setValue(option)}
         />
