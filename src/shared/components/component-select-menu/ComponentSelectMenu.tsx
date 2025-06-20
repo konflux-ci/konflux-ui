@@ -7,10 +7,13 @@ import {
   MenuSearch,
   MenuSearchInput,
   SearchInput,
+  Truncate,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten, isArray } from 'lodash-es';
+import { CurrentComponentRef } from '~/types/secret';
 import SelectComponentsDropdown from './SelectComponnetsDropdown';
+
 import './ComponentSelectMenu.scss';
 
 type ComponentSelectMenuProps = {
@@ -18,6 +21,7 @@ type ComponentSelectMenuProps = {
   options: string[] | { [application: string]: string[] };
   isMulti?: boolean;
   disableItem?: (item: string) => boolean;
+  defaultSelected?: null | CurrentComponentRef[];
   sourceComponentName?: string;
   includeSelectAll?: boolean;
   defaultToggleText?: string;
@@ -34,6 +38,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   options,
   isMulti = false,
   disableItem,
+  defaultSelected,
   sourceComponentName,
   includeSelectAll = false,
   defaultToggleText = 'Select components',
@@ -111,6 +116,29 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
     return selectedComponents?.length > 0 ? selectedToggleText : defaultToggleText;
   }, [defaultToggleText, value, selectedToggleText]);
 
+  useEffect(() => {
+    if (!defaultSelected || defaultSelected.length === 0) return;
+
+    const filterDefaultSelected = defaultSelected.filter(
+      (c) => c?.componentName && c?.applicationName,
+    );
+
+    if (filterDefaultSelected.length === 0) return;
+
+    const defaultValues = filterDefaultSelected.map((c) => c.componentName);
+
+    if (isMulti) {
+      if (Array.isArray(value) && value.length === 0) {
+        void setValue(defaultValues);
+      }
+    } else {
+      if (!value) {
+        void setValue(defaultValues[0]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultSelected, setValue, isMulti]);
+
   return (
     <>
       <SelectComponentsDropdown
@@ -167,7 +195,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
                         : undefined
                     }
                   >
-                    {item}
+                    <Truncate content={item} position="middle" />
                   </MenuItem>
                 ))}
               </MenuList>
@@ -184,7 +212,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
                 selected={!isMulti && isSelected(item)}
                 isDisabled={isItemDisabled(item)}
               >
-                {item}
+                <Truncate content={item} position="middle" />
               </MenuItem>
             ))}
           </MenuList>

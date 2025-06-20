@@ -2,11 +2,14 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
-import { useApplicationReleases } from '../../hooks/useApplicationReleases';
+import { PipelineRunLabel } from '../../consts/pipelinerun';
+import { useK8sAndKarchResources } from '../../hooks/useK8sAndKarchResources';
 import { useSortedResources } from '../../hooks/useSortedResources';
+import { ReleaseGroupVersionKind, ReleaseModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { ReleasesFilterToolbar } from '../Filter/toolbars/ReleasesFilterToolbar';
@@ -27,7 +30,31 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleasesListView: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
-  const [releases, loaded] = useApplicationReleases(applicationName);
+  const namespace = useNamespace();
+
+  const {
+    data: releases,
+    isLoading,
+    hasError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useK8sAndKarchResources<ReleaseKind>(
+    {
+      groupVersionKind: ReleaseGroupVersionKind,
+      namespace,
+      isList: true,
+      selector: applicationName
+        ? {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+            },
+          }
+        : undefined,
+    },
+    ReleaseModel,
+  );
+
   const [filterType, setFilterType] = React.useState<FilterTypes>(FilterTypes.name);
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.created);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
@@ -51,7 +78,7 @@ const ReleasesListView: React.FC = () => {
   );
 
   const filteredReleases = React.useMemo(() => {
-    if (!loaded) return [];
+    if (isLoading && !releases.length) return [];
     switch (filterType) {
       case FilterTypes.name:
         return releases.filter((r) => r.metadata.name.indexOf(searchFilter) !== -1);
@@ -62,7 +89,7 @@ const ReleasesListView: React.FC = () => {
       default:
         return releases;
     }
-  }, [filterType, loaded, releases, searchFilter]);
+  }, [filterType, isLoading, releases, searchFilter]);
 
   const sortedReleases = useSortedResources(
     filteredReleases,
@@ -71,7 +98,7 @@ const ReleasesListView: React.FC = () => {
     sortPaths,
   );
 
-  if (!loaded) {
+  if (isLoading && !releases.length) {
     return (
       <Bullseye>
         <Spinner />
@@ -79,7 +106,7 @@ const ReleasesListView: React.FC = () => {
     );
   }
 
-  if (!releases?.length) {
+  if (!isLoading && !releases?.length && !hasError) {
     return <ReleasesEmptyState />;
   }
 
@@ -101,20 +128,28 @@ const ReleasesListView: React.FC = () => {
         {!sortedReleases?.length ? (
           <FilteredEmptyState onClearFilters={() => onClearFilters()} />
         ) : (
-          <>
-            <Table
-              data-test="releases__table"
-              data={sortedReleases}
-              aria-label="Release List"
-              Header={ReleasesListHeader}
-              Row={ReleasesListRow}
-              loaded
-              getRowProps={(obj: ReleaseKind) => ({
-                id: obj?.metadata?.uid,
-              })}
-              customData={{ applicationName }}
-            />
-          </>
+          <Table
+            data-test="releases__table"
+            data={sortedReleases}
+            aria-label="Release List"
+            Header={ReleasesListHeader}
+            Row={ReleasesListRow}
+            loaded={!isLoading || releases.length > 0}
+            getRowProps={(obj: ReleaseKind) => ({
+              id: obj?.metadata?.uid,
+            })}
+            customData={{ applicationName }}
+            isInfiniteLoading={hasNextPage}
+            infiniteLoaderProps={{
+              isRowLoaded: (args) => {
+                return !!sortedReleases[args.index];
+              },
+              loadMoreRows: () => {
+                hasNextPage && !isFetchingNextPage && fetchNextPage?.();
+              },
+              rowCount: hasNextPage ? sortedReleases.length + 1 : sortedReleases.length,
+            }}
+          />
         )}
       </>
     </PageSection>

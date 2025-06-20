@@ -2,9 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
-import { FIELD_SECRET_FOR_COMPONENT_OPTION } from '~/consts/secrets';
-import { FLAGS } from '~/feature-flags/flags';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
 import { DropdownItemObject } from '../../shared/components/dropdown';
 import KeyValueFileInputField from '../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import SelectInputField from '../../shared/components/formik-fields/SelectInputField';
@@ -14,6 +12,7 @@ import {
   K8sSecretType,
   BuildTimeSecret,
   SourceSecretType,
+  CurrentComponentRef,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
@@ -28,10 +27,13 @@ import {
 
 type SecretFormProps = RawComponentProps & {
   existingSecrets: BuildTimeSecret[];
+  currentComponent?: null | CurrentComponentRef;
 };
 
-const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existingSecrets }) => {
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag(FLAGS.buildServiceAccount.key);
+const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
+  existingSecrets,
+  currentComponent,
+}) => {
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
   const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
@@ -146,10 +148,12 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({ existi
           void setFieldValue('secretName', value);
         }}
       />
-      {isBuildServiceAccountFeatureOn && shouldShowSecretLinkOptions && (
+      {shouldShowSecretLinkOptions && (
         <SecretLinkOptions
+          currentComponent={currentComponent}
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}
+          radioLabels={SecretLinkOptionLabels.forImportSecret}
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}

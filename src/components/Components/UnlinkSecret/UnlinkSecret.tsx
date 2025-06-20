@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, ModalVariant } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Text, ModalVariant } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
-import './UnlinkSecret.scss';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;
@@ -20,6 +20,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   const namespace = useNamespace();
   const { componentName } = useParams<RouterParams>();
   const component: ComponentKind = useComponent(namespace, componentName)[0];
+  const isCommonSecret = secret?.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true';
 
   const handleSubmit = () => {
     unLinkSecretFromBuildServiceAccount(secret, component)
@@ -32,18 +33,34 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
   };
 
   return (
-    <>
-      <strong>{secret?.metadata?.name}</strong>
-      will be unlinked from <strong>{component?.metadata?.name}</strong>
-      <div>
-        <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
-          Unlink
-        </Button>
-        <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
-          Cancel
-        </Button>
-      </div>
-    </>
+    <Flex direction={{ default: 'column' }}>
+      <FlexItem>
+        <Text component="p">
+          <strong>{secret?.metadata?.name}</strong> will be unlinked from{' '}
+          <strong>{component?.metadata?.name}</strong>
+        </Text>
+      </FlexItem>
+      {isCommonSecret && (
+        <FlexItem>
+          <Text>
+            <strong>Note:</strong> This is a common secret. Unlinking will remove its common secret
+            label and prevent automatic linking to new components.
+          </Text>
+        </FlexItem>
+      )}
+      <Flex gap={{ default: 'gapSm' }}>
+        <FlexItem>
+          <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
+            Unlink
+          </Button>
+        </FlexItem>
+        <FlexItem>
+          <Button variant="tertiary" onClick={() => onClose(null, { submitClicked: false })}>
+            Cancel
+          </Button>
+        </FlexItem>
+      </Flex>
+    </Flex>
   );
 };
 
@@ -51,6 +68,6 @@ export const createUnlinkSecretModalLauncher = () =>
   createModalLauncher(UnlinkSecret, {
     'data-test': `unlink-secret-modal`,
     variant: ModalVariant.small,
-    title: `Unlink Secret from  a Component?`,
+    title: `Unlink Secret from a Component?`,
     titleIconVariant: 'warning',
   });

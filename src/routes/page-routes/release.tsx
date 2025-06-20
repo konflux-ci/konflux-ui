@@ -3,6 +3,7 @@ import {
   releaseListViewTabLoader,
   ReleaseOverviewTab,
 } from '../../components/Releases';
+import ReleaseArtifactsTab from '../../components/Releases/ReleaseArtifactsTab';
 import { APPLICATION_RELEASE_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
@@ -17,6 +18,10 @@ const releaseRoutes = [
       {
         index: true,
         element: <ReleaseOverviewTab />,
+      },
+      {
+        path: 'artifacts',
+        element: <ReleaseArtifactsTab />,
       },
     ],
   },

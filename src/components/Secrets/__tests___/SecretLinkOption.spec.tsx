@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormikProvider, useFormik } from 'formik';
+import { SecretLinkOptionLabels } from '~/consts/secrets';
 import { SecretLinkOptions } from '../SecretsForm/SecretLinkOption';
 import { SecretForComponentOption } from '../utils/secret-utils';
 
@@ -26,6 +27,7 @@ describe('SecretLinkOptions', () => {
         <SecretLinkOptions
           secretForComponentOption={SecretForComponentOption.all}
           onOptionChange={mockOnOptionChange}
+          radioLabels={SecretLinkOptionLabels.default}
         />
       </TestWrapper>,
     );
@@ -43,6 +45,7 @@ describe('SecretLinkOptions', () => {
         <SecretLinkOptions
           secretForComponentOption={SecretForComponentOption.all}
           onOptionChange={mockOnOptionChange}
+          radioLabels={SecretLinkOptionLabels.forImportSecret}
         />
       </TestWrapper>,
     );
@@ -58,6 +61,7 @@ describe('SecretLinkOptions', () => {
         <SecretLinkOptions
           secretForComponentOption={SecretForComponentOption.all}
           onOptionChange={mockOnOptionChange}
+          radioLabels={SecretLinkOptionLabels.default}
         />
       </TestWrapper>,
     );
@@ -69,6 +73,7 @@ describe('SecretLinkOptions', () => {
           <SecretLinkOptions
             secretForComponentOption={SecretForComponentOption.partial}
             onOptionChange={mockOnOptionChange}
+            radioLabels={SecretLinkOptionLabels.forImportSecret}
           />
         </QueryClientProvider>
       </TestWrapper>,
