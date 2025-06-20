@@ -8,10 +8,12 @@ export const MAX_ANNOTATION_LENGTH = 2048;
 export const LINKING_STATUS_ANNOTATION = 'konflux-ui/linking-secret-action-status';
 export const SecretLinkOptionLabels = {
   default: {
+    none: 'Do not link to any components (same as not selecting any option)',
     all: 'All existing and future components in the namespace',
     partial: 'Select components in the namespace',
   },
   forImportSecret: {
+    none: 'Do not link to any components except current component (same as not selecting any option)',
     all: 'Current component, all existing and future components in the namespace',
     partial: 'Select components in the namespace',
   },

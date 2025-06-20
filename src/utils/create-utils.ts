@@ -462,7 +462,10 @@ export const createSecretResourceWithLinkingComponents = async (
 
   if (!createdSecret || dryRun) return createdSecret;
 
-  if (values.secretForComponentOption) {
+  if (
+    values.secretForComponentOption &&
+    values.secretForComponentOption !== SecretForComponentOption.none
+  ) {
     void enqueueLinkingTask(
       secretResource,
       values.relatedComponents,

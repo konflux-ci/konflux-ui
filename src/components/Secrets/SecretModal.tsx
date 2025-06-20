@@ -12,6 +12,7 @@ import {
 import { SecretFromSchema } from '../../utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import SecretForm from './SecretForm';
+import { SecretForComponentOption } from './utils/secret-utils';
 
 import './SecretModal.scss';
 
@@ -56,7 +57,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
     existingSecrets,
     currentComponent,
     relatedComponents: [],
-    secretForComponentOption: null,
+    secretForComponentOption: SecretForComponentOption.none,
   };
 
   return (

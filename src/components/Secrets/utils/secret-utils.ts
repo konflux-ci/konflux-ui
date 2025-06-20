@@ -26,6 +26,7 @@ export const isImagePullSecret = (secret: SecretKind): boolean => {
 };
 
 export enum SecretForComponentOption {
+  none = 'none',
   all = 'all',
   partial = 'partial',
 }

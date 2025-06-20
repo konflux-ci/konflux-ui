@@ -12,6 +12,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
 } from '../../../types';
+import { SecretForComponentOption } from '../utils/secret-utils';
 
 export const mockApplicationRequestData = {
   apiVersion: `${ApplicationModel.apiGroup}/${ApplicationModel.apiVersion}`,
@@ -151,7 +152,7 @@ export const addSecretFormValues: AddSecretFormValues = {
   },
   labels: [{ key: 'test', value: 'test' }],
   relatedComponents: [],
-  secretForComponentOption: null,
+  secretForComponentOption: SecretForComponentOption.none,
 };
 
 export const existingSecrets: BuildTimeSecret[] = [
@@ -184,7 +185,7 @@ export const secretFormValues: SecretFormValues = {
     ],
   },
   relatedComponents: [],
-  secretForComponentOption: null,
+  secretForComponentOption: SecretForComponentOption.none,
   existingSecrets,
 };
 
@@ -197,6 +198,6 @@ export const secretFormValuesForSourceSecret: SecretFormValues = {
     password: 'password-test',
   },
   relatedComponents: [],
-  secretForComponentOption: null,
+  secretForComponentOption: SecretForComponentOption.none,
   existingSecrets,
 };

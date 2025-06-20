@@ -34,6 +34,9 @@ describe('SecretLinkOptions', () => {
 
     expect(screen.getByText('Link secret options')).toBeInTheDocument();
     expect(
+      screen.getByLabelText('Do not link to any components (same as not selecting any option)'),
+    ).toBeInTheDocument();
+    expect(
       screen.getByLabelText('All existing and future components in the namespace'),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Select components in the namespace')).toBeInTheDocument();
@@ -52,6 +55,25 @@ describe('SecretLinkOptions', () => {
 
     fireEvent.click(screen.getByLabelText('Select components in the namespace'));
     expect(mockOnOptionChange).toHaveBeenCalledWith(SecretForComponentOption.partial);
+  });
+
+  it('calls onOptionChange with none when none option is selected', () => {
+    render(
+      <TestWrapper>
+        <SecretLinkOptions
+          secretForComponentOption={SecretForComponentOption.all}
+          onOptionChange={mockOnOptionChange}
+          radioLabels={SecretLinkOptionLabels.forImportSecret}
+        />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(
+      screen.getByLabelText(
+        'Do not link to any components except current component (same as not selecting any option)',
+      ),
+    );
+    expect(mockOnOptionChange).toHaveBeenCalledWith(SecretForComponentOption.none);
   });
 
   it('conditionally renders the ComponentSelector when "partial" option is selected', () => {
