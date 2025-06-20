@@ -21,11 +21,12 @@ const SnapshotDetailsView: React.FC = () => {
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
+  const [snapshot, loaded, snapshotError] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
-    () => loaded && !loadErr && snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
-    [snapshot, loaded, loadErr],
+    () =>
+      loaded && !snapshotError && snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
+    [snapshot, loaded, snapshotError],
   );
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
@@ -38,17 +39,19 @@ const SnapshotDetailsView: React.FC = () => {
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
 
-  if (loadErr || (loaded && !snapshot)) {
+  if (snapshotError || (loaded && !snapshot)) {
     return (
       <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
+        httpError={HttpError.fromCode(
+          snapshotError ? (snapshotError as { code: number }).code : 404,
+        )}
         title="Snapshot not found"
         body="No such snapshot"
       />
     );
   }
 
-  if (!plrLoadError && !plrLoaded) {
+  if (!plrLoadError && !plrLoaded && !loaded) {
     return (
       <Bullseye>
         <Spinner size="lg" />
