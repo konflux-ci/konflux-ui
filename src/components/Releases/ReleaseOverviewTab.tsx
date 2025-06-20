@@ -14,11 +14,19 @@ import {
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
-import { APPLICATION_RELEASE_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
+import {
+  APPLICATION_RELEASE_DETAILS_PATH,
+  PIPELINE_RUNS_DETAILS_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { calculateDuration } from '../../utils/pipeline-utils';
+import {
+  getNamespaceAndPRName,
+  getTenantCollectorPipelineRunFromRelease,
+} from '../../utils/release-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 
@@ -33,6 +41,10 @@ const ReleaseOverviewTab: React.FC = () => {
     typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
   );
   const status = useReleaseStatus(release);
+
+  const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = getNamespaceAndPRName(
+    getTenantCollectorPipelineRunFromRelease(release),
+  );
 
   if (!releasePlanLoaded) {
     return (
@@ -138,6 +150,24 @@ const ReleaseOverviewTab: React.FC = () => {
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               )}
+              <DescriptionListGroup>
+                <DescriptionListTerm>Tenant Collector Pipeline Run</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {tenantCollectorPipelineRun && tenantCollectorPrNamespace ? (
+                    <Link
+                      to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+                        workspaceName: tenantCollectorPrNamespace,
+                        applicationName: releasePlan.spec.application,
+                        pipelineRunName: tenantCollectorPipelineRun,
+                      })}
+                    >
+                      {tenantCollectorPipelineRun}
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </DescriptionListDescription>
+              </DescriptionListGroup>
             </DescriptionList>
           </FlexItem>
         </Flex>
