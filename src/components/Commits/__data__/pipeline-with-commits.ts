@@ -159,6 +159,8 @@ export const pipelineWithCommits: PipelineRunKind[] = [
         'pipelinesascode.tekton.dev/url-org': 'openshift',
         'build.appstudio.redhat.com/url-repository': 'console',
         'pipelinesascode.tekton.dev/git-provider': 'github',
+        'pipelinesascode.tekton.dev/pull-request': '12',
+        'pipelinesascode.tekton.dev/event-type': 'pull_request',
       },
       name: 'nodejs-sample-zth6t',
       namespace: 'test',
