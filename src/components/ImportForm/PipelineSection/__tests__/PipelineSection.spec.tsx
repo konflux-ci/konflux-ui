@@ -41,4 +41,30 @@ describe('PipelineSection', () => {
     expect(screen.getByText(exampleDescription)).toBeInTheDocument();
     expect(screen.getByText(examplePipeline)).toBeInTheDocument();
   });
+
+  it('should display pipeline detail when a pipeline with detail is selected', () => {
+    formikRenderer(<PipelineSection />, { pipeline: 'fbc-builder' });
+    const expectedDetail = mockDynamicPinelineTemplateJson.pipelines[0].detail;
+    expect(screen.getByText(expectedDetail)).toBeInTheDocument();
+  });
+
+  it('should not display detail when pipeline has no detail property', () => {
+    formikRenderer(<PipelineSection />, { pipeline: 'docker-build-multi-platform-oci-ta' });
+    // Should not show any detail text since this pipeline doesn't have a detail property
+    expect(screen.queryByText(/pipeline creates container images/)).not.toBeInTheDocument();
+  });
+
+  it('should show different details for different pipeline selections', () => {
+    // Test first pipeline
+    const { unmount } = formikRenderer(<PipelineSection />, { pipeline: 'fbc-builder' });
+    const fbcDetail = mockDynamicPinelineTemplateJson.pipelines[0].detail;
+    expect(screen.getByText(fbcDetail)).toBeInTheDocument();
+    unmount();
+
+    // Test second pipeline
+    formikRenderer(<PipelineSection />, { pipeline: 'docker-build' });
+    const dockerDetail = mockDynamicPinelineTemplateJson.pipelines[1].detail;
+    expect(screen.getByText(dockerDetail)).toBeInTheDocument();
+    expect(screen.queryByText(fbcDetail)).not.toBeInTheDocument();
+  });
 });

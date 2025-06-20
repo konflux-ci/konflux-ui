@@ -7,6 +7,7 @@ import {
   MenuSearch,
   MenuSearchInput,
   SearchInput,
+  Truncate,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten, isArray } from 'lodash-es';
@@ -194,7 +195,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
                         : undefined
                     }
                   >
-                    {item}
+                    <Truncate content={item} position="middle" />
                   </MenuItem>
                 ))}
               </MenuList>
@@ -211,7 +212,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
                 selected={!isMulti && isSelected(item)}
                 isDisabled={isItemDisabled(item)}
               >
-                {item}
+                <Truncate content={item} position="middle" />
               </MenuItem>
             ))}
           </MenuList>
