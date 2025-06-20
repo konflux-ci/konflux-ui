@@ -78,6 +78,10 @@ const ReleaseDetailsView: React.FC = () => {
           isFilled: true,
         },
         {
+          key: 'pipelineruns',
+          label: 'Pipeline runs',
+        },
+        {
           key: 'artifacts',
           label: 'Release artifacts',
           isFilled: true,
