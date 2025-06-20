@@ -23,7 +23,6 @@ export enum PipelineRunLabel {
   COMMIT_TYPE_LABEL = 'pipelines.appstudio.openshift.io/type',
   REPOSITORY_NAME = 'pipelinesascode.tekton.dev/url-repository',
   SNAPSHOT = 'appstudio.openshift.io/snapshot',
-  RELEASE_NAME = 'release.appstudio.openshift.io/name',
   COMMIT_EVENT_TYPE_LABEL = 'pipelinesascode.tekton.dev/event-type',
   PULL_REQUEST_NUMBER_LABEL = 'pipelinesascode.tekton.dev/pull-request',
   CREATE_SNAPSHOT_STATUS = 'test.appstudio.openshift.io/create-snapshot-status',
