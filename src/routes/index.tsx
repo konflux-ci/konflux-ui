@@ -13,6 +13,7 @@ import integrationTestRoutes from './page-routes/integration-test';
 import workspaceRoutes from './page-routes/namespace';
 import pipelineRoutes from './page-routes/pipeline';
 import releaseRoutes from './page-routes/release';
+import releaseMonitorRoutes from './page-routes/release-monitor';
 import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
 import snapshotRoutes from './page-routes/snapshots';
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
         element: <Overview />,
       },
       ...workspaceRoutes,
+      ...releaseMonitorRoutes,
       ...applicationRoutes,
       ...componentRoutes,
       ...releaseRoutes,
