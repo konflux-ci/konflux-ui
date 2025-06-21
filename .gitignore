@@ -33,27 +33,4 @@ coverage/
 *.sln
 *.sw?
 
-# System files
-Thumbs.db
-
-# TypeScript
-*.tsbuildinfo
-
-# Miscellaneous
-*.tgz
-package-lock.json
-yarn.lock
-
-# Generated reports
-*.lcov
-*.lcov-report/
-
-# Ignore Cypress screenshots/videos
-cypress/screenshots/
-cypress/videos/
-
-# Ignore Jest cache
-jest-cache/
-
-# Ignore storybook static build
-storybook-static/
+**/.gitconfig*

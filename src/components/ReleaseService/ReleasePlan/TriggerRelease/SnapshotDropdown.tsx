@@ -18,32 +18,42 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
   const {
     data: snapshots,
     isLoading,
-    error,
+    hasError,
+    archiveError,
+    clusterError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
   } = useSnapshotsForApplication(namespace, props.applicationName);
+  const error = archiveError ?? clusterError;
   const [, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(
     () =>
-      !isLoading ? snapshots.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
+      !isLoading ? snapshots?.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
     [isLoading, snapshots],
   );
 
   React.useEffect(() => {
     // Reset snapshot dropdown value when applicationName changes
     void setValue('');
-  }, [error, isLoading, props.applicationName, setErrors, setValue]);
+  }, [hasError, isLoading, props.applicationName, setErrors, setValue]);
+
+  React.useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && fetchNextPage) fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <>
       <DropdownField
         {...props}
         label="Snapshot"
-        placeholder={isLoading || !!error ? 'Loading snapshots...' : 'Select snapshot'}
-        isDisabled={props.isDisabled || isLoading || !!error}
+        placeholder={isLoading || isFetchingNextPage ? 'Loading snapshots...' : 'Select snapshot'}
+        isDisabled={props.isDisabled || isLoading}
         items={dropdownItems}
         onChange={(app: string) => setValue(app)}
       />
-      {error ? (
+      {!snapshots?.length && hasError ? (
         <FieldHelperText isValid={false} errorMessage={(error as { message: string }).message} />
       ) : null}
     </>

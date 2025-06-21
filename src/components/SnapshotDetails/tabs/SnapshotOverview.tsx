@@ -48,14 +48,14 @@ const SnapshotOverviewTab: React.FC = () => {
 
   const componentsTableData: SnapshotComponentTableData[] = React.useMemo(
     () =>
-      snapshot.spec.components.map((component) => {
+      snapshot?.spec?.components?.map((component) => {
         return {
           metadata: { uid: component.name, name: component.name },
-          application: snapshot.spec.application,
+          application: snapshot?.spec?.application,
           ...component,
         };
-      }),
-    [snapshot.spec],
+      }) || [],
+    [snapshot?.spec],
   );
 
   return (
@@ -75,7 +75,7 @@ const SnapshotOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Created at</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <Timestamp timestamp={snapshot.metadata.creationTimestamp ?? '-'} />
+                  <Timestamp timestamp={snapshot?.metadata?.creationTimestamp ?? '-'} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               {commit && (
@@ -85,7 +85,7 @@ const SnapshotOverviewTab: React.FC = () => {
                     <Link
                       to={COMMIT_DETAILS_PATH.createPath({
                         workspaceName: namespace,
-                        applicationName: snapshot.spec.application,
+                        applicationName: snapshot?.spec?.application,
                         commitName: commit.sha,
                       })}
                       title={commit.displayName || commit.shaTitle}
@@ -126,7 +126,7 @@ const SnapshotOverviewTab: React.FC = () => {
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList
             components={componentsTableData}
-            applicationName={snapshot.spec.application}
+            applicationName={snapshot?.spec?.application}
           />
         </FilterContextProvider>
       </div>
