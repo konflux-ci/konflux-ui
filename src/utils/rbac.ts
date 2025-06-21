@@ -1,7 +1,6 @@
 import React from 'react';
 import { defer, LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
-import { getUserDataFromLocalStorage } from '~/auth/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
 import { SelfSubjectAccessReviewModel } from '../models/rbac';
 import { useNamespace } from '../shared/providers/Namespace';
@@ -13,6 +12,7 @@ import {
   AccessReviewResources,
   SelfSubjectAccessReviewKind,
 } from '../types/rbac';
+import { getUserDataFromLocalStorage } from '~/auth/utils';
 
 export const checkAccess = memoize(
   async (group, resource, subresource, namespace, verb) => {

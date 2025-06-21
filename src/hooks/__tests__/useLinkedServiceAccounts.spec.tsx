@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { createK8sWatchResourceMock } from '~/utils/test-utils';
+import { useLinkedServiceAccounts } from '../useLinkedServiceAccounts';
 import { mockSecret, mockServiceAccounts } from '~/components/Secrets/__data__/mock-secrets';
 import * as serviceAccountUtils from '~/components/Secrets/utils/service-account-utils';
 import { BackgroundJobStatus } from '~/utils/task-store';
-import { createK8sWatchResourceMock } from '~/utils/test-utils';
-import { useLinkedServiceAccounts } from '../useLinkedServiceAccounts';
 
 jest.mock('~/components/Secrets/utils/service-account-utils', () => ({
   ...jest.requireActual('~/components/Secrets/utils/service-account-utils'),

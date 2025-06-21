@@ -1,9 +1,9 @@
+import { kubearchiveQueryGetResource } from './fetch-utils';
 import { k8sQueryGetResource } from '~/k8s';
 import { HttpError } from '~/k8s/error';
 import { K8sResourceReadOptions } from '~/k8s/k8s-fetch';
 import { TQueryOptions } from '~/k8s/query/type';
 import { K8sResourceCommon } from '~/types/k8s';
-import { kubearchiveQueryGetResource } from './fetch-utils';
 
 /**
  * Utility function to fetch a single K8s resource with fallback logic.

@@ -1,8 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { PIPELINE_RUNS_LIST_PATH, PIPELINE_RUNS_DETAILS_PATH } from '~/routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
@@ -17,6 +15,8 @@ import { useAccessReviewForModel } from '../../../utils/rbac';
 import { DetailsPage } from '../../DetailsPage';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
 import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';
+import { PIPELINE_RUNS_LIST_PATH, PIPELINE_RUNS_DETAILS_PATH } from '~/routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export const PipelineRunDetailsView: React.FC = () => {
   const { pipelineRunName } = useParams<RouterParams>();

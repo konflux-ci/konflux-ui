@@ -1,13 +1,13 @@
 import React from 'react';
 import { Form, FormSection, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { INTEGRATION_TEST_LIST_PATH } from '@routes/paths';
 import { useFormikContext } from 'formik';
 import isEmpty from 'lodash/isEmpty';
-import { INTEGRATION_TEST_LIST_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { FormFooter } from '../../../shared';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import IntegrationTestSection from './IntegrationTestSection';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 // [TODO]: Refactor form styles from the shared style sheet
 import '../../../shared/style.scss';

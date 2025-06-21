@@ -8,10 +8,10 @@ import {
   SplitItem,
   Title,
 } from '@patternfly/react-core';
-import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { CloseButton } from '../../shared';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import { useLocalStorage } from '~/hooks/useLocalStorage';
 import './WhatsNextSection.scss';
 
 export type WhatsNextItem = {

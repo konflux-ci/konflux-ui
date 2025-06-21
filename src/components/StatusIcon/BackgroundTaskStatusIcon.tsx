@@ -1,6 +1,6 @@
+import { StatusIconWithText } from './StatusIcon';
 import { runStatus } from '~/utils/pipeline-utils';
 import { BackgroundJobStatus } from '~/utils/task-store';
-import { StatusIconWithText } from './StatusIcon';
 
 export const mapBackgroundStatusToRunStatus = (status: BackgroundJobStatus): runStatus => {
   const mapping: Record<BackgroundJobStatus, runStatus> = {

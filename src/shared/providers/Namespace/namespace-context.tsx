@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Button, Spinner } from '@patternfly/react-core';
-import { useQuery } from '@tanstack/react-query';
 import { APPLICATION_LIST_PATH } from '@routes/paths';
+import { useQuery } from '@tanstack/react-query';
 import { RouterParams } from '../../../routes/utils';
 import { NamespaceKind } from '../../../types';
 import ErrorEmptyState from '../../components/empty-state/ErrorEmptyState';

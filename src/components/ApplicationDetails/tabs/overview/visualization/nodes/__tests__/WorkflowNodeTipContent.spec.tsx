@@ -7,7 +7,6 @@ import {
 } from '@patternfly/react-topology';
 import { Matcher, screen } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { routerRenderer } from '../../../../../../../utils/test-utils';
 import { layoutFactory, PipelineLayout } from '../../../../../../topology/factories';
 import { mockComponentsData } from '../../../../../__data__';
@@ -17,6 +16,7 @@ import { useAppWorkflowData } from '../../hooks/useAppWorkflowData';
 import { WorkflowNodeModelData } from '../../types';
 import { getLinkDataForElement, TYPE_DESCRIPTIONS } from '../../utils/node-utils';
 import WorkflowNodeTipContent from '../WorkflowNodeTipContent';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 const { workflowMocks, applyWorkflowMocks } = getMockWorkflows();
 

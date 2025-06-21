@@ -2,7 +2,6 @@ import '@testing-library/jest-dom';
 import { useParams } from 'react-router-dom';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { FieldArray, useField } from 'formik';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useComponents } from '../../../hooks/useComponents';
 import { ComponentKind } from '../../../types';
 import { openIntegrationTestContextDropdown } from '../../../utils/test-utils';
@@ -12,6 +11,7 @@ import {
   mapContextsWithSelection,
   addComponentContexts,
 } from '../utils/creation-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 // Mock the hooks used in the component
 jest.mock('react-router-dom', () => ({

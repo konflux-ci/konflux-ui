@@ -1,8 +1,8 @@
 import { screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../../utils/test-utils';
 import { testTaskRuns } from '../../../TaskRunListView/__data__/mock-TaskRun-data';
 import TaskRunDetailsTab from '../TaskRunDetailsTab';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.mock('../../../../hooks/useTektonResults');
 

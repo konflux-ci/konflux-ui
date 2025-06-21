@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { useApplication } from '../../hooks/useApplications';
 import { HttpError } from '../../k8s/error';
 import { ApplicationModel, ComponentModel, IntegrationTestScenarioModel } from '../../models';
@@ -21,6 +20,7 @@ import DetailsPage from '../DetailsPage/DetailsPage';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
 import { ApplicationHeader } from './ApplicationHeader';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './ApplicationDetails.scss';
 

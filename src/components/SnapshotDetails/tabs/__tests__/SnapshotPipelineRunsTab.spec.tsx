@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
@@ -11,6 +9,8 @@ import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsTab from '../SnapshotPipelineRunsTab';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 

@@ -2,11 +2,11 @@ import * as React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
 import { COMPONENT_LIST_PATH } from '@routes/paths';
-import { TableData } from '~/shared';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { UIEnterpriseContractData } from '../types';
 import { getRuleStatus } from '../utils';
 import { EnterpriseContractTableColumnClasses } from './EnterpriseContractHeader';
+import { TableData } from '~/shared';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './EnterpriceContractTable.scss';
 

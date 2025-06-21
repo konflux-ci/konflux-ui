@@ -1,12 +1,12 @@
 import { MemoryRouter } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { mockApplication } from '~/components/ApplicationDetails/__data__/mock-data';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useApplications } from '../../../../hooks/useApplications';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
 import { mockAccessReviewUtil } from '../../../../unit-test-utils/mock-access-review';
 import { mockReleasePlan, mockReleasePlans } from '../__data__/release-plan.mock';
 import ReleasePlanListView from '../ReleasePlanListView';
+import { mockApplication } from '~/components/ApplicationDetails/__data__/mock-data';
 
 jest.useFakeTimers();
 

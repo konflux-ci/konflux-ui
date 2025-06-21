@@ -1,5 +1,5 @@
-import { getLocalStorageData, setLocalStorageData } from '~/utils/local-storage';
 import { UserDataType } from './type';
+import { getLocalStorageData, setLocalStorageData } from '~/utils/local-storage';
 
 const USER_DATA_KEY = '__user_session__';
 

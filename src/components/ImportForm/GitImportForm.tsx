@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
-import { CurrentComponentRef } from '~/types';
 import { useNotifications } from '../../hooks/useUIInstance';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -16,6 +15,7 @@ import SecretSection from './SecretSection/SecretSection';
 import { createResourcesWithLinkingComponents } from './submit-utils';
 import { ImportFormValues } from './type';
 import { formValidationSchema } from './validation.utils';
+import { CurrentComponentRef } from '~/types';
 import './GitImportForm.scss';
 
 export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicationName }) => {

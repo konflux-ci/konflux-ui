@@ -19,9 +19,6 @@ import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { statuses } from '~/utils/commits-utils';
-import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -45,6 +42,9 @@ import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard'
 import { useModalLauncher } from '../../modal/ModalProvider';
 import ComponentsListHeader from './ComponentsListHeader';
 import ComponentsListRow from './ComponentsListRow';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { statuses } from '~/utils/commits-utils';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 
 import './ComponentListView.scss';
 

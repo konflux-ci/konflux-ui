@@ -1,5 +1,5 @@
-import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import { K8sResourceCommon } from './k8s';
+import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 
 export const SecretByUILabel = 'ui.appstudio.redhat.com/secret-for';
 

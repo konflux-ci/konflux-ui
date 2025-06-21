@@ -50,6 +50,20 @@ export type PipelineTask = {
   when?: WhenExpression[];
   workspaces?: PipelineTaskWorkspace[];
   status?: TaskRunStatus;
+  matrix?: {
+    params?: {
+      name: string;
+      value: string[];
+    }[];
+    include?: {
+      name: string;
+      value: string;
+    }[];
+    exclude?: {
+      name: string;
+      value: string;
+    }[];
+  };
 };
 
 export type PipelineSpec = {

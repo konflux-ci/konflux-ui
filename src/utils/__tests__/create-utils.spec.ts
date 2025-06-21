@@ -1,4 +1,3 @@
-import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import {
   addSecretFormValues,
   mockApplicationRequestData,
@@ -24,6 +23,7 @@ import {
   addSecretWithLinkingComponents,
 } from '../create-utils';
 import { mockWindowFetch } from '../test-utils';
+import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
   k8sCreateResource: jest.fn(() => Promise.resolve()),

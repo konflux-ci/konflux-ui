@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
@@ -9,6 +8,7 @@ import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunLogs } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 const PipelineRunLogsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;

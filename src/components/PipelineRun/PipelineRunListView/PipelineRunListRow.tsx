@@ -2,9 +2,6 @@ import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Label, Popover, Skeleton, Truncate } from '@patternfly/react-core';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
-import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
-import { ExternalLink } from '~/shared';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
@@ -21,6 +18,9 @@ import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
+import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
+import { ExternalLink } from '~/shared';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,

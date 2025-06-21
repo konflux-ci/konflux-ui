@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, ButtonVariant, Flex, Stack, StackItem } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { ComponentSelectMenu } from '~/shared/components/component-select-menu/ComponentSelectMenu';
+import { linkSecretsToComponent } from './link-secret-utils';
 import { useComponent } from '~/hooks/useComponents';
 import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
 import { useSecrets } from '~/hooks/useSecrets';
-import { ComponentSelectMenu } from '~/shared/components/component-select-menu/ComponentSelectMenu';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
-import { linkSecretsToComponent } from './link-secret-utils';
 
 type SecretSelectorProps = {
   onClose: () => void;

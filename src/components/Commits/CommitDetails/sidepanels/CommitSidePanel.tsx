@@ -12,7 +12,6 @@ import {
 } from '@patternfly/react-core';
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { COMPONENT_DETAILS_PATH } from '../../../../routes/paths';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
@@ -22,6 +21,7 @@ import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { CommitIcon } from '../../CommitIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export interface CommitSidePanelBodyProps {
   onClose: () => void;

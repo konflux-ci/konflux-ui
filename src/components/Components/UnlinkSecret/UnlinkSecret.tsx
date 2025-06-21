@@ -2,12 +2,12 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, Flex, FlexItem, Text, ModalVariant } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
+import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
+import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentKind, SecretKind } from '~/types';
-import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
-import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;

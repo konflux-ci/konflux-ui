@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
 import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 const rowContent = {
   title: 'dummyTitle',

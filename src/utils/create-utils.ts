@@ -2,15 +2,6 @@ import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  addCommonSecretLabelToBuildSecret,
-  linkSecretToBuildServiceAccount,
-  linkSecretToServiceAccounts,
-  updateAnnotateForSecret,
-} from '~/components/Secrets/utils/service-account-utils';
-import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
-import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
-import { HttpError } from '~/k8s/error';
-import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
@@ -51,6 +42,15 @@ import {
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
 import { BackgroundJobStatus, useTaskStore } from './task-store';
+import {
+  addCommonSecretLabelToBuildSecret,
+  linkSecretToBuildServiceAccount,
+  linkSecretToServiceAccounts,
+  updateAnnotateForSecret,
+} from '~/components/Secrets/utils/service-account-utils';
+import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
+import { HttpError } from '~/k8s/error';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 /**

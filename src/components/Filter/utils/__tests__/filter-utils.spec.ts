@@ -1,7 +1,7 @@
-import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { pipelineRunTypes } from '~/utils/pipelinerun-utils';
 import { mockPipelineRuns } from '../../../Components/__data__/mock-pipeline-run';
 import { createFilterObj } from '../filter-utils';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { pipelineRunTypes } from '~/utils/pipelinerun-utils';
 
 const pipelineRuns = [
   {

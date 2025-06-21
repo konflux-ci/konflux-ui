@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind } from '../../types';
 import { usePLRScanResults, usePLRVulnerabilities, useScanResults } from '../useScanResults';
 import { useTRTaskRuns } from '../useTektonResults';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.mock('../useTektonResults', () => ({
   useTRTaskRuns: jest.fn(() => [[], true]),

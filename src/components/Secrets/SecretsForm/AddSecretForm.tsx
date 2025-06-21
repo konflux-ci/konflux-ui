@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { SECRET_LIST_PATH } from '@routes/paths';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
-import { SECRET_LIST_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import FormFooter from '../../../shared/components/form-components/FormFooter';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../../types';
@@ -13,6 +12,7 @@ import PageLayout from '../../PageLayout/PageLayout';
 import { getAddSecretBreadcrumbs } from '../utils/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 const AddSecretForm: React.FC = () => {
   const namespace = useNamespace();

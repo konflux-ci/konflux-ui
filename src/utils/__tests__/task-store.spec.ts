@@ -1,5 +1,5 @@
-import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
 import { BackgroundJobStatus, useTaskStore } from '../task-store';
+import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
 
 describe('useTaskStore', () => {
   const action = BackgroundTaskInfo.SecretTask.action;

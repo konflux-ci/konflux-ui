@@ -12,10 +12,10 @@ import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { FieldArray, useField } from 'formik';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { useDeepCompareMemoize } from '~/shared';
 import ActionMenu from '../../../../../shared/components/action-menu/ActionMenu';
 import FilteredEmptyState from '../../../../../shared/components/empty-state/FilteredEmptyState';
 import { AddIssueModal, IssueType } from './AddIssueModal';
+import { useDeepCompareMemoize } from '~/shared';
 
 import './AddIssueSection.scss';
 

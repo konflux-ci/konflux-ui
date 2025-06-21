@@ -1,7 +1,7 @@
-import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../models';
 import { ReleaseKind } from '../types';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 
 export const useReleases = (
   namespace: string,

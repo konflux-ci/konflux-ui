@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { capitalize } from '@patternfly/react-core';
-import { ApplicationKind } from '~/types';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { ReleasePlanAdmissionKind } from '../../../types/release-plan-admission';
 import { useReleasePlanAdmissionActions } from './releaseplanadmission-actions';
 import { releasesPlanAdmissionTableColumnClasses } from './ReleasePlanAdmissionListHeader';
+import { ApplicationKind } from '~/types';
 
 export type ReleasePlanAdmissionWithApplicationData = ReleasePlanAdmissionKind & {
   application?: ApplicationKind;

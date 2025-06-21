@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { EmptyStateBody, EmptyStateActions } from '@patternfly/react-core';
-import { useNamespace } from '~/shared/providers/Namespace';
 import emptyStateImgUrl from '../../assets/Pipeline.svg';
 import { ComponentModel } from '../../models';
 import { IMPORT_PATH } from '../../routes/paths';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 interface PipelineRunEmptyStateProps {
   applicationName: string;

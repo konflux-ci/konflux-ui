@@ -2,13 +2,13 @@ import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, render, fireEvent, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { RemoteSecretStatusReason } from '../../../types';
 import { mockServiceAccounts } from '../__data__/mock-secrets';
 import SecretsListRowWithComponents from '../SecretsListView/SecretsListRowWithComponents';
 import SecretsListView from '../SecretsListView/SecretsListView';
 import { sampleRemoteSecrets } from './secret-data';
+import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 
 jest.useFakeTimers();
 

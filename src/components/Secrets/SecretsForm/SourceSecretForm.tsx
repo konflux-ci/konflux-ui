@@ -3,8 +3,8 @@ import { TextInputTypes } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { InputField } from 'formik-pf';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
-import { SourceSecretType } from '~/types/secret';
 import EncodedFileUploadField from './EncodedFileUploadField';
+import { SourceSecretType } from '~/types/secret';
 
 type SourceSecretFormProps = {
   onAuthTypeChange?: (type: SourceSecretType) => void;

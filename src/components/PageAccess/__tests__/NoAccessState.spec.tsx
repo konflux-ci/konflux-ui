@@ -2,8 +2,8 @@ import '@testing-library/jest-dom';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@patternfly/react-core';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import NoAccessState from '../NoAccessState';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');

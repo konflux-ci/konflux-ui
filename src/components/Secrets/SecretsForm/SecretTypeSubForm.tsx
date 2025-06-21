@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
-import { SecretLinkOptionLabels } from '~/consts/secrets';
 import { DropdownItemObject } from '../../../shared/components/dropdown';
 import KeyValueFileInputField from '../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '../../../shared/components/formik-fields/SelectInputField';
@@ -24,6 +23,7 @@ import { ImagePullSecretForm } from './ImagePullSecretForm';
 import { KeyValueSecretForm } from './KeyValueSecretForm';
 import { SecretLinkOptions } from './SecretLinkOption';
 import { SourceSecretForm } from './SourceSecretForm';
+import { SecretLinkOptionLabels } from '~/consts/secrets';
 import './SecretTypeSubForm.scss';
 
 const secretTypes = [

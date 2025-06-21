@@ -3,11 +3,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { createUseParamsMock } from '../../../utils/test-utils';
 import { mockReleases } from '../__data__/mock-release-data';
 import ReleasesListRow from '../ReleasesListRow';
 import ReleasesListView from '../ReleasesListView';
+import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 
 jest.useFakeTimers();
 

@@ -2,11 +2,6 @@ import * as React from 'react';
 import { Button, Label, Popover, Spinner } from '@patternfly/react-core';
 import ErrorModal from '~/components/modal/ErrorModal';
 import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
-import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
-import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
-import { HttpError } from '~/k8s/error';
-import { useNamespace } from '~/shared/providers/Namespace';
-import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { SecretKind } from '../../../types/secret';
@@ -14,6 +9,11 @@ import { useSecretActions } from '../secret-actions';
 import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
 import { isLinkableSecret } from '../utils/service-account-utils';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
+import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
+import { HttpError } from '~/k8s/error';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 
 import './SecretsListRow.scss';
 

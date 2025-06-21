@@ -1,8 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useSearchParamBatch } from '~/hooks/useSearchParam';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
 import { useK8sAndKarchResource } from '../../../../../hooks/useK8sAndKarchResources';
 import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
@@ -12,6 +10,8 @@ import { PipelineRunListRow } from '../../../../PipelineRun/PipelineRunListView/
 import { pipelineWithCommits } from '../../../__data__/pipeline-with-commits';
 import { MockSnapshots } from '../../visualization/__data__/MockCommitWorkflowData';
 import CommitsPipelineRunTab from '../CommitsPipelineRunTab';
+import { useSearchParamBatch } from '~/hooks/useSearchParam';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 
 jest.useFakeTimers();
 const useNamespaceMock = mockUseNamespaceHook('test-ns');

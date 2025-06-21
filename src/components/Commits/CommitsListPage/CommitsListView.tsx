@@ -2,7 +2,6 @@ import * as React from 'react';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
 import { HttpError } from '../../../k8s/error';
 import { Table, useDeepCompareMemoize } from '../../../shared';
@@ -15,6 +14,7 @@ import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import CommitsEmptyState from '../CommitsEmptyState';
 import CommitsListHeader from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 
 interface CommitsListViewProps {
   applicationName?: string;
