@@ -5,7 +5,6 @@ module.exports = {
   },
   extends: [
     "../.eslintrc.cjs",
-    "plugin:cypress/recommended",
     "plugin:cypress/recommended"
   ],
   plugins: [

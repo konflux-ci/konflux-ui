@@ -2,22 +2,13 @@ import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  addCommonSecretLabelToBuildSecret,
-  linkSecretToBuildServiceAccount,
-  linkSecretToServiceAccounts,
-  updateAnnotateForSecret,
-} from '~/components/Secrets/utils/service-account-utils';
-import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
-import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
-import { HttpError } from '~/k8s/error';
-import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
   SecretForComponentOption,
 } from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sGetResource, K8sListResourceItems } from '../k8s/k8s-fetch';
-import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
+import { K8sQueryCreateResource, K8sQueryUpdateResource, K8sQueryDeleteResource, K8sQueryListResourceItems } from '../k8s/query/fetch';
 import {
   ApplicationModel,
   ComponentModel,
@@ -25,6 +16,7 @@ import {
   SPIAccessTokenBindingModel,
   SecretModel,
   ImageRepositoryModel,
+  CronJobModel,
 } from '../models';
 import {
   ComponentKind,
@@ -40,7 +32,9 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   SecretFormValues,
+  CronJob,
 } from '../types';
+import { K8sResourceCommon } from '../types/k8s';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
 import { queueInstance } from './async-queue';
@@ -51,6 +45,15 @@ import {
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
 import { BackgroundJobStatus, useTaskStore } from './task-store';
+import {
+  addCommonSecretLabelToBuildSecret,
+  linkSecretToBuildServiceAccount,
+  linkSecretToServiceAccounts,
+  updateAnnotateForSecret,
+} from '~/components/Secrets/utils/service-account-utils';
+import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
+import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
+import { HttpError } from '~/k8s/error';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();
 /**
@@ -556,5 +559,63 @@ export const createImageRepository = async (
       ns: namespace,
       ...(dryRun && { queryParams: { dryRun: 'All' } }),
     },
+  });
+};
+
+export const createPeriodicIntegrationTestCronJob = (
+  cronJob: CronJob,
+  namespace: string,
+  dryRun?: boolean,
+): Promise<CronJob> => {
+  return K8sQueryCreateResource<CronJob>({
+    model: CronJobModel,
+    queryOptions: {
+      name: cronJob.metadata?.name,
+      ns: namespace,
+      ...(dryRun && { queryParams: { dryRun: 'All' } }),
+    },
+    resource: cronJob,
+  });
+};
+
+export const deletePeriodicIntegrationTestCronJob = (
+  name: string,
+  namespace: string,
+): Promise<K8sResourceCommon> => {
+  return K8sQueryDeleteResource({
+    model: CronJobModel,
+    queryOptions: {
+      name,
+      ns: namespace,
+    },
+  });
+};
+
+export const listPeriodicIntegrationTestCronJobs = (
+  namespace: string,
+  labelSelector?: string,
+): Promise<CronJob[]> => {
+  return K8sQueryListResourceItems<CronJob[]>({
+    model: CronJobModel,
+    queryOptions: {
+      ns: namespace,
+      ...(labelSelector && { queryParams: { labelSelector } as any }),
+    },
+  }).then((result: CronJob[] | { items: CronJob[] } | undefined) => {
+    console.debug('[listPeriodicIntegrationTestCronJobs] Raw result:', result);
+    if (!result) {
+      console.debug('[listPeriodicIntegrationTestCronJobs] No result returned');
+      return [];
+    }
+    if (Array.isArray(result)) {
+      console.debug('[listPeriodicIntegrationTestCronJobs] Result is array:', result);
+      return result;
+    }
+    if ('items' in result && Array.isArray(result.items)) {
+      console.debug('[listPeriodicIntegrationTestCronJobs] Result has items array:', result.items);
+      return result.items;
+    }
+    console.debug('[listPeriodicIntegrationTestCronJobs] Unexpected result format:', result);
+    return [];
   });
 };

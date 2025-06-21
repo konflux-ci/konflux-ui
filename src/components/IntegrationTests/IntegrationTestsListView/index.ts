@@ -5,6 +5,7 @@ import { createLoaderWithAccessCheck } from '../../../utils/rbac';
 
 export const integrationListPageLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
+    // console.log('integrationListPageLoader called with params:', params);
     return K8sQueryListResourceItems({
       model: IntegrationTestScenarioModel,
       queryOptions: { ns: params[RouterParams.workspaceName] },
@@ -16,4 +17,4 @@ export const integrationListPageLoader = createLoaderWithAccessCheck(
   },
 );
 
-export { default as IntegrationTestsListView } from './IntegrationTestsListView';
+export { IntegrationTestsListView } from './IntegrationTestsListView';
