@@ -1,6 +1,5 @@
 /* eslint-disable max-nested-callbacks */
 import { renderHook } from '@testing-library/react-hooks';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
@@ -20,6 +19,7 @@ import {
   useTaskRuns,
 } from '../usePipelineRuns';
 import { useTRPipelineRuns, useTRTaskRuns } from '../useTektonResults';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.mock('../useTektonResults');
 jest.mock('../useComponents');

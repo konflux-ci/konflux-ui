@@ -3,8 +3,6 @@ import { MemoryRouter } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, fireEvent, waitFor, render } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { NamespaceKind } from '~/types';
-import { mockNamespaceHooks, mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   createReactRouterMock,
   renderWithQueryClient,
@@ -12,6 +10,8 @@ import {
 } from '../../../utils/test-utils';
 import NamespaceListRow from '../NamespaceListRow';
 import NamespaceListView from '../NamespaceListView';
+import { NamespaceKind } from '~/types';
+import { mockNamespaceHooks, mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.useFakeTimers();
 

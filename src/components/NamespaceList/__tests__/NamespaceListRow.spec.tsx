@@ -1,8 +1,8 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { NamespaceKind } from '~/types';
 import NamespaceListRow, { NamespaceButton } from '.././NamespaceListRow';
 import { useApplications } from '../../../hooks/useApplications';
 import { createReactRouterMock, routerRenderer } from '../../../utils/test-utils';
+import { NamespaceKind } from '~/types';
 
 // Mock useApplications hook
 jest.mock('../../../hooks/useApplications', () => ({

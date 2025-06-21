@@ -11,12 +11,12 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
-import { useNamespace } from '~/shared/providers/Namespace';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PIPELINE_RUNS_LIST_PATH } from '../../../../routes/paths';
 import { RELEASE_DESC } from '../../../../utils/pipeline-utils';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export interface ReleaseSidePanelBodyProps {
   onClose: () => void;

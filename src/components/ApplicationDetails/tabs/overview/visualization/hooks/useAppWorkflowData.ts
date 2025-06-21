@@ -5,7 +5,6 @@ import {
   Model,
   PipelineNodeModel,
 } from '@patternfly/react-topology';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { runStatus } from '../../../../../../utils/pipeline-utils';
 import { NodeType } from '../const';
 import { WorkflowNodeType } from '../types';
@@ -14,6 +13,7 @@ import { useAppApplicationTestNodes } from './useAppApplicationTestNodes';
 import { useAppBuildNodes } from './useAppBuildNodes';
 import { useAppComponentsNodes } from './useAppComponentsNodes';
 import { useAppReleaseNodes } from './useAppReleaseNodes';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export const useAppWorkflowData = (
   applicationName: string,

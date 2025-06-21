@@ -9,7 +9,6 @@ import {
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
-import { useDeepCompareMemoize } from '~/shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
@@ -20,6 +19,7 @@ import SecurityTabEmptyState from './SecurityTabEmptyState';
 import { ENTERPRISE_CONTRACT_STATUS } from './types';
 import { useEnterpriseContractResults } from './useEnterpriseContractResultFromLogs';
 import { getRuleStatus } from './utils';
+import { useDeepCompareMemoize } from '~/shared';
 
 const statuses = [
   ENTERPRISE_CONTRACT_STATUS.violations,

@@ -17,10 +17,10 @@ import {
 } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { InputField } from 'formik-pf';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { K8sQueryDeleteResource } from '../../k8s';
 import { K8sModelCommon, K8sResourceCommon } from '../../types/k8s';
 import { ComponentProps, createModalLauncher } from './createModalLauncher';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 type DeleteResourceModalProps = ComponentProps & {
   obj: K8sResourceCommon;

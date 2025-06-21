@@ -11,7 +11,6 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
-import { useNamespace } from '~/shared/providers/Namespace';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
@@ -31,6 +30,7 @@ import RunResultsList from '../../../PipelineRun/PipelineRunDetailsView/tabs/Run
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export interface PipelineSidePanelBodyProps {
   onClose: () => void;

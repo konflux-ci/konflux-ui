@@ -22,13 +22,13 @@ import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-ci
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useFormikContext } from 'formik';
 import { isEmpty } from 'lodash-es';
-import { LEARN_MORE_ABOUT_NUDGING } from '~/consts/documentation';
 import { FormFooter } from '../../shared';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
 import { ComponentRelation } from './ComponentRelationForm';
 import { ComponentRelationFormikValue, ComponentRelationNudgeType } from './type';
 import { DUPLICATE_RELATONSHIP } from './utils';
+import { LEARN_MORE_ABOUT_NUDGING } from '~/consts/documentation';
 
 type DefineComponentRelationModalProps = Omit<Pick<RawComponentProps, 'modalProps'>, 'onClose'> & {
   componentNames: string[];

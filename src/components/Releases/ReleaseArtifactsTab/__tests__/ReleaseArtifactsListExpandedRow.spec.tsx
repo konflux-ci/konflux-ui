@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ReleaseArtifactsImages } from '../../../../types';
 import { ReleaseArtifactsListExpandedRow } from '../ReleaseArtifactsListExpandedRow';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 const mockedImage: ReleaseArtifactsImages = {
   arches: ['amd64'],

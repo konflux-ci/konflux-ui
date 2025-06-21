@@ -3,6 +3,7 @@ import {
   USER_ACCESS_GRANT_PAGE,
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
+import { RouteErrorBoundry } from '../RouteErrorBoundary';
 import {
   GrantAccessPage,
   grantAccessPageLoader,
@@ -10,7 +11,6 @@ import {
   UserAccessListPage,
   userAccessListPageLoader,
 } from '~/components/UserAccess';
-import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 const userAccessRoutes = [
   {

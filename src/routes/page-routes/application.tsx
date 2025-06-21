@@ -1,16 +1,16 @@
 import { RouterParams } from '@routes/utils';
+import { ComponentListTab, componentsTabLoader } from '~/components/Components/ComponentsListView';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
+import { RouteErrorBoundry } from '../RouteErrorBoundary';
 import { ActivityTab } from '~/components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '~/components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '~/components/Applications';
-import { ComponentListTab, componentsTabLoader } from '~/components/Components/ComponentsListView';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
   integrationListPageLoader,
   IntegrationTestsListView,
 } from '~/components/IntegrationTests/IntegrationTestsListView';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '~/components/Releases';
-import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
-import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 const applicationRoutes = [
   {

@@ -2,13 +2,13 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '@patternfly/react-core';
 import { Base64 } from 'js-base64';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
 import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { ContainerSpec, PodKind } from '../../types';
 import { LOG_SOURCE_TERMINATED } from '../utils';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './Logs.scss';
 

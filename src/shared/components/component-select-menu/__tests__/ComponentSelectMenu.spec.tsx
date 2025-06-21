@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useFormik, FormikProvider } from 'formik';
-import { CurrentComponentRef } from '~/types';
 import { ComponentSelectMenu } from '../ComponentSelectMenu';
+import { CurrentComponentRef } from '~/types';
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const formikBag = useFormik({

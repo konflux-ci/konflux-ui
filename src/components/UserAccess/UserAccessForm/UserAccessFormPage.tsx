@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { Formik, FormikHelpers } from 'formik';
 import { USER_ACCESS_LIST_PAGE } from '@routes/paths';
+import { Formik, FormikHelpers } from 'formik';
 import { useRoleMap } from '../../../hooks/useRole';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { NamespaceRole, RoleBinding } from '../../../types';

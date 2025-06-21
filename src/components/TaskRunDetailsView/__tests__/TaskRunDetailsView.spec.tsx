@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useTaskRun } from '../../../hooks/usePipelineRuns';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunDetailsView } from '../TaskRunDetailsView';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),

@@ -4,7 +4,6 @@ import { Bullseye, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { SECRET_CREATE_PATH } from '@routes/paths';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { useDeepCompareMemoize } from '~/shared';
 import secretEmptyStateIcon from '../../../assets/secret.svg';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
@@ -14,6 +13,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import SecretsList from './SecretsList';
+import { useDeepCompareMemoize } from '~/shared';
 
 const SecretsListView: React.FC = () => {
   const namespace = useNamespace();

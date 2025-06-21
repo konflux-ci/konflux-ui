@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { UIEnterpriseContractData } from '~/types';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
 import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
 import { WrappedEnterpriseContractRow } from '../EnterpriseContractRow';
+import { UIEnterpriseContractData } from '~/types';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');

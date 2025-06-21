@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useFormik, FormikProvider } from 'formik';
+import { ComponentSelector } from '../SecretsForm/ComponentSelector';
 import { useSortedGroupComponents } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { ComponentSelector } from '../SecretsForm/ComponentSelector';
 
 jest.mock('~/hooks/useComponents');
 jest.mock('~/shared/providers/Namespace');

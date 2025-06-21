@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
@@ -17,6 +16,7 @@ import SidePanelHost from '../../SidePanel/SidePanelHost';
 import { StatusIconWithTextLabel } from '../../topology/StatusIcon';
 import { useCommitStatus } from '../commit-status';
 import { CommitIcon } from '../CommitIcon';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './CommitDetailsView.scss';
 

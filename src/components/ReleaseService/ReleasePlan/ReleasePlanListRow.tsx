@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Label, capitalize } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ApplicationKind } from '~/types';
 import { getApplicationDisplayName } from '~/utils/common-utils';
 import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
@@ -12,6 +11,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleasePlanKind, ReleasePlanLabel } from '../../../types/coreBuildService';
 import { useReleasePlanActions } from './releaseplan-actions';
 import { releasesPlanTableColumnClasses } from './ReleasePlanListHeader';
+import { ApplicationKind } from '~/types';
 
 export type ReleasePlanWithApplicationData = ReleasePlanKind & {
   application?: ApplicationKind;

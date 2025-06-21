@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { useSortedGroupComponents } from '~/hooks/useComponents';
 import { ComponentSelectMenu } from '~/shared/components/component-select-menu/ComponentSelectMenu';
+import { useSortedGroupComponents } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { CurrentComponentRef } from '~/types';
 

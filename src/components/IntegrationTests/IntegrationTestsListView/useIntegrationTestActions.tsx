@@ -1,11 +1,11 @@
 import { INTEGRATION_TEST_EDIT_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { IntegrationTestScenarioModel } from '../../../models';
 import { Action } from '../../../shared/components/action-menu/types';
 import { IntegrationTestScenarioKind, ResolverType } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { createDeleteModalLauncher } from '../../modal/DeleteResourceModal';
 import { useModalLauncher } from '../../modal/ModalProvider';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export const integrationTestDeleteModal = (integrationTestObj: IntegrationTestScenarioKind) =>
   createDeleteModalLauncher(integrationTestObj.kind)({

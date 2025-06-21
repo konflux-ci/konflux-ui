@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { UnlinkSecret } from '../UnlinkSecret';
 import { mockSecret } from '~/components/Secrets/__data__/mock-secrets';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
-import { UnlinkSecret } from '../UnlinkSecret';
 
 // Mock the hooks
 jest.mock('react-router-dom', () => ({

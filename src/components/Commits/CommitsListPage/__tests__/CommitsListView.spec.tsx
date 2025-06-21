@@ -1,7 +1,6 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { useBuildPipelines } from '../../../../hooks/useBuildPipelines';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
@@ -13,6 +12,7 @@ import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
 import CommitsListView from '../CommitsListView';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 
 jest.mock('../../../../hooks/useTektonResults');
 jest.useFakeTimers();

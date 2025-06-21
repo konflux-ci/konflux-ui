@@ -16,7 +16,6 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
@@ -51,6 +50,7 @@ import { getSourceUrl } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
+import { useNamespace } from '~/shared/providers/Namespace';
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTestScenarios';
@@ -14,6 +13,7 @@ import {
   NodeType,
 } from './commit-visualization-types';
 import { addPrefixToResourceName } from './commit-visualization-utils';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export const getLatestResource = (resources = []) =>
   resources

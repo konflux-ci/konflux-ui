@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardCopy } from '@patternfly/react-core';
 import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { commitsTableColumnClasses } from './SnapshotComponentsListHeader';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export type SnapshotComponentTableData = {
   metadata: { uid: string; name: string };

@@ -3,12 +3,12 @@ import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH } from '@routes/paths';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
-import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
 import { NamespaceSwitcher } from '../shared/providers/Namespace/NamespaceSwitcher';
 import ActivePageAlert from './ActivePageAlert';
 import { AppHeader } from './AppHeader';
 import { AppSideBar } from './AppSideBar';
+import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 
 const namespaceSwitcherNotAllowedRoutes = [NAMESPACE_LIST_PATH.path, '/'];
 

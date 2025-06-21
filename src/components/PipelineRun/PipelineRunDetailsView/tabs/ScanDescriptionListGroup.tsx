@@ -9,11 +9,11 @@ import {
   Popover,
 } from '@patternfly/react-core';
 import { TASKRUN_LOGS_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { getScanResults } from '../../../../hooks/useScanResults';
 import { TaskRunKind, TektonResourceLabel } from '../../../../types';
 import { ScanDetailStatus } from '../../ScanDetailStatus';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './ScanDescriptionListGroup.scss';
 

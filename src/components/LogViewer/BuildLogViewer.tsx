@@ -7,9 +7,8 @@ import {
   DescriptionListTerm,
   ModalVariant,
 } from '@patternfly/react-core';
-import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
+import dayjs from 'dayjs';
 import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
 import PipelineRunLogs from '../../shared/components/pipeline-run-logs/PipelineRunLogs';
@@ -19,6 +18,7 @@ import { pipelineRunStatus } from '../../utils/pipeline-utils';
 import { ComponentProps, createModalLauncher } from '../modal/createModalLauncher';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './BuildLogViewer.scss';
 

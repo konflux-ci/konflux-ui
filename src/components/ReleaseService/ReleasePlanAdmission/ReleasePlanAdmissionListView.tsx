@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { useApplications } from '~/hooks/useApplications';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlanAdmissions } from '../../../hooks/useReleasePlanAdmissions';
@@ -17,6 +16,7 @@ import ReleasePlanAdmissionListHeader from './ReleasePlanAdmissionListHeader';
 import ReleasePlanAdmissionListRow, {
   ReleasePlanAdmissionWithApplicationData,
 } from './ReleasePlanAdmissionListRow';
+import { useApplications } from '~/hooks/useApplications';
 
 const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();

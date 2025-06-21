@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 import { useK8sWatchResource } from '../k8s';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
+import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 
 export interface K8sAndKarchResourcesResult<T extends K8sResourceCommon> {
   // Combined data (cluster + archive, deduplicated)

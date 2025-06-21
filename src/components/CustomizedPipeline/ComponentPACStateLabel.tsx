@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Label, Skeleton, Tooltip } from '@patternfly/react-core';
-import { useNamespace } from '~/shared/providers/Namespace';
 import usePACState, { PACState } from '../../hooks/usePACState';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
 import { useComponentBuildStatus } from '../../utils/component-utils';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { createCustomizeComponentPipelineModalLauncher } from './CustomizePipelinesModal';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 type Props = {
   component: ComponentKind;

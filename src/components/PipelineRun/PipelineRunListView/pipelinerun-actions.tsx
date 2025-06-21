@@ -1,7 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useSnapshot } from '~/hooks/useSnapshots';
-import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import {
   PipelineRunEventType,
   PipelineRunLabel,
@@ -17,6 +14,9 @@ import { startNewBuild } from '../../../utils/component-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
+import { useSnapshot } from '~/hooks/useSnapshots';
+import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
 

@@ -1,6 +1,5 @@
 import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PACState } from '../../../../hooks/usePACState';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import { ComponentGroupVersionKind, PipelineRunGroupVersionKind } from '../../../../models';
@@ -10,6 +9,7 @@ import { componentCRMocks } from '../../__data__/mock-data';
 import { mockPipelineRuns } from '../../__data__/mock-pipeline-run';
 import ComponentListView from '../ComponentListView';
 import { getContainerImageLink } from '../ComponentsListRow';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 
 jest.useFakeTimers();
 

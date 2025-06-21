@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
-import { Table } from '~/shared';
 import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
 import { EnterpriseContractExpandedRowContent } from './EnterpriseContractExpandedRowContent';
 import getEnterpriseContractHeader from './EnterpriseContractHeader';
 import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
+import { Table } from '~/shared';
 import './EnterpriceContractTable.scss';
 
 type EnterpriseContractTableProps = {

@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor, configure } from '@testing-library/react';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useApplications } from '../../../hooks/useApplications';
 import AddSecretForm from '../SecretsForm/AddSecretForm';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 
 configure({ testIdAttribute: 'data-test' });
 

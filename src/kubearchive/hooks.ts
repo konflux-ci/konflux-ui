@@ -5,6 +5,9 @@ import {
   UseQueryResult,
   InfiniteData,
 } from '@tanstack/react-query';
+import { TQueryOptions } from '../k8s/query/type';
+import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
+import { withKubearchivePathPrefix } from './fetch-utils';
 import {
   k8sListResource,
   convertToK8sQueryParams,
@@ -12,9 +15,6 @@ import {
   createGetQueryOptions,
   K8sResourceListOptions,
 } from '~/k8s';
-import { TQueryOptions } from '../k8s/query/type';
-import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
-import { withKubearchivePathPrefix } from './fetch-utils';
 
 export function useKubearchiveListResourceQuery(
   resourceInit: WatchK8sResource,

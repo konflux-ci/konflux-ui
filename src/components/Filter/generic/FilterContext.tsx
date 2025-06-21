@@ -1,7 +1,7 @@
 import { createContext, useCallback } from 'react';
+import { FilterType } from '../utils/filter-utils';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { useDeepCompareMemoize } from '~/shared';
-import { FilterType } from '../utils/filter-utils';
 
 const safeJSONParse = (value: string) => {
   if (!value) return null;

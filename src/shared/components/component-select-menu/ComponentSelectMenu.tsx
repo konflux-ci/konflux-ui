@@ -11,8 +11,8 @@ import {
 } from '@patternfly/react-core';
 import { useField } from 'formik';
 import { flatten, isArray } from 'lodash-es';
-import { CurrentComponentRef } from '~/types/secret';
 import SelectComponentsDropdown from './SelectComponnetsDropdown';
+import { CurrentComponentRef } from '~/types/secret';
 
 import './ComponentSelectMenu.scss';
 

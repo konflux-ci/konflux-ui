@@ -10,12 +10,12 @@ import {
   useCombineRefs,
   useHover,
 } from '@patternfly/react-topology';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { runStatusToRunStatus } from '../../../../../topology/utils';
 import { WorkflowNodeModelData } from '../types';
 import { getWorkflowNodeIcon } from '../utils/node-icon-utils';
 import { getLinksForElement } from '../utils/node-utils';
 import WorkflowNodeTipContent from './WorkflowNodeTipContent';
+import { useNamespace } from '~/shared/providers/Namespace';
 
 import './WorkflowNode.scss';
 

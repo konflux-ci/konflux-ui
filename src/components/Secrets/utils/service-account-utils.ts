@@ -1,7 +1,3 @@
-import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
-import { ComponentModel } from '~/models';
-import { SecretModel } from '~/models/secret';
-import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
 import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../../../consts/pipeline';
 import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
 import { ServiceAccountModel } from '../../../models/service-account';
@@ -11,6 +7,10 @@ import {
   SecretForComponentOption,
   patchCommonSecretLabel,
 } from './secret-utils';
+import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
+import { ComponentModel } from '~/models';
+import { SecretModel } from '~/models/secret';
+import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
 
 type SecretEntry = { name: string };
 

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { Table, useDeepCompareMemoize } from '../../../shared';
@@ -18,6 +17,7 @@ import {
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListRow';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 
 type SnapshotPipelineRunListProps = {
   snapshotPipelineRuns: PipelineRunKind[];

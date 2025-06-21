@@ -1,11 +1,11 @@
+import { RouteErrorBoundry } from '..//RouteErrorBoundary';
+import { SNAPSHOT_DETAILS_PATH } from '../paths';
 import {
   SnapshotDetailsView,
   snapshotDetailsViewLoader,
   SnapshotOverviewTab,
   SnapshotPipelineRunsTab,
 } from '~/components/SnapshotDetails';
-import { RouteErrorBoundry } from '..//RouteErrorBoundary';
-import { SNAPSHOT_DETAILS_PATH } from '../paths';
 
 const snapshotRoutes = [
   {

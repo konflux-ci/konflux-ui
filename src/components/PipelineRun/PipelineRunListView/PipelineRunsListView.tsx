@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
@@ -23,6 +22,7 @@ import {
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
 import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 
 type PipelineRunsListViewProps = {
   applicationName: string;

@@ -10,9 +10,9 @@ import {
   PipelineNodeModel,
 } from '@patternfly/react-topology';
 import pipelineStyles from '@patternfly/react-topology/dist/esm/css/topology-pipelines';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import { getLinksForElement, statusToRunStatus, TYPE_DESCRIPTIONS } from '../utils/node-utils';
+import { useNamespace } from '~/shared/providers/Namespace';
 import './WorkflowNodeTipContent.scss';
 
 type WorkflowNodeTipContentProps = {

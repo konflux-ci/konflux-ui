@@ -4,7 +4,6 @@ import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circ
 import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Base64 } from 'js-base64';
-import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
@@ -21,6 +20,7 @@ import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { useModalLauncher } from '../../modal/ModalProvider';
 import { SecretModalLauncher } from '../../Secrets/SecretModalLauncher';
 import { ImportFormValues } from '../type';
+import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
 
 const accessReviewResources: AccessReviewResources = [{ model: SecretModel, verb: 'create' }];
 

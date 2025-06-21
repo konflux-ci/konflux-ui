@@ -1,12 +1,12 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { routerRenderer } from '../../../utils/test-utils';
 import { mockEnterpriseContractUIData } from '../__data__/mockEnterpriseContractLogsJson';
 import { WrappedEnterpriseContractRow } from '../EnterpriseContractTable/EnterpriseContractRow';
 import { SecurityEnterpriseContractTab } from '../SecurityEnterpriseContractTab';
 import { useEnterpriseContractResults } from '../useEnterpriseContractResultFromLogs';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import '@testing-library/jest-dom';
 
 jest.useFakeTimers();

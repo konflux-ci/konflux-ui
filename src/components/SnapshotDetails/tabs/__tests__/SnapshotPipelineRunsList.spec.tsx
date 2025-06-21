@@ -1,8 +1,6 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
@@ -11,6 +9,8 @@ import { PipelineRunStatus } from '../../../../types';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsList from '../SnapshotPipelineRunsList';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 
 jest.useFakeTimers();
 
