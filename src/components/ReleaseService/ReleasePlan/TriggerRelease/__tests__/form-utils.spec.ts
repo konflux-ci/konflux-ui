@@ -116,4 +116,46 @@ describe('triggerReleasePlan', () => {
       }),
     );
   });
+
+  it('should omit empty fields from releaseNotes', async () => {
+    const result = await createRelease(
+      {
+        snapshot: 'test-snapshot',
+        releasePlan: 'test-releasePlan',
+        synopsis: '', // empty string
+        topic: '',
+        description: undefined, // undefined
+        solution: null, // null
+        references: [], // empty array
+        issues: [], // empty array
+        cves: [], // empty array
+        labels: [],
+      },
+      'test-ns',
+    );
+    // data should be omitted entirely
+    expect(result.spec.data).toBeUndefined();
+  });
+
+  it('should only include non-empty fields in releaseNotes', async () => {
+    const result = await createRelease(
+      {
+        snapshot: 'test-snapshot',
+        releasePlan: 'test-releasePlan',
+        synopsis: 'A summary',
+        topic: '',
+        description: '',
+        solution: undefined,
+        references: [],
+        issues: [{ id: 'ISSUE-1', source: 'src' }],
+        cves: [],
+        labels: [],
+      },
+      'test-ns',
+    );
+    expect(result.spec.data.releaseNotes).toEqual({
+      synopsis: 'A summary',
+      fixed: [{ id: 'ISSUE-1', source: 'src' }],
+    });
+  });
 });
