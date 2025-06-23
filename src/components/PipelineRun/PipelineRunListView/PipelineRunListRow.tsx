@@ -15,6 +15,7 @@ import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
+import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
 import {
   calculateDuration,
   getPipelineRunStatusResults,
@@ -26,26 +27,14 @@ import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
 
-interface ReleasePlan {
-  spec: {
-    application: string;
-  };
-}
-
-interface Release {
-  spec: {
-    snapshot: string;
-  };
-}
-
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,
   {
     vulnerabilities: { [key: string]: ScanResults };
     fetchedPipelineRuns: string[];
     error?: unknown;
-    releasePlan?: ReleasePlan;
-    release?: Release;
+    releasePlan?: ReleasePlanKind;
+    release?: ReleaseKind;
     releaseName?: string;
   }
 >;
@@ -82,11 +71,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
-  const {
-    releaseName = '',
-    releasePlan = { spec: { application: '' } },
-    release = { spec: { snapshot: '' } },
-  } = customData || {};
+  const { releaseName, releasePlan, release } = customData || {};
   // @ts-expect-error vulnerabilities will not be available until fetched for the next page
   const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
@@ -155,8 +140,9 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             workspaceName: namespace,
             applicationName,
             pipelineRunName: obj.metadata?.name,
-          })}?releaseName=${releaseName}`}
+          })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
           title={obj.metadata?.name}
+          state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
         >
           {obj.metadata?.name}
         </Link>
@@ -217,6 +203,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
               applicationName: releasePlan.spec.application,
               snapshotName: release.spec.snapshot,
             })}
+            state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] }}
           >
             {release.spec.snapshot}
           </Link>

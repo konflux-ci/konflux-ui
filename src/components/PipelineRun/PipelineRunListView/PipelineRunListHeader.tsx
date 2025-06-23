@@ -89,7 +89,7 @@ const createPipelineRunListHeader =
       ...(showWorkspace
         ? [
             {
-              title: 'Workspace',
+              title: 'Namespace',
               props: { className: pipelineRunTableColumnClasses.workspace },
             },
           ]
