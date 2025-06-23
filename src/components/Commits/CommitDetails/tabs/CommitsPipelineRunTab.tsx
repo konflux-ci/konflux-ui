@@ -34,6 +34,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    commit: unparsedFilters.commit ? (unparsedFilters.commit as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });

@@ -38,6 +38,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    commit: unparsedFilters.commit ? (unparsedFilters.commit as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
@@ -90,7 +91,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
 
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
-  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
+  const isFiltered = String(name).length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>
