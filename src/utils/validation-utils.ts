@@ -11,6 +11,12 @@ export const konfluxUsernameYupValidation = yup
 export const GIT_URL_REGEX =
   /^((((ssh|git|https?:?):\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%]*?:?))$/;
 
+export const GIT_URL = {
+  PROTOCOL_REGEX: /^https?:\/\//,
+  DOMAIN_REGEX: /^(https?:\/\/)?(github|gitlab|bitbucket)\.com/,
+  USER_OR_REPO_REGEX: /^https?:\/\/(github|gitlab|bitbucket)\.com\/[\w.-]+\/[\w.-]/,
+};
+
 export const RESOURCE_NAME_REGEX = /^[a-z]([-a-z0-9]*[a-z0-9])?$/;
 export const RESOURCE_NAME_REGEX_MSG =
   'Must start with a letter and end with a letter or number. Valid characters include lowercase letters from a to z, numbers from 0 to 9, and hyphens ( - ).';

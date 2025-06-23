@@ -494,7 +494,7 @@ export const createSecretWithLinkingComponents = async (
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
 
-  if (!dryRun && secret.secretForComponentOption) {
+  if (!dryRun && (secret.secretForComponentOption || componentName)) {
     void enqueueLinkingTask(
       createdSecret,
       secret.relatedComponents as string[],

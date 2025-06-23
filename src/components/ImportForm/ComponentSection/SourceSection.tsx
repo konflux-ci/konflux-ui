@@ -11,7 +11,7 @@ import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
 export const SourceSection = () => {
-  const [, { touched, error }] = useField('source.git.url');
+  const [, { touched, error }] = useField<string>('source.git.url');
   const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(true);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched

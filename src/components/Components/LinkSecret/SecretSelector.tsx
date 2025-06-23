@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, ButtonVariant } from '@patternfly/react-core';
+import { Button, ButtonVariant, Flex, Stack, StackItem } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { useComponent } from '~/hooks/useComponents';
 import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
@@ -43,29 +43,35 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
 
   return (
     <div className="labeled-dropdown-field">
-      <div className="title">Select Secrets:</div>
-      <div className="component-select-menu" data-test="secret-select-menu">
-        <ComponentSelectMenu
-          defaultToggleText="Selecting"
-          selectedToggleText="Secrets"
-          name="relatedSecrets"
-          options={filterUnlinkSecrets}
-          isMulti={true}
-          includeSelectAll={true}
-          linkedSecrets={setLinkedSecretsList}
-          entity="secret"
-          defaultPlaceholderText="Search secrets..."
-          defaultAriaLabel="Search secrets"
-        />
-      </div>
-      <div>
-        <Button onClick={handleSubmit} isDisabled={linkedSecretsList.length === 0}>
-          Link Secrets
-        </Button>
-        <Button variant={ButtonVariant.link} onClick={onClose}>
-          Cancel
-        </Button>
-      </div>
+      <Stack hasGutter>
+        <StackItem>
+          <div className="title">Select Secrets:</div>
+          <div className="component-select-menu" data-test="secret-select-menu">
+            <ComponentSelectMenu
+              defaultToggleText="Selecting"
+              selectedToggleText="Secrets"
+              name="relatedSecrets"
+              options={filterUnlinkSecrets}
+              isMulti={true}
+              includeSelectAll={true}
+              linkedSecrets={setLinkedSecretsList}
+              entity="secret"
+              defaultPlaceholderText="Search secrets..."
+              defaultAriaLabel="Search secrets"
+            />
+          </div>
+        </StackItem>
+        <StackItem>
+          <Flex>
+            <Button onClick={handleSubmit} isDisabled={linkedSecretsList.length === 0}>
+              Link Secrets
+            </Button>
+            <Button variant={ButtonVariant.link} onClick={onClose}>
+              Cancel
+            </Button>
+          </Flex>
+        </StackItem>
+      </Stack>
     </div>
   );
 };
