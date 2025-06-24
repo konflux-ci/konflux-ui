@@ -9,14 +9,14 @@ export enum ReleasePipelineLocation {
   target,
 }
 
-const getIssues = (issues): { id: string; source: string }[] => {
+export const getIssues = (issues): { id: string; source: string }[] => {
   return issues?.map((issue) => {
     return { id: issue.id, source: issue.source };
   });
 };
 
 // Create release notes object, filtering out empty values and ensuring required fields are present
-const createReleaseNotes = (values: {
+export const createReleaseNotes = (values: {
   issues?: object[];
   cves?: CVE[];
   references?: string[];
