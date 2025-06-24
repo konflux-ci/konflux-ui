@@ -1,12 +1,11 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { useK8sAndKarchResource } from '../../../hooks/useK8sAndKarchResources';
+import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { PipelineRunGroupVersionKind, SnapshotGroupVersionKind } from '../../../models';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { WatchK8sResource } from '../../../types/k8s';
-import {
-  createK8sWatchResourceMock,
-  renderWithQueryClientAndRouter,
-} from '../../../utils/test-utils';
+import { renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { pipelineWithCommits } from '../../Commits/__data__/pipeline-with-commits';
 import { useCommitStatus } from '../../Commits/commit-status';
 import { MockSnapshots } from '../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
@@ -34,41 +33,27 @@ jest.mock('../../../utils/rbac', () => ({
 
 const useParamsMock = useParams as jest.Mock;
 
-const watchResourceMock = createK8sWatchResourceMock();
+jest.mock('../../../hooks/useK8sAndKarchResources', () => ({
+  useK8sAndKarchResource: jest.fn(),
+}));
+
+jest.mock('../../../hooks/usePipelineRuns', () => ({
+  usePipelineRun: jest.fn(),
+}));
+
+const useSnapshotMock = useK8sAndKarchResource as jest.Mock;
+const usePipelineRunMock = usePipelineRun as jest.Mock;
 
 const mockSnapshots: IntegrationTestScenarioKind[] = [...MockSnapshots];
 
-const getMockedResources = (params: WatchK8sResource) => {
-  if (params?.groupVersionKind === SnapshotGroupVersionKind) {
-    return [mockSnapshots.find((t) => !params.name || t.metadata.name === params.name), true];
-  }
-  if (params?.groupVersionKind === PipelineRunGroupVersionKind) {
-    return [[pipelineWithCommits[0]], true];
-  }
-  return [[], true];
-};
-
 const errorSnapshotResources = (params: WatchK8sResource) => {
   if (params?.groupVersionKind === SnapshotGroupVersionKind) {
-    return [mockSnapshots[0], true];
+    return { data: mockSnapshots[0], isLoading: false };
   }
   if (params?.groupVersionKind === PipelineRunGroupVersionKind) {
-    return [[pipelineWithCommits[0]], true];
+    return { data: pipelineWithCommits[0], isLoading: false };
   }
-  return [[], true];
-};
-
-const getSnapshotWithNoLabels = (params: WatchK8sResource) => {
-  if (params?.groupVersionKind === SnapshotGroupVersionKind) {
-    return [
-      mockSnapshots.find((s) => s.metadata.generateName === 'my-test-output-no-labels'),
-      true,
-    ];
-  }
-  if (params?.groupVersionKind === PipelineRunGroupVersionKind) {
-    return [[pipelineWithCommits[0]], true];
-  }
-  return [[], true];
+  return { data: undefined, isLoading: false };
 };
 
 describe('SnapshotDetailsView', () => {
@@ -78,40 +63,48 @@ describe('SnapshotDetailsView', () => {
       applicationName: 'my-test-output',
     });
     (useCommitStatus as jest.Mock).mockReturnValueOnce(['-', true]);
+    usePipelineRunMock.mockReturnValue([pipelineWithCommits[0], true, false]);
   });
 
   it('should render loading indicator', () => {
-    watchResourceMock.mockReturnValue([[], false]);
+    useSnapshotMock.mockReturnValue({ data: undefined, isLoading: true });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     screen.getByRole('progressbar');
   });
 
   it('should show error state if test cannot be loaded', () => {
-    watchResourceMock.mockReturnValue([
-      [],
-      false,
-      { message: 'Application does not exist', code: 404 },
-    ]);
+    useSnapshotMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      hasError: true,
+      archiveError: { message: 'Application does not exist', code: 404 },
+    });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     screen.getByText('404: Page not found');
   });
 
   it('should display snapshot data when loaded', () => {
-    watchResourceMock.mockImplementation(getMockedResources);
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+    });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     expect(screen.getByTestId('snapshot-header-details')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-name').innerHTML).toBe('my-test-output-1');
   });
 
   it('should display correct breadcrumbs', () => {
-    watchResourceMock.mockImplementation(getMockedResources);
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+    });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     expect(screen.getByText(/Snapshots/)).toBeInTheDocument();
   });
 
   it('should show EnvProvisionError', () => {
     mockSnapshots[0].metadata.deletionTimestamp = '1';
-    watchResourceMock.mockImplementation(errorSnapshotResources);
+    useSnapshotMock.mockImplementation(errorSnapshotResources);
     useParamsMock.mockReturnValue({
       snapshotName: 'my-test-output-2',
       applicationName: 'my-test-output',
@@ -123,7 +116,7 @@ describe('SnapshotDetailsView', () => {
 
   it('should show failed scenario on EnvProvisionError', () => {
     mockSnapshots[0].metadata.deletionTimestamp = '1';
-    watchResourceMock.mockImplementation(errorSnapshotResources);
+    useSnapshotMock.mockImplementation(errorSnapshotResources);
     useParamsMock.mockReturnValue({
       snapshotName: 'my-test-output-2',
       applicationName: 'my-test-output',
@@ -133,7 +126,10 @@ describe('SnapshotDetailsView', () => {
   });
 
   it('should render without crashing when snapshot has no labels', () => {
-    watchResourceMock.mockImplementation(getSnapshotWithNoLabels);
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+    });
     useParamsMock.mockReturnValue({
       snapshotName: 'my-test-output-no-labels',
       applicationName: 'my-test-output',

@@ -3,6 +3,22 @@ import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { useDeepCompareMemoize } from '~/shared';
 import { FilterType } from '../utils/filter-utils';
 
+const safeJSONParse = (value: string) => {
+  if (!value) return null;
+  try {
+    // first try to parse the value
+    return JSON.parse(value);
+  } catch (e) {
+    // if JSON.parse(..) fails, then return the value as it is
+    // eslint-disable-next-line no-console
+    console.warn(
+      "The value passed is not a valid JSON, hence it's being returned as is. Error for reference: ",
+      e,
+    );
+    return value;
+  }
+};
+
 export type FilterContextType = {
   filters: FilterType;
   setFilters: (newFilters: FilterType) => void;
@@ -24,7 +40,9 @@ export const FilterContextProvider = ({ filterParams, children }: FilterContextP
   const [getValues, batchSet, batchUnset] = useSearchParamBatch(filterParams);
   const filters = useDeepCompareMemoize(
     Object.fromEntries(
-      Object.entries(getValues()).map(([key, value]) => [key, value ? JSON.parse(value) : null]),
+      Object.entries(getValues()).map(([key, value]) => {
+        return [key, value ? safeJSONParse(value) : null];
+      }),
     ),
   );
 
@@ -33,9 +51,10 @@ export const FilterContextProvider = ({ filterParams, children }: FilterContextP
       const formatedFilter = Object.fromEntries(
         Object.entries(newFilter).map(([key, value]) => {
           if (value && value !== '' && !(Array.isArray(value) && value.length === 0)) {
-            return [key, JSON.stringify(value)];
+            // only stringify if the value isn't already a string
+            const stringifiedValue = typeof value === 'string' ? value : JSON.stringify(value);
+            return [key, stringifiedValue];
           }
-
           return [key, null];
         }),
       );
