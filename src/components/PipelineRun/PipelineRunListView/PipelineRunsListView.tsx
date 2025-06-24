@@ -83,21 +83,51 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     );
   }, [pipelineRuns]);
 
-  const statusFilterObj = React.useMemo(
+  // Create filtered datasets for calculating available options
+  // Each excludes its own filter type but includes all others
+  const filtersForStatusOptions = React.useMemo(
     () =>
-      createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses, customFilter),
-    [sortedPipelineRuns, customFilter],
+      filterPipelineRuns(
+        sortedPipelineRuns,
+        {
+          name: filters.name,
+          commit: filters.commit,
+          status: [], // Exclude status to show available status options
+          type: filters.type,
+        },
+        customFilter,
+      ),
+    [sortedPipelineRuns, filters.name, filters.commit, filters.type, customFilter],
+  );
+
+  const filtersForTypeOptions = React.useMemo(
+    () =>
+      filterPipelineRuns(
+        sortedPipelineRuns,
+        {
+          name: filters.name,
+          commit: filters.commit,
+          status: filters.status,
+          type: [], // Exclude type to show available type options
+        },
+        customFilter,
+      ),
+    [sortedPipelineRuns, filters.name, filters.commit, filters.status, customFilter],
+  );
+
+  const statusFilterObj = React.useMemo(
+    () => createFilterObj(filtersForStatusOptions, (plr) => pipelineRunStatus(plr), statuses),
+    [filtersForStatusOptions],
   );
 
   const typeFilterObj = React.useMemo(
     () =>
       createFilterObj(
-        sortedPipelineRuns,
+        filtersForTypeOptions,
         (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
         pipelineRunTypes,
-        customFilter,
       ),
-    [sortedPipelineRuns, customFilter],
+    [filtersForTypeOptions],
   );
 
   const filteredPLRs = React.useMemo(

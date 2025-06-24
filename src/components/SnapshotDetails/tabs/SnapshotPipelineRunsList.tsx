@@ -44,26 +44,49 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   });
   const { name, status, type } = filters;
 
-  const statusFilterObj = React.useMemo(
+  const filtersForStatusOptions: PipelineRunKind[] = React.useMemo(
     () =>
-      createFilterObj(
+      filterPipelineRuns(
         snapshotPipelineRuns,
-        (plr) => pipelineRunStatus(plr),
-        statuses,
+        {
+          name: filters.name,
+          commit: filters.commit,
+          status: [],
+          type: filters.type,
+        },
         customFilter,
       ),
-    [snapshotPipelineRuns, customFilter],
+    [snapshotPipelineRuns, filters.name, filters.commit, filters.type, customFilter],
+  );
+
+  const filtersForTypeOptions: PipelineRunKind[] = React.useMemo(
+    () =>
+      filterPipelineRuns(
+        snapshotPipelineRuns,
+        {
+          name: filters.name,
+          commit: filters.commit,
+          status: filters.status,
+          type: [],
+        },
+        customFilter,
+      ),
+    [snapshotPipelineRuns, filters.name, filters.commit, filters.status, customFilter],
+  );
+
+  const statusFilterObj = React.useMemo(
+    () => createFilterObj(filtersForStatusOptions, (plr) => pipelineRunStatus(plr), statuses),
+    [filtersForStatusOptions],
   );
 
   const typeFilterObj = React.useMemo(
     () =>
       createFilterObj(
-        snapshotPipelineRuns,
+        filtersForTypeOptions,
         (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
         pipelineRunTypes,
-        customFilter,
       ),
-    [snapshotPipelineRuns, customFilter],
+    [filtersForTypeOptions],
   );
 
   const filteredPLRs: PipelineRunKind[] = React.useMemo(
