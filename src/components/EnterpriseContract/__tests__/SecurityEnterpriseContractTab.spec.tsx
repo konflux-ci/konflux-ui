@@ -20,6 +20,15 @@ jest.mock('~/hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
 }));
 
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useParams: () => ({
+    namespace: 'my-ns',
+    applicationName: 'my-app',
+    pipelineRunName: 'dummy-1',
+  }),
+}));
+
 jest.mock('../../../shared/components/table/TableComponent', () => {
   return (props) => {
     const { data, filters, selected, match, kindObj } = props;
@@ -156,5 +165,28 @@ describe('SecurityEnterpriseContractTab', () => {
     expect(value[0].textContent).toBe('1');
     expect(value[1].textContent).toBe('0');
     expect(value[2].textContent).toBe('1');
+  });
+
+  it('should render links with correct appName and component Name', () => {
+    routerRenderer(securityEnterpriseContracts('dummy-1'));
+
+    const links = screen.getAllByRole('link');
+
+    // Ensure there is at least one link rendered
+    expect(links.length).toBeGreaterThan(0);
+
+    // Check that all relevant hrefs include expected params
+    // Only check the last two component links
+    const lastTwoLinks = links.slice(-2);
+    lastTwoLinks.forEach((link) => {
+      const href = link.getAttribute('href');
+      expect(href).toContain('my-app');
+      // Get the related component name
+      const expectedComponent = mockEnterpriseContractUIData[lastTwoLinks.indexOf(link)].component;
+      // Get the href component name
+      const hrefParts = href?.split('/');
+      const lastField = hrefParts?.[hrefParts.length - 1];
+      expect(lastField).toBe(expectedComponent);
+    });
   });
 });
