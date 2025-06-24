@@ -1,5 +1,5 @@
 import { createK8sUtilMock } from '../../../../../utils/test-utils';
-import { createRelease } from '../form-utils';
+import { createRelease, createReleaseNotes, getIssues } from '../form-utils';
 
 const k8sCreateMock = createK8sUtilMock('K8sQueryCreateResource');
 
@@ -157,5 +157,90 @@ describe('triggerReleasePlan', () => {
       synopsis: 'A summary',
       fixed: [{ id: 'ISSUE-1', source: 'src' }],
     });
+  });
+});
+
+describe('createReleaseNotes', () => {
+  it('returns undefined if all required fields are empty', () => {
+    expect(
+      createReleaseNotes({
+        synopsis: '',
+        topic: '',
+        description: '',
+        issues: [],
+        cves: [],
+        references: [],
+        solution: '',
+      }),
+    ).toBeUndefined();
+  });
+
+  it('returns only non-empty fields', () => {
+    const result = createReleaseNotes({
+      synopsis: 'syn',
+      topic: '',
+      description: '',
+      issues: [{ id: '1', source: 'src' }],
+      cves: [],
+      references: [],
+      solution: '',
+    });
+    expect(result).toEqual({
+      synopsis: 'syn',
+      fixed: [{ id: '1', source: 'src' }],
+    });
+  });
+
+  it('returns all fields if all are set', () => {
+    const result = createReleaseNotes({
+      synopsis: 'syn',
+      topic: 'top',
+      description: 'desc',
+      issues: [{ id: '1', source: 'src' }],
+      cves: [{ issueKey: 'cve', components: ['a'], url: 'u' }],
+      references: ['ref'],
+      solution: 'sol',
+    });
+    expect(result).toEqual({
+      synopsis: 'syn',
+      topic: 'top',
+      description: 'desc',
+      fixed: [{ id: '1', source: 'src' }],
+      cves: [{ issueKey: 'cve', components: ['a'], url: 'u' }],
+      references: ['ref'],
+      solution: 'sol',
+    });
+  });
+
+  it('trims string fields and omits if only whitespace', () => {
+    const result = createReleaseNotes({
+      synopsis: '   ',
+      topic: '   ',
+      description: 'desc',
+      issues: [],
+      cves: [],
+      references: [],
+      solution: '',
+    });
+    expect(result).toEqual({ description: 'desc' });
+  });
+});
+
+describe('getIssues', () => {
+  it('returns empty array if issues is undefined', () => {
+    expect(getIssues(undefined)).toEqual(undefined);
+  });
+  it('returns mapped issues if present', () => {
+    const issues = [
+      { id: '1', source: 'src', extra: 'x' },
+      { id: '2', source: 'src2' },
+    ];
+    expect(getIssues(issues)).toEqual([
+      { id: '1', source: 'src' },
+      { id: '2', source: 'src2' },
+    ]);
+  });
+  it('handles empty array', () => {
+    expect(getIssues([])).toEqual([]);
   });
 });
