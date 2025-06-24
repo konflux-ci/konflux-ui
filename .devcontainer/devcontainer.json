@@ -1,0 +1,80 @@
+{
+  "name": "Konflux UI Development",
+  "build": {
+    "dockerfile": "Containerfile",
+    "context": "."
+  },
+
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.vscode-typescript-next",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "stylelint.vscode-stylelint",
+        "ms-playwright.playwright",
+        "ms-vscode.vscode-json"
+      ],
+      "settings": {
+        "typescript.preferences.importModuleSpecifier": "relative",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit"
+        },
+        "files.associations": {
+          "*.scss": "scss"
+        },
+        "emmet.includeLanguages": {
+          "javascript": "javascriptreact",
+          "typescript": "typescriptreact"
+        },
+        "git.enableCommitSigning": true
+      }
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [3000, 9000],
+
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "yarn install",
+
+  // Use 'postStartCommand' to run commands after the container is started
+  "postStartCommand": "echo 'Welcome to Konflux UI development environment! Run yarn start to begin development.' && /container-files/setup-gitconfig.sh && /container-files/test-gpg.sh",
+
+  // Set the default user to vscode (non-root)
+  "remoteUser": "vscode",
+
+  // Configure container environment
+  "containerEnv": {
+    "NODE_ENV": "development"
+  },
+
+  // Run arguments for the container - compatible with both Docker and Podman
+  "runArgs": ["--init", "--userns=keep-id"],
+
+  // Mount the project directory
+  "workspaceFolder": "/workspaces/konflux-ui",
+
+  // Lifecycle scripts
+  "initializeCommand": "echo 'Initializing Konflux UI devcontainer...' && echo 'Copying git configuration files...' && mkdir -p .devcontainer/.gitconfig-dir && cp ~/.gitconfig* .devcontainer/.gitconfig-dir/ 2>/dev/null || echo 'No gitconfig files found in home directory'",
+
+  // Development server configuration
+  "portsAttributes": {
+    "3000": {
+      "label": "Development Server",
+      "onAutoForward": "notify"
+    },
+    "9000": {
+      "label": "Webpack Bundle Analyzer",
+      "onAutoForward": "ignore"
+    }
+  },
+
+  // Podman-specific settings
+  "containerUser": "vscode",
+  "updateRemoteUserUID": true
+}

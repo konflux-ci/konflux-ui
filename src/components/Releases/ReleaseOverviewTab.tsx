@@ -12,10 +12,10 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
+import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -135,6 +135,7 @@ const ReleaseOverviewTab: React.FC = () => {
                         applicationName: releasePlan.spec.application,
                         snapshotName: release.spec.snapshot,
                       })}
+                      state={{ type: 'snapshot' }}
                     >
                       {release.spec.snapshot}
                     </Link>
@@ -193,6 +194,7 @@ const ReleaseOverviewTab: React.FC = () => {
                         applicationName: releasePlan.spec.application,
                         pipelineRunName: managedPipelineRun,
                       })}
+                      state={{ type: 'managed' }}
                     >
                       {managedPipelineRun}
                     </Link>
