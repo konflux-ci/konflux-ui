@@ -23,7 +23,6 @@ import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 
 const ReleaseOverviewTab: React.FC = () => {
-  const { applicationName } = useParams<RouterParams>();
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release] = useRelease(namespace, releaseName);
@@ -71,7 +70,7 @@ const ReleaseOverviewTab: React.FC = () => {
                 <Link
                   to={APPLICATION_RELEASE_DETAILS_PATH.createPath({
                     workspaceName: namespace,
-                    applicationName,
+                    applicationName: releasePlan.spec.application,
                     releaseName: release.metadata.name,
                   })}
                 >
