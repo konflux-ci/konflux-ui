@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useIsOnFeatureFlag } from '../../feature-flags/hooks';
 import { ComponentModel, ServiceAccountModel } from '../../models';
 import { COMPONENT_LINKED_SECRETS_PATH } from '../../routes/paths';
 import { Action } from '../../shared/components/action-menu/types';
@@ -18,8 +17,6 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canDeleteComponent] = useAccessReviewForModel(ComponentModel, 'delete');
   const [canManageLinkedSecrets] = useAccessReviewForModel(ServiceAccountModel, 'patch');
-
-  const isBuildServiceAccountFeatureOn = useIsOnFeatureFlag('buildServiceAccount');
 
   const actions: Action[] = React.useMemo(() => {
     if (!component) {
@@ -60,23 +57,19 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
           namespace,
         },
       },
-      ...(isBuildServiceAccountFeatureOn
-        ? [
-            {
-              cta: {
-                href: COMPONENT_LINKED_SECRETS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName,
-                  componentName: component.metadata.name,
-                }),
-              },
-              id: `linked-secrets-${name.toLowerCase()}`,
-              label: 'Manage linked secrets',
-              disabled: !canManageLinkedSecrets,
-              disabledTooltip: "You don't have access to manage linked secrets",
-            },
-          ]
-        : []),
+      {
+        cta: {
+          href: COMPONENT_LINKED_SECRETS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            componentName: component.metadata.name,
+          }),
+        },
+        id: `linked-secrets-${name.toLowerCase()}`,
+        label: 'Manage linked secrets',
+        disabled: !canManageLinkedSecrets,
+        disabledTooltip: "You don't have access to manage linked secrets",
+      },
     ];
 
     updatedActions.push({
@@ -93,7 +86,6 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
     name,
     applicationName,
     namespace,
-    isBuildServiceAccountFeatureOn,
     canManageLinkedSecrets,
     canDeleteComponent,
     showModal,

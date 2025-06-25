@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Skeleton } from '@patternfly/react-core';
-import { PIPELINE_RUNS_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { Label, Popover, Skeleton, Truncate } from '@patternfly/react-core';
+import { CommitIcon } from '~/components/Commits/CommitIcon';
+import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
+import {
+  PIPELINE_RUNS_DETAILS_PATH,
+  COMPONENT_DETAILS_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '../../../routes/paths';
+import { ExternalLink } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
-import { calculateDuration, pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
+import {
+  calculateDuration,
+  getPipelineRunStatusResults,
+  pipelineRunStatus,
+  taskTestResultStatus,
+} from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
@@ -21,19 +33,45 @@ type PipelineRunListRowProps = RowFunctionArgs<
     vulnerabilities: { [key: string]: ScanResults };
     fetchedPipelineRuns: string[];
     error?: unknown;
+    releasePlan?: ReleasePlanKind;
+    release?: ReleaseKind;
+    releaseName?: string;
   }
 >;
 
-type BasePipelineRunListRowProps = PipelineRunListRowProps & { showVulnerabilities?: boolean };
+type BasePipelineRunListRowProps = PipelineRunListRowProps & {
+  showVulnerabilities?: boolean;
+  showWorkspace?: boolean;
+  showTestResult?: boolean;
+  showSnapshot?: boolean;
+  showComponent?: boolean;
+  showReference?: boolean;
+  showTrigger?: boolean;
+};
+
+export enum PipelineRunEventTypeLabel {
+  push = 'Push',
+  pull_request = 'Pull Request',
+  incoming = 'Incoming',
+  'retest-all-comment' = 'Retest All Comment',
+}
 
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
   showVulnerabilities,
+  showWorkspace,
+  showTestResult,
+  showSnapshot,
+  showComponent,
+  showTrigger,
+  showReference,
   customData,
 }) => {
+  const namespace = useNamespace();
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
+  const { releaseName, releasePlan, release } = customData || {};
   // @ts-expect-error vulnerabilities will not be available until fetched for the next page
   const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
@@ -41,22 +79,70 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
 
   const status = pipelineRunStatus(obj);
   const actions = usePipelinerunActions(obj);
-  const namespace = useNamespace();
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
-  const applicationName = obj.metadata?.labels[PipelineRunLabel.APPLICATION];
+  const labels = obj.metadata.labels;
+  const applicationName = labels?.[PipelineRunLabel.APPLICATION];
+  const gitProvider = obj.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
+  const repoOrg = labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoURL = labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
+  const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
+  const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
+  const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
+
+  const getTriggerredByColumnData = useCallback(() => {
+    let icon = null,
+      text = ``,
+      link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
+    const commitDetails = {
+      text: commitId?.substring(0, 7),
+      link: `${link}/commit/${commitId}`,
+    };
+    if (eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.RETEST) {
+      icon = <CommitIcon isPR={false} className="sha-title-icon" />;
+    } else if (eventType === PipelineRunEventType.PULL) {
+      icon = <CommitIcon isPR={true} className="sha-title-icon" />;
+      text = `${repoOrg}/${repoURL}/${prNumber}`;
+      link = `${link}/pull/${prNumber}`;
+    }
+    return (
+      <>
+        {icon}
+        {eventType === PipelineRunEventType.PULL && (
+          <ExternalLink
+            href={link}
+            text={<Truncate content={text} style={{ marginBottom: '0.5rem' }} />}
+            hideIcon={true}
+          />
+        )}
+        {eventType ? (
+          <Label color="blue">
+            <ExternalLink href={commitDetails.link} text={commitDetails.text} />
+          </Label>
+        ) : (
+          '-'
+        )}
+      </>
+    );
+  }, [commitId, eventType, gitProvider, prNumber, repoOrg, repoURL]);
+
+  const testStatus = React.useMemo(() => {
+    const results = getPipelineRunStatusResults(obj);
+    return taskTestResultStatus(results);
+  }, [obj]);
 
   return (
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
         <Link
-          to={PIPELINE_RUNS_DETAILS_PATH.createPath({
+          to={`${PIPELINE_RUNS_DETAILS_PATH.createPath({
             workspaceName: namespace,
             applicationName,
             pipelineRunName: obj.metadata?.name,
-          })}
+          })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
           title={obj.metadata?.name}
+          state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
         >
           {obj.metadata?.name}
         </Link>
@@ -93,28 +179,70 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       <TableData className={pipelineRunTableColumnClasses.status}>
         <StatusIconWithText status={status} />
       </TableData>
+      {showTestResult ? (
+        <TableData className={pipelineRunTableColumnClasses.testResultStatus}>
+          <Popover
+            triggerAction="hover"
+            aria-label="error popover"
+            bodyContent={testStatus?.note}
+            isVisible={testStatus?.note ? undefined : false}
+          >
+            <div>{testStatus?.result ? testStatus.result : '-'}</div>
+          </Popover>
+        </TableData>
+      ) : null}
       <TableData className={pipelineRunTableColumnClasses.type}>
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.component}>
-        {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
-          obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
-            <Link
-              to={COMPONENT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-                componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
-              })}
-            >
-              {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
-            </Link>
+
+      {showSnapshot ? (
+        <TableData className={pipelineRunTableColumnClasses.snapshot}>
+          <Link
+            to={SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: releasePlan.spec.application,
+              snapshotName: release.spec.snapshot,
+            })}
+            state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] }}
+          >
+            {release.spec.snapshot}
+          </Link>
+        </TableData>
+      ) : null}
+      {showWorkspace ? (
+        <TableData className={pipelineRunTableColumnClasses.workspace}>{namespace}</TableData>
+      ) : null}
+      {showComponent ? (
+        <TableData className={pipelineRunTableColumnClasses.component}>
+          {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
+            obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
+              <Link
+                to={COMPONENT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
+                })}
+              >
+                {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
+              </Link>
+            ) : (
+              obj.metadata?.labels[PipelineRunLabel.COMPONENT]
+            )
           ) : (
-            obj.metadata?.labels[PipelineRunLabel.COMPONENT]
-          )
-        ) : (
-          '-'
-        )}
-      </TableData>
+            '-'
+          )}
+        </TableData>
+      ) : null}
+      {showTrigger ? (
+        <TableData className={pipelineRunTableColumnClasses.trigger}>
+          {PipelineRunEventTypeLabel[eventType] ?? '-'}
+        </TableData>
+      ) : null}
+      {showReference ? (
+        <TableData className={pipelineRunTableColumnClasses.reference}>
+          {getTriggerredByColumnData()}
+        </TableData>
+      ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
@@ -124,8 +252,23 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
 
 export const PipelineRunListRow: React.FC<React.PropsWithChildren<PipelineRunListRowProps>> = (
   props,
-) => <BasePipelineRunListRow {...props} showVulnerabilities={false} />;
+) => <BasePipelineRunListRow {...props} showComponent showTestResult showReference showTrigger />;
 
 export const PipelineRunListRowWithVulnerabilities: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
-> = (props) => <BasePipelineRunListRow {...props} showVulnerabilities />;
+> = (props) => (
+  <BasePipelineRunListRow {...props} showVulnerabilities showComponent showReference />
+);
+
+export const PipelineRunListRowForRelease: React.FC<
+  React.PropsWithChildren<PipelineRunListRowProps>
+> = (props) => (
+  <BasePipelineRunListRow
+    {...props}
+    showWorkspace={true}
+    showSnapshot={true}
+    showVulnerabilities={false}
+    showTestResult={false}
+    showComponent={false}
+  />
+);

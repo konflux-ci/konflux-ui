@@ -1,8 +1,7 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
-import { APPLICATION_ACTIVITY_PATH } from '@routes/paths';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { APPLICATION_ACTIVITY_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
 import { FilterContextProvider } from '../Filter/generic/FilterContext';
@@ -14,11 +13,8 @@ export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
 export const ActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
-  const { applicationName, workspaceName, activityTab } = params;
-  const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
-    ACTIVITY_SECONDARY_TAB_KEY,
-  );
-  const currentTab = activityTab || lastSelectedTab || 'latest-commits';
+  const { applicationName, workspaceName, activityTab = 'latest-commits' } = params;
+  const currentTab = activityTab || 'latest-commits';
 
   const getActivityTabRoute = React.useCallback(
     (tab: string) =>
@@ -36,22 +32,10 @@ export const ActivityTab: React.FC = () => {
     [currentTab, getActivityTabRoute, navigate],
   );
 
-  React.useEffect(() => {
-    if (activityTab !== lastSelectedTab) {
-      setLocalStorageItem(currentTab);
-    }
-  }, [activityTab, lastSelectedTab, currentTab, setLocalStorageItem]);
-
-  React.useEffect(() => {
-    if (!activityTab && lastSelectedTab) {
-      navigate(getActivityTabRoute(lastSelectedTab), { replace: true });
-    }
-  }, [activityTab, getActivityTabRoute, lastSelectedTab, navigate]);
-
   return (
     <>
       <Title size="xl" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Activity By
+        Activity by
       </Title>
       <Text className="pf-v5-u-mb-sm">
         Monitor your commits and their pipeline progression across all components.

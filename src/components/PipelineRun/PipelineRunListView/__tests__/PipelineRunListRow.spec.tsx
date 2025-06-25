@@ -27,7 +27,7 @@ describe('Pipeline run Row', () => {
       <PipelineRunListRowWithVulnerabilities obj={runningPipelineRun} columns={[]} />,
     );
 
-    expect(row.getByText('-')).toBeDefined();
+    expect(row.getAllByText('-')).toBeDefined();
     expect(row.getByText('Running')).toBeDefined();
   });
 
@@ -45,7 +45,7 @@ describe('Pipeline run Row', () => {
       />,
     );
 
-    expect(row.getByText('-')).toBeDefined();
+    expect(row.getAllByText('-')).toBeDefined();
     expect(row.getByText('Succeeded')).toBeDefined();
   });
 

@@ -83,19 +83,37 @@ const CommitsList = () => (
 
 describe('CommitsListView', () => {
   beforeEach(() => {
-    useBuildPipelinesMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
+    useBuildPipelinesMock.mockReturnValue([
+      pipelineWithCommits.slice(0, 4),
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     useComponentsMock.mockReturnValue([MockComponents, true]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render error state when there is an API error', () => {
-    useBuildPipelinesMock.mockReturnValue([[], true, new Error('500: Internal server error')]);
+    useBuildPipelinesMock.mockReturnValue([
+      [],
+      true,
+      new Error('500: Internal server error'),
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<CommitsList />);
     screen.getByText('Unable to load pipeline runs');
   });
 
   it('should render empty state if no commits are present', () => {
-    useBuildPipelinesMock.mockReturnValue([[], true]);
+    useBuildPipelinesMock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<CommitsList />);
     expect(
       screen.getByText(
@@ -219,10 +237,32 @@ describe('CommitsListView', () => {
   });
 
   it('should render skeleton while data is not loaded', () => {
-    useBuildPipelinesMock.mockReturnValue([[], false]);
+    useBuildPipelinesMock.mockReturnValue([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     useTRPipelineRunsMock.mockReturnValue([[], false]);
     useComponentsMock.mockReturnValue([[], false]);
     render(<CommitsList />);
     expect(screen.getByTestId('data-table-skeleton')).toBeVisible();
+  });
+
+  it('should call useBuildPipelines with componentName when provided', () => {
+    render(
+      <FilterContextProvider filterParams={['name', 'status']}>
+        <CommitsListView applicationName="purple-mermaid-app" componentName="sample-component" />
+      </FilterContextProvider>,
+    );
+
+    expect(useBuildPipelinesMock).toHaveBeenCalledWith(
+      'test-ns', // namespace
+      'purple-mermaid-app', // applicationName
+      undefined, // commit
+      true, // includeComponents
+      ['sample-component'], // componentNames
+    );
   });
 });

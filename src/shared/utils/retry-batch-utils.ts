@@ -87,6 +87,8 @@ const withRetry = async <T>(
  * @param maxConcurrency - how many items processed at the same time
  * @param processor - the process function
  * @param args - other parameters for the process function
+ * @returns all fulfilled jobs
+ * @throws all failed errors
  */
 
 export const processWithPLimit = async <T, A extends unknown[], R>(
@@ -94,13 +96,34 @@ export const processWithPLimit = async <T, A extends unknown[], R>(
   maxConcurrency: number,
   processor: (item: T, ...args: A) => Promise<R>,
   ...args: A
-) => {
+): Promise<Awaited<R>[]> => {
   const limit =
     maxConcurrency > DEFAULT_MAX_CONCURRENCY
       ? pLimit(DEFAULT_MAX_CONCURRENCY)
       : pLimit(maxConcurrency);
-  // With the p-limit, there are always 10 requests in process.
-  const tasks = items.map((item) => limit(() => withRetry(() => processor(item, ...args))));
 
-  await Promise.all(tasks);
+  const results = await Promise.allSettled(
+    items.map((item) =>
+      limit(() =>
+        withRetry(() => processor(item, ...args)).catch((err) => {
+          return Promise.reject({
+            item,
+            error: err,
+          });
+        }),
+      ),
+    ),
+  );
+
+  const fulfilledResults = results
+    .filter((r): r is PromiseFulfilledResult<Awaited<R>> => r.status === 'fulfilled')
+    .map((r) => r.value);
+
+  const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
+
+  if (errors.length > 0) {
+    throw errors; // throw errors for all failed jobs
+  }
+
+  return fulfilledResults;
 };
