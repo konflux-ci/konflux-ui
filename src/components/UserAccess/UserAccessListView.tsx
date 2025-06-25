@@ -71,10 +71,12 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
   const filterRBs = React.useMemo(
     () =>
-      roleBindings.filter((rb) =>
-        rb.subjects.some((subject) =>
-          subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
-        ),
+      roleBindings.filter(
+        (rb) =>
+          !rb.subjects ||
+          rb.subjects?.some((subject) =>
+            subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
+          ),
       ),
     [roleBindings, usernameFilter],
   );
