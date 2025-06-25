@@ -6,7 +6,7 @@ export type RoleBinding = K8sResourceCommon & {
     kind: string;
     name: string;
   };
-  subjects: {
+  subjects?: {
     apiGroup: string;
     kind: string;
     name: string;

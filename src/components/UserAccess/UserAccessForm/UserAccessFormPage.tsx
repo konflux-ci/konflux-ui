@@ -81,7 +81,7 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
   }
 
   const initialValues: UserAccessFormValues = {
-    usernames: existingRb ? existingRb.subjects.map((sub) => sub.name) : [],
+    usernames: existingRb && existingRb.subjects ? existingRb.subjects.map((sub) => sub.name) : [],
     role: roleMap?.roleMap[existingRb?.roleRef.name] as NamespaceRole,
     roleMap,
   };
@@ -93,7 +93,13 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
       initialValues={initialValues}
       validationSchema={userAccessFormSchema}
     >
-      {(props) => <UserAccessForm {...props} edit={edit} />}
+      {(props) => (
+        <UserAccessForm
+          {...props}
+          edit={edit}
+          missingSubjects={initialValues.usernames.length === 0}
+        />
+      )}
     </Formik>
   );
 };

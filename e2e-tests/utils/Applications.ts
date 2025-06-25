@@ -96,7 +96,7 @@ export class Applications {
   static checkComponentInListView(
     componentName: string,
     applicationName: string,
-    componentStatus: string,
+    componentStatus: string | RegExp,
   ) {
     this.createdComponentExists(componentName, applicationName);
     this.checkComponentStatus(componentName, componentStatus);
@@ -110,7 +110,7 @@ export class Applications {
     ComponentsTabPage.getComponentListItem(componentName).should('exist');
   }
 
-  static checkComponentStatus(componentName: string, componentStatus: string) {
+  static checkComponentStatus(componentName: string, componentStatus: string | RegExp) {
     cy.get(componentsTabPO.componentListItem(componentName)).contains(componentStatus, {
       timeout: 80000,
     });
