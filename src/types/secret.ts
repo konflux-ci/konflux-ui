@@ -19,13 +19,7 @@ export type ImportSecret = {
       readOnlyKey?: boolean;
     }[];
   };
-  image?: {
-    keyValues: {
-      key: string;
-      value: string;
-      readOnlyKey?: boolean;
-    }[];
-  };
+  image?: Image;
   currentComponent?: null | CurrentComponentRef;
   relatedComponents?: [];
   secretForComponentOption?: null | SecretForComponentOption;
@@ -140,14 +134,7 @@ export type BuildTimeSecret = {
       readOnlyValue?: boolean;
     }[];
   };
-  image?: {
-    keyValuePairs: {
-      key: string;
-      value: string;
-      readOnlyKey?: boolean;
-      readOnlyValue?: boolean;
-    }[];
-  };
+  image?: Image;
 };
 
 export type SecretFormValues = ImportSecret & {
