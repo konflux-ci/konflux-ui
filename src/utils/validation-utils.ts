@@ -13,8 +13,8 @@ export const GIT_URL_REGEX =
 
 export const GIT_URL = {
   PROTOCOL_REGEX: /^https?:\/\//,
-  DOMAIN_REGEX: /^(https?:\/\/)?(github|gitlab|bitbucket)\.com/,
-  USER_OR_REPO_REGEX: /^https?:\/\/(github|gitlab|bitbucket)\.com\/[\w.-]+\/[\w.-]/,
+  DOMAIN_REGEX: /^(https?:\/\/)?(github|gitlab|bitbucket)\.[\w.-]+/,
+  USER_OR_REPO_REGEX: /^https?:\/\/(github|gitlab|bitbucket)\.[\w.-]+\/[\w.-]+\/[\w.-]/,
 };
 
 export const RESOURCE_NAME_REGEX = /^[a-z]([-a-z0-9]*[a-z0-9])?$/;
