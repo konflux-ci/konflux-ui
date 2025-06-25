@@ -79,6 +79,7 @@ const ReleasesListRow: React.FC<
             applicationName,
             snapshotName: obj.spec.snapshot,
           })}
+          state={{ type: 'snapshot' }}
         >
           {obj.spec.snapshot}
         </Link>
@@ -121,6 +122,7 @@ const ReleasesListRow: React.FC<
               applicationName,
               pipelineRunName: managedPipelineRun,
             })}
+            state={{ type: 'managed' }}
           >
             {managedPipelineRun}
           </Link>
