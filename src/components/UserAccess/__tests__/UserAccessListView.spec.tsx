@@ -127,4 +127,12 @@ describe('UserAccessListView', () => {
     const grantAccessButton = screen.getByText('Grant access');
     expect(grantAccessButton.getAttribute('aria-disabled')).toEqual('true');
   });
+
+  it('should handle undefined subjects in role bindings', () => {
+    useRoleBindingsMock.mockReturnValue([[{ ...mockRoleBinding, subjects: undefined }], true]);
+    const r = render(UserAccessList);
+    const rows = r.getAllByRole('row');
+    expect(rows.length).toBe(2);
+    expect(rows[1]).toHaveTextContent('-');
+  });
 });
