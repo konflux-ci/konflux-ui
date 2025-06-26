@@ -11,10 +11,12 @@ import { UsernameSection } from './UsernameSection';
 
 type Props = FormikProps<UserAccessFormValues> & {
   edit?: boolean;
+  missingSubjects?: boolean;
 };
 
 export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
   edit,
+  missingSubjects = false,
   isSubmitting,
   dirty,
   errors, // The errors is caculated by formik automatically.
@@ -57,7 +59,7 @@ export const UserAccessForm: React.FC<React.PropsWithChildren<Props>> = ({
     >
       <PageSection isFilled variant={PageSectionVariants.light}>
         <Form onSubmit={handleSubmit}>
-          <UsernameSection disabled={edit} />
+          <UsernameSection disabled={!missingSubjects && edit} />
           <RoleSection />
         </Form>
       </PageSection>

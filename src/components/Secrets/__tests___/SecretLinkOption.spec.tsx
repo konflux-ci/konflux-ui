@@ -21,7 +21,7 @@ describe('SecretLinkOptions', () => {
     jest.clearAllMocks();
   });
 
-  it('renders the radio group with correct options', () => {
+  it('renders the radio group with correct options for adding secret page', () => {
     render(
       <TestWrapper>
         <SecretLinkOptions
@@ -33,10 +33,26 @@ describe('SecretLinkOptions', () => {
     );
 
     expect(screen.getByText('Link secret options')).toBeInTheDocument();
-    expect(
-      screen.getByLabelText('All existing and future components in the namespace'),
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText('Select components in the namespace')).toBeInTheDocument();
+    expect(screen.getByLabelText(SecretLinkOptionLabels.default.none)).toBeInTheDocument();
+    expect(screen.getByLabelText(SecretLinkOptionLabels.default.all)).toBeInTheDocument();
+    expect(screen.getByLabelText(SecretLinkOptionLabels.default.partial)).toBeInTheDocument();
+  });
+
+  it('renders the radio group with correct options for importing secret page', () => {
+    render(
+      <TestWrapper>
+        <SecretLinkOptions
+          secretForComponentOption={SecretForComponentOption.all}
+          onOptionChange={mockOnOptionChange}
+          radioLabels={SecretLinkOptionLabels.forImportSecret}
+        />
+      </TestWrapper>,
+    );
+
+    expect(screen.getByText('Link secret options')).toBeInTheDocument();
+    expect(screen.queryByText(SecretLinkOptionLabels.default.none)).toBeNull();
+    expect(screen.getByLabelText(SecretLinkOptionLabels.forImportSecret.all)).toBeInTheDocument();
+    expect(screen.getByLabelText(SecretLinkOptionLabels.forImportSecret.all)).toBeInTheDocument();
   });
 
   it('calls onOptionChange when a radio button is selected', () => {
@@ -52,6 +68,21 @@ describe('SecretLinkOptions', () => {
 
     fireEvent.click(screen.getByLabelText('Select components in the namespace'));
     expect(mockOnOptionChange).toHaveBeenCalledWith(SecretForComponentOption.partial);
+  });
+
+  it('calls onOptionChange with when option is selected', () => {
+    render(
+      <TestWrapper>
+        <SecretLinkOptions
+          secretForComponentOption={SecretForComponentOption.all}
+          onOptionChange={mockOnOptionChange}
+          radioLabels={SecretLinkOptionLabels.default}
+        />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByLabelText(SecretLinkOptionLabels.default.all));
+    expect(mockOnOptionChange).toHaveBeenCalledWith(SecretForComponentOption.all);
   });
 
   it('conditionally renders the ComponentSelector when "partial" option is selected', () => {

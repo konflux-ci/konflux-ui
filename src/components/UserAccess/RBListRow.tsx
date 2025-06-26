@@ -15,7 +15,9 @@ export const RBListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<RoleBin
 
   return (
     <>
-      <TableData className={rbTableColumnClasses.username}>{obj.subjects[0]?.name}</TableData>
+      <TableData className={rbTableColumnClasses.username}>
+        {obj.subjects ? obj.subjects[0]?.name : '-'}
+      </TableData>
       <TableData className={rbTableColumnClasses.role}>
         {!loaded ? <Skeleton width="200px" height="20px" /> : roleMap?.roleMap[obj.roleRef.name]}
       </TableData>
