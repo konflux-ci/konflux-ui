@@ -165,7 +165,7 @@ export const existingSecrets: BuildTimeSecret[] = [
 ];
 
 export const secretFormValues: SecretFormValues = {
-  type: SecretTypeDropdownLabel.image,
+  type: SecretTypeDropdownLabel.opaque,
   secretName: 'test',
   opaque: {
     keyValues: [
@@ -176,12 +176,7 @@ export const secretFormValues: SecretFormValues = {
     ],
   },
   image: {
-    keyValues: [
-      {
-        key: 'test',
-        value: 'dGVzdA==',
-      },
-    ],
+    authType: 'Image registry credentials',
   },
   relatedComponents: [],
   secretForComponentOption: null,
