@@ -113,6 +113,14 @@ export const useWhatsNextItems = (applicationName: string) => {
     },
     {
       id: 4,
+      title: 'Import Gitlab repos',
+      description: 'Import Gitlab repositories by providing the URL',
+      icon: gitAppIcon,
+      noAction: true,
+      helpLink: 'https://konflux-ci.dev/docs/building/creating/',
+    },
+    {
+      id: 5,
       title: 'Make a code change',
       description: 'Make a change to your source code to automatically trigger a new build.',
       icon: editCodeIcon,
@@ -129,7 +137,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
-      id: 5,
+      id: 6,
       title: 'Manage build pipelines',
       description:
         'Add some automation by upgrading your default build pipelines to custom build pipelines.',
