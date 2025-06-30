@@ -100,8 +100,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   );
 
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(sortedPipelineRuns, filters, customFilter),
-    [sortedPipelineRuns, filters, customFilter],
+    () => filterPipelineRuns(sortedPipelineRuns, filters, customFilter, componentName),
+    [sortedPipelineRuns, filters, customFilter, componentName],
   );
 
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : sortedPipelineRuns);

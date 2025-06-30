@@ -12,6 +12,7 @@ export const filterPipelineRuns = (
   pipelineRuns: PipelineRunKind[],
   filters: PipelineRunsFilterState,
   customFilter?: (plr: PipelineRunKind) => boolean,
+  componentName?: string,
 ): PipelineRunKind[] => {
   const { name, status, type } = filters;
 
@@ -19,10 +20,11 @@ export const filterPipelineRuns = (
     .filter((plr) => {
       const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
       return (
-        (!name ||
-          plr.metadata.name.indexOf(name) >= 0 ||
-          plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(name.trim().toLowerCase()) >=
-            0) &&
+        (!name || plr.metadata.name.indexOf(name) >= 0) &&
+        (!componentName ||
+          plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(
+            componentName.trim().toLowerCase(),
+          ) >= 0) &&
         (!status.length || status.includes(pipelineRunStatus(plr))) &&
         (!type.length || type.includes(runType))
       );
