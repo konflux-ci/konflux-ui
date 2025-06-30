@@ -10,6 +10,7 @@ export const RouterParams = {
   ns: 'ns',
   applicationName: 'applicationName',
   integrationTestName: 'integrationTestName',
+  integrationTestTab: 'integrationTestTab',
   releaseName: 'releaseName',
   activityTab: 'activityTab',
   pipelineRunName: 'pipelineRunName',

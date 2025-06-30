@@ -5,6 +5,11 @@ import {
   createImageRepository,
   createSecretWithLinkingComponents,
 } from '../../../utils/create-utils';
+import {
+  EC_INTEGRATION_TEST_PATH,
+  EC_INTEGRATION_TEST_REVISION,
+  EC_INTEGRATION_TEST_URL,
+} from '../../IntegrationTests/IntegrationTestForm/const';
 import { createIntegrationTest } from '../../IntegrationTests/IntegrationTestForm/utils/create-utils';
 import { createResourcesWithLinkingComponents } from '../submit-utils';
 
@@ -220,6 +225,90 @@ describe('Submit Utils: createResources', () => {
     );
 
     expect(createSecretWithLinkingComponentsMock).not.toHaveBeenCalled();
+  });
+
+  it('should create enterprise contract integration test when creating new application', async () => {
+    const appName = 'test-app-enterprise-contract';
+    createApplicationMock.mockResolvedValue({ metadata: { name: appName } });
+    createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
+    createIntegrationTestMock.mockResolvedValue({
+      metadata: { name: `${appName}-enterprise-contract` },
+    });
+
+    await createResourcesWithLinkingComponents(
+      {
+        application: appName,
+        inAppContext: false, // This triggers application creation
+        showComponent: true,
+        isPrivateRepo: false,
+        source: {
+          git: {
+            url: 'https://github.com/test/repo',
+          },
+        },
+        pipeline: 'docker-build-oci-ta',
+        componentName: 'test-component',
+      },
+      'test-ws-tenant',
+      [],
+    );
+
+    // Verify createIntegrationTest was called twice (dry run + actual creation)
+    expect(createIntegrationTestMock).toHaveBeenCalledTimes(2);
+
+    // Verify the enterprise contract integration test was created with correct parameters
+    const expectedIntegrationTestValues = {
+      name: `${appName}-enterprise-contract`,
+      url: EC_INTEGRATION_TEST_URL,
+      revision: EC_INTEGRATION_TEST_REVISION,
+      path: EC_INTEGRATION_TEST_PATH,
+      optional: false,
+    };
+
+    // Check dry run call
+    expect(createIntegrationTestMock).toHaveBeenNthCalledWith(
+      1,
+      expectedIntegrationTestValues,
+      appName,
+      'test-ws-tenant',
+      true, // dryRun
+    );
+
+    // Check actual creation call
+    expect(createIntegrationTestMock).toHaveBeenNthCalledWith(
+      2,
+      expectedIntegrationTestValues,
+      appName,
+      'test-ws-tenant',
+    );
+  });
+
+  it('should NOT create enterprise contract integration test when adding component to existing application', async () => {
+    const appName = 'existing-app';
+    createApplicationMock.mockResolvedValue({ metadata: { name: appName } });
+    createComponentMock.mockResolvedValue({ metadata: { name: 'test-component' } });
+
+    await createResourcesWithLinkingComponents(
+      {
+        application: appName,
+        inAppContext: true, // This means application already exists
+        showComponent: true,
+        isPrivateRepo: false,
+        source: {
+          git: {
+            url: 'https://github.com/test/repo',
+          },
+        },
+        pipeline: 'docker-build-oci-ta',
+        componentName: 'test-component',
+      },
+      'test-ws-tenant',
+      [],
+    );
+
+    // Verify createIntegrationTest was NOT called when adding to existing application
+    expect(createIntegrationTestMock).toHaveBeenCalledTimes(0);
+    expect(createComponentMock).toHaveBeenCalledTimes(2);
   });
 
   afterEach(() => {
