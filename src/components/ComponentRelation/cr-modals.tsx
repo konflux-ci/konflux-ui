@@ -84,8 +84,14 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
                         sortedGroupedComponents={sortedGroupedComponents}
                         index={index}
                         removeProps={{
-                          disableRemove: values.relations.length <= 1,
-                          onRemove: () => arrayHelpers.remove(index),
+                          onRemove: () =>
+                            values.relations.length <= 1
+                              ? arrayHelpers.replace(0, {
+                                  source: '',
+                                  nudgeType: ComponentRelationNudgeType.NUDGES,
+                                  target: [],
+                                })
+                              : arrayHelpers.remove(index),
                         }}
                       />
                       {index !== values.relations.length - 1 ? <Divider /> : null}
