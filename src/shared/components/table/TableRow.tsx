@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Tr } from '@patternfly/react-table';
-import { useResizeObserver } from '~/shared/hooks';
+import { useMutationObserver } from '~/shared/hooks';
 
 export type TableRowProps = {
   id: React.ReactText;
@@ -23,11 +23,31 @@ export const TableRow: React.FC<React.PropsWithChildren<TableRowProps>> = ({
   ...props
 }) => {
   const ref = React.useRef<HTMLTableRowElement>(null);
-  useResizeObserver(() => {
-    window.requestAnimationFrame(() => {
-      recompute?.();
-    });
-  }, ref.current);
+
+  useMutationObserver(
+    (mutations) => {
+      const hasRelevantChanges = mutations.some((mutation) => {
+        return (
+          mutation.type === 'childList' ||
+          (mutation.type === 'attributes' &&
+            (mutation.attributeName === 'class' ||
+              mutation.attributeName === 'style' ||
+              mutation.attributeName === 'aria-expanded'))
+        );
+      });
+
+      if (hasRelevantChanges) {
+        recompute?.();
+      }
+    },
+    recompute ? ref.current : null,
+    {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'style', 'aria-expanded'],
+    },
+  );
 
   return (
     <Tr
