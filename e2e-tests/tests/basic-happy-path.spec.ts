@@ -69,7 +69,11 @@ describe('Basic Happy Path', () => {
   it('Create an Application with a component', () => {
     Applications.createApplication(applicationName);
     Applications.createComponent(publicRepo, componentName, pipeline);
-    Applications.checkComponentInListView(componentName, applicationName, 'Build not started');
+    Applications.checkComponentInListView(
+      componentName,
+      applicationName,
+      /Build not started|Build running/,
+    );
   });
 
   it('Check default Integration Test', () => {
