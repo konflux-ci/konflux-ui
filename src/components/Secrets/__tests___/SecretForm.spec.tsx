@@ -135,7 +135,7 @@ describe('SecretForm SourceSecret', () => {
   });
 });
 
-describe('SecretForm Image Pull eScret', () => {
+describe('SecretForm Image Pull Secret', () => {
   it('should show correct fields for Image Pull Secret', async () => {
     formikRenderer(<SecretForm existingSecrets={existingSecrets} />, addSecretFormValues);
     await waitFor(() => {

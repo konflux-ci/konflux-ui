@@ -65,7 +65,7 @@ export const MultiImageCredentialForm: React.FC<
                 name={`${name}.${idx.toString()}.registry`}
                 label="Registry server address"
                 helperText="For example quay.io or docker.io"
-                required
+                isRequired
               />
               <InputField
                 name={`${name}.${idx.toString()}.username`}

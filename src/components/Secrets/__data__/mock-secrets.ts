@@ -5,6 +5,7 @@ import {
   BuildTimeSecret,
   ComponentKind,
   ComponentSpecs,
+  ImagePullSecretType,
   SecretFor,
   SecretFormValues,
   SecretKind,
@@ -134,7 +135,7 @@ export const addSecretFormValues: AddSecretFormValues = {
     ],
   },
   image: {
-    authType: 'Image registry credentials',
+    authType: ImagePullSecretType.ImageRegistryCreds,
     registryCreds: [
       {
         registry: 'test.io',
@@ -176,7 +177,7 @@ export const secretFormValues: SecretFormValues = {
     ],
   },
   image: {
-    authType: 'Image registry credentials',
+    authType: ImagePullSecretType.ImageRegistryCreds,
   },
   relatedComponents: [],
   secretForComponentOption: null,
