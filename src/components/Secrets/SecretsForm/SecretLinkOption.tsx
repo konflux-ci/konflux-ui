@@ -1,5 +1,6 @@
 import React from 'react';
 import { RadioGroupField } from 'formik-pf';
+import { SECRET_LINK_OPTION_HELP_TEXT } from '~/consts/secrets';
 import { CurrentComponentRef } from '~/types';
 import HelpPopover from '../../HelpPopover';
 import { SecretForComponentOption } from '../utils/secret-utils';
@@ -11,6 +12,7 @@ type SecretLinkOptionsProps = {
   secretForComponentOption: SecretForComponentOption;
   onOptionChange: (option: SecretForComponentOption) => void;
   radioLabels: {
+    none?: string;
     all: string;
     partial: string;
   };
@@ -29,11 +31,18 @@ export const SecretLinkOptions: React.FC<SecretLinkOptionsProps> = ({
         name="secretForComponentOption"
         label={
           <b>
-            Link secret options{' '}
-            <HelpPopover bodyContent="Select an option that allow you to link your desired components in this namespace while creating the secrets." />
+            Link secret options <HelpPopover bodyContent={SECRET_LINK_OPTION_HELP_TEXT} />
           </b>
         }
         options={[
+          ...(radioLabels.none
+            ? [
+                {
+                  value: SecretForComponentOption.none,
+                  label: radioLabels.none,
+                },
+              ]
+            : []),
           {
             value: SecretForComponentOption.all,
             label: radioLabels.all,

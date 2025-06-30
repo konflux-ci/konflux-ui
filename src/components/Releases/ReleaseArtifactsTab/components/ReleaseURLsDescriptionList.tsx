@@ -27,7 +27,7 @@ const DescriptionSection: React.FC<DescriptionSectionProps> = ({ term, links, ge
       <DescriptionListDescription>
         <Flex direction={{ default: 'column' }}>
           {links.map((href) => (
-            <ExternalLink key={getLink ? getLink(href) : href} href={href} text={href} />
+            <ExternalLink key={href} href={getLink ? getLink(href) : href} text={href} />
           ))}
         </Flex>
       </DescriptionListDescription>
