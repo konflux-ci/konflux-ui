@@ -235,7 +235,7 @@ describe('tekton-results', () => {
           selectorToFilter({
             filterByName: 'resource-name',
           }),
-        ).toStrictEqual('data.metadata.name.startsWith("resource-name")');
+        ).toStrictEqual('data.metadata.name.contains("resource-name")');
       });
 
       it('should return creationTimestamp filter', () => {
@@ -280,10 +280,10 @@ describe('tekton-results', () => {
     describe('nameFilter', () => {
       it('should return the name filter', () => {
         expect(nameFilter('test-resource-name')).toStrictEqual(
-          'data.metadata.name.startsWith("test-resource-name")',
+          'data.metadata.name.contains("test-resource-name")',
         );
         expect(nameFilter('TEST-RESOURCE-name')).toStrictEqual(
-          'data.metadata.name.startsWith("test-resource-name")',
+          'data.metadata.name.contains("test-resource-name")',
         );
       });
     });
