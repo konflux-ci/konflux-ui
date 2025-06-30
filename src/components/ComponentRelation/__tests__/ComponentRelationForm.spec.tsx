@@ -13,7 +13,6 @@ describe('ComponentRelationForm', () => {
         componentNames={['asdf', 'asd']}
         sortedGroupedComponents={{ app: ['asdf', 'asd'] }}
         removeProps={{
-          disableRemove: true,
           onRemove: jest.fn(),
         }}
       />,
