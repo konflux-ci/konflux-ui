@@ -41,7 +41,8 @@ export const FilterContextProvider = ({ filterParams, children }: FilterContextP
   const filters = useDeepCompareMemoize(
     Object.fromEntries(
       Object.entries(getValues()).map(([key, value]) => {
-        return [key, value ? safeJSONParse(value) : null];
+        const parsedValue = value ? safeJSONParse(value) : null;
+        return [key, typeof parsedValue === 'number' ? parsedValue.toString() : parsedValue];
       }),
     ),
   );
@@ -50,7 +51,12 @@ export const FilterContextProvider = ({ filterParams, children }: FilterContextP
     (newFilter: FilterType) => {
       const formatedFilter = Object.fromEntries(
         Object.entries(newFilter).map(([key, value]) => {
-          if (value && value !== '' && !(Array.isArray(value) && value.length === 0)) {
+          if (
+            value !== null &&
+            value !== undefined &&
+            value !== '' &&
+            !(Array.isArray(value) && value.length === 0)
+          ) {
             // only stringify if the value isn't already a string
             const stringifiedValue = typeof value === 'string' ? value : JSON.stringify(value);
             return [key, stringifiedValue];

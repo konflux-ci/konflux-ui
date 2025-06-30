@@ -9,6 +9,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -31,6 +32,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -59,6 +61,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -96,6 +99,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}

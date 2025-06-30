@@ -69,7 +69,7 @@ export const MultiSelect = ({
                 isChecked={values.includes(filter)}
                 itemCount={options[filter] ?? 0}
               >
-                {filter}
+                {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </SelectOption>
             ))}
           </SelectGroup>,
