@@ -40,6 +40,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   SecretFormValues,
+  ImagePullSecretType,
 } from '../types';
 import { ComponentSpecs } from './../types/component';
 import { SBOMEventNotification } from './../types/konflux-public-info';
@@ -333,11 +334,33 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
       const SSH_KEY = 'ssh-privatekey';
       data[SSH_KEY] = values.source[SSH_KEY];
     }
+  } else if (values.type === SecretTypeDropdownLabel.image) {
+    if (values.image.authType === ImagePullSecretType.ImageRegistryCreds) {
+      const dockerconfigjson = values.image.registryCreds.reduce(
+        (acc, cred) => {
+          acc.auths[cred.registry] = {
+            ...pick(cred, ['username', 'password', 'email']),
+            auth: Base64.encode(`${cred.username}:${cred.password}`),
+          };
+          return acc;
+        },
+        { auths: {} },
+      );
+
+      data = dockerconfigjson
+        ? { ['.dockerconfigjson']: Base64.encode(JSON.stringify(dockerconfigjson)) }
+        : '';
+    } else {
+      data = values.image.dockerconfig
+        ? {
+            ['.dockercfg']: Base64.encode(
+              JSON.stringify(JSON.parse(Base64.decode(values.image.dockerconfig))),
+            ),
+          }
+        : '';
+    }
   } else {
-    const keyValues =
-      values.type === SecretTypeDropdownLabel.opaque
-        ? values.opaque?.keyValues
-        : values.image?.keyValues;
+    const keyValues = values.opaque?.keyValues;
     data = keyValues?.reduce((acc, s) => {
       acc[s.key] = s.value ? s.value : '';
       return acc;
@@ -354,9 +377,9 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
       values.type === SecretTypeDropdownLabel.source
         ? K8sSecretType[values.source?.authType]
         : K8sSecretType[values.type],
-    stringData: data,
   };
-
+  if (values.type === SecretTypeDropdownLabel.image) secretResource.data = data;
+  else secretResource.stringData = data;
   return secretResource;
 };
 
