@@ -5,7 +5,7 @@ import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/
 import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import { BannerType, useBanner } from '~/hooks/useBanner';
 
-const typeToVariant = (type: BannerType): 'blue' | 'gold' | 'red' => {
+export const typeToVariant = (type: BannerType): 'blue' | 'gold' | 'red' => {
   switch (type) {
     case 'info':
       return 'blue';
@@ -18,7 +18,7 @@ const typeToVariant = (type: BannerType): 'blue' | 'gold' | 'red' => {
   }
 };
 
-const typeToIcon = (type: BannerType) => {
+export const typeToIcon = (type: BannerType) => {
   switch (type) {
     case 'info':
       return <InfoCircleIcon />;

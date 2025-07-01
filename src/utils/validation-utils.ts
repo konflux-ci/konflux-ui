@@ -18,6 +18,14 @@ export const bannerConfigYupSchema = yup.object({
     .optional()
     .test('is-date', 'Invalid endTime', (v) => !v || !isNaN(Date.parse(v))),
 });
+export const autoAlertConfigYupSchema = yup.object({
+  type: yup.mixed<'info' | 'warning' | 'danger'>().oneOf(['info', 'warning', 'danger']).required(),
+  summary: yup
+    .string()
+    .required()
+    .min(5, 'Must be at least 5 characters')
+    .max(200, 'Must be at most 200 characters'),
+});
 export const KONFLUX_USERNAME_REGEX = /^[-_a-zA-Z0-9@.]{2,45}$/;
 export const KONFLUX_USERNAME_REGEX_MGS =
   'Must be 2 to 45 characters long and can only contain letters from a to Z, numbers from 0 to 9, underscores( _ ), hyphens( - ), periods( . ), or @ symbol.';

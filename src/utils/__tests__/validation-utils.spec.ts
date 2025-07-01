@@ -1,5 +1,9 @@
 import { SecretTypeDropdownLabel, SourceSecretType } from '../../types';
-import { bannerConfigYupSchema, SecretFromSchema } from '../validation-utils';
+import {
+  bannerConfigYupSchema,
+  SecretFromSchema,
+  autoAlertConfigYupSchema,
+} from '../validation-utils';
 
 describe('validation-utils', () => {
   it('should return error for incorrect secret name', async () => {
@@ -203,6 +207,58 @@ describe('validation-utils', () => {
         type: 'warning',
       };
       await expect(bannerConfigYupSchema.validate(data)).resolves.toBeTruthy();
+    });
+
+    describe('autoAlertConfigYupSchema', () => {
+      it('should validate correct auto alert config', async () => {
+        const validData = {
+          type: 'info',
+          summary: 'This is a valid summary.',
+        };
+        await expect(autoAlertConfigYupSchema.validate(validData)).resolves.toBeTruthy();
+      });
+
+      it('should fail if type is missing', async () => {
+        const data = {
+          summary: 'Valid summary',
+        };
+        await expect(autoAlertConfigYupSchema.validate(data)).rejects.toThrow();
+      });
+
+      it('should fail if summary is missing', async () => {
+        const data = {
+          type: 'warning',
+        };
+        await expect(autoAlertConfigYupSchema.validate(data)).rejects.toThrow();
+      });
+
+      it('should fail if type is invalid', async () => {
+        const data = {
+          type: 'invalid',
+          summary: 'Valid summary',
+        };
+        await expect(autoAlertConfigYupSchema.validate(data)).rejects.toThrow();
+      });
+
+      it('should fail if summary is too short', async () => {
+        const data = {
+          type: 'danger',
+          summary: '1234',
+        };
+        await expect(autoAlertConfigYupSchema.validate(data)).rejects.toThrow(
+          'Must be at least 5 characters',
+        );
+      });
+
+      it('should fail if summary is too long', async () => {
+        const data = {
+          type: 'info',
+          summary: 'a'.repeat(201),
+        };
+        await expect(autoAlertConfigYupSchema.validate(data)).rejects.toThrow(
+          'Must be at most 200 characters',
+        );
+      });
     });
   });
 });
