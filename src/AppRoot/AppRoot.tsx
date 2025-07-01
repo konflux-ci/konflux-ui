@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH } from '@routes/paths';
+import { KonfluxBanner } from '~/components/konfluxBanner/KonfluxBanner';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
@@ -21,22 +22,28 @@ export const AppRoot: React.FC = () => {
     return namespaceSwitcherNotAllowedRoutes.map((r) => isActive(r, { exact: true })).some(Boolean);
   }, [isActive]);
   return (
-    <Page
-      sidebar={<AppSideBar isOpen={isSideBarOpen} />}
-      header={
-        <AppHeader isSideBarOpen={isSideBarOpen} onSideBarOpen={() => setSideBarOpen((s) => !s)} />
-      }
-    >
-      <ActivePageAlert />
-      <SidePanelHost>
-        {!showSwitcher ? (
-          <PageSection variant="light" style={{ paddingBlock: 0 }} hasShadowBottom>
-            <NamespaceSwitcher />
-          </PageSection>
-        ) : null}
+    <>
+      <KonfluxBanner />
+      <Page
+        sidebar={<AppSideBar isOpen={isSideBarOpen} />}
+        header={
+          <AppHeader
+            isSideBarOpen={isSideBarOpen}
+            onSideBarOpen={() => setSideBarOpen((s) => !s)}
+          />
+        }
+      >
+        <ActivePageAlert />
+        <SidePanelHost>
+          {!showSwitcher ? (
+            <PageSection variant="light" style={{ paddingBlock: 0 }} hasShadowBottom>
+              <NamespaceSwitcher />
+            </PageSection>
+          ) : null}
 
-        <Outlet />
-      </SidePanelHost>
-    </Page>
+          <Outlet />
+        </SidePanelHost>
+      </Page>
+    </>
   );
 };

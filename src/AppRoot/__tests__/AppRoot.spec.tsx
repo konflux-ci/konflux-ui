@@ -1,6 +1,6 @@
 import { screen, fireEvent } from '@testing-library/react';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
-import { routerRenderer } from '../../utils/test-utils';
+import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
 
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
@@ -9,10 +9,12 @@ jest.mock('../../hooks/useActiveRouteChecker', () => ({
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
 }));
+const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
 
 describe('AppRoot', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: null });
   });
 
   it('should render AppRoot with header and sidebar', () => {
