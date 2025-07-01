@@ -31,10 +31,11 @@ const ReleasePipelineRunTab: React.FC<React.PropsWithChildren> = () => {
           selector: {
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
+              [PipelineRunLabel.RELEASE_NAME]: releaseName,
             },
           },
         }),
-        [applicationName],
+        [applicationName, releaseName],
       ),
     );
 
