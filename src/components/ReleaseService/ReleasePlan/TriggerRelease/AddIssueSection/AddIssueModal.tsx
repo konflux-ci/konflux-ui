@@ -51,7 +51,7 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
   return (
     <>
       <Button variant="primary" onClick={handleModalToggle} data-test="modal-launch-btn">
-        {isBug ? 'Add a bug' : 'Add a CVE'}
+        {isBug ? 'Add Jira issue' : 'Add CVE'}
       </Button>
       <Modal
         variant={ModalVariant.medium}

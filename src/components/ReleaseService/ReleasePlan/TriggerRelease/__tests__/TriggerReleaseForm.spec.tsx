@@ -51,7 +51,7 @@ describe('TriggerReleaseForm', () => {
     const values = {};
     const props = { values } as FormikProps<TriggerReleaseFormValues>;
     const result = formikRenderer(TriggerRelease(props), values);
-    expect(result.getByRole('heading', { name: 'Trigger release plan' })).toBeVisible();
+    expect(result.getByRole('heading', { name: 'Trigger release' })).toBeVisible();
     expect(result.getByRole('button', { name: 'Trigger' })).toBeVisible();
   });
 
