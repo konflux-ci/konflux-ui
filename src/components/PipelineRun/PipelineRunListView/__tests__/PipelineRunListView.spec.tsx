@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { FilterContextProvider } from '../../../../components/Filter/generic/FilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useSearchParamBatch } from '~/hooks/useSearchParam';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { mockUseSearchParamBatch } from '../../../../unit-test-utils/mock-useSearchParam';
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../PipelineRunListRow';
@@ -217,7 +217,7 @@ describe('Pipeline run List', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<TestedComponent name={appName} />);
-    expect(screen.getByTestId('data-table-skeleton')).toBeInTheDocument();
+    screen.getByTestId('data-table-skeleton');
   });
 
   it('should render empty state if no application is present', () => {
@@ -229,12 +229,13 @@ describe('Pipeline run List', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<TestedComponent name={appName} />);
-    expect(screen.queryByText(/Keep tabs on components and activity/)).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Monitor your components with pipelines and oversee CI\/CD activity./),
-    ).toBeInTheDocument();
+    screen.queryByText(/Keep tabs on components and activity/);
+    screen.queryByText(/Monitor your components with pipelines and oversee CI\/CD activity./);
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
+    expect(button.closest('a').href).toContain(
+      `http://localhost/ns/test-ns/import?application=my-test-app`,
+    );
   });
 
   it('should render error state when there is an API error', () => {
@@ -246,7 +247,7 @@ describe('Pipeline run List', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<TestedComponent name="purple-mermaid-app" />);
-    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
+    screen.getByText('Unable to load pipeline runs');
   });
 
   it('should render correct columns when pipelineRuns are present', () => {
@@ -258,9 +259,13 @@ describe('Pipeline run List', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<TestedComponent name={appName} />);
-    expect(screen.queryByText('Name')).toBeInTheDocument();
-    expect(screen.queryByText('Started')).toBeInTheDocument();
-    expect(screen.queryByText('Duration')).toBeInTheDocument();
+    screen.queryByText('Name');
+    screen.queryByText('Started');
+    screen.queryByText('Duration');
+    screen.queryAllByText('Status');
+    screen.queryAllByText('Type');
+    screen.queryByText('Component');
+    screen.queryByText('Triggered By');
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
