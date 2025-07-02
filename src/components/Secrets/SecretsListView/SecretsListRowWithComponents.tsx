@@ -1,18 +1,19 @@
 import * as React from 'react';
-import { Button, Label, Popover, Spinner } from '@patternfly/react-core';
+import { Button, Popover, Spinner } from '@patternfly/react-core';
 import ErrorModal from '~/components/modal/ErrorModal';
 import { BackgroundStatusIconWithText } from '~/components/StatusIcon/BackgroundTaskStatusIcon';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { SecretKind } from '~/types';
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
-import { SecretKind } from '../../../types/secret';
 import { useSecretActions } from '../secret-actions';
 import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
 import { isLinkableSecret } from '../utils/service-account-utils';
+import { SecretLabels } from './SecretLabels';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
 
 import './SecretsListRow.scss';
@@ -26,10 +27,7 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
   const namespace = useNamespace();
 
   const { secretLabels } = getSecretRowLabels(obj);
-  const labels =
-    secretLabels !== '-'
-      ? secretLabels.split(', ').map((s) => <Label key={s}>{s}</Label>)
-      : secretLabels;
+  const labels = secretLabels !== '-' ? secretLabels.split(', ') : [secretLabels];
 
   const task = useTaskStore((state) => state.tasks[obj.metadata.name]);
   const taskError = task?.error ?? obj.metadata?.annotations?.[LINKING_ERROR_ANNOTATION];
@@ -52,11 +50,16 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
 
   return (
     <>
-      <TableData className={secretsTableColumnClasses.secretType}>
+      <TableData className={`${secretsTableColumnClasses.secretType} vertical-cell-align`}>
         {getSecretTypetoLabel(obj) ?? '-'}
       </TableData>
-      <TableData className={secretsTableColumnClasses.name}>{obj.metadata?.name}</TableData>
-      <TableData className={secretsTableColumnClasses.components} data-test="components-content">
+      <TableData className={`${secretsTableColumnClasses.name} vertical-cell-align`}>
+        {obj.metadata?.name}
+      </TableData>
+      <TableData
+        className={`${secretsTableColumnClasses.components} vertical-cell-align`}
+        data-test="components-content"
+      >
         {isLoading ? (
           <Spinner size="lg" />
         ) : error ? (
@@ -74,8 +77,13 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           <span>{linkedServiceAccounts.length}</span>
         )}
       </TableData>
-      <TableData className={secretsTableColumnClasses.labels}>{labels}</TableData>
-      <TableData className={secretsTableColumnClasses.status} data-test="components-status">
+      <TableData className={`${secretsTableColumnClasses.labels} vertical-cell-align`}>
+        <SecretLabels labels={labels} />
+      </TableData>
+      <TableData
+        className={`${secretsTableColumnClasses.status} vertical-cell-align`}
+        data-test="components-status"
+      >
         <BackgroundStatusIconWithText status={taskStatus as BackgroundJobStatus} />
         {taskStatus === BackgroundJobStatus.Failed && taskError && (
           <>
@@ -91,7 +99,7 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
           </>
         )}
       </TableData>
-      <TableData className={secretsTableColumnClasses.kebab}>
+      <TableData className={`${secretsTableColumnClasses.kebab} vertical-cell-align`}>
         <ActionMenu actions={actions} />
       </TableData>
     </>
