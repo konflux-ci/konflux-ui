@@ -12,6 +12,8 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
@@ -33,7 +35,28 @@ import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [release] = useRelease(namespace, releaseName);
+  const [release, loaded, isError] = useRelease(namespace, releaseName);
+  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
+  const status = useReleaseStatus(release);
+
+  if (!loaded || !releasePlanLoaded) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
+  if (isError) {
+    const httpError = HttpError.fromCode((isError as { code: number }).code);
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title={`Unable to load release ${releaseName}`}
+        body={(isError as { message: string }).message}
+      />
+    );
+  }
+
   const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
     getManagedPipelineRunFromRelease(release),
   );
@@ -46,20 +69,11 @@ const ReleaseOverviewTab: React.FC = () => {
   const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
     getFinalPipelineRunFromRelease(release),
   );
-  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release.spec.releasePlan);
+
   const duration = calculateDuration(
     typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
     typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
   );
-  const status = useReleaseStatus(release);
-
-  if (!releasePlanLoaded) {
-    return (
-      <Bullseye>
-        <Spinner size="lg" />
-      </Bullseye>
-    );
-  }
 
   return (
     <>
