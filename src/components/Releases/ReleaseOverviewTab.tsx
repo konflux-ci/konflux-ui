@@ -34,22 +34,22 @@ const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release] = useRelease(namespace, releaseName);
-  const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
-    getManagedPipelineRunFromRelease(release),
-  );
-  const [tenantPrNamespace, tenantPipelineRun] = getNamespaceAndPRName(
-    getTenantPipelineRunFromRelease(release),
-  );
-  const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = getNamespaceAndPRName(
-    getTenantCollectorPipelineRunFromRelease(release),
-  );
-  const [finalPrNamespace, finalPipelineRun] = getNamespaceAndPRName(
-    getFinalPipelineRunFromRelease(release),
-  );
-  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release.spec.releasePlan);
+  const [managedPrNamespace, managedPipelineRun] = release
+    ? getNamespaceAndPRName(getManagedPipelineRunFromRelease(release))
+    : [];
+  const [tenantPrNamespace, tenantPipelineRun] = release
+    ? getNamespaceAndPRName(getTenantPipelineRunFromRelease(release))
+    : [];
+  const [tenantCollectorPrNamespace, tenantCollectorPipelineRun] = release
+    ? getNamespaceAndPRName(getTenantCollectorPipelineRunFromRelease(release))
+    : [];
+  const [finalPrNamespace, finalPipelineRun] = release
+    ? getNamespaceAndPRName(getFinalPipelineRunFromRelease(release))
+    : [];
+  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
   const duration = calculateDuration(
-    typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
-    typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
+    typeof release?.status?.startTime === 'string' ? release?.status?.startTime : '',
+    typeof release?.status?.completionTime === 'string' ? release?.status?.completionTime : '',
   );
   const status = useReleaseStatus(release);
 
@@ -77,19 +77,19 @@ const ReleaseOverviewTab: React.FC = () => {
             <DescriptionListGroup>
               <DescriptionListTerm>Labels</DescriptionListTerm>
               <DescriptionListDescription>
-                <MetadataList metadata={release.metadata?.labels} />
+                <MetadataList metadata={release?.metadata?.labels} />
               </DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
               <DescriptionListTerm>Annotations</DescriptionListTerm>
               <DescriptionListDescription>
-                <MetadataList metadata={release.metadata?.annotations} />
+                <MetadataList metadata={release?.metadata?.annotations} />
               </DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
               <DescriptionListTerm>Created at</DescriptionListTerm>
               <DescriptionListDescription>
-                <Timestamp timestamp={release.metadata.creationTimestamp ?? '-'} />
+                <Timestamp timestamp={release?.metadata.creationTimestamp ?? '-'} />
               </DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
@@ -99,7 +99,7 @@ const ReleaseOverviewTab: React.FC = () => {
             <DescriptionListGroup>
               <DescriptionListTerm>Release Process</DescriptionListTerm>
               <DescriptionListDescription>
-                {release.status?.automated ? 'Automatic' : 'Manual'}
+                {release?.status?.automated ? 'Automatic' : 'Manual'}
               </DescriptionListDescription>
             </DescriptionListGroup>
           </DescriptionList>
@@ -123,9 +123,9 @@ const ReleaseOverviewTab: React.FC = () => {
               </DescriptionListGroup>
               <DescriptionListGroup>
                 <DescriptionListTerm>Release Plan</DescriptionListTerm>
-                <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
+                <DescriptionListDescription>{release?.spec.releasePlan}</DescriptionListDescription>
               </DescriptionListGroup>
-              {release.spec.snapshot && releasePlanLoaded && (
+              {release?.spec.snapshot && releasePlanLoaded && (
                 <DescriptionListGroup>
                   <DescriptionListTerm>Snapshot</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -133,11 +133,11 @@ const ReleaseOverviewTab: React.FC = () => {
                       to={SNAPSHOT_DETAILS_PATH.createPath({
                         workspaceName: namespace,
                         applicationName: releasePlan.spec.application,
-                        snapshotName: release.spec.snapshot,
+                        snapshotName: release?.spec.snapshot,
                       })}
                       state={{ type: 'snapshot' }}
                     >
-                      {release.spec.snapshot}
+                      {release?.spec.snapshot}
                     </Link>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
@@ -145,7 +145,7 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Release Target</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <>{release.status?.target ?? '-'}</>
+                  <>{release?.status?.target ?? '-'}</>
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>

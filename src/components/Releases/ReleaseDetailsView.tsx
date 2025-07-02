@@ -42,7 +42,7 @@ const ReleaseDetailsView: React.FC = () => {
 
   return (
     <DetailsPage
-      headTitle={release.metadata.name}
+      headTitle={release?.metadata?.name}
       breadcrumbs={[
         ...applicationBreadcrumbs,
         {
@@ -58,12 +58,12 @@ const ReleaseDetailsView: React.FC = () => {
             applicationName,
             releaseName,
           }),
-          name: release.metadata.name,
+          name: release?.metadata?.name,
         },
       ]}
       title={
         <Text component={TextVariants.h2}>
-          <b data-test="release-name">{release.metadata.name}</b>
+          <b data-test="release-name">{release?.metadata?.name}</b>
         </Text>
       }
       baseURL={APPLICATION_RELEASE_DETAILS_PATH.createPath({
