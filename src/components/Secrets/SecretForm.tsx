@@ -15,6 +15,7 @@ import {
   CurrentComponentRef,
 } from '../../types';
 import { RawComponentProps } from '../modal/createModalLauncher';
+import { ImagePullSecretForm } from './SecretsForm/ImagePullSecretForm';
 import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
 import { SourceSecretForm } from './SecretsForm/SourceSecretForm';
 import SecretTypeSelector from './SecretTypeSelector';
@@ -157,12 +158,11 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
-      {currentType !== SecretTypeDropdownLabel.source && (
+      {currentType === SecretTypeDropdownLabel.image && <ImagePullSecretForm />}
+      {currentType === SecretTypeDropdownLabel.opaque && (
         <KeyValueFileInputField
           required
-          name={
-            currentType === SecretTypeDropdownLabel.opaque ? 'opaque.keyValues' : 'image.keyValues'
-          }
+          name={'opaque.keyValues'}
           entries={defaultKeyValues}
           disableRemoveAction={values.opaque.keyValues.length === 1}
         />

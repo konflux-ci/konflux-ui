@@ -56,7 +56,7 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
             )
               ? { keyValuePairs }
               : null,
-            image: secret.type === SecretTypeDropdownLabel.image ? { keyValuePairs } : null,
+            image: secret.type === SecretTypeDropdownLabel.image ? { authType: '' } : null,
           };
         })
       : [];
