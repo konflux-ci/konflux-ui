@@ -5,7 +5,10 @@ import {
   PageSection,
   PageSectionVariants,
   Spinner,
+  Tooltip,
 } from '@patternfly/react-core';
+import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/question-circle-icon';
+import { useInstanceVisibility } from '~/hooks/useUIInstance';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -18,14 +21,21 @@ import PageLayout from '../PageLayout/PageLayout';
 import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
 
-const NamespaceCreateButton = () => (
-  <ExternalLink
-    variant="primary"
-    href="https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html"
-  >
-    Go to create namespace instructions
-  </ExternalLink>
-);
+const NamespaceCreateButton = () =>
+  useInstanceVisibility() === 'private' ? (
+    <ExternalLink
+      variant="primary"
+      href={'https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html'}
+    >
+      Go to create namespace instructions
+    </ExternalLink>
+  ) : (
+    <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
+      <div className="pf-v5-u-mt-xs" data-testid="namespace-create-tooltip">
+        <QuestionCircleIcon />
+      </div>
+    </Tooltip>
+  );
 
 const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
