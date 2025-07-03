@@ -1,0 +1,34 @@
+language: typescript
+
+severity:
+  function-too-long: warning
+  cyclomatic-complexity-high: warning
+  inconsistent-naming: warning
+  unclear-variable-names: warning
+  missing-jsdoc: warning
+  deeply-nested-code: warning
+  redundant-condition: warning
+
+ignore:
+  - path: "node_modules/**"
+  - path: "build/**"
+  - path: "dist/**"
+  - path: "**/*.test.tsx"
+  - path: "**/__mocks__/**"
+  - path: "**/*.stories.tsx"
+
+rules:
+  no-deeply-nested-code: true
+  limit-function-length:
+    max-lines: 80
+    severity: warning
+  enforce-consistent-naming: true
+  check-jsdoc-comments: true
+  check-unused-code: false  # Already handled by ESLint
+  check-import-sorting: false  # Already handled by ESLint
+  enforce-react-hooks-conventions: false  # ESLint has this covered
+  enforce-patternfly-usage: false  # Style preference; up to human
+
+style:
+  allow-console-log: false  # Already in ESLint
+  max-line-length: 120

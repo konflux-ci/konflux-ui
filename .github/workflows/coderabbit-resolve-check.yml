@@ -1,0 +1,40 @@
+name: Check unresolved CodeRabbit threads
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  coderabbit-review-blocker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for unresolved CodeRabbit threads
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+
+            const { data: comments } = await github.rest.pulls.listReviewComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              per_page: 100,
+            });
+
+            const unresolved = comments.filter(comment =>
+              comment.user.login === 'coderabbit-ai[bot]' &&
+              !comment.resolved
+            );
+
+            if (unresolved.length > 0) {
+              core.setFailed(`❌ You have ${unresolved.length} unresolved CodeRabbit comment(s). Please resolve them before merging.`);
+            } else {
+              console.log("✅ All CodeRabbit comments resolved.");
+            }
