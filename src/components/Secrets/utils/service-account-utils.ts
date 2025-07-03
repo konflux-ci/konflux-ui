@@ -79,6 +79,15 @@ export const linkSecretToBuildServiceAccount = async (
   return;
 };
 
+export const isLinkableSecret = (secret: SecretKind): boolean => {
+  if (!secret) {
+    return false;
+  }
+
+  const linkableValues = Object.values(LinkableSecretType) as string[];
+  return linkableValues.includes(secret.type);
+};
+
 export const linkSecretsToBuildServiceAccount = async (
   secrets: SecretKind[],
   component: ComponentKind,
@@ -92,44 +101,11 @@ export const linkSecretsToBuildServiceAccount = async (
     return;
   }
 
-  const secretListString = secrets.map((item: SecretKind) => {
-    return { name: item?.metadata?.name };
-  });
-  const serviceAccountName = `${PIPELINE_SERVICE_ACCOUNT_PREFIX}${component.metadata.name}`;
-  const namespace = component.metadata.namespace;
-
-  const serviceAccount = await K8sGetResource<ServiceAccountKind>({
-    model: ServiceAccountModel,
-    queryOptions: { name: serviceAccountName, ns: namespace },
-  });
-
-  const existingIPSecrets = serviceAccount?.imagePullSecrets as SecretKind[];
-  const imagePullSecretList = existingIPSecrets
-    ? [...existingIPSecrets, ...secretListString]
-    : secretListString;
-
-  const existingSecrets = serviceAccount?.secrets as SecretKind[];
-  const secretList = existingSecrets ? [...existingSecrets, ...secretListString] : secretListString;
-
-  return K8sQueryPatchResource({
-    model: ServiceAccountModel,
-    queryOptions: {
-      name: serviceAccountName,
-      ns: namespace,
-    },
-    patches: [
-      {
-        op: 'replace',
-        path: `/imagePullSecrets`,
-        value: imagePullSecretList,
-      },
-      {
-        op: 'replace',
-        path: `/secrets`,
-        value: secretList,
-      },
-    ],
-  });
+  for (const secret of secrets) {
+    if (isLinkableSecret(secret)) {
+      await linkSecretToBuildServiceAccount(secret, component);
+    }
+  }
 };
 
 export const unLinkSecretFromBuildServiceAccount = async (
@@ -313,15 +289,6 @@ export const linkCommonSecretsToServiceAccount = async (component: ComponentKind
   });
 
   await processWithPLimit(commonSecrets, 10, linkSecretToBuildServiceAccount, component);
-};
-
-export const isLinkableSecret = (secret: SecretKind): boolean => {
-  if (!secret) {
-    return false;
-  }
-
-  const linkableValues = Object.values(LinkableSecretType) as string[];
-  return linkableValues.includes(secret.type);
 };
 
 export const addCommonSecretLabelToBuildSecret = async (secret: SecretKind) => {

@@ -8,6 +8,7 @@ import {
   SourceSecretType,
   BuildTimeSecret,
   CurrentComponentRef,
+  ImagePullSecretType,
 } from '../../types';
 import { SecretFromSchema } from '../../utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
@@ -48,7 +49,16 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
       keyValues: defaultKeyValues,
     },
     image: {
-      keyValues: defaultKeyValues,
+      authType: ImagePullSecretType.ImageRegistryCreds,
+      registryCreds: [
+        {
+          registry: '',
+          username: '',
+          password: '',
+          email: '',
+        },
+      ],
+      dockerconfig: '',
     },
     source: {
       authType: SourceSecretType.basic,
