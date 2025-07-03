@@ -1,5 +1,5 @@
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../types';
-import { SecretFromSchema } from '../validation-utils';
+import { bannerConfigYupSchema, SecretFromSchema } from '../validation-utils';
 
 describe('validation-utils', () => {
   it('should return error for incorrect secret name', async () => {
@@ -128,5 +128,86 @@ describe('validation-utils', () => {
         existingSecrets: [],
       }),
     ).not.toThrow();
+  });
+
+  describe('bannerConfigYupSchema', () => {
+    it('should validate correct banner config', async () => {
+      const validData = {
+        enable: true,
+        summary: 'This is a valid summary.',
+        type: 'info',
+        startTime: '2024-06-01T12:00:00Z',
+        endTime: '2024-06-02T12:00:00Z',
+      };
+      await expect(bannerConfigYupSchema.validate(validData)).resolves.toBeTruthy();
+    });
+
+    it('should fail if enable is missing', async () => {
+      const data = {
+        summary: 'Valid summary',
+        type: 'info',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).rejects.toThrow();
+    });
+
+    it('should fail if summary is too short', async () => {
+      const data = {
+        enable: true,
+        summary: '1234',
+        type: 'info',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).rejects.toThrow(
+        'Must be at least 5 characters',
+      );
+    });
+
+    it('should fail if summary is too long', async () => {
+      const data = {
+        enable: true,
+        summary: 'a'.repeat(201),
+        type: 'info',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).rejects.toThrow(
+        'Must be at most 200 characters',
+      );
+    });
+
+    it('should fail if type is invalid', async () => {
+      const data = {
+        enable: true,
+        summary: 'Valid summary',
+        type: 'invalid',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).rejects.toThrow();
+    });
+
+    it('should fail if startTime is invalid date', async () => {
+      const data = {
+        enable: true,
+        summary: 'Valid summary',
+        type: 'info',
+        startTime: 'not-a-date',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).rejects.toThrow('Invalid startTime');
+    });
+
+    it('should fail if endTime is invalid date', async () => {
+      const data = {
+        enable: true,
+        summary: 'Valid summary',
+        type: 'info',
+        endTime: 'not-a-date',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).rejects.toThrow('Invalid endTime');
+    });
+
+    it('should allow missing startTime and endTime', async () => {
+      const data = {
+        enable: true,
+        summary: 'Valid summary',
+        type: 'warning',
+      };
+      await expect(bannerConfigYupSchema.validate(data)).resolves.toBeTruthy();
+    });
   });
 });

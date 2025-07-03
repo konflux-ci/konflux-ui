@@ -588,3 +588,46 @@ export const mockedSecrets: SecretKind[] = [
     },
   },
 ];
+
+export const mockedValidBannerConfig = {
+  apiVersion: 'v1',
+  kind: 'ConfigMap',
+  metadata: {
+    name: 'konflux-banner-configmap',
+    namespace: 'konflux-info',
+  },
+  data: {
+    'banner-content.yaml':
+      'enable: true\nsummary: This is a test banner\ntype: info\nstartTime: "2023-01-01T00:00:00Z"\nendTime: "2125-12-31T23:59:59Z"',
+  },
+};
+
+export const mockedValidBannerConfigWithNoTimeRange = {
+  ...mockedValidBannerConfig,
+  data: {
+    'banner-content.yaml': 'enable: true\nsummary: This is a test banner\ntype: info',
+  },
+};
+
+export const mockedInvalidBannerConfig = {
+  ...mockedValidBannerConfig,
+  data: {
+    'banner-content.yaml': 'invalid yaml content',
+  },
+};
+
+export const mockedObsoletedBannerConfig = {
+  ...mockedValidBannerConfig,
+  data: {
+    'banner-content.yaml':
+      'enable: true\nsummary: This banner is no longer valid\ntype: info\nstartTime: "2020-01-01T00:00:00Z"\nendTime: "2020-12-31T23:59:59Z"',
+  },
+};
+
+export const mockedDisabledBannerConfig = {
+  ...mockedValidBannerConfig,
+  data: {
+    'banner-content.yaml':
+      'enable: false\nsummary: This banner is no longer valid\ntype: info\nstartTime: "2020-01-01T00:00:00Z"\nendTime: "2020-12-31T23:59:59Z"',
+  },
+};
