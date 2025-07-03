@@ -14,6 +14,7 @@ type ComponentRelationProps = {
   sortedGroupedComponents: { [application: string]: string[] };
   index?: number;
   removeProps: {
+    disableRemove: boolean;
     onRemove: () => void;
   };
 };
@@ -22,7 +23,7 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
   index,
   componentNames,
   sortedGroupedComponents,
-  removeProps: { onRemove },
+  removeProps: { disableRemove, onRemove },
 }) => {
   const sourceName = `relations.${index.toString()}.source`;
   const nudgeName = `relations.${index.toString()}.nudgeType`;
@@ -93,7 +94,12 @@ export const ComponentRelation: React.FC<ComponentRelationProps> = ({
         />
       </GridItem>
       <GridItem span={1}>
-        <Button id={`remove-relation-${index}`} variant="plain" onClick={onRemove}>
+        <Button
+          id={`remove-relation-${index}`}
+          variant="plain"
+          onClick={onRemove}
+          isDisabled={disableRemove}
+        >
           <MinusCircleIcon />
         </Button>
       </GridItem>
