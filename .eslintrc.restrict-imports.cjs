@@ -6,12 +6,12 @@ module.exports = {
       {
         zones: [
           // Zone 1: Files in `./src/utils` may only import from:
-          // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, and `./src/consts`.
+          // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts` and `./src/kubearchive`.
           {
             target: './src/utils/**/*',
-            from: ['./src/!(utils|types|k8s|models|consts)/**/*'],
+            from: ['./src/!(utils|types|k8s|models|consts|kubearchive)/**/*'],
             message:
-              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, or `./src/consts`.',
+              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts` or `./src/kubearchive`',
           },
           // Zone 2: Files in `./src/types` may only import from `./src/types`.
           {
@@ -38,6 +38,19 @@ module.exports = {
             target: './src/shared/**/*',
             from: ['./src/!(shared|k8s)/**/*'],
             message: 'Files in `./src/shared` may only import from `./src/shared` or `./src/k8s`.',
+          },
+          // Zone 6: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`'.
+          {
+            target: './src/feature-flags/**/*',
+            from: ['./src/!(feature-flags|components/modal)/**/*'],
+            message: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`.',
+          },
+          // Zone 7: Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.
+          {
+            target: './src/kubearchive/**/*',
+            from: ['./src/!(kubearchive|k8s|types/k8s)/**/*'],
+            message:
+              'Files in `./src/kubearchive` may only import from `./src/kubearchive`, `./src/k8s` or `./src/types/k8s`.',
           },
         ],
       },
