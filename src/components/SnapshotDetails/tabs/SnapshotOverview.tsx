@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation } from 'react-router-dom';
 import {
   DescriptionList,
   DescriptionListDescription,
@@ -27,6 +27,7 @@ import { SnapshotComponentTableData } from './SnapshotComponentsListRow';
 
 const SnapshotOverviewTab: React.FC = () => {
   const { snapshotName } = useParams<RouterParams>();
+  const location = useLocation();
   const namespace = useNamespace();
   const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
 
@@ -57,6 +58,20 @@ const SnapshotOverviewTab: React.FC = () => {
       }) || [],
     [snapshot?.spec],
   );
+
+  // Handle scrolling to hash fragment after data is loaded
+  React.useEffect(() => {
+    if (loaded && !loadErr && location.hash) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(location.hash.substring(1));
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100); // Small delay to ensure DOM is fully rendered
+
+      return () => clearTimeout(timer);
+    }
+  }, [loaded, loadErr, location.hash]);
 
   return (
     <>
@@ -122,7 +137,7 @@ const SnapshotOverviewTab: React.FC = () => {
           </FlexItem>
         </Flex>
       </Flex>
-      <div className="pf-vf-u-mt-lg">
+      <div id="snapshot-components" className="pf-vf-u-mt-lg">
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList
             components={componentsTableData}
