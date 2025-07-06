@@ -106,6 +106,13 @@ describe('Secrets List With Components and Status', () => {
     expect(screen.queryByTestId('secrets-empty-state')).toBeInTheDocument();
   });
 
+  it('should render the error state if there is an error loading the secrets', () => {
+    useSecretsMock.mockReturnValue([[], true, Error()]);
+    render(SecretsList);
+    expect(screen.getByText('Unable to load secrets')).toBeInTheDocument();
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+  });
+
   it('should render all the remote secrets in the namespace', () => {
     render(SecretsList);
 
