@@ -18,13 +18,19 @@ import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
 
 import './SecretsListRow.scss';
 
-type SecretsListRowProps = RowFunctionArgs<SecretKind>;
+type SecretsListRowProps = RowFunctionArgs<
+  SecretKind,
+  { expandedIds: Set<number>; handleToggle: (id: number) => void }
+>;
 
 const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsListRowProps>> = ({
   obj,
+  customData,
+  index,
 }) => {
   const actions = useSecretActions(obj);
   const namespace = useNamespace();
+  const { expandedIds, handleToggle } = customData;
 
   const { secretLabels } = getSecretRowLabels(obj);
   const labels = secretLabels !== '-' ? secretLabels.split(', ') : [secretLabels];
@@ -78,7 +84,12 @@ const SecretsListRowWithComponents: React.FC<React.PropsWithChildren<SecretsList
         )}
       </TableData>
       <TableData className={`${secretsTableColumnClasses.labels} vertical-cell-align`}>
-        <SecretLabels labels={labels} />
+        <SecretLabels
+          labels={labels}
+          index={index}
+          expanded={expandedIds.has(index)}
+          handleToggle={handleToggle}
+        />
       </TableData>
       <TableData
         className={`${secretsTableColumnClasses.status} vertical-cell-align`}

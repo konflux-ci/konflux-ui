@@ -9,6 +9,19 @@ type SecretsListProps = {
 };
 
 const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secrets }) => {
+  const [expandedIds, setExpandedIds] = React.useState<Set<number>>(new Set());
+
+  const handleToggle = (id: number) => {
+    const newExpandedIds = new Set(expandedIds);
+    if (newExpandedIds.has(id)) {
+      newExpandedIds.delete(id);
+    } else {
+      newExpandedIds.add(id);
+    }
+
+    setExpandedIds(newExpandedIds);
+  };
+
   return (
     <Table
       data={secrets}
@@ -19,6 +32,7 @@ const SecretsList: React.FC<React.PropsWithChildren<SecretsListProps>> = ({ secr
       getRowProps={(obj: SecretKind) => ({
         id: obj.metadata.name,
       })}
+      customData={{ expandedIds, handleToggle }}
     />
   );
 };

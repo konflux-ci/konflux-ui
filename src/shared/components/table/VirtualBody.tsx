@@ -59,7 +59,7 @@ const RowMemo = React.memo<
       </>
     );
   }
-  return <Row {...props} />;
+  return <Row {...props} index={index} />;
 });
 
 export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = (props) => {
