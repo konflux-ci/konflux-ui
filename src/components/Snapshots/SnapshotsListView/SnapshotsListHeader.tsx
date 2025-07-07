@@ -1,9 +1,10 @@
 export const snapshotsTableColumnClasses = {
   name: 'pf-m-width-25',
-  createdAt: 'pf-m-width-25',
+  createdAt: 'pf-m-width-20',
   components: 'pf-m-width-15',
   triggerCommit: 'pf-m-width-20',
   status: 'pf-m-width-15',
+  kebab: 'pf-c-table__action',
 };
 
 const SnapshotsListHeader = () => {
@@ -27,6 +28,10 @@ const SnapshotsListHeader = () => {
     {
       title: 'Status',
       props: { className: snapshotsTableColumnClasses.status },
+    },
+    {
+      title: '',
+      props: { className: snapshotsTableColumnClasses.kebab },
     },
   ];
 };
