@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { pluralize } from '@patternfly/react-core';
+import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
+import { NotStartedIcon } from '@patternfly/react-icons/dist/esm/icons/not-started-icon';
 import { SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
+import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
@@ -9,6 +12,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { CommitIcon } from '../../Commits/CommitIcon';
+import { useSnapshotActions } from './snapshot-actions';
 import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
 
 import '../../Commits/CommitsListPage/CommitsListRow.scss';
@@ -21,6 +25,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
 }) => {
   const namespace = useNamespace();
   const { applicationName } = customData || {};
+  const actions = useSnapshotActions(snapshot);
 
   const componentCount = snapshot.spec.components?.length || 0;
 
@@ -116,7 +121,20 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
         data-test="snapshot-list-row-status"
         className={snapshotsTableColumnClasses.status}
       >
-        {/* TODO: Add status information */}-
+        {snapshot.status?.conditions?.some(
+          (condition) => condition.type === 'AutoReleased' && condition.status === 'True',
+        ) ? (
+          <>
+            <CheckCircleIcon color="green" /> Released
+          </>
+        ) : (
+          <>
+            <NotStartedIcon /> Not released
+          </>
+        )}
+      </TableData>
+      <TableData data-test="snapshot-list-row-kebab" className={snapshotsTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} />
       </TableData>
     </>
   );
