@@ -15,71 +15,52 @@ export const getIssues = (issues): { id: string; source: string }[] => {
   });
 };
 
-// Create release notes object, filtering out empty values and ensuring required fields are present
+// Create release notes object, filtering out empty values
 export const createReleaseNotes = (values: {
   issues?: object[];
   cves?: CVE[];
   references?: string[];
-  synopsis: string;
-  topic: string;
+  synopsis?: string;
+  topic?: string;
   description?: string;
   solution?: string;
 }) => {
   const { issues, cves, references, synopsis, topic, description, solution } = values;
 
-  // Check if we have any required fields with values
-  const hasRequiredFields =
-    (synopsis && synopsis.trim()) ||
-    (description && description.trim()) ||
-    (issues && issues.length > 0) ||
-    (cves && cves.length > 0);
-
-  // If no required fields, return undefined
-  if (!hasRequiredFields) {
-    return undefined;
-  }
-
-  const releaseNotes: {
-    topic?: string;
-    description?: string;
-    synopsis?: string;
-    fixed?: { id: string; source: string }[];
-    cves?: CVE[];
-    solution?: string;
-    references?: string[];
-  } = {};
+  const releaseNotes: NonNullable<ReleaseSpec['data']>['releaseNotes'] = {};
 
   // Only add fields if they have values
-  if (synopsis && synopsis.trim()) {
+  if (synopsis?.trim()) {
     releaseNotes.synopsis = synopsis;
   }
-  if (description && description.trim()) {
+  if (description?.trim()) {
     releaseNotes.description = description;
   }
-  if (topic && topic.trim()) {
+  if (topic?.trim()) {
     releaseNotes.topic = topic;
   }
-  if (solution && solution.trim()) {
+  if (solution?.trim()) {
     releaseNotes.solution = solution;
   }
-  if (references && references.length > 0) {
+  if (references?.length > 0) {
     releaseNotes.references = references;
   }
-  if (issues && issues.length > 0) {
+  if (issues?.length > 0) {
     releaseNotes.fixed = getIssues(issues);
   }
-  if (cves && cves.length > 0) {
+  if (cves?.length > 0) {
     releaseNotes.cves = cves;
   }
 
-  return releaseNotes;
+  // Return undefined if no fields were added
+  return Object.keys(releaseNotes).length > 0 ? releaseNotes : undefined;
 };
 
 export type TriggerReleaseFormValues = {
   releasePlan: string;
   snapshot: string;
-  synopsis: string;
-  topic: string;
+  synopsis?: string;
+  topic?: string;
   description?: string;
   solution?: string;
   references?: string[];
