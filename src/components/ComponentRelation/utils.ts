@@ -23,9 +23,8 @@ export const componentRelationValidationSchema = yup.mixed().test(
               .object()
               .shape({
                 source: yup.string().required(),
-
                 nudgeType: yup.string().required(),
-                target: yup.array().of(yup.string()).required().min(0),
+                target: yup.array().of(yup.string()).required().min(1),
               })
               .test('duplicate-relation-test', DUPLICATE_RELATONSHIP, (value) => {
                 const filteredValue = values.relations.filter(

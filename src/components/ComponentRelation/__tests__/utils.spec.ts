@@ -71,7 +71,7 @@ describe('componentRelationValidationSchema', () => {
   it('should validate yup schema', async () => {
     const values = {
       relations: [
-        { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] },
+        { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['a'] },
         { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGED_BY, target: ['b', 'c'] },
       ],
     };
