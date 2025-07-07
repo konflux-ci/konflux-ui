@@ -1,3 +1,4 @@
+import { TaskRunLabel } from '../../../../../../consts/pipelinerun';
 import { TaskRunKind, PipelineRunKind, PipelineKind } from '../../../../../../types';
 import { runStatus } from '../../../../../../utils/pipeline-utils';
 import { appendStatus } from '../pipelinerun-graph-utils';
@@ -57,7 +58,7 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
       namespace: 'test-ns',
       labels: {
         [TektonResourceLabel.pipelineTask]: taskName,
-        ...(platform && { 'build.appstudio.redhat.com/target-platform': platform }),
+        ...(platform && { [TaskRunLabel.TARGET_PLATFORM]: platform }),
       },
     },
     spec: { taskRef: { name: taskName } },

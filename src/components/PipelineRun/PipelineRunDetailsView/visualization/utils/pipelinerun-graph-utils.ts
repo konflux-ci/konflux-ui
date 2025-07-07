@@ -10,6 +10,7 @@ import {
   WhenStatus,
 } from '@patternfly/react-topology';
 import { PipelineNodeModel } from '@patternfly/react-topology/src/pipelines/types';
+import { TaskRunLabel } from '../../../../../consts/pipelinerun';
 import { isCVEScanResult } from '../../../../../hooks/useScanResults';
 import { formatPrometheusDuration } from '../../../../../shared/components/timestamp/datetime';
 import {
@@ -295,13 +296,13 @@ export const appendStatus = (
 
     // Check if this is a matrix task (multiple TaskRuns with platform labels)
     const platformTaskRuns = taskRunsForTask.filter(
-      (tr) => tr.metadata.labels?.['build.appstudio.redhat.com/target-platform'],
+      (tr) => tr.metadata.labels?.[TaskRunLabel.TARGET_PLATFORM],
     );
 
     if (platformTaskRuns.length > 1) {
       // Matrix task detected - create one entry per platform
       platformTaskRuns.forEach((taskRun) => {
-        const platform = taskRun.metadata.labels['build.appstudio.redhat.com/target-platform'];
+        const platform = taskRun.metadata.labels[TaskRunLabel.TARGET_PLATFORM];
         const platformDisplay = platform?.replace(/-/g, '/') || 'unknown';
 
         const matrixTask = createMatrixTaskEntry(task, taskRun, platformDisplay);
@@ -405,7 +406,6 @@ const hasParentDep = (
       ) {
         return true;
       }
-      continue;
     }
     if (depNode.runAfterTasks?.includes(dep) || hasParentDep(dep, depNode.runAfterTasks, nodes)) {
       return true;
@@ -488,7 +488,7 @@ const getGraphDataModel = (
           return taskRuns.find(
             (tr) =>
               tr.metadata.labels[TektonResourceLabel.pipelineTask] === matrixTask.originalName &&
-              tr.metadata.labels['build.appstudio.redhat.com/target-platform'] === platformLabel,
+              tr.metadata.labels[TaskRunLabel.TARGET_PLATFORM] === platformLabel,
           );
         }
         // Regular task - find by task name

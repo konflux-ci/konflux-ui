@@ -53,3 +53,7 @@ export enum PipelineRunEventType {
   INCOMING = 'incoming',
   RETEST = 'retest-all-comment',
 }
+
+export enum TaskRunLabel {
+  TARGET_PLATFORM = 'build.appstudio.redhat.com/target-platform',
+}
