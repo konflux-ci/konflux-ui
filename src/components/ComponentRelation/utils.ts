@@ -22,6 +22,7 @@ export const componentRelationValidationSchema = yup.mixed().test(
             yup
               .object()
               .shape({
+                source: yup.string(),
 
                 nudgeType: yup.string().required(),
                 target: yup.array().of(yup.string()).required().min(0),
