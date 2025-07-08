@@ -6,13 +6,18 @@ import { K8sResourceCommon } from '~/types/k8s';
 import { kubearchiveQueryGetResource } from './fetch-utils';
 
 /**
- * Utility function to fetch a single K8s resource with fallback logic.
- * First tries to fetch from the cluster, if it returns 404, falls back to kubearchive.
+ * Fetches a single Kubernetes resource with intelligent fallback from cluster to archive.
  *
- * @param resourceInit - K8s resource read options
- * @param options - Optional query options
- * @returns Promise<TResource> - The fetched resource
- * @throws Error if resource is not found in both cluster and kubearchive or other errors occur
+ * This utility implements a two-tier fallback strategy for resource fetching:
+ * 1. First attempts to fetch from the live cluster using k8sQueryGetResource
+ * 2. If cluster returns 404 (Not Found), falls back to KubeArchive
+ * 3. If both sources fail, throws the original cluster error
+ *
+ * @template TResource - The type of Kubernetes resource to fetch
+ * @param {K8sResourceReadOptions} resourceInit - Resource identification and query parameters
+ * @param {TQueryOptions<TResource>} [options] - Optional React Query configuration
+ * @returns {Promise<TResource>} Promise resolving to the fetched resource from cluster or archive
+ * @throws {Error} Original cluster error if resource not found in both sources, or any non-404 cluster error
  */
 export async function fetchResourceWithK8sAndKubeArchive<TResource extends K8sResourceCommon>(
   resourceInit: K8sResourceReadOptions,
