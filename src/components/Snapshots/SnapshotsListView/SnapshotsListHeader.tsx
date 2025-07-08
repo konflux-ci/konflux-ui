@@ -1,9 +1,10 @@
 export const snapshotsTableColumnClasses = {
   name: 'pf-m-width-25',
-  createdAt: 'pf-m-width-20',
+  createdAt: 'pf-m-width-15',
   components: 'pf-m-width-15',
-  triggerCommit: 'pf-m-width-20',
-  status: 'pf-m-width-15',
+  trigger: 'pf-m-width-10',
+  commit: 'pf-m-width-20',
+  status: 'pf-m-width-10',
   kebab: 'pf-c-table__action',
 };
 
@@ -22,8 +23,12 @@ const SnapshotsListHeader = () => {
       props: { className: snapshotsTableColumnClasses.components },
     },
     {
-      title: 'Trigger commit',
-      props: { className: snapshotsTableColumnClasses.triggerCommit },
+      title: 'Trigger',
+      props: { className: snapshotsTableColumnClasses.trigger },
+    },
+    {
+      title: 'Commit',
+      props: { className: snapshotsTableColumnClasses.commit },
     },
     {
       title: 'Status',

@@ -13,7 +13,7 @@ import {
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
-import emptyStateImgUrl from '../../../assets/overview/overview-info1.svg';
+import emptySnapshotImgUrl from '../../../assets/snapshots/empty-snapshot.png';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
 import { HttpError } from '../../../k8s/error';
@@ -65,9 +65,10 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       : snapshots || [];
   }, [snapshots, nameFilter]);
 
+  //todo: change for the approved image
   const emptyState = (
     <AppEmptyState
-      emptyStateImg={emptyStateImgUrl}
+      emptyStateImg={emptySnapshotImgUrl}
       title="No snapshots found"
       data-test="snapshots-empty-state"
     >
