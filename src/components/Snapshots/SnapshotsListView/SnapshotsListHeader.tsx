@@ -1,4 +1,3 @@
-import React from 'react';
 import { createTableHeaders } from '../../../shared/components/table/utils';
 
 export const snapshotsTableColumnClasses = {
