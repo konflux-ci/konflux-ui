@@ -9,7 +9,11 @@ import {
   TextContent,
   Text,
   TextVariants,
+  Button,
+  Flex,
+  FlexItem,
 } from '@patternfly/react-core';
+import { ColumnsIcon } from '@patternfly/react-icons/dist/esm/icons/columns-icon';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
@@ -23,7 +27,9 @@ import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptySt
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
+import SnapshotsColumnManagement from './SnapshotsColumnManagement';
 import SnapshotsList from './SnapshotsList';
+import { useSnapshotsColumnManagement } from './useSnapshotsColumnManagement';
 
 type SnapshotsListViewProps = {
   applicationName: string;
@@ -39,6 +45,15 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   });
 
   const { name: nameFilter } = filters;
+
+  const {
+    visibleColumns,
+    isColumnManagementOpen,
+    openColumnManagement,
+    closeColumnManagement,
+    handleVisibleColumnsChange,
+    isColumnVisible,
+  } = useSnapshotsColumnManagement();
 
   const {
     data: snapshots,
@@ -96,9 +111,17 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
-      <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Snapshots
-      </Title>
+      <Flex
+        justifyContent={{ default: 'justifyContentSpaceBetween' }}
+        alignItems={{ default: 'alignItemsCenter' }}
+      >
+        <FlexItem>
+          <Title size="lg" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
+            Snapshots
+          </Title>
+        </FlexItem>
+      </Flex>
+
       <TextContent>
         <Text component={TextVariants.p}>
           A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
@@ -108,18 +131,44 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </Text>
       </TextContent>
 
-      <BaseTextFilterToolbar
-        text={nameFilter}
-        label="name"
-        setText={(name) => setFilters({ name })}
-        onClearFilters={onClearFilters}
-        dataTest="snapshots-list-toolbar"
-      />
+      <Flex
+        justifyContent={{ default: 'justifyContentFlexStart' }}
+        alignItems={{ default: 'alignItemsCenter' }}
+      >
+        <FlexItem>
+          <BaseTextFilterToolbar
+            text={nameFilter}
+            label="name"
+            setText={(name) => setFilters({ name })}
+            onClearFilters={onClearFilters}
+            dataTest="snapshots-list-toolbar"
+          />
+        </FlexItem>
+
+        <FlexItem>
+          <Button variant="plain" aria-label="Manage columns" onClick={openColumnManagement}>
+            <ColumnsIcon /> Manage columns
+          </Button>
+        </FlexItem>
+      </Flex>
+
       {filteredSnapshots.length === 0 ? (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       ) : (
-        <SnapshotsList snapshots={filteredSnapshots} applicationName={applicationName} />
+        <SnapshotsList
+          snapshots={filteredSnapshots}
+          applicationName={applicationName}
+          visibleColumns={visibleColumns}
+          isColumnVisible={isColumnVisible}
+        />
       )}
+
+      <SnapshotsColumnManagement
+        isOpen={isColumnManagementOpen}
+        onClose={closeColumnManagement}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={handleVisibleColumnsChange}
+      />
     </PageSection>
   );
 };

@@ -14,18 +14,24 @@ import { Snapshot } from '../../../types/coreBuildService';
 import { getCommitShortName } from '../../../utils/commits-utils';
 import { CommitIcon } from '../../Commits/CommitIcon';
 import { useSnapshotActions } from './snapshot-actions';
-import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
+import { snapshotsTableColumnClasses, SnapshotColumnKey } from './SnapshotsListHeader';
 
 import '../../Commits/CommitsListPage/CommitsListRow.scss';
 
-type SnapshotsListRowProps = RowFunctionArgs<Snapshot, { applicationName: string }>;
+type SnapshotsListRowProps = RowFunctionArgs<
+  Snapshot,
+  {
+    applicationName: string;
+    isColumnVisible: (columnKey: SnapshotColumnKey) => boolean;
+  }
+>;
 
 const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>> = ({
   obj: snapshot,
   customData,
 }) => {
   const namespace = useNamespace();
-  const { applicationName } = customData || {};
+  const { applicationName, isColumnVisible } = customData || {};
   const actions = useSnapshotActions(snapshot);
 
   const componentCount = snapshot.spec.components?.length || 0;
@@ -87,7 +93,6 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
     return (
       <>
         <CommitIcon isPR={isPullRequest} className="sha-title-icon" />
-
         {isPullRequest ? (
           <>
             <ExternalLink
@@ -116,72 +121,89 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
 
   return (
     <>
-      <TableData data-test="snapshot-list-row-name" className={snapshotsTableColumnClasses.name}>
-        <Link
-          to={SNAPSHOT_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName,
-            snapshotName: snapshot.metadata.name,
-          })}
-        >
-          {snapshot.metadata.name}
-        </Link>
-      </TableData>
-      <TableData
-        data-test="snapshot-list-row-created-at"
-        className={snapshotsTableColumnClasses.createdAt}
-      >
-        <Timestamp timestamp={snapshot.metadata.creationTimestamp ?? '-'} />
-      </TableData>
-      <TableData
-        data-test="snapshot-list-row-components"
-        className={snapshotsTableColumnClasses.components}
-      >
-        {componentCount > 0 ? (
+      {isColumnVisible?.('name') && (
+        <TableData data-test="snapshot-list-row-name" className={snapshotsTableColumnClasses.name}>
           <Link
-            to={`${SNAPSHOT_DETAILS_PATH.createPath({
+            to={SNAPSHOT_DETAILS_PATH.createPath({
               workspaceName: namespace,
               applicationName,
               snapshotName: snapshot.metadata.name,
-            })}#snapshot-components`}
+            })}
           >
-            {pluralize(componentCount, 'Component')}
+            {snapshot.metadata.name}
           </Link>
-        ) : (
-          '-'
-        )}
-      </TableData>
-      <TableData
-        data-test="snapshot-list-row-trigger"
-        className={snapshotsTableColumnClasses.trigger}
-      >
-        {renderTriggerType()}
-      </TableData>
-      <TableData
-        data-test="snapshot-list-row-commit"
-        className={snapshotsTableColumnClasses.commit}
-      >
-        {renderCommitInfo()}
-      </TableData>
-      <TableData
-        data-test="snapshot-list-row-status"
-        className={snapshotsTableColumnClasses.status}
-      >
-        {snapshot.status?.conditions?.some(
-          (condition) => condition.type === 'AutoReleased' && condition.status === 'True',
-        ) ? (
-          <>
-            <CheckCircleIcon color="green" /> Released
-          </>
-        ) : (
-          <>
-            <NotStartedIcon /> Not released
-          </>
-        )}
-      </TableData>
-      <TableData data-test="snapshot-list-row-kebab" className={snapshotsTableColumnClasses.kebab}>
-        <ActionMenu actions={actions} />
-      </TableData>
+        </TableData>
+      )}
+      {isColumnVisible?.('createdAt') && (
+        <TableData
+          data-test="snapshot-list-row-created-at"
+          className={snapshotsTableColumnClasses.createdAt}
+        >
+          <Timestamp timestamp={snapshot.metadata.creationTimestamp ?? '-'} />
+        </TableData>
+      )}
+      {isColumnVisible?.('components') && (
+        <TableData
+          data-test="snapshot-list-row-components"
+          className={snapshotsTableColumnClasses.components}
+        >
+          {componentCount > 0 ? (
+            <Link
+              to={`${SNAPSHOT_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName,
+                snapshotName: snapshot.metadata.name,
+              })}#snapshot-components`}
+            >
+              {pluralize(componentCount, 'Component')}
+            </Link>
+          ) : (
+            '-'
+          )}
+        </TableData>
+      )}
+      {isColumnVisible?.('trigger') && (
+        <TableData
+          data-test="snapshot-list-row-trigger"
+          className={snapshotsTableColumnClasses.trigger}
+        >
+          {renderTriggerType()}
+        </TableData>
+      )}
+      {isColumnVisible?.('commit') && (
+        <TableData
+          data-test="snapshot-list-row-commit"
+          className={snapshotsTableColumnClasses.commit}
+        >
+          {renderCommitInfo()}
+        </TableData>
+      )}
+      {isColumnVisible?.('status') && (
+        <TableData
+          data-test="snapshot-list-row-status"
+          className={snapshotsTableColumnClasses.status}
+        >
+          {snapshot.status?.conditions?.some(
+            (condition) => condition.type === 'AutoReleased' && condition.status === 'True',
+          ) ? (
+            <>
+              <CheckCircleIcon color="green" /> Released
+            </>
+          ) : (
+            <>
+              <NotStartedIcon /> Not released
+            </>
+          )}
+        </TableData>
+      )}
+      {isColumnVisible?.('kebab') && (
+        <TableData
+          data-test="snapshot-list-row-kebab"
+          className={snapshotsTableColumnClasses.kebab}
+        >
+          <ActionMenu actions={actions} />
+        </TableData>
+      )}
     </>
   );
 };
