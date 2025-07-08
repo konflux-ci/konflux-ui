@@ -1,16 +1,17 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { pluralize } from '@patternfly/react-core';
+import { Label, pluralize, Truncate } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
 import { NotStartedIcon } from '@patternfly/react-icons/dist/esm/icons/not-started-icon';
-import { SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
+import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
-import CommitLabel from '../../Commits/commit-label/CommitLabel';
+import { getCommitShortName } from '../../../utils/commits-utils';
 import { CommitIcon } from '../../Commits/CommitIcon';
 import { useSnapshotActions } from './snapshot-actions';
 import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
@@ -33,12 +34,39 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
   const commitSha = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/sha'];
   const commitTitle = snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/sha-title'];
   const commitUrl = snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/sha-url'];
-  const gitProvider = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/git-provider'];
+  const repoUrl =
+    snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/source-repo-url'];
+  const gitProvider = repoUrl?.includes('github') ? 'Github' : 'Gitlab';
   const eventType = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/event-type'];
   const isPullRequest = eventType === 'pull_request';
   const prNumber = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/pull-request'];
   const repoOrg = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/url-org'];
   const repoName = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/url-repository'];
+  const componentName = snapshot.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+
+  const renderTriggerType = () => {
+    if (componentName && applicationName) {
+      // Link to the component details page
+      return (
+        <Link
+          to={COMPONENT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            componentName,
+          })}
+        >
+          {componentName}
+        </Link>
+      );
+    }
+
+    // Fallback to repository name if no component is found
+    if (repoOrg && repoName) {
+      return `${repoOrg}/${repoName}`;
+    }
+
+    return '-';
+  };
 
   const renderCommitInfo = () => {
     if (!commitSha || !commitUrl) return '-';
@@ -53,21 +81,33 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
       }
     } else {
       // Fallback to commit title or short SHA
-      displayText = commitTitle || commitSha.substring(0, 7);
+      displayText = commitTitle || commitSha.substring(0, 8);
     }
 
     return (
       <>
         <CommitIcon isPR={isPullRequest} className="sha-title-icon" />
+
         {isPullRequest ? (
           <>
-            <ExternalLink href={commitUrl} text={displayText} />{' '}
-            <CommitLabel gitProvider={gitProvider} sha={commitSha} shaURL={commitUrl} />
+            <ExternalLink
+              href={
+                gitProvider === 'Github'
+                  ? `https://github.com/${repoOrg}/${repoName}/pull/${prNumber}`
+                  : `https://gitlab.com/${repoOrg}/${repoName}/-/merge_requests/${prNumber}`
+              }
+              text={<Truncate content={displayText} />}
+              hideIcon={true}
+            />{' '}
+            <Label color="blue">
+              <ExternalLink href={commitUrl} text={getCommitShortName(commitSha)} />
+            </Label>
           </>
         ) : (
           <>
-            {' '}
-            <CommitLabel gitProvider={gitProvider} sha={commitSha} shaURL={commitUrl} />
+            <Label color="blue">
+              <ExternalLink href={commitUrl} text={getCommitShortName(commitSha)} />
+            </Label>
           </>
         )}
       </>
@@ -112,8 +152,14 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
         )}
       </TableData>
       <TableData
-        data-test="snapshot-list-row-trigger-commit"
-        className={snapshotsTableColumnClasses.triggerCommit}
+        data-test="snapshot-list-row-trigger"
+        className={snapshotsTableColumnClasses.trigger}
+      >
+        {renderTriggerType()}
+      </TableData>
+      <TableData
+        data-test="snapshot-list-row-commit"
+        className={snapshotsTableColumnClasses.commit}
       >
         {renderCommitInfo()}
       </TableData>
