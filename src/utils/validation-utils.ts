@@ -24,8 +24,7 @@ export const bannerConfigYupSchema = yup.object({
     .string()
     .matches(hhmmRegex, 'startTime must be in HH:mm 24-hour format')
     .when(['year', 'month', 'dayOfWeek', 'dayOfMonth'], {
-      is: (year, month, dayOfWeek, dayOfMonth) =>
-        year || month || dayOfWeek !== undefined || dayOfMonth,
+      is: (year, month, dayOfWeek, dayOfMonth) => year ?? month ?? dayOfWeek ?? dayOfMonth,
       then: (schema) => schema.required('startTime is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
@@ -34,8 +33,7 @@ export const bannerConfigYupSchema = yup.object({
     .string()
     .matches(hhmmRegex, 'endTime must be in HH:mm 24-hour format')
     .when(['year', 'month', 'dayOfWeek', 'dayOfMonth'], {
-      is: (year, month, dayOfWeek, dayOfMonth) =>
-        year || month || dayOfWeek !== undefined || dayOfMonth,
+      is: (year, month, dayOfWeek, dayOfMonth) => year ?? month ?? dayOfWeek ?? dayOfMonth,
       then: (schema) => schema.required('endTime is required'),
       otherwise: (schema) => schema.notRequired(),
     }),

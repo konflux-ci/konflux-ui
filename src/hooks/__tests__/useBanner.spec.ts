@@ -110,7 +110,7 @@ describe('useBanner hook', () => {
   });
 
   // --- Weekly ---
-  it('returns banner when repeatType is weekly and today is the correct day and time', () => {
+  it('returns weekly banner when today is the correct day and time', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedWeeklyBannerConfig,
       isLoading: false,
@@ -121,7 +121,7 @@ describe('useBanner hook', () => {
     expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
   });
 
-  it('returns null when repeatType is weekly but today is not the matching day', () => {
+  it('returns null for weekly banner when today is not the matching day', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedInvalidWeeklyBannerConfig,
       isLoading: false,
@@ -132,7 +132,7 @@ describe('useBanner hook', () => {
   });
 
   // --- Monthly ---
-  it('returns banner when repeatType is monthly and today is the correct date and time', () => {
+  it('returns monthly banner when today is the correct date and time', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedMonthlyBannerConfig,
       isLoading: false,
@@ -143,7 +143,7 @@ describe('useBanner hook', () => {
     expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
   });
 
-  it('returns null when repeatType is monthly but banner is out of time range', () => {
+  it('returns null for monthly banner when banner is out of time range', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedValidMonthlyBannerConfigWithInvalidTimeRange,
       isLoading: false,
@@ -153,7 +153,7 @@ describe('useBanner hook', () => {
     expect(result.current).toBeNull();
   });
 
-  it('returns null when repeatType is monthly but banner is obsolete', () => {
+  it('returns null for monthly banner when banner is obsolete', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedObsoletedMonthlyBannerConfigWithTimeRange,
       isLoading: false,
@@ -163,7 +163,7 @@ describe('useBanner hook', () => {
     expect(result.current).toBeNull();
   });
 
-  it('returns null when repeatType is monthly but today is not the matching date', () => {
+  it('returns null for monthly banner when today is not the matching date', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedInvalidMonthlyBannerConfig,
       isLoading: false,
@@ -180,7 +180,7 @@ describe('useBanner hook', () => {
       error: null,
     });
     const { result } = renderHook(() => useBanner());
-    const expected = yaml.load(mockedBannerListWithSeveralActive.data['banner-content.yaml'])[2];
+    const expected = yaml.load(mockedBannerListWithSeveralActive.data['banner-content.yaml'])[1];
     expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
   });
 });
