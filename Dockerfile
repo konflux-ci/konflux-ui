@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:8d8ab723e421f7303b51de36317a5632e7b161a016cd76a214f993124c5b1a95 as builder
+FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:92c0a555301e3b21ecfea8adf461cb34515d87912932e4bcc5cdc434b183a750 as builder
 
 WORKDIR  /opt/app-root/src
 RUN npm install yarn --global
