@@ -20,19 +20,12 @@ export const bannerConfigYupSchema = yup.object({
 
   type: yup.mixed<'info' | 'warning' | 'danger'>().oneOf(['info', 'warning', 'danger']).required(),
 
-  repeatType: yup
-    .mixed<'none' | 'weekly' | 'monthly'>()
-    .oneOf(['none', 'weekly', 'monthly'])
-    .default('none'),
-
   startTime: yup
     .string()
     .matches(hhmmRegex, 'startTime must be in HH:mm 24-hour format')
-    .when(['repeatType', 'year', 'month'], {
-      is: (repeatType: string, year: string, month: string) =>
-        repeatType === 'weekly' ||
-        repeatType === 'monthly' ||
-        (repeatType === 'none' && (!!year || !!month)),
+    .when(['year', 'month', 'dayOfWeek', 'dayOfMonth'], {
+      is: (year, month, dayOfWeek, dayOfMonth) =>
+        year || month || dayOfWeek !== undefined || dayOfMonth,
       then: (schema) => schema.required('startTime is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
@@ -40,11 +33,9 @@ export const bannerConfigYupSchema = yup.object({
   endTime: yup
     .string()
     .matches(hhmmRegex, 'endTime must be in HH:mm 24-hour format')
-    .when(['repeatType', 'year', 'month'], {
-      is: (repeatType: string, year: string, month: string) =>
-        repeatType === 'weekly' ||
-        repeatType === 'monthly' ||
-        (repeatType === 'none' && (!!year || !!month)),
+    .when(['year', 'month', 'dayOfWeek', 'dayOfMonth'], {
+      is: (year, month, dayOfWeek, dayOfMonth) =>
+        year || month || dayOfWeek !== undefined || dayOfMonth,
       then: (schema) => schema.required('endTime is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
@@ -62,40 +53,30 @@ export const bannerConfigYupSchema = yup.object({
     .number()
     .min(0)
     .max(6)
-    .when('repeatType', {
-      is: 'weekly',
-      then: (schema) => schema.required('dayOfWeek is required when repeatType is weekly'),
-      otherwise: (schema) => schema.notRequired(),
+    .when([], {
+      is: () => true,
+      then: (schema) => schema.notRequired(),
     }),
 
   dayOfMonth: yup
     .number()
     .min(1)
     .max(31)
-    .when(['repeatType', 'year', 'month'], {
-      is: (repeatType: string, year: string, month: string) =>
-        repeatType === 'monthly' || (repeatType === 'none' && (!!year || !!month)),
-      then: (schema) => schema.required('dayOfMonth is required'),
+    .when(['year', 'month'], {
+      is: (year: string | undefined, month: string | undefined) => !!year || !!month, // Specific date provided
+      then: (schema) => schema.required('dayOfMonth is required when year or month is specified'),
       otherwise: (schema) => schema.notRequired(),
     }),
 
   year: yup
     .string()
     .matches(/^\d{4}$/, 'year must be a 4-digit string')
-    .when('repeatType', {
-      is: 'none',
-      then: (schema) => schema.notRequired(),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    .notRequired(),
 
   month: yup
     .string()
     .matches(/^(0?[1-9]|1[0-2])$/, 'month must be 1-12 or 01-12')
-    .when('repeatType', {
-      is: 'none',
-      then: (schema) => schema.notRequired(),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    .notRequired(),
 });
 
 export const KONFLUX_USERNAME_REGEX = /^[-_a-zA-Z0-9@.]{2,45}$/;

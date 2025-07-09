@@ -20,10 +20,19 @@ export type BannerConfig = {
   startTime?: string;
   endTime?: string;
   timeZone?: string;
-  repeatType?: 'none' | 'weekly' | 'monthly';
   dayOfWeek?: number; // 0-6 for Sunday-Saturday
   dayOfMonth?: number; // 1-31 for the day of the month
 };
+
+export function inferRepeatType(banner: BannerConfig): 'weekly' | 'monthly' | 'none' {
+  // Sunday is 0, so we can not enjoy 'true' check here.
+  if (banner.dayOfWeek !== undefined) return 'weekly';
+  if (banner.dayOfMonth) {
+    if (banner.month) return 'none'; // specific date
+    return 'monthly'; // repeats every month on this day
+  }
+  return 'none'; // fallback
+}
 
 function convertToTimeZone(date: Date, timeZone: string): Date {
   return dayjs(date).tz(timeZone).toDate();
@@ -89,7 +98,7 @@ export function isBannerActive(banner: BannerConfig, now = new Date()): boolean 
   const zonedNow = convertToTimeZone(now, timeZone);
   const nowHM = zonedNow.getHours() * 60 + zonedNow.getMinutes();
 
-  switch (banner.repeatType) {
+  switch (inferRepeatType(banner)) {
     case 'none': {
       const hasDate = banner.year && banner.month && banner.dayOfMonth;
       // If user does not sepecify the year/month/day, let us assume it is today.
