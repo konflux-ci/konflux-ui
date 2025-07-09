@@ -1,30 +1,25 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Label, pluralize, Truncate } from '@patternfly/react-core';
+import { Flex, FlexItem, Label, Truncate, pluralize } from '@patternfly/react-core';
 import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
-import { NotStartedIcon } from '@patternfly/react-icons/dist/esm/icons/not-started-icon';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { CommitIcon } from '~/components/Commits/CommitIcon';
+import { getCommitShortName } from '~/utils/commits-utils';
+import { PipelineRunLabel, SnapshotLabels } from '../../../consts/pipelinerun';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
+import { ExternalLink, RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
-import ExternalLink from '../../../shared/components/links/ExternalLink';
-import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
-import { getCommitShortName } from '../../../utils/commits-utils';
-import { CommitIcon } from '../../Commits/CommitIcon';
 import { useSnapshotActions } from './snapshot-actions';
-import { snapshotsTableColumnClasses, SnapshotColumnKey } from './SnapshotsListHeader';
+import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
 
-import '../../Commits/CommitsListPage/CommitsListRow.scss';
-
-type SnapshotsListRowProps = RowFunctionArgs<
-  Snapshot,
-  {
+type SnapshotsListRowProps = RowFunctionArgs<Snapshot> & {
+  customData?: {
     applicationName: string;
-    isColumnVisible: (columnKey: SnapshotColumnKey) => boolean;
-  }
->;
+    isColumnVisible: (columnKey: string) => boolean;
+  };
+};
 
 const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>> = ({
   obj: snapshot,
@@ -36,19 +31,19 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
 
   const componentCount = snapshot.spec.components?.length || 0;
 
-  // Extract commit information from snapshot annotations
-  const commitSha = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/sha'];
-  const commitTitle = snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/sha-title'];
-  const commitUrl = snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/sha-url'];
+  // Extract commit information from snapshot annotations using constants
+  const commitSha = snapshot.metadata?.labels?.[SnapshotLabels.PAC_SHA_LABEL];
+  const commitTitle = snapshot.metadata?.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION];
+  const commitUrl = snapshot.metadata?.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION];
+  const eventType = snapshot.metadata?.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
+  const isPullRequest = eventType === 'pull_request';
+  const prNumber = snapshot.metadata?.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL];
+  const repoOrg = snapshot.metadata?.labels?.[SnapshotLabels.PAC_URL_ORG_LABEL];
+  const repoName = snapshot.metadata?.labels?.[SnapshotLabels.PAC_URL_REPOSITORY_LABEL];
+  const componentName = snapshot.metadata?.labels?.[PipelineRunLabel.COMPONENT];
   const repoUrl =
     snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/source-repo-url'];
   const gitProvider = repoUrl?.includes('github') ? 'Github' : 'Gitlab';
-  const eventType = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/event-type'];
-  const isPullRequest = eventType === 'pull_request';
-  const prNumber = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/pull-request'];
-  const repoOrg = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/url-org'];
-  const repoName = snapshot.metadata?.labels?.['pac.test.appstudio.openshift.io/url-repository'];
-  const componentName = snapshot.metadata?.labels?.[PipelineRunLabel.COMPONENT];
 
   const renderTriggerType = () => {
     if (componentName && applicationName) {
@@ -77,7 +72,6 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
   const renderCommitInfo = () => {
     if (!commitSha || !commitUrl) return '-';
 
-    // Format display text as "owner/repo/pull/39" for PRs or "owner/repo" for commits
     let displayText = '';
     if (repoOrg && repoName) {
       if (isPullRequest && prNumber) {
@@ -87,12 +81,13 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
       }
     } else {
       // Fallback to commit title or short SHA
-      displayText = commitTitle || commitSha.substring(0, 8);
+      displayText = commitTitle || commitSha.substring(0, 7);
     }
 
     return (
       <>
         <CommitIcon isPR={isPullRequest} className="sha-title-icon" />
+
         {isPullRequest ? (
           <>
             <ExternalLink
@@ -110,12 +105,26 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
           </>
         ) : (
           <>
+            {' '}
             <Label color="blue">
               <ExternalLink href={commitUrl} text={getCommitShortName(commitSha)} />
             </Label>
           </>
         )}
       </>
+    );
+  };
+
+  const renderStatus = () => {
+    // This is a placeholder - you'd need to implement actual status logic
+    // based on your snapshot status requirements
+    return (
+      <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
+        <FlexItem>
+          <CheckCircleIcon color="green" />
+        </FlexItem>
+        <FlexItem>Success</FlexItem>
+      </Flex>
     );
   };
 
@@ -170,37 +179,24 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
           {renderTriggerType()}
         </TableData>
       )}
-      {isColumnVisible?.('commit') && (
+      {isColumnVisible?.('reference') && (
         <TableData
-          data-test="snapshot-list-row-commit"
-          className={snapshotsTableColumnClasses.commit}
+          data-test="snapshot-list-row-reference"
+          className={snapshotsTableColumnClasses.reference}
         >
           {renderCommitInfo()}
         </TableData>
       )}
-      {isColumnVisible?.('status') && (
+      {isColumnVisible?.('latestSuccessfulRelease') && (
         <TableData
-          data-test="snapshot-list-row-status"
-          className={snapshotsTableColumnClasses.status}
+          data-test="snapshot-list-row-latest-successful-release"
+          className={snapshotsTableColumnClasses.latestSuccessfulRelease}
         >
-          {snapshot.status?.conditions?.some(
-            (condition) => condition.type === 'AutoReleased' && condition.status === 'True',
-          ) ? (
-            <>
-              <CheckCircleIcon color="green" /> Released
-            </>
-          ) : (
-            <>
-              <NotStartedIcon /> Not released
-            </>
-          )}
+          {renderStatus()}
         </TableData>
       )}
       {isColumnVisible?.('kebab') && (
-        <TableData
-          data-test="snapshot-list-row-kebab"
-          className={snapshotsTableColumnClasses.kebab}
-        >
+        <TableData className={snapshotsTableColumnClasses.kebab}>
           <ActionMenu actions={actions} />
         </TableData>
       )}

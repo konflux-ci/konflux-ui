@@ -14,6 +14,8 @@ import {
 } from '@patternfly/react-core';
 import { SnapshotColumnKey, snapshotColumns, defaultVisibleColumns } from './SnapshotsListHeader';
 
+const NON_HIDABLE_COLUMNS: SnapshotColumnKey[] = ['name', 'kebab'];
+
 type SnapshotsColumnManagementProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -39,8 +41,8 @@ const SnapshotsColumnManagement: React.FC<SnapshotsColumnManagementProps> = ({
   const handleColumnToggle = (columnKey: SnapshotColumnKey) => {
     const newColumns = new Set(localVisibleColumns);
     if (newColumns.has(columnKey)) {
-      // Don't allow hiding the name column or kebab column
-      if (columnKey !== 'name' && columnKey !== 'kebab') {
+      // Don't allow hiding non-hidable columns
+      if (!NON_HIDABLE_COLUMNS.includes(columnKey)) {
         newColumns.delete(columnKey);
       }
     } else {
@@ -58,7 +60,7 @@ const SnapshotsColumnManagement: React.FC<SnapshotsColumnManagementProps> = ({
     setLocalVisibleColumns(new Set(defaultVisibleColumns));
   };
 
-  const managableColumns = snapshotColumns.filter((col) => col.key !== 'kebab');
+  const managableColumns = snapshotColumns.filter((col) => !NON_HIDABLE_COLUMNS.includes(col.key));
 
   return (
     <Modal
@@ -76,20 +78,13 @@ const SnapshotsColumnManagement: React.FC<SnapshotsColumnManagementProps> = ({
       ]}
     >
       <TextContent>
-        <Text component={TextVariants.p}>
-          Selected columns will be displayed in the table. You can drag and drop columns to reorder
-          them.
-        </Text>
+        <Text component={TextVariants.p}>Selected columns will be displayed in the table.</Text>
       </TextContent>
       <Form>
         <FormGroup>
           <Flex direction={{ default: 'column' }}>
-            <FlexItem>
-              <Button
-                variant="link"
-                onClick={handleReset}
-                style={{ padding: 0, marginBottom: '1rem' }}
-              >
+            <FlexItem style={{ marginBottom: '1rem', marginTop: '1rem' }}>
+              <Button variant="primary" onClick={handleReset}>
                 Reset to default
               </Button>
             </FlexItem>
@@ -100,7 +95,7 @@ const SnapshotsColumnManagement: React.FC<SnapshotsColumnManagementProps> = ({
                   label={column.title}
                   isChecked={localVisibleColumns.has(column.key)}
                   onChange={() => handleColumnToggle(column.key)}
-                  isDisabled={column.key === 'name'} // Name column should always be visible
+                  isDisabled={NON_HIDABLE_COLUMNS.includes(column.key)}
                 />
               </FlexItem>
             ))}

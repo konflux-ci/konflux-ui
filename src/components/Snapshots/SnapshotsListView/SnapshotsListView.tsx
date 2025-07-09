@@ -146,14 +146,20 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </FlexItem>
 
         <FlexItem>
-          <Button variant="plain" aria-label="Manage columns" onClick={openColumnManagement}>
+          <Button
+            variant="link"
+            aria-label="Manage columns"
+            onClick={openColumnManagement}
+            data-test="manage-columns-button"
+            color="link"
+          >
             <ColumnsIcon /> Manage columns
           </Button>
         </FlexItem>
       </Flex>
 
       {filteredSnapshots.length === 0 ? (
-        <FilteredEmptyState onClearFilters={() => onClearFilters()} />
+        <FilteredEmptyState onClearFilters={onClearFilters} />
       ) : (
         <SnapshotsList
           snapshots={filteredSnapshots}
