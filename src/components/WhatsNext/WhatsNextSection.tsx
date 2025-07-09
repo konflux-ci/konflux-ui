@@ -20,7 +20,9 @@ export type WhatsNextItem = {
   description: string;
   icon: string;
   helpId?: string;
+  noAction?: boolean;
   helpLink?: string;
+  helpText?: string;
   cta?: {
     label: string;
     href?: string;
@@ -72,30 +74,32 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
                 <Title headingLevel="h4">{item.title}</Title>
                 <HelperText>{item.description}</HelperText>
               </SplitItem>
-              <SplitItem className="whats-next-card__cta" data-test={item.cta.testId}>
-                <ButtonWithAccessTooltip
-                  {...(item.cta.onClick
-                    ? { onClick: item.cta.onClick }
-                    : !item.cta.external
-                      ? {
-                          component: (props) => <Link {...props} to={item.cta.href} />,
-                        }
-                      : {
-                          component: 'a',
-                          href: item.cta.href,
-                          target: '_blank',
-                          rel: 'noreferrer',
-                        })}
-                  isDisabled={item.cta.disabled}
-                  tooltip={item.cta.disabledTooltip}
-                  variant="secondary"
-                  analytics={item.cta.analytics}
-                >
-                  {item.cta.label}
-                </ButtonWithAccessTooltip>
+              <SplitItem className="whats-next-card__cta" data-test={item.cta?.testId}>
+                {item.cta && (
+                  <ButtonWithAccessTooltip
+                    {...(item.cta.onClick
+                      ? { onClick: item.cta.onClick }
+                      : !item.cta.external
+                        ? {
+                            component: (props) => <Link {...props} to={item.cta.href} />,
+                          }
+                        : {
+                            component: 'a',
+                            href: item.cta.href,
+                            target: '_blank',
+                            rel: 'noreferrer',
+                          })}
+                    isDisabled={item.cta.disabled}
+                    tooltip={item.cta.disabledTooltip}
+                    variant="secondary"
+                    analytics={item.cta.analytics}
+                  >
+                    {item.cta.label}
+                  </ButtonWithAccessTooltip>
+                )}
                 {item.helpLink && (
                   <ExternalLink href={item.helpLink} isInline={false}>
-                    Learn more
+                    {item.helpText ?? 'Learn more'}
                   </ExternalLink>
                 )}
                 <CloseButton
