@@ -239,30 +239,6 @@ describe('validation-utils', () => {
       );
     });
 
-    it('fails for weekly banner without dayOfWeek', async () => {
-      const parsed = {
-        summary: 'Missing dayOfWeek',
-        type: 'info',
-        repeatType: 'weekly',
-        startTime: '10:00',
-        endTime: '11:00',
-      };
-      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow('dayOfWeek is required');
-    });
-
-    it('fails for monthly banner without dayOfMonth', async () => {
-      const parsed = {
-        summary: 'Missing dayOfMonth',
-        type: 'info',
-        repeatType: 'monthly',
-        startTime: '10:00',
-        endTime: '11:00',
-      };
-      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow(
-        'dayOfMonth is required',
-      );
-    });
-
     it('allows banner with no startTime/endTime if not required', async () => {
       const parsed = {
         summary: 'No time window',
@@ -281,7 +257,6 @@ describe('validation-utils', () => {
       const parsed = {
         summary: 'One-time event banner',
         type: 'info',
-        repeatType: 'none',
         year: '2025',
         month: '07',
         dayOfMonth: 8,
@@ -358,25 +333,35 @@ describe('validation-utils', () => {
       }
     });
 
-    it('validates one-time banner with year/month/day/time', async () => {
+    it('fails when year/month/dayOfMonth is set but missing startTime/endTime', async () => {
       const parsed = {
-        summary: 'One-time event banner',
+        summary: 'Missing time fields',
         type: 'info',
         repeatType: 'none',
         year: '2025',
         month: '07',
-        dayOfMonth: 8,
-        startTime: '08:00',
-        endTime: '18:00',
+        dayOfMonth: '14',
       };
-      await expect(bannerConfigYupSchema.validate(parsed)).resolves.toBeTruthy();
+      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow('endTime is required');
+    });
+
+    it('fails when year/month/dayOfMonth/endTime is set but missing startTime', async () => {
+      const parsed = {
+        summary: 'Missing time fields',
+        type: 'info',
+        repeatType: 'none',
+        year: '2025',
+        month: '07',
+        dayOfMonth: '14',
+        endTime: '10:30',
+      };
+      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow('startTime is required');
     });
 
     it('fails one-time banner with invalid year format', async () => {
       const parsed = {
         summary: 'Invalid year',
         type: 'info',
-        repeatType: 'none',
         year: '25',
         month: '07',
         dayOfMonth: 8,
@@ -403,22 +388,10 @@ describe('validation-utils', () => {
       await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow();
     });
 
-    it('fails when repeatType is invalid', async () => {
-      const parsed = {
-        summary: 'Invalid repeat type',
-        type: 'info',
-        repeatType: 'daily',
-        startTime: '10:00',
-        endTime: '11:00',
-      };
-      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow();
-    });
-
     it('fails when dayOfWeek is out of range', async () => {
       const parsed = {
         summary: 'Invalid weekday',
         type: 'info',
-        repeatType: 'weekly',
         dayOfWeek: 7,
         startTime: '10:00',
         endTime: '12:00',
@@ -430,7 +403,6 @@ describe('validation-utils', () => {
       const parsed = {
         summary: 'Invalid day',
         type: 'info',
-        repeatType: 'monthly',
         dayOfMonth: 32,
         startTime: '10:00',
         endTime: '12:00',
@@ -439,20 +411,10 @@ describe('validation-utils', () => {
     });
   });
 
-  it('defaults repeatType to none if not provided', async () => {
+  it('requires startTime and endTime when year/month present', async () => {
     const parsed = {
       summary: 'Test summary',
       type: 'info',
-    };
-    const validated = await bannerConfigYupSchema.validate(parsed);
-    expect(validated.repeatType).toBe('none');
-  });
-
-  it('requires startTime and endTime when year/month present even if repeatType is none', async () => {
-    const parsed = {
-      summary: 'Test summary',
-      type: 'info',
-      repeatType: 'none',
       year: '2025',
       month: '07',
       dayOfMonth: 8,
@@ -460,7 +422,7 @@ describe('validation-utils', () => {
     await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow('endTime is required');
   });
 
-  it('does not require startTime and endTime if year/month are not present and repeatType is none', async () => {
+  it('does not require startTime and endTime if year/month are not present', async () => {
     const parsed = {
       summary: 'Test summary',
       type: 'info',

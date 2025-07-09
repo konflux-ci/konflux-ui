@@ -1,5 +1,5 @@
 import React from 'react';
-import { Banner, Flex, FlexItem } from '@patternfly/react-core';
+import { Banner } from '@patternfly/react-core';
 import { BannerType, useBanner } from '~/hooks/useBanner';
 import { BannerContent } from './BannerContent';
 
@@ -22,16 +22,7 @@ export const KonfluxBanner: React.FC = () => {
 
   return (
     <Banner isSticky variant={typeToVariant(banner.type)} data-test="banner">
-      <Flex
-        alignItems={{ default: 'alignItemsCenter' }}
-        justifyContent={{ default: 'justifyContentCenter' }}
-        flexWrap={{ default: 'nowrap' }}
-        style={{ width: '100%' }}
-      >
-        <FlexItem>
-          <BannerContent type={banner.type} summary={banner.summary} />
-        </FlexItem>
-      </Flex>
+      <BannerContent type={banner.type} summary={banner.summary} />
     </Banner>
   );
 };
