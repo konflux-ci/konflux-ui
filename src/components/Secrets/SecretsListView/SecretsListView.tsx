@@ -4,7 +4,9 @@ import { Bullseye, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { SECRET_CREATE_PATH } from '@routes/paths';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { HttpError } from '~/k8s/error';
 import { useDeepCompareMemoize } from '~/shared';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import secretEmptyStateIcon from '../../../assets/secret.svg';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
@@ -18,7 +20,7 @@ import SecretsList from './SecretsList';
 const SecretsListView: React.FC = () => {
   const namespace = useNamespace();
 
-  const [secrets, secretsLoaded] = useSecrets(namespace, true);
+  const [secrets, secretsLoaded, error] = useSecrets(namespace, true);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -74,6 +76,18 @@ const SecretsListView: React.FC = () => {
       </Bullseye>
     );
   }
+
+  if (error || secrets === undefined) {
+    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title="Unable to load secrets"
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
+    );
+  }
+
   if (secrets.length === 0) return emptyState;
 
   return (

@@ -33,6 +33,9 @@ describe('ReleaseOverviewTab', () => {
     expect(screen.getByText('Duration')).toBeVisible();
     expect(screen.getByText('10 seconds')).toBeVisible();
 
+    expect(screen.getByText('Release Process')).toBeVisible();
+    expect(screen.getByText('Manual')).toBeVisible();
+
     expect(screen.getByText('Status')).toBeVisible();
     expect(screen.getByText('Unknown')).toBeVisible();
 
@@ -42,7 +45,23 @@ describe('ReleaseOverviewTab', () => {
     expect(screen.getByText('Snapshot')).toBeVisible();
     expect(screen.getByText('test-snapshot')).toBeVisible();
 
-    expect(screen.getByText('Release Target (Managed Namespace)')).toBeVisible();
+    expect(screen.getByText('Release Target')).toBeVisible();
     expect(screen.getByText('test-target')).toBeVisible();
+
+    expect(screen.getByText('Tenant Pipeline Run')).toBeVisible();
+
+    expect(screen.getByText('Tenant Collector Pipeline Run')).toBeVisible();
+
+    expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
+      `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
+    );
+  });
+
+  it('should render correct details if managedProcessing', () => {
+    render(<ReleaseOverviewTab />);
+    expect(screen.getByText('Managed Pipeline Run')).toBeVisible();
+    expect(screen.getByRole('link', { name: 'test-pipelinerun' }).getAttribute('href')).toBe(
+      `/ns/my-ns/applications/test-app/pipelineruns/test-pipelinerun`,
+    );
   });
 });

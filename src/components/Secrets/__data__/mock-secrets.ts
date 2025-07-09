@@ -5,6 +5,7 @@ import {
   BuildTimeSecret,
   ComponentKind,
   ComponentSpecs,
+  ImagePullSecretType,
   SecretFor,
   SecretFormValues,
   SecretKind,
@@ -134,7 +135,7 @@ export const addSecretFormValues: AddSecretFormValues = {
     ],
   },
   image: {
-    authType: 'Image registry credentials',
+    authType: ImagePullSecretType.ImageRegistryCreds,
     registryCreds: [
       {
         registry: 'test.io',
@@ -165,7 +166,7 @@ export const existingSecrets: BuildTimeSecret[] = [
 ];
 
 export const secretFormValues: SecretFormValues = {
-  type: SecretTypeDropdownLabel.image,
+  type: SecretTypeDropdownLabel.opaque,
   secretName: 'test',
   opaque: {
     keyValues: [
@@ -176,12 +177,7 @@ export const secretFormValues: SecretFormValues = {
     ],
   },
   image: {
-    keyValues: [
-      {
-        key: 'test',
-        value: 'dGVzdA==',
-      },
-    ],
+    authType: ImagePullSecretType.ImageRegistryCreds,
   },
   relatedComponents: [],
   secretForComponentOption: null,
