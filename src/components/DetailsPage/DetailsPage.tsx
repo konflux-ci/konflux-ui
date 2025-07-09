@@ -53,8 +53,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
 }) => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const showBackToRelease =
-    state?.type?.includes('snapshot') || state?.type?.includes('managed') || false;
+  const showBackToRelease = state?.isPrNamespaceChanged || false;
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
