@@ -3,6 +3,8 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import yaml from 'js-yaml';
+import * as yup from 'yup';
+import { BANNER_CONTENT_FILE, BANNER_NAMEPSACE } from '~/consts/banner';
 import { useK8sWatchResource } from '~/k8s';
 import { ConfigMap } from '~/types/configmap';
 import { bannerConfigYupSchema } from '~/utils/validation-utils';
@@ -67,6 +69,14 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
       } catch (err) {
         // eslint-disable-next-line no-console
         console.warn('Invalid banner skipped:', banner);
+
+        if (err instanceof yup.ValidationError) {
+          // eslint-disable-next-line no-console
+          console.warn('Validation errors:', err.errors);
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn('Unexpected validation error:', err);
+        }
       }
     }
 
@@ -81,8 +91,8 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
 /**
  * Determines whether a banner is currently active based on its configuration and the given time.
  *
- * The function supports three types of banners controlled by `repeatType`:
- * - 'none': A one-time banner active within a specified date(today, or year, month, dayOfMonth) and time range (startTime, endTime).
+ * The function supports three types of banners:
+ * - 'none': A one-time banner active within a specified date(today, or year,month, dayOfMonth) and time range (startTime, endTime).
  * - 'weekly': A recurring banner active on a specific day of the week and time range.
  * - 'monthly': A recurring banner active on a specific day of the month and time range.
  *
@@ -147,8 +157,8 @@ export const useBanner = () => {
   } = useK8sWatchResource<ConfigMap>(
     {
       groupVersionKind: ConfigMapGroupVersionKind,
-      namespace: 'konflux-info',
-      name: 'konflux-banner-configmap',
+      namespace: BANNER_NAMEPSACE,
+      name: BANNER_CONTENT_FILE,
       watch: true,
     },
     ConfigMapModel,
@@ -160,16 +170,12 @@ export const useBanner = () => {
     const yamlContent = bannerYamlData?.data?.['banner-content.yaml'];
     if (typeof yamlContent !== 'string') return null;
 
-    const bannerList = parseBannerList(yamlContent);
+    const activeBanner = parseBannerList(yamlContent).find((currentBanner) =>
+      isBannerActive(currentBanner),
+    );
+    if (!activeBanner) return null;
 
-    // Check from last to first and return the latest active one
-    for (let i = bannerList.length - 1; i >= 0; i--) {
-      const banner = bannerList[i];
-      if (isBannerActive(banner)) {
-        return { type: banner.type, summary: banner.summary };
-      }
-    }
-
-    return null;
+    const { type, summary } = activeBanner;
+    return { type, summary };
   }, [bannerYamlData, isLoading, error]);
 };
