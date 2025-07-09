@@ -9,7 +9,10 @@ import {
   IntegrationTestsListView,
 } from '~/components/IntegrationTests/IntegrationTestsListView';
 import { ReleaseListViewTab, releaseListViewTabLoader } from '~/components/Releases';
-import { SnapshotsListViewTab, snapshotsTabLoader } from '~/components/Snapshots/SnapshotsListView';
+import {
+  SnapshotsListViewTab,
+  snapshotsTabLoader,
+} from '~/components/Snapshots/SnapshotsListView/SnapshotsTab';
 import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 

@@ -5,8 +5,8 @@ export const snapshotsTableColumnClasses = {
   createdAt: 'pf-m-width-15',
   components: 'pf-m-width-15',
   trigger: 'pf-m-width-10',
-  commit: 'pf-m-width-20',
-  status: 'pf-m-width-10',
+  reference: 'pf-m-width-20',
+  latestSuccessfulRelease: 'pf-m-width-10',
   kebab: 'pf-c-table__action',
 };
 
@@ -22,8 +22,12 @@ export const snapshotColumns = [
   },
   { key: 'components', title: 'Components', className: snapshotsTableColumnClasses.components },
   { key: 'trigger', title: 'Trigger', className: snapshotsTableColumnClasses.trigger },
-  { key: 'commit', title: 'Commit', className: snapshotsTableColumnClasses.commit },
-  { key: 'status', title: 'Status', className: snapshotsTableColumnClasses.status },
+  { key: 'reference', title: 'Reference', className: snapshotsTableColumnClasses.reference },
+  {
+    key: 'latestSuccessfulRelease',
+    title: 'Last successful release',
+    className: snapshotsTableColumnClasses.latestSuccessfulRelease,
+  },
   { key: 'kebab', title: '', className: snapshotsTableColumnClasses.kebab },
 ] as const;
 
@@ -32,8 +36,8 @@ export const defaultVisibleColumns: Set<SnapshotColumnKey> = new Set([
   'createdAt',
   'components',
   'trigger',
-  'commit',
-  'status',
+  'reference',
+  'latestSuccessfulRelease',
   'kebab',
 ]);
 
