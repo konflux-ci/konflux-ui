@@ -1,6 +1,5 @@
 import yaml from 'js-yaml';
 import {
-  mockedDisabledBannerConfig,
   mockedInvalidBannerConfig,
   mockedMonthlyBannerConfig,
   mockedObsoletedBannerConfig,
@@ -173,28 +172,27 @@ describe('validation-utils', () => {
     });
 
     it('fails when summary is too short', async () => {
-      const parsed = { enable: true, summary: '1234', type: 'info' };
+      const parsed = { summary: '1234', type: 'info' };
       await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow(
         'Must be at least 5 characters',
       );
     });
 
     it('fails when summary is too long', async () => {
-      const parsed = { enable: true, summary: 'a'.repeat(501), type: 'info' };
+      const parsed = { summary: 'a'.repeat(501), type: 'info' };
       await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow(
         'Must be at most 500 characters',
       );
     });
 
     it('fails when type is invalid', async () => {
-      const parsed = { enable: true, summary: 'Valid summary', type: 'fatal' };
+      const parsed = { summary: 'Valid summary', type: 'fatal' };
       await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow();
     });
 
     it('validates all correct type values', async () => {
       for (const type of ['info', 'warning', 'danger']) {
         const parsed = {
-          enable: true,
           summary: 'Valid summary',
           type,
           startTime: '10:00',
@@ -206,7 +204,6 @@ describe('validation-utils', () => {
 
     it('fails if startTime is invalid', async () => {
       const parsed = {
-        enable: true,
         summary: 'Valid summary',
         type: 'info',
         startTime: 'bad-time',
@@ -219,7 +216,6 @@ describe('validation-utils', () => {
 
     it('fails if endTime is invalid', async () => {
       const parsed = {
-        enable: true,
         summary: 'Valid summary',
         type: 'info',
         startTime: '10:00',
@@ -232,7 +228,6 @@ describe('validation-utils', () => {
 
     it('fails if timeZone format is invalid', async () => {
       const parsed = {
-        enable: true,
         summary: 'Valid summary',
         type: 'info',
         startTime: '10:00',
@@ -246,7 +241,6 @@ describe('validation-utils', () => {
 
     it('fails for weekly banner without dayOfWeek', async () => {
       const parsed = {
-        enable: true,
         summary: 'Missing dayOfWeek',
         type: 'info',
         repeatType: 'weekly',
@@ -258,7 +252,6 @@ describe('validation-utils', () => {
 
     it('fails for monthly banner without dayOfMonth', async () => {
       const parsed = {
-        enable: true,
         summary: 'Missing dayOfMonth',
         type: 'info',
         repeatType: 'monthly',
@@ -270,14 +263,8 @@ describe('validation-utils', () => {
       );
     });
 
-    it('allows disabled banner config', async () => {
-      const parsed = getParsedBanner(mockedDisabledBannerConfig);
-      await expect(bannerConfigYupSchema.validate(parsed)).resolves.toBeTruthy();
-    });
-
     it('allows banner with no startTime/endTime if not required', async () => {
       const parsed = {
-        enable: true,
         summary: 'No time window',
         type: 'info',
         repeatType: 'none',
@@ -292,7 +279,6 @@ describe('validation-utils', () => {
 
     it('validates one-time banner with year/month/day/time', async () => {
       const parsed = {
-        enable: true,
         summary: 'One-time event banner',
         type: 'info',
         repeatType: 'none',
@@ -307,7 +293,6 @@ describe('validation-utils', () => {
 
     it('fails one-time banner with invalid year format', async () => {
       const parsed = {
-        enable: true,
         summary: 'Invalid year',
         type: 'info',
         repeatType: 'none',
@@ -324,7 +309,6 @@ describe('validation-utils', () => {
 
     it('fails one-time banner with invalid month format', async () => {
       const parsed = {
-        enable: true,
         summary: 'Invalid month',
         type: 'info',
         repeatType: 'none',
@@ -341,7 +325,6 @@ describe('validation-utils', () => {
 
     it('fails when year/month is set but missing dayOfMonth/startTime/endTime', async () => {
       const parsed = {
-        enable: true,
         summary: 'Missing time fields',
         type: 'info',
         repeatType: 'none',
@@ -366,7 +349,6 @@ describe('validation-utils', () => {
     it('validates all correct type values', async () => {
       for (const type of ['info', 'warning', 'danger']) {
         const parsed = {
-          enable: true,
           summary: 'Valid summary',
           type,
           startTime: '10:00',
@@ -378,7 +360,6 @@ describe('validation-utils', () => {
 
     it('validates one-time banner with year/month/day/time', async () => {
       const parsed = {
-        enable: true,
         summary: 'One-time event banner',
         type: 'info',
         repeatType: 'none',
@@ -393,7 +374,6 @@ describe('validation-utils', () => {
 
     it('fails one-time banner with invalid year format', async () => {
       const parsed = {
-        enable: true,
         summary: 'Invalid year',
         type: 'info',
         repeatType: 'none',
@@ -408,17 +388,8 @@ describe('validation-utils', () => {
       );
     });
 
-    it('fails when enable is missing', async () => {
-      const parsed = {
-        summary: 'No enable field',
-        type: 'info',
-      };
-      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow();
-    });
-
     it('fails when summary is only whitespace', async () => {
       const parsed = {
-        enable: true,
         summary: '   ',
         type: 'info',
       };
@@ -427,7 +398,6 @@ describe('validation-utils', () => {
 
     it('fails when type is missing', async () => {
       const parsed = {
-        enable: true,
         summary: 'Missing type',
       };
       await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow();
@@ -435,7 +405,6 @@ describe('validation-utils', () => {
 
     it('fails when repeatType is invalid', async () => {
       const parsed = {
-        enable: true,
         summary: 'Invalid repeat type',
         type: 'info',
         repeatType: 'daily',
@@ -447,7 +416,6 @@ describe('validation-utils', () => {
 
     it('fails when dayOfWeek is out of range', async () => {
       const parsed = {
-        enable: true,
         summary: 'Invalid weekday',
         type: 'info',
         repeatType: 'weekly',
@@ -460,7 +428,6 @@ describe('validation-utils', () => {
 
     it('fails when dayOfMonth is out of range', async () => {
       const parsed = {
-        enable: true,
         summary: 'Invalid day',
         type: 'info',
         repeatType: 'monthly',
@@ -474,7 +441,6 @@ describe('validation-utils', () => {
 
   it('defaults repeatType to none if not provided', async () => {
     const parsed = {
-      enable: true,
       summary: 'Test summary',
       type: 'info',
     };
@@ -484,7 +450,6 @@ describe('validation-utils', () => {
 
   it('requires startTime and endTime when year/month present even if repeatType is none', async () => {
     const parsed = {
-      enable: true,
       summary: 'Test summary',
       type: 'info',
       repeatType: 'none',
@@ -497,7 +462,6 @@ describe('validation-utils', () => {
 
   it('does not require startTime and endTime if year/month are not present and repeatType is none', async () => {
     const parsed = {
-      enable: true,
       summary: 'Test summary',
       type: 'info',
       repeatType: 'none',
@@ -507,7 +471,6 @@ describe('validation-utils', () => {
 
   it('passes validation for valid IANA timeZone', async () => {
     const parsed = {
-      enable: true,
       summary: 'Test summary',
       type: 'info',
       startTime: '09:00',
@@ -519,7 +482,6 @@ describe('validation-utils', () => {
 
   it('passes validation when timeZone is not provided', async () => {
     const parsed = {
-      enable: true,
       summary: 'Test summary',
       type: 'info',
       startTime: '09:00',

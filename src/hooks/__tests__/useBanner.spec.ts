@@ -3,7 +3,6 @@ import yaml from 'js-yaml';
 import { createK8sUtilMock } from '~/utils/test-utils';
 import {
   mockedBannerListWithSeveralActive,
-  mockedDisabledBannerConfig,
   mockedInvalidBannerConfig,
   mockedInvalidMonthlyBannerConfig,
   mockedInvalidWeeklyBannerConfig,
@@ -56,16 +55,6 @@ describe('useBanner hook', () => {
   it('returns null if banner config is invalid', () => {
     k8sWatchMock.mockReturnValue({
       data: mockedInvalidBannerConfig,
-      isLoading: false,
-      error: null,
-    });
-    const { result } = renderHook(() => useBanner());
-    expect(result.current).toBeNull();
-  });
-
-  it('returns null if banner is disabled', () => {
-    k8sWatchMock.mockReturnValue({
-      data: mockedDisabledBannerConfig,
       isLoading: false,
       error: null,
     });

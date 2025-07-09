@@ -12,8 +12,6 @@ dayjs.extend(timezone);
 export const hhmmRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 export const bannerConfigYupSchema = yup.object({
-  enable: yup.boolean().required(),
-
   summary: yup
     .string()
     .required()
