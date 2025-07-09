@@ -613,7 +613,6 @@ const month = (now.getUTCMonth() + 1).toString();
 
 // === YAML Banner Generator ===
 function generateBannerYAML({
-  enable = true,
   type = 'info',
   summary = 'Default banner',
   repeatType,
@@ -628,7 +627,6 @@ function generateBannerYAML({
   startTime,
   endTime,
 }: {
-  enable?: boolean;
   type?: string;
   summary?: string;
   repeatType?: 'weekly' | 'monthly' | 'none';
@@ -639,7 +637,7 @@ function generateBannerYAML({
   startTime?: string;
   endTime?: string;
 }) {
-  const lines = [`enable: ${enable}`, `type: ${type}`, `summary: ${summary}`];
+  const lines = [`type: ${type}`, `summary: ${summary}`];
   if (repeatType) {
     lines.push(`repeatType: ${repeatType}`);
     if (repeatType === 'weekly' && dayOfWeek !== undefined) {
@@ -720,20 +718,6 @@ export const mockedInvalidBannerConfig = {
   ...baseConfigMap,
   data: {
     'banner-content.yaml': 'invalid yaml content',
-  },
-};
-
-export const mockedDisabledBannerConfig = {
-  ...baseConfigMap,
-  data: {
-    'banner-content.yaml': generateBannerYAMLList([
-      generateBannerYAML({
-        enable: false,
-        summary: 'This banner is no longer valid',
-        startTime: '00:00',
-        endTime: '00:00',
-      }),
-    ]),
   },
 };
 
@@ -852,7 +836,6 @@ export const mockedBannerListWithSeveralActive = {
     'banner-content.yaml': generateBannerYAMLList([
       generateBannerYAML({
         summary: 'Inactive old banner',
-        enable: false,
         startTime: pastStartTime,
         endTime: pastEndTime,
       }),
@@ -869,7 +852,9 @@ export const mockedBannerListWithSeveralActive = {
       }),
       generateBannerYAML({
         summary: 'Another inactive',
-        enable: false,
+        repeatType: 'none',
+        startTime: pastStartTime,
+        endTime: pastEndTime,
       }),
     ]),
   },

@@ -26,7 +26,7 @@ const typeToIcon = (type: BannerType) => {
 
 export const BannerContent: React.FC<BannerContentProps> = React.memo(({ type, summary }) => (
   <div style={{ display: 'flex', alignItems: 'center' }}>
-    <div className="pf-v5-u-mr-sm">{typeToIcon(type)}</div>
+    {typeToIcon(type)}
     <SyncMarkdownView content={summary} inline />
   </div>
 ));

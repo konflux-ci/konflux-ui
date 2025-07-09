@@ -13,7 +13,6 @@ dayjs.extend(timezone);
 
 export type BannerType = 'info' | 'warning' | 'danger';
 export type BannerConfig = {
-  enable: boolean;
   summary: string;
   type: BannerType;
   year?: string;
@@ -74,7 +73,7 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
  * Determines whether a banner is currently active based on its configuration and the given time.
  *
  * The function supports three types of banners controlled by `repeatType`:
- * - 'none': A one-time banner active within a specified date and time range (year, month, dayOfMonth, startTime, endTime).
+ * - 'none': A one-time banner active within a specified date(today, or year, month, dayOfMonth) and time range (startTime, endTime).
  * - 'weekly': A recurring banner active on a specific day of the week and time range.
  * - 'monthly': A recurring banner active on a specific day of the month and time range.
  *
@@ -86,22 +85,21 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
  * @returns `true` if the banner is active at the given time, otherwise `false`.
  */
 export function isBannerActive(banner: BannerConfig, now = new Date()): boolean {
-  if (!banner.enable) return false;
-
   const timeZone = banner.timeZone || 'UTC';
   const zonedNow = convertToTimeZone(now, timeZone);
   const nowHM = zonedNow.getHours() * 60 + zonedNow.getMinutes();
 
   switch (banner.repeatType) {
     case 'none': {
-      const year = Number(banner.year);
-      const month = Number(banner.month) - 1; // zero-based
-      const day = banner.dayOfMonth;
+      const hasDate = banner.year && banner.month && banner.dayOfMonth;
+      // If user does not sepecify the year/month/day, let us assume it is today.
+      const year = hasDate ? Number(banner.year) : zonedNow.getUTCFullYear();
+      const month = hasDate ? Number(banner.month) - 1 : zonedNow.getUTCMonth(); // 0-based
+      const day = hasDate ? Number(banner.dayOfMonth) : zonedNow.getUTCDate();
 
-      // When there is no any time specified, we consider it always active
-      if (!year && !month && !day) return true;
+      // When there is no any time specified, we assume the banner should be shown at once
+      if (!banner.startTime || !banner.endTime) return true;
 
-      // When users set the year/month/dayOfMonth, we check the date
       const [startHour, startMinute] = banner.startTime.split(':').map(Number);
       const [endHour, endMinute] = banner.endTime.split(':').map(Number);
 
@@ -158,7 +156,7 @@ export const useBanner = () => {
     // Check from last to first and return the latest active one
     for (let i = bannerList.length - 1; i >= 0; i--) {
       const banner = bannerList[i];
-      if (banner.enable && isBannerActive(banner)) {
+      if (isBannerActive(banner)) {
         return { type: banner.type, summary: banner.summary };
       }
     }
