@@ -101,8 +101,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     );
   }
 
-  if (!snapshots || snapshots.length === 0) return emptyState;
-
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
       <Flex
@@ -125,38 +123,44 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </Text>
       </TextContent>
 
-      <Flex
-        justifyContent={{ default: 'justifyContentFlexStart' }}
-        alignItems={{ default: 'alignItemsCenter' }}
-      >
-        <FlexItem>
-          <BaseTextFilterToolbar
-            text={nameFilter}
-            label="name"
-            setText={(name) => setFilters({ name })}
-            onClearFilters={onClearFilters}
-            dataTest="snapshots-list-toolbar"
-          />
-        </FlexItem>
-      </Flex>
-
-      {filteredSnapshots.length === 0 ? (
-        <FilteredEmptyState onClearFilters={onClearFilters} />
+      {snapshots && !snapshots.length ? (
+        emptyState
       ) : (
-        <SnapshotsList
-          snapshots={filteredSnapshots}
-          applicationName={applicationName}
-          visibleColumns={visibleColumns}
-          isColumnVisible={isColumnVisible}
-        />
-      )}
+        <>
+          <Flex
+            justifyContent={{ default: 'justifyContentFlexStart' }}
+            alignItems={{ default: 'alignItemsCenter' }}
+          >
+            <FlexItem>
+              <BaseTextFilterToolbar
+                text={nameFilter}
+                label="name"
+                setText={(name) => setFilters({ name })}
+                onClearFilters={onClearFilters}
+                dataTest="snapshots-list-toolbar"
+              />
+            </FlexItem>
+          </Flex>
 
-      <SnapshotsColumnManagement
-        isOpen={isColumnManagementOpen}
-        onClose={closeColumnManagement}
-        visibleColumns={visibleColumns}
-        onVisibleColumnsChange={handleVisibleColumnsChange}
-      />
+          {filteredSnapshots.length === 0 ? (
+            <FilteredEmptyState onClearFilters={onClearFilters} />
+          ) : (
+            <SnapshotsList
+              snapshots={filteredSnapshots}
+              applicationName={applicationName}
+              visibleColumns={visibleColumns}
+              isColumnVisible={isColumnVisible}
+            />
+          )}
+
+          <SnapshotsColumnManagement
+            isOpen={isColumnManagementOpen}
+            onClose={closeColumnManagement}
+            visibleColumns={visibleColumns}
+            onVisibleColumnsChange={handleVisibleColumnsChange}
+          />
+        </>
+      )}
     </PageSection>
   );
 };
