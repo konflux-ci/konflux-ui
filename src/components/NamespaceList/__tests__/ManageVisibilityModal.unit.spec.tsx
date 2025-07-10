@@ -130,6 +130,15 @@ describe('ManageVisibilityModal Unit Tests', () => {
           ),
         ).toBeInTheDocument();
       });
+
+      // Form fields should be disabled when there's an error
+      const saveButton = screen.getByRole('button', { name: /save/i });
+      expect(saveButton).toBeDisabled();
+
+      const radioButtons = screen.getAllByRole('radio');
+      radioButtons.forEach((radio) => {
+        expect(radio).toBeDisabled();
+      });
     });
 
     it('should handle error without message property', async () => {
@@ -148,6 +157,15 @@ describe('ManageVisibilityModal Unit Tests', () => {
             'Failed to load current visibility state: String error without message property',
           ),
         ).toBeInTheDocument();
+      });
+
+      // Form fields should be disabled when there's an error
+      const saveButton = screen.getByRole('button', { name: /save/i });
+      expect(saveButton).toBeDisabled();
+
+      const radioButtons = screen.getAllByRole('radio');
+      radioButtons.forEach((radio) => {
+        expect(radio).toBeDisabled();
       });
     });
 
