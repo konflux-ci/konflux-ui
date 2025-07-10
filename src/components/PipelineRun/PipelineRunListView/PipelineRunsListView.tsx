@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
+import { Button, Bullseye, Spinner, Stack } from '@patternfly/react-core';
+import { CogIcon } from '@patternfly/react-icons';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -21,8 +22,10 @@ import {
   PipelineRunsFilterState,
 } from '../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
-import { PipelineRunListHeaderWithVulnerabilities } from './PipelineRunListHeader';
-import { PipelineRunListRowWithVulnerabilities } from './PipelineRunListRow';
+import { createPipelineRunListHeader, defaultVulnerabilityColumns, PipelineRunColumnKey } from './PipelineRunListHeader';
+import { PipelineRunListRowWithColumns } from './PipelineRunListRow';
+import { useColumnManagement } from '../../../shared/hooks/useColumnManagement';
+import PipelineRunColumnManagement from './PipelineRunColumnManagement';
 
 type PipelineRunsListViewProps = {
   applicationName: string;
@@ -42,6 +45,19 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
+  });
+
+  // Column management - use vulnerability columns as default for this view
+  const {
+    visibleColumns,
+    isColumnManagementOpen,
+    openColumnManagement,
+    closeColumnManagement,
+    handleVisibleColumnsChange,
+  } = useColumnManagement<PipelineRunColumnKey>({
+    defaultVisibleColumns: defaultVulnerabilityColumns,
+    storageKey: 'konflux-pipelinerun-visible-columns',
+    requiredColumns: ['name', 'kebab'],
   });
 
   const { name, status, type } = filters;
@@ -106,6 +122,26 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : sortedPipelineRuns);
 
+  // Create header and row with column management
+  const Header = React.useMemo(() => createPipelineRunListHeader(visibleColumns), [visibleColumns]);
+
+  const Row = React.useCallback(
+    (props: any) => <PipelineRunListRowWithColumns {...props} visibleColumns={visibleColumns} />,
+    [visibleColumns],
+  );
+
+  // Create column management button
+  const columnManagementButton = (
+    <Button
+      variant="plain"
+      aria-label="Manage columns"
+      onClick={openColumnManagement}
+      icon={<CogIcon />}
+    >
+      Manage columns
+    </Button>
+  );
+
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
@@ -131,6 +167,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           onClearFilters={onClearFilters}
           typeOptions={typeFilterObj}
           statusOptions={statusFilterObj}
+          columnManagementButton={columnManagementButton}
         />
       )}
       <Table
@@ -139,8 +176,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         aria-label="Pipeline run List"
         customData={vulnerabilities}
-        Header={PipelineRunListHeaderWithVulnerabilities}
-        Row={PipelineRunListRowWithVulnerabilities}
+        Header={Header}
+        Row={Row}
         loaded={isFetchingNextPage || loaded}
         getRowProps={(obj: PipelineRunKind) => ({
           id: obj.metadata.name,
@@ -156,6 +193,14 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
         }}
       />
+      
+      <PipelineRunColumnManagement
+        isOpen={isColumnManagementOpen}
+        onClose={closeColumnManagement}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={handleVisibleColumnsChange}
+      />
+      
       {isFetchingNextPage ? (
         <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
           <Bullseye>

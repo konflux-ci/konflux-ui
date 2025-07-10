@@ -8,6 +8,7 @@ type PipelineRunsFilterToolbarProps = {
   onClearFilters: () => void;
   typeOptions: { [key: string]: number };
   statusOptions: { [key: string]: number };
+  columnManagementButton?: React.ReactNode;
 };
 
 const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
@@ -16,6 +17,7 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   onClearFilters,
   typeOptions,
   statusOptions,
+  columnManagementButton,
 }: PipelineRunsFilterToolbarProps) => {
   const { name, status, type } = filters;
 
@@ -40,6 +42,7 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
         setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
         options={typeOptions}
       />
+      {columnManagementButton}
     </BaseTextFilterToolbar>
   );
 };
