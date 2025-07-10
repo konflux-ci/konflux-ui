@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { pluralize, Tooltip } from '@patternfly/react-core';
+import { pluralize } from '@patternfly/react-core';
 import { SnapshotLabels, snapshotsTableColumnClasses } from '../../../consts/snapshots';
 import { SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData } from '../../../shared';
@@ -16,7 +16,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
   customData,
 }) => {
   const namespace = useNamespace();
-  const { applicationName, isColumnVisible } = customData || {};
+  const { applicationName } = customData || {};
   const actions = useSnapshotActions(snapshot);
 
   const componentCount = snapshot.spec.components?.length || 0;
@@ -31,7 +31,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
     snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/source-repo-url'];
   const gitProvider = repoUrl?.includes('github') ? 'Github' : 'Gitlab';
 
-  const renderReferenceColumnData = () => {
+  const renderTriggerColumnData = () => {
     return getTriggerColumnData({
       gitProvider: gitProvider === 'Github' ? 'github' : 'gitlab',
       repoOrg,
@@ -44,64 +44,50 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
 
   return (
     <>
-      {isColumnVisible?.('name') && (
-        <TableData data-test="snapshot-list-row-name" className={snapshotsTableColumnClasses.name}>
+      <TableData data-test="snapshot-list-row-name" className={snapshotsTableColumnClasses.name}>
+        <Link
+          to={SNAPSHOT_DETAILS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            snapshotName: snapshot.metadata.name,
+          })}
+        >
+          {snapshot.metadata.name}
+        </Link>
+      </TableData>
+      <TableData
+        data-test="snapshot-list-row-created-at"
+        className={snapshotsTableColumnClasses.createdAt}
+      >
+        <Timestamp timestamp={snapshot.metadata.creationTimestamp ?? '-'} />
+      </TableData>
+      <TableData
+        data-test="snapshot-list-row-components"
+        className={snapshotsTableColumnClasses.components}
+      >
+        {componentCount > 0 ? (
           <Link
-            to={SNAPSHOT_DETAILS_PATH.createPath({
+            to={`${SNAPSHOT_DETAILS_PATH.createPath({
               workspaceName: namespace,
               applicationName,
               snapshotName: snapshot.metadata.name,
-            })}
+            })}#snapshot-components`}
           >
-            {snapshot.metadata.name}
+            {pluralize(componentCount, 'Component')}
           </Link>
-        </TableData>
-      )}
-      {isColumnVisible?.('createdAt') && (
-        <TableData
-          data-test="snapshot-list-row-created-at"
-          className={snapshotsTableColumnClasses.createdAt}
-        >
-          <Timestamp timestamp={snapshot.metadata.creationTimestamp ?? '-'} />
-        </TableData>
-      )}
-      {isColumnVisible?.('components') && (
-        <TableData
-          data-test="snapshot-list-row-components"
-          className={snapshotsTableColumnClasses.components}
-        >
-          {componentCount > 0 ? (
-            <Tooltip
-              content={snapshot.spec.components?.map((component) => component.name).join(', ')}
-            >
-              <Link
-                to={`${SNAPSHOT_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName,
-                  snapshotName: snapshot.metadata.name,
-                })}#snapshot-components`}
-              >
-                {pluralize(componentCount, 'Component')}
-              </Link>
-            </Tooltip>
-          ) : (
-            '-'
-          )}
-        </TableData>
-      )}
-      {isColumnVisible?.('reference') && (
-        <TableData
-          data-test="snapshot-list-row-reference"
-          className={snapshotsTableColumnClasses.reference}
-        >
-          {renderReferenceColumnData()}
-        </TableData>
-      )}
-      {isColumnVisible?.('kebab') && (
-        <TableData className={snapshotsTableColumnClasses.kebab}>
-          <ActionMenu actions={actions} />
-        </TableData>
-      )}
+        ) : (
+          '-'
+        )}
+      </TableData>
+      <TableData
+        data-test="snapshot-list-row-reference"
+        className={snapshotsTableColumnClasses.reference}
+      >
+        {renderTriggerColumnData()}
+      </TableData>
+      <TableData className={snapshotsTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} />
+      </TableData>
     </>
   );
 };

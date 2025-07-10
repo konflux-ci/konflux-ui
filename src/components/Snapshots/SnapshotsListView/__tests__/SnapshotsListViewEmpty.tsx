@@ -53,13 +53,6 @@ const createWrappedComponent = () => {
 };
 
 const checkEmptyState = () => {
-  expect(
-    screen.queryByText(
-      /A snapshot is a point-in-time, immutable record of an application's container images/,
-    ),
-  ).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'Learn more' })).toBeInTheDocument();
-
   // Check for the empty state title
   expect(screen.getByText('No snapshots found')).toBeInTheDocument();
 
@@ -68,11 +61,14 @@ const checkEmptyState = () => {
     screen.getByText(/Snapshots are created automatically by push events or pull request events/),
   ).toBeInTheDocument();
   expect(
-    screen.queryByText('Snapshots can also created by created by manually if needed'),
-  ).not.toBeInTheDocument();
+    screen.getByText(/Snapshots can also created by created by manually if needed/),
+  ).toBeInTheDocument();
   expect(
-    screen.queryByText('Once created, Snapshots will be displayed on this page'),
-  ).not.toBeInTheDocument();
+    screen.getByText(/Once created, Snapshots will be displayed on this page/),
+  ).toBeInTheDocument();
+
+  // Check for the empty state test attribute
+  expect(screen.getByTestId('snapshots-empty-state')).toBeInTheDocument();
 };
 
 describe('SnapshotsListView - Empty State', () => {
