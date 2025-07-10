@@ -6,8 +6,8 @@ import { render, screen, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { NamespaceContext } from '../../../../shared/providers/Namespace/namespace-context';
-import { Snapshot } from '../../../../types/coreBuildService';
 import { createUseParamsMock, createTestQueryClient } from '../../../../utils/test-utils';
+import { mockSnapshots } from '../__data__/mock-snapshots';
 import SnapshotsListRow from '../SnapshotsListRow';
 import SnapshotsListView from '../SnapshotsListView';
 
@@ -76,68 +76,6 @@ jest.mock('../../../../shared/components/table', () => {
 });
 
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
-
-// Mock snapshot data
-const mockSnapshots: Snapshot[] = [
-  {
-    kind: 'Snapshot',
-    apiVersion: 'appstudio.redhat.com/v1alpha1',
-    metadata: {
-      name: 'my-app-snapshot-1',
-      namespace: 'test-namespace',
-      creationTimestamp: '2023-01-01T10:00:00Z',
-      uid: 'snapshot-1-uid',
-      labels: {
-        'appstudio.openshift.io/application': 'test-app',
-        'appstudio.openshift.io/component': 'frontend-component',
-      },
-    },
-    spec: {
-      application: 'test-app',
-      displayName: 'Frontend Snapshot 1',
-      components: [
-        {
-          containerImage: 'quay.io/test/frontend:v1.0.0',
-          name: 'frontend-component',
-          source: {
-            git: {
-              url: 'https://github.com/test/frontend',
-              revision: 'main',
-            },
-          },
-        },
-        {
-          containerImage: 'quay.io/test/backend:v1.0.0',
-          name: 'backend-component',
-          source: {
-            git: {
-              url: 'https://github.com/test/backend',
-              revision: 'main',
-            },
-          },
-        },
-      ],
-    },
-    status: {
-      conditions: [
-        {
-          type: 'AppStudioTestSucceeded',
-          status: 'True',
-          reason: 'Passed',
-          message: 'All Integration Pipeline tests passed',
-          lastTransitionTime: '2023-01-01T12:00:00Z',
-        },
-        {
-          type: 'AutoReleased',
-          status: 'True',
-          reason: 'AutoReleased',
-          message: 'The Snapshot was auto-released',
-          lastTransitionTime: '2023-01-01T12:30:00Z',
-        },
-      ],
-    },
-  },
-];
 
 const createWrappedComponent = (client?: QueryClient) => {
   const queryClient = client ?? createTestQueryClient();

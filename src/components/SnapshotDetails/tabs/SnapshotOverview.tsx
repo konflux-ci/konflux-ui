@@ -11,7 +11,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { SnapshotLabels } from '../../../consts/pipelinerun';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { useScanResults } from '../../../hooks/useScanResults';
 import { useScrollToHash } from '../../../hooks/useScrollToHash';

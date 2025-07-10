@@ -1,6 +1,7 @@
 import React from 'react';
 import ColumnManagement from '../../../shared/components/table/ColumnManagement';
-import { SnapshotColumnKey, snapshotColumns, defaultVisibleColumns } from './SnapshotsListHeader';
+import { snapshotColumns, defaultVisibleColumns } from './SnapshotsListHeader';
+import { SnapshotColumnKey } from './types';
 
 const NON_HIDABLE_COLUMNS: SnapshotColumnKey[] = ['name', 'kebab'];
 

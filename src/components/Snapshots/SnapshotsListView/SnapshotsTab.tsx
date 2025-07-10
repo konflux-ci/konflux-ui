@@ -1,18 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { K8sQueryListResourceItems } from '../../../k8s';
 import { SnapshotModel } from '../../../models';
 import { RouterParams } from '../../../routes/utils';
 import { createLoaderWithAccessCheck } from '../../../utils/rbac';
 import { default as SnapshotsListView } from './SnapshotsListView';
 
 export const snapshotsTabLoader = createLoaderWithAccessCheck(
-  async ({ params }) => {
-    const ns = params[RouterParams.workspaceName];
-    return K8sQueryListResourceItems({
-      model: SnapshotModel,
-      queryOptions: { ns },
-    });
+  () => {
+    // Data loading is handled by useK8sAndKarchResources hook in the component
+    return null;
   },
   { model: SnapshotModel, verb: 'list' },
 );

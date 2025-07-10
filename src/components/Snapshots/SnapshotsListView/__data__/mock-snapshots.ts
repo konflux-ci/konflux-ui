@@ -41,5 +41,23 @@ export const mockSnapshots: Snapshot[] = [
         },
       ],
     },
+    status: {
+      conditions: [
+        {
+          type: 'AppStudioTestSucceeded',
+          status: 'True',
+          reason: 'Passed',
+          message: 'All Integration Pipeline tests passed',
+          lastTransitionTime: '2023-01-01T12:00:00Z',
+        },
+        {
+          type: 'AutoReleased',
+          status: 'True',
+          reason: 'AutoReleased',
+          message: 'The Snapshot was auto-released',
+          lastTransitionTime: '2023-01-01T12:30:00Z',
+        },
+      ],
+    },
   },
 ];

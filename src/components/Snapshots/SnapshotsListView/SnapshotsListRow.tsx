@@ -1,23 +1,17 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { pluralize } from '@patternfly/react-core';
-import { PipelineRunLabel, SnapshotLabels } from '../../../consts/pipelinerun';
+import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
-import { RowFunctionArgs, TableData } from '../../../shared';
+import { TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { Snapshot } from '../../../types/coreBuildService';
 import { getTriggerColumnData } from '../../../utils/trigger-column-utils';
 import { useSnapshotActions } from './snapshot-actions';
 import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
-
-type SnapshotsListRowProps = RowFunctionArgs<Snapshot> & {
-  customData?: {
-    applicationName: string;
-    isColumnVisible: (columnKey: string) => boolean;
-  };
-};
+import { SnapshotsListRowProps } from './types';
 
 const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>> = ({
   obj: snapshot,

@@ -73,8 +73,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
 
   // Check if the releasePlanName corresponds to an actual release plan
   // Don't use the releasePlanName if it's our placeholder value 'new' or if it doesn't exist
-  const isValidReleasePlanName = releasePlanName && String(releasePlanName) !== 'new';
-  const validReleasePlan = isValidReleasePlanName
+  const validReleasePlan = releasePlanName
     ? releasePlans.find((rp) => rp.metadata.name === releasePlanName)
     : null;
 

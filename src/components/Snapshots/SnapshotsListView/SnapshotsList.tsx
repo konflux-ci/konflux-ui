@@ -1,16 +1,12 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
+import { SortableSnapshotHeaders } from '../../../consts/snapshots';
 import { useSortedResources } from '../../../hooks/useSortedResources';
 import { Table } from '../../../shared';
 import { Snapshot } from '../../../types/coreBuildService';
-import { createSnapshotsListHeader, SnapshotColumnKey } from './SnapshotsListHeader';
+import { createSnapshotsListHeader } from './SnapshotsListHeader';
 import SnapshotsListRow from './SnapshotsListRow';
-
-export const enum SortableSnapshotHeaders {
-  name = 0,
-  createdAt = 1,
-  latestSuccessfulRelease = 2,
-}
+import { SnapshotsListProps } from './types';
 
 const sortPaths: Record<SortableSnapshotHeaders, string> = {
   [SortableSnapshotHeaders.name]: 'metadata.name',
@@ -29,13 +25,6 @@ const getLastSuccessfulReleaseTimestamp = (snapshot: Snapshot): string => {
   );
 
   return successfulReleaseCondition?.lastTransitionTime || '';
-};
-
-type SnapshotsListProps = {
-  snapshots: Snapshot[];
-  applicationName: string;
-  visibleColumns: Set<SnapshotColumnKey>;
-  isColumnVisible: (columnKey: SnapshotColumnKey) => boolean;
 };
 
 const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
@@ -64,7 +53,6 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
     [visibleColumns, activeSortIndex, activeSortDirection],
   );
 
-  // Always call the hook at the top level
   const defaultSortedSnapshots = useSortedResources(
     snapshots,
     activeSortIndex,
@@ -75,7 +63,6 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
   // Use custom sorting for latestSuccessfulRelease, fallback to useSortedResources for others
   const sortedSnapshots = React.useMemo(() => {
     if (activeSortIndex === SortableSnapshotHeaders.latestSuccessfulRelease) {
-      // Custom sorting for last successful release
       const sorted = [...snapshots].sort((a, b) => {
         const timestampA = getLastSuccessfulReleaseTimestamp(a);
         const timestampB = getLastSuccessfulReleaseTimestamp(b);
@@ -85,14 +72,12 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
         if (!timestampA) return 1;
         if (!timestampB) return -1;
 
-        // Compare timestamps
         return timestampA.localeCompare(timestampB);
       });
 
       return activeSortDirection === SortByDirection.desc ? sorted.reverse() : sorted;
     }
 
-    // Use the existing hook result for other columns
     return defaultSortedSnapshots;
   }, [snapshots, activeSortIndex, activeSortDirection, defaultSortedSnapshots]);
 

@@ -29,11 +29,8 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import SnapshotsColumnManagement from './SnapshotsColumnManagement';
 import SnapshotsList from './SnapshotsList';
+import { SnapshotsListViewProps } from './types';
 import { useSnapshotsColumnManagement } from './useSnapshotsColumnManagement';
-
-type SnapshotsListViewProps = {
-  applicationName: string;
-};
 
 const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps>> = ({
   applicationName,
