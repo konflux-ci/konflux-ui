@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { MemoryRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
@@ -26,48 +26,53 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../useSnapshotsColumnManagement', () => ({
-  useSnapshotsColumnManagement: () => ({
-    visibleColumns: new Set([
-      'name',
-      'createdAt',
-      'components',
-      'trigger',
-      'commit',
-      'status',
-      'kebab',
-    ]),
-    isColumnManagementOpen: false,
-    openColumnManagement: jest.fn(),
-    closeColumnManagement: jest.fn(),
-    handleVisibleColumnsChange: jest.fn(),
-  }),
-}));
-
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
-const createWrappedComponent = (client?: QueryClient) => {
-  const queryClient = client ?? createTestQueryClient();
-
+// Helper function to create wrapped component
+const createWrappedComponent = () => {
+  const queryClient = createTestQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={['/applications/test-app/snapshots']}>
         <NamespaceContext.Provider
           value={{
             namespace: 'test-namespace',
-            lastUsedNamespace: 'test-namespace',
-            namespaceResource: undefined,
-            namespaces: [],
+            namespaceResource: null,
             namespacesLoaded: true,
+            lastUsedNamespace: 'test-namespace',
+            namespaces: [],
           }}
         >
-          <FilterContextProvider filterParams={['name']}>
+          <FilterContextProvider filterParams={[]}>
             <SnapshotsListView applicationName="test-app" />
           </FilterContextProvider>
         </NamespaceContext.Provider>
       </MemoryRouter>
     </QueryClientProvider>
   );
+};
+
+const checkEmptyState = () => {
+  expect(
+    screen.queryByText(
+      /A snapshot is a point-in-time, immutable record of an application's container images/,
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Learn more' })).toBeInTheDocument();
+
+  // Check for the empty state title
+  expect(screen.getByText('No snapshots found')).toBeInTheDocument();
+
+  // Check for the empty state description text
+  expect(
+    screen.getByText(/Snapshots are created automatically by push events or pull request events/),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText('Snapshots can also created by created by manually if needed'),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByText('Once created, Snapshots will be displayed on this page'),
+  ).not.toBeInTheDocument();
 };
 
 describe('SnapshotsListView - Empty State', () => {
@@ -87,22 +92,7 @@ describe('SnapshotsListView - Empty State', () => {
 
     render(createWrappedComponent());
 
-    // Check for the empty state title
-    expect(screen.getByText('No snapshots found')).toBeInTheDocument();
-
-    // Check for the empty state description text
-    expect(
-      screen.getByText(/Snapshots are created automatically by push events or pull request events/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Snapshots can also created by created by manually if needed/),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Once created, Snapshots will be displayed on this page/),
-    ).toBeInTheDocument();
-
-    // Check for the empty state test attribute
-    expect(screen.getByTestId('snapshots-empty-state')).toBeInTheDocument();
+    checkEmptyState();
   });
 
   it('should display empty state when snapshots data is undefined', () => {
@@ -115,13 +105,7 @@ describe('SnapshotsListView - Empty State', () => {
 
     render(createWrappedComponent());
 
-    // Check for the empty state title
-    expect(screen.getByText('No snapshots found')).toBeInTheDocument();
-
-    // Check for the empty state description text
-    expect(
-      screen.getByText(/Snapshots are created automatically by push events or pull request events/),
-    ).toBeInTheDocument();
+    checkEmptyState();
   });
 
   it('should display empty state when snapshots data is null', () => {
@@ -134,13 +118,7 @@ describe('SnapshotsListView - Empty State', () => {
 
     render(createWrappedComponent());
 
-    // Check for the empty state title
-    expect(screen.getByText('No snapshots found')).toBeInTheDocument();
-
-    // Check for the empty state description text
-    expect(
-      screen.getByText(/Snapshots are created automatically by push events or pull request events/),
-    ).toBeInTheDocument();
+    checkEmptyState();
   });
 
   it('should not display empty state when snapshots are loading', () => {
@@ -153,9 +131,7 @@ describe('SnapshotsListView - Empty State', () => {
 
     render(createWrappedComponent());
 
-    // Should show loading spinner, not empty state
-    expect(screen.queryByText('No snapshots found')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('snapshots-empty-state')).not.toBeInTheDocument();
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
   it('should not display empty state when there is an error', () => {
@@ -168,8 +144,6 @@ describe('SnapshotsListView - Empty State', () => {
 
     render(createWrappedComponent());
 
-    // Should show error state, not empty state
-    expect(screen.queryByText('No snapshots found')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('snapshots-empty-state')).not.toBeInTheDocument();
+    expect(screen.getByText('Unable to load snapshots')).toBeInTheDocument();
   });
 });

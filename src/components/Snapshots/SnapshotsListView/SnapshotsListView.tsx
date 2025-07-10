@@ -96,7 +96,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   if (isLoading) {
     return (
       <Bullseye>
-        <Spinner />
+        <Spinner data-test="spinner" />
       </Bullseye>
     );
   }
@@ -123,7 +123,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </Text>
       </TextContent>
 
-      {snapshots && !snapshots.length ? (
+      {!snapshots || snapshots.length === 0 ? (
         emptyState
       ) : (
         <>
