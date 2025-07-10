@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ReleaseLabel } from '../../../consts/release';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
 import { K8sQueryCreateResource } from '../../../k8s';
-import { ReleaseModel } from '../../../models';
+import { ReleaseModel, ReleaseGroupVersionKind } from '../../../models';
 import { Action } from '../../../shared/components/action-menu/types';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleaseKind, ReleasePlanLabel, Snapshot } from '../../../types/coreBuildService';
@@ -61,8 +61,8 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
           }
 
           const release: ReleaseKind = {
-            apiVersion: 'appstudio.redhat.com/v1alpha1',
-            kind: 'Release',
+            apiVersion: `${ReleaseGroupVersionKind.group}/${ReleaseGroupVersionKind.version}`,
+            kind: ReleaseGroupVersionKind.kind,
             metadata: {
               generateName: `${selectedReleasePlan.metadata.name}-`,
               namespace,
