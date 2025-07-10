@@ -27,6 +27,7 @@ export const snapshotColumns = [
     key: 'latestSuccessfulRelease',
     title: 'Last successful release',
     className: snapshotsTableColumnClasses.latestSuccessfulRelease,
+    sortable: true,
   },
   { key: 'kebab', title: '', className: snapshotsTableColumnClasses.kebab },
 ] as const;

@@ -9,11 +9,26 @@ import SnapshotsListRow from './SnapshotsListRow';
 export const enum SortableSnapshotHeaders {
   name = 0,
   createdAt = 1,
+  latestSuccessfulRelease = 2,
 }
 
 const sortPaths: Record<SortableSnapshotHeaders, string> = {
   [SortableSnapshotHeaders.name]: 'metadata.name',
   [SortableSnapshotHeaders.createdAt]: 'metadata.creationTimestamp',
+  [SortableSnapshotHeaders.latestSuccessfulRelease]: 'status.conditions',
+};
+
+// Custom function to extract last successful release timestamp
+const getLastSuccessfulReleaseTimestamp = (snapshot: Snapshot): string => {
+  if (!snapshot.status?.conditions || snapshot.status.conditions.length === 0) {
+    return '';
+  }
+
+  const successfulReleaseCondition = snapshot.status.conditions.find(
+    (condition) => condition.status === 'True' && condition.reason?.toLowerCase() === 'passed',
+  );
+
+  return successfulReleaseCondition?.lastTransitionTime || '';
 };
 
 type SnapshotsListProps = {
@@ -49,12 +64,37 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
     [visibleColumns, activeSortIndex, activeSortDirection],
   );
 
-  const sortedSnapshots = useSortedResources(
+  // Always call the hook at the top level
+  const defaultSortedSnapshots = useSortedResources(
     snapshots,
     activeSortIndex,
     activeSortDirection,
     sortPaths,
   );
+
+  // Use custom sorting for latestSuccessfulRelease, fallback to useSortedResources for others
+  const sortedSnapshots = React.useMemo(() => {
+    if (activeSortIndex === SortableSnapshotHeaders.latestSuccessfulRelease) {
+      // Custom sorting for last successful release
+      const sorted = [...snapshots].sort((a, b) => {
+        const timestampA = getLastSuccessfulReleaseTimestamp(a);
+        const timestampB = getLastSuccessfulReleaseTimestamp(b);
+
+        // Handle empty values - put them at the end
+        if (!timestampA && !timestampB) return 0;
+        if (!timestampA) return 1;
+        if (!timestampB) return -1;
+
+        // Compare timestamps
+        return timestampA.localeCompare(timestampB);
+      });
+
+      return activeSortDirection === SortByDirection.desc ? sorted.reverse() : sorted;
+    }
+
+    // Use the existing hook result for other columns
+    return defaultSortedSnapshots;
+  }, [snapshots, activeSortIndex, activeSortDirection, defaultSortedSnapshots]);
 
   return (
     <>
