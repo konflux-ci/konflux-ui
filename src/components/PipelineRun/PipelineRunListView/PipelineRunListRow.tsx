@@ -20,7 +20,7 @@ import {
   pipelineRunStatus,
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
-import { getTriggerColumnData } from '../../../utils/trigger-column-utils';
+import { TriggerColumnData } from '../../../utils/trigger-column-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
@@ -203,14 +203,14 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
-          {getTriggerColumnData({
-            gitProvider,
-            repoOrg,
-            repoURL,
-            prNumber,
-            eventType,
-            commitId,
-          })}
+          <TriggerColumnData
+            gitProvider={gitProvider}
+            repoOrg={repoOrg}
+            repoURL={repoURL}
+            prNumber={prNumber}
+            eventType={eventType}
+            commitId={commitId}
+          />
         </TableData>
       ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>

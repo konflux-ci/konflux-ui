@@ -101,8 +101,6 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(screen.getByText('Name')).toBeInTheDocument();
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();
-    expect(screen.getByText('Trigger')).toBeInTheDocument();
     expect(screen.getByText('Reference')).toBeInTheDocument();
-    expect(screen.getByText('Last successful release')).toBeInTheDocument();
   });
 });

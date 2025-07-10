@@ -1,5 +1,5 @@
 import React from 'react';
-import { useField, useFormikContext } from 'formik';
+import { useField } from 'formik';
 import { useSnapshotsForApplication } from '../../../../hooks/useSnapshots';
 import DropdownField from '../../../../shared/components/formik-fields/DropdownField';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
@@ -13,7 +13,6 @@ type SnapshotDropdownProps = Omit<
 export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdownProps>> = (
   props,
 ) => {
-  const { setErrors } = useFormikContext();
   const namespace = useNamespace();
   const {
     data: snapshots,
@@ -26,7 +25,7 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
     isFetchingNextPage,
   } = useSnapshotsForApplication(namespace, props.applicationName);
   const error = archiveError ?? clusterError;
-  const [field, , { setValue }] = useField<string>(props.name);
+  const [, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(
     () =>
@@ -35,16 +34,10 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
   );
 
   React.useEffect(() => {
-    // Only reset snapshot dropdown value if the current value is not valid for this application
-    if (!isLoading && !hasError && snapshots && field.value) {
-      const isCurrentSnapshotValid = snapshots.some(
-        (snapshot) => snapshot.metadata.name === field.value,
-      );
-      if (!isCurrentSnapshotValid) {
-        void setValue('');
-      }
+    if (props.applicationName) {
+      void setValue('');
     }
-  }, [hasError, isLoading, props.applicationName, setErrors, setValue, snapshots, field.value]);
+  }, [props.applicationName, setValue]);
 
   React.useEffect(() => {
     if (hasNextPage && !isFetchingNextPage && fetchNextPage) fetchNextPage();

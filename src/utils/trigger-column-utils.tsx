@@ -14,40 +14,43 @@ export interface TriggerColumnData {
 }
 
 /**
- * Renders the trigger column data with appropriate icons and links
- * @param data - Object containing trigger-related data
+ * Component that renders trigger column data with appropriate icons and links
+ * @param props - Object containing trigger-related data
  * @returns JSX element for the trigger column
  */
-export const getTriggerColumnData = (data: TriggerColumnData): React.ReactNode => {
-  const { gitProvider, repoOrg, repoURL, prNumber, eventType, commitId } = data;
-
+export const TriggerColumnData: React.FC<TriggerColumnData> = ({
+  gitProvider,
+  repoOrg,
+  repoURL,
+  prNumber,
+  eventType,
+  commitId,
+}) => {
   if (!eventType || !commitId) {
-    return '-';
+    return <>-</>;
   }
 
-  let icon = null;
-  let text = '';
-  let link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
-
+  const link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
   const commitDetails = {
     text: commitId?.substring(0, 7),
     link: `${link}/commit/${commitId}`,
   };
 
-  if (eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.RETEST) {
-    icon = <CommitIcon isPR={false} className="sha-title-icon" />;
-  } else if (eventType === PipelineRunEventType.PULL) {
-    icon = <CommitIcon isPR={true} className="sha-title-icon" />;
-    text = `${repoOrg}/${repoURL}/${prNumber}`;
-    link = `${link}/pull/${prNumber}`;
-  }
+  const isPullRequest = eventType === PipelineRunEventType.PULL;
+  const icon = <CommitIcon isPR={isPullRequest} className="sha-title-icon" />;
+  const pullRequestText = `${repoOrg}/${repoURL}/${prNumber}`;
+  const pullRequestLink = `${link}/pull/${prNumber}`;
 
   return (
     <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
       <FlexItem>{icon}</FlexItem>
-      {eventType === PipelineRunEventType.PULL && (
+      {isPullRequest && (
         <FlexItem>
-          <ExternalLink href={link} text={<Truncate content={text} />} hideIcon={true} />
+          <ExternalLink
+            href={pullRequestLink}
+            text={<Truncate content={pullRequestText} />}
+            hideIcon={true}
+          />
         </FlexItem>
       )}
       <FlexItem>
@@ -57,4 +60,12 @@ export const getTriggerColumnData = (data: TriggerColumnData): React.ReactNode =
       </FlexItem>
     </Flex>
   );
+};
+
+/**
+ * @deprecated Use TriggerColumnData component instead
+ * Legacy function for backward compatibility
+ */
+export const getTriggerColumnData = (data: TriggerColumnData): React.ReactNode => {
+  return <TriggerColumnData {...data} />;
 };

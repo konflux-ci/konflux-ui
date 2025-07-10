@@ -7,7 +7,7 @@ import { TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { getTriggerColumnData } from '../../../utils/trigger-column-utils';
+import { TriggerColumnData } from '../../../utils/trigger-column-utils';
 import { useSnapshotActions } from './snapshot-actions';
 import { SnapshotsListRowProps } from './types';
 
@@ -30,17 +30,6 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
   const repoUrl =
     snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/source-repo-url'];
   const gitProvider = repoUrl?.includes('github') ? 'Github' : 'Gitlab';
-
-  const renderTriggerColumnData = () => {
-    return getTriggerColumnData({
-      gitProvider: gitProvider === 'Github' ? 'github' : 'gitlab',
-      repoOrg,
-      repoURL: repoName,
-      prNumber,
-      eventType,
-      commitId: commitSha,
-    });
-  };
 
   return (
     <>
@@ -83,7 +72,14 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
         data-test="snapshot-list-row-reference"
         className={snapshotsTableColumnClasses.reference}
       >
-        {renderTriggerColumnData()}
+        <TriggerColumnData
+          gitProvider={gitProvider === 'Github' ? 'github' : 'gitlab'}
+          repoOrg={repoOrg}
+          repoURL={repoName}
+          prNumber={prNumber}
+          eventType={eventType}
+          commitId={commitSha}
+        />
       </TableData>
       <TableData className={snapshotsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
