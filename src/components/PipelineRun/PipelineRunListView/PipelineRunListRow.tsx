@@ -1,15 +1,13 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Label, Popover, Skeleton, Truncate } from '@patternfly/react-core';
-import { CommitIcon } from '~/components/Commits/CommitIcon';
-import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
+import { Popover, Skeleton } from '@patternfly/react-core';
+import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
 import {
   PIPELINE_RUNS_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '../../../routes/paths';
-import { ExternalLink } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
@@ -22,6 +20,7 @@ import {
   pipelineRunStatus,
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
+import { getTriggerColumnData } from '../../../utils/trigger-column-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
@@ -90,42 +89,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
   const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
   const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
-
-  const getTriggerredByColumnData = useCallback(() => {
-    let icon = null,
-      text = ``,
-      link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
-    const commitDetails = {
-      text: commitId?.substring(0, 7),
-      link: `${link}/commit/${commitId}`,
-    };
-    if (eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.RETEST) {
-      icon = <CommitIcon isPR={false} className="sha-title-icon" />;
-    } else if (eventType === PipelineRunEventType.PULL) {
-      icon = <CommitIcon isPR={true} className="sha-title-icon" />;
-      text = `${repoOrg}/${repoURL}/${prNumber}`;
-      link = `${link}/pull/${prNumber}`;
-    }
-    return (
-      <>
-        {icon}
-        {eventType === PipelineRunEventType.PULL && (
-          <ExternalLink
-            href={link}
-            text={<Truncate content={text} style={{ marginBottom: '0.5rem' }} />}
-            hideIcon={true}
-          />
-        )}
-        {eventType ? (
-          <Label color="blue">
-            <ExternalLink href={commitDetails.link} text={commitDetails.text} />
-          </Label>
-        ) : (
-          '-'
-        )}
-      </>
-    );
-  }, [commitId, eventType, gitProvider, prNumber, repoOrg, repoURL]);
 
   const testStatus = React.useMemo(() => {
     const results = getPipelineRunStatusResults(obj);
@@ -240,7 +203,14 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
-          {getTriggerredByColumnData()}
+          {getTriggerColumnData({
+            gitProvider,
+            repoOrg,
+            repoURL,
+            prNumber,
+            eventType,
+            commitId,
+          })}
         </TableData>
       ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>

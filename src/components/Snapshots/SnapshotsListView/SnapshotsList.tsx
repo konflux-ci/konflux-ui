@@ -99,7 +99,7 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
   return (
     <>
       <Table
-        virtualize={false}
+        virtualize
         data={sortedSnapshots}
         aria-label="Snapshots List"
         Header={SnapshotsListHeader}

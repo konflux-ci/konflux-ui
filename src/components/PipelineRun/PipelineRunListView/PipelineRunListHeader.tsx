@@ -1,7 +1,7 @@
 export const pipelineRunTableColumnClasses = {
-  name: 'pf-m-width-10 pf-m-width-20-on-xl wrap-column',
+  name: 'pf-m-width-10 pf-m-width-15-on-xl',
   status: 'pf-m-width-10 pf-m-width-5-on-xl',
-  testResultStatus: 'pf-m-width-10 pf-m-width-5-on-xl',
+  testResultStatus: 'pf-m-width-5 pf-m-width-5-on-xl',
   started: 'pf-m-width-20 pf-m-width-10-on-xl',
   vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
@@ -9,8 +9,8 @@ export const pipelineRunTableColumnClasses = {
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   workspace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
-  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10 wrap-column',
+  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
+  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -57,7 +57,7 @@ const createPipelineRunListHeader =
             {
               title: <div>Test result</div>,
               props: {
-                className: 'pf-m-width-10 pf-m-width-5-on-xl',
+                className: pipelineRunTableColumnClasses.testResultStatus,
                 info: {
                   popover:
                     'The test result is the TEST_OUTPUT of the pipeline run integration test.',
