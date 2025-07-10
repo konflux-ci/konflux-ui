@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Label, Truncate, pluralize } from '@patternfly/react-core';
-import { CommitIcon } from '~/components/Commits/CommitIcon';
-import { getCommitShortName } from '~/utils/commits-utils';
+import { pluralize } from '@patternfly/react-core';
 import { PipelineRunLabel, SnapshotLabels } from '../../../consts/pipelinerun';
 import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
-import { ExternalLink, RowFunctionArgs, TableData } from '../../../shared';
+import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
+import { getTriggerColumnData } from '../../../utils/trigger-column-utils';
 import { useSnapshotActions } from './snapshot-actions';
 import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
 
@@ -32,10 +31,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
 
   // Extract commit information from snapshot annotations using constants
   const commitSha = snapshot.metadata?.labels?.[SnapshotLabels.PAC_SHA_LABEL];
-  const commitTitle = snapshot.metadata?.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION];
-  const commitUrl = snapshot.metadata?.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION];
   const eventType = snapshot.metadata?.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
-  const isPullRequest = eventType === 'pull_request';
   const prNumber = snapshot.metadata?.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL];
   const repoOrg = snapshot.metadata?.labels?.[SnapshotLabels.PAC_URL_ORG_LABEL];
   const repoName = snapshot.metadata?.labels?.[SnapshotLabels.PAC_URL_REPOSITORY_LABEL];
@@ -68,50 +64,15 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
     return '-';
   };
 
-  const renderCommitInfo = () => {
-    if (!commitSha || !commitUrl) return '-';
-
-    let displayText = '';
-    if (repoOrg && repoName) {
-      if (isPullRequest && prNumber) {
-        displayText = `${repoOrg}/${repoName}/pull/${prNumber}`;
-      } else {
-        displayText = `${repoOrg}/${repoName}`;
-      }
-    } else {
-      // Fallback to commit title or short SHA
-      displayText = commitTitle || commitSha.substring(0, 7);
-    }
-
-    return (
-      <>
-        <CommitIcon isPR={isPullRequest} className="sha-title-icon" />
-
-        {isPullRequest ? (
-          <>
-            <ExternalLink
-              href={
-                gitProvider === 'Github'
-                  ? `https://github.com/${repoOrg}/${repoName}/pull/${prNumber}`
-                  : `https://gitlab.com/${repoOrg}/${repoName}/-/merge_requests/${prNumber}`
-              }
-              text={<Truncate content={displayText} />}
-              hideIcon={true}
-            />{' '}
-            <Label color="blue">
-              <ExternalLink href={commitUrl} text={getCommitShortName(commitSha)} />
-            </Label>
-          </>
-        ) : (
-          <>
-            {' '}
-            <Label color="blue">
-              <ExternalLink href={commitUrl} text={getCommitShortName(commitSha)} />
-            </Label>
-          </>
-        )}
-      </>
-    );
+  const renderTriggerColumnData = () => {
+    return getTriggerColumnData({
+      gitProvider: gitProvider === 'Github' ? 'github' : 'gitlab',
+      repoOrg,
+      repoURL: repoName,
+      prNumber,
+      eventType,
+      commitId: commitSha,
+    });
   };
 
   const renderLatestSuccessfulRelease = () => {
@@ -190,7 +151,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
           data-test="snapshot-list-row-reference"
           className={snapshotsTableColumnClasses.reference}
         >
-          {renderCommitInfo()}
+          {renderTriggerColumnData()}
         </TableData>
       )}
       {isColumnVisible?.('latestSuccessfulRelease') && (
