@@ -1,124 +1,54 @@
-import { useParams } from 'react-router-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
+import { render, screen } from '@testing-library/react';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
+import { createK8sWatchResourceMock } from '../../../utils/test-utils';
+import { mockReleases } from '../__data__/mock-release-data';
 import ReleasePipelineRunTab from '../ReleasePipelineRunTab';
 
 jest.mock('react-router-dom', () => ({
-  useParams: jest.fn(),
-  useSearchParams: jest.fn(() => [new URLSearchParams(), jest.fn()]),
+  Link: (props) => <a href={props.to}>{props.children}</a>,
+  useParams: () => ({ releaseName: 'test-release' }),
 }));
 
-jest.mock('~/shared/providers/Namespace', () => ({
-  useNamespace: jest.fn(),
+jest.mock('../../../hooks/useReleases', () => ({
+  useRelease: jest.fn(() => [mockReleases[0], true]),
 }));
 
-jest.mock('~/hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(),
-}));
-
-jest.mock('~/hooks/useReleasePlans', () => ({
-  useReleasePlan: jest.fn(() => [null]),
-}));
-
-jest.mock('~/hooks/useReleases', () => ({
-  useRelease: jest.fn(() => [null]),
-}));
-
-const useParamsMock = useParams as jest.Mock;
-const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-const useNamespaceMock = mockUseNamespaceHook('test-ns');
-
-const TestedComponent = () => <ReleasePipelineRunTab />;
+const useNamespaceMock = mockUseNamespaceHook('my-ns');
+const watchResourceMock = createK8sWatchResourceMock();
 
 describe('ReleasePipelineRunTab', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    useParamsMock.mockReturnValue({ applicationName: 'test-app', releaseName: 'test-release' });
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      false,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-    useNamespaceMock.mockReturnValue('test-ns');
+    useNamespaceMock.mockReturnValue('my-ns');
   });
 
-  it('should render loading state', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      false,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-
-    render(<TestedComponent />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  it('should render loading indicator', () => {
+    watchResourceMock.mockReturnValue([{ spec: { application: 'test-app' } }, false]);
+    render(<ReleasePipelineRunTab />);
+    expect(screen.getByRole('progressbar')).toBeVisible();
   });
 
-  it('should render error state', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      true,
-      { code: 500 },
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+  it('should render correct details', () => {
+    watchResourceMock.mockReturnValue([{ spec: { application: 'test-app' } }, true]);
+    render(<ReleasePipelineRunTab />);
+    expect(screen.getByText('Name')).toBeVisible();
+    expect(screen.getByText('test-pipelinerun')).toBeVisible();
 
-    render(<TestedComponent />);
-    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
-  });
+    expect(screen.getByText('Start Time')).toBeVisible();
+    expect(screen.getByText('-')).toBeVisible();
 
-  it('should render empty state when no pipeline runs are present', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      true,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    expect(screen.getByText('Duration')).toBeVisible();
+    expect(screen.getByText('less than a second')).toBeVisible();
 
-    render(<TestedComponent />);
-    expect(screen.getByText(/Keep tabs on components and activity/)).toBeInTheDocument();
-  });
+    expect(screen.getByText('Type')).toBeVisible();
+    expect(screen.getByText('Tenant')).toBeVisible();
 
-  it('should render pipeline runs list when data is available', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [
-        {
-          metadata: { name: 'test-pipeline-run', uid: '123' },
-        },
-      ],
-      true,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    expect(screen.getByText('Status')).toBeVisible();
+    expect(screen.getByText('Unknown')).toBeVisible();
 
-    render(<TestedComponent />);
-    expect(screen.getByText('Pipeline runs')).toBeInTheDocument();
-  });
+    expect(screen.getByText('Snapshot')).toBeVisible();
+    expect(screen.getByText('test-snapshot')).toBeVisible();
 
-  it('should filter pipeline runs by name', async () => {
-    usePipelineRunsMock.mockReturnValue([
-      [
-        { metadata: { name: 'test-pipeline-run-1', uid: '123' } },
-        { metadata: { name: 'another-pipeline-run', uid: '456' } },
-      ],
-      true,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-
-    render(<TestedComponent />);
-    const filterInput = screen.getByPlaceholderText('Filter by name...');
-    fireEvent.change(filterInput, { target: { value: 'test' } });
-
-    await waitFor(() => {
-      expect(screen.queryByText('another-pipeline-run')).not.toBeInTheDocument();
-    });
+    expect(screen.getByText('Namespace')).toBeVisible();
+    expect(screen.getByText('my-ns')).toBeVisible();
   });
 });

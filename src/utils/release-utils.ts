@@ -24,6 +24,22 @@ export const getFinalPipelineRunFromRelease = (release: ReleaseKind): string => 
   return release.status?.finalProcessing?.pipelineRun;
 };
 
+export const getManagedProcessingFromRelease = (release: ReleaseKind) => {
+  return release.status?.managedProcessing;
+};
+
+export const getTenantProcessingFromRelease = (release: ReleaseKind) => {
+  return release.status?.tenantProcessing;
+};
+
+export const getTenantCollectorProcessingFromRelease = (release: ReleaseKind) => {
+  return release.status?.collectorsProcessing?.tenantCollectorsProcessing;
+};
+
+export const getFinalFromRelease = (release: ReleaseKind) => {
+  return release.status?.finalProcessing;
+};
+
 export const generateNewReleaseName = (currentName: string): string => {
   // Use a fallback name if currentName is falsy or empty after trimming
   const safeName = currentName?.trim() || 'release';
