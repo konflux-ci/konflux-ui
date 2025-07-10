@@ -4,7 +4,7 @@ import { SortableSnapshotHeaders } from '../../../consts/snapshots';
 import { useSortedResources } from '../../../hooks/useSortedResources';
 import { Table } from '../../../shared';
 import { Snapshot } from '../../../types/coreBuildService';
-import { createSnapshotsListHeader } from './SnapshotsListHeader';
+import SnapshotsListHeader from './SnapshotsListHeader';
 import SnapshotsListRow from './SnapshotsListRow';
 import { SnapshotsListProps } from './types';
 
@@ -30,8 +30,6 @@ const getLastSuccessfulReleaseTimestamp = (snapshot: Snapshot): string => {
 const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
   snapshots,
   applicationName,
-  visibleColumns,
-  isColumnVisible,
 }) => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
     SortableSnapshotHeaders.name,
@@ -40,17 +38,13 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
     SortByDirection.asc,
   );
 
-  const SnapshotsListHeader = React.useMemo(
+  const SnapshotsListHeaderWithSorting = React.useMemo(
     () =>
-      createSnapshotsListHeader(visibleColumns)(
-        activeSortIndex,
-        activeSortDirection,
-        (_, index, direction) => {
-          setActiveSortIndex(index);
-          setActiveSortDirection(direction);
-        },
-      ),
-    [visibleColumns, activeSortIndex, activeSortDirection],
+      SnapshotsListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
+        setActiveSortIndex(index);
+        setActiveSortDirection(direction);
+      }),
+    [activeSortIndex, activeSortDirection],
   );
 
   const defaultSortedSnapshots = useSortedResources(
@@ -87,10 +81,10 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
         virtualize
         data={sortedSnapshots}
         aria-label="Snapshots List"
-        Header={SnapshotsListHeader}
+        Header={SnapshotsListHeaderWithSorting}
         Row={SnapshotsListRow}
         loaded
-        customData={{ applicationName, isColumnVisible }}
+        customData={{ applicationName }}
         getRowProps={(obj: Snapshot) => ({
           id: `${obj.metadata.name}-snapshot-list-item`,
           'aria-label': obj.metadata.name,

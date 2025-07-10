@@ -33,24 +33,6 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../useSnapshotsColumnManagement', () => ({
-  useSnapshotsColumnManagement: () => ({
-    visibleColumns: new Set([
-      'name',
-      'createdAt',
-      'components',
-      'trigger',
-      'commit',
-      'latestRelease',
-      'kebab',
-    ]),
-    isColumnManagementOpen: false,
-    openColumnManagement: jest.fn(),
-    closeColumnManagement: jest.fn(),
-    handleVisibleColumnsChange: jest.fn(),
-  }),
-}));
-
 jest.mock('../../../../shared/components/table', () => {
   const actual = jest.requireActual('../../../../shared/components/table');
   return {
