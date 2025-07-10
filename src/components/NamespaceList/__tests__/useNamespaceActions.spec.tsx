@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { NamespaceKind } from '~/types';
-import { useAccessReviewForModel } from '../../../utils/rbac';
+import { mockAccessReviewUtil } from '../../../unit-test-utils/mock-access-review';
 import { useNamespaceActions } from '../useNamespaceActions';
 
 // Mock the modal launcher
@@ -9,12 +9,8 @@ jest.mock('../../modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(() => mockShowModal),
 }));
 
-// Mock the rbac hook
-jest.mock('../../../utils/rbac', () => ({
-  useAccessReviewForModel: jest.fn(),
-}));
-
-const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
+// Mock the rbac hook using mockAccessReviewUtil
+const mockUseAccessReviewForModel = mockAccessReviewUtil('useAccessReviewForModel');
 
 const mockNamespace: NamespaceKind = {
   apiVersion: 'v1',
@@ -31,13 +27,13 @@ describe('useNamespaceActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Default to having permissions (Admin user)
-    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    mockUseAccessReviewForModel.mockReturnValue([true, true]);
   });
 
   it('should return manage visibility action enabled when user has permissions (Admin)', () => {
     // First call (create): return [true, true]
     // Second call (delete): return [true, true]
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([true, true]) // create permission
       .mockReturnValueOnce([true, true]); // delete permission
 
@@ -57,7 +53,7 @@ describe('useNamespaceActions', () => {
     // User can delete but not create RoleBindings
     // First call (create): return [false, true]
     // Second call (delete): return [true, true]
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([false, true]) // create permission (no access)
       .mockReturnValueOnce([true, true]); // delete permission (has access)
 
@@ -77,7 +73,7 @@ describe('useNamespaceActions', () => {
     // User can create but not delete RoleBindings
     // First call (create): return [true, true]
     // Second call (delete): return [false, true]
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([true, true]) // create permission
       .mockReturnValueOnce([false, true]); // delete permission
 
@@ -97,7 +93,7 @@ describe('useNamespaceActions', () => {
     // User has no RoleBinding permissions
     // First call (create): return [false, true]
     // Second call (delete): return [false, true]
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([false, true]) // create permission (no access)
       .mockReturnValueOnce([false, true]); // delete permission (no access)
 
@@ -116,7 +112,7 @@ describe('useNamespaceActions', () => {
   it('should call modal launcher when manage visibility action is triggered (when enabled)', () => {
     // First call (create): return [true, true]
     // Second call (delete): return [true, true]
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([true, true]) // create permission
       .mockReturnValueOnce([true, true]); // delete permission
 
@@ -133,7 +129,7 @@ describe('useNamespaceActions', () => {
 
   it('should handle different namespaces with permissions', () => {
     // Each namespace hook calls useAccessReviewForModel twice, so we need 4 mock calls total
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([true, true]) // namespace1 create permission
       .mockReturnValueOnce([true, true]) // namespace1 delete permission
       .mockReturnValueOnce([true, true]) // namespace2 create permission
@@ -167,7 +163,7 @@ describe('useNamespaceActions', () => {
   it('should verify RoleBinding permissions are checked correctly', () => {
     // First call (create): return [true, true]
     // Second call (delete): return [true, true]
-    useAccessReviewForModelMock
+    mockUseAccessReviewForModel
       .mockReturnValueOnce([true, true]) // create permission
       .mockReturnValueOnce([true, true]); // delete permission
 
@@ -178,10 +174,10 @@ describe('useNamespaceActions', () => {
     expect(result.current[0].label).toBe('Manage visibility');
 
     // Verify the hook was called twice (once for create, once for delete)
-    expect(useAccessReviewForModelMock).toHaveBeenCalledTimes(2);
+    expect(mockUseAccessReviewForModel).toHaveBeenCalledTimes(2);
 
     // Verify it's checking RoleBinding model permissions
-    expect(useAccessReviewForModelMock).toHaveBeenCalledWith(
+    expect(mockUseAccessReviewForModel).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: 'RoleBinding',
         plural: 'rolebindings',
@@ -190,7 +186,7 @@ describe('useNamespaceActions', () => {
       'create',
     );
 
-    expect(useAccessReviewForModelMock).toHaveBeenCalledWith(
+    expect(mockUseAccessReviewForModel).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: 'RoleBinding',
         plural: 'rolebindings',

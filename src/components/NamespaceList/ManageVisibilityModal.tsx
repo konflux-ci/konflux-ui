@@ -73,12 +73,9 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
   }, [isLoading, roleBindingsError, roleBindings]);
 
   // Initial form values based on current visibility
-  const initialValues: FormValues = React.useMemo(
-    () => ({
-      visibility: currentVisibility,
-    }),
-    [currentVisibility],
-  );
+  const initialValues: FormValues = {
+    visibility: currentVisibility,
+  };
 
   const handleSubmit = async (values: FormValues, formikHelpers: FormikHelpers<FormValues>) => {
     formikHelpers.setSubmitting(true);
@@ -145,15 +142,6 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
     }
   };
 
-  // Check if there's a loading error
-  React.useEffect(() => {
-    if (roleBindingsError) {
-      setError(
-        `Failed to load current visibility state: ${roleBindingsError.message || String(roleBindingsError)}`,
-      );
-    }
-  }, [roleBindingsError]);
-
   return (
     <Formik initialValues={initialValues} onSubmit={handleSubmit} enableReinitialize>
       {({ values, isSubmitting, handleSubmit: formikHandleSubmit }) => {
@@ -179,7 +167,7 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
                 variant="primary"
                 onClick={() => formikHandleSubmit()}
                 isLoading={isSubmitting}
-                isDisabled={isLoading || !hasChanges || isSubmitting}
+                isDisabled={isLoading || !hasChanges || isSubmitting || !!roleBindingsError}
               >
                 Save
               </Button>,
@@ -189,9 +177,10 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
             ]}
           >
             <ModalBoxBody>
-              {error && (
+              {(error || roleBindingsError) && (
                 <Alert variant={AlertVariant.danger} title="Error" isInline>
-                  {error}
+                  {error ||
+                    `Failed to load current visibility state: ${roleBindingsError?.message || String(roleBindingsError)}`}
                 </Alert>
               )}
               <Form>
@@ -201,14 +190,15 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
                     {
                       value: VisibilityOption.PRIVATE,
                       label: 'Private (Default)',
+                      isDisabled: isSubmitting || !!roleBindingsError,
                     },
                     {
                       value: VisibilityOption.PUBLIC,
                       label: 'Public',
+                      isDisabled: isSubmitting || !!roleBindingsError,
                     },
                   ]}
                   required={false}
-                  isDisabled={isSubmitting}
                 />
               </Form>
             </ModalBoxBody>
