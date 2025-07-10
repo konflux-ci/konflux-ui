@@ -71,11 +71,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
     navigate(RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }));
   };
 
-  // Check if the releasePlanName corresponds to an actual release plan
-  // Don't use the releasePlanName if it's our placeholder value 'new' or if it doesn't exist
-  const validReleasePlan = releasePlanName
-    ? releasePlans.find((rp) => rp.metadata.name === releasePlanName)
-    : null;
+  const validReleasePlan = releasePlans.find((rp) => rp.metadata.name === releasePlanName);
 
   // Create initial values that will update when snapshot data loads
   const initialValues: TriggerReleaseFormValues = React.useMemo(

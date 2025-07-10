@@ -16,3 +16,11 @@ export const enum SortableSnapshotHeaders {
   createdAt = 1,
   latestSuccessfulRelease = 2,
 }
+
+export const snapshotsTableColumnClasses = {
+  name: 'pf-m-width-25',
+  createdAt: 'pf-m-width-20',
+  components: 'pf-m-width-20',
+  reference: 'pf-m-width-25',
+  kebab: 'pf-c-table__action pf-m-width-5',
+};

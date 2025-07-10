@@ -1,6 +1,6 @@
 import { RowFunctionArgs } from '~/shared';
+import { snapshotsTableColumnClasses } from '../../../consts/snapshots';
 import { Snapshot } from '../../../types/coreBuildService';
-import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
 
 export type SnapshotsListViewProps = {
   applicationName: string;

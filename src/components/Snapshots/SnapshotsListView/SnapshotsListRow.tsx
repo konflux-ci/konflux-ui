@@ -1,16 +1,14 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { pluralize } from '@patternfly/react-core';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { SnapshotLabels } from '../../../consts/snapshots';
-import { COMPONENT_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
+import { pluralize, Tooltip } from '@patternfly/react-core';
+import { SnapshotLabels, snapshotsTableColumnClasses } from '../../../consts/snapshots';
+import { SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { getTriggerColumnData } from '../../../utils/trigger-column-utils';
 import { useSnapshotActions } from './snapshot-actions';
-import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
 import { SnapshotsListRowProps } from './types';
 
 const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>> = ({
@@ -29,36 +27,11 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
   const prNumber = snapshot.metadata?.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL];
   const repoOrg = snapshot.metadata?.labels?.[SnapshotLabels.PAC_URL_ORG_LABEL];
   const repoName = snapshot.metadata?.labels?.[SnapshotLabels.PAC_URL_REPOSITORY_LABEL];
-  const componentName = snapshot.metadata?.labels?.[PipelineRunLabel.COMPONENT];
   const repoUrl =
     snapshot.metadata?.annotations?.['pac.test.appstudio.openshift.io/source-repo-url'];
   const gitProvider = repoUrl?.includes('github') ? 'Github' : 'Gitlab';
 
-  const renderTriggerType = () => {
-    if (componentName && applicationName) {
-      // Link to the component details page
-      return (
-        <Link
-          to={COMPONENT_DETAILS_PATH.createPath({
-            workspaceName: namespace,
-            applicationName,
-            componentName,
-          })}
-        >
-          {componentName}
-        </Link>
-      );
-    }
-
-    // Fallback to repository name if no component is found
-    if (repoOrg && repoName) {
-      return `${repoOrg}/${repoName}`;
-    }
-
-    return '-';
-  };
-
-  const renderTriggerColumnData = () => {
+  const renderReferenceColumnData = () => {
     return getTriggerColumnData({
       gitProvider: gitProvider === 'Github' ? 'github' : 'gitlab',
       repoOrg,
@@ -67,26 +40,6 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
       eventType,
       commitId: commitSha,
     });
-  };
-
-  const renderLatestSuccessfulRelease = () => {
-    // Check if snapshot has status conditions
-    if (!snapshot.status?.conditions || snapshot.status.conditions.length === 0) {
-      return '-';
-    }
-
-    // Find the last successful release condition
-    // Look for conditions where status is 'True' and reason is 'passed' (case-insensitive)
-    const successfulReleaseCondition = snapshot.status.conditions.find(
-      (condition) => condition.status === 'True' && condition.reason?.toLowerCase() === 'passed',
-    );
-
-    if (!successfulReleaseCondition || !successfulReleaseCondition.lastTransitionTime) {
-      return '-';
-    }
-
-    // Display the timestamp of the last successful release
-    return <Timestamp timestamp={successfulReleaseCondition.lastTransitionTime} />;
   };
 
   return (
@@ -118,26 +71,22 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
           className={snapshotsTableColumnClasses.components}
         >
           {componentCount > 0 ? (
-            <Link
-              to={`${SNAPSHOT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName,
-                snapshotName: snapshot.metadata.name,
-              })}#snapshot-components`}
+            <Tooltip
+              content={snapshot.spec.components?.map((component) => component.name).join(', ')}
             >
-              {pluralize(componentCount, 'Component')}
-            </Link>
+              <Link
+                to={`${SNAPSHOT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName,
+                  snapshotName: snapshot.metadata.name,
+                })}#snapshot-components`}
+              >
+                {pluralize(componentCount, 'Component')}
+              </Link>
+            </Tooltip>
           ) : (
             '-'
           )}
-        </TableData>
-      )}
-      {isColumnVisible?.('trigger') && (
-        <TableData
-          data-test="snapshot-list-row-trigger"
-          className={snapshotsTableColumnClasses.trigger}
-        >
-          {renderTriggerType()}
         </TableData>
       )}
       {isColumnVisible?.('reference') && (
@@ -145,15 +94,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
           data-test="snapshot-list-row-reference"
           className={snapshotsTableColumnClasses.reference}
         >
-          {renderTriggerColumnData()}
-        </TableData>
-      )}
-      {isColumnVisible?.('latestSuccessfulRelease') && (
-        <TableData
-          data-test="snapshot-list-row-latest-successful-release"
-          className={snapshotsTableColumnClasses.latestSuccessfulRelease}
-        >
-          {renderLatestSuccessfulRelease()}
+          {renderReferenceColumnData()}
         </TableData>
       )}
       {isColumnVisible?.('kebab') && (

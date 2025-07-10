@@ -9,11 +9,9 @@ import {
   TextContent,
   Text,
   TextVariants,
-  Button,
   Flex,
   FlexItem,
 } from '@patternfly/react-core';
-import { ColumnsIcon } from '@patternfly/react-icons/dist/esm/icons/columns-icon';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
@@ -46,7 +44,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const {
     visibleColumns,
     isColumnManagementOpen,
-    openColumnManagement,
     closeColumnManagement,
     handleVisibleColumnsChange,
     isColumnVisible,
@@ -140,18 +137,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
             onClearFilters={onClearFilters}
             dataTest="snapshots-list-toolbar"
           />
-        </FlexItem>
-
-        <FlexItem>
-          <Button
-            variant="link"
-            aria-label="Manage columns"
-            onClick={openColumnManagement}
-            data-test="manage-columns-button"
-            color="link"
-          >
-            <ColumnsIcon /> Manage columns
-          </Button>
         </FlexItem>
       </Flex>
 

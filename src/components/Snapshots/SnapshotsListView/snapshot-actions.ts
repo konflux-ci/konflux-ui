@@ -14,7 +14,7 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
   const navigate = useNavigate();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
   const [releasePlans, releasePlansLoaded] = useReleasePlans(namespace);
-  const [releases, releasesLoaded] = useApplicationReleases(snapshot.spec?.application || '');
+  const [releasesLoaded] = useApplicationReleases(snapshot.spec?.application || '');
 
   const actions: Action[] = React.useMemo(() => {
     if (!snapshot) {
@@ -56,25 +56,11 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
     const selectedReleasePlan =
       autoReleasePlans.length > 0 ? autoReleasePlans[0] : availableReleasePlans[0];
 
-    // Check if there are existing releases for this snapshot
-    const snapshotReleases = releases.filter(
-      (release) => release.spec.snapshot === snapshot.metadata.name,
-    );
-
-    // Also check if the snapshot itself indicates it was auto-released
-    const autoReleasedCondition = snapshot.status?.conditions?.find(
-      (condition) => condition.type === 'AutoReleased' && condition.status === 'True',
-    );
-
-    const hasExistingReleases = snapshotReleases.length > 0 || !!autoReleasedCondition;
-
-    // Determine the action label based on whether releases exist for this snapshot
-    const actionLabel = hasExistingReleases ? 'Re-trigger release' : 'Trigger release';
-
     const updatedActions: Action[] = [
       {
         cta: () => {
-          const releasePlanName = selectedReleasePlan?.metadata.name;
+          // If no release plan is selected, create a new one
+          const releasePlanName = selectedReleasePlan?.metadata.name || 'create';
 
           const triggerReleasePath = RELEASEPLAN_TRIGGER_PATH.createPath({
             workspaceName: namespace,
@@ -89,20 +75,17 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
           navigate(`${triggerReleasePath}?${searchParams.toString()}`);
         },
         id: `trigger-release-${snapshot.metadata.name}`,
-        label: actionLabel,
+        label: 'Trigger release',
         disabled: !canCreateRelease,
         disabledTooltip: !canCreateRelease
           ? "You don't have access to trigger releases"
           : undefined,
         analytics: {
-          link_name: hasExistingReleases
-            ? 'retrigger-release-snapshot'
-            : 'trigger-release-snapshot',
+          link_name: 'trigger-release-snapshot',
           link_location: 'snapshot-actions',
           snapshot_name: snapshot.metadata.name,
-          release_plan: selectedReleasePlan?.metadata.name || 'none',
+          release_plan: selectedReleasePlan?.metadata.name,
           namespace,
-          hasExistingReleases,
         },
       },
     ];
@@ -114,7 +97,6 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
     releasePlans,
     canCreateRelease,
     namespace,
-    releases,
     releasesLoaded,
     navigate,
   ]);
