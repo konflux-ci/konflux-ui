@@ -1,7 +1,9 @@
 import * as React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
+import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { APPLICATION_RELEASE_DETAILS_PATH, RELEASE_SERVICE_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { useNamespace } from '../../../../shared/providers/Namespace';
@@ -11,10 +13,17 @@ import { TriggerReleaseForm } from './TriggerReleaseForm';
 
 export const TriggerReleaseFormPage: React.FC = () => {
   const { releasePlanName } = useParams<RouterParams>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const track = useTrackEvent();
   const namespace = useNamespace();
   const [releasePlans] = useReleasePlans(namespace);
+
+  // Get snapshot from search params if provided
+  const snapshotName = searchParams.get('snapshot');
+
+  // Fetch snapshot details to get the application name
+  const [snapshotDetails, snapshotLoaded] = useSnapshot(namespace, snapshotName || '');
 
   const handleSubmit = async (
     values: TriggerReleaseFormValues,
@@ -62,15 +71,35 @@ export const TriggerReleaseFormPage: React.FC = () => {
     navigate(RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }));
   };
 
-  const initialValues: TriggerReleaseFormValues = {
-    releasePlan: releasePlanName,
-    snapshot: '',
-    synopsis: '',
-    description: '',
-    topic: '',
-    references: [],
-    labels: [{ key: '', value: '' }],
-  };
+  // Check if the releasePlanName corresponds to an actual release plan
+  // Don't use the releasePlanName if it's our placeholder value 'new' or if it doesn't exist
+  const isValidReleasePlanName = releasePlanName && String(releasePlanName) !== 'new';
+  const validReleasePlan = isValidReleasePlanName
+    ? releasePlans.find((rp) => rp.metadata.name === releasePlanName)
+    : null;
+
+  // Create initial values that will update when snapshot data loads
+  const initialValues: TriggerReleaseFormValues = React.useMemo(
+    () => ({
+      releasePlan: validReleasePlan ? releasePlanName : '',
+      snapshot: snapshotName || '',
+      synopsis: '',
+      description: '',
+      topic: '',
+      references: [],
+      labels: [{ key: '', value: '' }],
+    }),
+    [validReleasePlan, releasePlanName, snapshotName],
+  );
+
+  // Show loading spinner if we're waiting for snapshot data to load
+  if (snapshotName && !snapshotLoaded) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
 
   return (
     <Formik
@@ -78,8 +107,9 @@ export const TriggerReleaseFormPage: React.FC = () => {
       onReset={handleReset}
       validationSchema={triggerReleaseFormSchema}
       initialValues={initialValues}
+      enableReinitialize={true}
     >
-      {(props) => <TriggerReleaseForm {...props} />}
+      {(props) => <TriggerReleaseForm {...props} snapshotDetails={snapshotDetails} />}
     </Formik>
   );
 };

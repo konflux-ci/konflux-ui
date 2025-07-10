@@ -1,17 +1,20 @@
 import * as React from 'react';
-import { ReleaseLabel } from '../../../consts/release';
+import { useNavigate } from 'react-router-dom';
+import { useApplicationReleases } from '../../../hooks/useApplicationReleases';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
-import { K8sQueryCreateResource } from '../../../k8s';
-import { ReleaseModel, ReleaseGroupVersionKind } from '../../../models';
+import { ReleaseModel } from '../../../models';
+import { RELEASEPLAN_TRIGGER_PATH } from '../../../routes/paths';
 import { Action } from '../../../shared/components/action-menu/types';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { ReleaseKind, ReleasePlanLabel, Snapshot } from '../../../types/coreBuildService';
+import { ReleasePlanLabel, Snapshot } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
 export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
   const namespace = useNamespace();
+  const navigate = useNavigate();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
   const [releasePlans, releasePlansLoaded] = useReleasePlans(namespace);
+  const [releases, releasesLoaded] = useApplicationReleases(snapshot.spec?.application || '');
 
   const actions: Action[] = React.useMemo(() => {
     if (!snapshot) {
@@ -21,8 +24,8 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
     // Find release plans for this application
     const applicationName = snapshot.spec?.application;
 
-    // If release plans are still loading, show disabled action
-    if (!releasePlansLoaded) {
+    // If release plans or releases are still loading, show disabled action
+    if (!releasePlansLoaded || !releasesLoaded) {
       return [
         {
           cta: () => Promise.resolve(),
@@ -53,57 +56,68 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
     const selectedReleasePlan =
       autoReleasePlans.length > 0 ? autoReleasePlans[0] : availableReleasePlans[0];
 
+    // Check if there are existing releases for this snapshot
+    const snapshotReleases = releases.filter(
+      (release) => release.spec.snapshot === snapshot.metadata.name,
+    );
+
+    // Also check if the snapshot itself indicates it was auto-released
+    const autoReleasedCondition = snapshot.status?.conditions?.find(
+      (condition) => condition.type === 'AutoReleased' && condition.status === 'True',
+    );
+
+    const hasExistingReleases = snapshotReleases.length > 0 || !!autoReleasedCondition;
+
+    // Determine the action label based on whether releases exist for this snapshot
+    const actionLabel = hasExistingReleases ? 'Re-trigger release' : 'Trigger release';
+
     const updatedActions: Action[] = [
       {
-        cta: async () => {
-          if (!selectedReleasePlan) {
-            throw new Error('No release plan available');
-          }
+        cta: () => {
+          const releasePlanName = selectedReleasePlan?.metadata.name;
 
-          const release: ReleaseKind = {
-            apiVersion: `${ReleaseGroupVersionKind.group}/${ReleaseGroupVersionKind.version}`,
-            kind: ReleaseGroupVersionKind.kind,
-            metadata: {
-              generateName: `${selectedReleasePlan.metadata.name}-`,
-              namespace,
-              labels: {
-                [ReleaseLabel.AUTOMATED]: 'false',
-              },
-            },
-            spec: {
-              releasePlan: selectedReleasePlan.metadata.name,
-              snapshot: snapshot.metadata.name,
-            },
-          };
-
-          return K8sQueryCreateResource({
-            model: ReleaseModel,
-            queryOptions: {
-              ns: namespace,
-            },
-            resource: release,
+          const triggerReleasePath = RELEASEPLAN_TRIGGER_PATH.createPath({
+            workspaceName: namespace,
+            releasePlanName,
           });
+
+          // Add snapshot as a search parameter
+          const searchParams = new URLSearchParams({
+            snapshot: snapshot.metadata.name,
+          });
+
+          navigate(`${triggerReleasePath}?${searchParams.toString()}`);
         },
         id: `trigger-release-${snapshot.metadata.name}`,
-        label: 'Trigger release',
-        disabled: !canCreateRelease || !selectedReleasePlan,
+        label: actionLabel,
+        disabled: !canCreateRelease,
         disabledTooltip: !canCreateRelease
           ? "You don't have access to trigger releases"
-          : !selectedReleasePlan
-            ? 'No release plan found for this application'
-            : undefined,
+          : undefined,
         analytics: {
-          link_name: 'trigger-release-snapshot',
+          link_name: hasExistingReleases
+            ? 'retrigger-release-snapshot'
+            : 'trigger-release-snapshot',
           link_location: 'snapshot-actions',
           snapshot_name: snapshot.metadata.name,
           release_plan: selectedReleasePlan?.metadata.name || 'none',
           namespace,
+          hasExistingReleases,
         },
       },
     ];
 
     return updatedActions;
-  }, [snapshot, releasePlansLoaded, releasePlans, canCreateRelease, namespace]);
+  }, [
+    snapshot,
+    releasePlansLoaded,
+    releasePlans,
+    canCreateRelease,
+    namespace,
+    releases,
+    releasesLoaded,
+    navigate,
+  ]);
 
   return actions;
 };

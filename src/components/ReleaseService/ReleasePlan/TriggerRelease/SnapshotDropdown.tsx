@@ -26,7 +26,7 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
     isFetchingNextPage,
   } = useSnapshotsForApplication(namespace, props.applicationName);
   const error = archiveError ?? clusterError;
-  const [, , { setValue }] = useField<string>(props.name);
+  const [field, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(
     () =>
@@ -35,9 +35,16 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
   );
 
   React.useEffect(() => {
-    // Reset snapshot dropdown value when applicationName changes
-    void setValue('');
-  }, [hasError, isLoading, props.applicationName, setErrors, setValue]);
+    // Only reset snapshot dropdown value if the current value is not valid for this application
+    if (!isLoading && !hasError && snapshots && field.value) {
+      const isCurrentSnapshotValid = snapshots.some(
+        (snapshot) => snapshot.metadata.name === field.value,
+      );
+      if (!isCurrentSnapshotValid) {
+        void setValue('');
+      }
+    }
+  }, [hasError, isLoading, props.applicationName, setErrors, setValue, snapshots, field.value]);
 
   React.useEffect(() => {
     if (hasNextPage && !isFetchingNextPage && fetchNextPage) fetchNextPage();
