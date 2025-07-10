@@ -26,6 +26,7 @@ import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
+import { PipelineRunColumnKey } from './PipelineRunListHeader';
 
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,
@@ -72,8 +73,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
   const { releaseName, releasePlan, release } = customData || {};
-  // @ts-expect-error vulnerabilities will not be available until fetched for the next page
-  const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
+  const vulnerabilities = customData?.vulnerabilities?.[obj.metadata.name]?.[0];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
   const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
 
@@ -272,3 +272,180 @@ export const PipelineRunListRowForRelease: React.FC<
     showComponent={false}
   />
 );
+
+type PipelineRunListRowWithColumnsProps = PipelineRunListRowProps & {
+  visibleColumns: Set<PipelineRunColumnKey>;
+};
+
+export const PipelineRunListRowWithColumns: React.FC<React.PropsWithChildren<PipelineRunListRowWithColumnsProps>> = ({
+  obj,
+  customData,
+  visibleColumns,
+}) => {
+  const namespace = useNamespace();
+  const capitalize = (label: string) => {
+    return label && label.charAt(0).toUpperCase() + label.slice(1);
+  };
+  const { releaseName, releasePlan, release } = customData || {};
+  const vulnerabilities = customData?.vulnerabilities?.[obj.metadata.name]?.[0];
+  const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
+  const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
+
+  const status = pipelineRunStatus(obj);
+  const actions = usePipelinerunActions(obj);
+  if (!obj.metadata?.labels) {
+    obj.metadata.labels = {};
+  }
+  const labels = obj.metadata.labels;
+  const applicationName = labels?.[PipelineRunLabel.APPLICATION];
+  const gitProvider = obj.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
+  const repoOrg = labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoURL = labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
+  const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
+  const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
+  const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
+
+  const testStatus = React.useMemo(() => {
+    const results = getPipelineRunStatusResults(obj);
+    return taskTestResultStatus(results);
+  }, [obj]);
+
+  return (
+    <>
+      {visibleColumns.has('name') && (
+        <TableData className={pipelineRunTableColumnClasses.name}>
+          <Link
+            to={`${PIPELINE_RUNS_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              pipelineRunName: obj.metadata?.name,
+            })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
+            title={obj.metadata?.name}
+            state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
+          >
+            {obj.metadata?.name}
+          </Link>
+        </TableData>
+      )}
+      {visibleColumns.has('started') && (
+        <TableData className={pipelineRunTableColumnClasses.started}>
+          <Timestamp
+            timestamp={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : ''}
+          />
+        </TableData>
+      )}
+      {visibleColumns.has('vulnerabilities') && (
+        <TableData
+          data-test="vulnerabilities"
+          className={pipelineRunTableColumnClasses.vulnerabilities}
+        >
+          {customData?.error ? (
+            <>N/A</>
+          ) : !obj?.status?.completionTime ? (
+            '-'
+          ) : scanLoaded ? (
+            <ScanStatus scanResults={scanResults} />
+          ) : (
+            <Skeleton />
+          )}
+        </TableData>
+      )}
+      {visibleColumns.has('duration') && (
+        <TableData className={pipelineRunTableColumnClasses.duration}>
+          {status !== 'Pending'
+            ? calculateDuration(
+                typeof obj.status?.startTime === 'string' ? obj.status?.startTime : '',
+                typeof obj.status?.completionTime === 'string' ? obj.status?.completionTime : '',
+              )
+            : '-'}
+        </TableData>
+      )}
+      {visibleColumns.has('status') && (
+        <TableData className={pipelineRunTableColumnClasses.status}>
+          <StatusIconWithText status={status} />
+        </TableData>
+      )}
+      {visibleColumns.has('testResultStatus') && (
+        <TableData className={pipelineRunTableColumnClasses.testResultStatus}>
+          <Popover
+            triggerAction="hover"
+            aria-label="error popover"
+            bodyContent={testStatus?.note}
+            isVisible={testStatus?.note ? undefined : false}
+          >
+            <div>{testStatus?.result ? testStatus.result : '-'}</div>
+          </Popover>
+        </TableData>
+      )}
+      {visibleColumns.has('type') && (
+        <TableData className={pipelineRunTableColumnClasses.type}>
+          {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
+        </TableData>
+      )}
+      {visibleColumns.has('component') && (
+        <TableData className={pipelineRunTableColumnClasses.component}>
+          {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
+            obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
+              <Link
+                to={COMPONENT_DETAILS_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
+                })}
+              >
+                {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
+              </Link>
+            ) : (
+              obj.metadata?.labels[PipelineRunLabel.COMPONENT]
+            )
+          ) : (
+            '-'
+          )}
+        </TableData>
+      )}
+      {visibleColumns.has('snapshot') && (
+        <TableData className={pipelineRunTableColumnClasses.snapshot}>
+          {releasePlan && release ? (
+            <Link
+              to={SNAPSHOT_DETAILS_PATH.createPath({
+                workspaceName: namespace,
+                applicationName: releasePlan.spec.application,
+                snapshotName: release.spec.snapshot,
+              })}
+              state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] }}
+            >
+              {release.spec.snapshot}
+            </Link>
+          ) : (
+            '-'
+          )}
+        </TableData>
+      )}
+      {visibleColumns.has('workspace') && (
+        <TableData className={pipelineRunTableColumnClasses.workspace}>{namespace}</TableData>
+      )}
+      {visibleColumns.has('trigger') && (
+        <TableData className={pipelineRunTableColumnClasses.trigger}>
+          {PipelineRunEventTypeLabel[eventType] ?? '-'}
+        </TableData>
+      )}
+      {visibleColumns.has('reference') && (
+        <TableData className={pipelineRunTableColumnClasses.reference}>
+          {getTriggerColumnData({
+            gitProvider,
+            repoOrg,
+            repoURL,
+            prNumber,
+            eventType,
+            commitId,
+          })}
+        </TableData>
+      )}
+      {visibleColumns.has('kebab') && (
+        <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
+          <ActionMenu actions={actions} />
+        </TableData>
+      )}
+    </>
+  );
+};
