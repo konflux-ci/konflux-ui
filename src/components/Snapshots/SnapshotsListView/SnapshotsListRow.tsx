@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Flex, FlexItem, Label, Truncate, pluralize } from '@patternfly/react-core';
-import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-circle-icon';
+import { Label, Truncate, pluralize } from '@patternfly/react-core';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
 import { getCommitShortName } from '~/utils/commits-utils';
 import { PipelineRunLabel, SnapshotLabels } from '../../../consts/pipelinerun';
@@ -115,17 +114,24 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
     );
   };
 
-  const renderStatus = () => {
-    // This is a placeholder - you'd need to implement actual status logic
-    // based on your snapshot status requirements
-    return (
-      <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
-        <FlexItem>
-          <CheckCircleIcon color="green" />
-        </FlexItem>
-        <FlexItem>Success</FlexItem>
-      </Flex>
+  const renderLatestSuccessfulRelease = () => {
+    // Check if snapshot has status conditions
+    if (!snapshot.status?.conditions || snapshot.status.conditions.length === 0) {
+      return '-';
+    }
+
+    // Find the last successful release condition
+    // Look for conditions where status is 'True' and reason is 'passed' (case-insensitive)
+    const successfulReleaseCondition = snapshot.status.conditions.find(
+      (condition) => condition.status === 'True' && condition.reason?.toLowerCase() === 'passed',
     );
+
+    if (!successfulReleaseCondition || !successfulReleaseCondition.lastTransitionTime) {
+      return '-';
+    }
+
+    // Display the timestamp of the last successful release
+    return <Timestamp timestamp={successfulReleaseCondition.lastTransitionTime} />;
   };
 
   return (
@@ -192,7 +198,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
           data-test="snapshot-list-row-latest-successful-release"
           className={snapshotsTableColumnClasses.latestSuccessfulRelease}
         >
-          {renderStatus()}
+          {renderLatestSuccessfulRelease()}
         </TableData>
       )}
       {isColumnVisible?.('kebab') && (
