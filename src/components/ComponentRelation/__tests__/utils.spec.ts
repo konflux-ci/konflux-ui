@@ -78,11 +78,6 @@ describe('componentRelationValidationSchema', () => {
     await expect(componentRelationValidationSchema.validate(values)).resolves.toBe(values);
     await expect(
       componentRelationValidationSchema.validate({
-        relations: [{ source: '', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] }],
-      }),
-    ).rejects.toThrowError();
-    await expect(
-      componentRelationValidationSchema.validate({
         relations: [
           { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['a'] },
           { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['f'] },

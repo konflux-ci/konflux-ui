@@ -23,6 +23,11 @@ export const STATIC_ENV_DESC = `A static environment is a set of compute resourc
 export const RELEASE_DESC = `After pushing your application to release, your application goes through a series of tests through the release pipeline to ensure the application complies with the  release policy set on the release target, also known as the "managed environment".`;
 export const MANAGED_ENV_DESC = `A managed environment is your application release target. This release target is an external environment, set up in an external namespace, and managed by another team. It is set for each application and not automatically shared among applications within the namespace.`;
 
+export enum SBOMResultKeys {
+  IMAGE_DIGEST = 'IMAGE_DIGEST',
+  SBOM_SHA = 'SBOM_BLOB_URL',
+}
+
 export enum runStatus {
   Succeeded = 'Succeeded',
   Failed = 'Failed',
