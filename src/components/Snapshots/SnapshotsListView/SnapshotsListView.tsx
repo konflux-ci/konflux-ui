@@ -64,21 +64,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       : snapshots || [];
   }, [snapshots, nameFilter]);
 
-  //todo: change for the approved image
-  const emptyState = (
-    <AppEmptyState
-      emptyStateImg={emptySnapshotImgUrl}
-      title="No snapshots found"
-      data-test="snapshots-empty-state"
-    >
-      <EmptyStateBody>
-        Snapshots are created automatically by push events or pull request events. Snapshots can
-        also created by created by manually if needed. Once created, Snapshots will be displayed on
-        this page.
-      </EmptyStateBody>
-    </AppEmptyState>
-  );
-
   if (hasError) {
     return <ErrorEmptyState httpError={HttpError.fromCode(500)} title="Unable to load snapshots" />;
   }
@@ -90,8 +75,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       </Bullseye>
     );
   }
-
-  if (!snapshots || snapshots.length === 0) return emptyState;
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
@@ -114,19 +97,34 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           </ExternalLink>
         </Text>
       </TextContent>
-
-      <BaseTextFilterToolbar
-        text={nameFilter}
-        label="name"
-        setText={(name) => setFilters({ name })}
-        onClearFilters={onClearFilters}
-        dataTest="snapshots-list-toolbar"
-      />
-
-      {filteredSnapshots.length === 0 ? (
-        <FilteredEmptyState onClearFilters={onClearFilters} />
+      {!snapshots || snapshots.length === 0 ? (
+        <AppEmptyState
+          emptyStateImg={emptySnapshotImgUrl}
+          title="No snapshots found"
+          data-test="snapshots-empty-state"
+        >
+          <EmptyStateBody>
+            Snapshots are created automatically by push events or pull request events. Snapshots can
+            also created by created by manually if needed. Once created, Snapshots will be displayed
+            on this page.
+          </EmptyStateBody>
+        </AppEmptyState>
       ) : (
-        <SnapshotsList snapshots={filteredSnapshots} applicationName={applicationName} />
+        <>
+          <BaseTextFilterToolbar
+            text={nameFilter}
+            label="name"
+            setText={(name) => setFilters({ name })}
+            onClearFilters={onClearFilters}
+            dataTest="snapshots-list-toolbar"
+          />
+
+          {filteredSnapshots.length === 0 ? (
+            <FilteredEmptyState onClearFilters={onClearFilters} />
+          ) : (
+            <SnapshotsList snapshots={filteredSnapshots} applicationName={applicationName} />
+          )}
+        </>
       )}
     </PageSection>
   );

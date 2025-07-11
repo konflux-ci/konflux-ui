@@ -14,7 +14,6 @@ import { FormikProps, useField } from 'formik';
 import { InputField, TextAreaField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useSearchParam } from '~/hooks/useSearchParam';
 import { useReleasePlans } from '../../../../../src/hooks/useReleasePlans';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { RELEASE_SERVICE_PATH } from '../../../../routes/paths';
@@ -51,7 +50,6 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   status,
   snapshotDetails,
 }) => {
-  const [application] = useSearchParam('application');
   const namespace = useNamespace();
   const [{ value: labels }] = useField<TriggerReleaseFormValues['labels']>('labels');
   const [releasePlans, loaded] = useReleasePlans(namespace);
@@ -67,8 +65,7 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   );
 
   // Use application name from release plan if available, otherwise use from snapshot details
-  const applicationName =
-    application || releasePlanApplicationName || snapshotDetails?.spec?.application || '';
+  const applicationName = releasePlanApplicationName || snapshotDetails?.spec?.application || '';
 
   return (
     <PageLayout

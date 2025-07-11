@@ -1,11 +1,9 @@
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
-import { NamespaceContext } from '../../../../shared/providers/Namespace/namespace-context';
-import { createUseParamsMock, createTestQueryClient } from '../../../../utils/test-utils';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
 import SnapshotsListView from '../SnapshotsListView';
 
 jest.useFakeTimers();
@@ -29,28 +27,11 @@ jest.mock('react-router-dom', () => {
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 // Helper function to create wrapped component
-const createWrappedComponent = () => {
-  const queryClient = createTestQueryClient();
-  return (
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/applications/test-app/snapshots']}>
-        <NamespaceContext.Provider
-          value={{
-            namespace: 'test-namespace',
-            namespaceResource: null,
-            namespacesLoaded: true,
-            lastUsedNamespace: 'test-namespace',
-            namespaces: [],
-          }}
-        >
-          <FilterContextProvider filterParams={[]}>
-            <SnapshotsListView applicationName="test-app" />
-          </FilterContextProvider>
-        </NamespaceContext.Provider>
-      </MemoryRouter>
-    </QueryClientProvider>
-  );
-};
+const createWrappedComponent = () => (
+  <FilterContextProvider filterParams={[]}>
+    <SnapshotsListView applicationName="test-app" />
+  </FilterContextProvider>
+);
 
 const checkEmptyState = () => {
   // Check for the empty state title
@@ -76,6 +57,7 @@ describe('SnapshotsListView - Empty State', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseNamespaceHook('test-namespace');
   });
 
   it('should display empty state when no snapshots are found', () => {
@@ -86,7 +68,7 @@ describe('SnapshotsListView - Empty State', () => {
       hasError: false,
     });
 
-    render(createWrappedComponent());
+    renderWithQueryClientAndRouter(createWrappedComponent());
 
     checkEmptyState();
   });
@@ -99,7 +81,7 @@ describe('SnapshotsListView - Empty State', () => {
       hasError: false,
     });
 
-    render(createWrappedComponent());
+    renderWithQueryClientAndRouter(createWrappedComponent());
 
     checkEmptyState();
   });
@@ -112,7 +94,7 @@ describe('SnapshotsListView - Empty State', () => {
       hasError: false,
     });
 
-    render(createWrappedComponent());
+    renderWithQueryClientAndRouter(createWrappedComponent());
 
     checkEmptyState();
   });
@@ -125,7 +107,7 @@ describe('SnapshotsListView - Empty State', () => {
       hasError: false,
     });
 
-    render(createWrappedComponent());
+    renderWithQueryClientAndRouter(createWrappedComponent());
 
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
@@ -138,7 +120,7 @@ describe('SnapshotsListView - Empty State', () => {
       hasError: true,
     });
 
-    render(createWrappedComponent());
+    renderWithQueryClientAndRouter(createWrappedComponent());
 
     expect(screen.getByText('Unable to load snapshots')).toBeInTheDocument();
   });

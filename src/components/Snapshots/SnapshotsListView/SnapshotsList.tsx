@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
-import { SortableSnapshotHeaders } from '../../../consts/snapshots';
 import { useSortedResources } from '../../../hooks/useSortedResources';
 import { Table } from '../../../shared';
 import { Snapshot } from '../../../types/coreBuildService';
-import SnapshotsListHeader from './SnapshotsListHeader';
+import SnapshotsListHeader, { SortableSnapshotHeaders } from './SnapshotsListHeader';
 import SnapshotsListRow from './SnapshotsListRow';
 import { SnapshotsListProps } from './types';
 

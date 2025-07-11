@@ -22,7 +22,7 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
           ? {
               href: `${RELEASEPLAN_TRIGGER_PATH.createPath({
                 workspaceName: namespace,
-              })}?snapshot=${snapshot.metadata.name}&application=${snapshot.spec?.application}`,
+              })}?snapshot=${snapshot.metadata.name}`,
             }
           : () => Promise.resolve(),
         id: `trigger-release-${snapshot.metadata.name}`,
