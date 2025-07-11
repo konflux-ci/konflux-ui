@@ -11,9 +11,10 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { SnapshotLabels } from '../../../consts/pipelinerun';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { useScanResults } from '../../../hooks/useScanResults';
+import { useScrollToHash } from '../../../hooks/useScrollToHash';
 import { useSnapshot } from '../../../hooks/useSnapshots';
 import { COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
@@ -57,6 +58,11 @@ const SnapshotOverviewTab: React.FC = () => {
       }) || [],
     [snapshot?.spec],
   );
+
+  useScrollToHash({
+    loaded: Boolean(loaded),
+    loadErr: Boolean(loadErr),
+  });
 
   return (
     <>
@@ -122,7 +128,7 @@ const SnapshotOverviewTab: React.FC = () => {
           </FlexItem>
         </Flex>
       </Flex>
-      <div className="pf-vf-u-mt-lg">
+      <div id="snapshot-components" className="pf-vf-u-mt-lg">
         <FilterContextProvider filterParams={['name']}>
           <SnapshotComponentsList
             components={componentsTableData}

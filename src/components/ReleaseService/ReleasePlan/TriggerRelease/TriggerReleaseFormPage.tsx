@@ -1,20 +1,38 @@
 import * as React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
+import { useSearchParam } from '~/hooks/useSearchParam';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
+import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { APPLICATION_RELEASE_DETAILS_PATH, RELEASE_SERVICE_PATH } from '../../../../routes/paths';
-import { RouterParams } from '../../../../routes/utils';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { useTrackEvent, TrackEvents } from '../../../../utils/analytics';
 import { TriggerReleaseFormValues, createRelease, triggerReleaseFormSchema } from './form-utils';
 import { TriggerReleaseForm } from './TriggerReleaseForm';
 
 export const TriggerReleaseFormPage: React.FC = () => {
-  const { releasePlanName } = useParams<RouterParams>();
+  const [snapshotName] = useSearchParam('snapshot');
+  const [releasePlanName] = useSearchParam('releasePlan');
   const navigate = useNavigate();
   const track = useTrackEvent();
   const namespace = useNamespace();
   const [releasePlans] = useReleasePlans(namespace);
+
+  // Fetch snapshot details to get the application name
+  const [snapshotDetails, snapshotLoaded] = useSnapshot(
+    snapshotName ? namespace : undefined,
+    snapshotName || '',
+  );
+
+  // Show loading spinner if we're waiting for snapshot data to load
+  if (snapshotName && !snapshotLoaded) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
 
   const handleSubmit = async (
     values: TriggerReleaseFormValues,
@@ -28,20 +46,18 @@ export const TriggerReleaseFormPage: React.FC = () => {
     try {
       const newRelease = await createRelease(values, namespace);
       track('Release plan triggered', {
-        // eslint-disable-next-line camelcase
         release_plan_name: newRelease.metadata.name,
         // eslint-disable-next-line camelcase
         target_snapshot: newRelease.spec.snapshot,
         releasePlan: newRelease.spec.releasePlan,
         namespace,
       });
-      const applicationName = releasePlans.filter(
-        (rp) => rp.metadata.name === values.releasePlan,
-      )?.[0]?.spec?.application;
+      const application = releasePlans.filter((rp) => rp.metadata.name === values.releasePlan)?.[0]
+        ?.spec?.application;
       navigate(
         APPLICATION_RELEASE_DETAILS_PATH.createPath({
           workspaceName: namespace,
-          applicationName,
+          applicationName: application,
           releaseName: newRelease.metadata?.name,
         }),
       );
@@ -62,9 +78,11 @@ export const TriggerReleaseFormPage: React.FC = () => {
     navigate(RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }));
   };
 
+  const validReleasePlan = releasePlans?.find((rp) => rp.metadata.name === releasePlanName);
+
   const initialValues: TriggerReleaseFormValues = {
-    releasePlan: releasePlanName,
-    snapshot: '',
+    releasePlan: validReleasePlan ? releasePlanName : '',
+    snapshot: snapshotName ?? '',
     synopsis: '',
     description: '',
     topic: '',
@@ -73,13 +91,13 @@ export const TriggerReleaseFormPage: React.FC = () => {
   };
 
   return (
-    <Formik
+    <Formik<TriggerReleaseFormValues>
       onSubmit={handleSubmit}
       onReset={handleReset}
       validationSchema={triggerReleaseFormSchema}
       initialValues={initialValues}
     >
-      {(props) => <TriggerReleaseForm {...props} />}
+      {(props) => <TriggerReleaseForm {...props} snapshotDetails={snapshotDetails} />}
     </Formik>
   );
 };
