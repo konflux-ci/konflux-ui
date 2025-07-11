@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { pluralize } from '@patternfly/react-core';
-import { SnapshotLabels, snapshotsTableColumnClasses } from '../../../consts/snapshots';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
@@ -9,6 +9,7 @@ import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { TriggerColumnData } from '../../../utils/trigger-column-utils';
 import { useSnapshotActions } from './snapshot-actions';
+import { snapshotsTableColumnClasses } from './SnapshotsListHeader';
 import { SnapshotsListRowProps } from './types';
 
 const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>> = ({
