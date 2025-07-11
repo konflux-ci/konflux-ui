@@ -20,7 +20,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
   const [releasePlans] = useReleasePlans(namespace);
 
   // Fetch snapshot details to get the application name
-  const [snapshotDetails, snapshotLoaded, snapshotError] = useSnapshot(
+  const [snapshotDetails, snapshotLoaded] = useSnapshot(
     snapshotName ? namespace : undefined,
     snapshotName || '',
   );
@@ -34,9 +34,6 @@ export const TriggerReleaseFormPage: React.FC = () => {
     );
   }
 
-  const validSnapshot =
-    snapshotLoaded && !snapshotError && snapshotDetails?.metadata?.name === snapshotName;
-
   const handleSubmit = async (
     values: TriggerReleaseFormValues,
     { setSubmitting, setStatus }: FormikHelpers<TriggerReleaseFormValues>,
@@ -49,7 +46,6 @@ export const TriggerReleaseFormPage: React.FC = () => {
     try {
       const newRelease = await createRelease(values, namespace);
       track('Release plan triggered', {
-        // eslint-disable-next-line camelcase
         release_plan_name: newRelease.metadata.name,
         // eslint-disable-next-line camelcase
         target_snapshot: newRelease.spec.snapshot,
@@ -86,7 +82,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
 
   const initialValues: TriggerReleaseFormValues = {
     releasePlan: validReleasePlan ? releasePlanName : '',
-    snapshot: validSnapshot ? snapshotName : '',
+    snapshot: snapshotName ?? '',
     synopsis: '',
     description: '',
     topic: '',
@@ -95,7 +91,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
   };
 
   return (
-    <Formik
+    <Formik<TriggerReleaseFormValues>
       onSubmit={handleSubmit}
       onReset={handleReset}
       validationSchema={triggerReleaseFormSchema}
