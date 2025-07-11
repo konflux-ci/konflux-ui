@@ -11,6 +11,7 @@ import {
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
+import { TriggerColumnData } from '../../../shared/components/trigger-column-data/trigger-column-data';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
@@ -20,7 +21,6 @@ import {
   pipelineRunStatus,
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
-import { TriggerColumnData } from '../../../utils/trigger-column-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';

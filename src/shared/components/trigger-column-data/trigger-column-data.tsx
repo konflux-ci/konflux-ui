@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Label, Truncate, Flex, FlexItem } from '@patternfly/react-core';
 import { CommitIcon } from '~/components/Commits/CommitIcon';
-import { PipelineRunEventType } from '../consts/pipelinerun';
-import { ExternalLink } from '../shared';
+import { ExternalLink } from '../..';
+import { PipelineRunEventType } from '../../../consts/pipelinerun';
 
 export interface TriggerColumnData {
   gitProvider?: string;
@@ -60,12 +60,4 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
       </FlexItem>
     </Flex>
   );
-};
-
-/**
- * @deprecated Use TriggerColumnData component instead
- * Legacy function for backward compatibility
- */
-export const getTriggerColumnData = (data: TriggerColumnData): React.ReactNode => {
-  return <TriggerColumnData {...data} />;
 };

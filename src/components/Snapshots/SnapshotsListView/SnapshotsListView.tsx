@@ -16,6 +16,7 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
 import emptySnapshotImgUrl from '../../../assets/snapshots/empty-snapshot.png';
+import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
 import { HttpError } from '../../../k8s/error';
@@ -92,9 +93,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       <TextContent>
         <Text component={TextVariants.p}>
           A snapshot is a point-in-time, immutable record of an application&apos;s container images.{' '}
-          <ExternalLink href="https://konflux-ci.dev/docs/testing/integration/snapshots/">
-            Learn more
-          </ExternalLink>
+          <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
         </Text>
       </TextContent>
       {!snapshots || snapshots.length === 0 ? (

@@ -78,7 +78,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
     navigate(RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }));
   };
 
-  const validReleasePlan = releasePlans.find((rp) => rp.metadata.name === releasePlanName);
+  const validReleasePlan = releasePlans?.find((rp) => rp.metadata.name === releasePlanName);
 
   const initialValues: TriggerReleaseFormValues = {
     releasePlan: validReleasePlan ? releasePlanName : '',
