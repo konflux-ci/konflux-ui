@@ -12,9 +12,9 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { HttpError } from '~/k8s/error';
 import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
-import { useReleasePlan } from '../../hooks/useReleasePlans';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
@@ -36,10 +36,9 @@ const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release, loaded, isError] = useRelease(namespace, releaseName);
-  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
   const status = useReleaseStatus(release);
 
-  if (!loaded || !releasePlanLoaded) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner size="lg" />
@@ -56,6 +55,8 @@ const ReleaseOverviewTab: React.FC = () => {
       />
     );
   }
+
+  const applicationName = release.metadata.labels[PipelineRunLabel.APPLICATION];
 
   const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
     getManagedPipelineRunFromRelease(release),
@@ -139,14 +140,14 @@ const ReleaseOverviewTab: React.FC = () => {
                 <DescriptionListTerm>Release Plan</DescriptionListTerm>
                 <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
               </DescriptionListGroup>
-              {release.spec.snapshot && releasePlanLoaded && (
+              {release.spec.snapshot && (
                 <DescriptionListGroup>
                   <DescriptionListTerm>Snapshot</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Link
                       to={SNAPSHOT_DETAILS_PATH.createPath({
                         workspaceName: namespace,
-                        applicationName: releasePlan.spec.application,
+                        applicationName,
                         snapshotName: release.spec.snapshot,
                       })}
                       state={{ type: 'snapshot' }}
@@ -169,7 +170,7 @@ const ReleaseOverviewTab: React.FC = () => {
                     <Link
                       to={PIPELINE_RUNS_DETAILS_PATH.createPath({
                         workspaceName: tenantCollectorPrNamespace,
-                        applicationName: releasePlan.spec.application,
+                        applicationName,
                         pipelineRunName: tenantCollectorPipelineRun,
                       })}
                     >
@@ -183,11 +184,11 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Tenant Pipeline Run</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {tenantPipelineRun && tenantPrNamespace && releasePlanLoaded ? (
+                  {tenantPipelineRun && tenantPrNamespace ? (
                     <Link
                       to={PIPELINE_RUNS_DETAILS_PATH.createPath({
                         workspaceName: tenantPrNamespace,
-                        applicationName: releasePlan.spec.application,
+                        applicationName,
                         pipelineRunName: tenantPipelineRun,
                       })}
                     >
@@ -201,11 +202,11 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Managed Pipeline Run</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {managedPipelineRun && managedPrNamespace && releasePlanLoaded ? (
+                  {managedPipelineRun && managedPrNamespace ? (
                     <Link
                       to={PIPELINE_RUNS_DETAILS_PATH.createPath({
                         workspaceName: managedPrNamespace,
-                        applicationName: releasePlan.spec.application,
+                        applicationName,
                         pipelineRunName: managedPipelineRun,
                       })}
                       state={{ type: 'managed' }}
@@ -220,11 +221,11 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Final Pipeline Run</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {finalPipelineRun && finalPrNamespace && releasePlanLoaded ? (
+                  {finalPipelineRun && finalPrNamespace ? (
                     <Link
                       to={PIPELINE_RUNS_DETAILS_PATH.createPath({
                         workspaceName: finalPrNamespace,
-                        applicationName: releasePlan.spec.application,
+                        applicationName,
                         pipelineRunName: finalPipelineRun,
                       })}
                     >
