@@ -65,7 +65,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: [],
       isLoading: false,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -78,7 +79,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: undefined,
       isLoading: false,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -91,7 +93,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: null,
       isLoading: false,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -104,7 +107,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: [],
       isLoading: true,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -112,12 +116,27 @@ describe('SnapshotsListView - Empty State', () => {
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
-  it('should not display empty state when there is an error', () => {
+  it('should not display empty state when there is a cluster error', () => {
     // Mock error state
     useMockSnapshots.mockReturnValue({
       data: [],
       isLoading: false,
-      hasError: true,
+      archiveError: undefined,
+      clusterError: { code: 500 },
+    });
+
+    renderWithQueryClientAndRouter(createWrappedComponent());
+
+    expect(screen.getByText('Unable to load snapshots')).toBeInTheDocument();
+  });
+
+  it('should not display empty state when there is a archive error', () => {
+    // Mock error state
+    useMockSnapshots.mockReturnValue({
+      data: [],
+      isLoading: false,
+      archiveError: { code: 500 },
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());

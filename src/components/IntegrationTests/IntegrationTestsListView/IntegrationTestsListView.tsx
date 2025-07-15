@@ -11,6 +11,7 @@ import {
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioModel } from '../../../models';
@@ -25,6 +26,7 @@ import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { IntegrationTestListHeader } from './IntegrationTestListHeader';
 import IntegrationTestListRow from './IntegrationTestListRow';
+
 const IntegrationTestsEmptyState: React.FC<
   React.PropsWithChildren<{
     handleAddTest: () => void;
@@ -68,9 +70,12 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   );
 
   const navigate = useNavigate();
-  const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
-    namespace,
-    applicationName,
+  const [integrationTests, integrationTestsLoaded, integrationTestsError] =
+    useIntegrationTestScenarios(namespace, applicationName);
+  const errorState = useErrorState(
+    integrationTestsError,
+    integrationTestsLoaded,
+    'integration tests',
   );
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -116,6 +121,10 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
       </ButtonWithAccessTooltip>
     </BaseTextFilterToolbar>
   );
+
+  if (errorState) {
+    return errorState;
+  }
 
   return (
     <>

@@ -15,14 +15,13 @@ import {
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import emptySnapshotImgUrl from '../../../assets/snapshots/empty-snapshot.png';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
-import { HttpError } from '../../../k8s/error';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
@@ -43,7 +42,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const {
     data: snapshots,
     isLoading,
-    hasError,
+    clusterError,
+    archiveError,
   } = useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
@@ -57,6 +57,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     },
     SnapshotModel,
   );
+  const error = clusterError ?? archiveError;
+  const errorState = useErrorState(error, !isLoading, 'snapshots');
 
   const filteredSnapshots = React.useMemo(() => {
     // apply name filter
@@ -65,16 +67,16 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       : snapshots || [];
   }, [snapshots, nameFilter]);
 
-  if (hasError) {
-    return <ErrorEmptyState httpError={HttpError.fromCode(500)} title="Unable to load snapshots" />;
-  }
-
   if (isLoading) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
+  }
+
+  if (error) {
+    return errorState;
   }
 
   return (

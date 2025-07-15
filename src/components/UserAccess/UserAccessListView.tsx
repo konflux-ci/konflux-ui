@@ -8,6 +8,7 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
@@ -67,7 +68,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     username: unparsedFilters.username ? (unparsedFilters.username as string) : '',
   });
   const { username: usernameFilter } = filters;
-  const [roleBindings, loaded] = useRoleBindings(namespace);
+  const [roleBindings, loaded, error] = useRoleBindings(namespace);
+  const errorState = useErrorState(error, loaded, 'role bindings');
 
   const filterRBs = React.useMemo(
     () =>
@@ -80,6 +82,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       ),
     [roleBindings, usernameFilter],
   );
+
+  if (error) {
+    return errorState;
+  }
+
   if (!loaded) {
     return (
       <Bullseye>

@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
@@ -30,20 +31,30 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
   component,
 }) => {
   const namespace = useNamespace();
-  const [pipelineRun, loaded] = useLatestBuildPipelineRunForComponent(
+  const [pipelineRun, loaded, pipelineRunError] = useLatestBuildPipelineRunForComponent(
     component.metadata.namespace,
     component.metadata.name,
   );
-  const [taskRuns, tloaded] = useTaskRuns(
+  const pipelineRunErrorState = useErrorState(pipelineRunError, loaded, 'pipeline run');
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
     pipelineRun?.metadata?.namespace,
     pipelineRun?.metadata?.name,
   );
+  const taskRunsErrorState = useErrorState(taskRunsError, taskRunsLoaded, 'task runs');
   const plrStatus = React.useMemo(
     () => loaded && pipelineRun && pipelineRunStatus(pipelineRun),
     [loaded, pipelineRun],
   );
 
-  if (loaded && !pipelineRun) {
+  if (!loaded) {
+    return <LoadingBox />;
+  }
+
+  if (pipelineRunError) {
+    return pipelineRunErrorState;
+  }
+
+  if (!pipelineRun) {
     return <EmptyBox label="pipeline runs" />;
   }
 
@@ -94,10 +105,12 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
         </DescriptionList>
       </div>
       <div className="build-log-viewer__body">
-        {pipelineRun && taskRuns && tloaded ? (
-          <PipelineRunLogs obj={pipelineRun} taskRuns={taskRuns} />
-        ) : (
+        {!(pipelineRun && taskRunsLoaded) ? (
           <LoadingBox />
+        ) : taskRunsError ? (
+          taskRunsErrorState
+        ) : (
+          <PipelineRunLogs obj={pipelineRun} taskRuns={taskRuns} />
         )}
       </div>
     </>

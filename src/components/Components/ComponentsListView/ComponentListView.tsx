@@ -20,6 +20,7 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
@@ -74,6 +75,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     applicationName,
     true,
   );
+  const componentsErrorState = useErrorState(componentsError, componentsLoaded, 'components');
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
 
@@ -242,6 +244,10 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       </ButtonWithAccessTooltip>
     </BaseTextFilterToolbar>
   );
+
+  if (componentsError) {
+    return componentsErrorState;
+  }
 
   return (
     <>

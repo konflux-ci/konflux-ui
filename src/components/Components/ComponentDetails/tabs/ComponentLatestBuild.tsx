@@ -12,11 +12,10 @@ import {
   Spinner,
   Button,
 } from '@patternfly/react-core';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import { useLatestSuccessfulBuildPipelineRunForComponent } from '../../../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
-import { HttpError } from '../../../../k8s/error';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
-import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
@@ -33,30 +32,32 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   component,
 }) => {
   const namespace = useNamespace();
-  const [pipelineRun, pipelineRunLoaded, error] = useLatestSuccessfulBuildPipelineRunForComponent(
-    namespace,
-    component.metadata.name,
-  );
+  const [pipelineRun, pipelineRunLoaded, pipelineRunError] =
+    useLatestSuccessfulBuildPipelineRunForComponent(namespace, component.metadata.name);
   const commit = React.useMemo(
     () => ((pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1)) || [])[0],
     [pipelineRunLoaded, pipelineRun],
   );
-  const [taskRuns, taskRunsLoaded] = useTaskRuns(namespace, pipelineRun?.metadata?.name);
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+    namespace,
+    pipelineRun?.metadata?.name,
+  );
   const buildLogsModal = useBuildLogViewerModal(component);
+
+  const pipelineRunErrorState = useErrorState(
+    pipelineRunError,
+    pipelineRunLoaded,
+    'pipeline run',
+    true,
+  );
+  const taskRunsErrorState = useErrorState(taskRunsError, taskRunsLoaded, 'task runs', true);
 
   // Avoid getLastestImage fallback to spec.containerImage, which lacks image tag
   // and causes 'cosign download sbom' to fail. Use lastPromotedImage explicitly.
   const containerImage = component?.status?.lastPromotedImage;
 
-  if (error) {
-    const httpError = HttpError.fromCode((error as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title={`Unable to load the latest build information.`}
-        body={httpError.message}
-      />
-    );
+  if (pipelineRunError) {
+    return pipelineRunErrorState;
   }
 
   if (!pipelineRunLoaded || !taskRunsLoaded) {
@@ -164,7 +165,11 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
               )}
             </DescriptionListDescription>
           </DescriptionListGroup>
-          <ScanDescriptionListGroup taskRuns={taskRuns} showLogsLink />
+          {taskRunsError ? (
+            taskRunsErrorState
+          ) : (
+            <ScanDescriptionListGroup taskRuns={taskRuns} showLogsLink />
+          )}
         </DescriptionList>
       </FlexItem>
     </Flex>
