@@ -44,7 +44,10 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
   const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const pipelineRun = workflowData.resource as PipelineRunKind;
-  const [taskRuns] = useTaskRuns(namespace, pipelineRun.metadata.name);
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+    namespace,
+    pipelineRun?.metadata?.name ?? '',
+  );
 
   if (!pipelineRun) {
     return null;
@@ -143,7 +146,9 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>
-            <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound />
+            {taskRunsLoaded && !taskRunsError && (
+              <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound />
+            )}
             <DescriptionListGroup>
               <DescriptionListDescription>
                 <Link

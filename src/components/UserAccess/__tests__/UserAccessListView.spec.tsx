@@ -79,6 +79,12 @@ describe('UserAccessListView', () => {
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
+  it('should display error state if role bindings fail to load', () => {
+    useRoleBindingsMock.mockReturnValue([[], true, { code: 451 }]);
+    render(UserAccessList);
+    expect(screen.getByText('Unable to load role bindings')).toBeInTheDocument();
+  });
+
   it('should display role bindings when loaded', () => {
     useRoleBindingsMock.mockReturnValue([[mockRoleBinding], true]);
     render(UserAccessList);

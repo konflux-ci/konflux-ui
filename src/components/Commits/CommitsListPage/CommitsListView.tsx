@@ -4,12 +4,11 @@ import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
 import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
-import { HttpError } from '../../../k8s/error';
 import { Table, useDeepCompareMemoize } from '../../../shared';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit } from '../../../types';
@@ -111,14 +110,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   );
 
   if (error) {
-    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title="Unable to load pipeline runs"
-        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
-      />
-    );
+    return getErrorState(error, loaded, 'commits');
   }
   return (
     <>

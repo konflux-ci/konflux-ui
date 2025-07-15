@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import { HttpError } from '~/k8s/error';
 import NamespaceListRow from '.././NamespaceListRow';
 import { useApplications } from '../../../hooks/useApplications';
 import { NamespaceKind } from '../../../types';
@@ -62,5 +63,15 @@ describe('NamespaceListRow', () => {
     rerender(<NamespaceListRow columns={[]} obj={mockNamespace} />);
 
     expect(screen.getByText('2 Applications')).toBeInTheDocument();
+  });
+
+  it('should render the error message if there is an error loading the applications', () => {
+    (useApplications as jest.Mock).mockReturnValue([
+      undefined,
+      true,
+      new HttpError(undefined, 403),
+    ]);
+    routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+    expect(screen.getByText('Failed to load applications')).toBeInTheDocument();
   });
 });

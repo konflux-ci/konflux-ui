@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { mockSecret } from '~/components/Secrets/__data__/mock-secrets';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
+import { useComponent } from '~/hooks/useComponents';
 import { UnlinkSecret } from '../UnlinkSecret';
 
 // Mock the hooks
@@ -11,19 +12,14 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock('~/hooks/useComponents', () => ({
-  useComponent: () => [
-    {
-      metadata: {
-        name: 'test-component',
-        namespace: 'test-namespace',
-      },
-    },
-  ],
+  useComponent: jest.fn(),
 }));
 
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: () => 'test-namespace',
 }));
+
+const useComponentMock = useComponent as jest.Mock;
 
 describe('UnlinkSecret', () => {
   const mockCommonSecret = {
@@ -37,6 +33,19 @@ describe('UnlinkSecret', () => {
     },
   };
 
+  beforeEach(() => {
+    useComponentMock.mockReturnValue([
+      {
+        metadata: {
+          name: 'test-component',
+          namespace: 'test-namespace',
+        },
+      },
+      true, // loaded
+      null, // error
+    ]);
+  });
+
   it('should render basic unlink message for regular secret', () => {
     render(<UnlinkSecret onClose={() => {}} secret={mockSecret} />);
 
@@ -44,6 +53,12 @@ describe('UnlinkSecret', () => {
     expect(screen.getByText('test-component')).toBeInTheDocument();
     expect(screen.getByText(/will be unlinked from/)).toBeInTheDocument();
     expect(screen.queryByText(/This is a common secret/)).not.toBeInTheDocument();
+  });
+
+  it('should render error message for component not found', () => {
+    useComponentMock.mockReturnValue([undefined, false, { code: 404 }]);
+    render(<UnlinkSecret onClose={() => {}} secret={mockSecret} />);
+    expect(screen.getByText('Unable to load component')).toBeInTheDocument();
   });
 
   it('should render warning message for common secret', () => {

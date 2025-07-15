@@ -12,12 +12,11 @@ import {
   Button,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/secret.svg';
-import { useComponent } from '../../../hooks/useComponents';
 import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { useSortedResources } from '../../../hooks/useSortedResources';
-import { HttpError } from '../../../k8s/error';
 import {
   COMPONENT_DETAILS_PATH,
   COMPONENT_LIST_PATH,
@@ -26,7 +25,6 @@ import {
 import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared/components';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { SecretKind } from '../../../types';
@@ -45,7 +43,6 @@ export const LinkedSecretsListView: React.FC = () => {
   const { componentName, applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
-  const [component, componentLoaded, componentError] = useComponent(namespace, componentName);
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.secretName);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
     SortByDirection.asc,
@@ -85,7 +82,7 @@ export const LinkedSecretsListView: React.FC = () => {
     [sortedLinkedSecrets, nameFilter],
   );
 
-  if (!componentLoaded || !linkedSecretsLoaded) {
+  if (!linkedSecretsLoaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
@@ -93,17 +90,8 @@ export const LinkedSecretsListView: React.FC = () => {
     );
   }
 
-  if (componentError || linkedSecretsError) {
-    const error = componentError ?? linkedSecretsError;
-    const httpError = HttpError.fromCode((error as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        data-test="linked-secrets-list-view_error-empty-state"
-        httpError={httpError}
-        title="Unable to load linked secrets"
-        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
-      />
-    );
+  if (linkedSecretsError) {
+    return getErrorState(linkedSecretsError, linkedSecretsLoaded, 'linked secrets');
   }
 
   const EmptyMessage = () => (
@@ -154,7 +142,7 @@ export const LinkedSecretsListView: React.FC = () => {
               applicationName,
               componentName,
             }),
-            name: component.metadata.name,
+            name: componentName,
           },
           {
             path: COMPONENT_LINKED_SECRETS_PATH.createPath({

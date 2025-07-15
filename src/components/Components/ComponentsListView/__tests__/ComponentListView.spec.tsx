@@ -35,6 +35,7 @@ jest.mock('react-router-dom', () => {
   return {
     ...actual,
     Link: (props) => <a href={props.to}>{props.children}</a>,
+    useNavigate: () => jest.fn(),
   };
 });
 
@@ -99,6 +100,12 @@ describe('ComponentListViewPage', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false]);
     render(<ComponentList />);
     screen.getByTestId('data-table-skeleton');
+  });
+
+  it('should render error message if data is not loaded', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true, { code: 400 }]);
+    render(<ComponentList />);
+    screen.getByText('Unable to load components');
   });
 
   it('should render button to add components', () => {

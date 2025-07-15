@@ -2,8 +2,8 @@ import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useApplication } from '../../hooks/useApplications';
-import { HttpError } from '../../k8s/error';
 import { ApplicationModel, ComponentModel, IntegrationTestScenarioModel } from '../../models';
 import {
   APPLICATION_DETAILS_PATH,
@@ -11,7 +11,6 @@ import {
   INTEGRATION_TEST_ADD_PATH,
   IMPORT_PATH,
 } from '../../routes/paths';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
@@ -48,23 +47,16 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   const appDisplayName = application?.spec?.displayName || application?.metadata?.name || '';
   const applicationBreadcrumbs = useApplicationBreadcrumbs(appDisplayName, false);
 
-  if (applicationError) {
-    const appError = HttpError.fromCode((applicationError as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={appError}
-        title={`Unable to load application ${appDisplayName}`}
-        body={appError.message}
-      />
-    );
-  }
-
   if (!applicationLoaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
+  }
+
+  if (applicationError) {
+    return getErrorState(applicationError, applicationLoaded, 'application');
   }
 
   return (

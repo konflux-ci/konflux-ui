@@ -12,8 +12,8 @@ import { useNamespaceActions } from './useNamespaceActions';
 const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<NamespaceKind>>> = ({
   obj,
 }) => {
-  const [applications, loaded] = useApplications(obj.metadata.name);
   const [actions, , onToggle] = useNamespaceActions(obj);
+  const [applications, loaded, error] = useApplications(obj.metadata.name);
 
   return (
     <>
@@ -27,7 +27,11 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
       </TableData>
       <TableData className={namespaceTableColumnClasses.applications}>
         {loaded ? (
-          pluralize(applications.length, 'Application')
+          error ? (
+            'Failed to load applications'
+          ) : (
+            pluralize(applications.length, 'Application')
+          )
         ) : (
           <Skeleton width="50%" screenreaderText="Loading application count" />
         )}

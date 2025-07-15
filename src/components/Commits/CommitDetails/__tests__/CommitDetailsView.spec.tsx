@@ -54,10 +54,9 @@ describe('CommitDetailsView', () => {
 
   it('should show plr fetching error if unable to load plrs', () => {
     watchResourceMock.mockReturnValueOnce([[], true, { code: 503 }]);
-    watchCommitPrsMock.mockReturnValueOnce([[], false, { code: 503 }]);
+    watchCommitPrsMock.mockReturnValueOnce([[], true, { code: 503 }]);
     renderWithQueryClient(<CommitDetailsView />);
-    screen.getByText('Could not load PipelineRun');
-    screen.getByText('Not found');
+    screen.getByText('Unable to load commit details');
   });
 
   it('should show commit not found error if no matching pipelineruns are found ', () => {

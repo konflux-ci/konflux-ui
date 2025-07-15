@@ -12,7 +12,7 @@ export const useLatestIntegrationTestPipelines = (
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestTestPipelines, setLatestTestPipelines] = React.useState<PipelineRunKind[]>([]);
 
-  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
@@ -53,7 +53,7 @@ export const useLatestIntegrationTestPipelines = (
   React.useEffect(() => {
     let canceled = false;
 
-    if (plrError || !pipelineRunsLoaded || !componentNames || !pipelineRuns) {
+    if (plrError || !pipelineRunsLoaded || componentsError || !componentNames || !pipelineRuns) {
       return;
     }
 
@@ -95,6 +95,7 @@ export const useLatestIntegrationTestPipelines = (
     pipelineRuns,
     pipelineRunsLoaded,
     plrError,
+    componentsError,
   ]);
 
   return [
