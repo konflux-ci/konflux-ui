@@ -1,0 +1,260 @@
+---
+globs: **/__tests__/*.{ts,tsx},**/*.spec.{ts,tsx},**/*.test.{ts,tsx}
+---
+
+# Testing Conventions
+
+Follow these testing patterns when writing unit tests and component tests for Konflux UI.
+
+## Test Structure and Organization
+
+### File Naming and Location
+- Place test files in `__tests__/` directories within component folders
+- Use `.spec.ts` or `.spec.tsx` extensions for test files
+- Name test files after the component/module being tested
+
+```
+src/components/Applications/
+├── ApplicationListRow.tsx
+├── __tests__/
+│   ├── ApplicationListRow.spec.tsx
+│   └── application-actions.spec.ts
+```
+
+### Test Framework Setup
+Uses Jest with React Testing Library for component testing:
+
+```tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { ApplicationListRow } from '../ApplicationListRow';
+```
+
+## Test Structure Patterns
+
+### Describe and Test Blocks
+Use descriptive `describe` blocks and clear `it`/`test` statements:
+
+```tsx
+describe('ApplicationListRow', () => {
+  it('should render application name as a link', () => {
+    // Test implementation
+  });
+
+  it('should show component count when loaded', () => {
+    // Test implementation
+  });
+
+  describe('when loading', () => {
+    it('should show skeleton loader for component count', () => {
+      // Test implementation
+    });
+  });
+});
+```
+
+### Test Data and Mocks
+Use meaningful test data and consistent mocking patterns:
+
+```tsx
+// ✅ Good - Descriptive test data
+const mockApplication = {
+  metadata: { name: 'test-app', namespace: 'test-ns' },
+  spec: { displayName: 'Test Application' }
+};
+
+// Mock external dependencies
+jest.mock('~/hooks/useComponents', () => ({
+  useComponents: jest.fn()
+}));
+
+describe('ComponentList', () => {
+  beforeEach(() => {
+    (useComponents as jest.Mock).mockReturnValue([[], true]);
+  });
+});
+```
+
+## Component Testing Patterns
+
+### Rendering Components
+Use the render function with proper TypeScript typing:
+
+```tsx
+const renderComponent = (props: Partial<ComponentProps> = {}) => {
+  const defaultProps: ComponentProps = {
+    applicationName: 'test-app',
+    namespace: 'test-namespace',
+    ...props
+  };
+  
+  return render(<MyComponent {...defaultProps} />);
+};
+
+it('should render with default props', () => {
+  renderComponent();
+  expect(screen.getByText('test-app')).toBeInTheDocument();
+});
+```
+
+### Testing User Interactions
+Use `userEvent` for realistic user interactions:
+
+```tsx
+import userEvent from '@testing-library/user-event';
+
+it('should handle button click', async () => {
+  const user = userEvent.setup();
+  const onAction = jest.fn();
+  
+  renderComponent({ onAction });
+  
+  const button = screen.getByRole('button', { name: /submit/i });
+  await user.click(button);
+  
+  expect(onAction).toHaveBeenCalledTimes(1);
+});
+```
+
+### Testing Async Operations
+Use `waitFor` and `findBy` queries for async operations:
+
+```tsx
+it('should load and display data', async () => {
+  (useApplications as jest.Mock).mockReturnValue({
+    data: [mockApplication],
+    isLoading: false,
+    error: null
+  });
+
+  renderComponent();
+
+  // Wait for async data to load
+  const appLink = await screen.findByRole('link', { name: 'Test Application' });
+  expect(appLink).toBeInTheDocument();
+});
+
+it('should handle loading state', () => {
+  (useApplications as jest.Mock).mockReturnValue({
+    data: null,
+    isLoading: true,
+    error: null
+  });
+
+  renderComponent();
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+});
+```
+
+## Mocking Patterns
+
+### Hook Mocking
+Mock custom hooks at the module level:
+
+```tsx
+// Mock the entire hook module
+jest.mock('~/hooks/useApplications', () => ({
+  useApplications: jest.fn()
+}));
+
+// Mock specific functions from utils
+jest.mock('~/utils/k8s-utils', () => ({
+  k8sDeleteResource: jest.fn()
+}));
+```
+
+### React Query Mocking
+Mock React Query hooks for data fetching:
+
+```tsx
+jest.mock('@tanstack/react-query', () => ({
+  ...jest.requireActual('@tanstack/react-query'),
+  useQuery: jest.fn(),
+  useMutation: jest.fn()
+}));
+
+beforeEach(() => {
+  (useQuery as jest.Mock).mockReturnValue({
+    data: mockData,
+    isLoading: false,
+    error: null
+  });
+});
+```
+
+### Router Mocking
+Mock React Router for navigation testing:
+
+```tsx
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+  useParams: () => ({ applicationName: 'test-app' })
+}));
+```
+
+## Testing Best Practices
+
+### Test Organization
+- Group related tests in `describe` blocks
+- Use clear, descriptive test names that explain the expected behavior
+- Follow the Arrange-Act-Assert pattern
+
+```tsx
+describe('UserAccessForm', () => {
+  describe('validation', () => {
+    it('should show error when username is empty', () => {
+      // Arrange
+      renderComponent({ initialUsername: '' });
+      
+      // Act
+      const submitButton = screen.getByRole('button', { name: /submit/i });
+      fireEvent.click(submitButton);
+      
+      // Assert
+      expect(screen.getByText(/username is required/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+### Coverage and Quality
+- Aim for at least 80% test coverage (tracked via Codecov)
+- Test both success and error scenarios
+- Test edge cases and boundary conditions
+- Verify accessibility with screen reader queries
+
+```tsx
+// ✅ Good - Tests multiple scenarios
+describe('ApplicationActions', () => {
+  it('should show Edit action when user has permissions', () => {
+    mockPermissions({ canEdit: true });
+    // Test implementation
+  });
+
+  it('should disable Edit action when user lacks permissions', () => {
+    mockPermissions({ canEdit: false });
+    // Test implementation
+  });
+
+  it('should handle API errors gracefully', async () => {
+    mockApiError();
+    // Test error handling
+  });
+});
+```
+
+### Screen Reader Testing
+Use semantic queries that match how users interact with the app:
+
+```tsx
+// ✅ Good - Semantic queries
+screen.getByRole('button', { name: /delete application/i });
+screen.getByLabelText(/application name/i);
+screen.getByText(/5 components/i);
+
+// ❌ Avoid - Implementation details
+screen.getByTestId('delete-button');
+screen.getByClassName('app-name');
+```

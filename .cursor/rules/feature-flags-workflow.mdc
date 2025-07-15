@@ -1,0 +1,219 @@
+---
+description: Feature flags and development workflow patterns in Konflux UI
+---
+
+# Feature Flags & Development Workflow
+
+Guidelines for using feature flags and following development practices in Konflux UI.
+
+## Feature Flag System
+
+### Client-Side Feature Flags
+Konflux UI uses a client-side feature flag system for gradual feature rollouts. Reference [docs/feature-flags.md](mdc:docs/feature-flags.md) for complete documentation.
+
+### Adding New Feature Flags
+1. **Define the flag** in [src/feature-flags/flags.ts](mdc:src/feature-flags/flags.ts):
+
+```typescript
+export const FLAGS = {
+  // Existing flags...
+  NEW_COMPONENT_FEATURE: 'new-component-feature',
+} as const;
+
+export const FLAG_DEFAULTS: Record<FlagKey, boolean> = {
+  // Existing defaults...
+  [FLAGS.NEW_COMPONENT_FEATURE]: false, // Start disabled by default
+};
+```
+
+2. **Wrap new features** with the `IfFeature` component:
+
+```tsx
+import { IfFeature } from '~/feature-flags/hooks';
+import { FLAGS } from '~/feature-flags/flags';
+
+const MyComponent = () => (
+  <div>
+    <h1>Existing Functionality</h1>
+    
+    <IfFeature flag={FLAGS.NEW_COMPONENT_FEATURE}>
+      <NewExperimentalComponent />
+    </IfFeature>
+    
+    <IfFeature 
+      flag={FLAGS.NEW_COMPONENT_FEATURE}
+      fallback={<OldLegacyComponent />}
+    >
+      <NewImprovedComponent />
+    </IfFeature>
+  </div>
+);
+```
+
+3. **Use hooks for conditional logic**:
+
+```tsx
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { FLAGS } from '~/feature-flags/flags';
+
+const MyComponent = () => {
+  const isNewFeatureEnabled = useIsOnFeatureFlag(FLAGS.NEW_COMPONENT_FEATURE);
+  
+  const handleAction = () => {
+    if (isNewFeatureEnabled) {
+      // New implementation
+      performNewAction();
+    } else {
+      // Legacy implementation
+      performOldAction();
+    }
+  };
+  
+  return (
+    <Button onClick={handleAction}>
+      {isNewFeatureEnabled ? 'New Action' : 'Legacy Action'}
+    </Button>
+  );
+};
+```
+
+### Feature Flag URL Testing
+Enable flags for testing via URL parameters:
+
+```
+# Enable single flag
+?ff_new-component-feature=true
+
+# Enable multiple flags quickly  
+?ff=flag1,flag2,flag3
+
+# Mix of enabled/disabled
+?ff=flag1,flag2&ff_flag3=false
+```
+
+## Development Workflow
+
+### Pull Request Guidelines
+Follow the guidelines in [CONTRIBUTING.md](mdc:CONTRIBUTING.md):
+
+1. **Branch from main** and create descriptive branch names
+2. **Run all checks** before submitting:
+   ```bash
+   yarn lint        # ESLint and Stylelint
+   yarn tsc         # TypeScript checks  
+   yarn test        # Jest unit tests
+   ```
+3. **Include screenshots** for any UI changes
+4. **Tag reviewers** - at least 2 approvals required
+5. **Use feature flags** for incomplete features
+
+### Commit Conventions
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```bash
+# Good commit messages
+feat: add new application filtering component
+fix: resolve table sorting issue in components list  
+docs: update feature flag documentation
+test: add unit tests for user access forms
+style: fix SCSS linting issues
+
+# Include AI assistance acknowledgment if used
+feat: implement dark mode toggle
+
+Assisted-by: Cursor
+```
+
+### Import Restrictions and Architecture
+The codebase enforces strict import restrictions to maintain clean architecture. See [.eslintrc.restrict-imports.cjs](mdc:.eslintrc.restrict-imports.cjs) for details:
+
+```typescript
+// ✅ Allowed - utils can import from specific layers
+// src/utils/ → src/types, src/k8s, src/models, src/consts, src/kubearchive
+
+// ✅ Allowed - types are self-contained  
+// src/types/ → src/types only
+
+// ✅ Allowed - shared components are generic
+// src/shared/ → src/shared, src/k8s only
+
+// ❌ Forbidden - prevents circular dependencies
+// src/utils/ → src/components (business logic leaking into utils)
+// src/types/ → src/hooks (types shouldn't depend on implementations)
+```
+
+### KubeArchive Integration
+When working with Kubernetes resources, consider the dual-source architecture:
+
+```tsx
+// Use the integrated hook for both live and archived data
+import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+
+const MyComponent = () => {
+  const { 
+    data: resources,      // Combined live + archived data
+    isLoading,           // Loading state for both sources  
+    error                // Error handling
+  } = useK8sAndKarchResources({
+    model: PipelineRunModel,
+    namespace: 'my-namespace'
+  });
+
+  return (
+    <div>
+      {resources.map(resource => (
+        <ResourceCard 
+          key={resource.metadata.uid}
+          resource={resource}
+          isArchived={resource.metadata.isArchived} // Distinguish sources
+        />
+      ))}
+    </div>
+  );
+};
+```
+
+## Code Quality Standards
+
+### Test Coverage
+- Maintain **80% test coverage minimum** (tracked via Codecov)
+- Write tests for new components and business logic
+- Include accessibility testing with semantic queries
+- Test both success and error scenarios
+
+### Performance Considerations
+- Use React Query for efficient data fetching and caching
+- Implement proper loading states with PatternFly Spinner
+- Lazy load routes and large components when appropriate
+- Optimize bundle size with webpack analysis: `yarn analyze`
+
+### Accessibility Requirements
+- Use semantic HTML and ARIA attributes
+- Ensure keyboard navigation works properly
+- Test with screen readers using semantic queries
+- Follow PatternFly accessibility guidelines
+
+## Environment and Deployment
+
+### Local Development
+```bash
+# Standard development
+yarn start
+
+# Connect to local Konflux deployment  
+# (see README.md for .env configuration)
+yarn start  # with modified .env file
+```
+
+### E2E Testing
+- Cypress tests located in `e2e-tests/` directory
+- Run against staging environment for PR validation
+- Include tests for critical user workflows
+- See [e2e-tests/README.md](mdc:e2e-tests/README.md) for setup
+
+### DevContainer Support
+The project includes DevContainer configuration for consistent development environments:
+- Pre-configured with all dependencies
+- VS Code extensions and settings
+- Automatic environment setup
+- See [.devcontainer/README.md](mdc:.devcontainer/README.md) for details

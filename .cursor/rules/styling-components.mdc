@@ -1,0 +1,341 @@
+---
+globs: *.scss,*.tsx
+---
+
+# Styling & Component Structure
+
+Guidelines for styling and organizing components in Konflux UI.
+
+## Styling Conventions
+
+### PatternFly First Approach
+Always prefer PatternFly components and utilities over custom styling:
+
+```tsx
+// ✅ Good - PatternFly components and utilities
+import { 
+  Card, 
+  CardBody, 
+  Title, 
+  Button,
+  Flex,
+  FlexItem 
+} from '@patternfly/react-core';
+
+const MyComponent = () => (
+  <Card>
+    <CardBody>
+      <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+        <FlexItem>
+          <Title headingLevel="h2" size="lg">Application Details</Title>
+        </FlexItem>
+        <FlexItem>
+          <Button variant="primary">Edit Application</Button>
+        </FlexItem>
+      </Flex>
+    </CardBody>
+  </Card>
+);
+```
+
+### SCSS Module Structure
+When custom styles are needed, use SCSS modules alongside components:
+
+```
+src/components/Applications/
+├── ApplicationDetails.tsx
+├── ApplicationDetails.scss  # Component-specific styles
+└── __tests__/
+    └── ApplicationDetails.spec.tsx
+```
+
+### BEM Naming Convention
+Use BEM methodology for CSS class names to maintain clarity and avoid conflicts:
+
+```scss
+// ApplicationDetails.scss
+.application-details {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    &--loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  }
+  
+  &__content {
+    padding: var(--pf-global--spacer--md);
+    
+    &-section {
+      margin-bottom: var(--pf-global--spacer--lg);
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+```
+
+### PatternFly Tokens
+Use PatternFly design tokens for consistency:
+
+```scss
+.custom-component {
+  // ✅ Good - PatternFly design tokens
+  padding: var(--pf-global--spacer--md);
+  color: var(--pf-global--primary-color--100);
+  border-radius: var(--pf-global--BorderRadius--sm);
+  
+  // ❌ Avoid - Hard-coded values
+  padding: 16px;
+  color: #0066cc;
+  border-radius: 4px;
+}
+```
+
+## Component Structure Patterns
+
+### Component File Organization
+Structure components with clear separation of concerns:
+
+```tsx
+// 1. React and external imports
+import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Card, CardBody } from '@patternfly/react-core';
+
+// 2. Internal type imports
+import { ApplicationKind } from '~/types';
+
+// 3. Internal hook/utility imports
+import { useApplications } from '~/hooks/useApplications';
+import { formatDate } from '~/utils/date-utils';
+
+// 4. Relative imports (component-specific)
+import { useApplicationActions } from './application-actions';
+import './ApplicationCard.scss';
+
+// 5. TypeScript interfaces
+interface ApplicationCardProps {
+  application: ApplicationKind;
+  namespace: string;
+  onEdit?: (app: ApplicationKind) => void;
+}
+
+// 6. Component implementation
+const ApplicationCard: React.FC<ApplicationCardProps> = ({
+  application,
+  namespace,
+  onEdit
+}) => {
+  // Component logic
+};
+
+export default ApplicationCard;
+```
+
+### Conditional Styling
+Use classnames library for conditional CSS classes:
+
+```tsx
+import classNames from 'classnames';
+
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, isLoading }) => {
+  const badgeClasses = classNames('status-badge', {
+    'status-badge--success': status === 'success',
+    'status-badge--error': status === 'error',
+    'status-badge--loading': isLoading
+  });
+
+  return <span className={badgeClasses}>{status}</span>;
+};
+```
+
+### Responsive Design
+Use PatternFly's responsive utilities and breakpoint tokens:
+
+```scss
+.component-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--pf-global--spacer--md);
+  
+  // Use PatternFly breakpoints
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 300px;
+    gap: var(--pf-global--spacer--lg);
+  }
+  
+  @media (min-width: 1200px) {
+    grid-template-columns: 1fr 400px;
+  }
+}
+```
+
+## Component Architecture
+
+### Container vs Presentation Components
+Separate data fetching logic from UI presentation:
+
+```tsx
+// Container Component (handles data and business logic)
+const ApplicationListContainer: React.FC = () => {
+  const namespace = useNamespace();
+  const { data: applications, isLoading, error } = useApplications(namespace);
+  const actions = useApplicationActions();
+
+  if (isLoading) return <LoadingState />;
+  if (error) return <ErrorState error={error} />;
+
+  return (
+    <ApplicationListView 
+      applications={applications}
+      actions={actions}
+      namespace={namespace}
+    />
+  );
+};
+
+// Presentation Component (pure UI)
+interface ApplicationListViewProps {
+  applications: ApplicationKind[];
+  actions: ApplicationAction[];
+  namespace: string;
+}
+
+const ApplicationListView: React.FC<ApplicationListViewProps> = ({
+  applications,
+  actions,
+  namespace
+}) => {
+  return (
+    <div className="application-list">
+      {applications.map(app => (
+        <ApplicationCard 
+          key={app.metadata.uid}
+          application={app}
+          actions={actions}
+        />
+      ))}
+    </div>
+  );
+};
+```
+
+### Reusable Component Patterns
+Create composable components for common UI patterns:
+
+```tsx
+// Generic List Component
+interface ListViewProps<T> {
+  items: T[];
+  renderItem: (item: T) => React.ReactNode;
+  isLoading?: boolean;
+  emptyState?: React.ReactNode;
+  className?: string;
+}
+
+const ListView = <T,>({ 
+  items, 
+  renderItem, 
+  isLoading, 
+  emptyState,
+  className 
+}: ListViewProps<T>) => {
+  if (isLoading) return <Spinner />;
+  if (items.length === 0) return emptyState || <EmptyState />;
+
+  return (
+    <div className={classNames('list-view', className)}>
+      {items.map((item, index) => (
+        <div key={index} className="list-view__item">
+          {renderItem(item)}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Usage
+<ListView
+  items={applications}
+  renderItem={(app) => <ApplicationCard application={app} />}
+  emptyState={<EmptyApplicationsState />}
+  className="applications-list"
+/>
+```
+
+## Accessibility and UX
+
+### Semantic HTML and ARIA
+Use semantic HTML elements and proper ARIA attributes:
+
+```tsx
+const NavigationMenu: React.FC = () => (
+  <nav aria-label="Main navigation" className="main-nav">
+    <ul role="list" className="main-nav__list">
+      <li>
+        <Link 
+          to="/applications" 
+          aria-current={isCurrentPage ? 'page' : undefined}
+          className="main-nav__link"
+        >
+          Applications
+        </Link>
+      </li>
+    </ul>
+  </nav>
+);
+```
+
+### Loading States and Feedback
+Provide clear feedback for asynchronous operations:
+
+```tsx
+const ActionButton: React.FC<ActionButtonProps> = ({ 
+  onAction, 
+  isLoading, 
+  children 
+}) => (
+  <Button
+    variant="primary"
+    onClick={onAction}
+    isLoading={isLoading}
+    isDisabled={isLoading}
+    spinnerAriaValueText="Performing action..."
+  >
+    {children}
+  </Button>
+);
+```
+
+### Focus Management
+Manage focus appropriately for keyboard navigation:
+
+```tsx
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={modalRef}
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+      className="custom-modal"
+    >
+      {children}
+    </div>
+  );
+};
+```

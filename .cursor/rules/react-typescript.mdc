@@ -1,0 +1,200 @@
+---
+globs: *.ts,*.tsx
+---
+
+# React & TypeScript Conventions
+
+Follow these conventions when working with React components and TypeScript in Konflux UI.
+
+## Component Patterns
+
+### Functional Components with TypeScript
+Always use functional components with proper TypeScript interfaces:
+
+```tsx
+// ✅ Good - Functional component with proper typing
+interface ComponentProps {
+  applicationName: string;
+  onAction?: () => void;
+  isLoading?: boolean;
+}
+
+const MyComponent: React.FC<ComponentProps> = ({ 
+  applicationName, 
+  onAction, 
+  isLoading = false 
+}) => {
+  return (
+    <div>
+      <h1>{applicationName}</h1>
+      {isLoading && <Spinner />}
+    </div>
+  );
+};
+
+export default MyComponent;
+```
+
+### Props and Interfaces
+- Use descriptive interface names ending with `Props`
+- Make optional props explicit with `?`
+- Provide default values for optional props
+- Prefer object destructuring in function parameters
+
+## Import Conventions
+
+### Absolute Imports (Preferred)
+Use absolute imports with configured aliases:
+
+```tsx
+// ✅ Good - Absolute imports
+import { ApplicationKind } from '~/types';
+import { useApplications } from '~/hooks/useApplications';
+import { ApplicationListView } from '~/components/Applications';
+```
+
+### Import Order (ESLint enforced)
+1. React imports first
+2. External libraries
+3. Internal imports (grouped by type)
+4. Relative imports last
+
+```tsx
+import * as React from 'react';
+import { Link } from 'react-router-dom';
+import { Button, Spinner } from '@patternfly/react-core';
+import { useApplications } from '~/hooks/useApplications';
+import { ApplicationKind } from '~/types';
+import './Component.scss';
+```
+
+## PatternFly Integration
+
+### Use PatternFly Components
+Always prefer PatternFly components over custom styling:
+
+```tsx
+// ✅ Good - PatternFly components
+import { 
+  Button, 
+  Card, 
+  CardBody, 
+  Title, 
+  Spinner,
+  Bullseye 
+} from '@patternfly/react-core';
+
+// ❌ Avoid - Custom styled elements
+<button style={{ backgroundColor: 'blue' }}>Click me</button>
+```
+
+### PatternFly Icon Imports
+Use specific icon imports, not group imports:
+
+```tsx
+// ✅ Good - Specific imports
+import { EditIcon } from '@patternfly/react-icons/dist/esm/icons/edit-icon';
+import { DeleteIcon } from '@patternfly/react-icons/dist/esm/icons/delete-icon';
+
+// ❌ Bad - Group imports (ESLint will error)
+import { EditIcon, DeleteIcon } from '@patternfly/react-icons';
+```
+
+## Hooks and State Management
+
+### Custom Hooks
+Business logic hooks go in `src/hooks/`, utility hooks in `src/shared/hooks/`:
+
+```tsx
+// Business logic hook (src/hooks/)
+export const useApplications = (namespace: string) => {
+  return useQuery({
+    queryKey: ['applications', namespace],
+    queryFn: () => k8sListResource(ApplicationModel, namespace),
+  });
+};
+
+// Utility hook (src/shared/hooks/)
+export const useLocalStorage = <T>(key: string, defaultValue: T) => {
+  // Generic utility implementation
+};
+```
+
+### React Query Integration
+Use TanStack React Query for server state management:
+
+```tsx
+import { useQuery, useMutation } from '@tanstack/react-query';
+
+const MyComponent = () => {
+  const { data: applications, isLoading, error } = useQuery({
+    queryKey: ['applications', namespace],
+    queryFn: () => fetchApplications(namespace),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteApplication,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['applications']);
+    },
+  });
+};
+```
+
+## Error Handling and Loading States
+
+### Handle Loading and Error States
+Always handle loading and error states in components:
+
+```tsx
+const MyComponent = () => {
+  const { data, isLoading, error } = useApplications(namespace);
+
+  if (isLoading) {
+    return (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+  }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  return <div>{/* Render data */}</div>;
+};
+```
+
+## TypeScript Best Practices
+
+### Type Definitions
+- Use interfaces for objects, types for unions/primitives
+- Import types from `~/types` directory
+- Use generic types for reusable components
+
+```tsx
+// ✅ Good - Proper type usage
+interface TableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  onRowSelect?: (item: T) => void;
+}
+
+const Table = <T,>({ data, columns, onRowSelect }: TableProps<T>) => {
+  // Implementation
+};
+```
+
+### Strict Type Checking
+- Avoid `any` type - use specific types or `unknown`
+- Use optional chaining for potentially undefined values
+- Prefer type guards over type assertions
+
+```tsx
+// ✅ Good - Type safe
+const displayName = application?.spec?.displayName ?? application.metadata?.name;
+
+// ❌ Avoid - Type assertion
+const displayName = (application as any).spec.displayName;
+```
