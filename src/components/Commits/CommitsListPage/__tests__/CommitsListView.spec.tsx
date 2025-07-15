@@ -103,7 +103,7 @@ describe('CommitsListView', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<CommitsList />);
-    screen.getByText('Unable to load pipeline runs');
+    screen.getByText('Unable to load commits');
   });
 
   it('should render empty state if no commits are present', () => {

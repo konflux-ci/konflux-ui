@@ -3,6 +3,7 @@ import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useApplications } from '~/hooks/useApplications';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
@@ -18,8 +19,8 @@ import ReleasePlanListRow, { ReleasePlanWithApplicationData } from './ReleasePla
 
 const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
-  const [applications, appLoaded] = useApplications(namespace);
-  const [releasePlans, loaded] = useReleasePlans(namespace);
+  const [applications, appLoaded, appError] = useApplications(namespace);
+  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -27,7 +28,7 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { name: nameFilter } = filters;
 
   const releasePlanWithApplicationData: ReleasePlanWithApplicationData[] = React.useMemo(() => {
-    if (!loaded || !releasePlans) {
+    if (!releasePlansLoaded || !releasePlans) {
       return [];
     }
     return appLoaded && applications
@@ -38,7 +39,7 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
           return { ...rpa, application };
         })
       : releasePlans;
-  }, [loaded, appLoaded, releasePlans, applications]);
+  }, [releasePlansLoaded, appLoaded, releasePlans, applications]);
 
   const filteredReleasePlans = React.useMemo(
     () => releasePlanWithApplicationData.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1),
@@ -47,11 +48,19 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
 
   useDocumentTitle(`Release Plan | ${FULL_APPLICATION_TITLE}`);
 
-  if (!loaded) {
+  if (!releasePlansLoaded || !appLoaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
+    );
+  }
+
+  if (appError || releasePlansError) {
+    return getErrorState(
+      appError || releasePlansError,
+      appLoaded && releasePlansLoaded,
+      'release plans',
     );
   }
 

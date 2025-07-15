@@ -3,13 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, ButtonVariant, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
+import { getErrorState } from '~/shared/utils/error-utils';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { useComponent } from '../../../hooks/useComponents';
-import { HttpError } from '../../../k8s/error';
-import { ComponentGroupVersionKind, ComponentModel } from '../../../models';
+import { ComponentModel } from '../../../models';
 import { COMPONENT_LIST_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
@@ -54,24 +53,16 @@ const ComponentDetailsView: React.FC = () => {
     [componentActions, navigate],
   );
 
-  if (componentError || (loaded && !component)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(
-          componentError ? (componentError as { code: number }).code : 404,
-        )}
-        title={`Could not load ${ComponentGroupVersionKind.kind}`}
-        body={(componentError as { message?: string })?.message ?? 'Not found'}
-      />
-    );
-  }
-
   if (!loaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
+  }
+
+  if (componentError) {
+    return getErrorState(componentError, loaded, 'component');
   }
 
   return (

@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { useTaskRun } from '../../hooks/usePipelineRuns';
-import { HttpError } from '../../k8s/error';
 import {
   PIPELINERUN_DETAILS_PATH,
   PIPELINERUN_LIST_PATH,
@@ -11,7 +11,6 @@ import {
   TASKRUN_DETAILS_PATH,
 } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../types';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
@@ -47,14 +46,7 @@ export const TaskRunDetailsView: React.FC = () => {
   }, [activeTab, baseURL, navigate, trStatus]);
 
   if (error) {
-    const httpError = HttpError.fromCode((error as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title={`Unable to load task run ${taskRunName}`}
-        body={httpError.message}
-      />
-    );
+    return getErrorState(error, loaded, 'task run');
   }
 
   if (!loaded) {

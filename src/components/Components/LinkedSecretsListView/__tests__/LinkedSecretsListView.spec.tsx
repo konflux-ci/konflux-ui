@@ -68,7 +68,7 @@ describe('LinkedSecretsListView', () => {
     useLinkedSecretsMock.mockReturnValue([[], true, new Error('Error when fetching secrets')]);
     renderComponent();
 
-    expect(screen.getByTestId('linked-secrets-list-view_error-empty-state')).toBeInTheDocument();
+    expect(screen.getByText('Unable to load linked secrets')).toBeInTheDocument();
   });
 
   it('should render empty message component if no data is returned', () => {
