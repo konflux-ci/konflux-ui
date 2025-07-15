@@ -1,5 +1,5 @@
 import React from 'react';
-import { ExpandableSection, FormSection } from '@patternfly/react-core';
+import { Alert, ExpandableSection, FormSection } from '@patternfly/react-core';
 import { useField } from 'formik';
 import HelpPopover from '../../../components/HelpPopover';
 import { useRoleMap } from '../../../hooks/useRole';
@@ -7,41 +7,45 @@ import DropdownField from '../../../shared/components/formik-fields/DropdownFiel
 import { NamespaceRole } from '../../../types';
 import { PermissionsTable } from './PermissionsTable';
 import './RoleSection.scss';
-
 export const RoleSection: React.FC<React.PropsWithChildren<unknown>> = () => {
   const [{ value: role }] = useField<NamespaceRole>('role');
-  const [roleMap, loaded] = useRoleMap();
+  const [roleMap, loaded, error] = useRoleMap();
 
-  const dropdownItems = loaded
-    ? Object.entries(roleMap?.roleMap).map(([key, value]) => ({
-        key,
-        value,
-        description: roleMap.roleDescription[key],
-      }))
-    : [];
+  const dropdownItems =
+    loaded && roleMap
+      ? Object.entries(roleMap?.roleMap).map(([key, value]) => ({
+          key,
+          value,
+          description: roleMap.roleDescription[key],
+        }))
+      : [];
 
   return (
     <>
       <FormSection title="Assign role">
-        <DropdownField
-          className="role-section"
-          name="role"
-          placeholder={!loaded ? 'Loading...' : 'Select role'}
-          label="Select a role to assign to all of the users you added."
-          helpText="Provides access to all permissions except the ability to add or delete certain resources. To view a full list of permissions, refer to the following table."
-          data-test="role-input"
-          labelIcon={
-            <HelpPopover
-              aria-label="Usernames in RHTAP"
-              headerContent="About default roles and permissions"
-              bodyContent="At this time we do not offer custom roles. You can only assign the default roles."
-            />
-          }
-          isDisabled={!loaded}
-          items={dropdownItems}
-          validateOnChange
-          required
-        />
+        {error ? (
+          <Alert variant="danger" title="Unable to load role map" isInline />
+        ) : (
+          <DropdownField
+            className="role-section"
+            name="role"
+            placeholder={!loaded ? 'Loading...' : 'Select role'}
+            label="Select a role to assign to all of the users you added."
+            helpText="Provides access to all permissions except the ability to add or delete certain resources. To view a full list of permissions, refer to the following table."
+            data-test="role-input"
+            labelIcon={
+              <HelpPopover
+                aria-label="Usernames in RHTAP"
+                headerContent="About default roles and permissions"
+                bodyContent="At this time we do not offer custom roles. You can only assign the default roles."
+              />
+            }
+            isDisabled={!loaded}
+            items={dropdownItems}
+            validateOnChange
+            required
+          />
+        )}
       </FormSection>
 
       {role && (

@@ -8,6 +8,8 @@ import {
   EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
@@ -30,7 +32,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
-  const [components, loaded] = useComponents(namespace, applicationName);
+  const [components, loaded, error] = useComponents(namespace, applicationName);
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const filteredComponents = React.useMemo(
     () => (loaded ? (filter ? components.filter(filter) : components) : []),
@@ -38,6 +40,19 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
   );
 
   if (loaded) {
+    if (error) {
+      const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+      return (
+        <Modal {...modalProps}>
+          <ErrorEmptyState
+            httpError={httpError}
+            title="Unable to load components"
+            body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+          />
+        </Modal>
+      );
+    }
+
     if (filteredComponents.length > 0) {
       return (
         <CustomizePipeline

@@ -3,6 +3,8 @@ import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useApplications } from '~/hooks/useApplications';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
@@ -18,8 +20,8 @@ import ReleasePlanListRow, { ReleasePlanWithApplicationData } from './ReleasePla
 
 const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
-  const [applications, appLoaded] = useApplications(namespace);
-  const [releasePlans, loaded] = useReleasePlans(namespace);
+  const [applications, appLoaded, appError] = useApplications(namespace);
+  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -27,7 +29,7 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { name: nameFilter } = filters;
 
   const releasePlanWithApplicationData: ReleasePlanWithApplicationData[] = React.useMemo(() => {
-    if (!loaded || !releasePlans) {
+    if (!releasePlansLoaded || !releasePlans) {
       return [];
     }
     return appLoaded && applications
@@ -38,7 +40,7 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
           return { ...rpa, application };
         })
       : releasePlans;
-  }, [loaded, appLoaded, releasePlans, applications]);
+  }, [releasePlansLoaded, appLoaded, releasePlans, applications]);
 
   const filteredReleasePlans = React.useMemo(
     () => releasePlanWithApplicationData.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1),
@@ -47,11 +49,24 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
 
   useDocumentTitle(`Release Plan | ${FULL_APPLICATION_TITLE}`);
 
-  if (!loaded) {
+  if (!releasePlansLoaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
+    );
+  }
+
+  if (appError || releasePlansError) {
+    const error = appError ?? releasePlansError;
+
+    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title={`Unable to load ${appError ? 'applications' : 'release plans'}`}
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
     );
   }
 

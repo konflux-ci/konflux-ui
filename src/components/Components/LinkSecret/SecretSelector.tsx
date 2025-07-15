@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, ButtonVariant, Flex, Stack, StackItem } from '@patternfly/react-core';
+import {
+  Bullseye,
+  Button,
+  ButtonVariant,
+  Flex,
+  Spinner,
+  Stack,
+  StackItem,
+} from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { useComponent } from '~/hooks/useComponents';
 import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
 import { useSecrets } from '~/hooks/useSecrets';
+import { HttpError } from '~/k8s/error';
 import { ComponentSelectMenu } from '~/shared/components/component-select-menu/ComponentSelectMenu';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { ComponentKind, SecretKind } from '~/types';
+import { SecretKind } from '~/types';
 import { linkSecretsToComponent } from './link-secret-utils';
 
 type SecretSelectorProps = {
@@ -18,14 +28,14 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
   onClose,
 }) => {
   const namespace = useNamespace();
-  const secrets: SecretKind[] = useSecrets(namespace)[0];
+  const [secrets, secretsLoaded, secretsError] = useSecrets(namespace);
   const [linkedSecretsList, setLinkedSecretsList] = useState<string[]>([]);
   const { componentName } = useParams<RouterParams>();
-  const component: ComponentKind = useComponent(namespace, componentName)[0];
+  const [component, compLoaded, compError] = useComponent(namespace, componentName);
   const [previouslyLinked] = useLinkedSecrets(namespace, componentName);
 
   const filterUnlinkSecrets = React.useMemo(() => {
-    const unlinkedSecrets = secrets.filter((item) => {
+    const unlinkedSecrets = secrets?.filter((item) => {
       return !previouslyLinked.find((secret) => secret.metadata.name === item.metadata.name);
     });
     return unlinkedSecrets?.map((item) => item?.metadata?.name);
@@ -38,6 +48,26 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
     linkSecretsToComponent(secretsToBeLinked, component);
     onClose();
   };
+
+  if (!compLoaded || !secretsLoaded) {
+    return (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+  }
+
+  if (compError || secretsError) {
+    const error = compError || secretsError;
+    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title={`Unable to load ${compError ? 'component' : 'secrets'}`}
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
+    );
+  }
 
   if (filterUnlinkSecrets.length === 0) return <>No Unlinked Secrets</>;
 

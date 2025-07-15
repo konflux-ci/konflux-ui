@@ -11,6 +11,8 @@ import {
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioModel } from '../../../models';
@@ -68,10 +70,8 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   );
 
   const navigate = useNavigate();
-  const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
-    namespace,
-    applicationName,
-  );
+  const [integrationTests, integrationTestsLoaded, integrationTestsError] =
+    useIntegrationTestScenarios(namespace, applicationName);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -116,6 +116,19 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
       </ButtonWithAccessTooltip>
     </BaseTextFilterToolbar>
   );
+
+  if (integrationTestsError) {
+    const httpError = HttpError.fromCode(
+      integrationTestsError ? (integrationTestsError as { code: number }).code : 404,
+    );
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title="Unable to load integration tests"
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
+    );
+  }
 
   return (
     <>

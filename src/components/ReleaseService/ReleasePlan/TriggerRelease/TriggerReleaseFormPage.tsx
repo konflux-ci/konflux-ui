@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useSearchParam } from '~/hooks/useSearchParam';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
 import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { APPLICATION_RELEASE_DETAILS_PATH, RELEASE_SERVICE_PATH } from '../../../../routes/paths';
@@ -17,20 +19,33 @@ export const TriggerReleaseFormPage: React.FC = () => {
   const navigate = useNavigate();
   const track = useTrackEvent();
   const namespace = useNamespace();
-  const [releasePlans] = useReleasePlans(namespace);
+  const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
 
   // Fetch snapshot details to get the application name
-  const [snapshotDetails, snapshotLoaded] = useSnapshot(
+  const [snapshotDetails, snapshotLoaded, snapshotError] = useSnapshot(
     snapshotName ? namespace : undefined,
     snapshotName || '',
   );
 
   // Show loading spinner if we're waiting for snapshot data to load
-  if (snapshotName && !snapshotLoaded) {
+  if (!releasePlansLoaded || (snapshotName && !snapshotLoaded)) {
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
+    );
+  }
+
+  if (releasePlansError || snapshotError) {
+    const error = releasePlansError || snapshotError;
+    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title={`Unable to load ${releasePlansError ? 'release plans' : 'snapshot'}`}
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
     );
   }
 
