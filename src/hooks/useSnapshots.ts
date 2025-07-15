@@ -6,13 +6,16 @@ import { useK8sAndKarchResource, useK8sAndKarchResources } from './useK8sAndKarc
 
 export const useSnapshot = (namespace: string, name: string): [Snapshot, boolean, unknown] => {
   const resourceInit = React.useMemo(
-    () => ({
-      model: SnapshotModel,
-      queryOptions: {
-        ns: namespace,
-        name,
-      },
-    }),
+    () =>
+      namespace
+        ? {
+            model: SnapshotModel,
+            queryOptions: {
+              ns: namespace,
+              name,
+            },
+          }
+        : null,
     [namespace, name],
   );
 

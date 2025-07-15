@@ -176,6 +176,11 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             label: 'Integration tests',
           },
           {
+            key: 'snapshots',
+            label: 'Snapshots',
+            isFilled: true,
+          },
+          {
             key: 'releases',
             label: 'Releases',
             isFilled: true,
