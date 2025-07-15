@@ -4,13 +4,12 @@ import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
-import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
-import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
@@ -63,14 +62,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
 
   if (error) {
-    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title="Unable to load pipeline runs"
-        body={httpError?.message.length > 0 ? httpError?.message : 'Something went wrong'}
-      />
-    );
+    return getErrorState(error, loaded, 'pipeline runs');
   }
 
   if (loaded && (!pipelineRuns || pipelineRuns.length === 0)) {

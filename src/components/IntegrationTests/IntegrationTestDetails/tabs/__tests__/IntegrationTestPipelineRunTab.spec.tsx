@@ -32,8 +32,8 @@ describe('Integration Pipelinerun List', () => {
   it('should render the error state incase of any API errors', () => {
     usePipelineRunsMock.mockReturnValue([
       [],
-      false,
-      new Error('500: Internal server error'),
+      true,
+      { code: 500 },
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
     ]);

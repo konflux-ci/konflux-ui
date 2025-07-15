@@ -43,7 +43,10 @@ const IntegrationTestSidePanel: React.FC<
   const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const integrationTestPipeline = workflowData.resource as PipelineRunKind;
-  const [taskRuns] = useTaskRuns(namespace, integrationTestPipeline?.metadata.name);
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+    namespace,
+    integrationTestPipeline?.metadata.name,
+  );
 
   const duration = integrationTestPipeline
     ? calculateDuration(
@@ -147,7 +150,7 @@ const IntegrationTestSidePanel: React.FC<
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>
-            {integrationTestPipeline ? (
+            {integrationTestPipeline && taskRunsLoaded && !taskRunsError ? (
               <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound showLogsLink />
             ) : null}
           </DescriptionList>
