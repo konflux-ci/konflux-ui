@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import {
   Flex,
   FlexItem,
@@ -20,6 +20,9 @@ import {
 import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
 import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
 import { css } from '@patternfly/react-styles';
+import { APPLICATION_RELEASE_LIST_PATH } from '@routes/paths';
+import { RouterParams } from '@routes/utils';
+import { useNamespace } from '~/shared/providers/Namespace';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
@@ -51,10 +54,10 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   baseURL,
   onTabSelect,
 }) => {
-  const navigate = useNavigate();
+  const { applicationName } = useParams<RouterParams>();
+  const namespace = useNamespace();
   const { state } = useLocation();
-  const showBackToRelease =
-    state?.type?.includes('snapshot') || state?.type?.includes('managed') || false;
+  const showBackToRelease = state?.isPrNamespaceChanged || false;
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -127,12 +130,18 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
         {showBackToRelease ? (
-          <a onClick={() => navigate(-1)} className="pf-c-button pf-m-link">
+          <Link
+            to={APPLICATION_RELEASE_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+            })}
+            className="pf-c-button pf-m-link"
+          >
             <Icon>
               <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
             </Icon>
             {'Back to release details'}
-          </a>
+          </Link>
         ) : (
           ''
         )}

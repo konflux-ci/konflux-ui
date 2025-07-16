@@ -34,8 +34,6 @@ export enum PipelineRunLabel {
 
   BUILD_IMAGE_ANNOTATION = 'build.appstudio.openshift.io/image',
   BUILD_SERVICE_REPO_ANNOTATION = 'build.appstudio.openshift.io/repo',
-
-  RELEASE_NAME = 'release.appstudio.openshift.io/name',
 }
 
 export enum SnapshotLabels {
@@ -54,4 +52,8 @@ export enum PipelineRunEventType {
   PULL = 'pull_request',
   INCOMING = 'incoming',
   RETEST = 'retest-all-comment',
+}
+
+export enum TaskRunLabel {
+  TARGET_PLATFORM = 'build.appstudio.redhat.com/target-platform',
 }

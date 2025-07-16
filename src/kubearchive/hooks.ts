@@ -16,6 +16,17 @@ import { TQueryOptions } from '../k8s/query/type';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
 import { withKubearchivePathPrefix } from './fetch-utils';
 
+/**
+ * Hook for fetching paginated list resources from KubeArchive with infinite query support.
+ *
+ * This hook provides React Query's infinite query functionality for archive data, allowing
+ * you to load resources in pages using Kubernetes-native continue tokens. The hook automatically
+ * handles pagination state and provides utilities for loading additional pages.
+ *
+ * @param resourceInit - K8s resource watch configuration (namespace, selector, etc.)
+ * @param model - K8s model definition containing API group, version, and kind information
+ * @returns UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown>
+ */
 export function useKubearchiveListResourceQuery(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
@@ -52,6 +63,20 @@ export function useKubearchiveListResourceQuery(
   });
 }
 
+/**
+ * Hook for fetching a single resource from KubeArchive.
+ *
+ * This hook fetches a specific resource by name from the KubeArchive, providing
+ * standard React Query functionality with loading states, error handling, and caching.
+ * Unlike the list hook, this is designed for fetching individual resources when you
+ * know the exact name and namespace.
+ *
+ * @param resourceInit - K8s resource watch configuration specifying the resource to fetch
+ * @param model - K8s model definition containing API group, version, and kind information
+ * @param queryOptions - Optional React Query options for customizing query behavior
+ * @param options - Optional request configuration (headers, timeout, etc.)
+ * @returns UseQueryResult<K8sResourceCommon, unknown>
+ */
 export function useKubearchiveGetResourceQuery(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
