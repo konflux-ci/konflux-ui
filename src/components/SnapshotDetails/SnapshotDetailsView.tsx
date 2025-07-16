@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
-import { SnapshotLabels } from '../../consts/pipelinerun';
+import { SnapshotLabels } from '../../consts/snapshots';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { HttpError } from '../../k8s/error';

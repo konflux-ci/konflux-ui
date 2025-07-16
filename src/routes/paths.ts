@@ -49,9 +49,7 @@ export const RELEASEPLAN_PATH = RELEASE_SERVICE_PATH.extend(`release-plan`);
 
 export const RELEASEPLANADMISSION_LIST_PATH = RELEASE_SERVICE_PATH.extend(`release-plan-admission`);
 
-export const RELEASEPLAN_TRIGGER_PATH = RELEASEPLAN_PATH.extend(
-  `trigger/:${RouterParams.releasePlanName}`,
-);
+export const RELEASEPLAN_TRIGGER_PATH = RELEASEPLAN_PATH.extend(`trigger`);
 
 export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
   `edit/:${RouterParams.releasePlanName}`,

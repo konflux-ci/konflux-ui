@@ -27,6 +27,7 @@ export type KonfluxPublicInfoIntegrations = {
   };
   sbom_server?: {
     url?: string;
+    sbom_sha?: string;
   };
   image_controller?: {
     enabled?: boolean;

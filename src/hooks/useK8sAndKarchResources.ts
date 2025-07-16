@@ -143,7 +143,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   enabled: boolean = true,
 ): useK8sAndKarchResourceResult<TResource> {
   const [data, setData] = React.useState<TResource | undefined>(undefined);
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<unknown>(null);
 
   React.useEffect(() => {

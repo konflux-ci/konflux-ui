@@ -5,6 +5,9 @@ export const mockReleases = [
     metadata: {
       name: 'test-release',
       creationTimestamp: '2023-02-01T10:30:00Z',
+      labels: {
+        'appstudio.openshift.io/application': 'test-app',
+      },
     },
     spec: {
       releasePlan: 'test-plan',
@@ -70,6 +73,9 @@ export const mockReleaseWithManagedProcessing = {
   metadata: {
     name: 'test-release-3',
     creationTimestamp: '2023-01-01T10:30:00Z',
+    labels: {
+      'appstudio.openshift.io/application': 'test-app',
+    },
   },
   spec: {
     releasePlan: 'test-plan-3',
