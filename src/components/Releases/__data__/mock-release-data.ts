@@ -84,3 +84,37 @@ export const mockReleaseWithManagedProcessing = {
     },
   },
 };
+
+export const mockReleaseWithAllProcessing = {
+  apiVersion: 'appstudio.redhat.com/v1alpha1',
+  kind: 'Release',
+  metadata: {
+    name: 'test-release-3',
+    creationTimestamp: '2023-01-01T10:30:00Z',
+  },
+  spec: {
+    releasePlan: 'test-plan-3',
+    snapshot: 'test-snapshot-3',
+  },
+  status: {
+    startTime: '2023-01-01T10:30:00Z',
+    completionTime: '2023-01-01T10:30:10Z',
+    target: 'test-target',
+    managedProcessing: {
+      pipelineRun: 'my-ns/test-pipelinerun',
+    },
+    tenantProcessing: {
+      pipelineRun: 'my-ns/test-pipelinerun',
+    },
+    tenantCollectorProcessing: {
+      pipelineRun: 'my-ns/test-pipelinerun',
+      startTime: '2023-01-01T10:30:00Z',
+      completionTime: '2023-01-01T10:30:10Z',
+    },
+    finalProcessing: {
+      pipelineRun: 'my-ns/test-pipelinerun',
+      startTime: '2023-01-01T10:30:00Z',
+      completionTime: '2023-01-01T10:30:10Z',
+    },
+  },
+};
