@@ -10,9 +10,9 @@ import {
   Divider,
   Text,
 } from '@patternfly/react-core';
-import overviewInfo1 from '../../assets/overview/overview-info1.svg';
-import overviewInfo2 from '../../assets/overview/overview-info2.svg';
-import overviewInfo3 from '../../assets/overview/overview-info3.svg';
+import OverviewInfo1Icon from '../../assets/overview/overview-info1.svg';
+import OverviewInfo2Icon from '../../assets/overview/overview-info2.svg';
+import OverviewInfo3Icon from '../../assets/overview/overview-info3.svg';
 
 import './InfoBanner.scss';
 
@@ -30,11 +30,7 @@ const InfoBanner: React.FC = () => (
               <Bullseye>
                 <div className="info-banner__circle">
                   <Bullseye>
-                    <img
-                      src={overviewInfo1}
-                      className="info-banner__icon"
-                      alt="OpenShift and Kubernetes"
-                    />
+                    <OverviewInfo1Icon className="info-banner__icon" />
                   </Bullseye>
                 </div>
               </Bullseye>
@@ -57,11 +53,7 @@ const InfoBanner: React.FC = () => (
               <Bullseye>
                 <div className="info-banner__circle">
                   <Bullseye>
-                    <img
-                      src={overviewInfo2}
-                      className="info-banner__icon"
-                      alt="Secure supply chain"
-                    />
+                    <OverviewInfo2Icon className="info-banner__icon" />
                   </Bullseye>
                 </div>
               </Bullseye>
@@ -84,7 +76,7 @@ const InfoBanner: React.FC = () => (
               <Bullseye>
                 <div className="info-banner__circle">
                   <Bullseye>
-                    <img src={overviewInfo3} className="info-banner__icon" alt="Cloud deployment" />
+                    <OverviewInfo3Icon className="info-banner__icon" />
                   </Bullseye>
                 </div>
               </Bullseye>
