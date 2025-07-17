@@ -78,9 +78,18 @@ describe('ComponentList', () => {
 ## Component Testing Patterns
 
 ### Rendering Components
-Use the render function with proper TypeScript typing:
+Use the specialized rendering utilities for components with context providers:
 
 ```tsx
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+import { routerRenderer } from '~/unit-test-utils/mock-react-router';
+import { 
+  formikRenderer,
+  namespaceRenderer,
+  renderWithQueryClientAndRouter,
+  WithTestNamespaceContext 
+} from '~/unit-test-utils/rendering-utils';
+
 const renderComponent = (props: Partial<ComponentProps> = {}) => {
   const defaultProps: ComponentProps = {
     applicationName: 'test-app',
@@ -88,13 +97,39 @@ const renderComponent = (props: Partial<ComponentProps> = {}) => {
     ...props
   };
   
-  return render(<MyComponent {...defaultProps} />);
+  // For components that need React Query + Router
+  return renderWithQueryClientAndRouter(<MyComponent {...defaultProps} />);
 };
 
-it('should render with default props', () => {
-  renderComponent();
-  expect(screen.getByText('test-app')).toBeInTheDocument();
-});
+// For components that need namespace context
+const renderWithNamespace = (props: Partial<ComponentProps> = {}) => {
+  return namespaceRenderer(
+    <MyComponent {...props} />, 
+    'test-namespace',
+    { namespacesLoaded: true }
+  );
+};
+
+// For form components with Formik
+const renderFormComponent = (initialValues = {}) => {
+  return formikRenderer(<MyFormComponent />, initialValues);
+};
+
+// For components that need only React Query context
+const renderWithQuery = (props: Partial<ComponentProps> = {}) => {
+  return renderWithQueryClient(<MyComponent {...props} />);
+};
+
+// For components that need only Router context
+const renderWithRouter = (props: Partial<ComponentProps> = {}) => {
+  return routerRenderer(<MyComponent {...props} />);
+};
+
+// Using higher-order component for namespace context
+const MyComponentWithNamespace = WithTestNamespaceContext(
+  <MyComponent />, 
+  { namespacesLoaded: true }
+);
 ```
 
 ### Testing User Interactions
@@ -117,81 +152,287 @@ it('should handle button click', async () => {
 ```
 
 ### Testing Async Operations
-Use `waitFor` and `findBy` queries for async operations:
+Use specialized utilities for async operations and k8s resource watching:
 
 ```tsx
-it('should load and display data', async () => {
-  (useApplications as jest.Mock).mockReturnValue({
-    data: [mockApplication],
-    isLoading: false,
-    error: null
+import { createK8sWatchResourceMock } from '~/unit-test-utils/mock-k8s';
+import { waitForLoadingToFinish } from '~/unit-test-utils/test-helpers';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+
+describe('AsyncComponent', () => {
+  it('should load and display k8s resource data', async () => {
+    const mockWatchResource = createK8sWatchResourceMock();
+    
+    // Mock the k8s resource response with type safety
+    mockWatchResource.mockReturnValue({
+      data: [mockApplication],
+      isLoading: false,
+      error: null
+    });
+
+    renderWithQueryClient(<MyComponent />);
+
+    // Wait for async data to load
+    const appLink = await screen.findByRole('link', { name: 'Test Application' });
+    expect(appLink).toBeInTheDocument();
   });
 
-  renderComponent();
+  it('should handle loading state', async () => {
+    const mockWatchResource = createK8sWatchResourceMock();
+    
+    mockWatchResource.mockReturnValue({
+      data: [],
+      isLoading: true,
+      error: null
+    });
 
-  // Wait for async data to load
-  const appLink = await screen.findByRole('link', { name: 'Test Application' });
-  expect(appLink).toBeInTheDocument();
-});
-
-it('should handle loading state', () => {
-  (useApplications as jest.Mock).mockReturnValue({
-    data: null,
-    isLoading: true,
-    error: null
+    renderWithQueryClient(<MyComponent />);
+    
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    
+    // Update mock to finished loading
+    mockWatchResource.mockReturnValue({
+      data: [mockApplication],
+      isLoading: false,
+      error: null
+    });
+    
+    // Wait for loading to finish
+    await waitForLoadingToFinish();
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
-  renderComponent();
-  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+  it('should handle error state', () => {
+    const mockWatchResource = createK8sWatchResourceMock();
+    
+    mockWatchResource.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: new Error('Failed to fetch')
+    });
+
+    renderWithQueryClient(<MyComponent />);
+    expect(screen.getByText(/error/i)).toBeInTheDocument();
+  });
 });
+```
+
+## Test Utilities
+
+### Available Test Utilities
+Konflux UI provides comprehensive test utilities organized by functionality in `~/unit-test-utils`:
+
+```tsx
+// React Query utilities
+import { 
+  createTestQueryClient,
+  renderWithQueryClient,
+} from '~/unit-test-utils/mock-react-query';
+
+// React Router utilities
+import {
+  createUseParamsMock,
+  createReactRouterMock,
+  routerRenderer,
+} from '~/unit-test-utils/mock-react-router';
+
+// K8s and Kubearchive utilities
+import {
+  createK8sWatchResourceMock,
+  createK8sUtilMock,
+  createKubearchiveUtilMock,
+  transformReturnDataForUseK8sWatchResource,
+} from '~/unit-test-utils/mock-k8s';
+
+// Application hook utilities
+import { createUseApplicationMock } from '~/unit-test-utils/mock-application-hooks';
+
+// Browser/window utilities
+import {
+  mockLocation,
+  mockWindowFetch,
+} from '~/unit-test-utils/mock-browser';
+
+// Rendering utilities (JSX components)
+import {
+  formikRenderer,
+  namespaceRenderer,
+  renderWithQueryClientAndRouter,
+  WithTestNamespaceContext,
+} from '~/unit-test-utils/rendering-utils';
+
+// General test helpers
+import {
+  waitForLoadingToFinish,
+  openIntegrationTestContextDropdown,
+  getIntegrationTestContextOptionButton,
+} from '~/unit-test-utils/test-helpers';
+
+// Type-safe mock creation
+import { createJestMockFunction } from '~/unit-test-utils/common';
+
+// Access review utilities
+import { mockAccessReviewUtil } from '~/unit-test-utils/mock-access-review';
+
+// Namespace utilities
+import { mockNamespaceHooks } from '~/unit-test-utils/mock-namespace';
+
+// Search parameter utilities
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
+
+// Legacy utilities (deprecated - use above instead)
+import { 
+  // These are now available in ~/unit-test-utils/rendering-utils
+  renderWithQueryClientAndRouter, // @deprecated
+  formikRenderer,                 // @deprecated
+  namespaceRenderer,              // @deprecated
+  WithTestNamespaceContext,       // @deprecated
+} from '~/utils/test-utils';
+```
+
+### Type-Safe Mock Creation
+Use `createJestMockFunction` for type-safe mock creation:
+
+```tsx
+import { createJestMockFunction } from '~/unit-test-utils/common';
+
+// Type-safe mock function
+const mockCallback = createJestMockFunction<(id: string) => void>();
+
+// Mock with implementation
+const mockFetchData = createJestMockFunction<() => Promise<Data[]>>(
+  async () => [mockData1, mockData2]
+);
 ```
 
 ## Mocking Patterns
 
 ### Hook Mocking
-Mock custom hooks at the module level:
+Use the organized test utilities from `~/unit-test-utils`:
 
 ```tsx
-// Mock the entire hook module
-jest.mock('~/hooks/useApplications', () => ({
-  useApplications: jest.fn()
-}));
+import { createUseApplicationMock } from '~/unit-test-utils/mock-application-hooks';
+import { createK8sUtilMock, createKubearchiveUtilMock } from '~/unit-test-utils/mock-k8s';
+import { mockNamespaceHooks } from '~/unit-test-utils/mock-namespace';
+import { mockAccessReviewUtil } from '~/unit-test-utils/mock-access-review';
 
-// Mock specific functions from utils
-jest.mock('~/utils/k8s-utils', () => ({
-  k8sDeleteResource: jest.fn()
-}));
+describe('MyComponent', () => {
+  // Mock application hooks with type safety
+  const mockUseApplication = createUseApplicationMock([mockApplication, false, null]);
+  
+  // Mock k8s utilities with type safety
+  const mockK8sDelete = createK8sUtilMock('k8sDeleteResource');
+  
+  // Mock kubearchive utilities with type safety
+  const mockKubearchiveFetch = createKubearchiveUtilMock('fetchArchivedResource');
+  
+  // Mock namespace hooks with type safety
+  const mockUseNamespace = mockNamespaceHooks('useNamespace', 'test-namespace');
+  
+  // Mock access review utilities with type safety
+  const mockCheckAccess = mockAccessReviewUtil('checkAccess', true);
+});
 ```
 
-### React Query Mocking
-Mock React Query hooks for data fetching:
+### React Query Testing
+Use the dedicated React Query utilities:
 
 ```tsx
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(),
-  useMutation: jest.fn()
-}));
+import { 
+  renderWithQueryClient, 
+  createTestQueryClient 
+} from '~/unit-test-utils/mock-react-query';
 
-beforeEach(() => {
-  (useQuery as jest.Mock).mockReturnValue({
-    data: mockData,
-    isLoading: false,
-    error: null
+describe('ComponentWithQuery', () => {
+  it('should handle query data', () => {
+    const client = createTestQueryClient();
+    
+    renderWithQueryClient(<MyComponent />, client);
+    
+    // Test component behavior with query client
   });
 });
 ```
 
 ### Router Mocking
-Mock React Router for navigation testing:
+Use the dedicated React Router utilities:
 
 ```tsx
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-  useParams: () => ({ applicationName: 'test-app' })
-}));
+import { 
+  createUseParamsMock,
+  createReactRouterMock,
+  routerRenderer 
+} from '~/unit-test-utils/mock-react-router';
+
+describe('ComponentWithRouter', () => {
+  beforeEach(() => {
+    // Mock useParams with type safety
+    createUseParamsMock({ applicationName: 'test-app', namespace: 'test-ns' });
+    
+    // Mock useNavigate with type safety
+    const mockNavigate = createReactRouterMock('useNavigate');
+  });
+
+  it('should render with router context', () => {
+    routerRenderer(<MyComponent />);
+    // Test router-dependent component
+  });
+});
+```
+
+### Testing Permissions and Access Reviews
+Use the access review utilities for testing permission-based features:
+
+```tsx
+import { mockAccessReviewUtil } from '~/unit-test-utils/mock-access-review';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+
+describe('PermissionBasedComponent', () => {
+  it('should show edit button when user has permissions', () => {
+    const mockCheckAccess = mockAccessReviewUtil('checkAccess', true);
+    
+    renderWithQueryClient(<MyComponent />);
+    
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+    expect(mockCheckAccess).toHaveBeenCalledWith({
+      group: 'argoproj.io',
+      resource: 'applications',
+      verb: 'update'
+    });
+  });
+
+  it('should hide edit button when user lacks permissions', () => {
+    mockAccessReviewUtil('checkAccess', false);
+    
+    renderWithQueryClient(<MyComponent />);
+    
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+  });
+});
+```
+
+### Testing Search Parameters
+Use the search parameter utilities for URL-based state:
+
+```tsx
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+
+describe('ComponentWithSearchParams', () => {
+  it('should handle search parameter changes', () => {
+    const [getParams, setParams, unsetParams] = mockUseSearchParamBatch();
+    
+    renderWithQueryClient(<MyComponent />);
+    
+    // Simulate search parameter change
+    setParams({ filter: 'active', sort: 'name' });
+    
+    expect(getParams()).toEqual({ filter: 'active', sort: 'name' });
+    
+    // Clean up
+    unsetParams();
+  });
+});
 ```
 
 ## Testing Best Practices
