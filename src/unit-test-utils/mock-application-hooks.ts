@@ -6,9 +6,6 @@ type ApplicationHookModule = {
   [K in MockFunctionKeys<typeof ApplicationHook>]: (typeof ApplicationHook)[K];
 };
 
-/**
- * Creates a type-safe mock for useApplication hook with initial value
- */
 export const createUseApplicationMock = (
   initialValue: unknown = [{ metadata: { name: '' } }, false, null],
 ): jest.Mock => {
@@ -23,9 +20,6 @@ export const createUseApplicationMock = (
   return mockFn;
 };
 
-/**
- * Creates a type-safe mock for any application hook
- */
 export const mockApplicationHooks = <T extends MockFunctionKeys<ApplicationHookModule>>(
   name: T,
   initialValue: ReturnType<ApplicationHookModule[T]>,

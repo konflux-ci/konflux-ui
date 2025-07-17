@@ -20,9 +20,6 @@ export const createUseParamsMock = (
   return mockFn;
 };
 
-/**
- * Creates a type-safe mock for any React Router hook
- */
 export const createReactRouterMock = (name: string): jest.Mock => {
   const mockFn = jest.fn();
 

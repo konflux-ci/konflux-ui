@@ -41,9 +41,6 @@ export const createK8sWatchResourceMock = () => {
   return mockFn;
 };
 
-/**
- * Creates a type-safe mock for any k8s utility function
- */
 export const createK8sUtilMock = (name: string) => {
   const mockFn = jest.fn();
 
@@ -53,9 +50,6 @@ export const createK8sUtilMock = (name: string) => {
   return mockFn;
 };
 
-/**
- * Creates a type-safe mock for any kubearchive utility function
- */
 export const createKubearchiveUtilMock = (name: string) => {
   const mockFn = jest.fn();
 

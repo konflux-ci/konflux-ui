@@ -7,9 +7,6 @@ import { FormikValues, Formik } from 'formik';
 import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
 import { createTestQueryClient } from './mock-react-query';
 
-/**
- * Renders a component with Formik wrapper and QueryClient
- */
 export const formikRenderer = (
   element: React.ReactElement,
   initialValues?: FormikValues,
@@ -28,9 +25,6 @@ export const formikRenderer = (
   });
 };
 
-/**
- * Renders a component with NamespaceContext provider
- */
 export const namespaceRenderer = (
   element: React.ReactElement,
   namespace: string,
@@ -55,9 +49,6 @@ export const namespaceRenderer = (
     ...options,
   });
 
-/**
- * Renders a component with QueryClient and Router providers
- */
 export function renderWithQueryClientAndRouter(
   ui: React.ReactElement,
   client?: QueryClient,
@@ -76,9 +67,6 @@ export function renderWithQueryClientAndRouter(
   return render(ui, { wrapper: Wrapper, ...renderOptions });
 }
 
-/**
- * Higher-order component for providing test namespace context
- */
 export const WithTestNamespaceContext =
   (children: React.ReactNode, data?: Partial<NamespaceUtils.NamespaceContextData>) =>
   (): React.ReactElement => (
