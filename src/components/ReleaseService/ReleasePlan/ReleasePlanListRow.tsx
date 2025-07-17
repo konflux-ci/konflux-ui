@@ -38,7 +38,9 @@ const ReleasePlanListRow: React.FC<
           {appDisplayName}
         </Link>
       </TableData>
-      <TableData className={releasesPlanTableColumnClasses.target}>{obj.spec.target}</TableData>
+      <TableData className={releasesPlanTableColumnClasses.target}>
+        {obj.spec.target ?? '-'}
+      </TableData>
       <TableData className={releasesPlanTableColumnClasses.autoRelease}>
         {capitalize(obj.metadata.labels?.[ReleasePlanLabel.AUTO_RELEASE] ?? 'false')}
       </TableData>
