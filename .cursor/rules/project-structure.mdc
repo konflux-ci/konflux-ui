@@ -1,8 +1,11 @@
+
 ---
 alwaysApply: true
 ---
 
 # Konflux UI Project Structure & Architecture
+
+> 📖 **Also see**: [CONTRIBUTING.md](mdc:CONTRIBUTING.md) for detailed development guidelines, styling conventions, and import patterns.
 
 Konflux UI is a React TypeScript application for managing Kubernetes CI/CD workflows. Understanding the project structure is essential for effective development.
 
@@ -39,6 +42,7 @@ src/
 ├── feature-flags/     # Client-side feature flag system
 ├── auth/              # Authentication context and utilities
 ├── kubearchive/       # KubeArchive integration (historical data)
+├── unit-test-utils/   # Testing utilities and helper functions
 └── routes/            # Route definitions and page wrappers
 ```
 
@@ -51,7 +55,8 @@ src/
 - **SCSS** for component-specific styling
 
 ### State Management
-- **TanStack React Query** - Server state management and caching
+- **useK8sWatchResource** - Kubernetes resource watching and caching
+- **TanStack React Query** - Additional server state management
 - **Zustand** - Lightweight client state (feature flags)
 - **React Context** - Authentication and namespace providers
 
@@ -67,6 +72,7 @@ Use absolute imports with these configured aliases:
 - `~/types` → `src/types`
 - `~/k8s` → `src/k8s`
 - `~/utils` → `src/utils`
+- `~/models` → `src/models`
 - `@routes` → `src/routes`
 
 ## Architecture Principles
@@ -75,3 +81,4 @@ Use absolute imports with these configured aliases:
 3. **Import restrictions** - Strict layering prevents circular dependencies (see [.eslintrc.restrict-imports.cjs](mdc:.eslintrc.restrict-imports.cjs))
 4. **Client-side feature flags** - New features wrapped with feature flags during development
 5. **Dual data sources** - Live cluster data + historical archive data for comprehensive views
+6. **Kubernetes-first approach** - Built specifically for K8s resource management with `useK8sWatchResource`
