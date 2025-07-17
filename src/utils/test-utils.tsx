@@ -3,9 +3,7 @@
  * to the new organized test utilities in ~/unit-test-utils. Once all tests have been migrated
  * to import directly from ~/unit-test-utils, these re-exports should be removed.
  *
- * The ESLint disable comments below are temporary and should be removed once migration is complete.
  */
-/* eslint-disable import/no-restricted-paths */
 
 import { createUseApplicationMock as _createUseApplicationMock } from '../unit-test-utils/mock-application-hooks';
 import {
