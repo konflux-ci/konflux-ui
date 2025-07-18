@@ -18,6 +18,11 @@ import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-acti
 import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
+interface PipelineRunQueryParams {
+  releaseName?: string;
+  integrationTestName?: string;
+}
+
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
 
 // [TODO]: remove this once Snapshot details page is added
@@ -139,4 +144,18 @@ export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] =>
         : undefined,
     },
   ];
+};
+
+export const buildPipelineRunQuery = ({
+  releaseName,
+  integrationTestName,
+}: PipelineRunQueryParams): string => {
+  switch (true) {
+    case releaseName != null:
+      return `?releaseName=${encodeURIComponent(releaseName)}`;
+    case integrationTestName != null:
+      return `?integrationTestName=${encodeURIComponent(integrationTestName)}`;
+    default:
+      return '';
+  }
 };

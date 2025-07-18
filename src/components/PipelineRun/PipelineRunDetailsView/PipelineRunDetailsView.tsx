@@ -6,6 +6,7 @@ import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { HttpError } from '../../../k8s/error';
 import { PipelineRunModel } from '../../../models';
 import {
+  INTEGRATION_TEST_PIPELINE_LIST_PATH,
   PIPELINE_RUNS_DETAILS_PATH,
   PIPELINE_RUNS_LIST_PATH,
   RELEASE_PIPELINE_LIST_PATH,
@@ -63,20 +64,41 @@ export const PipelineRunDetailsView: React.FC = () => {
   const isEnterpriseContract = isResourceEnterpriseContract(pipelineRun);
 
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
+  const integrationTestName = queryParams.get('integrationTestName') || '';
+
+  const getDynamicPipelineRunsBreadcrumb = () => ({
+    path: (() => {
+      if (releaseName) {
+        return RELEASE_PIPELINE_LIST_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          releaseName,
+        });
+      }
+
+      if (integrationTestName) {
+        return INTEGRATION_TEST_PIPELINE_LIST_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          integrationTestName,
+        });
+      }
+
+      return PIPELINE_RUNS_LIST_PATH.createPath({
+        workspaceName: namespace,
+        applicationName,
+      });
+    })(),
+    name: 'Pipeline runs',
+  });
+
   return (
     <DetailsPage
       data-test="pipelinerun-details-test-id"
       headTitle={pipelineRunName}
       breadcrumbs={[
         ...applicationBreadcrumbs,
-        {
-          path: (releaseName ? RELEASE_PIPELINE_LIST_PATH : PIPELINE_RUNS_LIST_PATH).createPath({
-            workspaceName: namespace,
-            applicationName,
-            ...(releaseName ? { releaseName } : {}),
-          }),
-          name: 'Pipeline runs',
-        },
+        getDynamicPipelineRunsBreadcrumb(),
         {
           path: PIPELINE_RUNS_DETAILS_PATH.createPath({
             workspaceName: namespace,
