@@ -1,14 +1,12 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Title, EmptyStateBody } from '@patternfly/react-core';
+import { Bullseye, Spinner, Title } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useReleasePlan } from '~/hooks/useReleasePlans';
 import { useRelease } from '~/hooks/useReleases';
-import { useReleaseStatus } from '~/hooks/useReleaseStatus';
 import { Table, useDeepCompareMemoize } from '~/shared';
-import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import {
@@ -18,9 +16,9 @@ import {
   getTenantCollectorProcessingFromRelease,
   getTenantProcessingFromRelease,
 } from '~/utils/release-utils';
-import emptyStateImgUrl from '../../assets/secret.svg';
 import ReleasePipelineListHeader from './ReleasePipelineList/ReleasePipelineListHeader';
 import ReleasePipelineListRow from './ReleasePipelineList/ReleasePipelineListRow';
+import ReleasesEmptyState from './ReleasesEmptyState';
 
 interface PipelineRunProcessing {
   type: string;
@@ -63,7 +61,6 @@ const ReleasePipelineRunTab: React.FC = () => {
   const [release, loaded] = useRelease(namespace, releaseName);
 
   const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
-  const status = useReleaseStatus(release);
 
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -94,22 +91,12 @@ const ReleasePipelineRunTab: React.FC = () => {
       getManagedProcessingFromRelease(release),
       release.spec.snapshot,
     ),
-  ].filter((run) => run !== undefined && run !== null);
+  ].filter(Boolean);
 
   const { name: nameFilter } = filters;
 
   const filteredRuns = allRuns.filter((run) =>
     run.pipelineRun.toLowerCase().includes(nameFilter.toLowerCase()),
-  );
-
-  const NoDataEmptyMessage = () => (
-    <AppEmptyState
-      emptyStateImg={emptyStateImgUrl}
-      title="No linked secrets found"
-      data-test="linked-secrets-list-no-data-empty-message"
-    >
-      <EmptyStateBody>This release has no pipeline runs yet.</EmptyStateBody>
-    </AppEmptyState>
   );
 
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
@@ -123,7 +110,7 @@ const ReleasePipelineRunTab: React.FC = () => {
         data={filteredRuns}
         unfilteredData={allRuns}
         EmptyMsg={EmptyMessage}
-        NoDataEmptyMsg={NoDataEmptyMessage}
+        NoDataEmptyMsg={() => <ReleasesEmptyState />}
         Toolbar={
           <BaseTextFilterToolbar
             text={filters.name}
@@ -142,7 +129,6 @@ const ReleasePipelineRunTab: React.FC = () => {
             releasePlan={releasePlan}
             releaseName={releaseName}
             namespace={namespace}
-            status={status}
           />
         )}
         loaded={releasePlanLoaded}

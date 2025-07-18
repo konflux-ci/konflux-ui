@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Flex,
   FlexItem,
@@ -20,9 +20,6 @@ import {
 import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
 import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
 import { css } from '@patternfly/react-styles';
-import { APPLICATION_RELEASE_LIST_PATH } from '@routes/paths';
-import { RouterParams } from '@routes/utils';
-import { useNamespace } from '~/shared/providers/Namespace';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
@@ -54,10 +51,9 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   baseURL,
   onTabSelect,
 }) => {
-  const { applicationName } = useParams<RouterParams>();
-  const namespace = useNamespace();
+  const navigate = useNavigate();
   const { state } = useLocation();
-  const showBackToRelease = state?.isPrNamespaceChanged || false;
+  const showBackLink = state?.showBackButton || false;
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -126,22 +122,16 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   return (
     <PageGroup data-test="details" className="app-details">
       <PageSection type="breadcrumb">
-        {!showBackToRelease && breadcrumbs && (
+        {!showBackLink && breadcrumbs && (
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
-        {showBackToRelease ? (
-          <Link
-            to={APPLICATION_RELEASE_LIST_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-            })}
-            className="pf-c-button pf-m-link"
-          >
+        {showBackLink ? (
+          <div onClick={() => navigate(-1)} className="details__back-link">
             <Icon>
               <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
             </Icon>
             {'Back to release details'}
-          </Link>
+          </div>
         ) : (
           ''
         )}

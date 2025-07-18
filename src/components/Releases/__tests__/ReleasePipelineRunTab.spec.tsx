@@ -67,6 +67,10 @@ describe('ReleasePipelineRunTab', () => {
     ]);
     useMockReleasePlan.mockReturnValue([{}, true]);
     render(wrapper);
-    expect(screen.getByText('This release has no pipeline runs yet.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'A release object represents a deployed snapshot of your application components. To view your releases, set up a release plan for your application.',
+      ),
+    ).toBeInTheDocument();
   });
 });

@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
 import { TableData, Timestamp } from '~/shared';
 import { ReleasePlanKind } from '~/types/coreBuildService';
-import { calculateDuration, runStatus } from '~/utils/pipeline-utils';
-import { StatusIconWithText } from '../../topology/StatusIcon';
+import { calculateDuration } from '~/utils/pipeline-utils';
 import { releasePipelineRunListColumnClasses } from './ReleasePipelineListHeader';
 
 interface PipelineRunProcessing {
@@ -21,7 +20,6 @@ type PipelineRunListRowProps = {
   releasePlan: ReleasePlanKind;
   releaseName?: string;
   namespace: string;
-  status: runStatus;
 };
 
 const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
@@ -29,9 +27,8 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
   releasePlan,
   releaseName,
   namespace,
-  status,
 }) => {
-  const isNamespaceChanged = namespace !== run?.prNamespace;
+  const showBackButton = namespace !== run?.prNamespace;
 
   return (
     <>
@@ -42,7 +39,7 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
             applicationName: releasePlan.spec.application,
             pipelineRunName: run.pipelineRun,
           })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
-          state={{ isPrNamespaceChanged: isNamespaceChanged }}
+          state={{ showBackButton }}
         >
           {run.pipelineRun}
         </Link>
@@ -53,9 +50,6 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
       <TableData className={releasePipelineRunListColumnClasses.duration}>
         {calculateDuration(run.startTime || '', run.completionTime || '') || '-'}
       </TableData>
-      <TableData className={releasePipelineRunListColumnClasses.status}>
-        <StatusIconWithText status={status} dataTestAttribute="release-details status" />
-      </TableData>
       <TableData className={releasePipelineRunListColumnClasses.type}>{run.type}</TableData>
       <TableData className={releasePipelineRunListColumnClasses.snapshot}>
         <Link
@@ -64,7 +58,7 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
             applicationName: releasePlan.spec.application,
             snapshotName: run.snapshot,
           })}
-          state={{ isPrNamespaceChanged: isNamespaceChanged }}
+          state={{ showBackButton }}
         >
           {run.snapshot}
         </Link>

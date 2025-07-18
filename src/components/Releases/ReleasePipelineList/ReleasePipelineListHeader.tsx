@@ -5,7 +5,6 @@ export const releasePipelineRunListColumnClasses = {
   namespace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   startTime: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-15',
   duration: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-15',
-  status: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
 };
 
 const ReleasePipelineListHeader = () => {
@@ -21,10 +20,6 @@ const ReleasePipelineListHeader = () => {
     {
       title: 'Duration',
       props: { className: releasePipelineRunListColumnClasses.duration },
-    },
-    {
-      title: 'Status',
-      props: { className: releasePipelineRunListColumnClasses.status },
     },
     {
       title: 'Type',
