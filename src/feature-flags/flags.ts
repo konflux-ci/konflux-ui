@@ -40,6 +40,13 @@ type FeatureFlagDefinition = {
   status: 'wip' | 'enabled';
 };
 
-export const FLAGS: Record<string, FeatureFlagDefinition> = {};
+export const FLAGS: Record<string, FeatureFlagDefinition> = {
+  'dark-theme': {
+    key: 'dark-theme',
+    description: 'Enable dark theme selector in the header',
+    defaultEnabled: false,
+    status: 'wip',
+  },
+};
 
 export type FlagKey = keyof typeof FLAGS;
