@@ -29,13 +29,17 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   const component = plr.metadata.labels[PipelineRunLabel.COMPONENT] ?? '';
   const repoName = plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
   const repoURL = getSourceUrl(plr);
-  const repoOrg = plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoOrg =
+    plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
+    plr.metadata.annotations[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
   const shaURL =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
     `${repoURL}/commit/${commitSHA}`;
   const shaTitle =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
-  const gitProvider = plr.metadata.labels[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
+  const gitProvider =
+    plr.metadata.labels[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
+    plr.metadata.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
   const pullRequestNumber = plr.metadata.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
   const eventType = plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
   const isPullRequest =
