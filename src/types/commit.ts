@@ -21,4 +21,5 @@ export type Commit = {
   shaTitle?: string;
   isPullRequest: boolean;
   pullRequestNumber?: string;
+  eventType?: string;
 };

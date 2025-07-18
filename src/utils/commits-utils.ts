@@ -37,6 +37,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider = plr.metadata.labels[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
   const pullRequestNumber = plr.metadata.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
+  const eventType = plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
   const isPullRequest =
     plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
 
@@ -58,6 +59,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     pipelineRuns: [plr],
     application,
     shaTitle,
+    eventType,
     isPullRequest,
     pullRequestNumber,
   };
