@@ -121,7 +121,7 @@ const ReleasesListRow: React.FC<
               applicationName,
               pipelineRunName: managedPipelineRun,
             })}
-            state={{ showBackButton: Boolean(namespace !== managedPipelineRun) }}
+            state={{ showBackButton: Boolean(namespace !== managedPrNamespace) }}
           >
             {managedPipelineRun}
           </Link>

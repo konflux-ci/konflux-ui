@@ -6,7 +6,7 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useReleasePlan } from '~/hooks/useReleasePlans';
 import { useRelease } from '~/hooks/useReleases';
-import { Table, useDeepCompareMemoize } from '~/shared';
+import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import {
@@ -57,14 +57,10 @@ const ReleasePipelineRunTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
 
-  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const { filters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const [release, loaded] = useRelease(namespace, releaseName);
 
   const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
-
-  const filters = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-  });
 
   if (!releasePlanLoaded || !loaded) {
     return (
@@ -93,11 +89,11 @@ const ReleasePipelineRunTab: React.FC = () => {
     ),
   ].filter(Boolean);
 
-  const { name: nameFilter } = filters;
-
-  const filteredRuns = allRuns.filter((run) =>
-    run.pipelineRun.toLowerCase().includes(nameFilter.toLowerCase()),
-  );
+  const filteredRuns = filters?.name
+    ? allRuns.filter((run) =>
+        run.pipelineRun.toLowerCase().includes((filters.name as string).toLowerCase()),
+      )
+    : allRuns;
 
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
 
@@ -113,7 +109,7 @@ const ReleasePipelineRunTab: React.FC = () => {
         NoDataEmptyMsg={() => <ReleasesEmptyState />}
         Toolbar={
           <BaseTextFilterToolbar
-            text={filters.name}
+            text={filters.name as string}
             label="name"
             setText={(name) => setFilters({ ...filters, name })}
             onClearFilters={onClearFilters}

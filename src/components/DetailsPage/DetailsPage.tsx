@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  Button,
   Flex,
   FlexItem,
   Icon,
@@ -126,12 +127,12 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
         {showBackLink ? (
-          <div onClick={() => navigate(-1)} className="details__back-link">
+          <Button onClick={() => navigate(-1)} variant="link" isInline>
             <Icon>
               <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
             </Icon>
             {'Back to release details'}
-          </div>
+          </Button>
         ) : (
           ''
         )}
