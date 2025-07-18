@@ -9,7 +9,7 @@ module.exports = {
           // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts` and `./src/kubearchive`.
           {
             target: './src/utils/**/*',
-            from: ['./src/!(utils|types|k8s|models|consts|kubearchive)/**/*'],
+            from: ['./src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils)/**/*'],
             message:
               'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts` or `./src/kubearchive`',
           },
