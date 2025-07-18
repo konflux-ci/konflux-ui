@@ -32,20 +32,23 @@ export const mockBuildPipelineConfigJson: BuildPipelineConfigJson = {
     {
       name: 'fbc-builder',
       description: 'fbc-builder example description',
-      detail: 'The File-Based Catalog (FBC) builder pipeline creates container images for operator bundles using the file-based catalog format. This pipeline supports building OLM operator catalogs with improved performance and maintainability compared to the deprecated SQLite-based format.',
+      detail:
+        'The File-Based Catalog (FBC) builder pipeline creates container images for operator bundles using the file-based catalog format. This pipeline supports building OLM operator catalogs with improved performance and maintainability compared to the deprecated SQLite-based format.',
       bundle: 'quay.io/konflux-ci/examples/pipeline-fbc-builder@sha256:33f',
       'additional-params': ['build-platforms'],
     },
     {
       name: 'docker-build',
       description: 'Standard Docker build pipeline',
-      detail: 'The standard Docker build pipeline creates container images from a Dockerfile. This pipeline supports building single-architecture images and includes security scanning and attestation generation.',
+      detail:
+        'The standard Docker build pipeline creates container images from a Dockerfile. This pipeline supports building single-architecture images and includes security scanning and attestation generation.',
       bundle: 'quay.io/konflux-ci/examples/pipeline-docker-build@sha256:eff',
     },
     {
       name: 'docker-build-oci-ta',
       description: 'Docker build with trusted artifacts',
-      detail: 'This pipeline builds container images using Docker with OCI-compliant trusted artifacts. It provides enhanced security through cryptographic attestations and supports SLSA provenance generation for supply chain security.',
+      detail:
+        'This pipeline builds container images using Docker with OCI-compliant trusted artifacts. It provides enhanced security through cryptographic attestations and supports SLSA provenance generation for supply chain security.',
       bundle: 'quay.io/konflux-ci/examples/pipeline-docker-build-oci-ta:005',
     },
     {

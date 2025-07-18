@@ -1,0 +1,20 @@
+---
+alwaysApply: true
+---
+
+# Package Management
+
+Konflux UI uses **Yarn** as the package manager. Always use `yarn` commands instead of `npm`.
+
+## Reference
+
+For detailed development commands and setup instructions, refer to:
+- [CONTRIBUTING.md](../CONTRIBUTING.md) - Contains yarn commands for development workflow
+- [README.md](../README.md) - Setup and build instructions
+
+## Key Points
+
+- ✅ Use `yarn` commands (e.g., `yarn lint`, `yarn test`, `yarn tsc`)
+- ❌ Don't use `npm` commands  
+- Use `yarn.lock` (committed to repo)
+- Never commit `package-lock.json`
