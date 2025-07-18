@@ -39,4 +39,5 @@ export type KonfluxPublicInfo = {
   environment?: string;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
+  visibility?: 'public' | 'private';
 };
