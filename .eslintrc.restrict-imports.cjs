@@ -6,12 +6,14 @@ module.exports = {
       {
         zones: [
           // Zone 1: Files in `./src/utils` may only import from:
-          // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts` and `./src/kubearchive`.
+          // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__` or `./src/kubearchive`.
           {
             target: './src/utils/**/*',
-            from: ['./src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils)/**/*'],
+            from: [
+              './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__)/**/*',
+            ],
             message:
-              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts` or `./src/kubearchive`',
+              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__` or `./src/kubearchive`',
           },
           // Zone 2: Files in `./src/types` may only import from `./src/types`.
           {
