@@ -3,6 +3,7 @@ import {
   componentRelationValidationSchema,
   computeNudgeDataChanges,
   transformNudgeData,
+  toCustomBoolean,
 } from '../utils';
 
 describe('computeNudgeDataChanges', () => {
@@ -71,7 +72,7 @@ describe('componentRelationValidationSchema', () => {
   it('should validate yup schema', async () => {
     const values = {
       relations: [
-        { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: [] },
+        { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGES, target: ['a'] },
         { source: 'adf', nudgeType: ComponentRelationNudgeType.NUDGED_BY, target: ['b', 'c'] },
       ],
     };
@@ -94,5 +95,15 @@ describe('componentRelationValidationSchema', () => {
         relations: [{ source: 'adf', target: ['a'] }],
       }),
     ).rejects.toThrowError();
+  });
+});
+
+describe('toCustomBoolean', () => {
+  it('should use custom logic to convert value to boolean', () => {
+    expect(toCustomBoolean([])).toBe(false);
+    expect(toCustomBoolean(['a'])).toBe(true);
+    expect(toCustomBoolean('a')).toBe(true);
+    expect(toCustomBoolean(null)).toBe(false);
+    expect(toCustomBoolean(undefined)).toBe(false);
   });
 });
