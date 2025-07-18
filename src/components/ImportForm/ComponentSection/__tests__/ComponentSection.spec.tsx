@@ -11,7 +11,7 @@ describe('ComponentSection', () => {
     formikRenderer(<ComponentSection />, {
       source: { git: { url: '' } },
     });
-    screen.getByPlaceholderText('Enter your source');
+    screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
     expect(screen.queryByTestId('git-reference')).not.toBeInTheDocument();
   });
 
@@ -20,7 +20,7 @@ describe('ComponentSection', () => {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
-    const source = screen.getByPlaceholderText('Enter your source');
+    const source = screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
 
     await user.type(source, 'https://github.com/abcd/repo.git');
     await user.tab();
@@ -32,7 +32,7 @@ describe('ComponentSection', () => {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
-    const source = screen.getByPlaceholderText('Enter your source');
+    const source = screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
 
     await user.type(source, 'https://bitbucket.com/abcd/repo.git');
     await user.tab();
@@ -44,7 +44,7 @@ describe('ComponentSection', () => {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
-    const source = screen.getByPlaceholderText('Enter your source');
+    const source = screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
 
     await user.type(source, 'https://gitlab.com/abcd/repo.git');
     await user.tab();
@@ -69,7 +69,7 @@ describe('ComponentSection', () => {
       source: { git: { url: '' } },
     });
     const user = userEvent.setup();
-    const source = screen.getByPlaceholderText('Enter your source');
+    const source = screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
 
     await user.type(source, 'https://github.com/ExampleRepo123.git');
     await user.tab();
