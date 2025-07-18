@@ -22,7 +22,7 @@ import {
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { usePipelinerunActions } from './pipelinerun-actions';
+import { buildPipelineRunQuery, usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
 
@@ -35,6 +35,7 @@ type PipelineRunListRowProps = RowFunctionArgs<
     releasePlan?: ReleasePlanKind;
     release?: ReleaseKind;
     releaseName?: string;
+    integrationTestName?: string;
   }
 >;
 
@@ -70,7 +71,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
-  const { releaseName, releasePlan, release } = customData || {};
+  const { releaseName, integrationTestName, releasePlan, release } = customData || {};
   // @ts-expect-error vulnerabilities will not be available until fetched for the next page
   const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
@@ -95,6 +96,8 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     return taskTestResultStatus(results);
   }, [obj]);
 
+  const queryString = buildPipelineRunQuery({ releaseName, integrationTestName });
+
   return (
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
@@ -103,7 +106,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             workspaceName: namespace,
             applicationName,
             pipelineRunName: obj.metadata?.name,
-          })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
+          })}${queryString}`}
           title={obj.metadata?.name}
           state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
         >
