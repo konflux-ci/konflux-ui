@@ -25,5 +25,6 @@ tsconfig.tsbuildinfo
 *.njsproj
 *.sln
 *.sw?
+.cursorrules
 
 **/.gitconfig*
