@@ -7,11 +7,7 @@ import { PipelineRunKind } from '../../../../types';
 import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
-import {
-  buildPipelineRunQuery,
-  usePipelinererunAction,
-  usePipelinerunActions,
-} from '../pipelinerun-actions';
+import { usePipelinererunAction, usePipelinerunActions } from '../pipelinerun-actions';
 
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
@@ -482,41 +478,5 @@ describe('usePipelinererunAction', () => {
         label: 'Rerun',
       }),
     );
-  });
-});
-
-describe('buildPipelineRunQuery', () => {
-  it('returns query param for releaseName', () => {
-    const query = buildPipelineRunQuery({ releaseName: 'release-123' });
-    expect(query).toBe('?releaseName=release-123');
-  });
-
-  it('returns encoded query param for releaseName', () => {
-    const query = buildPipelineRunQuery({ releaseName: 'release 123' });
-    expect(query).toBe('?releaseName=release%20123');
-  });
-
-  it('returns query param for integrationTestName when releaseName and snapshotName are not provided', () => {
-    const query = buildPipelineRunQuery({ integrationTestName: 'test1' });
-    expect(query).toBe('?integrationTestName=test1');
-  });
-
-  it('returns encoded query param for integrationTestName', () => {
-    const query = buildPipelineRunQuery({ integrationTestName: 'test 1' });
-    expect(query).toBe('?integrationTestName=test%201');
-  });
-
-  it('returns empty string if no params are provided', () => {
-    const query = buildPipelineRunQuery({});
-    expect(query).toBe('');
-  });
-
-  it('prioritizes releaseName over snapshotName and integrationTestName', () => {
-    const query = buildPipelineRunQuery({
-      releaseName: 'releaseX',
-      // snapshotName: 'snapshotX',
-      integrationTestName: 'testX',
-    });
-    expect(query).toBe('?releaseName=releaseX');
   });
 });

@@ -22,7 +22,7 @@ import {
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { buildPipelineRunQuery, usePipelinerunActions } from './pipelinerun-actions';
+import { usePipelinerunActions } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
 
@@ -96,7 +96,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     return taskTestResultStatus(results);
   }, [obj]);
 
-  const queryString = buildPipelineRunQuery({ releaseName, integrationTestName });
+  const queryString = releaseName
+    ? `?releaseName=${encodeURIComponent(releaseName)}`
+    : integrationTestName
+      ? `?integrationTestName=${encodeURIComponent(integrationTestName)}`
+      : '';
 
   return (
     <>
