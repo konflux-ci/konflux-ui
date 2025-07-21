@@ -40,6 +40,9 @@ export enum PipelineRunType {
   BUILD = 'build',
   RELEASE = 'release',
   TEST = 'test',
+  TENANT = 'tenant',
+  MANAGED = 'managed',
+  FINAL = 'final',
 }
 
 export enum PipelineRunEventType {
