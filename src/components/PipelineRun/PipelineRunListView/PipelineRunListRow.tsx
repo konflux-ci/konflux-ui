@@ -112,7 +112,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             pipelineRunName: obj.metadata?.name,
           })}${queryString}`}
           title={obj.metadata?.name}
-          state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
         >
           {obj.metadata?.name}
         </Link>
@@ -173,7 +172,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
               applicationName: releasePlan.spec.application,
               snapshotName: release.spec.snapshot,
             })}
-            state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] }}
           >
             {release.spec.snapshot}
           </Link>
