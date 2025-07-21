@@ -98,10 +98,10 @@ export type ReleaseSpec = {
   data?: {
     releaseNotes?: {
       topic?: string;
-      description: string;
-      synopsis: string;
-      fixed: { id: string; source: string }[];
-      cves: CVE[];
+      description?: string;
+      synopsis?: string;
+      fixed?: { id: string; source: string }[];
+      cves?: CVE[];
       solution?: string;
       references?: string[];
     };

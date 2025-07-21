@@ -1,0 +1,84 @@
+
+---
+alwaysApply: true
+---
+
+# Konflux UI Project Structure & Architecture
+
+> 📖 **Also see**: [CONTRIBUTING.md](mdc:CONTRIBUTING.md) for detailed development guidelines, styling conventions, and import patterns.
+
+Konflux UI is a React TypeScript application for managing Kubernetes CI/CD workflows. Understanding the project structure is essential for effective development.
+
+## Key Entry Points
+- [src/main.tsx](mdc:src/main.tsx) - Application entry point with React providers
+- [src/routes/index.tsx](mdc:src/routes/index.tsx) - React Router configuration
+- [package.json](mdc:package.json) - Dependencies and build scripts
+
+## Core Directory Structure
+
+### Component Organization
+```
+src/
+├── components/          # Feature-specific components (domain logic)
+│   ├── Applications/    # Application management components
+│   ├── Components/      # Component management features  
+│   ├── Releases/        # Release management
+│   └── [FeatureName]/   # Each major feature has its own folder
+├── shared/             # Generic, reusable components & utilities
+│   ├── components/     # UI components with no business logic
+│   ├── hooks/          # Reusable React hooks
+│   └── utils/          # Pure utility functions
+└── hooks/              # Business logic hooks (API calls, state management)
+```
+
+### Supporting Infrastructure
+```
+src/
+├── types/              # TypeScript type definitions
+├── models/             # Data model definitions  
+├── k8s/               # Kubernetes API interaction layer
+├── utils/             # Utility functions with business logic
+├── consts/            # Application constants and enums
+├── feature-flags/     # Client-side feature flag system
+├── auth/              # Authentication context and utilities
+├── kubearchive/       # KubeArchive integration (historical data)
+├── unit-test-utils/   # Testing utilities and helper functions
+└── routes/            # Route definitions and page wrappers
+```
+
+## Key Technologies & Patterns
+
+### UI Framework
+- **PatternFly React** - Primary component library
+- **React 18** with functional components and hooks
+- **TypeScript** with strict type checking
+- **SCSS** for component-specific styling
+
+### State Management
+- **useK8sWatchResource** - Kubernetes resource watching and caching
+- **TanStack React Query** - Additional server state management
+- **Zustand** - Lightweight client state (feature flags)
+- **React Context** - Authentication and namespace providers
+
+### Development Tools
+- **Webpack** - Module bundling and dev server
+- **Jest** - Unit testing framework  
+- **Cypress** - End-to-end testing
+- **ESLint + Prettier** - Code formatting and linting
+
+## Import Path Aliases
+Use absolute imports with these configured aliases:
+- `~/components` → `src/components`
+- `~/types` → `src/types`
+- `~/k8s` → `src/k8s`
+- `~/utils` → `src/utils`
+- `~/models` → `src/models`
+- `@routes` → `src/routes`
+
+## Architecture Principles
+1. **Feature-based component organization** - Each major feature (Applications, Components, etc.) has its own folder
+2. **Separation of concerns** - Business logic in `hooks/`, pure UI in `shared/components/`
+3. **Import restrictions** - Strict layering prevents circular dependencies (see [.eslintrc.restrict-imports.cjs](mdc:.eslintrc.restrict-imports.cjs))
+4. **Client-side feature flags** - New features wrapped with feature flags during development
+5. **Dual data sources** - Live cluster data + historical archive data for comprehensive views
+6. **Kubernetes-first approach** - Built specifically for K8s resource management with `useK8sWatchResource`
