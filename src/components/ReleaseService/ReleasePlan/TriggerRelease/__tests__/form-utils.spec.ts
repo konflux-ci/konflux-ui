@@ -70,7 +70,7 @@ describe('triggerReleasePlan', () => {
       'test-ns',
     );
 
-    const advisoryIssues = result.spec.data.releaseNotes.fixed;
+    const advisoryIssues = result.spec.data.releaseNotes.issues.fixed;
     expect(advisoryIssues.length).toEqual(3);
     expect(advisoryIssues[0]).toEqual(
       expect.objectContaining({
@@ -155,7 +155,7 @@ describe('triggerReleasePlan', () => {
     );
     expect(result.spec.data.releaseNotes).toEqual({
       synopsis: 'A summary',
-      fixed: [{ id: 'ISSUE-1', source: 'src' }],
+      issues: { fixed: [{ id: 'ISSUE-1', source: 'src' }] },
     });
   });
 });
@@ -187,7 +187,7 @@ describe('createReleaseNotes', () => {
     });
     expect(result).toEqual({
       synopsis: 'syn',
-      fixed: [{ id: '1', source: 'src' }],
+      issues: { fixed: [{ id: '1', source: 'src' }] },
     });
   });
 
@@ -205,7 +205,7 @@ describe('createReleaseNotes', () => {
       synopsis: 'syn',
       topic: 'top',
       description: 'desc',
-      fixed: [{ id: '1', source: 'src' }],
+      issues: { fixed: [{ id: '1', source: 'src' }] },
       cves: [{ issueKey: 'cve', components: ['a'], url: 'u' }],
       references: ['ref'],
       solution: 'sol',
