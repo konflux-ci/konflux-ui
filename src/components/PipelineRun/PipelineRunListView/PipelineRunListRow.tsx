@@ -1,18 +1,17 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Label, Popover, Skeleton, Truncate } from '@patternfly/react-core';
-import { CommitIcon } from '~/components/Commits/CommitIcon';
-import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
+import { Popover, Skeleton } from '@patternfly/react-core';
+import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
 import {
   PIPELINE_RUNS_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '../../../routes/paths';
-import { ExternalLink } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
+import { TriggerColumnData } from '../../../shared/components/trigger-column-data/trigger-column-data';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
@@ -91,42 +90,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
   const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
 
-  const getTriggerredByColumnData = useCallback(() => {
-    let icon = null,
-      text = ``,
-      link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
-    const commitDetails = {
-      text: commitId?.substring(0, 7),
-      link: `${link}/commit/${commitId}`,
-    };
-    if (eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.RETEST) {
-      icon = <CommitIcon isPR={false} className="sha-title-icon" />;
-    } else if (eventType === PipelineRunEventType.PULL) {
-      icon = <CommitIcon isPR={true} className="sha-title-icon" />;
-      text = `${repoOrg}/${repoURL}/${prNumber}`;
-      link = `${link}/pull/${prNumber}`;
-    }
-    return (
-      <>
-        {icon}
-        {eventType === PipelineRunEventType.PULL && (
-          <ExternalLink
-            href={link}
-            text={<Truncate content={text} style={{ marginBottom: '0.5rem' }} />}
-            hideIcon={true}
-          />
-        )}
-        {eventType ? (
-          <Label color="blue">
-            <ExternalLink href={commitDetails.link} text={commitDetails.text} />
-          </Label>
-        ) : (
-          '-'
-        )}
-      </>
-    );
-  }, [commitId, eventType, gitProvider, prNumber, repoOrg, repoURL]);
-
   const testStatus = React.useMemo(() => {
     const results = getPipelineRunStatusResults(obj);
     return taskTestResultStatus(results);
@@ -142,7 +105,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             pipelineRunName: obj.metadata?.name,
           })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
           title={obj.metadata?.name}
-          state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
         >
           {obj.metadata?.name}
         </Link>
@@ -203,7 +165,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
               applicationName: releasePlan.spec.application,
               snapshotName: release.spec.snapshot,
             })}
-            state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] }}
           >
             {release.spec.snapshot}
           </Link>
@@ -240,7 +201,14 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
-          {getTriggerredByColumnData()}
+          <TriggerColumnData
+            gitProvider={gitProvider}
+            repoOrg={repoOrg}
+            repoURL={repoURL}
+            prNumber={prNumber}
+            eventType={eventType}
+            commitId={commitId}
+          />
         </TableData>
       ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>

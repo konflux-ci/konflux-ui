@@ -21,13 +21,16 @@ import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import TextColumnField from '../../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../../shared/providers/Namespace';
+import { Snapshot } from '../../../../types/coreBuildService';
 import { IssueType } from './AddIssueSection/AddIssueModal';
 import { AddIssueSection } from './AddIssueSection/AddIssueSection';
 import { TriggerReleaseFormValues } from './form-utils';
 import { ReleasePlanDropdown } from './ReleasePlanDropdown';
 import { SnapshotDropdown } from './SnapshotDropdown';
 
-type Props = FormikProps<TriggerReleaseFormValues>;
+type Props = FormikProps<TriggerReleaseFormValues> & {
+  snapshotDetails?: Snapshot;
+};
 
 export const getApplicationNameForReleasePlan = (releasePlans, selectedReleasePlan, loaded) => {
   if (!loaded || !releasePlans.length) {
@@ -45,6 +48,7 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   dirty,
   errors,
   status,
+  snapshotDetails,
 }) => {
   const namespace = useNamespace();
   const [{ value: labels }] = useField<TriggerReleaseFormValues['labels']>('labels');
@@ -54,11 +58,14 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   const [references, , { setValue }] =
     useField<TriggerReleaseFormValues['references']>('references');
 
-  const applicationName = getApplicationNameForReleasePlan(
+  const releasePlanApplicationName = getApplicationNameForReleasePlan(
     releasePlans,
     selectedReleasePlanField.value,
     loaded,
   );
+
+  // Use application name from release plan if available, otherwise use from snapshot details
+  const applicationName = releasePlanApplicationName || snapshotDetails?.spec?.application || '';
 
   return (
     <PageLayout

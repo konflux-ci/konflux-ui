@@ -45,11 +45,17 @@ const getBombinoUrl = (
   return notification?.config?.url ?? '';
 };
 
-export const useSbomUrl = (): ((imageHash: string) => string) => {
+export const useSbomUrl = (): ((imageHash: string, sbomSha?: string) => string) => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
-  return (imageHash: string) => {
+  return (imageHash: string, sbomSha?: string) => {
     if (loaded && !error) {
+      const sbomSHAUrl = konfluxPublicInfo.integrations.sbom_server.sbom_sha ?? '';
       const sbomServerUrl = konfluxPublicInfo.integrations.sbom_server.url ?? '';
+
+      if (sbomSHAUrl && sbomSha) {
+        return sbomSHAUrl.replace(PLACEHOLDER, sbomSha);
+      }
+      // fallback if sbom sha data not available
       return sbomServerUrl.replace(PLACEHOLDER, imageHash);
     }
   };

@@ -1,4 +1,4 @@
-import { SnapshotLabels } from '~/consts/pipelinerun';
+import { SnapshotLabels } from '~/consts/snapshots';
 import { K8sQueryPatchResource } from '~/k8s';
 import { SnapshotModel } from '~/models';
 import { Snapshot } from '~/types/coreBuildService';
