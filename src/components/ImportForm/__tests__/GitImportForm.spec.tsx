@@ -83,7 +83,7 @@ describe('GitImportForm', () => {
     screen.getByText('Create application');
     fireEvent.click(componentButton);
     expect(screen.queryByText('Add a component')).not.toBeInTheDocument();
-    screen.getByPlaceholderText('Enter your source');
+    screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
     screen.getByTestId('component-name');
   });
 
