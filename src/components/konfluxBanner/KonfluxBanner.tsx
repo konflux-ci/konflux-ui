@@ -1,20 +1,17 @@
 import React from 'react';
 import { Banner } from '@patternfly/react-core';
-import { BannerType, useBanner } from '~/hooks/useBanner';
+import { useBanner } from '~/hooks/useBanner';
+import { BannerType } from '~/types/banner';
 import { BannerContent } from './BannerContent';
 
-const typeToVariant = (type: BannerType): 'blue' | 'gold' | 'red' => {
-  switch (type) {
-    case 'info':
-      return 'blue';
-    case 'warning':
-      return 'gold';
-    case 'danger':
-      return 'red';
-    default:
-      return 'blue';
-  }
+const typeToVariantMap: Record<BannerType, 'blue' | 'gold' | 'red'> = {
+  info: 'blue',
+  warning: 'gold',
+  danger: 'red',
 };
+
+const typeToVariant = (type: BannerType): 'blue' | 'gold' | 'red' =>
+  typeToVariantMap[type] || 'blue';
 
 export const KonfluxBanner: React.FC = () => {
   const banner = useBanner();

@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc';
 import { Base64 } from 'js-base64';
 import { attempt, isError } from 'lodash-es';
 import * as yup from 'yup';
+import { BANNER_TYPES, BannerType } from '~/types/banner';
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../types';
 
 dayjs.extend(utc);
@@ -18,7 +19,10 @@ export const bannerConfigYupSchema = yup.object({
     .min(5, 'Must be at least 5 characters')
     .max(500, 'Must be at most 500 characters'),
 
-  type: yup.mixed<'info' | 'warning' | 'danger'>().oneOf(['info', 'warning', 'danger']).required(),
+  type: yup
+    .mixed<BannerType>()
+    .oneOf([...BANNER_TYPES])
+    .required(),
 
   startTime: yup
     .string()
@@ -58,22 +62,26 @@ export const bannerConfigYupSchema = yup.object({
 
   dayOfMonth: yup
     .number()
-    .min(1)
-    .max(31)
+    .min(1, 'dayOfMonth must be between 1 and 31')
+    .max(31, 'dayOfMonth must be between 1 and 31')
     .when(['year', 'month'], {
-      is: (year: string | undefined, month: string | undefined) => !!year || !!month, // Specific date provided
+      is: (year, month) => Boolean(year || month),
       then: (schema) => schema.required('dayOfMonth is required when year or month is specified'),
       otherwise: (schema) => schema.notRequired(),
     }),
 
   year: yup
-    .string()
-    .matches(/^\d{4}$/, 'year must be a 4-digit string')
+    .number()
+    .integer('year must be an integer')
+    .min(1970, 'year must be >= 1970')
+    .max(9999, 'year must be <= 9999')
     .notRequired(),
 
   month: yup
-    .string()
-    .matches(/^(0?[1-9]|1[0-2])$/, 'month must be 1-12 or 01-12')
+    .number()
+    .integer('month must be an integer')
+    .min(1, 'month must be between 1 and 12')
+    .max(12, 'month must be between 1 and 12')
     .notRequired(),
 });
 

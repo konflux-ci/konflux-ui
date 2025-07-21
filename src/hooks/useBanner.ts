@@ -6,6 +6,7 @@ import yaml from 'js-yaml';
 import * as yup from 'yup';
 import { BANNER_CONTENT_FILE, BANNER_NAMEPSACE } from '~/consts/banner';
 import { useK8sWatchResource } from '~/k8s';
+import { BannerConfig, RepeatType } from '~/types/banner';
 import { ConfigMap } from '~/types/configmap';
 import { bannerConfigYupSchema } from '~/utils/validation-utils';
 import { ConfigMapGroupVersionKind, ConfigMapModel } from './../models/config-map';
@@ -13,27 +14,14 @@ import { ConfigMapGroupVersionKind, ConfigMapModel } from './../models/config-ma
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export type BannerType = 'info' | 'warning' | 'danger';
-export type BannerConfig = {
-  summary: string;
-  type: BannerType;
-  year?: string;
-  month?: string;
-  startTime?: string;
-  endTime?: string;
-  timeZone?: string;
-  dayOfWeek?: number; // 0-6 for Sunday-Saturday
-  dayOfMonth?: number; // 1-31 for the day of the month
-};
-
-export function inferRepeatType(banner: BannerConfig): 'weekly' | 'monthly' | 'none' {
+export function inferRepeatType(banner: BannerConfig): RepeatType {
   // Sunday is 0, so we can not enjoy 'true' check here.
-  if (banner.dayOfWeek !== undefined) return 'weekly';
+  if (banner.dayOfWeek !== undefined) return RepeatType.WEEKLY;
   if (banner.dayOfMonth) {
-    if (banner.month) return 'none'; // specific date
-    return 'monthly'; // repeats every month on this day
+    if (banner.month) return RepeatType.NONE; // specific date
+    return RepeatType.MONTHLY; // repeats every month on this day
   }
-  return 'none'; // fallback
+  return RepeatType.NONE; // fallback
 }
 
 function convertToTimeZone(date: Date, timeZone: string): Date {
@@ -56,31 +44,29 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
 
     if (!Array.isArray(parsed)) return [];
 
-    const validBanners: BannerConfig[] = [];
-
-    for (const banner of parsed) {
-      try {
-        // Validate using your existing schema
-        const validated = bannerConfigYupSchema.validateSync(banner, {
-          strict: false,
-          abortEarly: false,
-        });
-        validBanners.push(validated as BannerConfig);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('Invalid banner skipped:', banner);
-
-        if (err instanceof yup.ValidationError) {
+    return parsed
+      .map((banner) => {
+        try {
+          const validated = bannerConfigYupSchema.validateSync(banner, {
+            strict: false,
+            abortEarly: false,
+          });
+          return validated as BannerConfig;
+        } catch (err) {
           // eslint-disable-next-line no-console
-          console.warn('Validation errors:', err.errors);
-        } else {
-          // eslint-disable-next-line no-console
-          console.warn('Unexpected validation error:', err);
+          console.warn('Invalid banner skipped:', banner);
+
+          if (err instanceof yup.ValidationError) {
+            // eslint-disable-next-line no-console
+            console.warn('Validation errors:', err.errors);
+          } else {
+            // eslint-disable-next-line no-console
+            console.warn('Unexpected validation error:', err);
+          }
+          return null;
         }
-      }
-    }
-
-    return validBanners;
+      })
+      .filter((banner): banner is BannerConfig => banner !== null);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error('Error parsing banner YAML:', e);
@@ -100,12 +86,11 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
  * ensuring accurate time comparisons regardless of the local environment.
  *
  * @param banner - The banner configuration containing scheduling and activation details.
- * @param now - The reference date/time to check against (defaults to current date/time).
  * @returns `true` if the banner is active at the given time, otherwise `false`.
  */
-export function isBannerActive(banner: BannerConfig, now = new Date()): boolean {
+export function isBannerActive(banner: BannerConfig): boolean {
   const timeZone = banner.timeZone || 'UTC';
-  const zonedNow = convertToTimeZone(now, timeZone);
+  const zonedNow = convertToTimeZone(new Date(), timeZone);
   const nowHM = zonedNow.getHours() * 60 + zonedNow.getMinutes();
 
   switch (inferRepeatType(banner)) {
@@ -170,12 +155,7 @@ export const useBanner = () => {
     const yamlContent = bannerYamlData?.data?.['banner-content.yaml'];
     if (typeof yamlContent !== 'string') return null;
 
-    const activeBanner = parseBannerList(yamlContent).find((currentBanner) =>
-      isBannerActive(currentBanner),
-    );
-    if (!activeBanner) return null;
-
-    const { type, summary } = activeBanner;
-    return { type, summary };
+    const activeBanner = parseBannerList(yamlContent).find(isBannerActive) ?? null;
+    return activeBanner;
   }, [bannerYamlData, isLoading, error]);
 };

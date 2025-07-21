@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
 import yaml from 'js-yaml';
-import { createK8sUtilMock } from '~/utils/test-utils';
 import {
   mockedBannerListWithSeveralActive,
   mockedInvalidBannerConfig,
@@ -14,7 +13,8 @@ import {
   mockedValidBannerConfigWithNoTimeRange,
   mockedValidMonthlyBannerConfigWithInvalidTimeRange,
   mockedWeeklyBannerConfig,
-} from '../__data__/mock-data';
+} from '~/__data__/banner-data';
+import { createK8sUtilMock } from '~/utils/test-utils';
 import { useBanner } from '../useBanner';
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
@@ -83,7 +83,7 @@ describe('useBanner hook', () => {
     });
     const { result } = renderHook(() => useBanner());
     const expected = yaml.load(mockedValidBannerConfig.data['banner-content.yaml'])[0];
-    expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
+    expect(result.current).toEqual(expected);
   });
 
   it('returns banner for one-time banner with time range', () => {
@@ -94,7 +94,7 @@ describe('useBanner hook', () => {
     });
     const { result } = renderHook(() => useBanner());
     const expected = yaml.load(mockedOneTimeBannerConfigWithTime.data['banner-content.yaml'])[0];
-    expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
+    expect(result.current).toEqual(expected);
   });
 
   it('returns null for one-time banner outside of time range', () => {
@@ -118,7 +118,7 @@ describe('useBanner hook', () => {
     });
     const { result } = renderHook(() => useBanner());
     const expected = yaml.load(mockedWeeklyBannerConfig.data['banner-content.yaml'])[0];
-    expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
+    expect(result.current).toEqual(expected);
   });
 
   it('returns null for weekly banner when today is not the matching day', () => {
@@ -140,7 +140,7 @@ describe('useBanner hook', () => {
     });
     const { result } = renderHook(() => useBanner());
     const expected = yaml.load(mockedMonthlyBannerConfig.data['banner-content.yaml'])[0];
-    expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
+    expect(result.current).toEqual(expected);
   });
 
   it('returns null for monthly banner when banner is out of time range', () => {
@@ -181,6 +181,6 @@ describe('useBanner hook', () => {
     });
     const { result } = renderHook(() => useBanner());
     const expected = yaml.load(mockedBannerListWithSeveralActive.data['banner-content.yaml'])[1];
-    expect(result.current).toEqual({ type: expected.type, summary: expected.summary });
+    expect(result.current).toEqual(expected);
   });
 });

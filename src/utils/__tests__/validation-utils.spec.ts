@@ -8,7 +8,7 @@ import {
   mockedValidBannerConfigWithNoTimeRange,
   mockedValidMonthlyBannerConfigWithInvalidTimeRange,
   mockedWeeklyBannerConfig,
-} from '~/hooks/__data__/mock-data';
+} from '~/__data__/banner-data';
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../types';
 import { bannerConfigYupSchema, SecretFromSchema } from '../validation-utils';
 
@@ -277,9 +277,7 @@ describe('validation-utils', () => {
         startTime: '08:00',
         endTime: '18:00',
       };
-      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow(
-        'year must be a 4-digit string',
-      );
+      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow('year must be >= 1970');
     });
 
     it('fails one-time banner with invalid month format', async () => {
@@ -294,7 +292,7 @@ describe('validation-utils', () => {
         endTime: '18:00',
       };
       await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow(
-        'month must be 1-12 or 01-12',
+        'month must be between 1 and 12',
       );
     });
 
@@ -362,15 +360,13 @@ describe('validation-utils', () => {
       const parsed = {
         summary: 'Invalid year',
         type: 'info',
-        year: '25',
+        year: '100000',
         month: '07',
         dayOfMonth: 8,
         startTime: '08:00',
         endTime: '18:00',
       };
-      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow(
-        'year must be a 4-digit string',
-      );
+      await expect(bannerConfigYupSchema.validate(parsed)).rejects.toThrow('year must be <= 9999');
     });
 
     it('fails when summary is only whitespace', async () => {

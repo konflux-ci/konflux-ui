@@ -4,13 +4,9 @@ import { BellIcon } from '@patternfly/react-icons/dist/esm/icons/bell-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import { SyncMarkdownView } from '~/shared/components/markdown-view/MarkdownView';
+import { BannerConfig, BannerType } from '~/types/banner';
 
-export type BannerType = 'info' | 'warning' | 'danger';
-
-type BannerContentProps = {
-  type: BannerType;
-  summary: string;
-};
+type BannerContentProps = Pick<BannerConfig, 'type' | 'summary'>;
 
 const typeToIcon = (type: BannerType) => {
   switch (type) {

@@ -1,5 +1,5 @@
 import { screen, fireEvent } from '@testing-library/react';
-import { mockedValidBannerConfig } from '~/hooks/__data__/mock-data';
+import { mockedValidBannerConfig } from '~/__data__/banner-data';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
 import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
