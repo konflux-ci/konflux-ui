@@ -1,3 +1,4 @@
+import { mockSnapshot } from '../../__data__/mock-snapshots';
 import {
   pipelineWithoutCommits,
   pipelineWithCommits,
@@ -13,6 +14,7 @@ import {
   getCommitShortName,
   showPLRMessage,
   showPLRType,
+  createCommitObjectFromSnapshot,
 } from '../commits-utils';
 
 describe('commit-utils', () => {
@@ -104,6 +106,80 @@ describe('commit-utils', () => {
         },
       };
       const result = createCommitObjectFromPLR(missingPRnumberLabel);
+      expect(result.isPullRequest).toBe(true);
+      expect(result.pullRequestNumber).toBe('');
+    });
+  });
+
+  describe('createCommitObjectFromSnapshot', () => {
+    it('Should return correct commit', () => {
+      const result = createCommitObjectFromSnapshot(mockSnapshot);
+      expect(result).not.toBe(null);
+      expect(result.sha).toBe('abc123def4567890');
+      expect(result.branch).toBe('main');
+      expect(result.components[0]).toBe('frontend-component');
+      expect(result.user).toBe('test-user');
+      expect(result.repoURL).toBe('https://github.com/test-org/frontend-repo');
+      expect(result.shaURL).toBe(
+        'https://github.com/test-org/frontend-repo/commit/abc123def4567890',
+      );
+      expect(result.shaTitle).toBe('Add new feature');
+      expect(result.gitProvider).toBe('github');
+      expect(result.application).toBe('test-app');
+    });
+
+    it('Should return null if no sha is present', () => {
+      const snapshotNoSha = {
+        ...mockSnapshot,
+        metadata: {
+          ...mockSnapshot.metadata,
+          labels: {
+            ...mockSnapshot.metadata.labels,
+            'pac.test.appstudio.openshift.io/sha': undefined,
+          },
+          annotations: {
+            ...mockSnapshot.metadata.annotations,
+            'pac.test.appstudio.openshift.io/sha': undefined,
+          },
+        },
+      };
+      const result = createCommitObjectFromSnapshot(snapshotNoSha);
+      expect(result).toBe(null);
+    });
+
+    it('Should return isPullRequest true for pull_request event type', () => {
+      const result = createCommitObjectFromSnapshot(mockSnapshot);
+      expect(result.isPullRequest).toBe(true);
+    });
+
+    it('Should return pullRequestNumber for pull_request snapshot', () => {
+      const result = createCommitObjectFromSnapshot(mockSnapshot);
+      expect(result.pullRequestNumber).toBe('42');
+    });
+
+    it('Should return isPullRequest false if the event type label is missing', () => {
+      const snapshotNoEventType = {
+        ...mockSnapshot,
+        metadata: { ...mockSnapshot.metadata, labels: { ...mockSnapshot.metadata.labels } },
+      };
+      delete snapshotNoEventType.metadata.labels['pac.test.appstudio.openshift.io/event-type'];
+      const result = createCommitObjectFromSnapshot(snapshotNoEventType);
+      expect(result.isPullRequest).toBe(false);
+      expect(result.pullRequestNumber).toBe('42');
+    });
+
+    it('Should not return undefined value in the pullRequestNumber', () => {
+      const snapshotMissingPR = {
+        ...mockSnapshot,
+        metadata: {
+          ...mockSnapshot.metadata,
+          labels: {
+            ...mockSnapshot.metadata.labels,
+            'pac.test.appstudio.openshift.io/pull-request': undefined,
+          },
+        },
+      };
+      const result = createCommitObjectFromSnapshot(snapshotMissingPR);
       expect(result.isPullRequest).toBe(true);
       expect(result.pullRequestNumber).toBe('');
     });

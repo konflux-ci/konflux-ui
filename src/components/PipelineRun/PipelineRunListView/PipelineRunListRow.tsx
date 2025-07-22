@@ -15,6 +15,7 @@ import { TriggerColumnData } from '../../../shared/components/trigger-column-dat
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
+import { createCommitObjectFromPLR } from '../../../utils/commits-utils';
 import {
   calculateDuration,
   getPipelineRunStatusResults,
@@ -84,12 +85,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   }
   const labels = obj.metadata.labels;
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
-  const gitProvider = obj.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
-  const repoOrg = labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
-  const repoURL = labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
-  const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
-  const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
-  const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
+  const commit = createCommitObjectFromPLR(obj);
 
   const testStatus = React.useMemo(() => {
     const results = getPipelineRunStatusResults(obj);
@@ -203,18 +199,19 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showTrigger ? (
         <TableData className={pipelineRunTableColumnClasses.trigger}>
-          {PipelineRunEventTypeLabel[eventType] ?? '-'}
+          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
         </TableData>
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
           <TriggerColumnData
-            gitProvider={gitProvider}
-            repoOrg={repoOrg}
-            repoURL={repoURL}
-            prNumber={prNumber}
-            eventType={eventType}
-            commitId={commitId}
+            repoOrg={commit?.repoOrg}
+            repoName={commit?.repoName}
+            repoURL={commit?.repoURL}
+            prNumber={commit?.pullRequestNumber}
+            eventType={commit?.eventType}
+            commitSha={commit?.sha}
+            shaUrl={commit?.shaURL}
           />
         </TableData>
       ) : null}
