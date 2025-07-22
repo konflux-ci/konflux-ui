@@ -1,5 +1,5 @@
 import { PLACEHOLDER, REPO_PUSH, SBOM_EVENT_TO_BOMBINO } from '../consts/constants';
-import { SBOMEventNotification } from '../types/konflux-public-info';
+import { KonfluxPublicInfoVisibility, SBOMEventNotification } from '../types/konflux-public-info';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
 export enum ConsoleDotEnvironments {
@@ -87,10 +87,10 @@ export const useNotifications = (): SBOMEventNotification[] => {
   return [];
 };
 
-export const useInstanceVisibility = (): 'public' | 'private' => {
+export const useInstanceVisibility = (): KonfluxPublicInfoVisibility => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
   if (loaded && !error && konfluxPublicInfo) {
-    return konfluxPublicInfo.visibility;
+    return konfluxPublicInfo.visibility || 'public';
   }
   return 'public';
 };

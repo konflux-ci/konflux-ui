@@ -234,13 +234,7 @@ describe('NamespaceListView', () => {
     });
     mockUseInstanceVisibility.mockReturnValue('public');
 
-    render(
-      <MemoryRouter>
-        <FilterContextProvider filterParams={['name']}>
-          <NamespaceListView />
-        </FilterContextProvider>
-      </MemoryRouter>,
-    );
+    render(NamespaceList);
 
     expect(screen.queryByText('Go to create namespace instructions')).not.toBeInTheDocument();
   });

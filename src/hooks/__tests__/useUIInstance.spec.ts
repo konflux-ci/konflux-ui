@@ -136,5 +136,12 @@ describe('useBombinoUrl', () => {
       const { result } = renderHook(() => useInstanceVisibility());
       expect(result.current).toBe('public');
     });
+
+    it('should return "public" if the instance is not specified', () => {
+      (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{ visibility: undefined }, true, null]);
+
+      const { result } = renderHook(() => useInstanceVisibility());
+      expect(result.current).toBe('public');
+    });
   });
 });
