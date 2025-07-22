@@ -81,7 +81,9 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
-              <DescriptionListTerm>Release Target (Managed Namespace)</DescriptionListTerm>
+              <DescriptionListTerm>
+                Release Target {namespace !== release.status?.target ? '(Managed Namespace)' : ''}
+              </DescriptionListTerm>
               <DescriptionListDescription>
                 <>{release.status?.target ?? '-'}</>
               </DescriptionListDescription>
