@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import * as useBannerHook from '~/hooks/useBanner';
-import { BannerType } from '~/types/banner';
+import * as useBannerHook from '~/components/KonfluxBanner/useBanner';
+import { BannerType } from '../banner-type';
 import { KonfluxBanner } from '../KonfluxBanner';
 
-jest.mock('~/hooks/useBanner', () => ({
+jest.mock('../useBanner', () => ({
   useBanner: jest.fn(),
 }));
 const userBannerMock = useBannerHook.useBanner as jest.Mock;
@@ -41,8 +41,8 @@ describe('KonfluxBanner', () => {
     'renders $type banner with correct icon and summary',
     ({ type, summary, expectedVariant }) => {
       userBannerMock.mockReturnValue({ type, summary });
-      render(<KonfluxBanner />);
-      const banner = screen.getByTestId('banner');
+      const { container } = render(<KonfluxBanner />);
+      const banner = container.querySelector('.pf-v5-c-banner');
       expect(banner).toHaveClass(expectedVariant);
       // Check icon is present
       const icon = screen.getByTestId(`${type}-icon`);

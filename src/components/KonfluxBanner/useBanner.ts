@@ -4,16 +4,17 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import yaml from 'js-yaml';
 import * as yup from 'yup';
-import { BANNER_CONTENT_FILE, BANNER_NAMEPSACE } from '~/consts/banner';
+import { BannerConfig, RepeatType } from '~/components/KonfluxBanner/banner-type';
+import { KONFLUX_INFO_NAMESPACE } from '~/consts/constants';
 import { useK8sWatchResource } from '~/k8s';
-import { BannerConfig, RepeatType } from '~/types/banner';
 import { ConfigMap } from '~/types/configmap';
-import { bannerConfigYupSchema } from '~/utils/validation-utils';
-import { ConfigMapGroupVersionKind, ConfigMapModel } from './../models/config-map';
+import { ConfigMapGroupVersionKind, ConfigMapModel } from '../../models/config-map';
+import { bannerConfigYupSchema } from './banner-validation-utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const BANNER_CONTENT_FILE = 'konflux-banner-configmap';
 export function inferRepeatType(banner: BannerConfig): RepeatType {
   // Sunday is 0, so we can not enjoy 'true' check here.
   if (banner.dayOfWeek !== undefined) return RepeatType.WEEKLY;
@@ -28,7 +29,7 @@ function convertToTimeZone(date: Date, timeZone: string): Date {
   return dayjs(date).tz(timeZone).toDate();
 }
 
-// Fore repeated banners
+// For repeated banners
 function parseHM(hm: string): number {
   const [h, m] = hm.split(':').map(Number);
   return h * 60 + m;
@@ -94,9 +95,9 @@ export function isBannerActive(banner: BannerConfig): boolean {
   const nowHM = zonedNow.getHours() * 60 + zonedNow.getMinutes();
 
   switch (inferRepeatType(banner)) {
-    case 'none': {
+    case RepeatType.NONE: {
       const hasDate = banner.year && banner.month && banner.dayOfMonth;
-      // If user does not sepecify the year/month/day, let us assume it is today.
+      // If user does not specify the year/month/day, let us assume it is today.
       const year = hasDate ? Number(banner.year) : zonedNow.getUTCFullYear();
       const month = hasDate ? Number(banner.month) - 1 : zonedNow.getUTCMonth(); // 0-based
       const day = hasDate ? Number(banner.dayOfMonth) : zonedNow.getUTCDate();
@@ -115,14 +116,14 @@ export function isBannerActive(banner: BannerConfig): boolean {
       return zonedNow >= startZoned && zonedNow <= endZoned;
     }
 
-    case 'weekly': {
+    case RepeatType.WEEKLY: {
       if (zonedNow.getDay() !== banner.dayOfWeek) return false;
       const startHM = parseHM(banner.startTime);
       const endHM = parseHM(banner.endTime);
       return nowHM >= startHM && nowHM <= endHM;
     }
 
-    case 'monthly': {
+    case RepeatType.MONTHLY: {
       if (zonedNow.getDate() !== banner.dayOfMonth) return false;
       const startHM = parseHM(banner.startTime);
       const endHM = parseHM(banner.endTime);
@@ -142,7 +143,7 @@ export const useBanner = () => {
   } = useK8sWatchResource<ConfigMap>(
     {
       groupVersionKind: ConfigMapGroupVersionKind,
-      namespace: BANNER_NAMEPSACE,
+      namespace: KONFLUX_INFO_NAMESPACE,
       name: BANNER_CONTENT_FILE,
       watch: true,
     },

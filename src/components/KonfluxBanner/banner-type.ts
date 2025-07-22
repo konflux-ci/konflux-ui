@@ -16,3 +16,8 @@ export enum RepeatType {
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
 }
+export enum BannerVariant {
+  BLUE = 'blue',
+  GOLD = 'gold',
+  RED = 'red',
+}

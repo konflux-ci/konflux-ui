@@ -1,5 +1,5 @@
 import { screen, fireEvent } from '@testing-library/react';
-import { mockedValidBannerConfig } from '~/__data__/banner-data';
+import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/banner-data';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
 import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
@@ -22,7 +22,7 @@ describe('AppRoot', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
     k8sWatchMock.mockReturnValue({ data: mockedValidBannerConfig, isLoading: false, error: null });
     routerRenderer(<AppRoot />);
-    expect(screen.getByTestId('banner')).toBeInTheDocument();
+    expect(screen.getByRole('banner')).toBeInTheDocument();
   });
 
   it('should render AppRoot with header and sidebar', () => {

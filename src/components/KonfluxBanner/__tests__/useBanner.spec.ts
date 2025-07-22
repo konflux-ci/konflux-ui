@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 import yaml from 'js-yaml';
 import {
   mockedBannerListWithSeveralActive,
@@ -13,7 +13,7 @@ import {
   mockedValidBannerConfigWithNoTimeRange,
   mockedValidMonthlyBannerConfigWithInvalidTimeRange,
   mockedWeeklyBannerConfig,
-} from '~/__data__/banner-data';
+} from '~/components/KonfluxBanner/__data__/banner-data';
 import { createK8sUtilMock } from '~/utils/test-utils';
 import { useBanner } from '../useBanner';
 

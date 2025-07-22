@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH } from '@routes/paths';
-import { KonfluxBanner } from '~/components/konfluxBanner/KonfluxBanner';
+import { KonfluxBanner } from '~/components/KonfluxBanner/KonfluxBanner';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
