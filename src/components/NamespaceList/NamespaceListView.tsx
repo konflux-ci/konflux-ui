@@ -8,6 +8,7 @@ import {
   Tooltip,
 } from '@patternfly/react-core';
 import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/question-circle-icon';
+import { GETTING_ACCESS_INTERNAL } from '~/consts/documentation';
 import { useInstanceVisibility } from '~/hooks/useUIInstance';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
@@ -23,10 +24,7 @@ import NamespaceListRow from './NamespaceListRow';
 
 const NamespaceCreateButton = () =>
   useInstanceVisibility() === 'private' ? (
-    <ExternalLink
-      variant="primary"
-      href={'https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html'}
-    >
+    <ExternalLink variant="primary" href={GETTING_ACCESS_INTERNAL}>
       Go to create namespace instructions
     </ExternalLink>
   ) : (
