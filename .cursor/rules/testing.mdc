@@ -1,0 +1,167 @@
+
+# Testing Conventions
+
+Follow these testing patterns when writing unit tests and component tests for Konflux UI.
+
+## Test Structure
+
+### File Organization
+- Place test files in `__tests__/` directories within component folders
+- Use `.spec.ts` or `.spec.tsx` extensions
+- Name test files after the component being tested
+
+### Basic Structure
+```tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+
+describe('ComponentName', () => {
+  it('should render correctly', () => {
+    // Test implementation
+  });
+
+  describe('when loading', () => {
+    it('should show skeleton loader', () => {
+      // Test implementation
+    });
+  });
+});
+```
+
+## Component Testing
+
+### Rendering Utilities
+Use specialized utilities from `~/unit-test-utils`:
+
+```tsx
+// React Query + Router
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+
+// Individual contexts
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
+import { routerRenderer } from '~/unit-test-utils/mock-react-router';
+import { namespaceRenderer, formikRenderer } from '~/unit-test-utils/rendering-utils';
+
+const renderComponent = (props = {}) => {
+  return renderWithQueryClientAndRouter(<MyComponent {...props} />);
+};
+```
+
+### K8s Resource Testing
+```tsx
+import { createK8sWatchResourceMock } from '~/unit-test-utils/mock-k8s';
+import { waitForLoadingToFinish } from '~/unit-test-utils/test-helpers';
+
+const mockWatchResource = createK8sWatchResourceMock();
+
+describe('K8sComponent', () => {
+  it('should load k8s resources', async () => {
+    
+    mockWatchResource.mockReturnValue({
+      data: [mockApplication],
+      isLoading: false,
+      error: null
+    });
+
+    renderComponent();
+    await waitForLoadingToFinish();
+    
+    expect(screen.getByText('Test Application')).toBeInTheDocument();
+  });
+});
+```
+
+### User Interactions
+```tsx
+import userEvent from '@testing-library/user-event';
+const user = userEvent.setup();
+it('should handle user actions', async () => {
+  
+  const onAction = jest.fn();
+  
+  renderComponent({ onAction });
+  
+  await user.click(screen.getByRole('button', { name: /submit/i }));
+  expect(onAction).toHaveBeenCalled();
+});
+```
+
+## Mocking Patterns
+
+### Hook Mocking
+```tsx
+import { createUseApplicationMock } from '~/unit-test-utils/mock-application-hooks';
+import { createUseParamsMock } from '~/unit-test-utils/mock-react-router';
+import { mockAccessReviewUtil } from '~/unit-test-utils/mock-access-review';
+
+describe('MyComponent', () => {
+  beforeEach(() => {
+    createUseApplicationMock([mockApplication, false, null]);
+    createUseParamsMock({ applicationName: 'test-app' });
+    mockAccessReviewUtil('checkAccess', true);
+  });
+});
+```
+
+### Permission Testing
+```tsx
+it('should show edit button when user has permissions', () => {
+  mockAccessReviewUtil('checkAccess', true);
+  renderComponent();
+  expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+});
+```
+
+## Key Test Utilities
+
+### Available Utilities
+```tsx
+// Rendering
+import { 
+  renderWithQueryClientAndRouter,
+  namespaceRenderer,
+  formikRenderer 
+} from '~/unit-test-utils/rendering-utils';
+
+// Mocking
+import { createK8sWatchResourceMock } from '~/unit-test-utils/mock-k8s';
+import { createUseApplicationMock } from '~/unit-test-utils/mock-application-hooks';
+import { mockAccessReviewUtil } from '~/unit-test-utils/mock-access-review';
+import { createJestMockFunction } from '~/unit-test-utils/common';
+
+// Helpers
+import { waitForLoadingToFinish } from '~/unit-test-utils/test-helpers';
+```
+
+### Type-Safe Mocks
+```tsx
+const mockCallback = createJestMockFunction<(id: string) => void>();
+```
+
+## Best Practices
+
+### Test Structure
+- Use descriptive test names explaining expected behavior
+- Follow Arrange-Act-Assert pattern
+- Group related tests in `describe` blocks
+
+### Coverage Guidelines
+- Test success and error scenarios
+- Use semantic queries: `getByRole`, `getByLabelText`
+- Avoid implementation details: `getByTestId`, `getByClassName`
+
+### Error Handling
+```tsx
+it('should handle API errors', async () => {
+  mockWatchResource.mockReturnValue({
+    data: [],
+    isLoading: false,
+    error: new Error('API Error')
+  });
+  
+  renderComponent();
+  expect(screen.getByText(/error/i)).toBeInTheDocument();
+});
+```
+
+For detailed development workflow and commands, see [CONTRIBUTING.md](mdc:CONTRIBUTING.md).

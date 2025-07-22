@@ -15,6 +15,7 @@ import { TriggerColumnData } from '../../../shared/components/trigger-column-dat
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
+import { createCommitObjectFromPLR } from '../../../utils/commits-utils';
 import {
   calculateDuration,
   getPipelineRunStatusResults,
@@ -35,6 +36,7 @@ type PipelineRunListRowProps = RowFunctionArgs<
     releasePlan?: ReleasePlanKind;
     release?: ReleaseKind;
     releaseName?: string;
+    integrationTestName?: string;
   }
 >;
 
@@ -70,7 +72,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const capitalize = (label: string) => {
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
-  const { releaseName, releasePlan, release } = customData || {};
+  const { releaseName, integrationTestName, releasePlan, release } = customData || {};
   // @ts-expect-error vulnerabilities will not be available until fetched for the next page
   const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
@@ -83,17 +85,18 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   }
   const labels = obj.metadata.labels;
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
-  const gitProvider = obj.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
-  const repoOrg = labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
-  const repoURL = labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
-  const prNumber = labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL];
-  const eventType = labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
-  const commitId = labels?.[PipelineRunLabel.COMMIT_LABEL];
+  const commit = createCommitObjectFromPLR(obj);
 
   const testStatus = React.useMemo(() => {
     const results = getPipelineRunStatusResults(obj);
     return taskTestResultStatus(results);
   }, [obj]);
+
+  const queryString = releaseName
+    ? `?releaseName=${encodeURIComponent(releaseName)}`
+    : integrationTestName
+      ? `?integrationTestName=${encodeURIComponent(integrationTestName)}`
+      : '';
 
   return (
     <>
@@ -103,9 +106,8 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             workspaceName: namespace,
             applicationName,
             pipelineRunName: obj.metadata?.name,
-          })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
+          })}${queryString}`}
           title={obj.metadata?.name}
-          state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE]?.toLowerCase() }}
         >
           {obj.metadata?.name}
         </Link>
@@ -166,7 +168,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
               applicationName: releasePlan.spec.application,
               snapshotName: release.spec.snapshot,
             })}
-            state={{ type: obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] }}
           >
             {release.spec.snapshot}
           </Link>
@@ -198,18 +199,19 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ) : null}
       {showTrigger ? (
         <TableData className={pipelineRunTableColumnClasses.trigger}>
-          {PipelineRunEventTypeLabel[eventType] ?? '-'}
+          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
         </TableData>
       ) : null}
       {showReference ? (
         <TableData className={pipelineRunTableColumnClasses.reference}>
           <TriggerColumnData
-            gitProvider={gitProvider}
-            repoOrg={repoOrg}
-            repoURL={repoURL}
-            prNumber={prNumber}
-            eventType={eventType}
-            commitId={commitId}
+            repoOrg={commit?.repoOrg}
+            repoName={commit?.repoName}
+            repoURL={commit?.repoURL}
+            prNumber={commit?.pullRequestNumber}
+            eventType={commit?.eventType}
+            commitSha={commit?.sha}
+            shaUrl={commit?.shaURL}
           />
         </TableData>
       ) : null}
