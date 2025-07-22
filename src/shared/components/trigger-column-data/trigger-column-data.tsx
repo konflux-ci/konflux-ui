@@ -5,12 +5,13 @@ import { ExternalLink } from '../..';
 import { PipelineRunEventType } from '../../../consts/pipelinerun';
 
 export interface TriggerColumnData {
-  gitProvider?: string;
   repoOrg?: string;
+  repoName?: string;
   repoURL?: string;
   prNumber?: string;
   eventType?: string;
-  commitId?: string;
+  commitSha?: string;
+  shaUrl?: string;
 }
 
 /**
@@ -19,27 +20,23 @@ export interface TriggerColumnData {
  * @returns JSX element for the trigger column
  */
 export const TriggerColumnData: React.FC<TriggerColumnData> = ({
-  gitProvider,
   repoOrg,
   repoURL,
   prNumber,
   eventType,
-  commitId,
+  commitSha,
+  shaUrl,
+  repoName,
 }) => {
-  if (!eventType || !commitId) {
+  if (!eventType || !commitSha) {
     return <>-</>;
   }
 
-  const link = `https://${gitProvider}.com/${repoOrg}/${repoURL}`;
-  const commitDetails = {
-    text: commitId?.substring(0, 7),
-    link: `${link}/commit/${commitId}`,
-  };
-
+  const commitShaText = commitSha.substring(0, 7);
   const isPullRequest = eventType === PipelineRunEventType.PULL;
   const icon = <CommitIcon isPR={isPullRequest} className="sha-title-icon" />;
-  const pullRequestText = `${repoOrg}/${repoURL}/${prNumber}`;
-  const pullRequestLink = `${link}/pull/${prNumber}`;
+  const pullRequestText = `${repoOrg}/${repoName}/${prNumber}`;
+  const pullRequestURL = `${repoURL}/pull/${prNumber}`;
 
   return (
     <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
@@ -47,7 +44,7 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
       {isPullRequest && (
         <FlexItem>
           <ExternalLink
-            href={pullRequestLink}
+            href={pullRequestURL}
             text={<Truncate content={pullRequestText} />}
             hideIcon={true}
           />
@@ -55,7 +52,7 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
       )}
       <FlexItem>
         <Label color="blue" isCompact>
-          <ExternalLink href={commitDetails.link} text={commitDetails.text} />
+          <ExternalLink href={shaUrl} text={commitShaText} />
         </Label>
       </FlexItem>
     </Flex>

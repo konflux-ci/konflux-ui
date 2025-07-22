@@ -3,9 +3,9 @@ import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecate
 import { screen, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
-import { mockSnapshots } from '../__data__/mock-snapshots';
 import SnapshotsListRow from '../SnapshotsListRow';
 import SnapshotsListView from '../SnapshotsListView';
 
