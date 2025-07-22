@@ -1,0 +1,35 @@
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  check-coderabbit-resolved:
+    runs-on: ubuntu-latest
+      - name: Setup GitHub CLI
+        uses: cli/cli@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for unresolved CodeRabbit comments
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          OWNER=${{ github.repository_owner }}
+          REPO=${{ github.event.repository.name }}
+
+          echo "Checking unresolved CodeRabbit comments for PR #$PR_NUMBER"
+
+          THREADS=$(gh api repos/$OWNER/$REPO/pulls/$PR_NUMBER/threads --paginate \
+            --jq '[.[] | select(any(.comments[]; .user.login == "coderabbit-ai[bot]"))]')
+          if [ "$THREADS" = "[]" ]; then
+            echo "✅ No CodeRabbit comments found."
+            exit 0
+          fi
+
+          UNRESOLVED=$(gh api repos/$OWNER/$REPO/pulls/$PR_NUMBER/threads --paginate \
+            --jq '[.[] | select((.resolved == false) and any(.comments[]; .user.login == "coderabbit-ai[bot]"))]')
+          if [ "$UNRESOLVED" != "[]" ]; then
+            echo "❌ There are unresolved CodeRabbit comments. Please resolve them before merging."
+            exit 1
+          fi
+
+          echo "✅ All CodeRabbit comments resolved."
