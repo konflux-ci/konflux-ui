@@ -97,3 +97,11 @@ export type ReleaseKind = K8sResourceCommon & {
     }[];
   };
 };
+
+// Keep the release kind separated for adding more RAP related spec
+// prodcut, product_version etc.
+export type MonitoredReleaseKind = ReleaseKind & {
+  product: string;
+  product_version: string;
+  rpa: string;
+};
