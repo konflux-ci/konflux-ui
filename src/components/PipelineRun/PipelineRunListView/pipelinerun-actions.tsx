@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -59,6 +59,8 @@ const defaultEmptyAction: RerunActionReturnType = {
 
 export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActionReturnType => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isIntegrationTestsPage = pathname?.includes('integrationtests') ?? false;
   const namespace = useNamespace();
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canPatchSnapshot] = useAccessReviewForModel(SnapshotModel, 'patch');
@@ -126,6 +128,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
           ...defaultEmptyAction,
           cta: () =>
             rerunTestPipeline(snapshot, scenario).then(() => {
+              if (isIntegrationTestsPage) return;
               const componentName = snapshot.metadata.labels?.[SnapshotLabels.COMPONENT];
               navigate(
                 `${PIPELINE_RUNS_LIST_PATH.createPath({
@@ -164,6 +167,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     navigate,
     runType,
     scenario,
+    isIntegrationTestsPage,
     snapshot,
     snapshotError,
   ]);
