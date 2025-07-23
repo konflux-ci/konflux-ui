@@ -27,7 +27,7 @@
     flex: 1;
     flex-direction: column;
     background-color: var(--pf-v5-global--palette--black-1000);
-    color: var(--pf-v5-global--BackgroundColor--100);
+    color: var(--pf-v5-global--palette--white);
     font-family: Menlo, Monaco, 'Courier New', monospace;
     overflow-y: scroll;
     position: relative;
@@ -39,7 +39,7 @@
   &__taskName {
     background-color: var(--pf-v5-global--BackgroundColor--dark-300);
     padding: var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md);
-    color: var(--pf-v5-global--BackgroundColor--100);
+    color: var(--pf-v5-global--palette--white);
   }
   &__taskName__loading-indicator {
     margin-left: var(--pf-v5-global--spacer--sm);
