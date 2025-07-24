@@ -1,0 +1,64 @@
+
+---
+description: Feature flags and development workflow patterns in Konflux UI
+---
+
+# Feature Flags & Development Workflow
+
+> 📖 **Complete Documentation**: [docs/feature-flags.md](mdc:docs/feature-flags.md) for detailed feature flag system documentation.
+> 📖 **Development Guidelines**: [CONTRIBUTING.md](mdc:CONTRIBUTING.md) for complete development workflow.
+
+Quick reference patterns for feature flags and development practices in Konflux UI.
+
+## Feature Flag Patterns
+
+### Component Gating
+```tsx
+import { IfFeature } from '~/feature-flags/hooks';
+
+// Simple feature gate
+<IfFeature flag="kubearchive">
+  <NewKubeArchiveComponent />
+</IfFeature>
+
+// With fallback
+<IfFeature flag="buildServiceAccount" fallback={<LegacyForm />}>
+  <NewServiceAccountForm />
+</IfFeature>
+```
+
+### Conditional Logic
+```tsx
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+
+const MyComponent = () => {
+  const isNewFeatureEnabled = useIsOnFeatureFlag('kubearchive');
+  
+  const handleAction = () => {
+    if (isNewFeatureEnabled) {
+      performNewAction();
+    } else {
+      performLegacyAction();
+    }
+  };
+
+  return <Button onClick={handleAction}>Action</Button>;
+};
+```
+
+### Adding New Feature Flag
+1. **Define in flags.ts**:
+```ts
+export const FLAGS = {
+  myNewFeature: {
+    key: 'myNewFeature',
+    description: 'Description of the new feature',
+    defaultEnabled: false,  // Start disabled
+    status: 'wip',          // 'wip' | 'ready'
+  },
+} as const;
+```
+
+2. **Use in components** (see patterns above)
+
+3. **Test with URL**: `?ff=myNewFeature` or `?ff_myNewFeature=true`

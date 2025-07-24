@@ -38,6 +38,12 @@ jest.mock('../src/hooks/useApplications', () => ({
   ...jest.requireActual('../src/hooks/useApplications'),
 }));
 
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
 afterAll(() => {
   jest.clearAllMocks();
 });

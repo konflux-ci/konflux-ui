@@ -4,21 +4,27 @@ import {
   Card,
   CardTitle,
   CardBody,
-  Grid,
-  GridItem,
+  Flex,
+  FlexItem,
+  Bullseye,
   Title,
   Text,
   Button,
 } from '@patternfly/react-core';
+import OverviewBannerSvg from '../../assets/overview/overview-banner.svg';
 import { NAMESPACE_LIST_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
 const IntroBanner: React.FC = () => {
   return (
-    <Grid className="intro-banner">
-      <GridItem span={8}>
-        <Card className="intro-banner__content" isLarge>
+    <Flex
+      className="intro-banner"
+      direction={{ default: 'row' }}
+      alignItems={{ default: 'alignItemsStretch' }}
+    >
+      <FlexItem flex={{ default: 'flex_2' }}>
+        <Card className="intro-banner__content" isLarge isFullHeight>
           <CardTitle>
             <Title headingLevel="h1" size="2xl">
               Get started with Konflux
@@ -44,9 +50,13 @@ const IntroBanner: React.FC = () => {
             </Button>
           </CardBody>
         </Card>
-      </GridItem>
-      <GridItem className="intro-banner__image" span={4} />
-    </Grid>
+      </FlexItem>
+      <FlexItem flex={{ default: 'flex_1' }}>
+        <Bullseye className="intro-banner__image">
+          <OverviewBannerSvg />
+        </Bullseye>
+      </FlexItem>
+    </Flex>
   );
 };
 

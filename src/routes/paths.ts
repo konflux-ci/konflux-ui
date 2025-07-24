@@ -64,6 +64,10 @@ export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
   `:${RouterParams.integrationTestName}`,
 );
 
+export const INTEGRATION_TEST_PIPELINE_LIST_PATH = INTEGRATION_TEST_LIST_PATH.extend(
+  `:${RouterParams.integrationTestName}/pipelineruns`,
+);
+
 export const INTEGRATION_TEST_ADD_PATH = INTEGRATION_TEST_LIST_PATH.extend('add');
 
 export const INTEGRATION_TEST_EDIT_PATH = INTEGRATION_TEST_DETAILS_PATH.extend('edit');

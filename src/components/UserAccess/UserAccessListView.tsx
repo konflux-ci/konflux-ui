@@ -116,7 +116,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           Grant access
         </ButtonWithAccessTooltip>
       </BaseTextFilterToolbar>
-      <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
+      <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       {filterRBs.length ? (
         <Table
           data={filterRBs}

@@ -50,7 +50,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
         />
         <InputField
           name="integrationTest.url"
-          placeholder="Enter your source"
+          placeholder="Enter a GitHub or GitLab repository URL"
           validated={validated}
           label="Git URL"
           required

@@ -72,8 +72,10 @@ export const createResourcesWithLinkingComponents = async (
     optional: false,
   };
 
+  let applicationData: ApplicationKind;
   if (shouldCreateApplication) {
     await createApplication(application, namespace, true);
+    applicationData = await createApplication(application, namespace);
     await createIntegrationTest(integrationTestValues, applicationName, namespace, true);
   }
   if (showComponent) {
@@ -100,9 +102,7 @@ export const createResourcesWithLinkingComponents = async (
     );
   }
 
-  let applicationData: ApplicationKind;
   if (shouldCreateApplication) {
-    applicationData = await createApplication(application, namespace);
     applicationName = applicationData.metadata.name;
     await createIntegrationTest(integrationTestValues, applicationName, namespace);
   }

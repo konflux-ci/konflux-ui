@@ -1,3 +1,4 @@
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
   ReleaseDetailsLayout,
   releaseListViewTabLoader,
@@ -22,7 +23,11 @@ const releaseRoutes = [
       },
       {
         path: 'pipelineruns',
-        element: <ReleasePipelineRunTab />,
+        element: (
+          <FilterContextProvider filterParams={['name']}>
+            <ReleasePipelineRunTab />
+          </FilterContextProvider>
+        ),
       },
       {
         path: 'artifacts',

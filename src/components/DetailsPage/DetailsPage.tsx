@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  Button,
   Flex,
   FlexItem,
   Icon,
@@ -53,8 +54,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
 }) => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const showBackToRelease =
-    state?.type?.includes('snapshot') || state?.type?.includes('managed') || false;
+  const showBackLink = state?.showBackButton || false;
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -123,16 +123,16 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   return (
     <PageGroup data-test="details" className="app-details">
       <PageSection type="breadcrumb">
-        {!showBackToRelease && breadcrumbs && (
+        {!showBackLink && breadcrumbs && (
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
-        {showBackToRelease ? (
-          <a onClick={() => navigate(-1)} className="pf-c-button pf-m-link">
+        {showBackLink ? (
+          <Button onClick={() => navigate(-1)} variant="link" isInline>
             <Icon>
               <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
             </Icon>
             {'Back to release details'}
-          </a>
+          </Button>
         ) : (
           ''
         )}

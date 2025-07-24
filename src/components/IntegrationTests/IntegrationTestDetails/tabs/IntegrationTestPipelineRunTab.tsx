@@ -82,6 +82,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
             getNextPage?.();
           }
         }}
+        customData={{ integrationTestName }}
       />
     </>
   );

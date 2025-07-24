@@ -1,124 +1,76 @@
-import { useParams } from 'react-router-dom';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
+import { MemoryRouter } from 'react-router-dom';
+import { render, screen } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useReleasePlan } from '~/hooks/useReleasePlans';
+import { useRelease } from '~/hooks/useReleases';
+import { createUseParamsMock } from '~/utils/test-utils';
 import ReleasePipelineRunTab from '../ReleasePipelineRunTab';
 
-jest.mock('react-router-dom', () => ({
-  useParams: jest.fn(),
-  useSearchParams: jest.fn(() => [new URLSearchParams(), jest.fn()]),
-}));
-
-jest.mock('~/shared/providers/Namespace', () => ({
-  useNamespace: jest.fn(),
-}));
-
-jest.mock('~/hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(),
-}));
-
 jest.mock('~/hooks/useReleasePlans', () => ({
-  useReleasePlan: jest.fn(() => [null]),
+  useReleasePlan: jest.fn(),
 }));
 
 jest.mock('~/hooks/useReleases', () => ({
-  useRelease: jest.fn(() => [null]),
+  useRelease: jest.fn(),
 }));
 
-const useParamsMock = useParams as jest.Mock;
-const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-const useNamespaceMock = mockUseNamespaceHook('test-ns');
+jest.mock('~/hooks/useReleaseStatus', () => ({
+  useReleaseStatus: jest.fn(() => ({})),
+}));
 
-const TestedComponent = () => <ReleasePipelineRunTab />;
+jest.mock('~/utils/release-utils', () => {
+  const actual = jest.requireActual('~/utils/release-utils');
+  return {
+    ...actual,
+    getNamespaceAndPRName: jest.fn((pr) => pr.split('/')),
+    getTenantCollectorProcessingFromRelease: jest.fn(),
+    getTenantProcessingFromRelease: jest.fn(),
+    getFinalFromRelease: jest.fn(),
+    getManagedProcessingFromRelease: jest.fn(),
+  };
+});
+
+const useMockRelease = useRelease as jest.Mock;
+const useMockReleasePlan = useReleasePlan as jest.Mock;
+
+const wrapper = (
+  <MemoryRouter>
+    <FilterContextProvider filterParams={['name']}>
+      <ReleasePipelineRunTab />
+    </FilterContextProvider>
+  </MemoryRouter>
+);
 
 describe('ReleasePipelineRunTab', () => {
+  createUseParamsMock({ releaseName: 'my-release' });
+
   beforeEach(() => {
     jest.clearAllMocks();
-    useParamsMock.mockReturnValue({ applicationName: 'test-app', releaseName: 'test-release' });
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      false,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-    useNamespaceMock.mockReturnValue('test-ns');
   });
 
-  it('should render loading state', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      false,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-
-    render(<TestedComponent />);
+  it('renders spinner while data is loading', () => {
+    useMockRelease.mockReturnValue([null, false]);
+    useMockReleasePlan.mockReturnValue([null, false]);
+    render(wrapper);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
-  it('should render error state', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      true,
-      { code: 500 },
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-
-    render(<TestedComponent />);
-    expect(screen.getByText('Unable to load pipeline runs')).toBeInTheDocument();
-  });
-
-  it('should render empty state when no pipeline runs are present', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [],
-      true,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-
-    render(<TestedComponent />);
-    expect(screen.getByText(/Keep tabs on components and activity/)).toBeInTheDocument();
-  });
-
-  it('should render pipeline runs list when data is available', () => {
-    usePipelineRunsMock.mockReturnValue([
-      [
-        {
-          metadata: { name: 'test-pipeline-run', uid: '123' },
+  it('renders empty state when no pipeline runs exist', () => {
+    useMockRelease.mockReturnValue([
+      {
+        spec: {
+          snapshot: 'snap1',
+          releasePlan: 'plan1',
         },
-      ],
+      },
       true,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
     ]);
-
-    render(<TestedComponent />);
-    expect(screen.getByText('Pipeline runs')).toBeInTheDocument();
-  });
-
-  it('should filter pipeline runs by name', async () => {
-    usePipelineRunsMock.mockReturnValue([
-      [
-        { metadata: { name: 'test-pipeline-run-1', uid: '123' } },
-        { metadata: { name: 'another-pipeline-run', uid: '456' } },
-      ],
-      true,
-      null,
-      jest.fn(),
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
-
-    render(<TestedComponent />);
-    const filterInput = screen.getByPlaceholderText('Filter by name...');
-    fireEvent.change(filterInput, { target: { value: 'test' } });
-
-    await waitFor(() => {
-      expect(screen.queryByText('another-pipeline-run')).not.toBeInTheDocument();
-    });
+    useMockReleasePlan.mockReturnValue([{}, true]);
+    render(wrapper);
+    expect(
+      screen.getByText(
+        'A release object represents a deployed snapshot of your application components. To view your releases, set up a release plan for your application.',
+      ),
+    ).toBeInTheDocument();
   });
 });

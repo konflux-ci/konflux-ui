@@ -6,7 +6,7 @@ export const releasesPlanTableColumnClasses = {
   standingAttribution: 'pf-m-hidden pf-m-width-15 pf-m-visible-on-xl',
   status: 'pf-m-hidden pf-m-width-15 pf-m-visible-on-xl',
   rpa: 'pf-m-hidden pf-m-width-15 pf-m-visible-on-xl',
-  kebab: 'pf-v5-c-table__action',
+  kebab: 'pf-c-table__action',
 };
 
 const ReleasePlanListHeader = () => {

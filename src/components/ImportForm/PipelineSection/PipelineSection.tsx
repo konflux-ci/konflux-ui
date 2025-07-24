@@ -30,8 +30,8 @@ export const PipelineSection: React.FunctionComponent = () => {
     if (!loaded || !values.pipeline || !pipelineTemplate?.pipelines) {
       return null;
     }
-    
-    const selectedPipeline = pipelineTemplate.pipelines.find(p => p.name === values.pipeline);
+
+    const selectedPipeline = pipelineTemplate.pipelines.find((p) => p.name === values.pipeline);
     return selectedPipeline?.detail || null;
   }, [loaded, values.pipeline, pipelineTemplate?.pipelines]);
 
