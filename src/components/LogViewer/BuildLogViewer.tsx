@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../hooks/useTaskRuns';
@@ -34,7 +35,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
     component.metadata.namespace,
     component.metadata.name,
   );
-  const [taskRuns, tloaded] = useTaskRuns(
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
     pipelineRun?.metadata?.namespace,
     pipelineRun?.metadata?.name,
   );
@@ -94,10 +95,12 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
         </DescriptionList>
       </div>
       <div className="build-log-viewer__body">
-        {pipelineRun && taskRuns && tloaded ? (
-          <PipelineRunLogs obj={pipelineRun} taskRuns={taskRuns} />
-        ) : (
+        {!(pipelineRun && taskRunsLoaded) ? (
           <LoadingBox />
+        ) : taskRunsError ? (
+          <ErrorEmptyState title="Unable to load task runs" />
+        ) : (
+          <PipelineRunLogs obj={pipelineRun} taskRuns={taskRuns} />
         )}
       </div>
     </>

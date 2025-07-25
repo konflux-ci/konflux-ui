@@ -8,6 +8,8 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import emptyStateImgUrl from '../../assets/Application.svg';
 import { useApplications } from '../../hooks/useApplications';
 import { useSortedResources } from '../../hooks/useSortedResources';
@@ -54,7 +56,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
     [activeSortDirection, activeSortIndex],
   );
 
-  const [applications, loaded] = useApplications(namespace);
+  const [applications, loaded, error] = useApplications(namespace);
   const filteredApplications = React.useMemo(() => {
     const lowerCaseNameFilter = nameFilter.toLowerCase();
     return applications?.filter(
@@ -76,6 +78,17 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
       <Bullseye>
         <Spinner />
       </Bullseye>
+    );
+  }
+
+  if (error) {
+    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title="Unable to load applications"
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
     );
   }
 

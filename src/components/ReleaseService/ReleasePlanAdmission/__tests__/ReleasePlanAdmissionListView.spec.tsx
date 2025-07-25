@@ -2,6 +2,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { mockApplication } from '~/components/ApplicationDetails/__data__/mock-data';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { HttpError } from '~/k8s/error';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useApplications } from '../../../../hooks/useApplications';
 import { useReleasePlanAdmissions } from '../../../../hooks/useReleasePlanAdmissions';
@@ -47,12 +48,30 @@ const ReleasePlanAdmissionList = (
 describe('ReleasePlanAdmissionListView', () => {
   mockUseNamespaceHook('test-ns');
   mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
-  useApplicationsMock.mockReturnValue([[mockApplication], true]);
+
+  beforeEach(() => {
+    useApplicationsMock.mockReturnValue([[mockApplication], true]);
+  });
 
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);
     const wrapper = render(ReleasePlanAdmissionList);
     expect(await wrapper.findByRole('progressbar')).toBeTruthy();
+  });
+
+  it('should render the error state if there is an error loading the applications', () => {
+    mockReleasePlanHook.mockReturnValue([[mockReleasePlanAdmissions], true]);
+    useApplicationsMock.mockReturnValue([undefined, true, new HttpError(undefined, 403)]);
+    render(ReleasePlanAdmissionList);
+    expect(screen.getByText('Unable to load applications')).toBeInTheDocument();
+    expect(screen.getByText('Forbidden')).toBeInTheDocument();
+  });
+
+  it('should render the error state if there is an error loading the release plans', () => {
+    mockReleasePlanHook.mockReturnValue([undefined, true, new HttpError(undefined, 403)]);
+    render(ReleasePlanAdmissionList);
+    expect(screen.getByText('Unable to load release plan admissions')).toBeInTheDocument();
+    expect(screen.getByText('Forbidden')).toBeInTheDocument();
   });
 
   it('should render empty state when no release Plans present', () => {

@@ -20,6 +20,8 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
@@ -242,6 +244,19 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       </ButtonWithAccessTooltip>
     </BaseTextFilterToolbar>
   );
+
+  if (componentsError) {
+    const httpError = HttpError.fromCode(
+      componentsError ? (componentsError as { code: number }).code : 400,
+    );
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title="Unable to load components"
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
+    );
+  }
 
   return (
     <>

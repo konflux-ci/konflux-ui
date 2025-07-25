@@ -33,22 +33,25 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   component,
 }) => {
   const namespace = useNamespace();
-  const [pipelineRun, pipelineRunLoaded, error] = useLatestSuccessfulBuildPipelineRunForComponent(
-    namespace,
-    component.metadata.name,
-  );
+  const [pipelineRun, pipelineRunLoaded, pipelineRunError] =
+    useLatestSuccessfulBuildPipelineRunForComponent(namespace, component.metadata.name);
   const commit = React.useMemo(
     () => ((pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1)) || [])[0],
     [pipelineRunLoaded, pipelineRun],
   );
-  const [taskRuns, taskRunsLoaded] = useTaskRuns(namespace, pipelineRun?.metadata?.name);
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+    namespace,
+    pipelineRun?.metadata?.name,
+  );
   const buildLogsModal = useBuildLogViewerModal(component);
 
   // Avoid getLastestImage fallback to spec.containerImage, which lacks image tag
   // and causes 'cosign download sbom' to fail. Use lastPromotedImage explicitly.
   const containerImage = component?.status?.lastPromotedImage;
 
-  if (error) {
+  if (pipelineRunError || taskRunsError) {
+    const error = pipelineRunError || taskRunsError;
+
     const httpError = HttpError.fromCode((error as { code: number }).code);
     return (
       <ErrorEmptyState

@@ -3,6 +3,8 @@ import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useApplications } from '~/hooks/useApplications';
+import { HttpError } from '~/k8s/error';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlanAdmissions } from '../../../hooks/useReleasePlanAdmissions';
@@ -20,8 +22,8 @@ import ReleasePlanAdmissionListRow, {
 
 const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
-  const [applications, appLoaded] = useApplications(namespace);
-  const [releasePlanAdmission, loaded] = useReleasePlanAdmissions(namespace);
+  const [applications, appLoaded, appError] = useApplications(namespace);
+  const [releasePlanAdmission, rpaLoaded, rpaError] = useReleasePlanAdmissions(namespace);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -30,7 +32,7 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
 
   const releasePlanAdmissionWithApplicationData: ReleasePlanAdmissionWithApplicationData[] =
     React.useMemo(() => {
-      return loaded && appLoaded && applications && releasePlanAdmission
+      return rpaLoaded && appLoaded && applications && releasePlanAdmission
         ? releasePlanAdmission.map((rpa) => {
             const application = applications.filter(
               (app) => app.metadata?.name === rpa.spec.application,
@@ -38,25 +40,37 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
             return { ...rpa, application };
           })
         : releasePlanAdmission;
-    }, [loaded, appLoaded, releasePlanAdmission, applications]);
+    }, [rpaLoaded, appLoaded, releasePlanAdmission, applications]);
 
   const filteredReleasePlanAdmission = React.useMemo(
     () =>
-      releasePlanAdmissionWithApplicationData
+      releasePlanAdmissionWithApplicationData && !appError
         ? releasePlanAdmissionWithApplicationData.filter(
             (r) => r.metadata.name.indexOf(nameFilter) !== -1,
           )
         : [],
-    [releasePlanAdmissionWithApplicationData, nameFilter],
+    [releasePlanAdmissionWithApplicationData, nameFilter, appError],
   );
 
   useDocumentTitle(`Release Plan Admission | ${FULL_APPLICATION_TITLE}`);
 
-  if (!loaded) {
+  if (!rpaLoaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
+    );
+  }
+
+  if (appError || rpaError) {
+    const error = appError ?? rpaError;
+    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
+    return (
+      <ErrorEmptyState
+        httpError={httpError}
+        title={`Unable to load ${appError ? 'applications' : 'release plan admissions'}`}
+        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
+      />
     );
   }
 
