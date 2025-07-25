@@ -1,7 +1,7 @@
 export const pipelineRunTableColumnClasses = {
   name: 'pf-m-width-10 pf-m-width-15-on-xl',
   status: 'pf-m-width-10 pf-m-width-5-on-xl',
-  testResultStatus: 'pf-m-width-5 pf-m-width-5-on-xl',
+  testResultStatus: 'pf-m-width-10 pf-m-width-10-on-xl',
   started: 'pf-m-width-20 pf-m-width-10-on-xl',
   vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
