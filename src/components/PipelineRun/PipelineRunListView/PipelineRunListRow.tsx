@@ -228,9 +228,7 @@ export const PipelineRunListRow: React.FC<React.PropsWithChildren<PipelineRunLis
 
 export const PipelineRunListRowWithVulnerabilities: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
-> = (props) => (
-  <BasePipelineRunListRow {...props} showVulnerabilities showComponent showReference />
-);
+> = (props) => <BasePipelineRunListRow {...props} showVulnerabilities showTrigger showReference />;
 
 export const PipelineRunListRowForRelease: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
