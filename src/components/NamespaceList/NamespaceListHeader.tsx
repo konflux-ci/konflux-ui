@@ -1,7 +1,7 @@
 export const namespaceTableColumnClasses = {
-  name: 'pf-m-width-35',
-  applications: 'pf-m-width-30',
-  actions: 'pf-m-width-35',
+  name: 'pf-m-width-40',
+  applications: 'pf-m-width-35',
+  kebab: 'pf-m-width-5 pf-c-table__action',
 };
 
 export const NamespaceListHeader = () => {
@@ -15,8 +15,8 @@ export const NamespaceListHeader = () => {
       props: { className: namespaceTableColumnClasses.applications },
     },
     {
-      title: 'Actions',
-      props: { className: namespaceTableColumnClasses.actions },
+      title: ' ',
+      props: { className: namespaceTableColumnClasses.kebab },
     },
   ];
 };

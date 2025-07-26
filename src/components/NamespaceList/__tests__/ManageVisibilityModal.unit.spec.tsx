@@ -1,11 +1,12 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { NamespaceKind, RoleBinding } from '~/types';
 import {
   createK8sUtilMock,
   createK8sWatchResourceMock,
   renderWithQueryClientAndRouter,
-} from '../../../utils/test-utils';
+} from '~/unit-test-utils';
 import ManageVisibilityModal from '../ManageVisibilityModal';
 
 // Mock the K8s utilities
@@ -300,7 +301,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
       expect(publicRadio).toBeChecked();
     });
 
-    it('should detect changes when visibility selection changes', () => {
+    it('should detect changes when visibility selection changes', async () => {
       mockUseK8sWatchResource.mockReturnValue({
         data: [], // Start with private
         isLoading: false,
@@ -315,7 +316,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to public
       const publicRadio = screen.getByRole('radio', { name: /public/i });
-      fireEvent.click(publicRadio);
+      await userEvent.click(publicRadio);
 
       // Save button should be enabled after change
       expect(saveButton).not.toBeDisabled();
@@ -335,7 +336,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
       expect(saveButton).toBeDisabled();
     });
 
-    it('should enable save button when changes are made', () => {
+    it('should enable save button when changes are made', async () => {
       mockUseK8sWatchResource.mockReturnValue({
         data: [mockPublicRoleBinding], // Start with public
         isLoading: false,
@@ -346,7 +347,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to private
       const privateRadio = screen.getByRole('radio', { name: /private/i });
-      fireEvent.click(privateRadio);
+      await userEvent.click(privateRadio);
 
       // Save button should be enabled after change
       const saveButton = screen.getByRole('button', { name: /save/i });
@@ -373,10 +374,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to public and submit
       const publicRadio = screen.getByRole('radio', { name: /public/i });
-      fireEvent.click(publicRadio);
+      await userEvent.click(publicRadio);
 
       const saveButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Save button should be disabled and show loading state during submission
       await waitFor(() => {
@@ -408,10 +409,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to public and submit
       const publicRadio = screen.getByRole('radio', { name: /public/i });
-      fireEvent.click(publicRadio);
+      await userEvent.click(publicRadio);
 
       const saveButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Button should show loading state
       await waitFor(() => {
@@ -419,19 +420,28 @@ describe('ManageVisibilityModal Unit Tests', () => {
       });
     });
 
-    it('should handle cancel button click', () => {
+    it('should handle cancel button click', async () => {
       mockUseK8sWatchResource.mockReturnValue({
         data: [],
         isLoading: false,
         error: null,
       });
 
-      renderManageVisibilityModal();
+      // Create a fresh mock for this test to avoid interference
+      const freshMockOnClose = jest.fn();
+
+      renderWithQueryClientAndRouter(
+        <ManageVisibilityModal
+          namespace={mockNamespace}
+          onClose={freshMockOnClose}
+          modalProps={{ isOpen: true }}
+        />,
+      );
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i });
-      fireEvent.click(cancelButton);
+      await userEvent.click(cancelButton);
 
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+      expect(freshMockOnClose).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -463,10 +473,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
         // Change to public and submit
         const publicRadio = screen.getByRole('radio', { name: /public/i });
-        fireEvent.click(publicRadio);
+        await userEvent.click(publicRadio);
 
         const saveButton = screen.getByRole('button', { name: /save/i });
-        fireEvent.click(saveButton);
+        await userEvent.click(saveButton);
 
         // Should call create resource with correct parameters
         await waitFor(() => {
@@ -532,10 +542,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
         // Change to private and submit
         const privateRadio = screen.getByRole('radio', { name: /private/i });
-        fireEvent.click(privateRadio);
+        await userEvent.click(privateRadio);
 
         const saveButton = screen.getByRole('button', { name: /save/i });
-        fireEvent.click(saveButton);
+        await userEvent.click(saveButton);
 
         // Should call delete resource with correct parameters
         await waitFor(() => {
@@ -604,10 +614,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
         // Change to public and submit
         const publicRadio = screen.getByRole('radio', { name: /public/i });
-        fireEvent.click(publicRadio);
+        await userEvent.click(publicRadio);
 
         const saveButton = screen.getByRole('button', { name: /save/i });
-        fireEvent.click(saveButton);
+        await userEvent.click(saveButton);
 
         await waitFor(() => {
           expect(isolatedMockOnCloseSuccess).toHaveBeenCalledTimes(1);
@@ -631,10 +641,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to public and submit
       const publicRadio = screen.getByRole('radio', { name: /public/i });
-      fireEvent.click(publicRadio);
+      await userEvent.click(publicRadio);
 
       const saveButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Should display error message
       await waitFor(() => {
@@ -660,10 +670,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to private and submit
       const privateRadio = screen.getByRole('radio', { name: /private/i });
-      fireEvent.click(privateRadio);
+      await userEvent.click(privateRadio);
 
       const saveButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Should display error message
       await waitFor(() => {
@@ -689,10 +699,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to public and submit
       const publicRadio = screen.getByRole('radio', { name: /public/i });
-      fireEvent.click(publicRadio);
+      await userEvent.click(publicRadio);
 
       const saveButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Should display error message with string conversion
       await waitFor(() => {
@@ -716,10 +726,10 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
       // Change to public and submit
       const publicRadio = screen.getByRole('radio', { name: /public/i });
-      fireEvent.click(publicRadio);
+      await userEvent.click(publicRadio);
 
       const saveButton = screen.getByRole('button', { name: /save/i });
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Wait for error to appear
       await waitFor(() => {
@@ -732,7 +742,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
       mockK8sQueryCreateResource.mockResolvedValueOnce({});
 
       // Submit again
-      fireEvent.click(saveButton);
+      await userEvent.click(saveButton);
 
       // Error should be cleared during new submission
       await waitFor(() => {

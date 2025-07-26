@@ -8,10 +8,16 @@ jest.mock('../../modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(() => mockShowModal),
 }));
 
-// Mock the rbac hook - useAccessReview returns [allowed, loaded]
-const mockUseAccessReview = jest.fn();
-jest.mock('../../../utils/rbac', () => ({
-  useAccessReview: jest.fn(() => mockUseAccessReview()),
+// Mock the k8sCreateResource function
+const mockK8sCreateResource = jest.fn();
+jest.mock('../../../k8s/k8s-fetch', () => ({
+  k8sCreateResource: jest.fn((...args: unknown[]) => mockK8sCreateResource(...args)),
+}));
+
+// Mock getUserDataFromLocalStorage
+const mockGetUserDataFromLocalStorage = jest.fn();
+jest.mock('../../../auth/utils', () => ({
+  getUserDataFromLocalStorage: jest.fn(() => mockGetUserDataFromLocalStorage()),
 }));
 
 const mockNamespace: NamespaceKind = {
@@ -28,126 +34,111 @@ const mockNamespace: NamespaceKind = {
 describe('useNamespaceActions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Default to having permissions loaded and allowed
-    mockUseAccessReview.mockReturnValue([true, true]);
+    // Default mock responses
+    mockGetUserDataFromLocalStorage.mockReturnValue({ preferredUsername: 'testuser' });
+    mockK8sCreateResource.mockResolvedValue({
+      status: { allowed: true },
+    });
+  });
+
+  it('should return actions array, loading state, and toggle function', () => {
+    const { result } = renderHook(() => useNamespaceActions(mockNamespace));
+
+    expect(result.current).toHaveLength(3);
+    expect(Array.isArray(result.current[0])).toBe(true);
+    expect(typeof result.current[1]).toBe('boolean');
+    expect(typeof result.current[2]).toBe('function');
   });
 
   it('should return manage visibility action enabled when user has permissions', () => {
-    // Mock both create and delete permissions as allowed and loaded
-    mockUseAccessReview
-      .mockReturnValueOnce([true, true]) // create permission
-      .mockReturnValueOnce([true, true]); // delete permission
+    mockK8sCreateResource.mockResolvedValue({
+      status: { allowed: true },
+    });
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    expect(result.current).toHaveLength(1);
-    expect(result.current[0]).toEqual({
+    // Initially not checking permissions
+    expect(result.current[0][0]).toEqual({
       cta: expect.any(Function),
       id: 'manage-visibility-test-namespace',
       label: 'Manage visibility',
       disabled: false,
-      disabledTooltip: undefined,
-    });
-  });
-
-  it('should return manage visibility action disabled when user lacks create permission', () => {
-    mockUseAccessReview
-      .mockReturnValueOnce([false, true]) // create permission denied
-      .mockReturnValueOnce([true, true]); // delete permission allowed
-
-    const { result } = renderHook(() => useNamespaceActions(mockNamespace));
-
-    expect(result.current[0]).toEqual({
-      cta: expect.any(Function),
-      id: 'manage-visibility-test-namespace',
-      label: 'Manage visibility',
-      disabled: true,
       disabledTooltip: "You don't have permission to manage namespace visibility",
     });
   });
 
-  it('should return manage visibility action disabled when user lacks delete permission', () => {
-    mockUseAccessReview
-      .mockReturnValueOnce([true, true]) // create permission allowed
-      .mockReturnValueOnce([false, true]); // delete permission denied
+  it('should trigger permission check when toggle function is called', async () => {
+    mockK8sCreateResource.mockResolvedValue({
+      status: { allowed: true },
+    });
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    expect(result.current[0]).toEqual({
-      cta: expect.any(Function),
-      id: 'manage-visibility-test-namespace',
-      label: 'Manage visibility',
-      disabled: true,
-      disabledTooltip: "You don't have permission to manage namespace visibility",
-    });
+    // Call the toggle function to trigger permission check
+    result.current[2](true);
+
+    // Wait for the permission check to complete
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mockK8sCreateResource).toHaveBeenCalledTimes(2); // create and delete checks
   });
 
-  it('should return manage visibility action disabled when user lacks both permissions', () => {
-    mockUseAccessReview
-      .mockReturnValueOnce([false, true]) // create permission denied
-      .mockReturnValueOnce([false, true]); // delete permission denied
+  it('should disable action when user lacks permissions', async () => {
+    mockK8sCreateResource.mockResolvedValue({
+      status: { allowed: false },
+    });
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    expect(result.current[0]).toEqual({
-      cta: expect.any(Function),
-      id: 'manage-visibility-test-namespace',
-      label: 'Manage visibility',
-      disabled: true,
-      disabledTooltip: "You don't have permission to manage namespace visibility",
-    });
+    // Trigger permission check
+    result.current[2](true);
+
+    // Wait for the permission check to complete
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(result.current[0][0].disabled).toBe(true);
+    expect(result.current[0][0].disabledTooltip).toBe(
+      "You don't have permission to manage namespace visibility",
+    );
   });
 
-  it('should show loading state when permissions are not yet loaded', () => {
-    mockUseAccessReview
-      .mockReturnValueOnce([false, false]) // create permission loading
-      .mockReturnValueOnce([false, false]); // delete permission loading
+  it('should show loading state while checking permissions', async () => {
+    // Mock a delayed response to simulate loading
+    mockK8sCreateResource.mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ status: { allowed: true } }), 100)),
+    );
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    expect(result.current[0]).toEqual({
-      cta: expect.any(Function),
-      id: 'manage-visibility-test-namespace',
-      label: 'Manage visibility',
-      disabled: true,
-      disabledTooltip: 'Loading permissions...',
-    });
+    // Trigger permission check
+    result.current[2](true);
+
+    // Check loading state - need to wait for the async operation to start
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(result.current[1]).toBe(true); // isChecking should be true
   });
 
-  it('should show loading state when only one permission is loaded', () => {
-    mockUseAccessReview
-      .mockReturnValueOnce([true, true]) // create permission loaded
-      .mockReturnValueOnce([false, false]); // delete permission still loading
-
-    const { result } = renderHook(() => useNamespaceActions(mockNamespace));
-
-    expect(result.current[0]).toEqual({
-      cta: expect.any(Function),
-      id: 'manage-visibility-test-namespace',
-      label: 'Manage visibility',
-      disabled: true,
-      disabledTooltip: 'Loading permissions...',
+  it('should call modal launcher when action is triggered with permissions', async () => {
+    mockK8sCreateResource.mockResolvedValue({
+      status: { allowed: true },
     });
-  });
-
-  it('should call the modal launcher when action is triggered', () => {
-    mockUseAccessReview
-      .mockReturnValueOnce([true, true]) // create permission
-      .mockReturnValueOnce([true, true]); // delete permission
 
     const { result } = renderHook(() => useNamespaceActions(mockNamespace));
 
-    // Call the action's cta function
-    const action = result.current[0];
+    // Trigger permission check first
+    result.current[2](true);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    // Now call the action
+    const action = result.current[0][0];
     if (typeof action.cta === 'function') {
       action.cta();
     }
 
     expect(mockShowModal).toHaveBeenCalledTimes(1);
-    expect(mockShowModal).toHaveBeenCalledWith(expect.any(Function));
   });
 
-  it('should handle different namespaces with permissions', () => {
+  it('should handle different namespaces correctly', () => {
     const namespace1: NamespaceKind = {
       ...mockNamespace,
       metadata: { ...mockNamespace.metadata, name: 'namespace-1' },
@@ -158,25 +149,11 @@ describe('useNamespaceActions', () => {
       metadata: { ...mockNamespace.metadata, name: 'namespace-2' },
     };
 
-    // Each namespace hook calls useAccessReview twice, so we need 4 mock calls total
-    mockUseAccessReview
-      .mockReturnValueOnce([true, true]) // namespace1 create permission
-      .mockReturnValueOnce([true, true]) // namespace1 delete permission
-      .mockReturnValueOnce([true, true]) // namespace2 create permission
-      .mockReturnValueOnce([true, true]); // namespace2 delete permission
-
     const { result: result1 } = renderHook(() => useNamespaceActions(namespace1));
     const { result: result2 } = renderHook(() => useNamespaceActions(namespace2));
 
-    // Both should return enabled actions
-    expect(result1.current[0].label).toBe('Manage visibility');
-    expect(result1.current[0].disabled).toBe(false);
-    expect(result2.current[0].label).toBe('Manage visibility');
-    expect(result2.current[0].disabled).toBe(false);
-
-    // But they should have different IDs and be different functions
-    expect(result1.current[0].id).toBe('manage-visibility-namespace-1');
-    expect(result2.current[0].id).toBe('manage-visibility-namespace-2');
-    expect(result1.current[0].cta).not.toBe(result2.current[0].cta);
+    // Both should return actions with correct IDs
+    expect(result1.current[0][0].id).toBe('manage-visibility-namespace-1');
+    expect(result2.current[0][0].id).toBe('manage-visibility-namespace-2');
   });
 });

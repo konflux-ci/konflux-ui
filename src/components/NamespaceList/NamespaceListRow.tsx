@@ -13,7 +13,7 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
   obj,
 }) => {
   const [applications, loaded] = useApplications(obj.metadata.name);
-  const actions = useNamespaceActions(obj);
+  const [actions, isChecking, onToggle] = useNamespaceActions(obj);
 
   return (
     <>
@@ -32,8 +32,8 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
           <Skeleton width="50%" screenreaderText="Loading application count" />
         )}
       </TableData>
-      <TableData className={namespaceTableColumnClasses.actions}>
-        <ActionMenu actions={actions} />
+      <TableData className={namespaceTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} onOpen={onToggle} isDisabled={isChecking} />
       </TableData>
     </>
   );
