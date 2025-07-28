@@ -61,6 +61,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isIntegrationTestsPage = pathname?.includes('integrationtests') ?? false;
+  const isSnapshotsPage = pathname?.includes('snapshots') ?? false;
   const namespace = useNamespace();
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canPatchSnapshot] = useAccessReviewForModel(SnapshotModel, 'patch');
@@ -104,6 +105,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
           ...defaultEmptyAction,
           cta: () =>
             startNewBuild(component).then(() => {
+              if (isSnapshotsPage) return;
               navigate(
                 `${PIPELINE_RUNS_LIST_PATH.createPath({
                   workspaceName: namespace,
@@ -128,7 +130,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
           ...defaultEmptyAction,
           cta: () =>
             rerunTestPipeline(snapshot, scenario).then(() => {
-              if (isIntegrationTestsPage) return;
+              if (isIntegrationTestsPage || isSnapshotsPage) return;
               const componentName = snapshot.metadata.labels?.[SnapshotLabels.COMPONENT];
               navigate(
                 `${PIPELINE_RUNS_LIST_PATH.createPath({
@@ -159,17 +161,18 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
   }, [
     canPatchComponent,
     canPatchSnapshot,
-    component,
-    componentError,
-    componentLoaded,
-    isPushBuildType,
-    namespace,
-    navigate,
     runType,
-    scenario,
-    isIntegrationTestsPage,
+    isPushBuildType,
+    componentLoaded,
+    componentError,
+    component,
+    navigate,
+    namespace,
     snapshot,
+    scenario,
     snapshotError,
+    isIntegrationTestsPage,
+    isSnapshotsPage,
   ]);
 };
 
