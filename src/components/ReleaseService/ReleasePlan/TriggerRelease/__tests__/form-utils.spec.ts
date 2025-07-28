@@ -70,7 +70,7 @@ describe('triggerReleasePlan', () => {
       'test-ns',
     );
 
-    const advisoryIssues = result.spec.data.releaseNotes.fixed;
+    const advisoryIssues = result.spec.data.releaseNotes.issues.fixed;
     expect(advisoryIssues.length).toEqual(3);
     expect(advisoryIssues[0]).toEqual(
       expect.objectContaining({
@@ -155,7 +155,7 @@ describe('triggerReleasePlan', () => {
     );
     expect(result.spec.data.releaseNotes).toEqual({
       synopsis: 'A summary',
-      fixed: [{ id: 'ISSUE-1', source: 'src' }],
+      issues: { fixed: [{ id: 'ISSUE-1', source: 'src' }] },
     });
   });
 });
@@ -187,7 +187,7 @@ describe('createReleaseNotes', () => {
     });
     expect(result).toEqual({
       synopsis: 'syn',
-      fixed: [{ id: '1', source: 'src' }],
+      issues: { fixed: [{ id: '1', source: 'src' }] },
     });
   });
 
@@ -205,7 +205,7 @@ describe('createReleaseNotes', () => {
       synopsis: 'syn',
       topic: 'top',
       description: 'desc',
-      fixed: [{ id: '1', source: 'src' }],
+      issues: { fixed: [{ id: '1', source: 'src' }] },
       cves: [{ issueKey: 'cve', components: ['a'], url: 'u' }],
       references: ['ref'],
       solution: 'sol',
@@ -242,5 +242,149 @@ describe('getIssues', () => {
   });
   it('handles empty array', () => {
     expect(getIssues([])).toEqual([]);
+  });
+});
+
+describe('issue source URL validation', () => {
+  it('should accept URLs with protocol', async () => {
+    const result = await createRelease(
+      {
+        snapshot: 'test-plan',
+        synopsis: 'synopsis',
+        releasePlan: 'test-releasePlan',
+        description: 'short description',
+        topic: 'topic of release',
+        references: [],
+        issues: [
+          {
+            id: 'RHTAP-123',
+            summary: 'test issue',
+            source: 'https://issues.redhat.com/browse/RHTAP-123',
+          },
+          {
+            id: 'BZ-456',
+            summary: 'test bug',
+            source: 'https://bugzilla.redhat.com/show_bug.cgi',
+          },
+          {
+            id: 'JIRA-789',
+            summary: 'test jira',
+            source: 'https://jira.atlassian.com/browse/JIRA-789',
+          },
+        ],
+        labels: [],
+      },
+      'test-ns',
+    );
+
+    const advisoryIssues = result.spec.data.releaseNotes.issues.fixed;
+    expect(advisoryIssues.length).toEqual(3);
+    expect(advisoryIssues[0]).toEqual(
+      expect.objectContaining({
+        id: 'RHTAP-123',
+        source: 'https://issues.redhat.com/browse/RHTAP-123',
+      }),
+    );
+  });
+
+  it('should accept URLs without protocol', async () => {
+    const result = await createRelease(
+      {
+        snapshot: 'test-plan',
+        synopsis: 'synopsis',
+        releasePlan: 'test-releasePlan',
+        description: 'short description',
+        topic: 'topic of release',
+        references: [],
+        issues: [
+          { id: 'RHTAP-123', summary: 'test issue', source: 'issues.redhat.com' },
+          { id: 'BZ-456', summary: 'test bug', source: 'bugzilla.redhat.com' },
+          { id: 'JIRA-789', summary: 'test jira', source: 'jira.atlassian.com' },
+        ],
+        labels: [],
+      },
+      'test-ns',
+    );
+
+    const advisoryIssues = result.spec.data.releaseNotes.issues.fixed;
+    expect(advisoryIssues.length).toEqual(3);
+    expect(advisoryIssues[0]).toEqual(
+      expect.objectContaining({
+        id: 'RHTAP-123',
+        source: 'issues.redhat.com',
+      }),
+    );
+  });
+
+  it('should accept URLs with query parameters and fragments', async () => {
+    const result = await createRelease(
+      {
+        snapshot: 'test-plan',
+        synopsis: 'synopsis',
+        releasePlan: 'test-releasePlan',
+        description: 'short description',
+        topic: 'topic of release',
+        references: [],
+        issues: [
+          {
+            id: 'BZ-456',
+            summary: 'test bug',
+            source: 'https://bugzilla.redhat.com/show_bug.cgi?id=456&component=test#c1',
+          },
+          {
+            id: 'JIRA-789',
+            summary: 'test jira',
+            source: 'https://jira.atlassian.com/browse/JIRA-789?filter=all#comment-123',
+          },
+        ],
+        labels: [],
+      },
+      'test-ns',
+    );
+
+    const advisoryIssues = result.spec.data.releaseNotes.issues.fixed;
+    expect(advisoryIssues.length).toEqual(2);
+    expect(advisoryIssues[0]).toEqual(
+      expect.objectContaining({
+        id: 'BZ-456',
+        source: 'https://bugzilla.redhat.com/show_bug.cgi?id=456&component=test#c1',
+      }),
+    );
+  });
+
+  it('should accept URLs with subdomains and ports', async () => {
+    const result = await createRelease(
+      {
+        snapshot: 'test-plan',
+        synopsis: 'synopsis',
+        releasePlan: 'test-releasePlan',
+        description: 'short description',
+        topic: 'topic of release',
+        references: [],
+        issues: [
+          {
+            id: 'TEST-123',
+            summary: 'test issue',
+            source: 'https://sub.issues.redhat.com:8443/browse/TEST-123',
+          },
+          {
+            id: 'DEV-456',
+            summary: 'test issue',
+            source: 'dev.jira.atlassian.com/browse/DEV-456',
+          },
+        ],
+        labels: [],
+      },
+      'test-ns',
+    );
+
+    const advisoryIssues = result.spec.data.releaseNotes.issues.fixed;
+    expect(advisoryIssues.length).toEqual(2);
+    expect(advisoryIssues[0]).toEqual(
+      expect.objectContaining({
+        id: 'TEST-123',
+        source: 'https://sub.issues.redhat.com:8443/browse/TEST-123',
+      }),
+    );
   });
 });

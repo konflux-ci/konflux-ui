@@ -100,7 +100,9 @@ export type ReleaseSpec = {
       topic?: string;
       description?: string;
       synopsis?: string;
-      fixed?: { id: string; source: string }[];
+      issues?: {
+        fixed: { id: string; source: string }[];
+      };
       cves?: CVE[];
       solution?: string;
       references?: string[];

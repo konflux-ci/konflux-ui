@@ -46,7 +46,7 @@ export const createReleaseNotes = (values: {
     releaseNotes.references = references;
   }
   if (issues?.length > 0) {
-    releaseNotes.fixed = getIssues(issues);
+    releaseNotes.issues = { fixed: getIssues(issues) };
   }
   if (cves?.length > 0) {
     releaseNotes.cves = cves;
