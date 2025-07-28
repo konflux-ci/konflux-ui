@@ -2,11 +2,13 @@ import '@testing-library/jest-dom';
 import { useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
 import { PipelineRunEventType, PipelineRunLabel } from '../../../../consts/pipelinerun';
+import { useComponent } from '../../../../hooks/useComponents';
 import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind } from '../../../../types';
 import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
+import { mockComponent } from '../../../Components/ComponentDetails/__data__/mockComponentDetails';
 import { usePipelinererunAction, usePipelinerunActions } from '../pipelinerun-actions';
 
 jest.mock('../../../../utils/rbac', () => ({
@@ -31,9 +33,14 @@ jest.mock('../../../../hooks/useSnapshots', () => ({
   useSnapshot: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/useComponents', () => ({
+  useComponent: jest.fn(),
+}));
+
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 const mockUseSnapshots = useSnapshot as jest.Mock;
+const useComponentMock = useComponent as jest.Mock;
 
 describe('usePipelinerunActions', () => {
   let navigateMock: jest.Mock;
@@ -44,6 +51,7 @@ describe('usePipelinerunActions', () => {
     useNavigateMock.mockImplementation(() => navigateMock);
     mockUseSnapshots.mockReturnValue([{ metadata: { name: 'snp1' } }, true]);
     mockWatchResource.mockReturnValue([[], false]);
+    useComponentMock.mockReturnValue([mockComponent, true]);
   });
 
   it('should contain enabled actions', () => {
@@ -476,6 +484,94 @@ describe('usePipelinererunAction', () => {
     expect(action).toEqual(
       expect.objectContaining({
         label: 'Rerun',
+      }),
+    );
+  });
+
+  it('should contain disabled rerun action if run type is "tenant"', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'tenant',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind),
+    );
+    const action = result.current;
+
+    expect(action).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot re-run pipeline run for the type tenant',
+      }),
+    );
+  });
+
+  it('should contain disabled rerun action if run type is "managed"', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'managed',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind),
+    );
+    const action = result.current;
+
+    expect(action).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot re-run pipeline run for the type managed',
+      }),
+    );
+  });
+
+  it('should contain disabled rerun action if run type is "release"', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'release',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind),
+    );
+    const action = result.current;
+
+    expect(action).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot re-run pipeline run for the type release',
+      }),
+    );
+  });
+
+  it('should contain disabled rerun action if run type is "final"', () => {
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    const { result } = renderHook(() =>
+      usePipelinererunAction({
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'final',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind),
+    );
+    const action = result.current;
+
+    expect(action).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot re-run pipeline run for the type final',
       }),
     );
   });
