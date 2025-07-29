@@ -9,7 +9,7 @@ const config = JSON.parse(fs.readFileSync(`${__dirname}/.swcrc`, 'utf-8'));
 
 export default {
   transform: {
-    '^.+\\.(ts|tsx|js|jsx)$': ['@swc/jest', { ...config }],
+    '^.+\\.(ts|tsx|js|mjs|jsx)$': ['@swc/jest', { ...config }],
   },
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   testEnvironment: 'jsdom',
