@@ -3,6 +3,7 @@ import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/ban
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
 import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
+import { useSystemNotifications } from '../useSystemNotifications';
 
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
@@ -10,11 +11,20 @@ jest.mock('../../hooks/useActiveRouteChecker', () => ({
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
 }));
-const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
+jest.mock('../useSystemNotifications', () => ({
+  useSystemNotifications: jest.fn(),
+}));
 
+const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
+const useSystemNotificationsMock = useSystemNotifications as jest.Mock;
 describe('AppRoot', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useSystemNotificationsMock.mockReturnValue({
+      notifications: [],
+      isLoading: false,
+      error: null,
+    });
     k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: null });
   });
 
@@ -62,5 +72,10 @@ describe('AppRoot', () => {
     routerRenderer(<AppRoot />);
 
     expect(screen.queryByTestId('namespace-switcher')).not.toBeInTheDocument();
+  });
+
+  it('should show notification badge', () => {
+    routerRenderer(<AppRoot />);
+    expect(screen.getByLabelText('Notifications')).toBeVisible();
   });
 });
