@@ -1,4 +1,5 @@
 import * as React from 'react';
+/*eslint-disable-next-line import/no-restricted-paths*/
 import { useApplicationPipelineGitHubApp } from '../hooks/useApplicationPipelineGitHubApp';
 import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel } from '../models';
@@ -148,9 +149,7 @@ export const startNewBuild = (component: ComponentKind) =>
       {
         op: 'add',
         path: `/metadata/annotations/${BUILD_REQUEST_ANNOTATION.replace('/', '~1')}`,
-        value: isPACEnabled(component)
-          ? BuildRequest.triggerPACBuild
-          : BuildRequest.triggerSimpleBuild,
+        value: BuildRequest.triggerPACBuild,
       },
     ],
   });
