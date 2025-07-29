@@ -16,7 +16,7 @@ export const bannerTypeToVariant: Record<BannerType, BannerVariant> = {
 };
 
 // Map BannerVariant → Icon component
-const bannerVariantToIcon: Record<BannerVariant, JSX.Element> = {
+export const bannerVariantToIcon: Record<BannerVariant, JSX.Element> = {
   [BannerVariant.BLUE]: <InfoCircleIcon data-test="info-icon" />,
   [BannerVariant.GOLD]: <BellIcon data-test="warning-icon" />,
   [BannerVariant.RED]: <ExclamationTriangleIcon data-test="danger-icon" />,
