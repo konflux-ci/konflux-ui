@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
+/*eslint-disable-next-line import/no-restricted-paths*/
 import { useApplicationPipelineGitHubApp } from '../../hooks/useApplicationPipelineGitHubApp';
 import { ComponentModel } from '../../models';
 import { ComponentKind } from '../../types';
@@ -95,7 +96,7 @@ describe('component-utils', () => {
         {
           op: 'add',
           path: `/metadata/annotations/${BUILD_REQUEST_ANNOTATION.replace('/', '~1')}`,
-          value: BuildRequest.triggerSimpleBuild,
+          value: BuildRequest.triggerPACBuild,
         },
       ],
     });
