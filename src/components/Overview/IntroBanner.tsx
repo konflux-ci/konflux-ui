@@ -12,7 +12,8 @@ import {
   Button,
 } from '@patternfly/react-core';
 import OverviewBannerSvg from '../../assets/overview/overview-banner.svg';
-import { NAMESPACE_LIST_PATH } from '../../routes/paths';
+import { IfFeature } from '../../feature-flags/hooks';
+import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
@@ -48,6 +49,18 @@ const IntroBanner: React.FC = () => {
             >
               View my namespaces
             </Button>
+            <IfFeature flag="release-monitor">
+              <Button
+                className="intro-banner__cta"
+                component={(props) => (
+                  <Link {...props} to={RELEASE_MONITOR_PATH.createPath({} as never)} />
+                )}
+                variant="secondary"
+                size="lg"
+              >
+                Release Monitor Board
+              </Button>
+            </IfFeature>
           </CardBody>
         </Card>
       </FlexItem>
