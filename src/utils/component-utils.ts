@@ -1,6 +1,4 @@
 import * as React from 'react';
-/*eslint-disable-next-line import/no-restricted-paths*/
-import { useApplicationPipelineGitHubApp } from '../hooks/useApplicationPipelineGitHubApp';
 import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel } from '../models';
 import { ComponentKind } from '../types';
@@ -149,20 +147,6 @@ export const startNewBuild = (component: ComponentKind) =>
       },
     ],
   });
-
-const GIT_URL_PREFIX = 'https://github.com/';
-
-export const useURLForComponentPRs = (components: ComponentKind[]): string => {
-  const { name: PR_BOT_NAME } = useApplicationPipelineGitHubApp();
-  const repos = components.reduce((acc, component) => {
-    const gitURL = component.spec.source?.git?.url;
-    if (gitURL && isPACEnabled(component) && gitURL.startsWith('https://github.com/')) {
-      acc = `${acc}+repo:${gitURL.replace(GIT_URL_PREFIX, '').replace(/.git$/i, '')}`;
-    }
-    return acc;
-  }, '');
-  return `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
-};
 
 export const useComponentBuildStatus = (component: ComponentKind): ComponentBuildStatus =>
   React.useMemo(() => getComponentBuildStatus(component), [component]);
