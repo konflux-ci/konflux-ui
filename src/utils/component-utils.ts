@@ -89,10 +89,6 @@ export const isPACEnabled = (component: ComponentKind) =>
 
 export enum BuildRequest {
   /**
-   * submits a new simple build pipeline. The build could be requested at any time regardless PaC Component configuration
-   */
-  triggerSimpleBuild = 'trigger-simple-build',
-  /**
    * submits a new pac build pipeline. The build could be requested at any time regardless PaC Component configuration
    */
   triggerPACBuild = 'trigger-pac-build',
