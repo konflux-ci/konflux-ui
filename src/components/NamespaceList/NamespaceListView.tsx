@@ -11,10 +11,7 @@ import {
 import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/question-circle-icon';
 import { GETTING_ACCESS_INTERNAL } from '~/consts/documentation';
 import { useInstanceVisibility } from '~/hooks/useUIInstance';
-import {
-  KonfluxInstanceVisibility,
-  KonfluxInstanceVisibilityType,
-} from '~/types/konflux-public-info';
+import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -27,33 +24,28 @@ import PageLayout from '../PageLayout/PageLayout';
 import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
 
-type NamespaceCreateButtonProps = {
-  instanceVisibility: KonfluxInstanceVisibilityType;
-};
+const NamespaceCreateButton = React.memo(() => {
+  const instanceVisibility = useInstanceVisibility();
 
-const NamespaceCreateButton: React.FC<NamespaceCreateButtonProps> = React.memo(
-  ({ instanceVisibility }) => {
-    if (instanceVisibility === KonfluxInstanceVisibility.PRIVATE) {
-      return (
-        <ExternalLink variant="primary" href={GETTING_ACCESS_INTERNAL}>
-          Go to create namespace instructions
-        </ExternalLink>
-      );
-    }
-
+  if (instanceVisibility === KonfluxInstanceVisibility.PRIVATE) {
     return (
-      <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
-        <Flex className="pf-v5-u-mt-sm" data-testid="namespace-create-tooltip">
-          <QuestionCircleIcon />
-        </Flex>
-      </Tooltip>
+      <ExternalLink variant="primary" href={GETTING_ACCESS_INTERNAL}>
+        Go to create namespace instructions
+      </ExternalLink>
     );
-  },
-);
+  }
+
+  return (
+    <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
+      <Flex className="pf-v5-u-mt-sm" data-testid="namespace-create-tooltip">
+        <QuestionCircleIcon />
+      </Flex>
+    </Tooltip>
+  );
+});
 
 const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
-  const instanceVisibility = useInstanceVisibility();
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -95,7 +87,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 <br />
                 To create a namespace using GitOps, follow the instruction.
               </EmptyStateBody>
-              <NamespaceCreateButton instanceVisibility={instanceVisibility} />
+              <NamespaceCreateButton />
             </AppEmptyState>
           ) : (
             <>
@@ -106,7 +98,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                 onClearFilters={onClearFilters}
                 dataTest="namespace-list-toolbar"
               >
-                <NamespaceCreateButton instanceVisibility={instanceVisibility} />
+                <NamespaceCreateButton />
               </BaseTextFilterToolbar>
               {filteredNamespaces.length !== 0 ? (
                 <Table
