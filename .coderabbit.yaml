@@ -1,0 +1,59 @@
+version: 1
+
+# Add this new section at the top level
+tone_instructions: 'Provide concise, professional summaries without poems, creative elements, or ASCII art. Focus on technical details and actionable insights.'
+
+# Files to include and exclude
+include:
+  - '**/*.ts'
+  - '**/*.tsx'
+  - '**/*.scss'
+  - 'package.json'
+  - '**/*.yaml'
+  - '**/*.yml'
+  - '**/*.md'
+  - '**/*.js'
+  - '**/*.cjs'
+  - '**/*.mjs'
+
+exclude:
+  - 'dist/**'
+  - 'node_modules/**'
+  - 'coverage/**'
+
+rules:
+  # ✅ Complexity
+  complexity:
+    maxFunctionLength: 60
+    maxNestedBlocks: 3
+
+  # ✅ Naming
+  naming:
+    enforcePascalCaseForComponents: true
+
+  # ✅ TypeScript rules
+  typescript:
+    enforceStrictNullChecks: true
+    preferReadonlyProps: true
+    suggestBetterTypes: true
+
+  # ✅ React rules
+  react:
+    enforceHooksRules: true
+    preferFunctionComponents: true
+    avoidInlineStyles: true
+
+  # ✅ Performance
+  performance:
+    avoidUnnecessaryRerenders: true
+    suggestMemoization: true
+
+  # ✅ Architecture & Readability
+  architecture:
+    enforceSeparationOfConcerns: true
+    suggestFolderStructure: true
+    suggestCodeSplitting: true
+
+limits:
+  maxFileSizeKB: 500
+  maxReviewTimeMinutes: 60

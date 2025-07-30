@@ -46,6 +46,7 @@ jest.mock('react-router-dom', () => {
     ...actual,
     Link: (props) => <a href={props.to}>{props.children}</a>,
     useNavigate: jest.fn(),
+    useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
   };
 });
 
