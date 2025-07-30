@@ -5,6 +5,7 @@ import { screen, fireEvent, waitFor, render } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useInstanceVisibility } from '~/hooks/useUIInstance';
 import { NamespaceKind } from '~/types';
+import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import { mockNamespaceHooks, mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   createReactRouterMock,
@@ -74,7 +75,7 @@ describe('NamespaceListView', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseInstanceVisibility.mockReturnValue('private');
+    mockUseInstanceVisibility.mockReturnValue(KonfluxInstanceVisibility.PRIVATE);
   });
 
   it('should render a spinner while loading namespaces', () => {
@@ -232,7 +233,7 @@ describe('NamespaceListView', () => {
       namespaces: mockNamespaces,
       namespacesLoaded: true,
     });
-    mockUseInstanceVisibility.mockReturnValue('public');
+    mockUseInstanceVisibility.mockReturnValue(KonfluxInstanceVisibility.PUBLIC);
 
     render(NamespaceList);
 

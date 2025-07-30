@@ -35,11 +35,17 @@ export type KonfluxPublicInfoIntegrations = {
   };
 };
 
-export type KonfluxPublicInfoVisibility = 'public' | 'private';
+export const KonfluxInstanceVisibility = {
+  PUBLIC: 'public',
+  PRIVATE: 'private',
+} as const;
+
+export type KonfluxInstanceVisibilityType =
+  (typeof KonfluxInstanceVisibility)[keyof typeof KonfluxInstanceVisibility];
 
 export type KonfluxPublicInfo = {
   environment?: string;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
-  visibility?: KonfluxPublicInfoVisibility;
+  visibility?: KonfluxInstanceVisibilityType;
 };

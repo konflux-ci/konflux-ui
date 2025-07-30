@@ -11,7 +11,10 @@ import {
 import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/question-circle-icon';
 import { GETTING_ACCESS_INTERNAL } from '~/consts/documentation';
 import { useInstanceVisibility } from '~/hooks/useUIInstance';
-import { KonfluxPublicInfoVisibility } from '~/types/konflux-public-info';
+import {
+  KonfluxInstanceVisibility,
+  KonfluxInstanceVisibilityType,
+} from '~/types/konflux-public-info';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -25,12 +28,12 @@ import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
 
 type NamespaceCreateButtonProps = {
-  instanceVisibility: KonfluxPublicInfoVisibility;
+  instanceVisibility: KonfluxInstanceVisibilityType;
 };
 
 const NamespaceCreateButton: React.FC<NamespaceCreateButtonProps> = React.memo(
   ({ instanceVisibility }) => {
-    if (instanceVisibility === 'private') {
+    if (instanceVisibility === KonfluxInstanceVisibility.PRIVATE) {
       return (
         <ExternalLink variant="primary" href={GETTING_ACCESS_INTERNAL}>
           Go to create namespace instructions
