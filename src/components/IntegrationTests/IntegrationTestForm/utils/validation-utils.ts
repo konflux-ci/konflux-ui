@@ -4,6 +4,7 @@ import { resourceNameYupValidation } from '../../../../utils/validation-utils';
 export const integrationTestValidationSchema = yup.object({
   integrationTest: yup.object({
     name: resourceNameYupValidation,
+    resourceKind: yup.string().required('Required'),
     url: yup
       .string()
       .required('Required')
