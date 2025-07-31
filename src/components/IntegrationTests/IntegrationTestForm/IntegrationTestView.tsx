@@ -86,6 +86,7 @@ const IntegrationTestView: React.FunctionComponent<
       params: getFormParamValues(integrationTest?.spec?.params),
       contexts: getFormContextValues(integrationTest),
       optional: integrationTest?.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true',
+      resourceKind: integrationTest?.spec?.resolverRef.resourceKind ?? '',
     },
     isDetected: true,
   };
