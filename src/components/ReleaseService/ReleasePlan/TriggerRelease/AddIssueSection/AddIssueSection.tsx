@@ -102,7 +102,7 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
             <TextContent className="pf-v5-u-mt-xs">
               <Text component={TextVariants.h4} className="pf-v5-u-mt-0 pf-v5-u-pt-0">
                 {isBug
-                  ? 'Are there any bug fixes you would like to add to this release?'
+                  ? 'Are there any Jira issues you would like to add to this release?'
                   : 'Are there any CVEs you would like to add to this release?'}
               </Text>
             </TextContent>
