@@ -4,6 +4,7 @@ import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
+import LogViewer from './LogViewer';
 
 import './Logs.scss';
 import './MultiStreamLogs.scss';
@@ -17,19 +18,12 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
   taskRun,
   setCurrentLogsGetter,
 }) => {
-  const scrollPane = React.useRef<HTMLDivElement>();
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [trResults, trLoaded, trError] = useTRTaskRunLog(taskRun.metadata.namespace, taskRun);
 
   React.useEffect(() => {
-    setCurrentLogsGetter(() => scrollPane.current?.innerText);
-  }, [setCurrentLogsGetter]);
-
-  React.useEffect(() => {
-    if (!trError && trLoaded && scrollPane.current && trResults) {
-      scrollPane.current.scrollTop = scrollPane.current.scrollHeight;
-    }
-  }, [trError, trLoaded, trResults]);
+    setCurrentLogsGetter(() => trResults);
+  }, [setCurrentLogsGetter, trResults]);
 
   const errorMessage =
     (trError as HttpError)?.code === 404
@@ -50,11 +44,7 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
           </span>
         )}
       </div>
-      <div
-        className="multi-stream-logs__container"
-        data-testid="tr-logs-task-container"
-        ref={scrollPane}
-      >
+      <div className="multi-stream-logs__container" data-testid="tr-logs-task-container">
         <div className="multi-stream-logs__container__logs" data-testid="tr-logs-container">
           {errorMessage && (
             <div className="pipeline-run-logs__logtext" data-testid="tr-logs-error-message">
@@ -64,11 +54,7 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
           {!errorMessage && trLoaded ? (
             <div className="logs" data-testid="tr-logs-container">
               <p className="logs__name">{taskName}</p>
-              <div>
-                <div className="logs__content" data-testid="tr-logs-content">
-                  {trResults}
-                </div>
-              </div>
+              <LogViewer data={trResults} autoScroll />
             </div>
           ) : null}
         </div>
