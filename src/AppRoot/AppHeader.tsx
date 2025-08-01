@@ -12,9 +12,19 @@ import { BarsIcon } from '@patternfly/react-icons/dist/esm/icons/bars-icon';
 import konfluxLogo from '../assets/konflux.svg';
 import { Header } from '../components/Header/Header';
 
-export const AppHeader: React.FC<{ isSideBarOpen: boolean; onSideBarOpen: () => void }> = ({
+interface AppHeaderProos {
+  isSideBarOpen: boolean;
+  onSideBarOpen: () => void;
+  isDrawerExpanded: boolean;
+  toggleDrawer: () => void;
+  unreadCount: number;
+}
+export const AppHeader: React.FC<AppHeaderProos> = ({
   isSideBarOpen,
   onSideBarOpen,
+  isDrawerExpanded,
+  toggleDrawer,
+  unreadCount,
 }) => {
   return (
     <Masthead>
@@ -35,7 +45,11 @@ export const AppHeader: React.FC<{ isSideBarOpen: boolean; onSideBarOpen: () => 
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>
-        <Header />
+        <Header
+          isDrawerExpanded={isDrawerExpanded}
+          toggleDrawer={toggleDrawer}
+          unreadCount={unreadCount}
+        />
       </MastheadContent>
     </Masthead>
   );
