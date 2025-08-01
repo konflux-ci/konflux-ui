@@ -12,6 +12,7 @@ export type IntegrationTestFormValues = {
   environmentType?: string;
   params?: Param[];
   contexts?: Context[];
+  resourceKind: string;
 };
 
 export enum IntegrationTestAnnotations {

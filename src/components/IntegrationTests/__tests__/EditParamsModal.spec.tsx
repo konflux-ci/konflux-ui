@@ -19,7 +19,7 @@ describe('EditParamsModal', () => {
     formikRenderer(<EditParamsModal intTest={MockIntegrationTestsWithParams[1]} />, initialValues);
 
     await waitFor(() => {
-      screen.getByText('Parameters');
+      screen.getByText('Show parameters');
       screen.queryByText('colors');
       screen.queryByText('animals');
     });
@@ -29,7 +29,7 @@ describe('EditParamsModal', () => {
     formikRenderer(<EditParamsModal intTest={MockIntegrationTestsWithParams[0]} />, initialValues);
 
     await waitFor(() => {
-      screen.getByText('Parameters');
+      screen.getByText('Show parameters');
       screen.queryByText('colors');
       screen.queryByText('red');
       screen.queryByText('green');
