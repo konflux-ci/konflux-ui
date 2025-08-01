@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
-import { NAMESPACE_LIST_PATH } from '@routes/paths';
+import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
 import { KonfluxBanner } from '~/components/KonfluxBanner/KonfluxBanner';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
@@ -11,7 +11,11 @@ import ActivePageAlert from './ActivePageAlert';
 import { AppHeader } from './AppHeader';
 import { AppSideBar } from './AppSideBar';
 
-const namespaceSwitcherNotAllowedRoutes = [NAMESPACE_LIST_PATH.path, '/'];
+const namespaceSwitcherNotAllowedRoutes = [
+  RELEASE_MONITOR_PATH.path,
+  NAMESPACE_LIST_PATH.path,
+  '/',
+];
 
 export const AppRoot: React.FC = () => {
   const [isSideBarOpen, setSideBarOpen] = React.useState<boolean>(true);
