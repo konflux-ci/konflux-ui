@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react';
+import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import { mockLocation } from '../../utils/test-utils';
 import { useKonfluxPublicInfo } from '../useKonfluxPublicInfo';
 import {
@@ -7,6 +8,7 @@ import {
   useSbomUrl,
   useBombinoUrl,
   useUIInstance,
+  useInstanceVisibility,
 } from '../useUIInstance';
 
 jest.mock('../useKonfluxPublicInfo');
@@ -126,5 +128,25 @@ describe('useBombinoUrl', () => {
 
     const { result } = renderHook(() => useBombinoUrl());
     expect(result.current).toBe('https://custom-bombino-url.com');
+  });
+
+  describe('useInstanceVisibility', () => {
+    it('should return the correct instance visibility', () => {
+      (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+        { visibility: KonfluxInstanceVisibility.PUBLIC },
+        true,
+        null,
+      ]);
+
+      const { result } = renderHook(() => useInstanceVisibility());
+      expect(result.current).toBe(KonfluxInstanceVisibility.PUBLIC);
+    });
+
+    it('should return "public" if the instance is not specified', () => {
+      (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{ visibility: undefined }, true, null]);
+
+      const { result } = renderHook(() => useInstanceVisibility());
+      expect(result.current).toBe(KonfluxInstanceVisibility.PUBLIC);
+    });
   });
 });

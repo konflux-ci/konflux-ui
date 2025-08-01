@@ -35,8 +35,17 @@ export type KonfluxPublicInfoIntegrations = {
   };
 };
 
+export const KonfluxInstanceVisibility = {
+  PUBLIC: 'public',
+  PRIVATE: 'private',
+} as const;
+
+export type KonfluxInstanceVisibilityType =
+  (typeof KonfluxInstanceVisibility)[keyof typeof KonfluxInstanceVisibility];
+
 export type KonfluxPublicInfo = {
   environment?: string;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
+  visibility?: KonfluxInstanceVisibilityType;
 };
