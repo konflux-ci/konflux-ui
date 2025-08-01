@@ -16,12 +16,12 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
-import { HttpError } from '../../../../k8s/error';
 import {
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
@@ -32,7 +32,6 @@ import {
 } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
-import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
@@ -52,12 +51,15 @@ import { getSourceUrl } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
+
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
   const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
+  const pipelineRunErrorState = useErrorState(error, loaded, 'pipeline run');
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
+  const taskRunErrorState = useErrorState(taskRunError, taskRunsLoaded, 'task runs', true);
 
   const snapshotStatusAnnotation =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
@@ -70,18 +72,6 @@ const PipelineRunDetailsTab: React.FC = () => {
     }
   }, [snapshotStatusAnnotation]);
 
-  const loadError = error || taskRunError;
-  if (loadError) {
-    const httpError = HttpError.fromCode((loadError as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title={`Unable to load pipeline run ${pipelineRunName}`}
-        body={httpError.message}
-      />
-    );
-  }
-
   if (!(loaded && taskRunsLoaded)) {
     return (
       <Bullseye>
@@ -89,6 +79,11 @@ const PipelineRunDetailsTab: React.FC = () => {
       </Bullseye>
     );
   }
+
+  if (error) {
+    return pipelineRunErrorState;
+  }
+
   const results = getPipelineRunStatusResults(pipelineRun);
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
@@ -120,7 +115,11 @@ const PipelineRunDetailsTab: React.FC = () => {
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
         Pipeline run details
       </Title>
-      <PipelineRunVisualization pipelineRun={pipelineRun} error={error} taskRuns={taskRuns} />
+      {taskRunError ? (
+        <div className="pf-v5-u-pb-lg">{taskRunErrorState}</div>
+      ) : (
+        <PipelineRunVisualization pipelineRun={pipelineRun} error={error} taskRuns={taskRuns} />
+      )}
       {!error && (
         <>
           <Flex direction={{ default: 'row' }}>
@@ -290,7 +289,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                     )}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                <ScanDescriptionListGroup taskRuns={taskRuns} showLogsLink />
+                {!taskRunError && <ScanDescriptionListGroup taskRuns={taskRuns} showLogsLink />}
                 <DescriptionListGroup>
                   <DescriptionListTerm>Component</DescriptionListTerm>
                   <DescriptionListDescription>

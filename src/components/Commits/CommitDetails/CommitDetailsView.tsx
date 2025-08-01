@@ -1,11 +1,11 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { HttpError } from '~/k8s/error';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
-import { HttpError } from '../../../k8s/error';
-import { PipelineRunGroupVersionKind } from '../../../models';
 import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -32,6 +32,7 @@ const CommitDetailsView: React.FC = () => {
     applicationName,
     commitName,
   );
+  const errorState = useErrorState(loadErr, loaded, 'commit details');
 
   const commit = React.useMemo(
     () =>
@@ -49,23 +50,28 @@ const CommitDetailsView: React.FC = () => {
 
   const commitDisplayName = getCommitShortName(commitName);
 
-  if (loadErr || (loaded && !commit)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
-        title={`Could not load ${PipelineRunGroupVersionKind.kind}`}
-        body={(loadErr as { message: string })?.message ?? 'Not found'}
-      />
-    );
-  }
-
-  if (!commit) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
   }
+
+  if (loadErr) {
+    return errorState;
+  }
+
+  if (!commit) {
+    return (
+      <ErrorEmptyState
+        httpError={HttpError.fromCode(404)}
+        title={`Unable to load commit details`}
+        body={'Not found'}
+      />
+    );
+  }
+
   return (
     <SidePanelHost>
       <DetailsPage

@@ -8,6 +8,7 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import emptyStateImgUrl from '../../assets/Application.svg';
 import { useApplications } from '../../hooks/useApplications';
 import { useSortedResources } from '../../hooks/useSortedResources';
@@ -54,7 +55,7 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
     [activeSortDirection, activeSortIndex],
   );
 
-  const [applications, loaded] = useApplications(namespace);
+  const [applications, loaded, error] = useApplications(namespace);
   const filteredApplications = React.useMemo(() => {
     const lowerCaseNameFilter = nameFilter.toLowerCase();
     return applications?.filter(
@@ -71,12 +72,18 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
     sortPaths,
   );
 
+  const applicationsErrorState = useErrorState(error, loaded, 'applications');
+
   if (!loaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
     );
+  }
+
+  if (error) {
+    return applicationsErrorState;
   }
 
   return (

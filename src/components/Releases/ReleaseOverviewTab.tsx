@@ -12,8 +12,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { HttpError } from '~/k8s/error';
-import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
+import { useErrorState } from '~/shared/hooks/useErrorState';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
@@ -23,10 +22,12 @@ import { useNamespace } from '../../shared/providers/Namespace';
 import { calculateDuration } from '../../utils/pipeline-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
+
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [release, loaded, isError] = useRelease(namespace, releaseName);
+  const releaseErrorState = useErrorState(isError, loaded, 'release');
   const status = useReleaseStatus(release);
 
   if (!loaded) {
@@ -37,14 +38,7 @@ const ReleaseOverviewTab: React.FC = () => {
     );
   }
   if (isError) {
-    const httpError = HttpError.fromCode((isError as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title={`Unable to load release ${releaseName}`}
-        body={(isError as { message: string }).message}
-      />
-    );
+    return releaseErrorState;
   }
 
   const applicationName = release.metadata.labels[PipelineRunLabel.APPLICATION];

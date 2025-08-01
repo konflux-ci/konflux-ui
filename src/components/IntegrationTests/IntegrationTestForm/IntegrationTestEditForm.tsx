@@ -2,9 +2,8 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestScenarios';
-import { HttpError } from '../../../k8s/error';
 import { RouterParams } from '../../../routes/utils';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+import { useErrorState } from '../../../shared/hooks/useErrorState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import IntegrationTestView from './IntegrationTestView';
 
@@ -16,16 +15,10 @@ export const IntegrationTestEditForm: React.FC = () => {
     applicationName,
     integrationTestName,
   );
+  const errorState = useErrorState(error, loaded, 'integration test');
 
   if (error) {
-    const httpError = HttpError.fromCode((error as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode((error as { code: number }).code)}
-        title={`Unable to load integration test ${integrationTestName}`}
-        body={httpError.message}
-      />
-    );
+    return errorState;
   }
 
   if (!loaded) {

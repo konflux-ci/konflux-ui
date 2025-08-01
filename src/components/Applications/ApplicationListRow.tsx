@@ -14,7 +14,7 @@ const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Appli
   obj,
 }) => {
   const namespace = useNamespace();
-  const [components, loaded] = useComponents(namespace, obj.metadata?.name);
+  const [components, loaded, error] = useComponents(namespace, obj.metadata?.name);
   const actions = useApplicationActions(obj);
 
   const displayName = obj.spec.displayName || obj.metadata?.name;
@@ -34,7 +34,11 @@ const ApplicationListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Appli
       </TableData>
       <TableData className={applicationTableColumnClasses.components}>
         {loaded ? (
-          pluralize(components.length, 'Component')
+          error ? (
+            'Failed to load components'
+          ) : (
+            pluralize(components.length, 'Component')
+          )
         ) : (
           <Skeleton width="50%" screenreaderText="Loading component count" />
         )}
