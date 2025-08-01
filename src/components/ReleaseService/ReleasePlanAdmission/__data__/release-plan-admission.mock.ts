@@ -6,7 +6,7 @@ export const mockReleasePlanAdmissions = [
       creationTimestamp: '2023-08-03T15:08:32Z',
       generation: 1,
       labels: {
-        'release.appstudio.openshift.io/auto-release': 'true',
+        'release.appstudio.openshift.io/block-releases': 'true',
       },
       name: 'test-rpa',
       namespace: 'rorai-tenant',
@@ -27,7 +27,7 @@ export const mockReleasePlanAdmissions = [
       creationTimestamp: '2023-08-03T15:08:33Z',
       generation: 1,
       labels: {
-        'release.appstudio.openshift.io/auto-release': 'true',
+        'release.appstudio.openshift.io/block-releases': 'false',
       },
       name: 'test-rpa-2',
       namespace: 'rorai-tenant',
