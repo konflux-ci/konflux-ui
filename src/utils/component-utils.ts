@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useApplicationPipelineGitHubApp } from '../hooks/useApplicationPipelineGitHubApp';
 import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel } from '../models';
 import { ComponentKind } from '../types';
@@ -88,10 +87,6 @@ export const isPACEnabled = (component: ComponentKind) =>
 
 export enum BuildRequest {
   /**
-   * submits a new simple build pipeline. The build could be requested at any time regardless PaC Component configuration
-   */
-  triggerSimpleBuild = 'trigger-simple-build',
-  /**
    * submits a new pac build pipeline. The build could be requested at any time regardless PaC Component configuration
    */
   triggerPACBuild = 'trigger-pac-build',
@@ -148,26 +143,10 @@ export const startNewBuild = (component: ComponentKind) =>
       {
         op: 'add',
         path: `/metadata/annotations/${BUILD_REQUEST_ANNOTATION.replace('/', '~1')}`,
-        value: isPACEnabled(component)
-          ? BuildRequest.triggerPACBuild
-          : BuildRequest.triggerSimpleBuild,
+        value: BuildRequest.triggerPACBuild,
       },
     ],
   });
-
-const GIT_URL_PREFIX = 'https://github.com/';
-
-export const useURLForComponentPRs = (components: ComponentKind[]): string => {
-  const { name: PR_BOT_NAME } = useApplicationPipelineGitHubApp();
-  const repos = components.reduce((acc, component) => {
-    const gitURL = component.spec.source?.git?.url;
-    if (gitURL && isPACEnabled(component) && gitURL.startsWith('https://github.com/')) {
-      acc = `${acc}+repo:${gitURL.replace(GIT_URL_PREFIX, '').replace(/.git$/i, '')}`;
-    }
-    return acc;
-  }, '');
-  return `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
-};
 
 export const useComponentBuildStatus = (component: ComponentKind): ComponentBuildStatus =>
   React.useMemo(() => getComponentBuildStatus(component), [component]);
