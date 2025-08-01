@@ -18,7 +18,7 @@ export type WhatsNextItem = {
   id: number;
   title: string;
   description: string;
-  icon: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   helpId?: string;
   noAction?: boolean;
   helpLink?: string;
@@ -64,11 +64,13 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
         What&apos;s next?
       </Title>
       {whatsNextItems.map((item) => {
+        const ItemIcon = item.icon;
+
         return (
           !(localStorageItem as number[])?.includes(item?.id) && (
             <Card className="whats-next-card" key={item.id} isFlat>
               <SplitItem>
-                <img src={item.icon} alt={item.title} className="whats-next-card__icon" />
+                <ItemIcon aria-label={item.title} role="img" className="whats-next-card__icon" />
               </SplitItem>
               <SplitItem className="whats-next-card__content" isFilled>
                 <Title headingLevel="h4">{item.title}</Title>
