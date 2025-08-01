@@ -8,16 +8,14 @@ function formatTimeUTC(date: Date): string {
 }
 
 const now = new Date();
-const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 const oneHourEarlier = new Date(now.getTime() - 60 * 60 * 1000);
 const halfHourEarlier = new Date(now.getTime() - 30 * 60 * 1000);
 
-const futureStartTime = formatTimeUTC(oneHourLater);
 const pastStartTime = formatTimeUTC(oneHourEarlier);
 const pastEndTime = formatTimeUTC(halfHourEarlier);
 
 const mockedDayOfWeek = now.getUTCDay();
-const mockedDayOfMonth = now.getUTCDate();
+const mockedDayOfMonth = now.getUTCDate(); // return the exact current day: 1-31
 const mockedYear = now.getUTCFullYear();
 const mockedMonth = now.getUTCMonth() + 1;
 
@@ -185,7 +183,7 @@ export const mockedInvalidMonthlyBannerConfig = {
     'banner-content.yaml': generateBannerYAMLList([
       generateBannerYAML({
         summary: 'Monthly banner',
-        dayOfMonth: mockedDayOfMonth + 1,
+        dayOfMonth: mockedDayOfMonth + 2,
         startTime: '00:00',
         endTime: '23:59',
       }),
@@ -199,8 +197,8 @@ export const mockedValidMonthlyBannerConfigWithInvalidTimeRange = {
     'banner-content.yaml': generateBannerYAMLList([
       generateBannerYAML({
         summary: 'Monthly banner',
-        dayOfMonth: mockedDayOfMonth + 1,
-        startTime: futureStartTime,
+        dayOfMonth: mockedDayOfMonth,
+        startTime: '23:59',
         endTime: '23:59',
       }),
     ]),
@@ -213,7 +211,7 @@ export const mockedObsoletedMonthlyBannerConfigWithTimeRange = {
     'banner-content.yaml': generateBannerYAMLList([
       generateBannerYAML({
         summary: 'Monthly banner',
-        dayOfMonth: mockedDayOfMonth + 1,
+        dayOfMonth: mockedDayOfMonth,
         startTime: pastStartTime,
         endTime: pastEndTime,
       }),
