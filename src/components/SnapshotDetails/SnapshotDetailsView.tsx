@@ -5,7 +5,7 @@ import { SnapshotLabels } from '../../consts/snapshots';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { HttpError } from '../../k8s/error';
-import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
+import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
@@ -66,7 +66,10 @@ const SnapshotDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `#`,
+            path: SNAPSHOT_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+            }),
             name: 'Snapshots',
           },
           {
