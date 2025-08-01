@@ -14,9 +14,11 @@ export const ComponentRelationStatusIcon: React.FC<{
   const isInRelationship = !!(
     component.spec?.['build-nudges-ref']?.length ?? component.status?.['build-nudged-by']?.length
   );
+  const RelationIcon = relationIcon;
+
   return isInRelationship ? (
     <Tooltip content="This component is in a relationship">
-      <img
+      <RelationIcon
         style={style}
         className={css('component-relation-status-icon', className)}
         src={relationIcon}

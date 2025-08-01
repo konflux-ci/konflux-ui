@@ -99,6 +99,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       {!snapshots || snapshots.length === 0 ? (
         <AppEmptyState
           emptyStateImg={emptySnapshotImgUrl}
+          // emptyStateImg={undefined}
           title="No snapshots found"
           data-test="snapshots-empty-state"
         >
