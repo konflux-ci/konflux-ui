@@ -2,10 +2,16 @@ import * as React from 'react';
 import {
   Bullseye,
   EmptyStateBody,
+  Flex,
   PageSection,
   PageSectionVariants,
   Spinner,
+  Tooltip,
 } from '@patternfly/react-core';
+import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/question-circle-icon';
+import { GETTING_ACCESS_INTERNAL } from '~/consts/documentation';
+import { useInstanceVisibility } from '~/hooks/useUIInstance';
+import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -18,14 +24,25 @@ import PageLayout from '../PageLayout/PageLayout';
 import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
 
-const NamespaceCreateButton = () => (
-  <ExternalLink
-    variant="primary"
-    href="https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html"
-  >
-    Go to create namespace instructions
-  </ExternalLink>
-);
+const NamespaceCreateButton = React.memo(() => {
+  const instanceVisibility = useInstanceVisibility();
+
+  if (instanceVisibility === KonfluxInstanceVisibility.PRIVATE) {
+    return (
+      <ExternalLink variant="primary" href={GETTING_ACCESS_INTERNAL}>
+        Go to create namespace instructions
+      </ExternalLink>
+    );
+  }
+
+  return (
+    <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
+      <Flex className="pf-v5-u-mt-sm" data-testid="namespace-create-tooltip">
+        <QuestionCircleIcon />
+      </Flex>
+    </Tooltip>
+  );
+});
 
 const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
