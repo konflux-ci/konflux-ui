@@ -2,7 +2,7 @@ export const releasesPlanAdmissionTableColumnClasses = {
   name: 'pf-m-width-20 wrap-column',
   application: 'pf-m-width-30',
   source: 'pf-m-width-20',
-  autoRelease: 'pf-m-width-20',
+  blockReleases: 'pf-m-width-20',
   kebab: 'pf-c-table__action',
 };
 
@@ -21,8 +21,8 @@ const ReleasePlanAdmissionListHeader = () => {
       props: { className: releasesPlanAdmissionTableColumnClasses.source },
     },
     {
-      title: 'Auto release',
-      props: { className: releasesPlanAdmissionTableColumnClasses.autoRelease },
+      title: 'Block releases',
+      props: { className: releasesPlanAdmissionTableColumnClasses.blockReleases },
     },
     {
       title: ' ',
