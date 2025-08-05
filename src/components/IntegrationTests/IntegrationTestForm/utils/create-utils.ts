@@ -79,6 +79,7 @@ export const editIntegrationTest = (
             }
           : null,
       resolverRef: {
+        ...integrationTest.spec.resolverRef,
         resolver: ResolverType.GIT,
         params: [
           { name: ResolverRefParams.URL, value: url },

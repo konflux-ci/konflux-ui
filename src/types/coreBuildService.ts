@@ -22,6 +22,7 @@ export type IntegrationTestScenarioSpec = {
   resolverRef?: {
     resolver: ResolverType;
     params: ResolverParam[];
+    resourceKind?: string;
   };
   pipeline?: string;
   bundle?: string;
