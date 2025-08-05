@@ -9,6 +9,7 @@ import {
 import { useField } from 'formik';
 import { CheckboxField, InputField, RadioGroupField } from 'formik-pf';
 import HelpPopover from '~/components/HelpPopover';
+import { LEARN_MORE_ABOUT_INTEGRATION_TESTS } from '~/consts/documentation';
 import { ExternalLink } from '~/shared';
 import { ResourceKind } from '~/types/coreBuildService';
 import { RESOURCE_NAME_REGEX_MSG } from '../../../utils/validation-utils';
@@ -38,11 +39,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
             <Text component={TextVariants.p}>
               To test all your components after code commit, add integration test. Integration tests
               run in parallel using temporary environments.
-              <ExternalLink
-                href="https://konflux-ci.dev/docs/testing/integration/"
-                text="Learn more"
-                icon
-              />
+              <ExternalLink href={LEARN_MORE_ABOUT_INTEGRATION_TESTS} text="Learn more" icon />
             </Text>
           </TextContent>
         </>

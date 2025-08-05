@@ -88,8 +88,8 @@ export const editIntegrationTest = (
             }
           : null,
       resolverRef: {
-        resourceKind,
         ...integrationTest.spec.resolverRef,
+        resourceKind,
         resolver: ResolverType.GIT,
         params: [
           { name: ResolverRefParams.URL, value: url },
@@ -215,10 +215,10 @@ export const getURLForParam = (params: ResolverParam[], paramName: string): stri
 
 export const getLabelForParam = (paramName: string): string => {
   if (paramName === ResolverRefParams.URL) {
-    return 'Git URL';
+    return 'Git Repository URL';
   }
   if (paramName === ResolverRefParams.PATH) {
-    return 'Path in repository';
+    return 'Path in the repository';
   }
   return `${paramName.charAt(0).toUpperCase()}${paramName.slice(1)}`;
 };

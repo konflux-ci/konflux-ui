@@ -3,12 +3,12 @@ import { Form, FormSection, PageSection, PageSectionVariants } from '@patternfly
 import { useFormikContext } from 'formik';
 import isEmpty from 'lodash/isEmpty';
 import { INTEGRATION_TEST_LIST_PATH } from '@routes/paths';
+import { LEARN_MORE_ABOUT_INTEGRATION_TESTS } from '~/consts/documentation';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ExternalLink, FormFooter } from '../../../shared';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import IntegrationTestSection from './IntegrationTestSection';
-
 // [TODO]: Refactor form styles from the shared style sheet
 import '../../../shared/style.scss';
 import './IntegrationTestForm.scss';
@@ -40,11 +40,7 @@ const IntegrationTestForm: React.FunctionComponent<
     <>
       To test all your components after code commit, add integration test. Integration tests run in
       parallel using temporary environments.
-      <ExternalLink
-        href="https://konflux-ci.dev/docs/testing/integration/"
-        text="Learn more"
-        icon
-      />
+      <ExternalLink href={LEARN_MORE_ABOUT_INTEGRATION_TESTS} text="Learn more" icon />
     </>
   );
 

@@ -163,9 +163,11 @@ describe('Create Utils', () => {
 
   it('Should return correct labels for params', () => {
     const resource = MockIntegrationTestsWithGit[0];
-    expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('Git URL');
+    expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('Git Repository URL');
     expect(getLabelForParam(resource.spec.resolverRef.params[1].name)).toBe('Revision');
-    expect(getLabelForParam(resource.spec.resolverRef.params[2].name)).toBe('Path in repository');
+    expect(getLabelForParam(resource.spec.resolverRef.params[2].name)).toBe(
+      'Path in the repository',
+    );
     expect(getLabelForParam('test-param' as ResolverRefParams)).toBe('Test-param');
   });
 

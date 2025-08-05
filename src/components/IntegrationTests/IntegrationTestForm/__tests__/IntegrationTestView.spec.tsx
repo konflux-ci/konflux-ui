@@ -91,17 +91,40 @@ const useApplicationsMock = useApplications as jest.Mock;
 
 describe('IntegrationTestView', () => {
   const user = userEvent.setup();
+
+  it('should init values from provided integration test', async () => {
+    const integrationTest = MockIntegrationTestsWithGit[1];
+    const wrapper = renderWithQueryClient(
+      <IntegrationTestViewWrapper>
+        <IntegrationTestView applicationName="test-app" integrationTest={integrationTest} />,
+      </IntegrationTestViewWrapper>,
+    );
+
+    const radioGroup = screen.getByLabelText('Pipeline');
+    await user.click(radioGroup);
+
+    expect(wrapper.getByLabelText(/Integration test name/).getAttribute('value')).toBe(
+      'test-app-test-2',
+    );
+
+    expect(wrapper.getByLabelText(/Git Repository URL/).getAttribute('value')).toEqual('test-url2');
+    expect(wrapper.getByLabelText(/Revision/).getAttribute('value')).toEqual('main2');
+
+    expect(wrapper.getByLabelText(/Path in the repository/).getAttribute('value')).toEqual(
+      'test-path2',
+    );
+  });
   beforeEach(() => {
     useApplicationsMock.mockReturnValue([[mockApplication], true]);
     watchResourceMock.mockReturnValue([[], true]);
     mockUseComponents.mockReturnValue([MockComponents, true]);
   });
-  const fillIntegrationTestForm = (wrapper: RenderResult) => {
+  const fillIntegrationTestForm = async (wrapper: RenderResult) => {
     fireEvent.input(wrapper.getByLabelText(/Integration test name/), {
       target: { value: 'new-test-name' },
     });
-    // const radioGroup = screen.getByLabelText('Pipeline Run');
-    // await user.click(radioGroup).then();
+    const radioGroup = screen.getByLabelText('Pipeline Run');
+    await user.click(radioGroup);
 
     fireEvent.input(wrapper.getByLabelText(/Git Repository URL/), {
       target: { value: 'quay.io/kpavic/test-bundle:pipeline' },
@@ -140,7 +163,7 @@ describe('IntegrationTestView', () => {
 
     const submitButton = wrapper.getByRole('button', { name: 'Add integration test' });
     expect(submitButton).toBeDisabled();
-    fillIntegrationTestForm(wrapper);
+    void fillIntegrationTestForm(wrapper);
     expect(submitButton).toBeEnabled();
   });
 
@@ -158,34 +181,11 @@ describe('IntegrationTestView', () => {
     );
     expect(wrapper).toBeTruthy();
 
-    fillIntegrationTestForm(wrapper);
+    void fillIntegrationTestForm(wrapper);
 
     const submitButton = wrapper.getByRole('button', { name: 'Add integration test' });
     expect(submitButton).toBeTruthy();
     expect(submitButton).toBeEnabled();
-  });
-
-  it('should init values from provided integration test', async () => {
-    const integrationTest = MockIntegrationTestsWithGit[1];
-    const wrapper = renderWithQueryClient(
-      <IntegrationTestViewWrapper>
-        <IntegrationTestView applicationName="test-app" integrationTest={integrationTest} />,
-      </IntegrationTestViewWrapper>,
-    );
-
-    const radioGroup = screen.getByLabelText('Pipeline');
-    await user.click(radioGroup);
-
-    expect(wrapper.getByLabelText(/Integration test name/).getAttribute('value')).toBe(
-      'test-app-test-2',
-    );
-
-    expect(wrapper.getByLabelText(/Git Repository URL/).getAttribute('value')).toEqual('test-url2');
-    expect(wrapper.getByLabelText(/Revision/).getAttribute('value')).toEqual('main2');
-
-    expect(wrapper.getByLabelText(/Path in the repository/).getAttribute('value')).toEqual(
-      'test-path2',
-    );
   });
 
   it('should be in edit mode', () => {

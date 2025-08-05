@@ -99,7 +99,7 @@ const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldNa
             )}
           />
           <HelperText>
-            Must select atleast one context but you have option to pick more if needed.
+            Must select at least one context but you have option to pick more if needed.
           </HelperText>
         </>
       ) : (
