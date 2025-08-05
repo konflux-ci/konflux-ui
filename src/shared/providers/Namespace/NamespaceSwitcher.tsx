@@ -23,7 +23,7 @@ export const NamespaceSwitcher: React.FC<
 
   const onSelect = (item: ContextMenuItem) => {
     // switch to new workspace but keep the first segment of the URL
-    navigate(pathname.replace(/\/ns\/([-a-z0-9]+)/, `/ns/${item.name}`));
+    navigate(pathname.replace(/\/ns\/[-a-z0-9]+\/?([-a-z0-9]*).*/, `/ns/${item.name}/$1`));
   };
 
   return namespaces?.length > 0 ? (
