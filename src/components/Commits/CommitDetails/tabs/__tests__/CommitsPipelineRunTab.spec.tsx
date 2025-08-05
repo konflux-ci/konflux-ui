@@ -34,6 +34,7 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(),
   useParams: jest.fn(),
+  useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
 jest.mock('../../../../../hooks/useTektonResults');
 jest.mock('../../../../../hooks/usePipelineRuns', () => ({

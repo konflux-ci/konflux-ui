@@ -47,6 +47,13 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'release-monitor': {
+    key: 'release-monitor',
+    description:
+      'New release monitor page that make user see all the related releases of viable namespaces',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 };
 
 export type FlagKey = keyof typeof FLAGS;
