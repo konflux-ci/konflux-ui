@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { renderHook } from '@testing-library/react';
 import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import { mockLocation } from '../../utils/test-utils';
@@ -100,6 +101,109 @@ describe('useSbomUrl', () => {
     const { result } = renderHook(() => useSbomUrl());
     const sbomUrl = result.current('test-image-hash');
     expect(sbomUrl).toBe('');
+  });
+
+  it('should handle undefined integrations gracefully', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: undefined,
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe('');
+  });
+
+  it('should handle undefined sbom_server gracefully', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: undefined,
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe('');
+  });
+
+  it('should prioritize sbom_sha URL when both sbom_sha and imageHash are provided', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: 'https://atlas.devshift.net/sbom/sha/<PLACEHOLDER>',
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/sha/test-sbom-sha');
+  });
+
+  it('should fallback to regular URL when sbom_sha is undefined but sbomSha parameter is provided', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: undefined,
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
+  });
+
+  it('should handle empty sbom_sha gracefully', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: '',
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
+  });
+
+  it('should return undefined when data is still loading', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, false, null]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe(undefined);
+  });
+
+  it('should return undefined when there is an error loading data', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, true, new Error('Failed to load')]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe(undefined);
   });
 });
 
