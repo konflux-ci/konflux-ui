@@ -35,9 +35,35 @@ done
 echo "is_authorized: $is_authorized"
 
 if [ $is_authorized -eq 1 ]; then
-    # Use a fixed trailer string.
-    TRAILER="Assisted-by: Cursor"
+    # Detect which AI assistant was used based on commit patterns or environment
+    AI_ASSISTANT="Cursor"  # Default to Cursor
+    
+    # Check for Claude-specific indicators in the commit message or staged files
+    if grep -qiE "(claude|anthropic)" "$COMMIT_MSG_FILE" 2>/dev/null; then
+        AI_ASSISTANT="Claude"
+    else
+        # Check staged files for Claude-specific patterns
+        for file in $(git diff --cached --name-only 2>/dev/null || true); do
+            if [ -f "$file" ] && grep -qiE "(claude|anthropic|🤖 Generated with.*Claude)" "$file" 2>/dev/null; then
+                AI_ASSISTANT="Claude"
+                break
+            fi
+        done
+        
+        # Check for CLAUDE.md file existence as indicator
+        if [ -f "CLAUDE.md" ]; then
+            # If CLAUDE.md exists and there are significant changes, likely Claude was used
+            CHANGED_LINES=$(git diff --cached --numstat | awk '{print $1+$2}' | awk '{sum+=$1} END {print sum+0}')
+            if [ "${CHANGED_LINES:-0}" -gt 10 ]; then
+                AI_ASSISTANT="Claude"
+            fi
+        fi
+    fi
+    
+    # Use the detected AI assistant in the trailer
+    TRAILER="Assisted-by: $AI_ASSISTANT"
+    
     # Add the trailer if it doesn't already exist.
-    grep -qs "^$TRAILER" "$COMMIT_MSG_FILE" ||
+    grep -qs "^Assisted-by:" "$COMMIT_MSG_FILE" ||
         git interpret-trailers --in-place --trailer "$TRAILER" "$COMMIT_MSG_FILE"
 fi

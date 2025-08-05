@@ -1,0 +1,127 @@
+# AI Assistance Workflow for Claude
+
+Guidelines for working with Claude on the Konflux UI project, including commit attribution and development practices.
+
+## Development Workflow
+
+### Before Starting Work
+1. **Read existing code** - Always examine current implementation before making changes
+2. **Follow existing patterns** - Use the same coding style, import patterns, and component structure
+3. **Check for similar components** - Look for existing solutions before creating new ones
+4. **Understand the context** - Read related files and understand the feature's purpose
+
+### Code Modification Principles
+- **PREFER** editing existing files over creating new ones
+- **MAINTAIN** existing code style and patterns
+- **RESPECT** the project's architectural decisions
+- **FOLLOW** PatternFly component usage patterns
+- **KEEP** changes focused and minimal
+
+## AI Attribution System
+
+The project uses automated AI attribution through husky hooks. The system:
+
+### Automatic Detection
+- Detects Claude usage by checking for:
+  - "claude" or "anthropic" keywords in commit messages
+  - Claude-specific patterns in staged files
+  - Presence of CLAUDE.md file with significant changes (>10 lines)
+  - `🤖 Generated with.*Claude` patterns in code
+
+### Manual Indicators
+To ensure proper attribution, include these in your code when appropriate:
+```tsx
+// When major generation happens, add markers like:
+// Generated with Claude assistance
+/* Claude-assisted implementation */
+
+// Or in commit messages:
+"feat: add notification system (claude assisted)"
+```
+
+### Commit Attribution Format
+The system automatically adds:
+```
+Assisted-by: Claude
+```
+
+## Working with Existing Cursor Rules
+
+### Complementary Approach
+- **BUILD ON** existing Cursor rules, don't contradict them
+- **EXTEND** testing and styling conventions
+- **RESPECT** the established project structure from Cursor rules
+- **INTEGRATE** with existing development workflow
+
+### Key Cursor Rules to Follow
+1. **PatternFly Layout Components Only** - No custom HTML layouts
+2. **Component Structure** - Follow established file organization
+3. **Testing Patterns** - Use existing test utilities and patterns
+4. **Import Organization** - Follow the import order and restrictions
+
+## Code Generation Guidelines
+
+### When Generating Code
+```tsx
+// ✅ Good - Follows project patterns
+const NotificationHeader: React.FC<NotificationHeaderProps> = ({ onClose, notifications }) => {
+  const customText = useMemo(() => {
+    const total = notifications.length;
+    const recentCount = notifications.filter(/* ... */).length;
+    return `${total} total, ${recentCount} new (past hour)`;
+  }, [notifications]);
+
+  return (
+    <NotificationDrawerHeader 
+      onClose={onClose} 
+      customText={customText} 
+    />
+  );
+};
+```
+
+### Code Quality Standards
+- **TypeScript**: Use proper interfaces and type safety
+- **Testing**: Include comprehensive test coverage
+- **Accessibility**: Follow ARIA guidelines and semantic HTML
+- **Performance**: Use React best practices (useCallback, useMemo)
+- **Error Handling**: Handle loading and error states appropriately
+
+## Integration with Development Tools
+
+### Linting and Formatting
+- Code will be automatically formatted by Prettier
+- ESLint will check for import order and style issues
+- TypeScript will validate type safety
+- Follow the existing configuration without modification
+
+### Testing Integration
+- Use Jest and React Testing Library
+- Follow existing test patterns from `~/unit-test-utils/`
+- Ensure tests pass before committing
+- Maintain test coverage standards
+
+### Build Integration
+- Verify code builds successfully with `npm run build`
+- Check TypeScript compilation with `npm run type-checks`
+- Ensure all linting passes with `npm run lint`
+
+## Collaboration Guidelines
+
+### Code Reviews
+- Expect code to be reviewed by human developers
+- Write clear, self-documenting code
+- Include tests that demonstrate functionality
+- Follow semantic commit message patterns
+
+### Documentation
+- **AVOID** creating documentation files unless explicitly requested
+- **USE** inline comments sparingly and only for complex business logic
+- **RELY** on clear variable and function names for self-documentation
+
+### Feature Development
+- Use feature flags for new functionality during development
+- Integrate with existing routing and navigation patterns
+- Follow the established state management approach (useK8sWatchResource, React Query, Zustand)
+
+This workflow ensures Claude assistance integrates smoothly with the existing development practices and tools.
