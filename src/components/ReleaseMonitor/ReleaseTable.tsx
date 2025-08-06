@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { Bullseye, EmptyStateBody, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import {
+  Bullseye,
+  EmptyStateBody,
+  Spinner,
+  Text,
+  TextVariants,
+  Pagination,
+} from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import emptyStateImgUrl from '../../assets/Release.svg';
@@ -37,6 +44,11 @@ export const ReleaseTable: React.FC<ReleaseTableProps> = ({ releases, loading })
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
     SortByDirection.asc,
   );
+
+  // Pagination state
+  const [page, setPage] = React.useState<number>(1);
+  const [perPage, setPerPage] = React.useState<number>(10);
+
   const ReleaseListHeader = React.useMemo(
     () =>
       getReleasesListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
@@ -53,6 +65,35 @@ export const ReleaseTable: React.FC<ReleaseTableProps> = ({ releases, loading })
     sortPaths,
   );
 
+  // Pagination logic
+  const total = sortedReleases.length;
+  const paginatedReleases = React.useMemo(
+    () => sortedReleases.slice((page - 1) * perPage, page * perPage),
+    [sortedReleases, page, perPage],
+  );
+
+  // Reset to first page if current page is out of range after data updates
+  React.useEffect(() => {
+    if ((page - 1) * perPage >= total) {
+      setPage(1);
+    }
+  }, [total, page, perPage]);
+
+  const onSetPage = (
+    _event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+    newPage: number,
+  ) => {
+    setPage(newPage);
+  };
+
+  const onPerPageSelect = (
+    _event: React.MouseEvent | React.KeyboardEvent | MouseEvent,
+    newPerPage: number,
+  ) => {
+    setPerPage(newPerPage);
+    setPage(1);
+  };
+
   return (
     <>
       {loading ? (
@@ -61,17 +102,37 @@ export const ReleaseTable: React.FC<ReleaseTableProps> = ({ releases, loading })
         </Bullseye>
       ) : (
         <>
-          {!sortedReleases?.length ? (
+          <Pagination
+            itemCount={total}
+            perPage={perPage}
+            page={page}
+            onSetPage={onSetPage}
+            onPerPageSelect={onPerPageSelect}
+            variant="top"
+            isCompact
+            aria-label="Release List Pagination Top"
+          />
+          {!paginatedReleases.length ? (
             <ReleasesEmptyState />
           ) : (
             <Table
-              data={sortedReleases}
+              data={paginatedReleases}
               aria-label="Release List"
               Header={ReleaseListHeader}
               Row={ReleaseListRow}
               loaded={releases.length > 0}
             />
           )}
+          <Pagination
+            itemCount={total}
+            perPage={perPage}
+            page={page}
+            onSetPage={onSetPage}
+            onPerPageSelect={onPerPageSelect}
+            variant="bottom"
+            isCompact
+            aria-label="Release List Pagination Bottom"
+          />
         </>
       )}
     </>
