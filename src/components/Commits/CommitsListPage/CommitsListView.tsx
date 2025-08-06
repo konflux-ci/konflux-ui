@@ -58,14 +58,14 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       commits.filter(
         (commit) =>
           (!nameFilter ||
-            commit.sha.indexOf(nameFilter) !== -1 ||
-            commit.components.some(
-              (c) => c.toLowerCase().indexOf(nameFilter.trim().toLowerCase()) !== -1,
+            commit.sha.toLowerCase().startsWith(nameFilter.trim().toLowerCase()) ||
+            commit.components.some((c) =>
+              c.toLowerCase().startsWith(nameFilter.trim().toLowerCase()),
             ) ||
             commit.pullRequestNumber
               .toLowerCase()
-              .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
-            commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
+              .startsWith(nameFilter.trim().replace('#', '').toLowerCase()) ||
+            commit.shaTitle.toLowerCase().startsWith(nameFilter.trim().toLowerCase())) &&
           (!statusFilter.length ||
             statusFilter.includes(pipelineRunStatus(commit.pipelineRuns[0]))),
       ),
