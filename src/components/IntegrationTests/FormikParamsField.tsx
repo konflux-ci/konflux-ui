@@ -88,7 +88,7 @@ const FormikParamsField: React.FC<React.PropsWithChildren<IntegrationTestParamsP
           }}
           className="pf-v5-u-pl-xs pf-v5-u-pr-xs"
         >
-          {heading ?? 'Parameters'}
+          {heading ?? 'Show parameters'}
           {error && (
             <Alert data-test="its-param-error-alert" title={error} variant={AlertVariant.danger} />
           )}

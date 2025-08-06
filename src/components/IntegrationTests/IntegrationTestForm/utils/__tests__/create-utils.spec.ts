@@ -33,6 +33,7 @@ const integrationTestData = {
     application: 'Test Application',
     params: null,
     resolverRef: {
+      resourceKind: 'pipeline',
       resolver: 'git',
       params: [
         { name: 'url', value: 'test-url' },
@@ -59,6 +60,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipeline',
         contexts: [
           {
             name: 'application',
@@ -90,6 +92,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: true,
+        resourceKind: 'pipeline',
       },
       'Test Application',
       'test-ns',
@@ -107,6 +110,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipelinerun',
       },
       'Test Application',
       'test-ns',
@@ -123,6 +127,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipelinerun',
         params: [{ name: 'param1', values: ['value'] }],
       },
       'Test Application',
@@ -142,6 +147,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipeline',
         params: [{ name: 'param1', values: ['value1', 'value2', 'value3'] }],
       },
       'Test Application',
@@ -157,9 +163,11 @@ describe('Create Utils', () => {
 
   it('Should return correct labels for params', () => {
     const resource = MockIntegrationTestsWithGit[0];
-    expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('Git URL');
+    expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('Git Repository URL');
     expect(getLabelForParam(resource.spec.resolverRef.params[1].name)).toBe('Revision');
-    expect(getLabelForParam(resource.spec.resolverRef.params[2].name)).toBe('Path in repository');
+    expect(getLabelForParam(resource.spec.resolverRef.params[2].name)).toBe(
+      'Path in the repository',
+    );
     expect(getLabelForParam('test-param' as ResolverRefParams)).toBe('Test-param');
   });
 
@@ -201,6 +209,7 @@ describe('Create Utils', () => {
         url: EC_INTEGRATION_TEST_URL,
         path: EC_INTEGRATION_TEST_PATH,
         optional: false,
+        resourceKind: 'pipelinerun',
       },
       'Test Application',
       'test-ns',
@@ -305,6 +314,7 @@ describe('Edit Integration Test Utils', () => {
       optional: true,
       environmentName: 'development',
       environmentType: 'POC',
+      resourceKind: 'pipelinerun',
     });
 
     expect(resource.spec.resolverRef.resolver).toBe('git');
@@ -324,6 +334,7 @@ describe('Edit Integration Test Utils', () => {
       url: 'updated-url',
       path: 'updated-path',
       optional: false,
+      resourceKind: 'pipeline',
     });
 
     expect(resource.metadata.name).toBe('existing-test');

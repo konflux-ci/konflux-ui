@@ -5,6 +5,12 @@ export enum ResolverType {
   GIT = 'git',
   BUNDLES = 'bundles',
 }
+
+export enum ResourceKind {
+  pipeline = 'pipeline',
+  pipelineRun = 'pipelinerun',
+}
+
 export type IntegrationTestScenarioKind = K8sResourceCommon & {
   spec: IntegrationTestScenarioSpec;
 };
@@ -20,9 +26,9 @@ export type IntegrationTestScenarioSpec = {
   environment?: Environment;
   params?: Param[];
   resolverRef?: {
+    resourceKind: string;
     resolver: ResolverType;
     params: ResolverParam[];
-    resourceKind?: string;
   };
   pipeline?: string;
   bundle?: string;

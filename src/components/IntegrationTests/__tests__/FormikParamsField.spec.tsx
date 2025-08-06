@@ -27,7 +27,7 @@ describe('FormikParamsField', () => {
   it('should render default heading and add parameter button when no params', () => {
     useFieldMock.mockReturnValue([{}, { value: '' }]);
     render(<FormikParamsField fieldName="it.param" initExpanded={true} />);
-    expect(screen.getByText('Parameters')).toBeInTheDocument();
+    expect(screen.getByText('Show parameters')).toBeInTheDocument();
     ('its-param-error-alert');
     expect(screen.getByTestId('add-param-button')).toBeInTheDocument();
   });
