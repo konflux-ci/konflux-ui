@@ -4,13 +4,16 @@ import { pluralize, Skeleton } from '@patternfly/react-core';
 import { APPLICATION_LIST_PATH } from '@routes/paths';
 import { useApplications } from '../../hooks/useApplications';
 import { RowFunctionArgs, TableData } from '../../shared';
+import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { NamespaceKind } from '../../types';
 import { namespaceTableColumnClasses } from './NamespaceListHeader';
+import { useNamespaceActions } from './useNamespaceActions';
 
 const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<NamespaceKind>>> = ({
   obj,
 }) => {
   const [applications, loaded] = useApplications(obj.metadata.name);
+  const [actions, isChecking, onToggle] = useNamespaceActions(obj);
 
   return (
     <>
@@ -28,6 +31,9 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
         ) : (
           <Skeleton width="50%" screenreaderText="Loading application count" />
         )}
+      </TableData>
+      <TableData className={namespaceTableColumnClasses.kebab}>
+        <ActionMenu actions={actions} onOpen={onToggle} isDisabled={isChecking} />
       </TableData>
     </>
   );
