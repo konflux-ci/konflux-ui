@@ -6,9 +6,9 @@ import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { Commit } from '../../../types';
-import { createRepoBranchURL, statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { Commit, PipelineRunKind } from '../../../types';
+import { createRepoBranchURL, getCommitSha, statuses } from '../../../utils/commits-utils';
+import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
@@ -17,48 +17,68 @@ import { commitsTableColumnClasses } from './CommitsListHeader';
 
 import './CommitsListRow.scss';
 
-const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>> = ({ obj }) => {
-  const actions = useCommitActions(obj);
-  const namespace = useNamespace();
-  const status = pipelineRunStatus(obj.pipelineRuns[0]);
+type CommitsListRowProps = {
+  commit: Commit;
+  pipelineRuns: PipelineRunKind[];
+};
 
-  const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
+const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<CommitsListRowProps>>> = ({
+  obj: { commit, pipelineRuns },
+}) => {
+  const actions = useCommitActions(commit);
+  const namespace = useNamespace();
+
+  const status = React.useMemo<runStatus>(() => {
+    const plrsForCommit = pipelineRuns
+      ?.filter((plr) => getCommitSha(plr) === commit.sha)
+      ?.sort(
+        (a, b) => new Date(b.status?.startTime).getTime() - new Date(a.status?.startTime).getTime(),
+      );
+
+    const plrStatus = pipelineRunStatus(plrsForCommit?.[0]);
+    if (statuses.includes(plrStatus)) {
+      return plrStatus;
+    }
+    return runStatus.Failed;
+  }, [commit.sha, pipelineRuns]);
+
+  const prNumber = commit.isPullRequest ? `#${commit.pullRequestNumber}` : '';
   return (
     <>
       <TableData className={commitsTableColumnClasses.name}>
-        <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
+        <CommitIcon isPR={commit.isPullRequest} className="sha-title-icon" />
         <Link
           to={COMMIT_DETAILS_PATH.createPath({
             workspaceName: namespace,
-            applicationName: obj.application,
-            commitName: obj.sha,
+            applicationName: commit.application,
+            commitName: commit.sha,
           })}
         >
-          {prNumber} {obj.shaTitle}
+          {prNumber} {commit.shaTitle}
         </Link>
-        {obj.shaURL && (
+        {commit.shaURL && (
           <>
             {' '}
-            <CommitLabel gitProvider={obj.gitProvider} sha={obj.sha} shaURL={obj.shaURL} />
+            <CommitLabel gitProvider={commit.gitProvider} sha={commit.sha} shaURL={commit.shaURL} />
           </>
         )}
       </TableData>
       <TableData className={commitsTableColumnClasses.branch}>
-        {createRepoBranchURL(obj) ? (
-          <ExternalLink href={createRepoBranchURL(obj)} text={`${obj.branch}`} />
+        {createRepoBranchURL(commit) ? (
+          <ExternalLink href={createRepoBranchURL(commit)} text={`${commit.branch}`} />
         ) : (
-          `${obj.branch || '-'}`
+          `${commit.branch || '-'}`
         )}
       </TableData>
       <TableData className={commitsTableColumnClasses.component}>
         <div className="commits-component-list">
-          {obj.components.length > 0
-            ? obj.components.map((c) => (
+          {commit.components.length > 0
+            ? commit.components.map((c) => (
                 <Link
                   key={c}
                   to={COMPONENT_DETAILS_PATH.createPath({
                     workspaceName: namespace,
-                    applicationName: obj.application,
+                    applicationName: commit.application,
                     componentName: c.trim(),
                   })}
                 >
@@ -69,10 +89,10 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
         </div>
       </TableData>
       <TableData className={commitsTableColumnClasses.byUser}>
-        <Truncate content={obj.user ?? '-'} />
+        <Truncate content={commit.user ?? '-'} />
       </TableData>
       <TableData className={commitsTableColumnClasses.committedAt}>
-        <Timestamp timestamp={obj.creationTime} />
+        <Timestamp timestamp={commit.creationTime} />
       </TableData>
       <TableData className={commitsTableColumnClasses.status}>
         {statuses.includes(status) ? <StatusIconWithText status={status} /> : '-'}
