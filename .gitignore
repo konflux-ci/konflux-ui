@@ -27,3 +27,6 @@ tsconfig.tsbuildinfo
 *.sw?
 
 **/.gitconfig*
+
+# Personal local claude settings
+.claude/local/*
