@@ -1,36 +1,67 @@
 import * as React from 'react';
-import { Button, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import {
+  Button,
+  NotificationBadge,
+  Toolbar,
+  ToolbarContent,
+  ToolbarGroup,
+  ToolbarItem,
+  Tooltip,
+} from '@patternfly/react-core';
 import { FlaskIcon } from '@patternfly/react-icons/dist/esm/icons/flask-icon';
 import { IfFeature } from '~/feature-flags/hooks';
 import { createFeatureFlagPanelModal } from '~/feature-flags/Panel';
-import { ThemeDropdown } from '~/shared/theme';
+import { ThemeDropdown } from '~/shared/theme/ThemeDropdown';
+import { SystemNotificationConfig } from '~/types/notification-type';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { UserDropdown } from './UserDropdown';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  isDrawerExpanded: boolean;
+  toggleDrawer: () => void;
+  notifications: SystemNotificationConfig[];
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  isDrawerExpanded,
+  toggleDrawer,
+  notifications,
+}) => {
   const showModal = useModalLauncher();
   return (
     <Toolbar isFullHeight>
       <ToolbarContent>
-        <ToolbarItem align={{ default: 'alignRight' }}>
-          <Button
-            variant="plain"
-            title="Experimental Features"
-            onClick={() => {
-              showModal(createFeatureFlagPanelModal());
-            }}
-          >
-            <FlaskIcon />
-          </Button>
-        </ToolbarItem>
-        <IfFeature flag="dark-theme">
+        <ToolbarGroup align={{ default: 'alignRight' }}>
           <ToolbarItem>
-            <ThemeDropdown />
+            <Tooltip content="Experimental Features">
+              <Button
+                variant="plain"
+                onClick={() => showModal(createFeatureFlagPanelModal())}
+                aria-label="Experimental Features"
+              >
+                <FlaskIcon />
+              </Button>
+            </Tooltip>
           </ToolbarItem>
-        </IfFeature>
-        <ToolbarItem>
-          <UserDropdown />
-        </ToolbarItem>
+          <ToolbarItem>
+            <Tooltip content="System Notifications">
+              <NotificationBadge
+                onClick={toggleDrawer}
+                aria-label="Notifications"
+                isExpanded={isDrawerExpanded}
+                count={notifications.length}
+              />
+            </Tooltip>
+          </ToolbarItem>
+          <IfFeature flag="dark-theme">
+            <ToolbarItem>
+              <ThemeDropdown />
+            </ToolbarItem>
+          </IfFeature>
+          <ToolbarItem>
+            <UserDropdown />
+          </ToolbarItem>
+        </ToolbarGroup>
       </ToolbarContent>
     </Toolbar>
   );

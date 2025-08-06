@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import * as yup from 'yup';
-import { BANNER_TYPES, BannerType } from '~/components/KonfluxBanner/banner-type';
+import { BANNER_TYPES, BannerType } from '~/types/banner-type';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
