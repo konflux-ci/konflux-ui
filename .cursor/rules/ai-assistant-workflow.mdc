@@ -1,19 +1,19 @@
 ---
-description: Claude AI assistant workflow patterns and best practices for Konflux UI development
+description: AI assistant workflow patterns and best practices for Konflux UI development
 alwaysApply: true
 ---
 
-# Claude Development Workflow
+# AI Assistant Development Workflow
 
 > 📖 **Project Context**: This is Konflux UI, a React TypeScript application for Kubernetes CI/CD management.
 > 📖 **See Also**: [project-structure.mdc](mdc:.cursor/rules/project-structure.mdc) for architecture details.
 
-Guidelines for effective collaboration between developers and Claude AI assistant on Konflux UI.
+Guidelines for effective collaboration between developers and AI assistants on Konflux UI.
 
 ## Task Planning & Management
 
 ### Always Use Todo Lists
-For any non-trivial task (3+ steps), Claude should create and maintain a todo list:
+For any non-trivial task (3+ steps), AI assistants should create and maintain a todo list:
 
 ```markdown
 ✅ Research existing component patterns
@@ -51,9 +51,7 @@ find . -name "*.spec.tsx" -path "*/components/*"
 
 ### Component Development
 - **Check existing patterns** first in `src/components/` and `src/shared/components/`
-- **Use TypeScript types** from `src/types/` and `src/models/`
-- **Follow PatternFly conventions** for UI components
-- **Implement feature flags** for new features using `~/feature-flags/hooks`
+- **Follow project conventions** and existing code style
 
 ### Testing Requirements
 - **Create unit tests** using patterns from `testing.mdc`
@@ -64,9 +62,9 @@ find . -name "*.spec.tsx" -path "*/components/*"
 ### Code Quality Checks
 Always run these commands after code changes:
 ```bash
-npm run lint
-npm run typecheck
-npm test -- --passWithNoTests
+yarn lint
+yarn typecheck
+yarn test --passWithNoTests
 ```
 
 ## File Navigation & References
@@ -77,12 +75,6 @@ When discussing code, always include file paths with line numbers:
 The error handling is in src/hooks/useApplications.ts:45
 ```
 
-### Import Path Usage
-Use configured aliases consistently:
-- `~/components` for feature components
-- `~/shared` for reusable utilities
-- `~/hooks` for business logic hooks
-- `~/types` for TypeScript definitions
 
 ## Communication Patterns
 
@@ -101,38 +93,6 @@ Use configured aliases consistently:
 - Check common issues: imports, types, missing dependencies
 - Provide specific file paths and line numbers for fixes
 
-## Konflux UI Specific Patterns
-
-### K8s Resource Management
-```tsx
-// Standard pattern for K8s resource watching
-const [applications, isLoading, error] = useK8sWatchResource({
-  groupVersionKind: ApplicationGroupVersionKind,
-  namespace: 'default',
-});
-
-// With feature flag integration
-<IfFeature flag="kubearchive">
-  <KubeArchiveComponent />
-</IfFeature>
-```
-
-### Component Structure
-```tsx
-// Feature component structure
-src/components/FeatureName/
-├── index.ts                 // Export barrel
-├── FeatureNameView.tsx      // Main view component  
-├── components/              // Sub-components
-├── hooks/                   // Feature-specific hooks
-└── __tests__/               // Test files
-```
-
-### State Management Patterns
-- **useK8sWatchResource** for live K8s data
-- **React Query** for additional API calls
-- **Zustand** for client-side state (feature flags)
-- **React Context** for cross-cutting concerns
 
 ## Quality Assurance
 
@@ -141,8 +101,6 @@ src/components/FeatureName/
 - [ ] Unit tests written and passing
 - [ ] TypeScript types are correct
 - [ ] Lint and typecheck pass
-- [ ] Feature flags used for new functionality
-- [ ] Imports use configured aliases
 - [ ] Error handling implemented
 
 ### Code Review Readiness
@@ -156,18 +114,18 @@ src/components/FeatureName/
 
 ### Development
 ```bash
-npm start                    # Start development server
-npm test                     # Run unit tests
-npm run test:watch          # Watch mode testing
-npm run lint                # ESLint checking
-npm run typecheck           # TypeScript checking
+yarn start                   # Start development server
+yarn test                    # Run unit tests
+yarn test:watch             # Watch mode testing
+yarn lint                   # ESLint checking
+yarn typecheck              # TypeScript checking
 ```
 
 ### Debugging
 ```bash
-npm run build               # Build for production
-npm run analyze             # Bundle analysis
-npm run test:coverage       # Test coverage report
+yarn build                  # Build for production
+yarn analyze                # Bundle analysis
+yarn test:coverage          # Test coverage report
 ```
 
 ### Git Workflow
@@ -178,21 +136,4 @@ git add .                   # Stage changes
 git commit -m "feat: description"  # Commit with conventional format
 ```
 
-## Integration Points
-
-### Feature Flags
-- All new features behind feature flags during development
-- Use `IfFeature` component for conditional rendering
-- Test with URL parameters: `?ff=featureName`
-
-### Authentication
-- Respect RBAC permissions using access review hooks
-- Handle authentication context throughout the app
-- Test permission scenarios in unit tests
-
-### Data Sources
-- Live cluster data via K8s API
-- Historical data via KubeArchive
-- Proper error handling for both sources
-
-This workflow ensures efficient collaboration and maintains code quality standards specific to Konflux UI's architecture and development practices.
+This workflow ensures efficient collaboration and maintains code quality standards specific to Konflux UI's development practices.

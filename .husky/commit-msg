@@ -50,14 +50,6 @@ if [ $is_authorized -eq 1 ]; then
             fi
         done
         
-        # Check for CLAUDE.md file existence as indicator
-        if [ -f "CLAUDE.md" ]; then
-            # If CLAUDE.md exists and there are significant changes, likely Claude was used
-            CHANGED_LINES=$(git diff --cached --numstat | awk '{print $1+$2}' | awk '{sum+=$1} END {print sum+0}')
-            if [ "${CHANGED_LINES:-0}" -gt 10 ]; then
-                AI_ASSISTANT="Claude"
-            fi
-        fi
     fi
     
     # Use the detected AI assistant in the trailer
