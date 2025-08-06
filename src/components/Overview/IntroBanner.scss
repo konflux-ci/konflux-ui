@@ -25,4 +25,8 @@
 
 html.pf-v5-theme-dark {
   --banner-gradient-end: #404040;
+
+  .intro-banner path  {
+    stroke: var(--pf-v5-global--icon--Color--dark);
+  }
 }

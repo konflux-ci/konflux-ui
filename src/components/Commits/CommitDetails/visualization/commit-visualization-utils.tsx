@@ -20,7 +20,7 @@ export const getCommitWorkflowNodeIcon = (type: CommitWorkflowNodeType): React.R
     case CommitWorkflowNodeType.APPLICATION_TEST:
     case CommitWorkflowNodeType.RELEASE:
     default:
-      return <img src={PipelineIcon} />;
+      return <PipelineIcon />;
   }
 };
 

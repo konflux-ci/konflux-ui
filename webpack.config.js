@@ -19,7 +19,8 @@ export default {
       // SVGR rule specifically for overview SVGs
       {
         test: /\.svg$/i,
-        include: path.resolve(__dirname, 'src/assets/overview'),
+        include: path.resolve(__dirname, 'src/assets'),
+        exclude: path.resolve(__dirname, 'src/assets/konflux.svg'),
         issuer: /\.[jt]sx?$/,
         use: [
           {
@@ -46,7 +47,20 @@ export default {
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
-        exclude: path.resolve(__dirname, 'src/assets/overview'),
+        exclude: (resourcePath) => {
+          if (resourcePath === path.resolve(__dirname, 'src/assets/konflux.svg')) {
+            return false;
+          }
+
+          if (
+            resourcePath.endsWith('.svg') &&
+            resourcePath.startsWith(path.resolve(__dirname, 'src/assets'))
+          ) {
+            return true;
+          }
+
+          return false;
+        },
         type: 'asset/resource',
       },
     ],
