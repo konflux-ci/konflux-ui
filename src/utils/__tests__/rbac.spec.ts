@@ -17,10 +17,12 @@ jest.mock('../../k8s/k8s-fetch', () => ({
 }));
 
 jest.mock('~/auth/utils', () => ({
-  getUserDataFromLocalStorage: jest.fn(() => ({
-    email: 'test@demo',
-    preferredUsername: 'testuser',
-  })),
+  getUserDataWithFallback: jest.fn(() =>
+    Promise.resolve({
+      email: 'test@demo',
+      preferredUsername: 'testuser',
+    }),
+  ),
 }));
 
 const createResourceMock = k8sCreateResource as jest.Mock;
