@@ -1,4 +1,6 @@
 import { screen } from '@testing-library/react';
+import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
+import { useTaskRuns } from '~/hooks/useTaskRuns';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useTRPipelineRuns } from '../../../hooks/useTektonResults';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
@@ -14,12 +16,18 @@ jest.mock('react-router-dom', () => {
   };
 });
 jest.mock('../../../hooks/useTektonResults');
+jest.mock('~/hooks/useTaskRuns', () => ({
+  useTaskRuns: jest.fn(),
+}));
 
 const watchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const useTaskRunsMock = useTaskRuns as jest.Mock;
 
 describe('BuildLogViewer', () => {
-  beforeEach(() => {});
+  beforeEach(() => {
+    useTaskRunsMock.mockReturnValue([testTaskRuns, true, undefined]);
+  });
 
   it('should show empty box if pipelineRuns not found', () => {
     watchResourceMock.mockReturnValue([[], true]);
@@ -82,5 +90,12 @@ describe('BuildLogViewer', () => {
     useTRPipelineRunsMock.mockReturnValue([[], false]);
     routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
     expect(screen.getByTestId('loading-indicator')).not.toBeNull();
+  });
+
+  it('should handle error when fetching task runs', () => {
+    watchResourceMock.mockReturnValue([[pipelineRunMock], true]);
+    useTaskRunsMock.mockReturnValue([undefined, true, { code: 451 }]);
+    routerRenderer(<BuildLogViewer component={componentCRMocks[0]} />);
+    screen.getByText('Unable to load task runs');
   });
 });

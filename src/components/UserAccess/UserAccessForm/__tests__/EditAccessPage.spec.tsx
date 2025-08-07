@@ -53,7 +53,7 @@ describe('EditAccessPage', () => {
 
     // Wait for async error display
     await waitFor(() => {
-      expect(screen.getByText('Unable to load role binding user1')).toBeInTheDocument();
+      expect(screen.getByText('Unable to load role binding')).toBeInTheDocument();
       // Adjust error message as per your HttpError handling
       expect(screen.getByText('Internal Server Error')).toBeInTheDocument();
     });

@@ -36,7 +36,7 @@ const usePACState = (component: ComponentKind) => {
   const buildStatus = useComponentBuildStatus(component);
   const configurationTime = buildStatus?.pac?.['configuration-time'];
 
-  const [pipelineBuildRuns, pipelineBuildRunsLoaded] = usePipelineRuns(
+  const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRuns(
     !isSample && pacProvision ? component.metadata.namespace : null,
     React.useMemo(
       () => ({
@@ -61,12 +61,14 @@ const usePACState = (component: ComponentKind) => {
   // filter out runs that were created if the component previously had pac configured
   const runsForComponent = React.useMemo(
     () =>
-      pipelineBuildRuns?.filter((p) =>
-        configurationTime
-          ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
-          : true,
-      ),
-    [configurationTime, pipelineBuildRuns],
+      !pipelineBuildRunsLoaded || pipelineBuildRunsError
+        ? []
+        : pipelineBuildRuns?.filter((p) =>
+            configurationTime
+              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
+              : true,
+          ),
+    [configurationTime, pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError],
   );
 
   const prMerged = runsForComponent.find(

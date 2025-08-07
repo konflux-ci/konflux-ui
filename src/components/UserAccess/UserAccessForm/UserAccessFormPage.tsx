@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { USER_ACCESS_LIST_PAGE } from '@routes/paths';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useRoleMap } from '../../../hooks/useRole';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { NamespaceRole, RoleBinding } from '../../../types';
@@ -22,7 +23,7 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
   username,
 }) => {
   const namespace = useNamespace();
-  const [roleMap, loaded] = useRoleMap();
+  const [roleMap, loaded, error] = useRoleMap();
   const track = useTrackEvent();
   const navigate = useNavigate();
 
@@ -49,11 +50,11 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
         namespace,
       });
       navigate(USER_ACCESS_LIST_PAGE.createPath({ workspaceName: namespace }));
-    } catch (error) {
+    } catch (err) {
       // eslint-disable-next-line no-console
-      console.warn('Error while submitting access form:', error);
+      console.warn('Error while submitting access form:', err);
       actions.setSubmitting(false);
-      actions.setStatus({ submitError: error.message });
+      actions.setStatus({ submitError: (err as { message: string }).message });
     }
   };
 
@@ -78,6 +79,9 @@ export const UserAccessFormPage: React.FC<React.PropsWithChildren<Props>> = ({
         <Spinner data-test="spinner" />
       </Bullseye>
     );
+  }
+  if (error) {
+    return getErrorState(error, loaded, 'role binding');
   }
 
   const initialValues: UserAccessFormValues = {

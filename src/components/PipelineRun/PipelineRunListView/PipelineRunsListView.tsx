@@ -2,13 +2,12 @@ import * as React from 'react';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
-import { HttpError } from '../../../k8s/error';
 import { Table, useDeepCompareMemoize } from '../../../shared';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
@@ -110,14 +109,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
-    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title="Unable to load pipeline runs"
-        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
-      />
-    );
+    return getErrorState(error, loaded, 'pipeline runs');
   }
 
   const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
