@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
+import { IfFeature } from '~/feature-flags/hooks';
 import { RouterParams } from '../../routes/utils';
 import { useWhatsNextItems } from '../WhatsNext/useWhatsNextItems';
 import WhatsNextSection from '../WhatsNext/WhatsNextSection';
@@ -10,7 +11,9 @@ const ApplicationOverviewTab: React.FC = () => {
   const whatsNextItems = useWhatsNextItems(applicationName);
   return (
     <>
-      <AppWorkflowSection applicationName={applicationName} />
+      <IfFeature flag="overview-lifecycle">
+        <AppWorkflowSection applicationName={applicationName} />
+      </IfFeature>
       <WhatsNextSection whatsNextItems={whatsNextItems} />
     </>
   );
