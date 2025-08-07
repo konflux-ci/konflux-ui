@@ -54,6 +54,12 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'overview-lifecycle': {
+    key: 'overview-lifecycle',
+    description: 'disable the lifecycle section in the application overview tab',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 };
 
 export type FlagKey = keyof typeof FLAGS;
