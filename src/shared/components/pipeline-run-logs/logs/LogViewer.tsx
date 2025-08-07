@@ -45,6 +45,7 @@ const LogViewer: React.FC<Props> = ({
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
   const downloadLogs = () => {
+    if (!data) return;
     const blob = new Blob([data], {
       type: 'text/plain;charset=utf-8',
     });
