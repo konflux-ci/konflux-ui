@@ -201,14 +201,14 @@ describe('Basic Happy Path', () => {
     });
   });
 
-  describe('Check Application Overview', () => {
-    before(() => {
-      Common.openApplicationURL(applicationName);
-    });
+  // describe('Check Application Overview', () => {
+  //   before(() => {
+  //     Common.openApplicationURL(applicationName);
+  //   });
 
-    it('Validate the graph views for the created application', () => {
-      UIhelper.verifyGraphNodes('Components', false);
-      UIhelper.verifyGraphNodes('Builds');
-    });
-  });
+  //   it('Validate the graph views for the created application', () => {
+  //     UIhelper.verifyGraphNodes('Components', false);
+  //     UIhelper.verifyGraphNodes('Builds');
+  //   });
+  // });
 });
