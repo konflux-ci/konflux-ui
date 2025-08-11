@@ -14,7 +14,7 @@ export const NotificationItem: React.FC<SystemNotificationConfig> = ({
   created,
 }) => {
   return (
-    <NotificationDrawerListItem>
+    <NotificationDrawerListItem variant={type}>
       <NotificationDrawerListItemHeader
         variant={type}
         title={title?.trim() ? title.trim() : component}
