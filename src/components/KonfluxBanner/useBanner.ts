@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import yaml from 'js-yaml';
@@ -13,6 +14,7 @@ import { bannerConfigYupSchema } from './banner-validation-utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(customParseFormat);
 
 const BANNER_CONTENT_FILE = 'konflux-banner-configmap';
 export function inferRepeatType(banner: BannerConfig): RepeatType {
@@ -25,13 +27,10 @@ export function inferRepeatType(banner: BannerConfig): RepeatType {
   return RepeatType.NONE; // fallback
 }
 
-function convertToTimeZone(date: Date, timeZone: string): Date {
-  return dayjs(date).tz(timeZone).toDate();
-}
-
 // For repeated banners
-function parseHM(hm: string): number {
-  const [h, m] = hm.split(':').map(Number);
+function parseHM(timeStr?: string): number {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
   return h * 60 + m;
 }
 
@@ -91,42 +90,45 @@ export const parseBannerList = (yamlContent: string): BannerConfig[] => {
  */
 export function isBannerActive(banner: BannerConfig): boolean {
   const timeZone = banner.timeZone || 'UTC';
-  const zonedNow = convertToTimeZone(new Date(), timeZone);
-  const nowHM = zonedNow.getHours() * 60 + zonedNow.getMinutes();
+
+  // Current time in banner timezone
+  const zonedNow = dayjs().tz(timeZone);
+  const nowHM = zonedNow.hour() * 60 + zonedNow.minute();
 
   switch (inferRepeatType(banner)) {
     case RepeatType.NONE: {
-      const hasDate = banner.year && banner.month && banner.dayOfMonth;
-      // If user does not specify the year/month/day, let us assume it is today.
-      const year = hasDate ? Number(banner.year) : zonedNow.getUTCFullYear();
-      const month = hasDate ? Number(banner.month) - 1 : zonedNow.getUTCMonth(); // 0-based
-      const day = hasDate ? Number(banner.dayOfMonth) : zonedNow.getUTCDate();
+      const hasDate =
+        banner.year !== undefined && banner.month !== undefined && banner.dayOfMonth !== undefined;
+      const year = hasDate ? Number(banner.year) : zonedNow.year();
+      const month = hasDate ? Number(banner.month) - 1 : zonedNow.month(); // 0-based for dayjs
+      const day = hasDate ? Number(banner.dayOfMonth) : zonedNow.date();
 
-      // When there is no any time specified, we assume the banner should be shown at once
       if (!banner.startTime || !banner.endTime) return true;
 
-      const [startHour, startMinute] = banner.startTime.split(':').map(Number);
-      const [endHour, endMinute] = banner.endTime.split(':').map(Number);
+      const format = 'YYYY-MM-DD HH:mm';
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-      const start = new Date(Date.UTC(year, month, day, startHour, startMinute));
-      const end = new Date(Date.UTC(year, month, day, endHour, endMinute));
-      const startZoned = convertToTimeZone(start, timeZone);
-      const endZoned = convertToTimeZone(end, timeZone);
+      const start = dayjs.tz(`${dateStr} ${banner.startTime}`, format, timeZone);
+      const end = dayjs.tz(`${dateStr} ${banner.endTime}`, format, timeZone);
 
-      return zonedNow >= startZoned && zonedNow <= endZoned;
+      return zonedNow.isAfter(start) && zonedNow.isBefore(end);
     }
 
     case RepeatType.WEEKLY: {
-      if (zonedNow.getDay() !== banner.dayOfWeek) return false;
+      if (zonedNow.day() !== banner.dayOfWeek) return false;
+
       const startHM = parseHM(banner.startTime);
       const endHM = parseHM(banner.endTime);
+
       return nowHM >= startHM && nowHM <= endHM;
     }
 
     case RepeatType.MONTHLY: {
-      if (zonedNow.getDate() !== banner.dayOfMonth) return false;
+      if (zonedNow.date() !== banner.dayOfMonth) return false;
+
       const startHM = parseHM(banner.startTime);
       const endHM = parseHM(banner.endTime);
+
       return nowHM >= startHM && nowHM <= endHM;
     }
 

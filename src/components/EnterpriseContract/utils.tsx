@@ -57,7 +57,7 @@ export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
  * ```
  *
  */
-const EC_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-|$))/g;
+const EC_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-|$))/gs;
 
 export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
   const extractedLogs = logs.match(EC_REPORT_JSON_REGEX);

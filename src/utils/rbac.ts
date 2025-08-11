@@ -150,9 +150,7 @@ export const useAccessReviews = (
               allowed: result.status.allowed,
             });
           });
-          if (resourceAccess.every((access) => access.allowed)) {
-            setIsAllowed(true);
-          }
+          setIsAllowed(resourceAccess.every((access) => access.allowed));
           setLoaded(true);
         })
         .catch((e) => {
