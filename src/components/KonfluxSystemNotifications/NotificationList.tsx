@@ -6,27 +6,22 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { useSystemNotifications } from '~/components/KonfluxSystemNotifications/useSystemNotifications';
 import { HttpError } from '~/k8s/error';
 import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
-import { SystemNotificationConfig } from '~/types/notification-type';
 import { NotificationHeader } from './NotificationHeader';
 import { NotificationItem } from './NotificationItem';
 
 interface NotificationCenterProps {
   isDrawerExpanded: boolean;
   closeDrawer: () => void;
-  notifications: SystemNotificationConfig[];
-  isLoading: boolean;
-  error: unknown;
 }
 
 const NotificationCenter: React.FC<NotificationCenterProps> = ({
   isDrawerExpanded,
   closeDrawer,
-  notifications,
-  isLoading,
-  error,
 }) => {
+  const { notifications, isLoading, error } = useSystemNotifications();
   if (isLoading) {
     return (
       <Bullseye>
@@ -36,7 +31,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   }
 
   if (error) {
-    const httpError = HttpError.fromCode((error as { code: number }).code);
+    const httpError = HttpError.fromCode((error as unknown as { code: number }).code);
     return (
       <ErrorEmptyState
         httpError={httpError}

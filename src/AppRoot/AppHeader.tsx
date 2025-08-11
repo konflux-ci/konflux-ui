@@ -9,7 +9,6 @@ import {
   PageToggleButton,
 } from '@patternfly/react-core';
 import { BarsIcon } from '@patternfly/react-icons/dist/esm/icons/bars-icon';
-import { SystemNotificationConfig } from '~/types/notification-type';
 import konfluxLogo from '../assets/konflux.svg';
 import { Header } from '../components/Header/Header';
 
@@ -18,14 +17,12 @@ interface AppHeaderProos {
   onSideBarOpen: () => void;
   isDrawerExpanded: boolean;
   toggleDrawer: () => void;
-  notifications: SystemNotificationConfig[];
 }
 export const AppHeader: React.FC<AppHeaderProos> = ({
   isSideBarOpen,
   onSideBarOpen,
   isDrawerExpanded,
   toggleDrawer,
-  notifications,
 }) => {
   return (
     <Masthead>
@@ -46,11 +43,7 @@ export const AppHeader: React.FC<AppHeaderProos> = ({
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>
-        <Header
-          isDrawerExpanded={isDrawerExpanded}
-          toggleDrawer={toggleDrawer}
-          notifications={notifications}
-        />
+        <Header isDrawerExpanded={isDrawerExpanded} toggleDrawer={toggleDrawer} />
       </MastheadContent>
     </Masthead>
   );

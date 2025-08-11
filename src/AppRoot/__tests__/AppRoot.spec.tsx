@@ -1,9 +1,9 @@
 import { screen, fireEvent } from '@testing-library/react';
 import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/banner-data';
+import { useSystemNotifications } from '../../components/KonfluxSystemNotifications/useSystemNotifications';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
 import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
-import { useSystemNotifications } from '../useSystemNotifications';
 
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
@@ -11,7 +11,7 @@ jest.mock('../../hooks/useActiveRouteChecker', () => ({
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
 }));
-jest.mock('../useSystemNotifications', () => ({
+jest.mock('../../components/KonfluxSystemNotifications/useSystemNotifications', () => ({
   useSystemNotifications: jest.fn(),
 }));
 

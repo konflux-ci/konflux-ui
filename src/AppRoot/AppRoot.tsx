@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
-import { useSystemNotifications } from '~/AppRoot/useSystemNotifications';
 import { KonfluxBanner } from '~/components/KonfluxBanner/KonfluxBanner';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
@@ -29,9 +28,6 @@ export const AppRoot: React.FC = () => {
   }, [isActive]);
 
   const [isDrawerExpanded, setIsDrawerExpanded] = React.useState(false);
-  // Move notification state to AppRoot level
-  const { notifications, isLoading, error } = useSystemNotifications();
-
   const toggleDrawer = () => setIsDrawerExpanded((prev) => !prev);
   const closeDrawer = () => setIsDrawerExpanded(false);
 
@@ -46,17 +42,10 @@ export const AppRoot: React.FC = () => {
             isSideBarOpen={isSideBarOpen}
             onSideBarOpen={() => setSideBarOpen((s) => !s)}
             isDrawerExpanded={isDrawerExpanded}
-            notifications={notifications}
           />
         }
         notificationDrawer={
-          <NotificationCenter
-            isDrawerExpanded={isDrawerExpanded}
-            closeDrawer={closeDrawer}
-            notifications={notifications}
-            isLoading={isLoading}
-            error={error}
-          />
+          <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
         }
         isNotificationDrawerExpanded={isDrawerExpanded}
       >
