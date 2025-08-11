@@ -18,30 +18,34 @@ interface AppHeaderPros {
   isDrawerExpanded: boolean;
   toggleDrawer: () => void;
 }
-export const AppHeader: React.FC<AppHeaderPros> = React.memo(
-  ({ isSideBarOpen, onSideBarOpen, isDrawerExpanded, toggleDrawer }) => {
-    return (
-      <Masthead>
-        <MastheadToggle>
-          <PageToggleButton
-            variant="plain"
-            aria-label="Sidebar toggle"
-            data-test="sidebar-toggle"
-            onSidebarToggle={onSideBarOpen}
-            isSidebarOpen={isSideBarOpen}
-          >
-            <BarsIcon />
-          </PageToggleButton>
-        </MastheadToggle>
-        <MastheadMain>
-          <MastheadBrand>
-            <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
-          </MastheadBrand>
-        </MastheadMain>
-        <MastheadContent>
-          <Header isDrawerExpanded={isDrawerExpanded} toggleDrawer={toggleDrawer} />
-        </MastheadContent>
-      </Masthead>
-    );
-  },
-);
+const AppHeaderComponent: React.FC<AppHeaderPros> = ({
+  isSideBarOpen,
+  onSideBarOpen,
+  isDrawerExpanded,
+  toggleDrawer,
+}) => {
+  return (
+    <Masthead>
+      <MastheadToggle>
+        <PageToggleButton
+          variant="plain"
+          aria-label="Sidebar toggle"
+          data-test="sidebar-toggle"
+          onSidebarToggle={onSideBarOpen}
+          isSidebarOpen={isSideBarOpen}
+        >
+          <BarsIcon />
+        </PageToggleButton>
+      </MastheadToggle>
+      <MastheadMain>
+        <MastheadBrand>
+          <Brand src={konfluxLogo} alt="konflux" heights={{ default: '36px' }} />
+        </MastheadBrand>
+      </MastheadMain>
+      <MastheadContent>
+        <Header isDrawerExpanded={isDrawerExpanded} toggleDrawer={toggleDrawer} />
+      </MastheadContent>
+    </Masthead>
+  );
+};
+export const AppHeader = React.memo(AppHeaderComponent);

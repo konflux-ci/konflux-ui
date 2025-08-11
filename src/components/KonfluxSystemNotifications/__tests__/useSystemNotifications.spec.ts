@@ -24,6 +24,7 @@ import {
   mockConfigMapWithArray,
   mockConfigMapWithMixedDataInArray,
   thirdValidDangerNotificationConfigMap,
+  longSummary,
 } from '~/components/KonfluxSystemNotifications/__data__/notifications-data';
 import { ConfigMap } from '~/types/configmap';
 import { createK8sUtilMock } from '~/unit-test-utils/mock-k8s';
@@ -96,7 +97,7 @@ describe('useSystemNotifications', () => {
     });
   });
 
-  it('parses valid alert from system-content.json', () => {
+  it('parses valid alert from notification-content.json', () => {
     k8sWatchMock.mockReturnValue({
       data: [validWarningNotificationConfigMap],
       isLoading: false,
@@ -149,7 +150,7 @@ describe('useSystemNotifications', () => {
     });
     const { result } = renderHook(() => useSystemNotifications());
 
-    expect(result.current.notifications[0].summary).toHaveLength(500);
+    expect(result.current.notifications[0].summary).toBe(longSummary);
   });
 
   it('skips ConfigMap with invalid JSON and logs warning', () => {

@@ -65,7 +65,7 @@ export const validInfoNotification = {
   title: '',
 };
 
-const longSummary = 'A'.repeat(500);
+export const longSummary = 'A'.repeat(500);
 export const validLongSummaryNotificationJson = {
   type: 'info',
   summary: longSummary,

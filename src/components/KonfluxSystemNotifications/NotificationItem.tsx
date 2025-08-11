@@ -15,7 +15,10 @@ export const NotificationItem: React.FC<SystemNotificationConfig> = ({
 }) => {
   return (
     <NotificationDrawerListItem>
-      <NotificationDrawerListItemHeader variant={type} title={title?.trim() ? title : component} />
+      <NotificationDrawerListItemHeader
+        variant={type}
+        title={title?.trim() ? title.trim() : component}
+      />
       <NotificationDrawerListItemBody timestamp={<Timestamp timestamp={created} simple />}>
         {summary}
       </NotificationDrawerListItemBody>
