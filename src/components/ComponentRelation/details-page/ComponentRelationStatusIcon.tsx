@@ -20,7 +20,7 @@ export const ComponentRelationStatusIcon: React.FC<{
       <RelationIcon
         style={style}
         className={css('component-relation-status-icon', className)}
-        src={<RelationIcon />}
+        role="img"
         alt="Component is in a relationship icon"
       />
     </Tooltip>
