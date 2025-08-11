@@ -1,6 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import { SystemNotificationConfig } from '~/types/notification-type';
 import NotificationCenter from '../NotificationList';
+import { useSystemNotifications } from '../useSystemNotifications';
+
+// Mock the useSystemNotifications hook
+jest.mock('~/components/KonfluxSystemNotifications/useSystemNotifications', () => ({
+  useSystemNotifications: jest.fn(),
+}));
 
 // Mock the child components
 jest.mock('../NotificationHeader', () => ({
@@ -25,15 +31,13 @@ jest.mock('../NotificationItem', () => ({
   ),
 }));
 
+const mockUseSystemNotifications = useSystemNotifications as jest.Mock;
 describe('NotificationCenter', () => {
   const mockCloseDrawer = jest.fn();
 
   const defaultProps = {
     isDrawerExpanded: true,
     closeDrawer: mockCloseDrawer,
-    notifications: [],
-    isLoading: false,
-    error: null,
   };
 
   const createMockNotification = (
@@ -49,17 +53,35 @@ describe('NotificationCenter', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mock return value
+    mockUseSystemNotifications.mockReturnValue({
+      notifications: [],
+      isLoading: false,
+      error: null,
+    });
   });
 
   it('renders loading state', () => {
-    render(<NotificationCenter {...defaultProps} isLoading={true} />);
+    mockUseSystemNotifications.mockReturnValue({
+      notifications: [],
+      isLoading: true,
+      error: null,
+    });
+
+    render(<NotificationCenter {...defaultProps} />);
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('renders error state', () => {
     const error = { code: 500, message: 'Server error' };
-    render(<NotificationCenter {...defaultProps} error={error} />);
+    mockUseSystemNotifications.mockReturnValue({
+      notifications: [],
+      isLoading: false,
+      error,
+    });
+
+    render(<NotificationCenter {...defaultProps} />);
 
     expect(screen.getByText('Unable to load system notifications')).toBeInTheDocument();
     expect(screen.getByText('Server error')).toBeInTheDocument();
@@ -84,7 +106,13 @@ describe('NotificationCenter', () => {
       createMockNotification({ title: 'Second Notification', summary: 'Second summary' }),
     ];
 
-    render(<NotificationCenter {...defaultProps} notifications={notifications} />);
+    mockUseSystemNotifications.mockReturnValue({
+      notifications,
+      isLoading: false,
+      error: null,
+    });
+
+    render(<NotificationCenter {...defaultProps} />);
 
     expect(screen.getByText('Header with 2 notifications')).toBeInTheDocument();
 
@@ -97,7 +125,13 @@ describe('NotificationCenter', () => {
   it('passes notifications to header component', () => {
     const notifications = [createMockNotification(), createMockNotification()];
 
-    render(<NotificationCenter {...defaultProps} notifications={notifications} />);
+    mockUseSystemNotifications.mockReturnValue({
+      notifications,
+      isLoading: false,
+      error: null,
+    });
+
+    render(<NotificationCenter {...defaultProps} />);
 
     expect(screen.getByText('Header with 2 notifications')).toBeInTheDocument();
   });
@@ -109,7 +143,13 @@ describe('NotificationCenter', () => {
       createMockNotification({ created: now, type: 'warning' }),
     ];
 
-    render(<NotificationCenter {...defaultProps} notifications={notifications} />);
+    mockUseSystemNotifications.mockReturnValue({
+      notifications,
+      isLoading: false,
+      error: null,
+    });
+
+    render(<NotificationCenter {...defaultProps} />);
 
     const notificationItems = screen.getAllByTestId('notification-item');
     expect(notificationItems).toHaveLength(2);

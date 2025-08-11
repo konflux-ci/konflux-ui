@@ -1,26 +1,37 @@
 import { render, screen } from '@testing-library/react';
 import { SystemNotificationConfig } from '~/types/notification-type';
-import { NotificationItem, formatTimestamp } from '../NotificationItem';
+import { NotificationItem } from '../NotificationItem';
 
-// Mock dayjs to have predictable timestamps
-jest.mock('dayjs', () => {
-  const originalDayjs = jest.requireActual('dayjs');
-  const mockDayjs = Object.assign(
-    jest.fn((date?: string) => {
-      const instance = originalDayjs(date);
-      if (!date) {
-        // Return a fixed "now" time for consistent testing
-        return originalDayjs('2024-01-01T12:00:00Z');
-      }
-      return instance;
-    }),
-    {
-      extend: originalDayjs.extend,
-    },
-  );
+// Mock PatternFly components to avoid import issues
+jest.mock('@patternfly/react-core/dist/esm/components', () => ({
+  NotificationDrawerListItem: ({ children }: { children: React.ReactNode }) => (
+    <div data-test="notification-drawer-list-item">{children}</div>
+  ),
+  NotificationDrawerListItemHeader: ({ title, variant }: { title: string; variant: string }) => (
+    <div data-test="notification-header" data-variant={variant}>
+      {title}
+    </div>
+  ),
+  NotificationDrawerListItemBody: ({
+    children,
+    timestamp,
+  }: {
+    children: React.ReactNode;
+    timestamp?: React.ReactNode;
+  }) => (
+    <div data-test="notification-body">
+      {timestamp && <div data-test="notification-timestamp">{timestamp}</div>}
+      {children}
+    </div>
+  ),
+}));
 
-  return mockDayjs;
-});
+// Mock the Timestamp component to avoid PatternFly import issues
+jest.mock('~/shared/components/timestamp', () => ({
+  Timestamp: ({ timestamp, simple }: { timestamp: string; simple?: boolean }) => (
+    <span data-test="timestamp">{simple ? timestamp : `Timestamp: ${timestamp}`}</span>
+  ),
+}));
 
 describe('NotificationItem', () => {
   const defaultNotification: SystemNotificationConfig = {
@@ -28,7 +39,7 @@ describe('NotificationItem', () => {
     title: 'Test Notification Title',
     type: 'info',
     summary: 'This is a test notification summary',
-    created: '2024-01-01T11:30:00Z', // 30 minutes ago from mocked "now"
+    created: '2024-01-01T11:30:00Z',
   };
 
   it('renders notification with title', () => {
@@ -72,45 +83,27 @@ describe('NotificationItem', () => {
 
     expect(screen.getByText('Custom summary content')).toBeInTheDocument();
   });
-});
 
-describe('formatTimestamp', () => {
-  beforeAll(() => {
-    // Mock the current time to be consistent
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date('2024-01-01T12:00:00Z'));
+  it('renders timestamp using Timestamp component', () => {
+    render(<NotificationItem {...defaultNotification} />);
+
+    expect(screen.getByTestId('notification-timestamp')).toBeInTheDocument();
+    expect(screen.getByTestId('timestamp')).toBeInTheDocument();
+    expect(screen.getByText('2024-01-01T11:30:00Z')).toBeInTheDocument();
   });
 
-  afterAll(() => {
-    jest.useRealTimers();
+  it('renders with correct structure', () => {
+    render(<NotificationItem {...defaultNotification} />);
+
+    expect(screen.getByTestId('notification-drawer-list-item')).toBeInTheDocument();
+    expect(screen.getByTestId('notification-header')).toBeInTheDocument();
+    expect(screen.getByTestId('notification-body')).toBeInTheDocument();
   });
 
-  it('formats recent timestamps as relative time', () => {
-    const thirtyMinutesAgo = '2024-01-01T11:30:00Z';
-    const result = formatTimestamp(thirtyMinutesAgo);
+  it('passes variant to header component', () => {
+    render(<NotificationItem {...defaultNotification} type="warning" />);
 
-    expect(result).toBe('30 minutes ago');
-  });
-
-  it('formats old timestamps as absolute time', () => {
-    const twoHoursAgo = '2024-01-01T10:00:00Z';
-    const result = formatTimestamp(twoHoursAgo);
-
-    expect(result).toMatch(/Jan 1 2024/);
-  });
-
-  it('formats timestamps exactly at the one hour boundary', () => {
-    const oneHourAgo = '2024-01-01T11:00:00Z';
-    const result = formatTimestamp(oneHourAgo);
-
-    // At exactly 60 minutes, should use absolute format
-    expect(result).toMatch(/Jan 1 2024/);
-  });
-
-  it('formats timestamps just under one hour as relative', () => {
-    const fiftyNineMinutesAgo = '2024-01-01T11:01:00Z';
-    const result = formatTimestamp(fiftyNineMinutesAgo);
-
-    expect(result).toContain('an hour ago');
+    const header = screen.getByTestId('notification-header');
+    expect(header).toHaveAttribute('data-variant', 'warning');
   });
 });
