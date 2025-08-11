@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { RoleBindingModel } from '../../models';
-import { Action } from '../../shared/components/action-menu/types';
-import { NamespaceKind } from '../../types';
-import { checkReviewAccesses } from '../../utils/rbac';
+import { RoleBindingModel } from '~/models';
+import { Action } from '~/shared/components/action-menu/types';
+import { NamespaceKind } from '~/types';
+import { checkReviewAccesses } from '~/utils/rbac';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { createManageVisibilityModalLauncher } from './ManageVisibilityModalLauncher';
 
@@ -39,11 +39,14 @@ export const useNamespaceActions = (
     setChecked(true);
   }, [namespace.metadata.name]);
 
-  const onToggle = (isOpen: boolean) => {
-    if (isOpen && !checked) {
-      void checkPermissions();
-    }
-  };
+  const onToggle = React.useCallback(
+    (isOpen: boolean) => {
+      if (isOpen && !checked) {
+        void checkPermissions();
+      }
+    },
+    [checked, checkPermissions],
+  );
 
   const actions: Action[] = React.useMemo(
     () => [

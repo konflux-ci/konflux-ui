@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { pluralize, Skeleton } from '@patternfly/react-core';
 import { APPLICATION_LIST_PATH } from '@routes/paths';
-import { useApplications } from '../../hooks/useApplications';
-import { RowFunctionArgs, TableData } from '../../shared';
-import ActionMenu from '../../shared/components/action-menu/ActionMenu';
-import { NamespaceKind } from '../../types';
+import { useApplications } from '~/hooks/useApplications';
+import { RowFunctionArgs, TableData } from '~/shared';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
+import { NamespaceKind } from '~/types';
 import { namespaceTableColumnClasses } from './NamespaceListHeader';
 import { useNamespaceActions } from './useNamespaceActions';
 
@@ -13,7 +13,7 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
   obj,
 }) => {
   const [applications, loaded] = useApplications(obj.metadata.name);
-  const [actions, isChecking, onToggle] = useNamespaceActions(obj);
+  const [actions, , onToggle] = useNamespaceActions(obj);
 
   return (
     <>
@@ -33,7 +33,7 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
         )}
       </TableData>
       <TableData className={namespaceTableColumnClasses.kebab}>
-        <ActionMenu actions={actions} onOpen={onToggle} isDisabled={isChecking} />
+        <ActionMenu actions={actions} onOpen={onToggle} />
       </TableData>
     </>
   );

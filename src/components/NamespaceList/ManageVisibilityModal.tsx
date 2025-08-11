@@ -1,22 +1,22 @@
 import * as React from 'react';
 import {
-  Modal,
-  ModalVariant,
   Button,
   Form,
   Alert,
   AlertVariant,
-  ModalBoxBody,
+  Stack,
+  StackItem,
+  ButtonVariant,
 } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { RadioGroupField } from 'formik-pf';
 import { K8sQueryCreateResource, K8sQueryDeleteResource, useK8sWatchResource } from '~/k8s';
 import { RoleBindingModel, RoleBindingGroupVersionKind } from '~/models';
 import { NamespaceKind, RoleBinding } from '~/types';
-import { RawComponentProps } from '../modal/createModalLauncher';
 
-type ManageVisibilityModalProps = RawComponentProps & {
+type ManageVisibilityModalProps = {
   namespace: NamespaceKind;
+  onClose?: () => void;
 };
 
 enum VisibilityOption {
@@ -43,11 +43,7 @@ const findPublicRoleBinding = (
   );
 };
 
-const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
-  namespace,
-  modalProps,
-  onClose,
-}) => {
+const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace, onClose }) => {
   const [error, setError] = React.useState<string>();
 
   // Use useK8sWatchResource to watch role bindings in the namespace
@@ -143,35 +139,17 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
         const hasChanges = values.visibility !== currentVisibility;
 
         return (
-          <Modal
-            {...modalProps}
-            variant={ModalVariant.small}
-            title="Manage visibility"
-            data-testid="manage-visibility-modal"
-            description="Manage visibility for a namespace. Private namespaces are only accessible to members, while public namespaces allow read-only access to all authenticated users."
-            actions={[
-              <Button
-                key="save"
-                variant="primary"
-                onClick={() => formikHandleSubmit()}
-                isLoading={isSubmitting}
-                isDisabled={isLoading || !hasChanges || isSubmitting || !!roleBindingsError}
-              >
-                Save
-              </Button>,
-              <Button key="cancel" variant="link" onClick={onClose} isDisabled={isSubmitting}>
-                Cancel
-              </Button>,
-            ]}
-          >
-            <ModalBoxBody>
-              {(error || roleBindingsError) && (
-                <Alert variant={AlertVariant.danger} title="Error" isInline>
-                  {error ||
-                    `Failed to load current visibility state: ${roleBindingsError?.message || String(roleBindingsError)}`}
-                </Alert>
-              )}
-              <Form>
+          <Form>
+            <Stack hasGutter>
+              <StackItem>
+                {(error || roleBindingsError) && (
+                  <Alert variant={AlertVariant.danger} title="Error" isInline>
+                    {error ||
+                      `Failed to load current visibility state: ${roleBindingsError?.message || String(roleBindingsError)}`}
+                  </Alert>
+                )}
+              </StackItem>
+              <StackItem>
                 <RadioGroupField
                   name="visibility"
                   options={[
@@ -188,9 +166,26 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
                   ]}
                   required={false}
                 />
-              </Form>
-            </ModalBoxBody>
-          </Modal>
+              </StackItem>
+              <StackItem>
+                <Button
+                  variant="primary"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    formikHandleSubmit();
+                  }}
+                  isLoading={isSubmitting}
+                  isDisabled={isLoading || !hasChanges || isSubmitting || !!roleBindingsError}
+                  data-test="save-visibility"
+                >
+                  Save
+                </Button>
+                <Button variant={ButtonVariant.link} onClick={onClose} isDisabled={isSubmitting}>
+                  Cancel
+                </Button>
+              </StackItem>
+            </Stack>
+          </Form>
         );
       }}
     </Formik>

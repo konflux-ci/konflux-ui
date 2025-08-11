@@ -72,11 +72,7 @@ const mockPrivateRoleBinding: RoleBinding = {
 
 const renderManageVisibilityModal = () => {
   return renderWithQueryClientAndRouter(
-    <ManageVisibilityModal
-      namespace={mockNamespace}
-      onClose={mockOnClose}
-      modalProps={{ isOpen: true }}
-    />,
+    <ManageVisibilityModal namespace={mockNamespace} onClose={mockOnClose} />,
   );
 };
 
@@ -106,7 +102,6 @@ describe('ManageVisibilityModal Unit Tests', () => {
       renderManageVisibilityModal();
 
       // Form should be rendered but save button should be disabled during loading
-      expect(screen.getByText('Manage visibility')).toBeInTheDocument();
       expect(screen.getByText('Private (Default)')).toBeInTheDocument();
       expect(screen.getByText('Public')).toBeInTheDocument();
 
@@ -431,11 +426,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
       const freshMockOnClose = jest.fn();
 
       renderWithQueryClientAndRouter(
-        <ManageVisibilityModal
-          namespace={mockNamespace}
-          onClose={freshMockOnClose}
-          modalProps={{ isOpen: true }}
-        />,
+        <ManageVisibilityModal namespace={mockNamespace} onClose={freshMockOnClose} />,
       );
 
       const cancelButton = screen.getByRole('button', { name: /cancel/i });
@@ -464,11 +455,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
         // Use the isolated mock
         renderWithQueryClientAndRouter(
-          <ManageVisibilityModal
-            namespace={mockNamespace}
-            onClose={isolatedMockOnCloseCreate}
-            modalProps={{ isOpen: true }}
-          />,
+          <ManageVisibilityModal namespace={mockNamespace} onClose={isolatedMockOnCloseCreate} />,
         );
 
         // Change to public and submit
@@ -533,11 +520,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
         // Use the isolated mock
         renderWithQueryClientAndRouter(
-          <ManageVisibilityModal
-            namespace={mockNamespace}
-            onClose={isolatedMockOnClose}
-            modalProps={{ isOpen: true }}
-          />,
+          <ManageVisibilityModal namespace={mockNamespace} onClose={isolatedMockOnClose} />,
         );
 
         // Change to private and submit
@@ -605,11 +588,7 @@ describe('ManageVisibilityModal Unit Tests', () => {
 
         // Use the isolated mock
         renderWithQueryClientAndRouter(
-          <ManageVisibilityModal
-            namespace={mockNamespace}
-            onClose={isolatedMockOnCloseSuccess}
-            modalProps={{ isOpen: true }}
-          />,
+          <ManageVisibilityModal namespace={mockNamespace} onClose={isolatedMockOnCloseSuccess} />,
         );
 
         // Change to public and submit
