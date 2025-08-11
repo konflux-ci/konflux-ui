@@ -6,7 +6,6 @@ import { BANNER_TYPES, BannerType } from '~/types/banner-type';
 import { ConfigMap } from '~/types/configmap';
 import { SystemNotificationConfig } from '~/types/notification-type';
 
-export const MAX_NOTIFICATION_SUMMARY_LENGTH = 500;
 const SYSTEM_NOTIFICATION_LABEL_SELECTOR = { 'konflux.system.notification': 'true' };
 
 export const useSystemNotifications = () => {
@@ -30,36 +29,48 @@ export const useSystemNotifications = () => {
       return { notifications: [], isLoading, error };
     }
 
-    const notifications: SystemNotificationConfig[] = [];
+    const notifications = configMaps
+      .reduce<SystemNotificationConfig[]>((acc, cm) => {
+        // Skip if no notification content
+        if (!cm?.data?.['notification-content.json']) {
+          // eslint-disable-next-line no-console
+          console.warn('No notification-content.json found in ConfigMap:', cm?.metadata?.name);
+          return acc;
+        }
 
-    for (const cm of configMaps) {
-      const jsonString = cm?.data?.['notification-content.json'];
-      if (!jsonString) continue;
+        try {
+          const parsed = JSON.parse(cm.data['notification-content.json']);
 
-      try {
-        const parsed = JSON.parse(jsonString);
-        const { type, summary, title } = parsed;
-        const isValidType = typeof type === 'string' && BANNER_TYPES.includes(type as BannerType);
-        const isValidSummary = typeof summary === 'string' && summary.trim().length > 0;
+          // Handle multiple notifications per config map
+          // Currently we do not recommend user to enjoy several notifications in one configmap, but
+          // let us just support here.
+          const notificationArray = Array.isArray(parsed) ? parsed : [parsed];
 
-        if (!isValidType || !isValidSummary) continue;
+          notificationArray.forEach((notification) => {
+            const { type, summary } = notification;
+            const isValidType =
+              typeof type === 'string' && BANNER_TYPES.includes(type as BannerType);
+            const isValidSummary = typeof summary === 'string' && summary.trim().length > 0;
 
-        notifications.push({
-          title: title ?? '',
-          component: cm.metadata.name,
-          type: type as BannerType,
-          summary: summary.slice(0, MAX_NOTIFICATION_SUMMARY_LENGTH),
-          created: cm.metadata.creationTimestamp || '',
-        });
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.warn('Invalid notification-content.json in ConfigMap:', cm?.metadata?.name);
-      }
-    }
+            if (isValidType && isValidSummary) {
+              acc.push({
+                title: notification.title ?? '',
+                component: cm.metadata.name,
+                type: notification.type as BannerType,
+                summary: notification.summary,
+                created: cm.metadata.creationTimestamp || '',
+              });
+            }
+          });
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn('Invalid notification-content.json in ConfigMap:', cm?.metadata?.name);
+        }
 
-    // Sort valid alerts by creationTimestamp (newest first)
-    notifications.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+        return acc;
+      }, [])
+      .sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 
-    return { notifications, isLoading: false, error };
+    return { notifications, isLoading, error };
   }, [configMaps, isLoading, error]);
 };

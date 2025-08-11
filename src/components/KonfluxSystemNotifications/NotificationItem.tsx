@@ -3,18 +3,8 @@ import {
   NotificationDrawerListItemBody,
   NotificationDrawerListItemHeader,
 } from '@patternfly/react-core/dist/esm/components';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
+import { Timestamp } from '~/shared/components/timestamp';
 import { SystemNotificationConfig } from '~/types/notification-type';
-
-dayjs.extend(relativeTime);
-
-// Enjoy a relative time within one hour, while absolute time after it.
-export const formatTimestamp = (created: string): string => {
-  const createdDate = dayjs(created);
-  const ageInMinutes = dayjs().diff(createdDate, 'minute');
-  return ageInMinutes < 60 ? createdDate.fromNow() : createdDate.format('MMM D YYYY h:mm A');
-};
 
 // This is the exact notifaction for drawer.
 // Our current implementation does not support individual notification read state for
@@ -31,7 +21,7 @@ export const NotificationItem: React.FC<SystemNotificationConfig> = ({
   return (
     <NotificationDrawerListItem>
       <NotificationDrawerListItemHeader variant={type} title={title?.trim() ? title : component} />
-      <NotificationDrawerListItemBody timestamp={formatTimestamp(created)}>
+      <NotificationDrawerListItemBody timestamp={<Timestamp timestamp={created} simple />}>
         {summary}
       </NotificationDrawerListItemBody>
     </NotificationDrawerListItem>

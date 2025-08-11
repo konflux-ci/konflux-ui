@@ -1,7 +1,5 @@
 import { KONFLUX_INFO_NAMESPACE } from '~/consts/constants';
 import { ConfigMap } from '~/types/configmap';
-import { MAX_NOTIFICATION_SUMMARY_LENGTH } from '../AppRoot/useSystemNotifications';
-
 export const validWarningNotificationJson = {
   type: 'warning',
   summary: 'warning alert',
@@ -67,7 +65,7 @@ export const validInfoNotification = {
   title: '',
 };
 
-const longSummary = 'A'.repeat(MAX_NOTIFICATION_SUMMARY_LENGTH + 100);
+const longSummary = 'A'.repeat(500);
 export const validLongSummaryNotificationJson = {
   type: 'info',
   summary: longSummary,
@@ -148,6 +146,7 @@ export const noContentNotificationConfigMap: ConfigMap = {
 const now = new Date();
 const firstValidCreated = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
 const secondValidCreated = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+const thirdValidCreated = new Date(now.getTime() + 120 * 60 * 1000).toISOString();
 
 export const firstValidInfoNotificationJson = {
   title: 'first summary',
@@ -159,8 +158,15 @@ export const firstValidInfoNotificationJson = {
 export const secondValidInfoNotificationJson = {
   title: 'second summary',
   type: 'info',
-  summary: 'latest alert',
+  summary: 'newer alert',
   created: secondValidCreated,
+};
+
+export const thirdValidDangerNotificationJson = {
+  title: 'third summary',
+  type: 'danger',
+  summary: 'newest alert',
+  created: thirdValidCreated,
 };
 
 export const firstValidInfoNotificationConfigMap: ConfigMap = {
@@ -180,9 +186,49 @@ export const secondValidInfoNotificationConfigMap: ConfigMap = {
   metadata: {
     ...validInfoNotificationConfigMap.metadata,
     creationTimestamp: secondValidCreated,
-    name: 'latest one',
+    name: 'newer one',
   },
   data: {
     'notification-content.json': JSON.stringify(secondValidInfoNotificationJson),
+  },
+};
+
+export const thirdValidDangerNotificationConfigMap: ConfigMap = {
+  ...validInfoNotificationConfigMap,
+  metadata: {
+    ...validInfoNotificationConfigMap.metadata,
+    creationTimestamp: secondValidCreated,
+    name: 'newest one',
+  },
+  data: {
+    'notification-content.json': JSON.stringify(thirdValidDangerNotificationJson),
+  },
+};
+
+export const mockConfigMapWithArray = {
+  ...validInfoNotificationConfigMap,
+  metadata: {
+    ...validInfoNotificationConfigMap.metadata,
+    creationTimestamp: secondValidCreated,
+    name: 'mixed one',
+  },
+  data: {
+    'notification-content.json': JSON.stringify([
+      firstValidInfoNotificationJson,
+      secondValidInfoNotificationJson,
+    ]),
+  },
+};
+
+export const mockConfigMapWithMixedDataInArray = {
+  ...mockConfigMapWithArray,
+  data: {
+    'notification-content.json': JSON.stringify([
+      firstValidInfoNotificationJson,
+      secondValidInfoNotificationJson,
+      JSON.stringify({
+        'notification-content.json': 'invalid json content',
+      }),
+    ]),
   },
 };

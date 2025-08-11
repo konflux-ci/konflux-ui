@@ -9,6 +9,7 @@ import {
   MissingTypeNotificationConfigMap,
   noContentNotificationConfigMap,
   secondValidInfoNotificationConfigMap,
+  thirdValidDangerNotificationJson,
   secondValidInfoNotificationJson,
   validInfoNotification,
   validInfoNotificationConfigMap,
@@ -20,10 +21,13 @@ import {
   validDangerNotification,
   validWarningNotification,
   whitespaceSummaryNotificationConfigMap,
-} from '~/__data__/notifications-data';
+  mockConfigMapWithArray,
+  mockConfigMapWithMixedDataInArray,
+  thirdValidDangerNotificationConfigMap,
+} from '~/components/KonfluxSystemNotifications/__data__/notifications-data';
 import { ConfigMap } from '~/types/configmap';
 import { createK8sUtilMock } from '~/unit-test-utils/mock-k8s';
-import { MAX_NOTIFICATION_SUMMARY_LENGTH, useSystemNotifications } from '../useSystemNotifications';
+import { useSystemNotifications } from '../useSystemNotifications';
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
 
@@ -145,7 +149,7 @@ describe('useSystemNotifications', () => {
     });
     const { result } = renderHook(() => useSystemNotifications());
 
-    expect(result.current.notifications[0].summary).toHaveLength(MAX_NOTIFICATION_SUMMARY_LENGTH);
+    expect(result.current.notifications[0].summary).toHaveLength(500);
   });
 
   it('skips ConfigMap with invalid JSON and logs warning', () => {
@@ -224,7 +228,7 @@ describe('useSystemNotifications', () => {
     expect(result.current.notifications).toHaveLength(0);
   });
 
-  it('skips ConfigMap without alert-content.json', () => {
+  it('skips ConfigMap without alert-content.json and logs warning', () => {
     k8sWatchMock.mockReturnValue({
       data: [noContentNotificationConfigMap],
       isLoading: false,
@@ -234,6 +238,10 @@ describe('useSystemNotifications', () => {
     const { result } = renderHook(() => useSystemNotifications());
 
     expect(result.current.notifications).toHaveLength(0);
+    expect(mockConsoleWarn).toHaveBeenCalledWith(
+      'No notification-content.json found in ConfigMap:',
+      noContentNotificationConfigMap.metadata.name,
+    );
   });
 
   it('handles mixed valid and invalid ConfigMaps', () => {
@@ -292,5 +300,87 @@ describe('useSystemNotifications', () => {
     );
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBe(null);
+  });
+
+  it('should handle multiple notifications in a single configmap', () => {
+    k8sWatchMock.mockReturnValue({
+      data: [mockConfigMapWithArray],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+    expect(result.current.notifications).toHaveLength(2);
+    expect(result.current.notifications).toEqual(
+      expect.arrayContaining([
+        {
+          ...secondValidInfoNotificationJson,
+          created: mockConfigMapWithArray.metadata.creationTimestamp,
+          component: mockConfigMapWithArray.metadata.name,
+        },
+        {
+          ...firstValidInfoNotificationJson,
+          created: mockConfigMapWithArray.metadata.creationTimestamp,
+          component: mockConfigMapWithArray.metadata.name,
+        },
+      ]),
+    );
+  });
+
+  it('should filter out invalid notifications from array while keeping valid ones', () => {
+    k8sWatchMock.mockReturnValue({
+      data: [mockConfigMapWithMixedDataInArray],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+
+    expect(result.current.notifications).toHaveLength(2);
+    expect(result.current.notifications).toEqual(
+      expect.arrayContaining([
+        {
+          ...secondValidInfoNotificationJson,
+          component: mockConfigMapWithArray.metadata.name,
+          created: mockConfigMapWithArray.metadata.creationTimestamp,
+        },
+        {
+          ...firstValidInfoNotificationJson,
+          component: mockConfigMapWithArray.metadata.name,
+          created: mockConfigMapWithArray.metadata.creationTimestamp,
+        },
+      ]),
+    );
+  });
+
+  it('should handle mix of single notification and array notifications from different configmaps', () => {
+    k8sWatchMock.mockReturnValue({
+      data: [thirdValidDangerNotificationConfigMap, mockConfigMapWithMixedDataInArray],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+
+    expect(result.current.notifications).toHaveLength(3);
+    expect(result.current.notifications).toEqual(
+      expect.arrayContaining([
+        {
+          ...thirdValidDangerNotificationJson,
+          component: thirdValidDangerNotificationConfigMap.metadata.name,
+          created: thirdValidDangerNotificationConfigMap.metadata.creationTimestamp,
+        },
+        {
+          ...secondValidInfoNotificationJson,
+          component: mockConfigMapWithMixedDataInArray.metadata.name,
+          created: mockConfigMapWithMixedDataInArray.metadata.creationTimestamp,
+        },
+        {
+          ...firstValidInfoNotificationJson,
+          component: mockConfigMapWithMixedDataInArray.metadata.name,
+          created: mockConfigMapWithMixedDataInArray.metadata.creationTimestamp,
+        },
+      ]),
+    );
   });
 });
