@@ -28,8 +28,8 @@ export const AppRoot: React.FC = () => {
   }, [isActive]);
 
   const [isDrawerExpanded, setIsDrawerExpanded] = React.useState(false);
-  const toggleDrawer = () => setIsDrawerExpanded((prev) => !prev);
-  const closeDrawer = () => setIsDrawerExpanded(false);
+  const toggleDrawer = React.useCallback(() => setIsDrawerExpanded((prev) => !prev), []);
+  const closeDrawer = React.useCallback(() => setIsDrawerExpanded(false), []);
 
   return (
     <>
