@@ -1,3 +1,4 @@
+import React from 'react';
 import { PLACEHOLDER, REPO_PUSH, SBOM_EVENT_TO_BOMBINO } from '../consts/constants';
 import {
   KonfluxInstanceVisibility,
@@ -49,20 +50,28 @@ const getBombinoUrl = (
   return notification?.config?.url ?? '';
 };
 
-export const useSbomUrl = (): ((imageHash: string, sbomSha?: string) => string) => {
+export const useSbomUrl = (): ((imageHash: string, sbomSha?: string) => string | undefined) => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
-  return (imageHash: string, sbomSha?: string) => {
-    if (loaded && !error) {
-      const sbomSHAUrl = konfluxPublicInfo.integrations.sbom_server.sbom_sha ?? '';
-      const sbomServerUrl = konfluxPublicInfo.integrations.sbom_server.url ?? '';
+  return React.useCallback(
+    (imageHash: string, sbomSha?: string) => {
+      if (loaded && !error) {
+        const sbomSHAUrl = konfluxPublicInfo.integrations?.sbom_server?.sbom_sha ?? '';
+        const sbomServerUrl = konfluxPublicInfo.integrations?.sbom_server?.url ?? '';
 
-      if (sbomSHAUrl && sbomSha) {
-        return sbomSHAUrl.replace(PLACEHOLDER, sbomSha);
+        if (sbomSHAUrl && sbomSha) {
+          return sbomSHAUrl.replace(PLACEHOLDER, sbomSha);
+        }
+        // fallback if sbom sha data not available
+        return sbomServerUrl.replace(PLACEHOLDER, imageHash);
       }
-      // fallback if sbom sha data not available
-      return sbomServerUrl.replace(PLACEHOLDER, imageHash);
-    }
-  };
+    },
+    [
+      error,
+      konfluxPublicInfo.integrations?.sbom_server?.sbom_sha,
+      konfluxPublicInfo.integrations?.sbom_server?.url,
+      loaded,
+    ],
+  );
 };
 
 export const useBombinoUrl = (): string | undefined => {
