@@ -1,5 +1,15 @@
 import React from 'react';
-import { Alert, Button, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import {
+  Alert,
+  Banner,
+  Bullseye,
+  Button,
+  Divider,
+  Spinner,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+} from '@patternfly/react-core';
 import { CompressIcon, DownloadIcon, ExpandIcon } from '@patternfly/react-icons/dist/esm/icons';
 import {
   LogViewer as PatternFlyLogViewer,
@@ -12,6 +22,9 @@ import { TaskRunKind } from '../../../../types';
 import { useFullscreen } from '../../../hooks/fullscreen';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
+
+import './Logs.scss';
+import './MultiStreamLogs.scss';
 
 export type Props = LogViewerProps & {
   showSearch?: boolean;
@@ -74,19 +87,15 @@ const LogViewer: React.FC<Props> = ({
         theme="dark"
         scrollToRow={scrolledRow}
         header={
-          <div className="multi-stream-logs__taskName" data-testid="logs-taskName">
+          <Banner data-testid="logs-taskName">
             {taskName} <LogsTaskDuration taskRun={taskRun} />
             {isLoading && (
-              <span className="multi-stream-logs__taskName__loading-indicator">
-                <LoadingInline />
-              </span>
+              <Bullseye>
+                <Spinner />
+              </Bullseye>
             )}
-            {errorMessage && (
-              <span className="multi-stream-logs__taskName__error-indicator">
-                <Alert variant="danger" isInline title={errorMessage} />
-              </span>
-            )}
-          </div>
+            {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
+          </Banner>
         }
         toolbar={
           <Toolbar>
@@ -102,9 +111,11 @@ const LogViewer: React.FC<Props> = ({
                   className="multi-stream-logs__button"
                 >
                   <LogViewerSearch placeholder="Search" minSearchChars={0} width="100%" />
-                  <div className="multi-stream-logs__divider" style={{ alignSelf: 'center' }}>
-                    |
-                  </div>
+                  <Divider
+                    component="div"
+                    orientation={{ default: 'vertical' }}
+                    className="multi-stream-logs__divider"
+                  />
                 </ToolbarItem>
               )}
               <ToolbarItem alignSelf="center" className="multi-stream-logs__button">
@@ -112,7 +123,11 @@ const LogViewer: React.FC<Props> = ({
                   <DownloadIcon className="multi-stream-logs__icon" />
                   Download
                 </Button>
-                <div className="multi-stream-logs__divider">|</div>
+                <Divider
+                  component="div"
+                  orientation={{ default: 'vertical' }}
+                  className="multi-stream-logs__divider"
+                />
               </ToolbarItem>
               {onDownloadAll && (
                 <ToolbarItem alignSelf="center" className="multi-stream-logs__button">
@@ -126,7 +141,11 @@ const LogViewer: React.FC<Props> = ({
                     {downloadAllLabel}
                     {downloadAllStatus && <LoadingInline />}
                   </Button>
-                  <div className="multi-stream-logs__divider">|</div>
+                  <Divider
+                    component="div"
+                    orientation={{ default: 'vertical' }}
+                    className="multi-stream-logs__divider"
+                  />
                 </ToolbarItem>
               )}
               {fullscreenToggle && (
