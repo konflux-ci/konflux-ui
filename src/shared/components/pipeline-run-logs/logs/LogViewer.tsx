@@ -10,7 +10,12 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { CompressIcon, DownloadIcon, ExpandIcon } from '@patternfly/react-icons/dist/esm/icons';
+import {
+  CompressIcon,
+  DownloadIcon,
+  ExpandIcon,
+  OutlinedPlayCircleIcon,
+} from '@patternfly/react-icons/dist/esm/icons';
 import {
   LogViewer as PatternFlyLogViewer,
   LogViewerProps,
@@ -28,7 +33,7 @@ import './LogViewer.scss';
 export type Props = LogViewerProps & {
   showSearch?: boolean;
   data: string;
-  autoScroll?: boolean;
+  allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
   taskRun?: TaskRunKind;
@@ -38,7 +43,7 @@ export type Props = LogViewerProps & {
 
 const LogViewer: React.FC<Props> = ({
   showSearch = true,
-  autoScroll,
+  allowAutoScroll,
   data = '',
   downloadAllLabel,
   onDownloadAll,
@@ -49,6 +54,10 @@ const LogViewer: React.FC<Props> = ({
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = React.useState<LogViewerProps['theme']>('dark');
+
+  const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
+  const [autoScroll, setAutoScroll] = React.useState(allowAutoScroll);
+
   const scrolledRow = React.useMemo(
     () => (autoScroll ? data.split('\n').length : 0),
     [autoScroll, data],
@@ -56,6 +65,15 @@ const LogViewer: React.FC<Props> = ({
 
   const [isFullscreen, fullscreenRef, fullscreenToggle] = useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
+
+  const showResumeStreamButton = allowAutoScroll && scrollDirection === 'backward';
+
+  // track when logs become available to enable auto-scroll
+  React.useEffect(() => {
+    if (data && allowAutoScroll) {
+      setAutoScroll(true);
+    }
+  }, [data, allowAutoScroll]);
 
   const downloadLogs = () => {
     if (!data) return;
@@ -77,6 +95,7 @@ const LogViewer: React.FC<Props> = ({
         console.warn(err.message || 'Error downloading logs.');
       });
   };
+
   return (
     <div
       ref={fullscreenRef}
@@ -93,6 +112,17 @@ const LogViewer: React.FC<Props> = ({
         data={data}
         theme={logTheme}
         scrollToRow={scrolledRow}
+        onScroll={(onScrollProps) => {
+          const { scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested } =
+            onScrollProps;
+          setScrollDirection(logViewerScrollDirection);
+
+          if (scrollUpdateWasRequested) {
+            setAutoScroll(false);
+          }
+
+          props.onScroll?.(onScrollProps);
+        }}
         header={
           <Banner data-testid="logs-taskName">
             {taskName} <LogsTaskDuration taskRun={taskRun} />
@@ -158,7 +188,7 @@ const LogViewer: React.FC<Props> = ({
                 </>
               )}
               {fullscreenToggle && (
-                <ToolbarItem alignSelf="center">
+                <ToolbarItem alignSelf="center" spacer={{ default: 'spacerMd' }}>
                   <Button variant="link" onClick={fullscreenToggle} isInline>
                     {isFullscreen ? (
                       <>
@@ -176,6 +206,20 @@ const LogViewer: React.FC<Props> = ({
               )}
             </ToolbarContent>
           </Toolbar>
+        }
+        footer={
+          showResumeStreamButton && (
+            <div className="log-viewer__resume-stream-button-wrapper">
+              <Button
+                data-testid="resume-log-stream"
+                variant="primary"
+                isBlock
+                onClick={() => setAutoScroll(true)}
+              >
+                <OutlinedPlayCircleIcon /> Resume log stream
+              </Button>
+            </div>
+          )
         }
       />
     </div>

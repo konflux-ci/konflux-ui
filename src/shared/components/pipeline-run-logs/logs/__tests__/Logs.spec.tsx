@@ -7,7 +7,7 @@ const mockLogViewer = jest.fn();
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
     data: string;
-    autoScroll: boolean;
+    allowAutoScroll: boolean;
     onScroll?: () => void;
   }) {
     mockLogViewer(props);
@@ -69,7 +69,7 @@ describe('Logs', () => {
   const defaultProps = {
     resource: mockResource,
     containers: mockContainers,
-    autoScroll: false,
+    allowAutoScroll: false,
     taskName: 'task-test',
     taskRun: undefined,
     isLoading: false,
@@ -88,12 +88,12 @@ describe('Logs', () => {
     });
 
     it('should render LogViewer with correct props', () => {
-      render(<Logs {...defaultProps} autoScroll={true} />);
+      render(<Logs {...defaultProps} allowAutoScroll={true} />);
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.any(String),
-          autoScroll: true,
+          allowAutoScroll: true,
           onScroll: undefined,
         }),
       );
