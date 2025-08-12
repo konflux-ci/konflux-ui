@@ -25,6 +25,10 @@ import {
   mockConfigMapWithMixedDataInArray,
   thirdValidDangerNotificationConfigMap,
   longSummary,
+  futureTimestampNotificationConfigMap,
+  invalidTimestampNotificationConfigMap,
+  missingActiveTimestampNotificationConfigMap,
+  missingActiveTimestampNotificationJson,
 } from '~/components/KonfluxSystemNotifications/__data__/notifications-data';
 import { ConfigMap } from '~/types/configmap';
 import { createK8sUtilMock } from '~/unit-test-utils/mock-k8s';
@@ -142,7 +146,7 @@ describe('useSystemNotifications', () => {
     expect(result.current.error).toBe(null);
   });
 
-  it('truncates summary to MAX_NOTIFICATION_SUMMARY_LENGTH', () => {
+  it('Keep long summary as it is', () => {
     k8sWatchMock.mockReturnValue({
       data: [validLongSummaryNotificationConfigMap],
       isLoading: false,
@@ -163,9 +167,14 @@ describe('useSystemNotifications', () => {
     const { result } = renderHook(() => useSystemNotifications());
 
     expect(result.current.notifications).toHaveLength(0);
-    expect(mockConsoleWarn).toHaveBeenCalledWith(
-      'Invalid notification-content.json in ConfigMap:',
-      invalidDataNotificationConfigMap.metadata.name,
+    expect(mockConsoleWarn).toHaveBeenNthCalledWith(
+      1,
+      'Invalid notification-content.json in ConfigMap: test-alert',
+    );
+    expect(mockConsoleWarn).toHaveBeenNthCalledWith(
+      2,
+      'Parsing error details:',
+      'Unexpected token \'i\', "invalid json content" is not valid JSON',
     );
   });
 
@@ -287,19 +296,22 @@ describe('useSystemNotifications', () => {
     const { result } = renderHook(() => useSystemNotifications());
 
     expect(result.current.notifications).toHaveLength(2);
-    expect(result.current.notifications).toEqual(
-      expect.arrayContaining([
-        {
-          ...secondValidInfoNotificationJson,
-          component: secondValidInfoNotificationConfigMap.metadata.name,
-        },
-        {
-          ...firstValidInfoNotificationJson,
-          component: firstValidInfoNotificationConfigMap.metadata.name,
-        },
-      ]),
-    );
-    expect(result.current.isLoading).toBe(false);
+    const { activeTimestamp: activeTimestampSecond, ...restSecond } =
+      secondValidInfoNotificationJson;
+    const { activeTimestamp: activeTimestampFirst, ...restFirst } = firstValidInfoNotificationJson;
+    expect(result.current.notifications).toEqual([
+      {
+        ...restSecond,
+        created: activeTimestampSecond,
+        component: secondValidInfoNotificationConfigMap.metadata.name,
+      },
+      {
+        ...restFirst,
+        created: activeTimestampFirst,
+        component: firstValidInfoNotificationConfigMap.metadata.name,
+      },
+    ]),
+      expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBe(null);
   });
 
@@ -312,20 +324,21 @@ describe('useSystemNotifications', () => {
 
     const { result } = renderHook(() => useSystemNotifications());
     expect(result.current.notifications).toHaveLength(2);
-    expect(result.current.notifications).toEqual(
-      expect.arrayContaining([
-        {
-          ...secondValidInfoNotificationJson,
-          created: mockConfigMapWithArray.metadata.creationTimestamp,
-          component: mockConfigMapWithArray.metadata.name,
-        },
-        {
-          ...firstValidInfoNotificationJson,
-          created: mockConfigMapWithArray.metadata.creationTimestamp,
-          component: mockConfigMapWithArray.metadata.name,
-        },
-      ]),
-    );
+    const { activeTimestamp: activeTimestampSecond, ...restSecond } =
+      secondValidInfoNotificationJson;
+    const { activeTimestamp: activeTimestampFirst, ...restFirst } = firstValidInfoNotificationJson;
+    expect(result.current.notifications).toEqual([
+      {
+        ...restSecond,
+        created: activeTimestampSecond,
+        component: mockConfigMapWithArray.metadata.name,
+      },
+      {
+        ...restFirst,
+        created: activeTimestampFirst,
+        component: mockConfigMapWithArray.metadata.name,
+      },
+    ]);
   });
 
   it('should filter out invalid notifications from array while keeping valid ones', () => {
@@ -338,20 +351,21 @@ describe('useSystemNotifications', () => {
     const { result } = renderHook(() => useSystemNotifications());
 
     expect(result.current.notifications).toHaveLength(2);
-    expect(result.current.notifications).toEqual(
-      expect.arrayContaining([
-        {
-          ...secondValidInfoNotificationJson,
-          component: mockConfigMapWithArray.metadata.name,
-          created: mockConfigMapWithArray.metadata.creationTimestamp,
-        },
-        {
-          ...firstValidInfoNotificationJson,
-          component: mockConfigMapWithArray.metadata.name,
-          created: mockConfigMapWithArray.metadata.creationTimestamp,
-        },
-      ]),
-    );
+    const { activeTimestamp: activeTimestampSecond, ...restSecond } =
+      secondValidInfoNotificationJson;
+    const { activeTimestamp: activeTimestampFirst, ...restFirst } = firstValidInfoNotificationJson;
+    expect(result.current.notifications).toEqual([
+      {
+        ...restSecond,
+        component: mockConfigMapWithMixedDataInArray.metadata.name,
+        created: activeTimestampSecond,
+      },
+      {
+        ...restFirst,
+        component: mockConfigMapWithMixedDataInArray.metadata.name,
+        created: activeTimestampFirst,
+      },
+    ]);
   });
 
   it('should handle mix of single notification and array notifications from different configmaps', () => {
@@ -364,24 +378,95 @@ describe('useSystemNotifications', () => {
     const { result } = renderHook(() => useSystemNotifications());
 
     expect(result.current.notifications).toHaveLength(3);
-    expect(result.current.notifications).toEqual(
-      expect.arrayContaining([
-        {
-          ...thirdValidDangerNotificationJson,
-          component: thirdValidDangerNotificationConfigMap.metadata.name,
-          created: thirdValidDangerNotificationConfigMap.metadata.creationTimestamp,
-        },
-        {
-          ...secondValidInfoNotificationJson,
-          component: mockConfigMapWithMixedDataInArray.metadata.name,
-          created: mockConfigMapWithMixedDataInArray.metadata.creationTimestamp,
-        },
-        {
-          ...firstValidInfoNotificationJson,
-          component: mockConfigMapWithMixedDataInArray.metadata.name,
-          created: mockConfigMapWithMixedDataInArray.metadata.creationTimestamp,
-        },
-      ]),
+    const { activeTimestamp: activeTimestampSecond, ...restSecond } =
+      secondValidInfoNotificationJson;
+    const { activeTimestamp: activeTimestampFirst, ...restFirst } = firstValidInfoNotificationJson;
+    expect(result.current.notifications).toEqual([
+      {
+        ...thirdValidDangerNotificationJson,
+        component: thirdValidDangerNotificationConfigMap.metadata.name,
+        created: thirdValidDangerNotificationConfigMap.metadata.creationTimestamp,
+      },
+      {
+        ...restSecond,
+        component: mockConfigMapWithMixedDataInArray.metadata.name,
+        created: activeTimestampSecond,
+      },
+      {
+        ...restFirst,
+        component: mockConfigMapWithMixedDataInArray.metadata.name,
+        created: activeTimestampFirst,
+      },
+    ]);
+  });
+
+  it('should filter out notifications with future timestamps', () => {
+    k8sWatchMock.mockReturnValue({
+      data: [futureTimestampNotificationConfigMap, validInfoNotificationConfigMap],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+
+    // Should only include the valid notification, not the future one
+    expect(result.current.notifications).toHaveLength(1);
+    expect(result.current.notifications[0].component).toBe(
+      validInfoNotificationConfigMap.metadata.name,
     );
+  });
+
+  it('should filter out notifications with invalid timestamps', () => {
+    k8sWatchMock.mockReturnValue({
+      data: [invalidTimestampNotificationConfigMap, validWarningNotificationConfigMap],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+
+    // Should only include the valid notification, not the invalid timestamp one
+    expect(result.current.notifications).toHaveLength(1);
+    expect(result.current.notifications[0].component).toBe(
+      validWarningNotificationConfigMap.metadata.name,
+    );
+  });
+
+  it('should use ConfigMap timestamp when activeTimestamp is missing', () => {
+    k8sWatchMock.mockReturnValue({
+      data: [missingActiveTimestampNotificationConfigMap],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+
+    expect(result.current.notifications).toHaveLength(1);
+    expect(result.current.notifications[0]).toEqual({
+      ...missingActiveTimestampNotificationJson,
+      component: missingActiveTimestampNotificationConfigMap.metadata.name,
+      created: missingActiveTimestampNotificationConfigMap.metadata.creationTimestamp,
+      title: '',
+    });
+  });
+
+  it('should filter out notifications when both activeTimestamp and ConfigMap timestamp are missing', () => {
+    const configMapWithoutTimestamp = {
+      ...missingActiveTimestampNotificationConfigMap,
+      metadata: {
+        ...missingActiveTimestampNotificationConfigMap.metadata,
+        creationTimestamp: undefined,
+      },
+    };
+
+    k8sWatchMock.mockReturnValue({
+      data: [configMapWithoutTimestamp],
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useSystemNotifications());
+
+    expect(result.current.notifications).toHaveLength(0);
   });
 });

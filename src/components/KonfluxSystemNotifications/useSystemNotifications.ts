@@ -52,19 +52,52 @@ export const useSystemNotifications = () => {
               typeof type === 'string' && BANNER_TYPES.includes(type as BannerType);
             const isValidSummary = typeof summary === 'string' && summary.trim().length > 0;
 
-            if (isValidType && isValidSummary) {
+            const notificationTimestamp: string =
+              notification?.activeTimestamp ?? cm.metadata.creationTimestamp;
+
+            const isActive = (() => {
+              if (!notificationTimestamp) {
+                // eslint-disable-next-line no-console
+                console.warn(
+                  'Notification not active: missing timestamp for ConfigMap:',
+                  cm.metadata.name,
+                );
+                return false; // Treat missing timestamp as invalid
+              }
+              const timestampMs = new Date(notificationTimestamp).getTime();
+              const active = !isNaN(timestampMs) && timestampMs <= Date.now();
+              if (!active) {
+                // eslint-disable-next-line no-console
+                console.warn(
+                  'Notification not active: timestamp check failed for ConfigMap:',
+                  cm.metadata.name,
+                  'timestamp:',
+                  notificationTimestamp,
+                  'timestampMs:',
+                  timestampMs,
+                  'now:',
+                  Date.now(),
+                );
+              }
+              return active;
+            })();
+
+            if (isValidType && isValidSummary && isActive) {
               acc.push({
-                title: notification.title ?? '',
+                title: notification?.title ?? '',
                 component: cm.metadata.name,
                 type: notification.type as BannerType,
                 summary: notification.summary,
-                created: cm.metadata.creationTimestamp || '',
+                created: notificationTimestamp,
               });
             }
           });
         } catch (e) {
           // eslint-disable-next-line no-console
-          console.warn('Invalid notification-content.json in ConfigMap:', cm?.metadata?.name);
+          console.warn(`Invalid notification-content.json in ConfigMap: ${cm?.metadata?.name}`);
+
+          // eslint-disable-next-line no-console
+          console.warn('Parsing error details:', e instanceof Error ? e.message : e);
         }
 
         return acc;
