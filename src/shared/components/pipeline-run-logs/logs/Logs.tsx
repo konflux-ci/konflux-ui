@@ -164,18 +164,16 @@ const Logs: React.FC<LogsProps> = ({
   }, [formattedLogs, onLogsChange]);
 
   return (
-    <div className="logs" data-test="logs-container">
-      <LogViewer
-        data={formattedLogs}
-        autoScroll={autoScroll}
-        onScroll={onScroll}
-        downloadAllLabel={downloadAllLabel}
-        onDownloadAll={onDownloadAll}
-        taskRun={taskRun}
-        isLoading={isLoading}
-        errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
-      />
-    </div>
+    <LogViewer
+      data={formattedLogs}
+      autoScroll={autoScroll}
+      onScroll={onScroll}
+      downloadAllLabel={downloadAllLabel}
+      onDownloadAll={onDownloadAll}
+      taskRun={taskRun}
+      isLoading={isLoading}
+      errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
+    />
   );
 };
 

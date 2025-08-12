@@ -4,9 +4,6 @@ import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
 import LogViewer from './LogViewer';
 
-import './Logs.scss';
-import './MultiStreamLogs.scss';
-
 type TektonTaskRunLogProps = {
   taskRun?: TaskRunKind;
   downloadAllLabel?: string;
@@ -28,21 +25,19 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
 
   return (
     <>
-      <div className="multi-stream-logs__container" data-testid="tr-logs-task-container">
-        {!errorMessage && trLoaded ? (
-          <div className="logs" data-testid="tr-logs-container">
-            <LogViewer
-              data={trResults}
-              autoScroll
-              downloadAllLabel={downloadAllLabel}
-              onDownloadAll={onDownloadAll}
-              taskRun={taskRun}
-              isLoading={!trLoaded}
-              errorMessage={errorMessage}
-            />
-          </div>
-        ) : null}
-      </div>
+      {!errorMessage && trLoaded ? (
+        <div data-testid="tr-logs-container">
+          <LogViewer
+            data={trResults}
+            autoScroll
+            downloadAllLabel={downloadAllLabel}
+            onDownloadAll={onDownloadAll}
+            taskRun={taskRun}
+            isLoading={!trLoaded}
+            errorMessage={errorMessage}
+          />
+        </div>
+      ) : null}
     </>
   );
 };

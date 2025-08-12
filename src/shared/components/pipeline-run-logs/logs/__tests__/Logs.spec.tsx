@@ -11,7 +11,7 @@ jest.mock('../LogViewer', () => {
     onScroll?: () => void;
   }) {
     mockLogViewer(props);
-    return <div data-testid="mock-log-viewer" />;
+    return <div data-test="mock-log-viewer" />;
   };
 });
 
@@ -84,7 +84,7 @@ describe('Logs', () => {
     it('should render logs container', () => {
       render(<Logs {...defaultProps} />);
 
-      expect(screen.getByTestId('logs-container')).toBeInTheDocument();
+      expect(screen.getByTestId('mock-log-viewer')).toBeInTheDocument();
     });
 
     it('should render LogViewer with correct props', () => {
@@ -122,7 +122,7 @@ describe('Logs', () => {
       it('should handle empty containers array', () => {
         render(<Logs {...defaultProps} containers={[]} />);
 
-        expect(screen.getByTestId('logs-container')).toBeInTheDocument();
+        expect(screen.getByTestId('mock-log-viewer')).toBeInTheDocument();
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
             data: '',

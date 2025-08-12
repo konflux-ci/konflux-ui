@@ -104,7 +104,7 @@ describe('LogViewer', () => {
     it('should show loading indicator when isLoading is true', () => {
       render(<LogViewer {...defaultProps} isLoading={true} taskRun={mockTaskRun} />);
 
-      expect(screen.getByTestId('loading-inline')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
 
     it('should show error message when errorMessage is provided', () => {
@@ -343,7 +343,7 @@ describe('LogViewer', () => {
 
       render(<LogViewer {...defaultProps} />);
 
-      const toolbarContent = document.querySelector('.multi-stream-logs--fullscreen');
+      const toolbarContent = document.querySelector('.log-viewer--fullscreen');
       expect(toolbarContent).toBeInTheDocument();
     });
   });

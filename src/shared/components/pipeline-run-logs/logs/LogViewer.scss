@@ -1,0 +1,138 @@
+.log-viewer {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  height: 100%;
+
+  &--fullscreen {
+    padding: var(--pf-v5-global--spacer--sm);
+  }
+
+  &__icon {
+    margin-right: var(--pf-v5-global--spacer--xs);
+  }
+
+  &__divider {
+    color: var(--pf-v5-global--palette--black-600);
+    margin: 0 var(--pf-v5-global--spacer--sm);
+    align-self: center;
+  }
+  &__divider.pf-v5-c-divider {
+    height: 20px;
+  }
+
+  &__button {
+    margin-right: 0;
+  }
+
+  &__container {
+    font-family: Menlo, Monaco, 'Courier New', monospace;
+  }
+}
+
+// LogViewer theme isolation - override global PatternFly theme
+.log-viewer-theme-isolation {
+  // Light theme override - using PatternFly palette colors to avoid global theme interference
+  &--light {
+    // LogViewer main elements
+    .pf-v5-c-log-viewer,
+    .pf-v5-c-log-viewer__main,
+    .pf-v5-c-log-viewer__text {
+      background-color: var(--pf-v5-global--palette--white) !important;
+      color: var(--pf-v5-global--palette--black-1000) !important;
+    }
+
+    // Header (Banner) styling
+    .pf-v5-c-banner {
+      background-color: var(--pf-v5-global--palette--black-150) !important;
+      color: var(--pf-v5-global--palette--black-1000) !important;
+      border-bottom: 1px solid var(--pf-v5-global--palette--black-300) !important;
+    }
+
+    // Toolbar styling
+    .pf-v5-c-toolbar {
+      background-color: var(--pf-v5-global--palette--white) !important;
+      border-bottom: 1px solid var(--pf-v5-global--palette--black-300) !important;
+      color: var(--pf-v5-global--palette--black-1000) !important;
+    }
+
+    // Toolbar buttons and controls
+    .pf-v5-c-button.pf-m-link {
+      color: var(--pf-v5-global--palette--blue-400) !important;
+    }
+
+    .pf-v5-c-check__label {
+      color: var(--pf-v5-global--palette--black-1000) !important;
+    }
+
+    // LogViewerSearch styling - target PatternFly input components
+    .pf-v5-c-text-input-group,
+    .pf-v5-c-form-control,
+    input[type='text'] {
+      background-color: var(--pf-v5-global--palette--white) !important;
+      border: 1px solid var(--pf-v5-global--palette--black-300) !important;
+      color: var(--pf-v5-global--palette--black-1000) !important;
+
+      &::placeholder {
+        color: var(--pf-v5-global--palette--black-600) !important;
+      }
+    }
+
+    // Dividers
+    .log-viewer__divider {
+      color: var(--pf-v5-global--palette--black-600) !important;
+    }
+  }
+
+  // Dark theme override - using PatternFly palette colors to avoid global theme interference
+  &--dark {
+    // LogViewer main elements
+    .pf-v5-c-log-viewer,
+    .pf-v5-c-log-viewer__main,
+    .pf-v5-c-log-viewer__text {
+      background-color: var(--pf-v5-global--palette--black-1000) !important;
+      color: var(--pf-v5-global--palette--white) !important;
+    }
+
+    // Header (Banner) styling
+    .pf-v5-c-banner {
+      background-color: var(--pf-v5-global--palette--black-850) !important;
+      color: var(--pf-v5-global--palette--white) !important;
+      border-bottom: 1px solid var(--pf-v5-global--palette--black-600) !important;
+    }
+
+    // Toolbar styling
+    .pf-v5-c-toolbar {
+      background-color: var(--pf-v5-global--palette--black-900) !important;
+      border-bottom: 1px solid var(--pf-v5-global--palette--black-600) !important;
+      color: var(--pf-v5-global--palette--white) !important;
+    }
+
+    // Toolbar buttons and controls
+    .pf-v5-c-button.pf-m-link {
+      color: var(--pf-v5-global--palette--blue-200) !important;
+    }
+
+    .pf-v5-c-check__label {
+      color: var(--pf-v5-global--palette--white) !important;
+    }
+
+    // LogViewerSearch styling - target PatternFly input components
+    .pf-v5-c-text-input-group,
+    .pf-v5-c-form-control,
+    input[type='text'] {
+      background-color: var(--pf-v5-global--palette--black-900) !important;
+      border: 1px solid var(--pf-v5-global--palette--black-600) !important;
+      color: var(--pf-v5-global--palette--white) !important;
+
+      &::placeholder {
+        color: var(--pf-v5-global--palette--black-400) !important;
+      }
+    }
+
+    // Dividers
+    .log-viewer__divider {
+      color: var(--pf-v5-global--palette--black-400) !important;
+    }
+  }
+}

@@ -4,7 +4,7 @@ import {
   Banner,
   Bullseye,
   Button,
-  Divider,
+  Checkbox,
   Spinner,
   Toolbar,
   ToolbarContent,
@@ -23,8 +23,7 @@ import { useFullscreen } from '../../../hooks/fullscreen';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
 
-import './Logs.scss';
-import './MultiStreamLogs.scss';
+import './LogViewer.scss';
 
 export type Props = LogViewerProps & {
   showSearch?: boolean;
@@ -49,6 +48,7 @@ const LogViewer: React.FC<Props> = ({
   ...props
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
+  const [logTheme, setLogTheme] = React.useState<LogViewerProps['theme']>('dark');
   const scrolledRow = React.useMemo(
     () => (autoScroll ? data.split('\n').length : 0),
     [autoScroll, data],
@@ -78,20 +78,27 @@ const LogViewer: React.FC<Props> = ({
       });
   };
   return (
-    <div ref={fullscreenRef} style={{ height: isFullscreen ? '100vh' : '100%' }}>
+    <div
+      ref={fullscreenRef}
+      style={{ height: isFullscreen ? '100vh' : '100%' }}
+      className={classNames('log-viewer__container', 'log-viewer-theme-isolation', {
+        'log-viewer-theme-isolation--dark': logTheme === 'dark',
+        'log-viewer-theme-isolation--light': logTheme === 'light',
+      })}
+    >
       <PatternFlyLogViewer
         {...props}
         hasLineNumbers={false}
         height={isFullscreen ? '100%' : undefined}
         data={data}
-        theme="dark"
+        theme={logTheme}
         scrollToRow={scrolledRow}
         header={
           <Banner data-testid="logs-taskName">
             {taskName} <LogsTaskDuration taskRun={taskRun} />
             {isLoading && (
               <Bullseye>
-                <Spinner />
+                <Spinner size="lg" />
               </Bullseye>
             )}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
@@ -101,64 +108,66 @@ const LogViewer: React.FC<Props> = ({
           <Toolbar>
             <ToolbarContent
               className={classNames({
-                'multi-stream-logs--fullscreen': isFullscreen,
+                'log-viewer--fullscreen': isFullscreen,
               })}
             >
               {showSearch && (
-                <ToolbarItem
-                  alignSelf="center"
-                  style={{ flex: 1 }}
-                  className="multi-stream-logs__button"
-                >
-                  <LogViewerSearch placeholder="Search" minSearchChars={0} width="100%" />
-                  <Divider
-                    component="div"
-                    orientation={{ default: 'vertical' }}
-                    className="multi-stream-logs__divider"
-                  />
-                </ToolbarItem>
+                <>
+                  <ToolbarItem alignSelf="center" style={{ flex: 1 }}>
+                    <LogViewerSearch placeholder="Search" minSearchChars={0} width="100%" />
+                  </ToolbarItem>
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
+                </>
               )}
-              <ToolbarItem alignSelf="center" className="multi-stream-logs__button">
-                <Button variant="link" onClick={downloadLogs} isInline>
-                  <DownloadIcon className="multi-stream-logs__icon" />
-                  Download
-                </Button>
-                <Divider
-                  component="div"
-                  orientation={{ default: 'vertical' }}
-                  className="multi-stream-logs__divider"
+              <ToolbarItem alignSelf="center">
+                <Checkbox
+                  id="theme"
+                  label="Dark theme"
+                  checked={logTheme === 'dark'}
+                  onClick={() =>
+                    setLogTheme((prev) => {
+                      if (prev === 'dark') return 'light';
+                      return 'dark';
+                    })
+                  }
                 />
               </ToolbarItem>
+              <ToolbarItem variant="separator" className="log-viewer__divider" />
+              <ToolbarItem alignSelf="center">
+                <Button variant="link" onClick={downloadLogs} isInline>
+                  <DownloadIcon className="log-viewer__icon" />
+                  Download
+                </Button>
+              </ToolbarItem>
+              <ToolbarItem variant="separator" className="log-viewer__divider" />
               {onDownloadAll && (
-                <ToolbarItem alignSelf="center" className="multi-stream-logs__button">
-                  <Button
-                    variant="link"
-                    onClick={startDownloadAll}
-                    isDisabled={downloadAllStatus}
-                    isInline
-                  >
-                    <DownloadIcon className="multi-stream-logs__icon" />
-                    {downloadAllLabel}
-                    {downloadAllStatus && <LoadingInline />}
-                  </Button>
-                  <Divider
-                    component="div"
-                    orientation={{ default: 'vertical' }}
-                    className="multi-stream-logs__divider"
-                  />
-                </ToolbarItem>
+                <>
+                  <ToolbarItem alignSelf="center">
+                    <Button
+                      variant="link"
+                      onClick={startDownloadAll}
+                      isDisabled={downloadAllStatus}
+                      isInline
+                    >
+                      <DownloadIcon className="log-viewer__icon" />
+                      {downloadAllLabel}
+                      {downloadAllStatus && <LoadingInline />}
+                    </Button>
+                  </ToolbarItem>
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
+                </>
               )}
               {fullscreenToggle && (
-                <ToolbarItem alignSelf="center" className="multi-stream-logs__button">
+                <ToolbarItem alignSelf="center">
                   <Button variant="link" onClick={fullscreenToggle} isInline>
                     {isFullscreen ? (
                       <>
-                        <CompressIcon className="multi-stream-logs__icon" />
+                        <CompressIcon className="log-viewer__icon" />
                         Collapse
                       </>
                     ) : (
                       <>
-                        <ExpandIcon className="multi-stream-logs__icon" />
+                        <ExpandIcon className="log-viewer__icon" />
                         Expand
                       </>
                     )}
