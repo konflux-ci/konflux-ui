@@ -16,6 +16,11 @@
   &__divider {
     color: var(--pf-v5-global--palette--black-600);
     margin: 0 var(--pf-v5-global--spacer--sm);
+    align-self: center;
+  }
+
+  &__divider.pf-v5-c-divider {
+    height: 20px;
   }
 
   &__button {
