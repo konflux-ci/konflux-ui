@@ -6,8 +6,6 @@ import { PodKind } from '../../types';
 import Logs from './Logs';
 import { getRenderContainers } from './logs-utils';
 
-import './MultiStreamLogs.scss';
-
 type MultiStreamLogsProps = {
   resource: PodKind;
   taskRun?: TaskRunKind;
@@ -40,27 +38,25 @@ export const MultiStreamLogs: React.FC<MultiStreamLogsProps> = ({
 
   return (
     <>
-      <div className="multi-stream-logs__container" data-testid="logs-task-container">
-        {!loadingContainers && (
-          <Logs
-            resource={resource}
-            containers={containers}
-            onLogsChange={setCurrentLogs}
-            autoScroll={autoScroll}
-            onScroll={({ scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested }) => {
-              setScrollDirection(logViewerScrollDirection);
+      {!loadingContainers && (
+        <Logs
+          resource={resource}
+          containers={containers}
+          onLogsChange={setCurrentLogs}
+          autoScroll={autoScroll}
+          onScroll={({ scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested }) => {
+            setScrollDirection(logViewerScrollDirection);
 
-              if (scrollUpdateWasRequested) {
-                setAutoScroll(false);
-              }
-            }}
-            downloadAllLabel={downloadAllLabel}
-            onDownloadAll={onDownloadAll}
-            taskRun={taskRun}
-            isLoading={!!((loadingContainers || stillFetching) && resource)}
-          />
-        )}
-      </div>
+            if (scrollUpdateWasRequested) {
+              setAutoScroll(false);
+            }
+          }}
+          downloadAllLabel={downloadAllLabel}
+          onDownloadAll={onDownloadAll}
+          taskRun={taskRun}
+          isLoading={!!((loadingContainers || stillFetching) && resource)}
+        />
+      )}
 
       <div>
         {!hideResumeStreamButton && (

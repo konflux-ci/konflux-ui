@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useK8sWatchResource } from '../../../../k8s';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { WatchK8sResource } from '../../../../types/k8s';
-import { LoadingInline } from '../../status-box/StatusBox';
 import { PodKind } from '../../types';
 import { MultiStreamLogs } from './MultiStreamLogs';
 import { TektonTaskRunLog } from './TektonTaskRunLog';
@@ -36,7 +36,7 @@ const LogsWrapperComponent: React.FC<React.PropsWithChildren<LogsWrapperComponen
   }
 
   return (
-    <div className="multi-stream-logs">
+    <>
       {!isLoading || error ? (
         <>
           {!error ? (
@@ -57,14 +57,11 @@ const LogsWrapperComponent: React.FC<React.PropsWithChildren<LogsWrapperComponen
           )}
         </>
       ) : (
-        <span
-          className="multi-stream-logs__taskName__loading-indicator"
-          data-testid="loading-indicator"
-        >
-          <LoadingInline />
-        </span>
+        <Bullseye>
+          <Spinner size="lg" />
+        </Bullseye>
       )}
-    </div>
+    </>
   );
 };
 
