@@ -77,7 +77,7 @@ export const useSbomUrl = (): ((imageHash: string, sbomSha?: string) => string |
 export const useBombinoUrl = (): string | undefined => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
 
-  if (loaded && !error && konfluxPublicInfo) {
+  if (loaded && !error && konfluxPublicInfo?.integrations?.image_controller?.notifications) {
     const notifications = konfluxPublicInfo.integrations.image_controller.notifications || [];
     return getBombinoUrl(notifications);
   }
@@ -86,7 +86,7 @@ export const useBombinoUrl = (): string | undefined => {
 
 export const useApplicationUrl = (): string | undefined => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
-  if (loaded && !error && konfluxPublicInfo) {
+  if (loaded && !error && konfluxPublicInfo?.integrations?.github?.application_url) {
     return konfluxPublicInfo.integrations.github.application_url;
   }
   return undefined;
@@ -94,8 +94,8 @@ export const useApplicationUrl = (): string | undefined => {
 
 export const useNotifications = (): SBOMEventNotification[] => {
   const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
-  if (loaded && !error && konfluxPublicInfo) {
-    return konfluxPublicInfo.integrations.image_controller.notifications || [];
+  if (loaded && !error && konfluxPublicInfo?.integrations?.image_controller?.notifications) {
+    return konfluxPublicInfo.integrations.image_controller.notifications;
   }
   return [];
 };
