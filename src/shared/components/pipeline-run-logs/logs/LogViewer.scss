@@ -26,7 +26,16 @@
   }
 
   &__container {
+    position: relative;
     font-family: Menlo, Monaco, 'Courier New', monospace;
+  }
+
+  &__resume-stream-button-wrapper {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
   }
 }
 

@@ -1,6 +1,4 @@
 import * as React from 'react';
-import { Button } from '@patternfly/react-core';
-import { OutlinedPlayCircleIcon } from '@patternfly/react-icons/dist/esm/icons';
 import { TaskRunKind } from '../../../../types';
 import { PodKind } from '../../types';
 import Logs from './Logs';
@@ -22,19 +20,7 @@ export const MultiStreamLogs: React.FC<MultiStreamLogsProps> = ({
   onDownloadAll,
 }) => {
   const { containers, stillFetching } = getRenderContainers(resource);
-  const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
   const loadingContainers = resource?.metadata?.name !== resourceName;
-  const [autoScroll, setAutoScroll] = React.useState(false);
-
-  const hideResumeStreamButton = scrollDirection == null || scrollDirection === 'forward';
-
-  // track when logs become available to enable auto-scroll
-  const [currentLogs, setCurrentLogs] = React.useState('');
-  React.useEffect(() => {
-    if (currentLogs) {
-      setAutoScroll(true);
-    }
-  }, [currentLogs]);
 
   return (
     <>
@@ -42,29 +28,13 @@ export const MultiStreamLogs: React.FC<MultiStreamLogsProps> = ({
         <Logs
           resource={resource}
           containers={containers}
-          onLogsChange={setCurrentLogs}
-          autoScroll={autoScroll}
-          onScroll={({ scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested }) => {
-            setScrollDirection(logViewerScrollDirection);
-
-            if (scrollUpdateWasRequested) {
-              setAutoScroll(false);
-            }
-          }}
+          allowAutoScroll
           downloadAllLabel={downloadAllLabel}
           onDownloadAll={onDownloadAll}
           taskRun={taskRun}
           isLoading={!!((loadingContainers || stillFetching) && resource)}
         />
       )}
-
-      <div>
-        {!hideResumeStreamButton && (
-          <Button data-testid="resume-log-stream" isBlock onClick={() => setAutoScroll(true)}>
-            <OutlinedPlayCircleIcon /> Resume log stream
-          </Button>
-        )}
-      </div>
     </>
   );
 };

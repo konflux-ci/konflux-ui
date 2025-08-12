@@ -149,28 +149,28 @@ describe('LogViewer', () => {
   });
 
   describe('auto-scroll calculation', () => {
-    it('should calculate scrolledRow based on data lines when autoScroll is true', () => {
-      render(<LogViewer {...defaultProps} autoScroll={true} />);
+    it('should calculate scrolledRow based on data lines when allowAutoScroll is true', () => {
+      render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
       // scrollToRow should be the number of lines (3 lines in defaultProps.data)
       expect(logViewer).toHaveAttribute('scrolltorow', '3');
     });
 
-    it('should set scrolledRow to 0 when autoScroll is false', () => {
-      render(<LogViewer {...defaultProps} autoScroll={false} />);
+    it('should set scrolledRow to 0 when allowAutoScroll is false', () => {
+      render(<LogViewer {...defaultProps} allowAutoScroll={false} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
       expect(logViewer).toHaveAttribute('scrolltorow', '0');
     });
 
     it('should recalculate scrolledRow when data changes', () => {
-      const { rerender } = render(<LogViewer {...defaultProps} autoScroll={true} />);
+      const { rerender } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
       expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('scrolltorow', '3');
 
       const newData = 'line 1\nline 2\nline 3\nline 4\nline 5';
-      rerender(<LogViewer {...defaultProps} data={newData} autoScroll={true} />);
+      rerender(<LogViewer {...defaultProps} data={newData} allowAutoScroll={true} />);
 
       expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('scrolltorow', '5');
     });
