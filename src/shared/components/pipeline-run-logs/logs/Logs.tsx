@@ -60,25 +60,23 @@ const retryWebSocket = (
 type LogsProps = {
   resource: PodKind;
   containers: ContainerSpec[];
-  onLogsChange: (logs: string) => void;
-  autoScroll: boolean;
   onScroll?: LogViewerProps['onScroll'];
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
   taskRun: TaskRunKind;
   isLoading: boolean;
+  allowAutoScroll: boolean;
 };
 
 const Logs: React.FC<LogsProps> = ({
   resource,
   containers,
-  onLogsChange,
-  autoScroll,
   onScroll,
   downloadAllLabel,
   onDownloadAll,
   taskRun,
   isLoading,
+  allowAutoScroll,
 }) => {
   const { t } = useTranslation();
   const namespace = useNamespace();
@@ -158,15 +156,10 @@ const Logs: React.FC<LogsProps> = ({
     [logSources, containers],
   );
 
-  // notify parent when logs change
-  React.useEffect(() => {
-    onLogsChange(formattedLogs);
-  }, [formattedLogs, onLogsChange]);
-
   return (
     <LogViewer
       data={formattedLogs}
-      autoScroll={autoScroll}
+      allowAutoScroll={allowAutoScroll}
       onScroll={onScroll}
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
