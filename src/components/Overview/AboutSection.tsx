@@ -8,7 +8,7 @@ import {
   Stack,
   StackItem,
 } from '@patternfly/react-core';
-import StatusPageCard from './StatusPageCard';
+import StatusPageCard from '~/components/Overview/StatusPageCard';
 
 import './AboutSection.scss';
 

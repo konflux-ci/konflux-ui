@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Card, CardBody, CardTitle, StackItem } from '@patternfly/react-core';
-import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
+import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 
 const StatusPageCard: React.FC = () => {
   const [konfluxInfo] = useKonfluxPublicInfo();
