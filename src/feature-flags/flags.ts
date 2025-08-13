@@ -54,6 +54,12 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'kubearchive-logs': {
+    key: 'kubearchive-logs',
+    description: 'Use KubeArchive to fetch logs instead of Tekton',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 };
 
 export type FlagKey = keyof typeof FLAGS;

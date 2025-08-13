@@ -1,10 +1,19 @@
 import * as React from 'react';
+import { hashKey } from '@tanstack/react-query';
+import { useK8sQueryWatch } from '~/k8s/hooks/useK8sQueryWatch';
+import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
-import { useK8sWatchResource } from '../k8s';
+import { createQueryKeys, useK8sWatchResource } from '../k8s';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
-import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
+import {
+  K8sModelCommon,
+  K8sResourceCommon,
+  ResourceSource,
+  ResourceWithSource,
+  WatchK8sResource,
+} from '../types/k8s';
 
 export interface K8sAndKarchResourcesResult<T extends K8sResourceCommon> {
   // Combined data (cluster + archive, deduplicated)
@@ -122,8 +131,10 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
 
 export interface useK8sAndKarchResourceResult<TResource extends K8sResourceCommon> {
   data: TResource | undefined;
+  source: ResourceSource | undefined;
   isLoading: boolean;
-  error: unknown;
+  fetchError: unknown;
+  wsError: unknown;
   isError: boolean;
 }
 
@@ -133,18 +144,24 @@ export interface useK8sAndKarchResourceResult<TResource extends K8sResourceCommo
  * Uses the tanstack query integrated functions directly.
  *
  * @param resourceInit - K8s resource read options
- * @param options - Optional query options
+ * @param queryOptions - Optional query options
+ * @param watch - Whether to watch the resource (default: false)
+ * @param watchOptions - Optional watch options
  * @param enabled - Whether the query should be enabled (default: true)
  * @returns Object with data, loading, and error states
  */
 export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   resourceInit: K8sResourceReadOptions | null,
-  options?: TQueryOptions<TResource>,
+  queryOptions?: TQueryOptions<TResource>,
+  watch: boolean = false,
+  watchOptions: Partial<
+    WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
+  > = {},
   enabled: boolean = true,
 ): useK8sAndKarchResourceResult<TResource> {
-  const [data, setData] = React.useState<TResource | undefined>(undefined);
+  const [result, setResult] = React.useState<ResourceWithSource<TResource> | undefined>(undefined);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
-  const [error, setError] = React.useState<unknown>(null);
+  const [fetchError, setFetchError] = React.useState<unknown>(null);
 
   React.useEffect(() => {
     if (!enabled || !resourceInit) {
@@ -152,26 +169,35 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     }
 
     setIsLoading(true);
-    setError(null);
+    setFetchError(null);
 
-    fetchResourceWithK8sAndKubeArchive<TResource>(resourceInit, options)
-      .then((result) => {
-        setData(result);
-        setError(null);
+    fetchResourceWithK8sAndKubeArchive<TResource>(resourceInit, queryOptions)
+      .then((res) => {
+        setResult(res);
+        setFetchError(null);
       })
       .catch((err) => {
-        setError(err);
-        setData(undefined);
+        setFetchError(err);
+        setResult(undefined);
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, [resourceInit, enabled, options]);
+  }, [resourceInit, enabled, queryOptions]);
+
+  const wsError = useK8sQueryWatch(
+    watch && result?.source === ResourceSource.Cluster ? resourceInit : null,
+    false,
+    hashKey(createQueryKeys(resourceInit)),
+    watchOptions,
+  );
 
   return {
-    data,
+    data: result?.resource,
+    source: result?.source,
     isLoading,
-    error,
-    isError: !!error,
+    fetchError,
+    wsError,
+    isError: !!(fetchError || wsError),
   };
 }

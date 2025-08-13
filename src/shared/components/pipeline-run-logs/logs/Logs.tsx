@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
+import { FLAGS } from '~/feature-flags/flags';
+import { FeatureFlagsStore } from '~/feature-flags/store';
+import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
 import { MessageHandler, WebSocketOptions } from '../../../../k8s/web-socket/types';
@@ -66,6 +69,7 @@ type LogsProps = {
   taskRun: TaskRunKind;
   isLoading: boolean;
   allowAutoScroll: boolean;
+  source: ResourceSource;
 };
 
 const Logs: React.FC<LogsProps> = ({
@@ -77,6 +81,7 @@ const Logs: React.FC<LogsProps> = ({
   taskRun,
   isLoading,
   allowAutoScroll,
+  source,
 }) => {
   const { t } = useTranslation();
   const namespace = useNamespace();
@@ -96,8 +101,10 @@ const Logs: React.FC<LogsProps> = ({
     }));
   }, []);
 
-  // loops through th containers and initiates fetching for each one
+  // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
+    const isKubearchiveEnabled = FeatureFlagsStore.isOn(FLAGS['kubearchive-logs'].key);
+
     containers.forEach((container) => {
       if (activeContainers.has(container.name)) return;
       setActiveContainers((prev) => new Set(prev).add(container.name));
@@ -120,7 +127,12 @@ const Logs: React.FC<LogsProps> = ({
       const watchURL = getK8sResourceURL(PodModel, undefined, urlOpts);
 
       if (resourceStatus === LOG_SOURCE_TERMINATED) {
-        commonFetchText(watchURL)
+        commonFetchText(
+          watchURL,
+          isKubearchiveEnabled && source === ResourceSource.Archive
+            ? { pathPrefix: 'plugins/kubearchive' }
+            : undefined,
+        )
           .then((res) => !loaded && appendLog(name, res))
           .catch(() => !loaded && setError(true));
       } else {
@@ -149,7 +161,17 @@ const Logs: React.FC<LogsProps> = ({
         }
       };
     });
-  }, [containers, resource, resName, resNamespace, activeContainers, appendLog, t, namespace]);
+  }, [
+    containers,
+    resource,
+    resName,
+    resNamespace,
+    activeContainers,
+    appendLog,
+    t,
+    namespace,
+    source,
+  ]);
 
   const formattedLogs = React.useMemo(
     () => processLogs(logSources, containers),
