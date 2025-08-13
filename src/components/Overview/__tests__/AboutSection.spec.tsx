@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import { useKonfluxPublicInfo } from '../../../hooks/useKonfluxPublicInfo';
+import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import AboutSection from '../AboutSection';
 
 jest.mock('@tanstack/react-query', () => ({
@@ -8,7 +8,7 @@ jest.mock('@tanstack/react-query', () => ({
   useQuery: jest.fn(),
 }));
 
-jest.mock('../../../hooks/useKonfluxPublicInfo', () => ({
+jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => []),
 }));
 
