@@ -200,15 +200,4 @@ describe('Basic Happy Path', () => {
       ComponentDetailsPage.checkBuildImage();
     });
   });
-
-  // describe('Check Application Overview', () => {
-  //   before(() => {
-  //     Common.openApplicationURL(applicationName);
-  //   });
-
-  //   it('Validate the graph views for the created application', () => {
-  //     UIhelper.verifyGraphNodes('Components', false);
-  //     UIhelper.verifyGraphNodes('Builds');
-  //   });
-  // });
 });
