@@ -158,7 +158,6 @@ Behavior and usage:
 - If `environments` is omitted, the flag is available in all environments.
 - The Feature Flags panel hides flags that are not allowed in the current environment.
 - In UI code (components/elements), you can check environment with `useUIInstance()` if needed.
-- In loaders/lazy (no hooks), prefer the basic `ensureFeatureFlagOnLoader()` for deep‑link gating. If environment enforcement is needed in loaders, add a non‑hook env getter or keep environment gating in elements where hooks are allowed.
 
 ---
 

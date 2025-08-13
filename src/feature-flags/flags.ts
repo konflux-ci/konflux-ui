@@ -44,7 +44,7 @@ export interface FeatureMeta {
 const InternalFLAGS = {
   'dark-theme': {
     key: 'dark-theme',
-    description: 'Enable dark theme selector in the header',
+    description: 'Enable the theme switcher in the header to toggle between light and dark modes.',
     defaultEnabled: false,
     status: 'wip',
   },
