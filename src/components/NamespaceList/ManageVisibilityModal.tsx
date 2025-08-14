@@ -8,7 +8,7 @@ import {
   StackItem,
   ButtonVariant,
 } from '@patternfly/react-core';
-import { Formik, FormikHelpers } from 'formik';
+import { Formik } from 'formik';
 import { RadioGroupField } from 'formik-pf';
 import { K8sQueryCreateResource, K8sQueryDeleteResource, useK8sWatchResource } from '~/k8s';
 import { RoleBindingModel, RoleBindingGroupVersionKind } from '~/models';
@@ -76,7 +76,7 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace
     visibility: currentVisibility,
   };
 
-  const handleSubmit = async (values: FormValues, formikHelpers: FormikHelpers<FormValues>) => {
+  const handleSubmit = async (values: FormValues) => {
     setError(undefined);
 
     try {
@@ -124,12 +124,10 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace
           });
         }
       }
-
-      onClose();
+      onClose?.();
     } catch (err) {
-      setError(`Failed to save visibility setting: ${err.message || String(err)}`);
-    } finally {
-      formikHelpers.setSubmitting(false);
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Failed to save visibility setting: ${message}`);
     }
   };
 
@@ -139,7 +137,7 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace
         const hasChanges = values.visibility !== currentVisibility;
 
         return (
-          <Form>
+          <Form onSubmit={formikHandleSubmit}>
             <Stack hasGutter>
               <StackItem>
                 {(error || roleBindingsError) && (
@@ -169,18 +167,20 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace
               </StackItem>
               <StackItem>
                 <Button
+                  type="submit"
                   variant="primary"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    formikHandleSubmit();
-                  }}
                   isLoading={isSubmitting}
                   isDisabled={isLoading || !hasChanges || isSubmitting || !!roleBindingsError}
                   data-test="save-visibility"
                 >
                   Save
                 </Button>
-                <Button variant={ButtonVariant.link} onClick={onClose} isDisabled={isSubmitting}>
+                <Button
+                  type="button"
+                  variant={ButtonVariant.link}
+                  onClick={onClose}
+                  isDisabled={isSubmitting}
+                >
                   Cancel
                 </Button>
               </StackItem>
