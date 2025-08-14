@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Card, CardBody, CardTitle, StackItem } from '@patternfly/react-core';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import ExternalLink from '~/shared/components/links/ExternalLink';
 
 const StatusPageCard: React.FC = () => {
   const [konfluxInfo] = useKonfluxPublicInfo();
@@ -16,9 +17,7 @@ const StatusPageCard: React.FC = () => {
       <Card isLarge>
         <CardTitle>Status Page</CardTitle>
         <CardBody>
-          <a href={statusPageUrl} target="_blank" rel="noopener noreferrer">
-            View Status Page
-          </a>
+          <ExternalLink href={statusPageUrl} text="View Status Page" />
         </CardBody>
       </Card>
     </StackItem>
