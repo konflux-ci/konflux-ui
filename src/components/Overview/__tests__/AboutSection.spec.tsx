@@ -1,31 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import AboutSection from '../AboutSection';
-
-jest.mock('@tanstack/react-query', () => ({
-  ...jest.requireActual('@tanstack/react-query'),
-  useQuery: jest.fn(),
-}));
 
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => []),
 }));
 
-const mockUseQuery = useQuery as jest.Mock;
 const mockUseKonfluxPublicInfo = useKonfluxPublicInfo as jest.Mock;
 
 describe('About section with status page card', () => {
   beforeEach(() => {
-    mockUseQuery
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-      })
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-      });
     // eslint-disable-next-line camelcase
     mockUseKonfluxPublicInfo.mockReturnValue([{ status_page_url: 'https://status-page.local/' }]);
   });
@@ -54,15 +38,6 @@ describe('About section with status page card', () => {
 
 describe('About section without status page card due to missing url', () => {
   beforeEach(() => {
-    mockUseQuery
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-      })
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-      });
     mockUseKonfluxPublicInfo.mockReturnValue([{}]);
   });
   afterEach(() => {
@@ -85,15 +60,6 @@ describe('About section without status page card due to missing url', () => {
 
 describe('About section without status page card due to bad url', () => {
   beforeEach(() => {
-    mockUseQuery
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-      })
-      .mockReturnValueOnce({
-        data: undefined,
-        isLoading: true,
-      });
     // eslint-disable-next-line camelcase
     mockUseKonfluxPublicInfo.mockReturnValue([{ status_page_url: 'badurl' }]);
   });
