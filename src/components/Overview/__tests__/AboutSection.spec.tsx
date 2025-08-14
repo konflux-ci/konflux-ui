@@ -10,8 +10,7 @@ const mockUseKonfluxPublicInfo = useKonfluxPublicInfo as jest.Mock;
 
 describe('About section with status page card', () => {
   beforeEach(() => {
-    // eslint-disable-next-line camelcase
-    mockUseKonfluxPublicInfo.mockReturnValue([{ status_page_url: 'https://status-page.local/' }]);
+    mockUseKonfluxPublicInfo.mockReturnValue([{ statusPageUrl: 'https://status-page.local/' }]);
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -60,8 +59,7 @@ describe('About section without status page card due to missing url', () => {
 
 describe('About section without status page card due to bad url', () => {
   beforeEach(() => {
-    // eslint-disable-next-line camelcase
-    mockUseKonfluxPublicInfo.mockReturnValue([{ status_page_url: 'badurl' }]);
+    mockUseKonfluxPublicInfo.mockReturnValue([{ statusPageUrl: 'badurl' }]);
   });
   afterEach(() => {
     jest.clearAllMocks();

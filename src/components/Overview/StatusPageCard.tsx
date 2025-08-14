@@ -4,7 +4,7 @@ import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 
 const StatusPageCard: React.FC = () => {
   const [konfluxInfo] = useKonfluxPublicInfo();
-  const statusPageUrlRaw = konfluxInfo?.status_page_url ?? '';
+  const statusPageUrlRaw = konfluxInfo?.statusPageUrl ?? '';
   const statusPageUrl = statusPageUrlRaw.trim();
   // Only allow http/https URLs
   if (!statusPageUrl || !/^https?:\/\//i.test(statusPageUrl)) {
