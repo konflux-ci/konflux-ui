@@ -51,7 +51,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
               return (
                 <NotificationItem
                   key={`${notification.created}-${notification.type}-${index}`}
-                  component={notification.component}
                   title={notification.title}
                   type={notification.type}
                   summary={notification.summary}

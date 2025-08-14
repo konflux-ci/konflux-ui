@@ -1,5 +1,9 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { SystemNotificationConfig } from '~/types/notification-type';
+import {
+  firstValidInfoNotification,
+  secondValidInfoNotification,
+  thirdValidDangerNotification,
+} from '../__data__/notifications-data';
 import { NotificationHeader } from '../NotificationHeader';
 
 describe('NotificationHeader', () => {
@@ -9,14 +13,6 @@ describe('NotificationHeader', () => {
     jest.clearAllMocks();
   });
 
-  const createMockNotification = (created: string): SystemNotificationConfig => ({
-    component: 'test-component',
-    title: 'Test Notification',
-    type: 'info',
-    summary: 'Test summary',
-    created,
-  });
-
   it('renders with empty notifications', () => {
     render(<NotificationHeader onClose={mockOnClose} notifications={[]} />);
 
@@ -24,13 +20,7 @@ describe('NotificationHeader', () => {
   });
 
   it('renders with notifications from past hour', () => {
-    const now = new Date();
-    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-
-    const notifications = [
-      createMockNotification(thirtyMinutesAgo.toISOString()),
-      createMockNotification(thirtyMinutesAgo.toISOString()),
-    ];
+    const notifications = [thirdValidDangerNotification, secondValidInfoNotification];
 
     render(<NotificationHeader onClose={mockOnClose} notifications={notifications} />);
 
@@ -38,14 +28,10 @@ describe('NotificationHeader', () => {
   });
 
   it('renders with mixed old and new notifications', () => {
-    const now = new Date();
-    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-
     const notifications = [
-      createMockNotification(thirtyMinutesAgo.toISOString()),
-      createMockNotification(twoHoursAgo.toISOString()),
-      createMockNotification(thirtyMinutesAgo.toISOString()),
+      firstValidInfoNotification,
+      secondValidInfoNotification,
+      thirdValidDangerNotification,
     ];
 
     render(<NotificationHeader onClose={mockOnClose} notifications={notifications} />);
@@ -54,13 +40,7 @@ describe('NotificationHeader', () => {
   });
 
   it('renders with only old notifications', () => {
-    const now = new Date();
-    const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-
-    const notifications = [
-      createMockNotification(twoHoursAgo.toISOString()),
-      createMockNotification(twoHoursAgo.toISOString()),
-    ];
+    const notifications = [firstValidInfoNotification, firstValidInfoNotification];
 
     render(<NotificationHeader onClose={mockOnClose} notifications={notifications} />);
 

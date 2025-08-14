@@ -1,28 +1,26 @@
 import { KONFLUX_INFO_NAMESPACE } from '~/consts/constants';
 import { ConfigMap } from '~/types/configmap';
-export const validWarningNotificationJson = {
+import { RawNotificationConfig, SystemNotificationConfig } from '~/types/notification-type';
+export const validWarningNotificationJson: RawNotificationConfig = {
   type: 'warning',
   summary: 'warning alert',
-  created: '2025-08-10T11:08:17Z',
 };
 
-export const validInfoNotificationJson = {
+export const validInfoNotificationJson: RawNotificationConfig = {
   type: 'info',
   summary: 'info alert',
-  created: '2025-08-10T11:08:17Z',
 };
 
-export const validDangerNotificationJson = {
+export const validDangerNotificationJson: RawNotificationConfig = {
   type: 'danger',
   summary: 'danger alert',
-  created: '2025-08-10T11:08:17Z',
 };
 
 export const validWarningNotificationConfigMap: ConfigMap = {
   apiVersion: 'v1',
   kind: 'ConfigMap',
   metadata: {
-    name: 'test-alert',
+    name: 'test-notification',
     namespace: KONFLUX_INFO_NAMESPACE,
     labels: {
       'konflux.system.notification': 'true',
@@ -48,29 +46,28 @@ export const validDangerNotificationConfigMap: ConfigMap = {
   },
 };
 
-export const validWarningNotification = {
+export const validWarningNotification: SystemNotificationConfig = {
   ...validWarningNotificationJson,
-  component: validWarningNotificationConfigMap.metadata.name,
-  title: '',
+  title: 'test-notification',
+  created: '2025-08-10T11:08:17Z',
 };
 
-export const validDangerNotification = {
+export const validDangerNotification: SystemNotificationConfig = {
   ...validDangerNotificationJson,
-  component: validDangerNotificationConfigMap.metadata.name,
-  title: '',
+  title: 'test-notification',
+  created: '2025-08-10T11:08:17Z',
 };
 
-export const validInfoNotification = {
+export const validInfoNotification: SystemNotificationConfig = {
   ...validInfoNotificationJson,
-  component: validInfoNotificationConfigMap.metadata.name,
-  title: '',
+  title: 'test-notification',
+  created: '2025-08-10T11:08:17Z',
 };
 
 export const longSummary = 'A'.repeat(500);
-export const validLongSummaryNotificationJson = {
+export const validLongSummaryNotificationJson: RawNotificationConfig = {
   type: 'info',
   summary: longSummary,
-  created: '',
 };
 export const validLongSummaryNotificationConfigMap: ConfigMap = {
   ...validInfoNotificationConfigMap,
@@ -145,28 +142,47 @@ export const noContentNotificationConfigMap: ConfigMap = {
 };
 
 const now = new Date();
-const firstValidCreated = new Date(now.getTime() - 120 * 60 * 1000).toISOString();
-const secondValidCreated = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-const thirdValidCreated = new Date(now.getTime() - 30 * 60 * 1000).toISOString();
+const firstValidCreated = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(); // two hours ago
+const secondValidCreated = new Date(now.getTime() - 59 * 60 * 1000).toISOString(); // 59 minutes agao
+const thirdValidCreated = new Date(now.getTime() - 30 * 60 * 1000).toISOString(); // 30 minutes agao
 
-export const firstValidInfoNotificationJson = {
+export const firstValidInfoNotificationJson: RawNotificationConfig = {
   title: 'first summary',
   type: 'info',
   summary: 'old alert',
   activeTimestamp: firstValidCreated,
 };
 
-export const secondValidInfoNotificationJson = {
+const { activeTimestamp: firstActive, ...firstRest } = firstValidInfoNotificationJson;
+export const firstValidInfoNotification: SystemNotificationConfig = {
+  ...firstRest,
+  created: firstActive,
+};
+
+export const secondValidInfoNotificationJson: RawNotificationConfig = {
   title: 'second summary',
   type: 'info',
   summary: 'newer alert',
   activeTimestamp: secondValidCreated,
 };
 
-export const thirdValidDangerNotificationJson = {
+const { activeTimestamp: secondActive, ...secondRest } = secondValidInfoNotificationJson;
+export const secondValidInfoNotification: SystemNotificationConfig = {
+  ...secondRest,
+  created: secondActive,
+};
+
+export const thirdValidDangerNotificationJson: RawNotificationConfig = {
   title: 'third summary',
   type: 'danger',
   summary: 'newest alert',
+  activeTimestamp: thirdValidCreated,
+};
+
+const { activeTimestamp: thirdActive, ...thirdRest } = thirdValidDangerNotificationJson;
+export const thirdValidDangerNotification: SystemNotificationConfig = {
+  ...thirdRest,
+  created: thirdActive,
 };
 
 export const firstValidInfoNotificationConfigMap: ConfigMap = {
@@ -234,12 +250,18 @@ export const mockConfigMapWithMixedDataInArray = {
 };
 
 // Future timestamp test data
-const futureTimestamp = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+const futureTimestamp = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // one hour later
 
-export const futureTimestampNotificationJson = {
+export const futureTimestampNotificationJson: RawNotificationConfig = {
   type: 'info',
   summary: 'Future notification',
   activeTimestamp: futureTimestamp,
+};
+
+const { activeTimestamp: furtureActive, ...furtureRest } = futureTimestampNotificationJson;
+export const furtureValidInfoNotification: SystemNotificationConfig = {
+  ...furtureRest,
+  created: furtureActive,
 };
 
 export const futureTimestampNotificationConfigMap: ConfigMap = {
@@ -254,7 +276,7 @@ export const futureTimestampNotificationConfigMap: ConfigMap = {
 };
 
 // Invalid timestamp test data
-export const invalidTimestampNotificationJson = {
+export const invalidTimestampNotificationJson: RawNotificationConfig = {
   type: 'warning',
   summary: 'Invalid timestamp notification',
   activeTimestamp: 'invalid-date-string',
@@ -272,7 +294,7 @@ export const invalidTimestampNotificationConfigMap: ConfigMap = {
 };
 
 // Missing activeTimestamp test data
-export const missingActiveTimestampNotificationJson = {
+export const missingActiveTimestampNotificationJson: RawNotificationConfig = {
   type: 'danger',
   summary: 'No activeTimestamp notification',
 };

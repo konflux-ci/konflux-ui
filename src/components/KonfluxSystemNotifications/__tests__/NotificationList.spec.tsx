@@ -3,34 +3,9 @@ import { SystemNotificationConfig } from '~/types/notification-type';
 import NotificationCenter from '../NotificationList';
 import { useSystemNotifications } from '../useSystemNotifications';
 
-// Mock the useSystemNotifications hook
-jest.mock('~/components/KonfluxSystemNotifications/useSystemNotifications', () => ({
+jest.mock('../useSystemNotifications', () => ({
   useSystemNotifications: jest.fn(),
 }));
-
-// Mock the child components
-jest.mock('../NotificationHeader', () => ({
-  NotificationHeader: ({
-    onClose,
-    notifications,
-  }: {
-    onClose: () => void;
-    notifications: SystemNotificationConfig[];
-  }) => (
-    <div data-test="notification-header" onClick={onClose}>
-      Header with {notifications.length} notifications
-    </div>
-  ),
-}));
-
-jest.mock('../NotificationItem', () => ({
-  NotificationItem: ({ title, summary }: { title: string; summary: string }) => (
-    <div data-test="notification-item">
-      {title}: {summary}
-    </div>
-  ),
-}));
-
 const mockUseSystemNotifications = useSystemNotifications as jest.Mock;
 describe('NotificationCenter', () => {
   const mockCloseDrawer = jest.fn();
@@ -43,7 +18,6 @@ describe('NotificationCenter', () => {
   const createMockNotification = (
     overrides: Partial<SystemNotificationConfig> = {},
   ): SystemNotificationConfig => ({
-    component: 'test-component',
     title: 'Test Notification',
     type: 'info',
     summary: 'Test summary',
@@ -96,7 +70,7 @@ describe('NotificationCenter', () => {
   it('renders notification drawer when expanded with no notifications', () => {
     render(<NotificationCenter {...defaultProps} />);
 
-    expect(screen.getByText('Header with 0 notifications')).toBeInTheDocument();
+    expect(screen.getByText('0 total, 0 new (past hour)')).toBeInTheDocument();
     expect(screen.queryByTestId('notification-item')).not.toBeInTheDocument();
   });
 
@@ -114,12 +88,12 @@ describe('NotificationCenter', () => {
 
     render(<NotificationCenter {...defaultProps} />);
 
-    expect(screen.getByText('Header with 2 notifications')).toBeInTheDocument();
+    expect(screen.getByText('2 total, 2 new (past hour)')).toBeInTheDocument();
 
     const notificationItems = screen.getAllByTestId('notification-item');
     expect(notificationItems).toHaveLength(2);
-    expect(screen.getByText('First Notification: First summary')).toBeInTheDocument();
-    expect(screen.getByText('Second Notification: Second summary')).toBeInTheDocument();
+    expect(screen.getByText('First summary')).toBeInTheDocument();
+    expect(screen.getByText('Second summary')).toBeInTheDocument();
   });
 
   it('passes notifications to header component', () => {
@@ -133,7 +107,7 @@ describe('NotificationCenter', () => {
 
     render(<NotificationCenter {...defaultProps} />);
 
-    expect(screen.getByText('Header with 2 notifications')).toBeInTheDocument();
+    expect(screen.getByText('2 total, 2 new (past hour)')).toBeInTheDocument();
   });
 
   it('renders notifications with unique keys', () => {

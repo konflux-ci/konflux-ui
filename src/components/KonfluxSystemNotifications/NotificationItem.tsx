@@ -7,19 +7,22 @@ import { Timestamp } from '~/shared/components/timestamp';
 import { SystemNotificationConfig } from '~/types/notification-type';
 
 export const NotificationItem: React.FC<SystemNotificationConfig> = ({
-  component,
   title,
   type,
   summary,
   created,
 }) => {
   return (
-    <NotificationDrawerListItem variant={type}>
+    <NotificationDrawerListItem data-test="notification-item" variant={type}>
       <NotificationDrawerListItemHeader
+        data-test="notification-header"
         variant={type}
-        title={title?.trim() ? title.trim() : component}
+        title={title}
       />
-      <NotificationDrawerListItemBody timestamp={<Timestamp timestamp={created} simple />}>
+      <NotificationDrawerListItemBody
+        data-test="notification-body"
+        timestamp={<Timestamp timestamp={created} simple />}
+      >
         {summary}
       </NotificationDrawerListItemBody>
     </NotificationDrawerListItem>
