@@ -45,7 +45,7 @@ export type KonfluxInstanceVisibilityType =
 
 export type KonfluxPublicInfo = {
   environment?: string;
-  status_page_url?: string;
+  statusPageUrl?: string;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
   visibility?: KonfluxInstanceVisibilityType;
