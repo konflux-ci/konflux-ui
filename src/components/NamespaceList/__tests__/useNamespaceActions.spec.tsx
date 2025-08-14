@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { NamespaceKind } from '~/types';
+import { mockAccessReviewUtil } from '../../../unit-test-utils/mock-access-review';
 import { useNamespaceActions } from '../useNamespaceActions';
 
 // Mock the modal launcher
@@ -7,12 +8,8 @@ const mockShowModal = jest.fn();
 jest.mock('../../modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(() => mockShowModal),
 }));
-
 // Mock the checkReviewAccesses function
-const mockCheckReviewAccesses = jest.fn();
-jest.mock('../../../utils/rbac', () => ({
-  checkReviewAccesses: jest.fn((...args: unknown[]) => mockCheckReviewAccesses(...args)),
-}));
+const mockCheckReviewAccesses = mockAccessReviewUtil('checkReviewAccesses');
 
 const mockNamespace: NamespaceKind = {
   apiVersion: 'v1',
