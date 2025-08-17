@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
-import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
+import { TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace';
@@ -17,15 +17,26 @@ import { commitsTableColumnClasses } from './CommitsListHeader';
 
 import './CommitsListRow.scss';
 
-const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>> = ({ obj }) => {
+type CommitColumnKeys = 'name' | 'branch' | 'component' | 'byUser' | 'committedAt' | 'status';
+
+interface CommitsListRowProps {
+  obj: Commit;
+  visibleColumns?: Set<CommitColumnKeys>;
+}
+
+const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({ obj, visibleColumns }) => {
   const actions = useCommitActions(obj);
   const namespace = useNamespace();
   const status = pipelineRunStatus(obj.pipelineRuns[0]);
 
   const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
-  return (
-    <>
-      <TableData className={commitsTableColumnClasses.name}>
+  
+  const defaultColumns = new Set<CommitColumnKeys>(['name', 'branch', 'component', 'byUser', 'committedAt', 'status']);
+  const columnsToShow = visibleColumns || defaultColumns;
+  
+  const columnComponents = {
+    name: (
+      <TableData key="name" className={commitsTableColumnClasses.name}>
         <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
         <Link
           to={COMMIT_DETAILS_PATH.createPath({
@@ -43,14 +54,18 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
           </>
         )}
       </TableData>
-      <TableData className={commitsTableColumnClasses.branch}>
+    ),
+    branch: (
+      <TableData key="branch" className={commitsTableColumnClasses.branch}>
         {createRepoBranchURL(obj) ? (
           <ExternalLink href={createRepoBranchURL(obj)} text={`${obj.branch}`} />
         ) : (
           `${obj.branch || '-'}`
         )}
       </TableData>
-      <TableData className={commitsTableColumnClasses.component}>
+    ),
+    component: (
+      <TableData key="component" className={commitsTableColumnClasses.component}>
         <div className="commits-component-list">
           {obj.components.length > 0
             ? obj.components.map((c) => (
@@ -68,15 +83,32 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
             : '-'}
         </div>
       </TableData>
-      <TableData className={commitsTableColumnClasses.byUser}>
+    ),
+    byUser: (
+      <TableData key="byUser" className={commitsTableColumnClasses.byUser}>
         <Truncate content={obj.user ?? '-'} />
       </TableData>
-      <TableData className={commitsTableColumnClasses.committedAt}>
+    ),
+    committedAt: (
+      <TableData key="committedAt" className={commitsTableColumnClasses.committedAt}>
         <Timestamp timestamp={obj.creationTime} />
       </TableData>
-      <TableData className={commitsTableColumnClasses.status}>
+    ),
+    status: (
+      <TableData key="status" className={commitsTableColumnClasses.status}>
         {statuses.includes(status) ? <StatusIconWithText status={status} /> : '-'}
       </TableData>
+    ),
+  };
+
+  // Define the order of columns to display
+  const columnOrder: CommitColumnKeys[] = ['name', 'branch', 'component', 'byUser', 'committedAt', 'status'];
+
+  return (
+    <>
+      {columnOrder
+        .filter(columnKey => columnsToShow.has(columnKey))
+        .map(columnKey => columnComponents[columnKey])}
       <TableData className={commitsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>

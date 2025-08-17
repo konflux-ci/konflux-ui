@@ -23,9 +23,17 @@ import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 import { useReleaseActions } from './release-actions';
 import { releasesTableColumnClasses } from './ReleasesListHeader';
 
-const ReleasesListRow: React.FC<
-  React.PropsWithChildren<RowFunctionArgs<ReleaseKind, { applicationName: string }>>
-> = ({ obj, customData: { applicationName } }) => {
+type ReleaseColumnKeys = 'name' | 'created' | 'duration' | 'status' | 'releasePlan' | 'releaseSnapshot' | 'tenantCollectorPipelineRun' | 'tenantPipelineRun' | 'managedPipelineRun' | 'finalPipelineRun';
+
+interface ReleasesListRowProps extends RowFunctionArgs<ReleaseKind, { applicationName: string }> {
+  visibleColumns?: Set<ReleaseColumnKeys>;
+}
+
+const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> = ({ 
+  obj, 
+  customData: { applicationName },
+  visibleColumns 
+}) => {
   const namespace = useNamespace();
   const status = useReleaseStatus(obj);
   const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
@@ -42,9 +50,11 @@ const ReleasesListRow: React.FC<
   );
   const actions = useReleaseActions(obj);
 
-  return (
-    <>
-      <TableData className={releasesTableColumnClasses.name}>
+  const columnOrder: ReleaseColumnKeys[] = ['name', 'created', 'duration', 'status', 'releasePlan', 'releaseSnapshot', 'tenantCollectorPipelineRun', 'tenantPipelineRun', 'managedPipelineRun', 'finalPipelineRun'];
+
+  const columnComponents: Record<ReleaseColumnKeys, React.ReactNode> = {
+    name: (
+      <TableData key="name" className={releasesTableColumnClasses.name}>
         <Link
           to={APPLICATION_RELEASE_DETAILS_PATH.createPath({
             workspaceName: namespace,
@@ -55,10 +65,14 @@ const ReleasesListRow: React.FC<
           {obj.metadata.name}
         </Link>
       </TableData>
-      <TableData className={releasesTableColumnClasses.created}>
+    ),
+    created: (
+      <TableData key="created" className={releasesTableColumnClasses.created}>
         <Timestamp timestamp={obj.metadata.creationTimestamp} />
       </TableData>
-      <TableData className={releasesTableColumnClasses.duration}>
+    ),
+    duration: (
+      <TableData key="duration" className={releasesTableColumnClasses.duration}>
         {obj.status?.startTime != null
           ? calculateDuration(
               typeof obj.status?.startTime === 'string' ? obj.status?.startTime : '',
@@ -66,13 +80,19 @@ const ReleasesListRow: React.FC<
             )
           : '-'}
       </TableData>
-      <TableData className={releasesTableColumnClasses.status}>
+    ),
+    status: (
+      <TableData key="status" className={releasesTableColumnClasses.status}>
         <StatusIconWithText dataTestAttribute="release-status" status={status} />
       </TableData>
-      <TableData className={releasesTableColumnClasses.releasePlan}>
+    ),
+    releasePlan: (
+      <TableData key="releasePlan" className={releasesTableColumnClasses.releasePlan}>
         {obj.spec.releasePlan}
       </TableData>
-      <TableData className={releasesTableColumnClasses.releaseSnapshot}>
+    ),
+    releaseSnapshot: (
+      <TableData key="releaseSnapshot" className={releasesTableColumnClasses.releaseSnapshot}>
         <Link
           to={SNAPSHOT_DETAILS_PATH.createPath({
             workspaceName: namespace,
@@ -83,7 +103,9 @@ const ReleasesListRow: React.FC<
           {obj.spec.snapshot}
         </Link>
       </TableData>
-      <TableData className={releasesTableColumnClasses.tenantCollectorPipelineRun}>
+    ),
+    tenantCollectorPipelineRun: (
+      <TableData key="tenantCollectorPipelineRun" className={releasesTableColumnClasses.tenantCollectorPipelineRun}>
         {tenantCollectorPipelineRun && tenantCollectorPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -98,7 +120,9 @@ const ReleasesListRow: React.FC<
           '-'
         )}
       </TableData>
-      <TableData className={releasesTableColumnClasses.tenantPipelineRun}>
+    ),
+    tenantPipelineRun: (
+      <TableData key="tenantPipelineRun" className={releasesTableColumnClasses.tenantPipelineRun}>
         {tenantPipelineRun && tenantPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -113,7 +137,9 @@ const ReleasesListRow: React.FC<
           '-'
         )}
       </TableData>
-      <TableData className={releasesTableColumnClasses.managedPipelineRun}>
+    ),
+    managedPipelineRun: (
+      <TableData key="managedPipelineRun" className={releasesTableColumnClasses.managedPipelineRun}>
         {managedPipelineRun && managedPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -129,7 +155,9 @@ const ReleasesListRow: React.FC<
           '-'
         )}
       </TableData>
-      <TableData className={releasesTableColumnClasses.finalPipelineRun}>
+    ),
+    finalPipelineRun: (
+      <TableData key="finalPipelineRun" className={releasesTableColumnClasses.finalPipelineRun}>
         {finalPipelineRun && finalPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -144,6 +172,16 @@ const ReleasesListRow: React.FC<
           '-'
         )}
       </TableData>
+    ),
+  };
+
+  return (
+    <>
+      {visibleColumns 
+        ? columnOrder
+            .filter(columnKey => visibleColumns.has(columnKey))
+            .map(columnKey => columnComponents[columnKey])
+        : Object.values(columnComponents)}
       <TableData className={releasesTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  Button,
   capitalize,
   InputGroup,
   InputGroupItem,
@@ -13,13 +14,15 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { CogIcon, FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
 
 type Props = {
   value: string;
   dropdownItems: string[];
   onInput: (value: string) => void;
   onFilterTypeChange: (value: string) => void;
+  openColumnManagement?: () => void;
+  totalColumns?: number;
 };
 
 export const ReleasesFilterToolbar: React.FC<Props> = ({
@@ -27,6 +30,8 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
   onInput,
   onFilterTypeChange,
   dropdownItems,
+  openColumnManagement,
+  totalColumns = 0,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [filterType, setFilterType] = React.useState(dropdownItems[0]);
@@ -81,6 +86,18 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
               </InputGroupItem>
             </InputGroup>
           </ToolbarItem>
+          {openColumnManagement && totalColumns > 6 && (
+            <ToolbarItem>
+              <Button
+                variant="plain"
+                aria-label="Manage columns"
+                onClick={openColumnManagement}
+                icon={<CogIcon />}
+              >
+                Manage columns
+              </Button>
+            </ToolbarItem>
+          )}
         </ToolbarGroup>
       </ToolbarContent>
     </Toolbar>

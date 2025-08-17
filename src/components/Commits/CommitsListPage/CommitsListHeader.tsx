@@ -8,37 +8,52 @@ export const commitsTableColumnClasses = {
   kebab: 'pf-v5-c-table__action',
 };
 
-const CommitsListHeader = () => {
-  return [
+type CommitColumnKeys = 'name' | 'branch' | 'component' | 'byUser' | 'committedAt' | 'status';
+
+interface CommitsListHeaderProps {
+  visibleColumns: Set<CommitColumnKeys>;
+}
+
+const CommitsListHeader = ({ visibleColumns }: CommitsListHeaderProps) => {
+  const allColumns = [
     {
+      key: 'name',
       title: 'Name',
       props: { className: commitsTableColumnClasses.name },
     },
     {
+      key: 'branch',
       title: 'Branch',
       props: { className: commitsTableColumnClasses.branch },
     },
     {
+      key: 'component',
       title: 'Component',
       props: { className: commitsTableColumnClasses.component },
     },
     {
+      key: 'byUser',
       title: 'By user',
       props: { className: commitsTableColumnClasses.byUser },
     },
     {
+      key: 'committedAt',
       title: 'Latest commit at',
       props: { className: commitsTableColumnClasses.committedAt },
     },
     {
+      key: 'status',
       title: 'Status',
       props: { className: commitsTableColumnClasses.status },
     },
-    {
-      title: ' ',
-      props: { className: commitsTableColumnClasses.kebab },
-    },
   ];
+
+  const visibleColumnsWithActions = [...allColumns.filter(column => visibleColumns.has(column.key as CommitColumnKeys)), {
+    title: ' ',
+    props: { className: commitsTableColumnClasses.kebab },
+  }];
+
+  return visibleColumnsWithActions;
 };
 
 export default CommitsListHeader;

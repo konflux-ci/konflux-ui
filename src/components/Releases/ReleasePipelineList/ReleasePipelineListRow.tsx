@@ -6,6 +6,9 @@ import { ReleasePlanKind } from '~/types/coreBuildService';
 import { calculateDuration } from '~/utils/pipeline-utils';
 import { releasePipelineRunListColumnClasses } from './ReleasePipelineListHeader';
 
+// Type defined in ReleasePipelineRunTab.tsx to avoid duplication
+type PipelineRunColumnKeys = 'name' | 'startTime' | 'duration' | 'type' | 'snapshot' | 'namespace' | 'status' | 'completionTime';
+
 interface PipelineRunProcessing {
   type: string;
   startTime: string | null;
@@ -20,6 +23,7 @@ type PipelineRunListRowProps = {
   releasePlan: ReleasePlanKind;
   releaseName?: string;
   namespace: string;
+  visibleColumns: Set<PipelineRunColumnKeys>;
 };
 
 const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
@@ -27,12 +31,13 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
   releasePlan,
   releaseName,
   namespace,
+  visibleColumns,
 }) => {
   const showBackButton = namespace !== run?.prNamespace;
 
-  return (
-    <>
-      <TableData className={releasePipelineRunListColumnClasses.name}>
+  const columnComponents = {
+    name: (
+      <TableData key="name" className={releasePipelineRunListColumnClasses.name}>
         <Link
           to={`${PIPELINE_RUNS_DETAILS_PATH.createPath({
             workspaceName: run.prNamespace,
@@ -44,14 +49,24 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
           {run.pipelineRun}
         </Link>
       </TableData>
-      <TableData className={releasePipelineRunListColumnClasses.startTime}>
+    ),
+    startTime: (
+      <TableData key="startTime" className={releasePipelineRunListColumnClasses.startTime}>
         <Timestamp timestamp={run.startTime ?? '-'} />
       </TableData>
-      <TableData className={releasePipelineRunListColumnClasses.duration}>
+    ),
+    duration: (
+      <TableData key="duration" className={releasePipelineRunListColumnClasses.duration}>
         {calculateDuration(run.startTime || '', run.completionTime || '') || '-'}
       </TableData>
-      <TableData className={releasePipelineRunListColumnClasses.type}>{run.type}</TableData>
-      <TableData className={releasePipelineRunListColumnClasses.snapshot}>
+    ),
+    type: (
+      <TableData key="type" className={releasePipelineRunListColumnClasses.type}>
+        {run.type}
+      </TableData>
+    ),
+    snapshot: (
+      <TableData key="snapshot" className={releasePipelineRunListColumnClasses.snapshot}>
         <Link
           to={SNAPSHOT_DETAILS_PATH.createPath({
             workspaceName: namespace,
@@ -63,9 +78,32 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
           {run.snapshot}
         </Link>
       </TableData>
-      <TableData className={releasePipelineRunListColumnClasses.namespace}>
+    ),
+    namespace: (
+      <TableData key="namespace" className={releasePipelineRunListColumnClasses.namespace}>
         {run.prNamespace}
       </TableData>
+    ),
+    status: (
+      <TableData key="status" className={releasePipelineRunListColumnClasses.status}>
+        {run.completionTime ? 'Completed' : run.startTime ? 'Running' : 'Pending'}
+      </TableData>
+    ),
+    completionTime: (
+      <TableData key="completionTime" className={releasePipelineRunListColumnClasses.completionTime}>
+        <Timestamp timestamp={run.completionTime ?? '-'} />
+      </TableData>
+    ),
+  };
+
+  // Define the order of columns to maintain consistent ordering
+  const columnOrder: PipelineRunColumnKeys[] = ['name', 'startTime', 'duration', 'type', 'snapshot', 'namespace', 'status', 'completionTime'];
+
+  return (
+    <>
+      {columnOrder
+        .filter(columnKey => visibleColumns.has(columnKey))
+        .map(columnKey => columnComponents[columnKey])}
     </>
   );
 };

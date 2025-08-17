@@ -8,6 +8,7 @@ import { useReleasePlan } from '~/hooks/useReleasePlans';
 import { useRelease } from '~/hooks/useReleases';
 import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import ColumnManagement, { ColumnDefinition } from '~/shared/components/table/ColumnManagement';
 import { useNamespace } from '~/shared/providers/Namespace';
 import {
   getFinalFromRelease,
@@ -28,6 +29,22 @@ interface PipelineRunProcessing {
   pipelineRun: string;
   prNamespace: string;
 }
+
+type PipelineRunColumnKeys = 'name' | 'startTime' | 'duration' | 'type' | 'snapshot' | 'namespace' | 'status' | 'completionTime';
+
+const pipelineRunColumns: readonly ColumnDefinition<PipelineRunColumnKeys>[] = [
+  { key: 'name', title: 'Name', sortable: true },
+  { key: 'startTime', title: 'Started', sortable: true },
+  { key: 'duration', title: 'Duration', sortable: true },
+  { key: 'type', title: 'Type', sortable: true },
+  { key: 'snapshot', title: 'Snapshot', sortable: true },
+  { key: 'namespace', title: 'Namespace', sortable: true },
+  { key: 'status', title: 'Status', sortable: true },
+  { key: 'completionTime', title: 'Completed', sortable: true },
+];
+
+const defaultVisibleColumns: Set<PipelineRunColumnKeys> = new Set(['name', 'startTime', 'duration', 'type', 'snapshot', 'namespace']);
+const nonHidableColumns: readonly PipelineRunColumnKeys[] = ['name'];
 
 const createPipelineRunEntry = (
   type: string,
@@ -58,6 +75,32 @@ const ReleasePipelineRunTab: React.FC = () => {
   const namespace = useNamespace();
 
   const { filters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  
+  // Column management state
+  const [visibleColumns, setVisibleColumns] = React.useState<Set<PipelineRunColumnKeys>>(() => {
+    try {
+      const saved = sessionStorage.getItem('release-pipeline-visible-columns');
+      if (saved) {
+        const parsedColumns = JSON.parse(saved) as PipelineRunColumnKeys[];
+        if (Array.isArray(parsedColumns)) {
+          return new Set(parsedColumns);
+        }
+      }
+    } catch {
+      // Silent error handling
+    }
+    return defaultVisibleColumns;
+  });
+
+  // Save visible columns to session storage whenever they change
+  React.useEffect(() => {
+    try {
+      sessionStorage.setItem('release-pipeline-visible-columns', JSON.stringify([...visibleColumns]));
+    } catch {
+      // Silent error handling
+    }
+  }, [visibleColumns]);
+  const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [release, loaded] = useRelease(namespace, releaseName);
 
   const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release?.spec?.releasePlan);
@@ -114,17 +157,19 @@ const ReleasePipelineRunTab: React.FC = () => {
             setText={(name) => setFilters({ ...filters, name })}
             onClearFilters={onClearFilters}
             data-test="release-pipeline-runs-toolbar"
+            totalColumns={pipelineRunColumns.length}
+            openColumnManagement={() => setIsColumnManagementOpen(true)}
           />
         }
         aria-label="release-pipeline-runs-table"
-        Header={ReleasePipelineListHeader}
+        Header={() => ReleasePipelineListHeader({ visibleColumns })}
         Row={(props) => (
           <ReleasePipelineListRow
-            {...props}
             obj={props.obj as PipelineRunProcessing}
             releasePlan={releasePlan}
             releaseName={releaseName}
             namespace={namespace}
+            visibleColumns={visibleColumns}
           />
         )}
         loaded={releasePlanLoaded}
@@ -132,6 +177,17 @@ const ReleasePipelineRunTab: React.FC = () => {
           id: obj.pipelineRun,
         })}
         virtualize
+      />
+      <ColumnManagement<PipelineRunColumnKeys>
+        isOpen={isColumnManagementOpen}
+        onClose={() => setIsColumnManagementOpen(false)}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={setVisibleColumns}
+        columns={pipelineRunColumns}
+        defaultVisibleColumns={defaultVisibleColumns}
+        nonHidableColumns={nonHidableColumns}
+        title="Manage pipeline run columns"
+        description="Selected columns will be displayed in the pipeline runs table."
       />
     </>
   );
