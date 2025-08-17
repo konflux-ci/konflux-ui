@@ -15,6 +15,7 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { CogIcon, FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { IfFeature } from '~/feature-flags/hooks';
 
 type Props = {
   value: string;
@@ -86,18 +87,20 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
               </InputGroupItem>
             </InputGroup>
           </ToolbarItem>
-          {openColumnManagement && totalColumns > 6 && (
-            <ToolbarItem>
-              <Button
-                variant="plain"
-                aria-label="Manage columns"
-                onClick={openColumnManagement}
-                icon={<CogIcon />}
-              >
-                Manage columns
-              </Button>
-            </ToolbarItem>
-          )}
+          <IfFeature flag="column-management">
+            {openColumnManagement && totalColumns > 6 && (
+              <ToolbarItem>
+                <Button
+                  variant="plain"
+                  aria-label="Manage columns"
+                  onClick={openColumnManagement}
+                  icon={<CogIcon />}
+                >
+                  Manage columns
+                </Button>
+              </ToolbarItem>
+            )}
+          </IfFeature>
         </ToolbarGroup>
       </ToolbarContent>
     </Toolbar>

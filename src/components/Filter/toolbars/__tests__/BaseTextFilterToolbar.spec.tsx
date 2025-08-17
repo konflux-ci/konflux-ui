@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { BaseTextFilterToolbar } from '../BaseTextFIlterToolbar';
 
 describe('BaseTextFilterToolbar', () => {
@@ -17,7 +18,7 @@ describe('BaseTextFilterToolbar', () => {
         label="name"
         setText={mockSetText}
         onClearFilters={mockOnClearFilters}
-      />
+      />,
     );
 
     const searchInput = screen.getByRole('textbox');
@@ -34,7 +35,7 @@ describe('BaseTextFilterToolbar', () => {
         onClearFilters={mockOnClearFilters}
         openColumnManagement={mockOpenColumnManagement}
         totalColumns={8}
-      />
+      />,
     );
 
     const manageColumnsButton = screen.getByRole('button', { name: /manage columns/i });
@@ -50,7 +51,7 @@ describe('BaseTextFilterToolbar', () => {
         onClearFilters={mockOnClearFilters}
         openColumnManagement={mockOpenColumnManagement}
         totalColumns={5}
-      />
+      />,
     );
 
     const manageColumnsButton = screen.queryByRole('button', { name: /manage columns/i });
@@ -65,14 +66,16 @@ describe('BaseTextFilterToolbar', () => {
         setText={mockSetText}
         onClearFilters={mockOnClearFilters}
         totalColumns={8}
-      />
+      />,
     );
 
     const manageColumnsButton = screen.queryByRole('button', { name: /manage columns/i });
     expect(manageColumnsButton).not.toBeInTheDocument();
   });
 
-  it('should call openColumnManagement when manage columns button is clicked', () => {
+  it('should call openColumnManagement when manage columns button is clicked', async () => {
+    const user = userEvent.setup();
+
     render(
       <BaseTextFilterToolbar
         text=""
@@ -81,35 +84,36 @@ describe('BaseTextFilterToolbar', () => {
         onClearFilters={mockOnClearFilters}
         openColumnManagement={mockOpenColumnManagement}
         totalColumns={8}
-      />
+      />,
     );
 
     const manageColumnsButton = screen.getByRole('button', { name: /manage columns/i });
-    fireEvent.click(manageColumnsButton);
+    await user.click(manageColumnsButton);
 
     expect(mockOpenColumnManagement).toHaveBeenCalledTimes(1);
   });
 
-  it('should call setText with debounced value when search input changes', () => {
+  it('should call setText with debounced value when search input changes', async () => {
     jest.useFakeTimers();
-    
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
     render(
       <BaseTextFilterToolbar
         text=""
         label="name"
         setText={mockSetText}
         onClearFilters={mockOnClearFilters}
-      />
+      />,
     );
 
     const searchInput = screen.getByRole('textbox');
-    fireEvent.change(searchInput, { target: { value: 'test search' } });
+    await user.type(searchInput, 'test search');
 
     // Fast-forward time to trigger debounced function
     jest.advanceTimersByTime(600);
 
     expect(mockSetText).toHaveBeenCalledWith('test search');
-    
+
     jest.useRealTimers();
   });
 
@@ -122,7 +126,7 @@ describe('BaseTextFilterToolbar', () => {
         onClearFilters={mockOnClearFilters}
       >
         <div data-testid="custom-child">Custom child component</div>
-      </BaseTextFilterToolbar>
+      </BaseTextFilterToolbar>,
     );
 
     expect(screen.getByText('Custom child component')).toBeInTheDocument();

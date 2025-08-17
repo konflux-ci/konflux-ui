@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { mockReleasePlans } from '~/components/ReleaseService/ReleasePlan/__data__/release-plan.mock';
 import { useReleasePlan } from '~/hooks/useReleasePlans';
 import { useRelease } from '~/hooks/useReleases';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -21,17 +22,7 @@ const mockUseRelease = useRelease as jest.MockedFunction<typeof useRelease>;
 const mockUseReleasePlan = useReleasePlan as jest.MockedFunction<typeof useReleasePlan>;
 const mockUseNamespace = useNamespace as jest.MockedFunction<typeof useNamespace>;
 
-const mockReleasePlan = {
-  apiVersion: 'appstudio.redhat.com/v1alpha1',
-  kind: 'ReleasePlan',
-  spec: {
-    application: 'test-app',
-    target: 'test-target',
-  },
-  metadata: {
-    name: 'test-release-plan',
-  },
-};
+const mockReleasePlan = mockReleasePlans[0];
 
 const mockFilterContextValue = {
   filters: { name: '' },

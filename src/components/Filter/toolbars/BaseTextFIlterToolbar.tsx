@@ -2,6 +2,7 @@ import { Children } from 'react';
 import { Button, SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
 import { CogIcon } from '@patternfly/react-icons/dist/esm/icons/cog-icon';
 import { debounce } from 'lodash-es';
+import { IfFeature } from '~/feature-flags/hooks';
 
 type BaseTextFilterToolbarProps = {
   text: string;
@@ -22,26 +23,28 @@ export const BaseTextFilterToolbar = ({
   children,
   dataTest,
   openColumnManagement,
-  totalColumns = 0
+  totalColumns = 0,
 }: BaseTextFilterToolbarProps) => {
   const onTextInput = debounce((newName: string) => {
     setText(newName);
   }, 600);
 
   // Create column management button
-  const columnManagementButton = () =>(
-    <Button
-      variant="plain"
-      aria-label="Manage columns"
-      onClick={openColumnManagement}
-      icon={<CogIcon />}
-    >
-      Manage columns
-    </Button>
+  const columnManagementButton = () => (
+    <IfFeature flag="column-management">
+      <Button
+        variant="plain"
+        aria-label="Manage columns"
+        onClick={openColumnManagement}
+        icon={<CogIcon />}
+      >
+        Manage columns
+      </Button>
+    </IfFeature>
   );
 
   return (
-    <>   
+    <>
       <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
         <ToolbarContent>
           <ToolbarItem className="pf-v5-u-ml-0">

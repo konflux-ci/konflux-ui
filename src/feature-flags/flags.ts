@@ -54,6 +54,12 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'column-management': {
+    key: 'column-management',
+    description: 'Enable manage columns buttons for tables with more than 6 columns',
+    defaultEnabled: true,
+    status: 'enabled',
+  },
 };
 
 export type FlagKey = keyof typeof FLAGS;

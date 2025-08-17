@@ -7,7 +7,15 @@ import { calculateDuration } from '~/utils/pipeline-utils';
 import { releasePipelineRunListColumnClasses } from './ReleasePipelineListHeader';
 
 // Type defined in ReleasePipelineRunTab.tsx to avoid duplication
-type PipelineRunColumnKeys = 'name' | 'startTime' | 'duration' | 'type' | 'snapshot' | 'namespace' | 'status' | 'completionTime';
+type PipelineRunColumnKeys =
+  | 'name'
+  | 'startTime'
+  | 'duration'
+  | 'type'
+  | 'snapshot'
+  | 'namespace'
+  | 'status'
+  | 'completionTime';
 
 interface PipelineRunProcessing {
   type: string;
@@ -52,12 +60,12 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
     ),
     startTime: (
       <TableData key="startTime" className={releasePipelineRunListColumnClasses.startTime}>
-        <Timestamp timestamp={run.startTime ?? '-'} />
+        <Timestamp timestamp={run.startTime || undefined} />
       </TableData>
     ),
     duration: (
       <TableData key="duration" className={releasePipelineRunListColumnClasses.duration}>
-        {calculateDuration(run.startTime || '', run.completionTime || '') || '-'}
+        {run.startTime ? calculateDuration(run.startTime, run.completionTime) : '-'}
       </TableData>
     ),
     type: (
@@ -90,20 +98,32 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
       </TableData>
     ),
     completionTime: (
-      <TableData key="completionTime" className={releasePipelineRunListColumnClasses.completionTime}>
-        <Timestamp timestamp={run.completionTime ?? '-'} />
+      <TableData
+        key="completionTime"
+        className={releasePipelineRunListColumnClasses.completionTime}
+      >
+        <Timestamp timestamp={run.completionTime || undefined} />
       </TableData>
     ),
   };
 
   // Define the order of columns to maintain consistent ordering
-  const columnOrder: PipelineRunColumnKeys[] = ['name', 'startTime', 'duration', 'type', 'snapshot', 'namespace', 'status', 'completionTime'];
+  const columnOrder: PipelineRunColumnKeys[] = [
+    'name',
+    'startTime',
+    'duration',
+    'type',
+    'snapshot',
+    'namespace',
+    'status',
+    'completionTime',
+  ];
 
   return (
     <>
       {columnOrder
-        .filter(columnKey => visibleColumns.has(columnKey))
-        .map(columnKey => columnComponents[columnKey])}
+        .filter((columnKey) => visibleColumns.has(columnKey))
+        .map((columnKey) => columnComponents[columnKey])}
     </>
   );
 };

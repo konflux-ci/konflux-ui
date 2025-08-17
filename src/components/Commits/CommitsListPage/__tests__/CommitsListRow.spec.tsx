@@ -16,7 +16,14 @@ jest.mock('../../commit-status', () => ({
 const commits = getCommitsFromPLRs(pipelineWithCommits);
 
 type CommitColumnKeys = 'name' | 'branch' | 'component' | 'byUser' | 'committedAt' | 'status';
-const defaultVisibleColumns = new Set<CommitColumnKeys>(['name', 'branch', 'component', 'byUser', 'committedAt', 'status']);
+const defaultVisibleColumns = new Set<CommitColumnKeys>([
+  'name',
+  'branch',
+  'component',
+  'byUser',
+  'committedAt',
+  'status',
+]);
 
 describe('CommitsListRow', () => {
   it('lists correct Commit details', () => {
@@ -55,8 +62,9 @@ describe('CommitsListRow', () => {
     screen.getAllByText(`#23 ${commits[0].shaTitle}`);
   });
 
-  it('should show plr status on the row', () => {});
-  const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
-  render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />);
-  screen.getByText(status);
+  it('should show plr status on the row', () => {
+    const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
+    render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />);
+    screen.getByText(status);
+  });
 });
