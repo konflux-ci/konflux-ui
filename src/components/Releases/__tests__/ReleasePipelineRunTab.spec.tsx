@@ -22,8 +22,11 @@ const mockUseReleasePlan = useReleasePlan as jest.MockedFunction<typeof useRelea
 const mockUseNamespace = useNamespace as jest.MockedFunction<typeof useNamespace>;
 
 const mockReleasePlan = {
+  apiVersion: 'appstudio.redhat.com/v1alpha1',
+  kind: 'ReleasePlan',
   spec: {
     application: 'test-app',
+    target: 'test-target',
   },
   metadata: {
     name: 'test-release-plan',
@@ -37,19 +40,17 @@ const mockFilterContextValue = {
 };
 
 const TestWrapper = ({ children }) => (
-  <FilterContext.Provider value={mockFilterContextValue}>
-    {children}
-  </FilterContext.Provider>
+  <FilterContext.Provider value={mockFilterContextValue}>{children}</FilterContext.Provider>
 );
 
 describe('ReleasePipelineRunTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockUseParams.mockReturnValue({ releaseName: 'test-release' });
     mockUseNamespace.mockReturnValue('test-namespace');
-    mockUseRelease.mockReturnValue([mockReleaseWithAllProcessing, true]);
-    mockUseReleasePlan.mockReturnValue([mockReleasePlan, true]);
+    mockUseRelease.mockReturnValue([mockReleaseWithAllProcessing, true, undefined]);
+    mockUseReleasePlan.mockReturnValue([mockReleasePlan, true, undefined]);
 
     // Mock sessionStorage
     Object.defineProperty(window, 'sessionStorage', {
@@ -65,7 +66,7 @@ describe('ReleasePipelineRunTab', () => {
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -81,7 +82,7 @@ describe('ReleasePipelineRunTab', () => {
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -93,7 +94,9 @@ describe('ReleasePipelineRunTab', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Manage pipeline run columns')).toBeInTheDocument();
-      expect(screen.getByText('Selected columns will be displayed in the pipeline runs table.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Selected columns will be displayed in the pipeline runs table.'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -101,7 +104,7 @@ describe('ReleasePipelineRunTab', () => {
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -130,7 +133,7 @@ describe('ReleasePipelineRunTab', () => {
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -141,21 +144,19 @@ describe('ReleasePipelineRunTab', () => {
     await waitFor(() => {
       expect(mockSetItem).toHaveBeenCalledWith(
         'release-pipeline-visible-columns',
-        expect.stringContaining('name')
+        expect.stringContaining('name'),
       );
     });
   });
 
   it('should load saved column preferences from session storage', () => {
-    const mockGetItem = jest.fn().mockReturnValue(
-      JSON.stringify(['name', 'startTime', 'type'])
-    );
+    const mockGetItem = jest.fn().mockReturnValue(JSON.stringify(['name', 'startTime', 'type']));
     window.sessionStorage.getItem = mockGetItem;
 
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(mockGetItem).toHaveBeenCalledWith('release-pipeline-visible-columns');
@@ -172,7 +173,7 @@ describe('ReleasePipelineRunTab', () => {
       render(
         <TestWrapper>
           <ReleasePipelineRunTab />
-        </TestWrapper>
+        </TestWrapper>,
       );
     }).not.toThrow();
   });
@@ -181,7 +182,7 @@ describe('ReleasePipelineRunTab', () => {
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     await waitFor(() => {
@@ -206,13 +207,13 @@ describe('ReleasePipelineRunTab', () => {
   });
 
   it('should show loading spinner when data is not loaded', () => {
-    mockUseRelease.mockReturnValue([null, false]);
-    mockUseReleasePlan.mockReturnValue([null, false]);
+    mockUseRelease.mockReturnValue([null, false, undefined]);
+    mockUseReleasePlan.mockReturnValue([null, false, undefined]);
 
     render(
       <TestWrapper>
         <ReleasePipelineRunTab />
-      </TestWrapper>
+      </TestWrapper>,
     );
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -225,15 +226,13 @@ describe('ReleasePipelineRunTab', () => {
     };
 
     const TestWrapperWithFilter = ({ children }) => (
-      <FilterContext.Provider value={filterContextWithName}>
-        {children}
-      </FilterContext.Provider>
+      <FilterContext.Provider value={filterContextWithName}>{children}</FilterContext.Provider>
     );
 
     render(
       <TestWrapperWithFilter>
         <ReleasePipelineRunTab />
-      </TestWrapperWithFilter>
+      </TestWrapperWithFilter>,
     );
 
     await waitFor(() => {
