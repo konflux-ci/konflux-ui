@@ -112,16 +112,49 @@ describe('SnapshotsListView - Empty State', () => {
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
-  it('should not display empty state when there is an error', () => {
-    // Mock error state
-    useMockSnapshots.mockReturnValue({
-      data: [],
-      isLoading: false,
-      hasError: true,
+  describe('Error Handling', () => {
+    it('should render ErrorEmptyState when both cluster and archive errors occur', () => {
+      useMockSnapshots.mockReturnValue({
+        data: [],
+        isLoading: false,
+        hasError: true,
+        clusterError: new Error('Cluster connection failed'),
+        archiveError: new Error('Archive service unavailable'),
+      });
+
+      renderWithQueryClientAndRouter(createWrappedComponent());
+
+      expect(screen.getByText('Unable to load snapshots')).toBeInTheDocument();
     });
 
-    renderWithQueryClientAndRouter(createWrappedComponent());
+    it('should not render ErrorEmptyState when only cluster error occurs', () => {
+      useMockSnapshots.mockReturnValue({
+        data: [],
+        isLoading: false,
+        hasError: true,
+        clusterError: new Error('Cluster connection failed'),
+        archiveError: null,
+      });
 
-    expect(screen.getByText('Unable to load snapshots')).toBeInTheDocument();
+      renderWithQueryClientAndRouter(createWrappedComponent());
+
+      checkEmptyState();
+      expect(screen.queryByText('Unable to load snapshots')).not.toBeInTheDocument();
+    });
+
+    it('should not render ErrorEmptyState when only archive error occurs', () => {
+      useMockSnapshots.mockReturnValue({
+        data: [],
+        isLoading: false,
+        hasError: true,
+        clusterError: null,
+        archiveError: new Error('Archive service unavailable'),
+      });
+
+      renderWithQueryClientAndRouter(createWrappedComponent());
+
+      checkEmptyState();
+      expect(screen.queryByText('Unable to load snapshots')).not.toBeInTheDocument();
+    });
   });
 });
