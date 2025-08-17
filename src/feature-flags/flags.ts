@@ -56,9 +56,9 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
   },
   'column-management': {
     key: 'column-management',
-    description: 'Enable manage columns buttons for tables with more than 6 columns',
+    description: 'Enable the "Manage columns" button for tables with more than six columns',
     defaultEnabled: true,
-    status: 'enabled',
+    status: 'ready',
   },
 };
 
