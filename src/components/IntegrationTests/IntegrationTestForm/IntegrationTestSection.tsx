@@ -23,7 +23,6 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
     name: 'integrationTest.url',
     type: 'input',
   });
-  const [{ value }, , { setValue }] = useField('integrationTest.resourceKind');
   const validated = touched
     ? touched && !error
       ? ValidatedOptions.success
@@ -75,34 +74,30 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
               label: 'Pipeline Run',
             },
           ]}
-          onChange={(val) => setValue(val)}
         />
 
-        {value && (
-          <>
-            <InputField
-              name="integrationTest.url"
-              placeholder="Enter a GitHub or GitLab repository URL"
-              validated={validated}
-              label="Git Repository URL"
-              isRequired
-              data-test="git-url-input"
-            />
-            <InputField
-              name="integrationTest.revision"
-              label="Revision"
-              helperText="Branch, tag or commit."
-              data-test="git-revision"
-            />
-            <InputField
-              name="integrationTest.path"
-              label="Path in the repository"
-              helperText="Where to find the file in your repository."
-              data-test="git-path-repo"
-              isRequired
-            />
-          </>
-        )}
+        <InputField
+          name="integrationTest.url"
+          placeholder="Enter a GitHub or GitLab repository URL"
+          validated={validated}
+          label="Git Repository URL"
+          isRequired
+          data-test="git-url-input"
+        />
+        <InputField
+          name="integrationTest.revision"
+          label="Revision"
+          helperText="Branch, tag or commit."
+          data-test="git-revision"
+        />
+        <InputField
+          name="integrationTest.path"
+          label="Path in the repository"
+          helperText="Where to find the file in your repository."
+          data-test="git-path-repo"
+          isRequired
+        />
+
         <ContextsField fieldName="integrationTest.contexts" />
         <FormikParamsField fieldName="integrationTest.params" heading="Show Parameters" />
 
