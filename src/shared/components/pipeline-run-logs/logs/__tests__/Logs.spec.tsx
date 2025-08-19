@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { ResourceSource } from '~/types/k8s';
 import { PodKind, ContainerSpec } from '../../../types';
 import Logs, { processLogs } from '../Logs';
 
@@ -74,6 +75,7 @@ describe('Logs', () => {
     taskRun: undefined,
     isLoading: false,
     onLogsChange: mockOnLogsChange,
+    source: ResourceSource.Cluster,
   };
 
   beforeEach(() => {

@@ -10,7 +10,7 @@ import { MultiStreamLogs } from './MultiStreamLogs';
 type K8sAndKarchLogWrapperProps = {
   taskRun: TaskRunKind;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<Error>;
+  onDownloadAll?: () => Promise<void>;
   resource: WatchK8sResource;
 };
 
@@ -48,12 +48,14 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
   }
 
   if (isLoading) {
-    <span
-      className="multi-stream-logs__taskName__loading-indicator"
-      data-testid="loading-indicator"
-    >
-      <LoadingInline />
-    </span>;
+    return (
+      <span
+        className="multi-stream-logs__taskName__loading-indicator"
+        data-testid="loading-indicator"
+      >
+        <LoadingInline />
+      </span>
+    );
   }
 
   if (fetchError) {

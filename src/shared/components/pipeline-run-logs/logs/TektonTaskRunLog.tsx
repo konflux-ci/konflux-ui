@@ -7,7 +7,7 @@ import LogViewer from './LogViewer';
 type TektonTaskRunLogProps = {
   taskRun?: TaskRunKind;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<Error>;
+  onDownloadAll?: () => Promise<void>;
 };
 
 export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLogProps>> = ({

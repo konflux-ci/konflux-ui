@@ -11,7 +11,7 @@ const K8sAndTektonLogsWrapper = React.lazy(() => import('./K8sAndTektonLogsWrapp
 type LogsWrapperComponentProps = {
   taskRun: TaskRunKind;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<Error>;
+  onDownloadAll?: () => Promise<void>;
   resource: WatchK8sResource;
 };
 

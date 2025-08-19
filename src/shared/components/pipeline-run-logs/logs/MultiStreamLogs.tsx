@@ -10,7 +10,7 @@ type MultiStreamLogsProps = {
   taskRun?: TaskRunKind;
   resourceName: string;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<Error>;
+  onDownloadAll?: () => Promise<void>;
   source?: ResourceSource;
 };
 

@@ -104,7 +104,7 @@ describe('LogViewer', () => {
     it('should show loading indicator when isLoading is true', () => {
       render(<LogViewer {...defaultProps} isLoading={true} taskRun={mockTaskRun} />);
 
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByTestId('loading-inline')).toBeInTheDocument();
     });
 
     it('should show error message when errorMessage is provided', () => {

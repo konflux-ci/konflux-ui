@@ -2,10 +2,8 @@ import React from 'react';
 import {
   Alert,
   Banner,
-  Bullseye,
   Button,
   Checkbox,
-  Spinner,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
@@ -36,7 +34,7 @@ export type Props = LogViewerProps & {
   data: string;
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<Error>;
+  onDownloadAll?: () => Promise<void>;
   taskRun?: TaskRunKind;
   isLoading: boolean;
   errorMessage: string | null;
@@ -81,7 +79,7 @@ const LogViewer: React.FC<Props> = ({
     const blob = new Blob([data], {
       type: 'text/plain;charset=utf-8',
     });
-    saveAs(blob, `${taskName}.log`);
+    saveAs(blob, `${taskName || 'logs'}.log`);
   };
 
   const startDownloadAll = () => {
@@ -127,11 +125,7 @@ const LogViewer: React.FC<Props> = ({
         header={
           <Banner data-testid="logs-taskName">
             {taskName} <LogsTaskDuration taskRun={taskRun} />
-            {isLoading && (
-              <Bullseye>
-                <Spinner size="lg" />
-              </Bullseye>
-            )}
+            {isLoading && <LoadingInline />}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
         }

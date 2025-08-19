@@ -99,7 +99,7 @@ export const getDownloadAllLogsCallback = (
   taskRuns: TaskRunKind[],
   namespace: string,
   pipelineRunName: string,
-): (() => Promise<Error>) => {
+): (() => Promise<void>) => {
   const getWatchUrls = async (): Promise<StepsWatchUrl> => {
     const orderedSteps: OrderedSteps[] = await Promise.all(
       sortedTaskRunNames.map((currTask) => {
@@ -199,7 +199,7 @@ export const getDownloadAllLogsCallback = (
     saveAs(blob, `${pipelineRunName}.log`);
     return null;
   };
-  return (): Promise<Error> => {
+  return (): Promise<void> => {
     return fetchLogs(getWatchUrls());
   };
 };

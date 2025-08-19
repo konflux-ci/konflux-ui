@@ -36,7 +36,7 @@ describe('ReleaseDetailsView', () => {
     },
   };
   it('should render spinner if release data is not loaded', () => {
-    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: true });
+    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: true, fetchError: undefined });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getByRole('progressbar')).toBeVisible();
   });
@@ -53,7 +53,7 @@ describe('ReleaseDetailsView', () => {
   });
 
   it('should render release name if release data is loaded', () => {
-    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false });
+    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false, fetchError: undefined });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getAllByRole('heading')[0]).toHaveTextContent('test-release');
   });
