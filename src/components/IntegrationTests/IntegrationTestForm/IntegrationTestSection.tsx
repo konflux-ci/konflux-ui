@@ -36,8 +36,8 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
           <TextContent data-test="integration-test-section-header">
             <Text component={TextVariants.h1}>Add integration test</Text>
             <Text component={TextVariants.p}>
-              To test all your components after code commit, add integration test. Integration tests
-              run in parallel using temporary environments.
+              To test all your components after code commit, add an integration test. Integration
+              tests run in parallel using temporary environments.
               <ExternalLink href={LEARN_MORE_ABOUT_INTEGRATION_TESTS} text="Learn more" icon />
             </Text>
           </TextContent>
@@ -60,7 +60,7 @@ const IntegrationTestSection: React.FC<React.PropsWithChildren<Props>> = ({ isIn
               Where do we look for your integration test configurations ?{' '}
               <HelpPopover
                 headerContent="Test pipeline definitions"
-                bodyContent="This is where you can specify where Konflux should look for your integration test pipeline definitions"
+                bodyContent="This is where you can specify where Konflux should look for your integration test pipeline definitions."
               />
             </b>
           }

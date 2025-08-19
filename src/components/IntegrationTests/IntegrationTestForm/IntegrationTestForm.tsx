@@ -38,8 +38,8 @@ const IntegrationTestForm: React.FunctionComponent<
   const title = edit ? 'Edit integration test' : 'Add integration test';
   const description = (
     <>
-      To test all your components after code commit, add integration test. Integration tests run in
-      parallel using temporary environments.
+      To test all your components after code commit, add an integration test. Integration tests run
+      in parallel using temporary environments.
       <ExternalLink href={LEARN_MORE_ABOUT_INTEGRATION_TESTS} text="Learn more" icon />
     </>
   );
