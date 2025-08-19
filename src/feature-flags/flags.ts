@@ -37,7 +37,7 @@ type FeatureFlagDefinition = {
   key: string;
   description: string;
   defaultEnabled: boolean;
-  status: 'wip' | 'enabled';
+  status: 'wip' | 'ready';
 };
 
 export const FLAGS: Record<string, FeatureFlagDefinition> = {
