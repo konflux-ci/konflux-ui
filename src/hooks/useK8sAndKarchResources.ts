@@ -165,6 +165,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
 
   React.useEffect(() => {
     if (!enabled || !resourceInit) {
+      setIsLoading(false);
       return;
     }
 
@@ -188,7 +189,15 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   const wsError = useK8sQueryWatch(
     watch && result?.source === ResourceSource.Cluster ? resourceInit : null,
     false,
-    watch && hashKey(createQueryKeys(resourceInit)),
+    watch &&
+      resourceInit &&
+      hashKey(
+        createQueryKeys({
+          model: resourceInit.model,
+          queryOptions: resourceInit.queryOptions,
+          prefix: resourceInit.fetchOptions?.requestInit?.pathPrefix,
+        }),
+      ),
     watchOptions,
   );
 
