@@ -1,11 +1,16 @@
 import { screen, fireEvent } from '@testing-library/react';
 import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/banner-data';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
 import { createK8sUtilMock, routerRenderer } from '../../utils/test-utils';
 import { AppRoot } from '../AppRoot';
 
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
+}));
+jest.mock('~/feature-flags/hooks', () => ({
+  useIsOnFeatureFlag: jest.fn(),
+  IfFeature: ({ children }: { flag: string; children: React.ReactNode }) => children,
 }));
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
@@ -44,11 +49,16 @@ jest.mock('~/components/KonfluxSystemNotifications/NotificationList', () => ({
 }));
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 
 describe('AppRoot', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: null });
+    // Default: enable system-notifications feature flag for tests
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
+      return flag === 'system-notifications';
+    });
   });
 
   it('should render banner when useBanner returns a banner', () => {

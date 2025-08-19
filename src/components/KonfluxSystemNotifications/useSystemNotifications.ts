@@ -19,7 +19,6 @@ export const useSystemNotifications = () => {
       isList: true,
       selector: { matchLabels: SYSTEM_NOTIFICATION_LABEL_SELECTOR },
       namespace: KONFLUX_INFO_NAMESPACE,
-      watch: true,
     },
     ConfigMapModel,
   );

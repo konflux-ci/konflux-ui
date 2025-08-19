@@ -5,6 +5,7 @@ import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
 import { KonfluxBanner } from '~/components/KonfluxBanner/KonfluxBanner';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
 import { NamespaceSwitcher } from '../shared/providers/Namespace/NamespaceSwitcher';
@@ -22,6 +23,7 @@ export const AppRoot: React.FC = () => {
   const [isSideBarOpen, setSideBarOpen] = React.useState<boolean>(true);
   const isActive = useActiveRouteChecker();
   usePreventWindowCloseIfTaskRunning();
+  const isSystemNotificationsEnabled = useIsOnFeatureFlag('system-notifications');
 
   const showSwitcher = React.useMemo(() => {
     return namespaceSwitcherNotAllowedRoutes.map((r) => isActive(r, { exact: true })).some(Boolean);
@@ -45,9 +47,11 @@ export const AppRoot: React.FC = () => {
           />
         }
         notificationDrawer={
-          <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
+          isSystemNotificationsEnabled ? (
+            <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
+          ) : undefined
         }
-        isNotificationDrawerExpanded={isDrawerExpanded}
+        isNotificationDrawerExpanded={isSystemNotificationsEnabled && isDrawerExpanded}
       >
         <ActivePageAlert />
         <SidePanelHost>
