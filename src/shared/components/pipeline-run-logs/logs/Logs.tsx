@@ -134,7 +134,14 @@ const Logs: React.FC<LogsProps> = ({
             : undefined,
         )
           .then((res) => !loaded && appendLog(name, res))
-          .catch(() => !loaded && setError(true));
+          .catch((err) => {
+            if (!loaded) {
+              appendLog(
+                name,
+                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error && `:\n${err.message}`}\x1b[0m\n`,
+              );
+            }
+          });
       } else {
         const wsOpts = getWebsocketSubProtocolAndPathPrefix(watchURL);
         ws = retryWebSocket(

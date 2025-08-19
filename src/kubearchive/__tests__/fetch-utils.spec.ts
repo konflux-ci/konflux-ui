@@ -1,7 +1,7 @@
 import { createK8sUtilMock, createKubearchiveUtilMock } from '~/utils/test-utils';
 import { HttpError } from '../../k8s/error';
 import { TQueryOptions } from '../../k8s/query/type';
-import { K8sResourceCommon } from '../../types/k8s';
+import { K8sResourceCommon, ResourceSource } from '../../types/k8s';
 import { fetchResourceWithK8sAndKubeArchive } from '../resource-utils';
 
 const mockK8sQueryGetResource = createK8sUtilMock('k8sQueryGetResource');
@@ -39,23 +39,31 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
   });
 
   it('should return resource from cluster when cluster request succeeds', async () => {
+    const mockResult = {
+      resource: mockResource,
+      source: ResourceSource.Cluster,
+    };
     mockK8sQueryGetResource.mockResolvedValue(mockResource);
 
     const result = await fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions);
 
     // Assert
-    expect(result).toEqual(mockResource);
+    expect(result).toEqual(mockResult);
     expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
     expect(mockKubearchiveQueryGetResource).not.toHaveBeenCalled();
   });
 
   it('should return resource from kubearchive when cluster returns 404', async () => {
+    const mockResult = {
+      resource: mockResource,
+      source: ResourceSource.Archive,
+    };
     mockK8sQueryGetResource.mockRejectedValue(HttpError.fromCode(404));
     mockKubearchiveQueryGetResource.mockResolvedValueOnce(mockResource);
 
     const result = await fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions);
 
-    expect(result).toEqual(mockResource);
+    expect(result).toEqual(mockResult);
     expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
     expect(mockKubearchiveQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
   });

@@ -188,7 +188,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   const wsError = useK8sQueryWatch(
     watch && result?.source === ResourceSource.Cluster ? resourceInit : null,
     false,
-    hashKey(createQueryKeys(resourceInit)),
+    watch && hashKey(createQueryKeys(resourceInit)),
     watchOptions,
   );
 

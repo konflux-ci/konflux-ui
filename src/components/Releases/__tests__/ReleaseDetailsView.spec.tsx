@@ -36,20 +36,24 @@ describe('ReleaseDetailsView', () => {
     },
   };
   it('should render spinner if release data is not loaded', () => {
-    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: true, error: false });
+    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: true });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getByRole('progressbar')).toBeVisible();
   });
 
   it('should render the error state if the release is not found', () => {
-    useMockRelease.mockReturnValue({ data: {}, isLoading: false, error: { code: 404 } });
+    useMockRelease.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      fetchError: { code: 404 },
+    });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getByText('404: Page not found')).toBeVisible();
     expect(screen.getByText('Go to applications list')).toBeVisible();
   });
 
   it('should render release name if release data is loaded', () => {
-    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false, error: false });
+    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getAllByRole('heading')[0]).toHaveTextContent('test-release');
   });
