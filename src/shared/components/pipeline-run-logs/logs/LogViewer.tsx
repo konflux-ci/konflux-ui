@@ -8,6 +8,7 @@ import {
   Spinner,
   Toolbar,
   ToolbarContent,
+  ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
 import {
@@ -140,70 +141,72 @@ const LogViewer: React.FC<Props> = ({
               className={classNames({
                 'log-viewer--fullscreen': isFullscreen,
               })}
+              alignItems="center"
             >
               {showSearch && (
-                <>
-                  <ToolbarItem alignSelf="center" style={{ flex: 1 }}>
-                    <LogViewerSearch placeholder="Search" minSearchChars={0} width="100%" />
+                <ToolbarGroup>
+                  <ToolbarItem>
+                    <LogViewerSearch placeholder="Search" minSearchChars={0} />
                   </ToolbarItem>
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
-                </>
+                </ToolbarGroup>
               )}
-              <ToolbarItem alignSelf="center">
-                <Checkbox
-                  id="theme"
-                  label="Dark theme"
-                  checked={logTheme === 'dark'}
-                  onClick={() =>
-                    setLogTheme((prev) => {
-                      if (prev === 'dark') return 'light';
-                      return 'dark';
-                    })
-                  }
-                />
-              </ToolbarItem>
-              <ToolbarItem variant="separator" className="log-viewer__divider" />
-              <ToolbarItem alignSelf="center">
-                <Button variant="link" onClick={downloadLogs} isInline>
-                  <DownloadIcon className="log-viewer__icon" />
-                  Download
-                </Button>
-              </ToolbarItem>
-              <ToolbarItem variant="separator" className="log-viewer__divider" />
-              {onDownloadAll && (
-                <>
-                  <ToolbarItem alignSelf="center">
-                    <Button
-                      variant="link"
-                      onClick={startDownloadAll}
-                      isDisabled={downloadAllStatus}
-                      isInline
-                    >
-                      <DownloadIcon className="log-viewer__icon" />
-                      {downloadAllLabel}
-                      {downloadAllStatus && <LoadingInline />}
-                    </Button>
-                  </ToolbarItem>
-                  <ToolbarItem variant="separator" className="log-viewer__divider" />
-                </>
-              )}
-              {fullscreenToggle && (
-                <ToolbarItem alignSelf="center">
-                  <Button variant="link" onClick={fullscreenToggle} isInline>
-                    {isFullscreen ? (
-                      <>
-                        <CompressIcon className="log-viewer__icon" />
-                        Collapse
-                      </>
-                    ) : (
-                      <>
-                        <ExpandIcon className="log-viewer__icon" />
-                        Expand
-                      </>
-                    )}
+              <ToolbarGroup align={{ default: 'alignRight' }}>
+                <ToolbarItem>
+                  <Checkbox
+                    id="theme"
+                    label="Dark theme"
+                    checked={logTheme === 'dark'}
+                    onClick={() =>
+                      setLogTheme((prev) => {
+                        if (prev === 'dark') return 'light';
+                        return 'dark';
+                      })
+                    }
+                  />
+                </ToolbarItem>
+                <ToolbarItem variant="separator" className="log-viewer__divider" />
+                <ToolbarItem>
+                  <Button variant="link" onClick={downloadLogs} isInline>
+                    <DownloadIcon className="log-viewer__icon" />
+                    Download
                   </Button>
                 </ToolbarItem>
-              )}
+                <ToolbarItem variant="separator" className="log-viewer__divider" />
+                {onDownloadAll && (
+                  <>
+                    <ToolbarItem>
+                      <Button
+                        variant="link"
+                        onClick={startDownloadAll}
+                        isDisabled={downloadAllStatus}
+                        isInline
+                      >
+                        <DownloadIcon className="log-viewer__icon" />
+                        {downloadAllLabel}
+                        {downloadAllStatus && <LoadingInline />}
+                      </Button>
+                    </ToolbarItem>
+                    <ToolbarItem variant="separator" className="log-viewer__divider" />
+                  </>
+                )}
+                {fullscreenToggle && (
+                  <ToolbarItem spacer={{ default: 'spacerMd' }}>
+                    <Button variant="link" onClick={fullscreenToggle} isInline>
+                      {isFullscreen ? (
+                        <>
+                          <CompressIcon className="log-viewer__icon" />
+                          Collapse
+                        </>
+                      ) : (
+                        <>
+                          <ExpandIcon className="log-viewer__icon" />
+                          Expand
+                        </>
+                      )}
+                    </Button>
+                  </ToolbarItem>
+                )}
+              </ToolbarGroup>
             </ToolbarContent>
           </Toolbar>
         }
