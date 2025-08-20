@@ -88,7 +88,7 @@ export const watchObjectResource = (
   return k8sWatch(
     model,
     {
-      labelSelector: queryOptions.queryParams.labelSelector,
+      labelSelector: queryOptions.queryParams?.labelSelector,
       ns: queryOptions.ns,
       fieldSelector: `metadata.name=${queryOptions.name}`,
     },

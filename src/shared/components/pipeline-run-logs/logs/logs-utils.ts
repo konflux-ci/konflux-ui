@@ -1,6 +1,9 @@
 import { saveAs } from 'file-saver';
+import { FLAGS } from '~/feature-flags/flags';
+import { FeatureFlagsStore } from '~/feature-flags/store';
+import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
+import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
-import { K8sGetResource } from '../../../../k8s/k8s-fetch';
 import { getK8sResourceURL } from '../../../../k8s/k8s-utils';
 import { PipelineRunModel } from '../../../../models';
 import { PodModel } from '../../../../models/pod';
@@ -43,24 +46,52 @@ export const getRenderContainers = (
   };
 };
 
-const getOrderedStepsFromPod = (name: string, ns: string): Promise<ContainerStatus[]> => {
-  return K8sGetResource({ model: PodModel, queryOptions: { name, ns } })
-    .then((pod: PodKind) => {
-      return getSortedContainerStatus(
-        pod.spec.containers ?? [],
-        pod.status?.containerStatuses ?? [],
-      );
+type OrderedSteps = {
+  stepsList: ContainerStatus[];
+  source?: ResourceSource;
+};
+
+const getOrderedStepsFromPod = (ns: string, name?: string): Promise<OrderedSteps> => {
+  if (!name) {
+    return Promise.resolve({
+      stepsList: [],
+      source: undefined,
+    });
+  }
+
+  return fetchResourceWithK8sAndKubeArchive<PodKind>({
+    model: PodModel,
+    queryOptions: { ns, name },
+  })
+    .then((res) => {
+      const isKubearchiveEnabled = FeatureFlagsStore.isOn(FLAGS['kubearchive-logs'].key);
+      // Legacy option to support getting logs from Tekton
+      if (res.source === ResourceSource.Archive && !isKubearchiveEnabled) {
+        return {
+          stepsList: [],
+          source: ResourceSource.Archive,
+        };
+      }
+
+      return {
+        stepsList: getSortedContainerStatus(
+          res.resource.spec.containers ?? [],
+          res.resource.status?.containerStatuses ?? [],
+        ),
+        source: res.source,
+      };
     })
     .catch((err) => {
       // eslint-disable-next-line no-console
       console.warn('Error Downloading logs', err);
-      return [];
+      return { stepsList: [], source: undefined };
     });
 };
 
 type StepsWatchUrl = {
   [key: string]: {
     name: string;
+    source?: ResourceSource;
     steps: { [step: string]: WatchURLStatus };
   };
 };
@@ -75,12 +106,12 @@ export const getDownloadAllLogsCallback = (
   taskRuns: TaskRunKind[],
   namespace: string,
   pipelineRunName: string,
-): (() => Promise<Error>) => {
+): (() => Promise<void>) => {
   const getWatchUrls = async (): Promise<StepsWatchUrl> => {
-    const stepsList: ContainerStatus[][] = await Promise.all(
+    const orderedSteps: OrderedSteps[] = await Promise.all(
       sortedTaskRunNames.map((currTask) => {
         const { status } = taskRuns.find((t) => t.metadata.name === currTask) ?? {};
-        return getOrderedStepsFromPod(status?.podName, namespace);
+        return getOrderedStepsFromPod(namespace, status?.podName);
       }),
     );
     return sortedTaskRunNames.reduce((acc, currTask, i) => {
@@ -89,7 +120,7 @@ export const getDownloadAllLogsCallback = (
       const status = taskRun.status;
 
       const podName = status?.podName;
-      const steps = stepsList[i];
+      const steps = orderedSteps[i].stepsList;
       const allStepUrls = steps.reduce((stepUrls, currentStep) => {
         const { name } = currentStep;
         const currentStatus = containerToLogSourceStatus(currentStep);
@@ -113,6 +144,7 @@ export const getDownloadAllLogsCallback = (
       }, {});
       acc[currTask] = {
         name: pipelineTaskName,
+        source: orderedSteps[i].source,
         steps: { ...allStepUrls },
       };
       return acc;
@@ -121,18 +153,29 @@ export const getDownloadAllLogsCallback = (
 
   const fetchLogs = async (tasksPromise: Promise<StepsWatchUrl>) => {
     const tasks = await tasksPromise;
+    const isKubearchiveEnabled = FeatureFlagsStore.isOn(FLAGS['kubearchive-logs'].key);
     let allLogs = '';
     for (const currTask of sortedTaskRunNames) {
       const task = tasks[currTask];
       const steps = Object.keys(task.steps);
       allLogs += `${task.name}\n\n`;
-
       if (steps.length > 0) {
         for (const step of steps) {
           const { url, status } = task.steps[step];
-          const getContentPromise = commonFetchText(url).then((logs) => {
-            return `${step.toUpperCase()}\n\n${logs}\n\n`;
-          });
+          const getContentPromise = commonFetchText(
+            url,
+            isKubearchiveEnabled && task.source === ResourceSource.Archive
+              ? { pathPrefix: 'plugins/kubearchive' }
+              : undefined,
+          )
+            .then((logs) => {
+              return `${step.toUpperCase()}\n\n${logs}\n\n`;
+            })
+            .catch((err) => {
+              // eslint-disable-next-line no-console
+              console.warn(`Error downloading logs for '${step}' of task '${task.name}'`, err);
+              return '';
+            });
           allLogs +=
             status === LOG_SOURCE_TERMINATED
               ? // If we are done, we want this log content
@@ -163,7 +206,7 @@ export const getDownloadAllLogsCallback = (
     saveAs(blob, `${pipelineRunName}.log`);
     return null;
   };
-  return (): Promise<Error> => {
+  return (): Promise<void> => {
     return fetchLogs(getWatchUrls());
   };
 };

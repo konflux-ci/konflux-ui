@@ -19,9 +19,9 @@ export const useSnapshot = (namespace: string, name: string): [Snapshot, boolean
     [namespace, name],
   );
 
-  const { data: snapshot, isLoading, error } = useK8sAndKarchResource<Snapshot>(resourceInit);
+  const { data: snapshot, isLoading, fetchError } = useK8sAndKarchResource<Snapshot>(resourceInit);
 
-  return [snapshot, !isLoading, error];
+  return [snapshot, !isLoading, fetchError];
 };
 
 export const useSnapshotsForApplication = (namespace, applicationName) => {

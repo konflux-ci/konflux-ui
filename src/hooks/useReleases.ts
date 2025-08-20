@@ -41,6 +41,7 @@ export const useRelease = (namespace: string, name: string): [ReleaseKind, boole
     }),
     [namespace, name],
   );
-  const { data, isLoading, error } = useK8sAndKarchResource<ReleaseKind>(resourceInit);
-  return [data, !isLoading, error];
+  const { data, isLoading, fetchError } = useK8sAndKarchResource<ReleaseKind>(resourceInit);
+
+  return [data, !isLoading, fetchError];
 };
