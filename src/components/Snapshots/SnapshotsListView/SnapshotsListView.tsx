@@ -43,7 +43,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const {
     data: snapshots,
     isLoading,
-    hasError,
+    clusterError,
+    archiveError,
   } = useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
@@ -65,7 +66,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       : snapshots || [];
   }, [snapshots, nameFilter]);
 
-  if (hasError) {
+  if (archiveError && clusterError) {
     return <ErrorEmptyState httpError={HttpError.fromCode(500)} title="Unable to load snapshots" />;
   }
 

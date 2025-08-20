@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { renderHook } from '@testing-library/react';
 import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import { mockLocation } from '../../utils/test-utils';
@@ -9,6 +10,8 @@ import {
   useBombinoUrl,
   useUIInstance,
   useInstanceVisibility,
+  useApplicationUrl,
+  useNotifications,
 } from '../useUIInstance';
 
 jest.mock('../useKonfluxPublicInfo');
@@ -101,6 +104,109 @@ describe('useSbomUrl', () => {
     const sbomUrl = result.current('test-image-hash');
     expect(sbomUrl).toBe('');
   });
+
+  it('should handle undefined integrations gracefully', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: undefined,
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe('');
+  });
+
+  it('should handle undefined sbom_server gracefully', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: undefined,
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe('');
+  });
+
+  it('should prioritize sbom_sha URL when both sbom_sha and imageHash are provided', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: 'https://atlas.devshift.net/sbom/sha/<PLACEHOLDER>',
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/sha/test-sbom-sha');
+  });
+
+  it('should fallback to regular URL when sbom_sha is undefined but sbomSha parameter is provided', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: undefined,
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
+  });
+
+  it('should handle empty sbom_sha gracefully', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          sbom_server: {
+            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: '',
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
+  });
+
+  it('should return undefined when data is still loading', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, false, null]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe(undefined);
+  });
+
+  it('should return undefined when there is an error loading data', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, true, new Error('Failed to load')]);
+
+    const { result } = renderHook(() => useSbomUrl());
+    const sbomUrl = result.current('test-image-hash');
+    expect(sbomUrl).toBe(undefined);
+  });
 });
 
 describe('useBombinoUrl', () => {
@@ -128,6 +234,236 @@ describe('useBombinoUrl', () => {
 
     const { result } = renderHook(() => useBombinoUrl());
     expect(result.current).toBe('https://custom-bombino-url.com');
+  });
+
+  it('should handle undefined integrations gracefully in useBombinoUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: undefined,
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useBombinoUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should handle undefined image_controller gracefully in useBombinoUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: undefined,
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useBombinoUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should return empty string when no matching notification is found', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: {
+            notifications: [
+              {
+                title: 'Different-Title',
+                event: 'repo_push',
+                config: { url: 'https://different-url.com' },
+              },
+            ],
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useBombinoUrl());
+    expect(result.current).toBe('');
+  });
+
+  it('should return undefined when data is loading in useBombinoUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, false, null]);
+
+    const { result } = renderHook(() => useBombinoUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should return undefined when there is an error in useBombinoUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, true, new Error('Failed to load')]);
+
+    const { result } = renderHook(() => useBombinoUrl());
+    expect(result.current).toBe(undefined);
+  });
+});
+
+describe('useApplicationUrl', () => {
+  it('should return the correct application URL from KonfluxPublicInfo', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          github: {
+            application_url: 'https://github.com/apps/konflux-staging',
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useApplicationUrl());
+    expect(result.current).toBe('https://github.com/apps/konflux-staging');
+  });
+
+  it('should handle undefined integrations gracefully in useApplicationUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: undefined,
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useApplicationUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should handle undefined github gracefully in useApplicationUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          github: undefined,
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useApplicationUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should return undefined when data is loading in useApplicationUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, false, null]);
+
+    const { result } = renderHook(() => useApplicationUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should return undefined when there is an error in useApplicationUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, true, new Error('Failed to load')]);
+
+    const { result } = renderHook(() => useApplicationUrl());
+    expect(result.current).toBe(undefined);
+  });
+
+  it('should handle undefined application_url gracefully in useApplicationUrl', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          github: {
+            application_url: undefined,
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useApplicationUrl());
+    expect(result.current).toBe(undefined);
+  });
+});
+
+describe('useNotifications', () => {
+  it('should return notifications from KonfluxPublicInfo', () => {
+    const mockNotifications = [
+      {
+        title: 'SBOM-event-to-Bombino',
+        event: 'repo_push',
+        method: 'webhook',
+        config: { url: 'https://bombino.com' },
+      },
+    ];
+
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: {
+            notifications: mockNotifications,
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useNotifications());
+    expect(result.current).toEqual(mockNotifications);
+  });
+
+  it('should handle undefined integrations gracefully in useNotifications', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: undefined,
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useNotifications());
+    expect(result.current).toEqual([]);
+  });
+
+  it('should handle undefined image_controller gracefully in useNotifications', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: undefined,
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useNotifications());
+    expect(result.current).toEqual([]);
+  });
+
+  it('should handle undefined notifications gracefully in useNotifications', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([
+      {
+        integrations: {
+          image_controller: {
+            notifications: undefined,
+          },
+        },
+      },
+      true,
+      null,
+    ]);
+
+    const { result } = renderHook(() => useNotifications());
+    expect(result.current).toEqual([]);
+  });
+
+  it('should return empty array when data is loading in useNotifications', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, false, null]);
+
+    const { result } = renderHook(() => useNotifications());
+    expect(result.current).toEqual([]);
+  });
+
+  it('should return empty array when there is an error in useNotifications', () => {
+    (useKonfluxPublicInfo as jest.Mock).mockReturnValue([{}, true, new Error('Failed to load')]);
+
+    const { result } = renderHook(() => useNotifications());
+    expect(result.current).toEqual([]);
   });
 
   describe('useInstanceVisibility', () => {

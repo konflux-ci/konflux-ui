@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, FormGroup, Spinner } from '@patternfly/react-core';
+import { Bullseye, FormGroup, HelperText, Spinner } from '@patternfly/react-core';
 import { FieldArray, useField, FieldArrayRenderProps } from 'formik';
 import { getFieldId } from '../../../src/shared/components/formik-fields/field-utils';
 import { useComponents } from '../../hooks/useComponents';
@@ -83,20 +83,25 @@ const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldNa
   return (
     <FormGroup fieldId={fieldId} label={heading ?? 'Contexts'} style={{ maxWidth: '750px' }}>
       {componentsLoaded && components ? (
-        <FieldArray
-          name={fieldName}
-          render={(arrayHelpers) => (
-            <ContextSelectList
-              allContexts={allContexts}
-              filteredContexts={filteredContexts}
-              onSelect={(contextName: string) => handleSelect(arrayHelpers, contextName)}
-              inputValue={inputValue}
-              onInputValueChange={setInputValue}
-              onRemoveAll={() => handleRemoveAll(arrayHelpers)}
-              error={error}
-            />
-          )}
-        />
+        <>
+          <FieldArray
+            name={fieldName}
+            render={(arrayHelpers) => (
+              <ContextSelectList
+                allContexts={allContexts}
+                filteredContexts={filteredContexts}
+                onSelect={(contextName: string) => handleSelect(arrayHelpers, contextName)}
+                inputValue={inputValue}
+                onInputValueChange={setInputValue}
+                onRemoveAll={() => handleRemoveAll(arrayHelpers)}
+                error={error}
+              />
+            )}
+          />
+          <HelperText>
+            Must select at least one context but you have option to pick more if needed.
+          </HelperText>
+        </>
       ) : (
         <Bullseye>
           <Spinner size="xl" />
