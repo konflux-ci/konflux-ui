@@ -8,10 +8,10 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
-import { FilterConfig } from '../generic/FilterConfig';
-import { useFilterOptions } from '../generic/hooks/useFilteredData';
-import { MultiSelect } from '../generic/MultiSelect';
-import { SearchFilter } from '../generic/Search';
+import { FilterConfig } from './FilterConfig';
+import { useFilterOptions } from './hooks/useFilteredData';
+import { MultiSelect } from './MultiSelect';
+import { SearchFilter } from './Search';
 
 interface FilterToolbarProps {
   filterConfigs: FilterConfig[];
@@ -19,7 +19,6 @@ interface FilterToolbarProps {
   dataTestId?: string;
 }
 
-// Internal component to handle multiSelect case with proper hook usage
 const MultiSelectFilterComponent: React.FC<{
   config: FilterConfig;
   data: unknown[];
@@ -31,7 +30,8 @@ const MultiSelectFilterComponent: React.FC<{
     const param = searchParams.get(config.param);
     if (!param) return [];
     try {
-      return JSON.parse(param);
+      const parsed = JSON.parse(param);
+      return Array.isArray(parsed) && parsed.every((v) => typeof v === 'string') ? parsed : [];
     } catch {
       return [];
     }
@@ -84,10 +84,10 @@ const MultiSelectFilterComponent: React.FC<{
   );
 };
 
-export const PipelineRunsFilterToolbar: React.FC<FilterToolbarProps> = ({
+export const FilterToolbar: React.FC<FilterToolbarProps> = ({
   filterConfigs,
   data = [],
-  dataTestId = 'pipeline-runs-filter-toolbar',
+  dataTestId = 'filter-toolbar',
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -123,11 +123,9 @@ export const PipelineRunsFilterToolbar: React.FC<FilterToolbarProps> = ({
       case 'singleSelect':
         // TODO: Implement SingleSelectFilter when needed
         return null;
-
       case 'dateRange':
         // TODO: Implement DateRangeFilter when needed
         return null;
-
       case 'boolean':
         // TODO: Implement BooleanFilter when needed
         return null;
