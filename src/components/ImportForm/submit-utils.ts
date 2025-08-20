@@ -70,6 +70,7 @@ export const createResourcesWithLinkingComponents = async (
     revision: EC_INTEGRATION_TEST_REVISION,
     path: EC_INTEGRATION_TEST_PATH,
     optional: false,
+    resourceKind: 'pipeline',
   };
 
   let applicationData: ApplicationKind;
