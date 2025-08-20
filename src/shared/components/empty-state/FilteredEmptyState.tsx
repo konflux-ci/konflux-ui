@@ -10,12 +10,13 @@ import {
   EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
-import emptySearchImgUrl from '../../../assets/Not-found.svg';
+import EmptySearchImgUrl from '../../assets/Not-found.svg';
 
 import './EmptyState.scss';
 
 const EmptyStateImg = () => (
-  <img className="app-empty-state__icon" src={emptySearchImgUrl} alt="" />
+  // <img className="app-empty-state__icon" src={emptySearchImgUrl} alt="" />
+  <EmptySearchImgUrl className="app-empty-state__icon" role="img" />
 );
 
 const FilteredEmptyState: React.FC<

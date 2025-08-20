@@ -18,7 +18,7 @@ type GettingStartedCardProps = {
   imgClassName?: string;
   localStorageKey: string;
   title: string;
-  imgSrc?: string;
+  imgSrc?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   imgAlt?: string;
   isLight?: boolean;
 };
@@ -40,6 +40,7 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
 
   const keys = storageKeys && typeof storageKeys === 'object' ? storageKeys : {};
   const isDismissed = keys[localStorageKey];
+  const SvgIcon = imgSrc;
 
   return (
     !isDismissed && (
@@ -50,7 +51,9 @@ export const GettingStartedCard: React.FC<React.PropsWithChildren<GettingStarted
               <SplitItem
                 className={classnames('pf-v5-u-min-width getting-started-card__img', imgClassName)}
               >
-                <img src={imgSrc} alt={imgAlt} />
+                {/* <img src={imgSrc} alt={imgAlt} /> */}
+                {/* <svg role="img" aria-label={imgAlt}/> */}
+                <SvgIcon aria-label={imgAlt} role="img" />
               </SplitItem>
             )}
             <SplitItem isFilled>

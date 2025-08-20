@@ -15,7 +15,7 @@ import {
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
-import emptySnapshotImgUrl from '../../../assets/snapshots/empty-snapshot.png';
+import emptySnapshotImgUrl from '../../../assets/iconsUrl/empty-snapshot.png';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
