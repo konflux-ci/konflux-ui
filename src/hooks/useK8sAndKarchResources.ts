@@ -186,18 +186,20 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
       });
   }, [resourceInit, enabled, queryOptions]);
 
+  const shouldWatch = watch && result?.source === ResourceSource.Cluster && resourceInit;
+
   const wsError = useK8sQueryWatch(
-    watch && result?.source === ResourceSource.Cluster ? resourceInit : null,
+    shouldWatch ? resourceInit : null,
     false,
-    watch &&
-      resourceInit &&
-      hashKey(
-        createQueryKeys({
-          model: resourceInit.model,
-          queryOptions: resourceInit.queryOptions,
-          prefix: resourceInit.fetchOptions?.requestInit?.pathPrefix,
-        }),
-      ),
+    shouldWatch
+      ? hashKey(
+          createQueryKeys({
+            model: resourceInit.model,
+            queryOptions: resourceInit.queryOptions,
+            prefix: resourceInit.fetchOptions?.requestInit?.pathPrefix,
+          }),
+        )
+      : hashKey(['disabled', 'no-resource']),
     watchOptions,
   );
 

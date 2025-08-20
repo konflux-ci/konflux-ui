@@ -41,7 +41,7 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
     fetchError,
   } = useK8sAndKarchResource(resourceInit, queryOptions, true);
 
-  if (!isLoading && !fetchError && resource.name === obj.metadata.name) {
+  if (!isLoading && !fetchError && resource.name === obj.metadata?.name) {
     resourceRef.current = obj;
   } else if (fetchError) {
     resourceRef.current = null;

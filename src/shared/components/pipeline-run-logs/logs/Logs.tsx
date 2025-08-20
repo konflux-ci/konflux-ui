@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { FLAGS } from '~/feature-flags/flags';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
@@ -85,6 +86,7 @@ const Logs: React.FC<LogsProps> = ({
 }) => {
   const { t } = useTranslation();
   const namespace = useNamespace();
+  const isKubearchiveEnabled = useIsOnFeatureFlag(FLAGS['kubearchive-logs'].key);
   const { metadata = {} } = resource;
   const { name: resName, namespace: resNamespace } = metadata;
 
@@ -103,7 +105,6 @@ const Logs: React.FC<LogsProps> = ({
 
   // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
-    const isKubearchiveEnabled = FeatureFlagsStore.isOn(FLAGS['kubearchive-logs'].key);
     const activeConnections = connectionManagerRef.current;
 
     containers.forEach((container) => {
@@ -118,7 +119,6 @@ const Logs: React.FC<LogsProps> = ({
 
       const urlOpts = {
         ns: resNamespace,
-        ws: namespace,
         name: resName,
         path: 'log',
         queryParams: {
@@ -143,7 +143,7 @@ const Logs: React.FC<LogsProps> = ({
             if (err.name !== 'AbortError') {
               appendLog(
                 name,
-                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error && `:\n${err.message}`}\x1b[0m\n`,
+                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
               );
             }
           });
@@ -177,7 +177,16 @@ const Logs: React.FC<LogsProps> = ({
         }
       });
     };
-  }, [containers, resource, resName, resNamespace, appendLog, t, namespace, source]);
+  }, [
+    containers,
+    resource,
+    resName,
+    resNamespace,
+    appendLog,
+    namespace,
+    source,
+    isKubearchiveEnabled,
+  ]);
 
   const formattedLogs = React.useMemo(
     () => processLogs(logSources, containers),

@@ -51,7 +51,14 @@ type OrderedSteps = {
   source?: ResourceSource;
 };
 
-const getOrderedStepsFromPod = (name: string, ns: string): Promise<OrderedSteps> => {
+const getOrderedStepsFromPod = (ns: string, name?: string): Promise<OrderedSteps> => {
+  if (!name) {
+    return Promise.resolve({
+      stepsList: [],
+      source: undefined,
+    });
+  }
+
   return fetchResourceWithK8sAndKubeArchive<PodKind>({
     model: PodModel,
     queryOptions: { ns, name },
@@ -104,7 +111,7 @@ export const getDownloadAllLogsCallback = (
     const orderedSteps: OrderedSteps[] = await Promise.all(
       sortedTaskRunNames.map((currTask) => {
         const { status } = taskRuns.find((t) => t.metadata.name === currTask) ?? {};
-        return getOrderedStepsFromPod(status?.podName, namespace);
+        return getOrderedStepsFromPod(namespace, status?.podName);
       }),
     );
     return sortedTaskRunNames.reduce((acc, currTask, i) => {
