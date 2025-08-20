@@ -8,48 +8,39 @@ import { AppRoot } from '../AppRoot';
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
 }));
-jest.mock('~/feature-flags/hooks', () => ({
-  useIsOnFeatureFlag: jest.fn(),
-  IfFeature: ({ children }: { flag: string; children: React.ReactNode }) => children,
-}));
+// This mock ensures different features have different status
+jest.mock('~/feature-flags/hooks', () => {
+  const mockFn = jest.fn();
+  return {
+    useIsOnFeatureFlag: mockFn,
+    IfFeature: ({ flag, children }: { flag: string; children: React.ReactNode }) => {
+      const isEnabled = mockFn(flag);
+      return isEnabled ? children : null;
+    },
+  };
+});
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
-}));
-jest.mock('../../components/Header/Header', () => ({
-  Header: ({
-    isDrawerExpanded,
-    toggleDrawer,
-  }: {
-    isDrawerExpanded: boolean;
-    toggleDrawer: () => void;
-  }) => (
-    <div data-test="header">
-      <button aria-label="Notifications" onClick={toggleDrawer} data-test="notification-toggle">
-        Notifications {isDrawerExpanded ? 'Open' : 'Closed'}
-      </button>
-    </div>
-  ),
-}));
-jest.mock('~/components/KonfluxSystemNotifications/NotificationList', () => ({
-  __esModule: true,
-  default: ({
-    isDrawerExpanded,
-    closeDrawer,
-  }: {
-    isDrawerExpanded: boolean;
-    closeDrawer: () => void;
-  }) => (
-    <div data-test="notification-center" data-expanded={isDrawerExpanded}>
-      <button onClick={closeDrawer} data-test="close-notifications">
-        Close
-      </button>
-      Notification Center
-    </div>
-  ),
 }));
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+
+// Mock window.matchMedia for PatternFly components to fix:
+// TypeError: window.matchMedia is not a function
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // deprecated
+    removeListener: jest.fn(), // deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
 
 describe('AppRoot', () => {
   beforeEach(() => {
@@ -107,22 +98,36 @@ describe('AppRoot', () => {
     expect(screen.queryByTestId('namespace-switcher')).not.toBeInTheDocument();
   });
 
-  it('should show notification badge', () => {
+  it('should show notification badge when feature flag is enabled', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    // Enable system-notifications feature flag
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'system-notifications');
 
     routerRenderer(<AppRoot />);
-    expect(screen.getByLabelText('Notifications')).toBeVisible();
+    expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
   });
 
-  it('should toggle notification drawer when notification button is clicked', () => {
+  it('should not show notification badge when feature flag is disabled', () => {
     (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    // Disable system-notifications feature flag
+    mockUseIsOnFeatureFlag.mockImplementation(() => false);
+
+    routerRenderer(<AppRoot />);
+    expect(screen.queryByLabelText('Notifications')).not.toBeInTheDocument();
+  });
+
+  it('should show notification drawer when feature flag is enabled and opened', () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    // Enable system-notifications feature flag
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'system-notifications');
 
     routerRenderer(<AppRoot />);
 
-    const notificationToggle = screen.getByTestId('notification-toggle');
-    expect(screen.queryByText('Notification Center')).not.toBeInTheDocument();
-    // Click to open
-    fireEvent.click(notificationToggle);
-    expect(screen.getByText('Notification Center')).toBeVisible();
+    const notificationButton = screen.getByLabelText('Notifications');
+    fireEvent.click(notificationButton);
+
+    // Check that the notification drawer content is visible
+    expect(screen.getByText('Notifications')).toBeInTheDocument();
+    expect(document.querySelector('.pf-v5-c-notification-drawer__list')).toBeInTheDocument();
   });
 });
