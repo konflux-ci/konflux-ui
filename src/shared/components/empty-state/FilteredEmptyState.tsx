@@ -14,10 +14,7 @@ import EmptySearchImgUrl from '../../assets/Not-found.svg';
 
 import './EmptyState.scss';
 
-const EmptyStateImg = () => (
-  // <img className="app-empty-state__icon" src={emptySearchImgUrl} alt="" />
-  <EmptySearchImgUrl className="app-empty-state__icon" role="img" />
-);
+const EmptyStateImg = () => <EmptySearchImgUrl className="app-empty-state__icon" role="img" />;
 
 const FilteredEmptyState: React.FC<
   React.PropsWithChildren<
