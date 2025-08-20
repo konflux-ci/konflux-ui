@@ -184,10 +184,33 @@ const Logs: React.FC<LogsProps> = ({
     [logSources, containers],
   );
 
+  const allLogsTerminated = React.useMemo<boolean>(() => {
+    if (containers.length === 0) return false;
+
+    const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
+    const terminatedContainers: string[] = [];
+    const runningContainers: string[] = [];
+
+    containers.forEach((container) => {
+      const status = allStatuses.find((c) => c.name === container.name);
+      const resourceStatus = containerToLogSourceStatus(status);
+
+      if (resourceStatus === LOG_SOURCE_TERMINATED) {
+        terminatedContainers.push(container.name);
+      } else {
+        runningContainers.push(container.name);
+      }
+    });
+
+    const allTerminated = runningContainers.length === 0;
+
+    return allTerminated;
+  }, [containers, resource?.status?.containerStatuses]);
+
   return (
     <LogViewer
       data={formattedLogs}
-      allowAutoScroll={allowAutoScroll}
+      allowAutoScroll={allowAutoScroll && !allLogsTerminated}
       onScroll={onScroll}
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}

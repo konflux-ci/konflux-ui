@@ -29,7 +29,6 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
         <div data-testid="tr-logs-container">
           <LogViewer
             data={trResults}
-            allowAutoScroll
             downloadAllLabel={downloadAllLabel}
             onDownloadAll={onDownloadAll}
             taskRun={taskRun}
