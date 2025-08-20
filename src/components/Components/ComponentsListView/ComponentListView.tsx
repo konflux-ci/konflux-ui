@@ -25,7 +25,7 @@ import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useComponents } from '../../../hooks/useComponents';
+import { useComponents, useURLForComponentPRs } from '../../../hooks/useComponents';
 import { useLatestBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
 import { PACState } from '../../../hooks/usePACState';
 import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents';
@@ -37,7 +37,6 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../types';
-import { useURLForComponentPRs } from '../../../utils/component-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { createCustomizeAllPipelinesModalLauncher } from '../../CustomizedPipeline/CustomizePipelinesModal';

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Formik } from 'formik';
 import { INTEGRATION_TEST_DETAILS_PATH, INTEGRATION_TEST_LIST_PATH } from '../../../routes/paths';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
+import { IntegrationTestScenarioKind, ResourceKind } from '../../../types/coreBuildService';
 import { useTrackEvent, TrackEvents } from '../../../utils/analytics';
 import { defaultSelectedContextOption } from '../utils/creation-utils';
 import IntegrationTestForm from './IntegrationTestForm';
@@ -86,6 +86,7 @@ const IntegrationTestView: React.FunctionComponent<
       params: getFormParamValues(integrationTest?.spec?.params),
       contexts: getFormContextValues(integrationTest),
       optional: integrationTest?.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true',
+      resourceKind: integrationTest?.spec?.resolverRef.resourceKind ?? ResourceKind.pipeline,
     },
     isDetected: true,
   };
