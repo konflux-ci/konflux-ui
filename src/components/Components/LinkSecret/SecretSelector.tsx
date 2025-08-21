@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, ButtonVariant, Flex, Stack, StackItem } from '@patternfly/react-core';
+import {
+  Bullseye,
+  Button,
+  ButtonVariant,
+  Flex,
+  Spinner,
+  Stack,
+  StackItem,
+} from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { useComponent } from '~/hooks/useComponents';
 import { useLinkedSecrets } from '~/hooks/useLinkedSecrets';
 import { useSecrets } from '~/hooks/useSecrets';
 import { ComponentSelectMenu } from '~/shared/components/component-select-menu/ComponentSelectMenu';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { ComponentKind, SecretKind } from '~/types';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { SecretKind } from '~/types';
 import { linkSecretsToComponent } from './link-secret-utils';
 
 type SecretSelectorProps = {
@@ -18,14 +27,14 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
   onClose,
 }) => {
   const namespace = useNamespace();
-  const secrets: SecretKind[] = useSecrets(namespace)[0];
+  const [secrets, secretsLoaded, secretsError] = useSecrets(namespace);
   const [linkedSecretsList, setLinkedSecretsList] = useState<string[]>([]);
   const { componentName } = useParams<RouterParams>();
-  const component: ComponentKind = useComponent(namespace, componentName)[0];
+  const [component, compLoaded, compError] = useComponent(namespace, componentName);
   const [previouslyLinked] = useLinkedSecrets(namespace, componentName);
 
   const filterUnlinkSecrets = React.useMemo(() => {
-    const unlinkedSecrets = secrets.filter((item) => {
+    const unlinkedSecrets = secrets?.filter((item) => {
       return !previouslyLinked.find((secret) => secret.metadata.name === item.metadata.name);
     });
     return unlinkedSecrets?.map((item) => item?.metadata?.name);
@@ -38,6 +47,22 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
     linkSecretsToComponent(secretsToBeLinked, component);
     onClose();
   };
+
+  if (!compLoaded || !secretsLoaded) {
+    return (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+  }
+
+  if (compError) {
+    return getErrorState(compError, compLoaded, 'component');
+  }
+
+  if (secretsError) {
+    return getErrorState(secretsError, secretsLoaded, 'secrets');
+  }
 
   if (filterUnlinkSecrets.length === 0) return <>No Unlinked Secrets</>;
 

@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button, Flex, FlexItem, Text, ModalVariant } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, Text, ModalVariant, Alert } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { ComponentKind, SecretKind } from '~/types';
+import { SecretKind } from '~/types';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
 import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
 
@@ -19,7 +19,7 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
 }) => {
   const namespace = useNamespace();
   const { componentName } = useParams<RouterParams>();
-  const component: ComponentKind = useComponent(namespace, componentName)[0];
+  const [component, compLoaded, compError] = useComponent(namespace, componentName);
   const isCommonSecret = secret?.metadata?.labels?.[COMMON_SECRETS_LABEL] === 'true';
 
   const handleSubmit = () => {
@@ -48,9 +48,18 @@ export const UnlinkSecret: React.FC<React.PropsWithChildren<UnlinkSecretModalPro
           </Text>
         </FlexItem>
       )}
+      {compError && (
+        <FlexItem>
+          <Alert variant="danger" title="Unable to load component" isInline />
+        </FlexItem>
+      )}
       <Flex gap={{ default: 'gapSm' }}>
         <FlexItem>
-          <Button variant="primary" onClick={handleSubmit} isDisabled={!secret || !component}>
+          <Button
+            variant="primary"
+            onClick={handleSubmit}
+            isDisabled={!secret || !compLoaded || !!compError}
+          >
             Unlink
           </Button>
         </FlexItem>

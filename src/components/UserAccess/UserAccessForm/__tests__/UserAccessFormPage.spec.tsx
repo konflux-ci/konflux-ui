@@ -104,4 +104,10 @@ describe('UserAccessFormPage', () => {
     expect(screen.getByText('Edit access to namespace, test-ns')).toBeVisible();
     expect(screen.getByRole('searchbox')).not.toBeDisabled();
   });
+
+  it('should show error if roles fails to load', () => {
+    mockUseRoleMap.mockReturnValue([undefined, true, { code: 451 }]);
+    namespaceRenderer(<UserAccessFormPage />, 'test-ns');
+    expect(screen.getByText('Unable to load role binding')).toBeVisible();
+  });
 });

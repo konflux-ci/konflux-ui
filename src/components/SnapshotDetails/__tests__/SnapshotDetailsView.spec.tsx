@@ -76,8 +76,7 @@ describe('SnapshotDetailsView', () => {
     useSnapshotMock.mockReturnValue({
       data: undefined,
       isLoading: false,
-      hasError: true,
-      archiveError: { message: 'Application does not exist', code: 404 },
+      error: { message: 'Application does not exist', code: 404 },
     });
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     screen.getByText('404: Page not found');
