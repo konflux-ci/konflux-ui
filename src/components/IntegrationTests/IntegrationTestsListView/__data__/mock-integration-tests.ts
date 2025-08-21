@@ -98,6 +98,7 @@ export const MockIntegrationTestsWithBundles: IntegrationTestScenarioKind[] = [
     spec: {
       application: 'test-app',
       resolverRef: {
+        resourceKind: 'pipelinerun',
         resolver: ResolverType.BUNDLES,
         params: [
           {
@@ -137,6 +138,7 @@ export const MockIntegrationTestsWithGit: IntegrationTestScenarioKind[] = [
       application: 'test-app',
       environment: { name: 'env1', type: 'POC' },
       resolverRef: {
+        resourceKind: 'pipeline',
         resolver: ResolverType.GIT,
         params: [
           { name: 'url', value: 'https://test-url' },
@@ -166,6 +168,7 @@ export const MockIntegrationTestsWithGit: IntegrationTestScenarioKind[] = [
     spec: {
       application: 'test-app',
       resolverRef: {
+        resourceKind: 'pipelinerun',
         resolver: ResolverType.GIT,
         params: [
           { name: 'url', value: 'test-url2' },
@@ -196,6 +199,7 @@ export const MockIntegrationTestsWithGit: IntegrationTestScenarioKind[] = [
     spec: {
       application: 'example-app',
       resolverRef: {
+        resourceKind: 'pipeline',
         params: [
           {
             name: 'url',
@@ -239,6 +243,7 @@ export const MockIntegrationTestsWithGit: IntegrationTestScenarioKind[] = [
     spec: {
       application: 'test-app',
       resolverRef: {
+        resourceKind: 'pipelinerun',
         resolver: ResolverType.GIT,
         params: [
           { name: 'url', value: 'https://github.com/example/repo' },
@@ -271,6 +276,7 @@ export const MockIntegrationTestsWithParams: IntegrationTestScenarioKind[] = [
       ],
       application: 'example-app',
       resolverRef: {
+        resourceKind: 'pipelinerun',
         params: [
           {
             name: 'url',
@@ -318,6 +324,7 @@ export const MockIntegrationTestsWithParams: IntegrationTestScenarioKind[] = [
       ],
       application: 'test-app',
       resolverRef: {
+        resourceKind: 'pipeline',
         resolver: ResolverType.GIT,
         params: [
           { name: 'url', value: 'test-url2' },
@@ -348,6 +355,7 @@ export const MockIntegrationTestsWithParams: IntegrationTestScenarioKind[] = [
       params: [{ name: 'colors', values: ['red', 'green', 'orange'] }],
       application: 'test-app',
       resolverRef: {
+        resourceKind: 'pipeline',
         resolver: ResolverType.GIT,
         params: [
           { name: 'url', value: 'test-url2' },
