@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { BannerConfig } from '~/components/KonfluxBanner/banner-type';
+import { BannerConfig } from '~/types/banner-type';
 
 function formatTimeUTC(date: Date): string {
   const h = date.getUTCHours().toString().padStart(2, '0');

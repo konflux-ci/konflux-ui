@@ -3,8 +3,8 @@ import { Flex } from '@patternfly/react-core';
 import { BellIcon } from '@patternfly/react-icons/dist/esm/icons/bell-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
-import { BannerConfig, BannerType, BannerVariant } from '~/components/KonfluxBanner/banner-type';
 import { SyncMarkdownView } from '~/shared/components/markdown-view/MarkdownView';
+import { BannerConfig, BannerType, BannerVariant } from '~/types/banner-type';
 
 type BannerContentProps = Pick<BannerConfig, 'type' | 'summary'>;
 
