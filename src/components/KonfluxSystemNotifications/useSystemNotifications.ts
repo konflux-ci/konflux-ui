@@ -6,7 +6,7 @@ import { BANNER_TYPES } from '~/types/banner-type';
 import { ConfigMap } from '~/types/configmap';
 import { RawNotificationConfig, SystemNotificationConfig } from '~/types/notification-type';
 
-const SYSTEM_NOTIFICATION_LABEL_SELECTOR = { 'konflux.system.notification': 'true' };
+const SYSTEM_NOTIFICATION_LABEL_SELECTOR = { 'appstudio.openshift.io/system-notification': 'true' };
 
 export const useSystemNotifications = () => {
   const {
