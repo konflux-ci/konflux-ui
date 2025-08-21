@@ -13,27 +13,32 @@ import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
 import { CommitIcon } from '../CommitIcon';
-import { commitsTableColumnClasses } from './CommitsListHeader';
+import {
+  CommitColumnKeys,
+  commitsTableColumnClasses,
+  DEFAULT_VISIBLE_COMMIT_COLUMNS,
+  COMMIT_COLUMN_ORDER,
+} from './commits-columns-config';
 
 import './CommitsListRow.scss';
-
-type CommitColumnKeys = 'name' | 'branch' | 'component' | 'byUser' | 'committedAt' | 'status';
 
 interface CommitsListRowProps {
   obj: Commit;
   visibleColumns?: Set<CommitColumnKeys>;
 }
 
-const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({ obj, visibleColumns }) => {
+const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({
+  obj,
+  visibleColumns,
+}) => {
   const actions = useCommitActions(obj);
   const namespace = useNamespace();
   const status = pipelineRunStatus(obj.pipelineRuns[0]);
 
   const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
-  
-  const defaultColumns = new Set<CommitColumnKeys>(['name', 'branch', 'component', 'byUser', 'committedAt', 'status']);
-  const columnsToShow = visibleColumns || defaultColumns;
-  
+
+  const columnsToShow = visibleColumns || DEFAULT_VISIBLE_COMMIT_COLUMNS;
+
   const columnComponents = {
     name: (
       <TableData key="name" className={commitsTableColumnClasses.name}>
@@ -101,14 +106,11 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     ),
   };
 
-  // Define the order of columns to display
-  const columnOrder: CommitColumnKeys[] = ['name', 'branch', 'component', 'byUser', 'committedAt', 'status'];
-
   return (
     <>
-      {columnOrder
-        .filter(columnKey => columnsToShow.has(columnKey))
-        .map(columnKey => columnComponents[columnKey])}
+      {COMMIT_COLUMN_ORDER.filter((columnKey) => columnsToShow.has(columnKey)).map(
+        (columnKey) => columnComponents[columnKey],
+      )}
       <TableData className={commitsTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
