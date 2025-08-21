@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { HttpError } from '~/k8s/error';
 import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import { useGetAllReleases } from '../../hooks/useGetAllReleases';
@@ -93,7 +94,14 @@ const ReleaseMonitor: React.FunctionComponent = () => {
   };
 
   return (
-    <PageLayout title="Release Monitor" description="The dashboard to monitor your cared releases">
+    <PageLayout
+      title={
+        <>
+          Release Monitor <FeatureFlagIndicator flags={['release-monitor']} fullLabel />
+        </>
+      }
+      description="The dashboard to monitor your cared releases"
+    >
       <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
         <ReleaseFilters
           applications={applications}

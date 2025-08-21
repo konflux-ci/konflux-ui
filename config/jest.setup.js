@@ -38,6 +38,11 @@ jest.mock('../src/hooks/useApplications', () => ({
   ...jest.requireActual('../src/hooks/useApplications'),
 }));
 
+jest.mock('../src/hooks/useKonfluxPublicInfo', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/hooks/useKonfluxPublicInfo'),
+}));
+
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),

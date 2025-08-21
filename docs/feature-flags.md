@@ -105,6 +105,62 @@ FeatureFlagsStore.subscribe(cb);        // low‑level subscription
 
 ---
 
+## 5. Routing with feature flags (React Router v6 data router)
+
+You can guard routes at two levels:
+
+- In loaders/lazy (no hooks): stop navigation early and show 404
+- In elements (with hooks): hide UI when disabled
+
+### Loader/lazy guard (no hooks)
+
+Use the non-hook utilities from `src/feature-flags/utils.ts`.
+
+```ts
+import { ensureFeatureFlagOn, isFeatureFlagOn } from '~/feature-flags/utils';
+
+// Example: gate inside lazy loading
+async function lazy() {
+  ensureFeatureFlagOnLoader('release-monitor'); // throws 404 if off
+  const { ReleaseMonitor } = await import('~/components/ReleaseMonitor');
+  return { element: <ReleaseMonitor /> };
+}
+
+// Example: gate inside loader
+export const loader = () => {
+  ensureFeatureFlagOnLoader('release-monitor');
+  return null;
+};
+```
+
+### Environment‑scoped flags
+
+You can scope a flag to specific deployment environments (for example, staging vs. production) using the `environments` field in `flags.ts`.
+
+Define:
+
+```ts
+import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
+
+export const FLAGS = {
+  releaseMonitor: {
+    key: 'releaseMonitor',
+    description: 'New Release Monitor page',
+    defaultEnabled: false,
+    status: 'wip',
+    environments: [KonfluxInstanceEnvironments.STAGING], // Only available on staging
+  },
+};
+```
+
+Behavior and usage:
+
+- If `environments` is omitted, the flag is available in all environments.
+- The Feature Flags panel hides flags that are not allowed in the current environment.
+- In UI code (components/elements), you can check environment with `useUIInstance()` if needed.
+
+---
+
 ## 6. Cleaning up a finished flag
 
 1. Flip `defaultEnabled: true` and `status: 'ready'` in `flags.ts`.
