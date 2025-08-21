@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
+  APPLICATION_RELEASE_LIST_PATH,
   PIPELINERUN_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '../../routes/paths';
@@ -23,10 +24,21 @@ import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 import { useReleaseActions } from './release-actions';
 import { releasesTableColumnClasses } from './ReleasesListHeader';
 
+const RELEASE_LIST_LINK_TEXT = 'Back to release list';
+
 const ReleasesListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<ReleaseKind, { applicationName: string }>>
 > = ({ obj, customData: { applicationName } }) => {
   const namespace = useNamespace();
+
+  const backButtonState = {
+    backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
+      workspaceName: namespace,
+      applicationName,
+    }),
+    backButtonText: RELEASE_LIST_LINK_TEXT,
+  };
+
   const status = useReleaseStatus(obj);
   const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
     getManagedPipelineRunFromRelease(obj),
@@ -79,6 +91,7 @@ const ReleasesListRow: React.FC<
             applicationName,
             snapshotName: obj.spec.snapshot,
           })}
+          state={backButtonState}
         >
           {obj.spec.snapshot}
         </Link>
@@ -121,7 +134,7 @@ const ReleasesListRow: React.FC<
               applicationName,
               pipelineRunName: managedPipelineRun,
             })}
-            state={{ showBackButton: Boolean(namespace !== managedPrNamespace) }}
+            state={backButtonState}
           >
             {managedPipelineRun}
           </Link>
@@ -137,6 +150,7 @@ const ReleasesListRow: React.FC<
               applicationName,
               pipelineRunName: finalPipelineRun,
             })}
+            state={backButtonState}
           >
             {finalPipelineRun}
           </Link>
