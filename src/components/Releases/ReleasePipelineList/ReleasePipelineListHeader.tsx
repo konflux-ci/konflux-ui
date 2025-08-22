@@ -1,3 +1,26 @@
+import {
+  generateDynamicColumnClasses,
+  COMMON_COLUMN_CONFIGS,
+} from '../../../shared/components/table/dynamic-columns';
+
+type PipelineRunColumnKeys =
+  | 'name'
+  | 'startTime'
+  | 'duration'
+  | 'type'
+  | 'snapshot'
+  | 'namespace'
+  | 'status'
+  | 'completionTime';
+
+export const getDynamicReleasePipelineColumnClasses = (
+  visibleColumns: Set<PipelineRunColumnKeys>,
+) => {
+  return generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS, {
+    specialClasses: { name: 'wrap-column' },
+  });
+};
+
 export const releasePipelineRunListColumnClasses = {
   name: 'pf-m-width-15 wrap-column',
   type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
@@ -9,58 +32,58 @@ export const releasePipelineRunListColumnClasses = {
   completionTime: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
 };
 
-// Type defined in ReleasePipelineRunTab.tsx to avoid duplication
-type PipelineRunColumnKeys = 'name' | 'startTime' | 'duration' | 'type' | 'snapshot' | 'namespace' | 'status' | 'completionTime';
-
 interface ReleasePipelineListHeaderProps {
   visibleColumns: Set<PipelineRunColumnKeys>;
 }
 
 const ReleasePipelineListHeader = ({ visibleColumns }: ReleasePipelineListHeaderProps) => {
+  // Use dynamic classes if available, otherwise fall back to static classes
+  const columnClasses = getDynamicReleasePipelineColumnClasses(visibleColumns);
+
   const allColumns = [
     {
       key: 'name',
       title: 'Name',
-      props: { className: releasePipelineRunListColumnClasses.name },
+      props: { className: columnClasses.name },
     },
     {
       key: 'startTime',
       title: 'Started',
-      props: { className: releasePipelineRunListColumnClasses.startTime },
+      props: { className: columnClasses.startTime },
     },
     {
       key: 'duration',
       title: 'Duration',
-      props: { className: releasePipelineRunListColumnClasses.duration },
+      props: { className: columnClasses.duration },
     },
     {
       key: 'type',
       title: 'Type',
-      props: { className: releasePipelineRunListColumnClasses.type },
+      props: { className: columnClasses.type },
     },
     {
       key: 'snapshot',
       title: 'Snapshot',
-      props: { className: releasePipelineRunListColumnClasses.snapshot },
+      props: { className: columnClasses.snapshot },
     },
     {
       key: 'namespace',
       title: 'Namespace',
-      props: { className: releasePipelineRunListColumnClasses.namespace },
+      props: { className: columnClasses.namespace },
     },
     {
       key: 'status',
       title: 'Status',
-      props: { className: releasePipelineRunListColumnClasses.status },
+      props: { className: columnClasses.status },
     },
     {
       key: 'completionTime',
       title: 'Completed',
-      props: { className: releasePipelineRunListColumnClasses.completionTime },
+      props: { className: columnClasses.completionTime },
     },
   ];
 
-  return allColumns.filter(column => visibleColumns.has(column.key as PipelineRunColumnKeys));
+  return allColumns.filter((column) => visibleColumns.has(column.key as PipelineRunColumnKeys));
 };
 
 export default ReleasePipelineListHeader;

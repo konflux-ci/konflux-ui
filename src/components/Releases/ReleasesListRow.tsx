@@ -21,18 +21,28 @@ import {
 } from '../../utils/release-utils';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 import { useReleaseActions } from './release-actions';
-import { releasesTableColumnClasses } from './ReleasesListHeader';
+import { releasesTableColumnClasses, getDynamicReleaseColumnClasses } from './ReleasesListHeader';
 
-type ReleaseColumnKeys = 'name' | 'created' | 'duration' | 'status' | 'releasePlan' | 'releaseSnapshot' | 'tenantCollectorPipelineRun' | 'tenantPipelineRun' | 'managedPipelineRun' | 'finalPipelineRun';
+type ReleaseColumnKeys =
+  | 'name'
+  | 'created'
+  | 'duration'
+  | 'status'
+  | 'releasePlan'
+  | 'releaseSnapshot'
+  | 'tenantCollectorPipelineRun'
+  | 'tenantPipelineRun'
+  | 'managedPipelineRun'
+  | 'finalPipelineRun';
 
 interface ReleasesListRowProps extends RowFunctionArgs<ReleaseKind, { applicationName: string }> {
   visibleColumns?: Set<ReleaseColumnKeys>;
 }
 
-const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> = ({ 
-  obj, 
+const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> = ({
+  obj,
   customData: { applicationName },
-  visibleColumns 
+  visibleColumns,
 }) => {
   const namespace = useNamespace();
   const status = useReleaseStatus(obj);
@@ -50,11 +60,27 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
   );
   const actions = useReleaseActions(obj);
 
-  const columnOrder: ReleaseColumnKeys[] = ['name', 'created', 'duration', 'status', 'releasePlan', 'releaseSnapshot', 'tenantCollectorPipelineRun', 'tenantPipelineRun', 'managedPipelineRun', 'finalPipelineRun'];
+  const columnOrder: ReleaseColumnKeys[] = [
+    'name',
+    'created',
+    'duration',
+    'status',
+    'releasePlan',
+    'releaseSnapshot',
+    'tenantCollectorPipelineRun',
+    'tenantPipelineRun',
+    'managedPipelineRun',
+    'finalPipelineRun',
+  ];
+
+  // Use dynamic classes if visibleColumns is provided, otherwise fall back to static classes
+  const columnClasses = visibleColumns
+    ? getDynamicReleaseColumnClasses(visibleColumns)
+    : releasesTableColumnClasses;
 
   const columnComponents: Record<ReleaseColumnKeys, React.ReactNode> = {
     name: (
-      <TableData key="name" className={releasesTableColumnClasses.name}>
+      <TableData key="name" className={columnClasses.name}>
         <Link
           to={APPLICATION_RELEASE_DETAILS_PATH.createPath({
             workspaceName: namespace,
@@ -67,12 +93,12 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
       </TableData>
     ),
     created: (
-      <TableData key="created" className={releasesTableColumnClasses.created}>
+      <TableData key="created" className={columnClasses.created}>
         <Timestamp timestamp={obj.metadata.creationTimestamp} />
       </TableData>
     ),
     duration: (
-      <TableData key="duration" className={releasesTableColumnClasses.duration}>
+      <TableData key="duration" className={columnClasses.duration}>
         {obj.status?.startTime != null
           ? calculateDuration(
               typeof obj.status?.startTime === 'string' ? obj.status?.startTime : '',
@@ -82,17 +108,17 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
       </TableData>
     ),
     status: (
-      <TableData key="status" className={releasesTableColumnClasses.status}>
+      <TableData key="status" className={columnClasses.status}>
         <StatusIconWithText dataTestAttribute="release-status" status={status} />
       </TableData>
     ),
     releasePlan: (
-      <TableData key="releasePlan" className={releasesTableColumnClasses.releasePlan}>
+      <TableData key="releasePlan" className={columnClasses.releasePlan}>
         {obj.spec.releasePlan}
       </TableData>
     ),
     releaseSnapshot: (
-      <TableData key="releaseSnapshot" className={releasesTableColumnClasses.releaseSnapshot}>
+      <TableData key="releaseSnapshot" className={columnClasses.releaseSnapshot}>
         <Link
           to={SNAPSHOT_DETAILS_PATH.createPath({
             workspaceName: namespace,
@@ -105,7 +131,10 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
       </TableData>
     ),
     tenantCollectorPipelineRun: (
-      <TableData key="tenantCollectorPipelineRun" className={releasesTableColumnClasses.tenantCollectorPipelineRun}>
+      <TableData
+        key="tenantCollectorPipelineRun"
+        className={columnClasses.tenantCollectorPipelineRun}
+      >
         {tenantCollectorPipelineRun && tenantCollectorPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -122,7 +151,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
       </TableData>
     ),
     tenantPipelineRun: (
-      <TableData key="tenantPipelineRun" className={releasesTableColumnClasses.tenantPipelineRun}>
+      <TableData key="tenantPipelineRun" className={columnClasses.tenantPipelineRun}>
         {tenantPipelineRun && tenantPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -139,7 +168,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
       </TableData>
     ),
     managedPipelineRun: (
-      <TableData key="managedPipelineRun" className={releasesTableColumnClasses.managedPipelineRun}>
+      <TableData key="managedPipelineRun" className={columnClasses.managedPipelineRun}>
         {managedPipelineRun && managedPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -157,7 +186,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
       </TableData>
     ),
     finalPipelineRun: (
-      <TableData key="finalPipelineRun" className={releasesTableColumnClasses.finalPipelineRun}>
+      <TableData key="finalPipelineRun" className={columnClasses.finalPipelineRun}>
         {finalPipelineRun && finalPrNamespace ? (
           <Link
             to={PIPELINERUN_DETAILS_PATH.createPath({
@@ -177,12 +206,12 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
 
   return (
     <>
-      {visibleColumns 
+      {visibleColumns
         ? columnOrder
-            .filter(columnKey => visibleColumns.has(columnKey))
-            .map(columnKey => columnComponents[columnKey])
+            .filter((columnKey) => visibleColumns.has(columnKey))
+            .map((columnKey) => columnComponents[columnKey])
         : Object.values(columnComponents)}
-      <TableData className={releasesTableColumnClasses.kebab}>
+      <TableData className={columnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
     </>

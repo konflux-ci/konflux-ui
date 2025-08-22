@@ -1,4 +1,17 @@
 import { ColumnDefinition } from '~/shared/components/table/ColumnManagement';
+import {
+  generateDynamicColumnClasses,
+  COMMON_COLUMN_CONFIGS,
+} from '~/shared/components/table/dynamic-columns';
+
+export const getDynamicCommitsColumnClasses = (visibleColumns: Set<CommitColumnKeys>) => {
+  return generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS, {
+    specialClasses: {
+      name: 'wrap-column',
+      branch: 'commits-list__branch',
+    },
+  });
+};
 
 export const commitsTableColumnClasses = {
   name: 'pf-m-width-35 wrap-column',

@@ -18,6 +18,7 @@ import {
   commitsTableColumnClasses,
   DEFAULT_VISIBLE_COMMIT_COLUMNS,
   COMMIT_COLUMN_ORDER,
+  getDynamicCommitsColumnClasses,
 } from './commits-columns-config';
 
 import './CommitsListRow.scss';
@@ -39,9 +40,14 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
 
   const columnsToShow = visibleColumns || DEFAULT_VISIBLE_COMMIT_COLUMNS;
 
+  // Use dynamic classes based on visible columns
+  const columnClasses = visibleColumns
+    ? getDynamicCommitsColumnClasses(visibleColumns)
+    : commitsTableColumnClasses;
+
   const columnComponents = {
     name: (
-      <TableData key="name" className={commitsTableColumnClasses.name}>
+      <TableData key="name" className={columnClasses.name}>
         <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
         <Link
           to={COMMIT_DETAILS_PATH.createPath({
@@ -61,7 +67,7 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
       </TableData>
     ),
     branch: (
-      <TableData key="branch" className={commitsTableColumnClasses.branch}>
+      <TableData key="branch" className={columnClasses.branch}>
         {createRepoBranchURL(obj) ? (
           <ExternalLink href={createRepoBranchURL(obj)} text={`${obj.branch}`} />
         ) : (
@@ -70,7 +76,7 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
       </TableData>
     ),
     component: (
-      <TableData key="component" className={commitsTableColumnClasses.component}>
+      <TableData key="component" className={columnClasses.component}>
         <div className="commits-component-list">
           {obj.components.length > 0
             ? obj.components.map((c) => (
@@ -90,17 +96,17 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
       </TableData>
     ),
     byUser: (
-      <TableData key="byUser" className={commitsTableColumnClasses.byUser}>
+      <TableData key="byUser" className={columnClasses.byUser}>
         <Truncate content={obj.user ?? '-'} />
       </TableData>
     ),
     committedAt: (
-      <TableData key="committedAt" className={commitsTableColumnClasses.committedAt}>
+      <TableData key="committedAt" className={columnClasses.committedAt}>
         <Timestamp timestamp={obj.creationTime} />
       </TableData>
     ),
     status: (
-      <TableData key="status" className={commitsTableColumnClasses.status}>
+      <TableData key="status" className={columnClasses.status}>
         {statuses.includes(status) ? <StatusIconWithText status={status} /> : '-'}
       </TableData>
     ),
@@ -111,7 +117,7 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
       {COMMIT_COLUMN_ORDER.filter((columnKey) => columnsToShow.has(columnKey)).map(
         (columnKey) => columnComponents[columnKey],
       )}
-      <TableData className={commitsTableColumnClasses.kebab}>
+      <TableData className={columnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
     </>

@@ -8,6 +8,8 @@ type PipelineRunsFilterToolbarProps = {
   onClearFilters: () => void;
   typeOptions: { [key: string]: number };
   statusOptions: { [key: string]: number };
+  openColumnManagement?: () => void;
+  totalColumns?: number;
 };
 
 const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
@@ -16,6 +18,8 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   onClearFilters,
   typeOptions,
   statusOptions,
+  openColumnManagement,
+  totalColumns,
 }: PipelineRunsFilterToolbarProps) => {
   const { name, status, type } = filters;
 
@@ -25,6 +29,8 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
       label="name"
       setText={(newName) => setFilters({ ...filters, name: newName })}
       onClearFilters={onClearFilters}
+      openColumnManagement={openColumnManagement}
+      totalColumns={totalColumns}
     >
       <MultiSelect
         label="Status"

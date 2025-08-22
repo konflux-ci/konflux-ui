@@ -4,6 +4,7 @@ import {
   commitsColumns,
   commitsTableColumnClasses,
   COMMIT_COLUMN_ORDER,
+  getDynamicCommitsColumnClasses,
 } from './commits-columns-config';
 
 interface CommitsListHeaderProps {
@@ -11,15 +12,23 @@ interface CommitsListHeaderProps {
 }
 
 const getCommitsListHeader = (visibleColumns: Set<CommitColumnKeys>) => {
-  const visibleColumnsConfig = commitsColumns.filter((_, index) =>
-    visibleColumns.has(COMMIT_COLUMN_ORDER[index]),
-  );
+  // Use dynamic classes based on visible columns
+  const dynamicClasses = getDynamicCommitsColumnClasses(visibleColumns);
+
+  // Create column configs with dynamic classes
+  const columnConfigs = COMMIT_COLUMN_ORDER.filter((col) => visibleColumns.has(col)).map((col) => {
+    const originalColumn = commitsColumns.find((_, index) => COMMIT_COLUMN_ORDER[index] === col);
+    return {
+      ...originalColumn,
+      className: dynamicClasses[col] || originalColumn?.className,
+    };
+  });
 
   const finalColumns = [
-    ...visibleColumnsConfig,
+    ...columnConfigs,
     {
       title: ' ',
-      className: commitsTableColumnClasses.kebab,
+      className: dynamicClasses.kebab,
     },
   ];
 
