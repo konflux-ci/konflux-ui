@@ -1,4 +1,7 @@
 #!/bin/bash
+# Git commit-msg hook: validates commit messages with commitlint and automatically
+# adds "Assisted-by" trailers for AI tool usage (Claude/Cursor) based on running
+# processes and commit message content for authorized users.
 set -euo pipefail
 
 npx --no -- commitlint --edit $1
@@ -34,10 +37,56 @@ done
 
 echo "is_authorized: $is_authorized"
 
-if [ $is_authorized -eq 1 ]; then
-    # Use a fixed trailer string.
-    TRAILER="Assisted-by: Cursor"
-    # Add the trailer if it doesn't already exist.
-    grep -qs "^$TRAILER" "$COMMIT_MSG_FILE" ||
-        git interpret-trailers --in-place --trailer "$TRAILER" "$COMMIT_MSG_FILE"
+if [ "$is_authorized" -eq 1 ]; then
+  REPO_ROOT=$(git rev-parse --show-toplevel)
+
+  check_ai_process_in_repo() {
+    local ai_pattern="$1"
+    for pid in $(pgrep -f "$ai_pattern" || true); do
+      # Only proceed if /proc exists (Linux)
+      if [ -d "/proc/$pid" ]; then
+        cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null || echo "")
+        if [[ "$cwd" == "$REPO_ROOT"* ]]; then
+          echo "true"
+          return
+        fi
+      fi
+    done
+    echo "false"
+  }
+
+  claude_active=$(check_ai_process_in_repo "claude")
+  cursor_active=$(check_ai_process_in_repo "cursor")
+
+  echo "[commit-msg] claude active in repo? $claude_active"
+  echo "[commit-msg] cursor active in repo? $cursor_active"
+
+  # Fallback: check commit message content for AI markers
+  COMMIT_MSG_CONTENT=$(cat "$COMMIT_MSG_FILE" || echo "")
+
+  if [ "$claude_active" != "true" ]; then
+    if echo "$COMMIT_MSG_CONTENT" | grep -qiE "(claude|anthropic|Generated with.*Claude Code|Co-Authored-By: Claude)"; then
+      claude_active="true"
+    fi
+  fi
+
+  if [ "$cursor_active" != "true" ]; then
+    if echo "$COMMIT_MSG_CONTENT" | grep -qiE "(cursor|Co-Authored-By: cursor)"; then
+      cursor_active="true"
+    fi
+  fi
+
+  TRAILER=""
+
+  if [ "$claude_active" = "true" ] && [ "$cursor_active" = "true" ]; then
+    TRAILER="Assisted-by: Cursor, Claude"
+  elif [ "$claude_active" = "true" ]; then
+    TRAILER="Assisted-by: Claude"
+  elif [ "$cursor_active" = "true" ]; then
+    TRAILERS="Assisted-by: Cursor"
+  fi
+
+  if ! grep -qiE "^$TRAILER" "$COMMIT_MSG_FILE"; then
+    git interpret-trailers --in-place --trailer "$TRAILER" "$COMMIT_MSG_FILE"
+  fi
 fi
