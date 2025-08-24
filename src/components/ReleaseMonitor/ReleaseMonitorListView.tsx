@@ -1,0 +1,208 @@
+import * as React from 'react';
+import { SortByDirection } from '@patternfly/react-table';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import {
+  filterMonitoredReleases,
+  MonitoredReleasesFilterState,
+} from '~/components/Filter/utils/monitoredreleases-filter-utils';
+import PageLayout from '~/components/PageLayout/PageLayout';
+import MonitoredReleaseEmptyState from '~/components/ReleaseMonitor/ReleaseEmptyState';
+import getReleasesListHeader, {
+  SortableHeaders,
+} from '~/components/ReleaseMonitor/ReleaseListHeader';
+import ReleaseListRow from '~/components/ReleaseMonitor/ReleaseListRow';
+import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { getReleaseStatus } from '~/hooks/useReleaseStatus';
+import { useSortedResources } from '~/hooks/useSortedResources';
+import { HttpError } from '~/k8s/error';
+import { Table, useDeepCompareMemoize } from '~/shared';
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { MonitoredReleaseKind } from '~/types';
+import { statuses } from '~/utils/commits-utils';
+
+const sortPaths: Record<SortableHeaders, string> = {
+  [SortableHeaders.name]: 'metadata.name',
+  [SortableHeaders.completionTime]: 'status.completionTime',
+};
+
+const ReleaseMonitorListView: React.FunctionComponent = () => {
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters: MonitoredReleasesFilterState = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+    application: unparsedFilters.application ? (unparsedFilters.application as string[]) : [],
+    releasePlan: unparsedFilters.releasePlan ? (unparsedFilters.releasePlan as string[]) : [],
+    namespace: unparsedFilters.namespace ? (unparsedFilters.namespace as string[]) : [],
+    component: unparsedFilters.component ? (unparsedFilters.component as string[]) : [],
+  });
+
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
+    SortableHeaders.completionTime,
+  );
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
+    SortByDirection.desc,
+  );
+
+  const ReleasesListHeader = React.useMemo(
+    () =>
+      getReleasesListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
+        setActiveSortIndex(index);
+        setActiveSortDirection(direction);
+      }),
+    [activeSortDirection, activeSortIndex],
+  );
+
+  const { name, status, application, releasePlan, namespace, component } = filters;
+
+  const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
+
+  const [releases, setReleases] = React.useState<MonitoredReleaseKind[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<unknown>();
+
+  const releasesRef = React.useRef<Record<string, MonitoredReleaseKind[]>>({});
+  const loadedNamespacesRef = React.useRef<Set<string>>(new Set());
+
+  const handleReleasesLoaded = React.useCallback(
+    (ns: string, data: MonitoredReleaseKind[]) => {
+      releasesRef.current[ns] = data;
+      loadedNamespacesRef.current.add(ns);
+
+      if (loadedNamespacesRef.current.size === namespaces.length) {
+        const allReleases = Object.values(releasesRef.current).flat();
+        setReleases(allReleases);
+        setLoading(false);
+        setError(null);
+      }
+    },
+    [namespaces.length],
+  );
+
+  const handleError = React.useCallback((err: unknown) => {
+    setError(err);
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (loaded && namespaces.length > 0) {
+      setLoading(true);
+      releasesRef.current = {};
+      loadedNamespacesRef.current = new Set();
+    } else if (loaded) {
+      setLoading(false);
+    }
+  }, [loaded, namespaces]);
+
+  const sortedMonitoredReleases = useSortedResources(
+    releases,
+    activeSortIndex,
+    activeSortDirection,
+    sortPaths,
+  );
+
+  const filterOptions = React.useMemo(() => {
+    const apps = new Set<string>();
+    const plans = new Set<string>();
+    const comps = new Set<string>();
+    const nsKeys = namespaces.map((ns) => ns.metadata.name);
+
+    releases.forEach((r) => {
+      const app = r.metadata.labels?.[PipelineRunLabel.APPLICATION];
+      if (app) apps.add(app);
+      const plan = r.spec.releasePlan;
+      if (plan) plans.add(plan);
+      const comp = r.metadata.labels?.[PipelineRunLabel.COMPONENT];
+      if (comp) comps.add(comp);
+    });
+
+    return {
+      statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
+      applicationOptions: createFilterObj(
+        releases,
+        (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
+        [...apps],
+      ),
+      releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan, [...plans]),
+      namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
+      componentOptions: createFilterObj(
+        releases,
+        (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
+        [...comps],
+      ),
+    };
+  }, [releases, namespaces]);
+
+  const filteredMRs = React.useMemo(
+    () => filterMonitoredReleases(sortedMonitoredReleases, filters),
+    [sortedMonitoredReleases, filters],
+  );
+
+  const EmptyMsg = React.useCallback(
+    () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />,
+    [onClearFilters],
+  );
+
+  if (error) {
+    return <ErrorEmptyState httpError={error as HttpError} />;
+  }
+
+  const isFiltered =
+    name.length > 0 ||
+    status.length > 0 ||
+    application.length > 0 ||
+    releasePlan.length > 0 ||
+    namespace.length > 0 ||
+    component.length > 0;
+
+  return (
+    <PageLayout
+      title={
+        <>
+          Release Monitor <FeatureFlagIndicator flags={['release-monitor']} fullLabel />
+        </>
+      }
+      description="The dashboard to monitor the releases you care about"
+    >
+      {loaded &&
+        namespaces.map((ns) => (
+          <ReleasesInNamespace
+            key={ns.metadata.name}
+            namespace={ns.metadata.name}
+            onReleasesLoaded={(data) => handleReleasesLoaded(ns.metadata.name, data)}
+            onError={handleError}
+          />
+        ))}
+      {(isFiltered || sortedMonitoredReleases.length > 0) && (
+        <MonitoredReleasesFilterToolbar
+          filters={filters}
+          setFilters={setFilters}
+          onClearFilters={onClearFilters}
+          statusOptions={filterOptions.statusOptions}
+          applicationOptions={filterOptions.applicationOptions}
+          releasePlanOptions={filterOptions.releasePlanOptions}
+          namespaceOptions={filterOptions.namespaceOptions}
+          componentOptions={filterOptions.componentOptions}
+        />
+      )}
+
+      <Table
+        data={filteredMRs}
+        unfilteredData={sortedMonitoredReleases}
+        EmptyMsg={EmptyMsg}
+        NoDataEmptyMsg={MonitoredReleaseEmptyState}
+        aria-label="Release List"
+        Header={ReleasesListHeader}
+        Row={ReleaseListRow}
+        loaded={!loading || releases.length > 0}
+      />
+    </PageLayout>
+  );
+};
+
+export default ReleaseMonitorListView;
