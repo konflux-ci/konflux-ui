@@ -90,9 +90,9 @@ export type ReleaseKind = K8sResourceCommon & {
       releaseStrategy?: string;
     };
     conditions?: {
-      type?: ReleaseCondition;
+      type: ReleaseCondition;
       reason?: string;
-      status?: string;
+      status: string;
       message?: string;
     }[];
   };
