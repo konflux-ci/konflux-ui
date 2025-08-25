@@ -41,14 +41,14 @@ describe('CommitsListRow', () => {
 
   it('should show commit icon for commits', () => {
     render(<CommitsListRow columns={null} obj={commits[3]} />);
-    expect(screen.getByAltText('Commit icon')).toBeInTheDocument();
+    expect(screen.getByLabelText('Commit icon')).toBeInTheDocument();
   });
 
   it('should show pull request icon for pull requests', () => {
     commits[0].isPullRequest = true;
     commits[0].pullRequestNumber = '23';
     render(<CommitsListRow columns={null} obj={commits[0]} />);
-    screen.getByAltText('Pull request icon');
+    screen.getByLabelText('Pull request icon');
     screen.getAllByText(`#23 ${commits[0].shaTitle}`);
   });
 

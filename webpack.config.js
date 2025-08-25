@@ -19,7 +19,11 @@ export default {
       // SVGR rule specifically for overview SVGs
       {
         test: /\.svg$/i,
-        include: path.resolve(__dirname, 'src/assets/overview'),
+        include: [
+          path.resolve(__dirname, 'src/assets'),
+          path.resolve(__dirname, 'src/shared/assets'),
+        ],
+        exclude: path.resolve(__dirname, 'src/assets/iconsUrl'),
         issuer: /\.[jt]sx?$/,
         use: [
           {
@@ -46,7 +50,7 @@ export default {
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif)$/i,
-        exclude: path.resolve(__dirname, 'src/assets/overview'),
+        include: path.resolve(__dirname, 'src/assets/iconsUrl'),
         type: 'asset/resource',
       },
     ],
