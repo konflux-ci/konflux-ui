@@ -37,7 +37,7 @@ type FeatureFlagDefinition = {
   key: string;
   description: string;
   defaultEnabled: boolean;
-  status: 'wip' | 'enabled';
+  status: 'wip' | 'ready';
 };
 
 export const FLAGS: Record<string, FeatureFlagDefinition> = {
@@ -53,6 +53,12 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
       'New release monitor page that make user see all the related releases of viable namespaces',
     defaultEnabled: false,
     status: 'wip',
+  },
+  'column-management': {
+    key: 'column-management',
+    description: 'Enable the "Manage columns" button for tables with more than six columns',
+    defaultEnabled: true,
+    status: 'ready',
   },
   'system-notifications': {
     key: 'system-notifications',

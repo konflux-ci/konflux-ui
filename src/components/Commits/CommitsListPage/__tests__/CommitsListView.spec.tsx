@@ -47,7 +47,7 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         <tbody>
           {props.data.map((d, i) => (
             <tr key={i}>
-              <CommitsListRow columns={null} obj={d} />
+              <CommitsListRow obj={d} />
             </tr>
           ))}
         </tbody>
@@ -129,7 +129,7 @@ describe('CommitsListView', () => {
 
   it('renders correct commit data', () => {
     const { getByText, queryByText, container } = render(
-      <CommitsListRow columns={null} obj={commits[0]} />,
+      <CommitsListRow obj={commits[0]} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
     expect(queryByText('commit1')).toBeInTheDocument();

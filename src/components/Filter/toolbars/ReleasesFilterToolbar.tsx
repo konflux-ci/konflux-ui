@@ -14,12 +14,15 @@ import {
   ToolbarItem,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import ColumnManagementButton from '../components/ColumnManagementButton';
 
 type Props = {
   value: string;
   dropdownItems: string[];
   onInput: (value: string) => void;
   onFilterTypeChange: (value: string) => void;
+  openColumnManagement?: () => void;
+  totalColumns?: number;
 };
 
 export const ReleasesFilterToolbar: React.FC<Props> = ({
@@ -27,6 +30,8 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
   onInput,
   onFilterTypeChange,
   dropdownItems,
+  openColumnManagement,
+  totalColumns = 0,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [filterType, setFilterType] = React.useState(dropdownItems[0]);
@@ -80,6 +85,9 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
                 />
               </InputGroupItem>
             </InputGroup>
+          </ToolbarItem>
+          <ToolbarItem>
+            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
           </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
