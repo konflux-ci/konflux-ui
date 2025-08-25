@@ -187,7 +187,7 @@ export class TaskRunsTab {
       { name: `${pipelineName}-init`, task: 'init', status: 'Succeeded' },
       { name: `${pipelineName}-clone-repository`, task: 'clone-repository', status: 'Succeeded' },
       { name: `${pipelineName}-build-container`, task: 'build-container', status: 'Succeeded' },
-      { name: `${pipelineName}-show-sbom`, task: 'show-sbom', status: 'Succeeded' },
+      { name: `${pipelineName}-push-dockerfile`, task: 'push-dockerfile', status: 'Succeeded' },
     ];
   }
 
