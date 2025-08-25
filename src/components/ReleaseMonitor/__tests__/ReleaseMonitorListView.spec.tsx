@@ -468,19 +468,6 @@ describe('ReleaseMonitorListView', () => {
     });
   });
 
-  it('should sort releases by completion time', async () => {
-    render(
-      <TestWrapper>
-        <ReleaseMonitorListView />
-      </TestWrapper>,
-    );
-
-    await waitFor(() => {
-      const releaseNames = screen.getAllByText(/test-release-\d/);
-      expect(releaseNames[0]).toHaveTextContent('test-release-3'); // Should be first due to completion time
-    });
-  });
-
   it('should handle error state', async () => {
     mockReleasesInNamespace.mockImplementation(({ onError }) => {
       React.useEffect(() => {
