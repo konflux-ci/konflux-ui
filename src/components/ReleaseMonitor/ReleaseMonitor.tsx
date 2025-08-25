@@ -1,7 +1,6 @@
 import * as React from 'react';
-// import { PipelineRunKind } from '../../types';
-import { FilterContextProvider } from '../Filter/generic/FilterContext';
-import ReleaseMonitorListView from './ReleaseMonitorListView';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
 
 const ReleaseMonitor: React.FunctionComponent = () => {
   return (

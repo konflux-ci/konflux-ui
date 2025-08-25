@@ -1,7 +1,6 @@
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { MonitoredReleaseKind } from '../../../types';
-import { monitoredReleaseStatus } from '../../../utils/monitored-release-utils';
-
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { MonitoredReleaseKind } from '~/types';
+import { monitoredReleaseStatus } from '~/utils/monitored-release-utils';
 export type MonitoredReleasesFilterState = {
   name: string;
   status: string[];

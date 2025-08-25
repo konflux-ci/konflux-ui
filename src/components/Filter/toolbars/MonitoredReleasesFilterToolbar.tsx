@@ -1,10 +1,10 @@
-import { MultiSelect } from '../generic/MultiSelect';
-import { MonitoredReleasesFilterState } from '../utils/monitoredreleases-filter-utils';
-import { BaseTextFilterToolbar } from './BaseTextFIlterToolbar';
-
+import * as React from 'react';
+import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
+import { MonitoredReleasesFilterState } from '~/components/Filter/utils/monitoredreleases-filter-utils';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 type MonitoredReleasesFilterToolbarProps = {
   filters: MonitoredReleasesFilterState;
-  setFilters: (MonitoredReleasesFilterState) => void;
+  setFilters: (newFilters: MonitoredReleasesFilterState) => void;
   onClearFilters: () => void;
   statusOptions: { [key: string]: number };
   applicationOptions: { [key: string]: number };

@@ -1,28 +1,34 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
+// React / external imports would go here (none in this snippet)
+
+// Internal absolute imports
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { PipelineRunLabel } from '../../consts/pipelinerun';
-import { useSortedResources } from '../../hooks/useSortedResources';
-import { HttpError } from '../../k8s/error';
-import { Table, useDeepCompareMemoize } from '../../shared';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
-import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespaceInfo } from '../../shared/providers/Namespace';
-import { MonitoredReleaseKind } from '../../types';
-import { statuses } from '../../utils/commits-utils';
-import { monitoredReleaseStatus } from '../../utils/monitored-release-utils';
-import MonitoredReleasesFilterToolbar from '../Filter/toolbars/MonitoredReleasesFilterToolbar';
+import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
+import PageLayout from '~/components/PageLayout/PageLayout';
+import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
+
+import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { Table, useDeepCompareMemoize } from '~/shared';
+
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useSortedResources } from '~/hooks/useSortedResources';
+import { HttpError } from '~/k8s/error';
+import { MonitoredReleaseKind } from '~/types';
+import { statuses } from '~/utils/commits-utils';
+import { monitoredReleaseStatus } from '~/utils/monitored-release-utils';
+
 import {
   filterMonitoredReleases,
   MonitoredReleasesFilterState,
 } from '../Filter/utils/monitoredreleases-filter-utils';
-import PageLayout from '../PageLayout/PageLayout';
-import MonitoredReleaseEmptyState from './ReleaseEmptyState';
-import getReleasesListHeader, { SortableHeaders } from './ReleaseListHeader';
-import ReleaseListRow from './ReleaseListRow';
-import ReleasesInNamespace from './ReleasesInNamespace';
 
+import MonitoredReleaseEmptyState from '~/components/ReleaseMonitor/ReleaseEmptyState';
+import getReleasesListHeader, { SortableHeaders } from '~/components/ReleaseMonitor/ReleaseListHeader';
+import ReleaseListRow from '~/components/ReleaseMonitor/ReleaseListRow';
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: MonitoredReleasesFilterState = useDeepCompareMemoize({
@@ -36,7 +42,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   const sortPaths: Record<SortableHeaders, string> = {
     [SortableHeaders.name]: 'metadata.name',
-    [SortableHeaders.completionTime]: 'status?.completionTime',
+    [SortableHeaders.completionTime]: 'status.completionTime',
   };
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
