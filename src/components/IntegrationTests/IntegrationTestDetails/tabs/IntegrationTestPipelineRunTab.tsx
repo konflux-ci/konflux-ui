@@ -44,19 +44,17 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
       ),
     );
 
-  // Column management state
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [visibleColumns, setVisibleColumns] = useLocalStorage<Set<PipelineRunColumnKeys>>(
+  const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
     `integration-test-pipeline-runs-columns-${applicationName}-${integrationTestName}`,
   );
 
-  // Initialize visible columns with default if not set
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (visibleColumns instanceof Set) {
-      return visibleColumns;
+    if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {
+      return new Set(persistedColumns as PipelineRunColumnKeys[]);
     }
-    return DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES;
-  }, [visibleColumns]);
+    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES);
+  }, [persistedColumns]);
 
   if (error) {
     const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
@@ -137,7 +135,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
         visibleColumns={safeVisibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
+        onVisibleColumnsChange={(cols) => setPersistedColumns(Array.from(cols))}
         columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
         defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES}
         nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}

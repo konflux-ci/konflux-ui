@@ -1,3 +1,4 @@
+import { SortByDirection, ThProps } from '@patternfly/react-table';
 import { createTableHeaders } from '~/shared/components/table/utils';
 import {
   CommitColumnKeys,
@@ -11,16 +12,21 @@ interface CommitsListHeaderProps {
   visibleColumns: Set<CommitColumnKeys>;
 }
 
-const getCommitsListHeader = (visibleColumns: Set<CommitColumnKeys>) => {
-  // Use dynamic classes based on visible columns
-  const dynamicClasses = getDynamicCommitsColumnClasses(visibleColumns);
+const getCommitsListHeader = (
+  activeSortIndex?: number,
+  activeSortDirection?: SortByDirection,
+  onSort?: ThProps['sort']['onSort'],
+  visibleColumns?: Set<CommitColumnKeys>,
+) => {
+  const columnsToUse = visibleColumns || new Set(COMMIT_COLUMN_ORDER);
+  const dynamicClasses = getDynamicCommitsColumnClasses(columnsToUse);
 
-  // Create column configs with dynamic classes
-  const columnConfigs = COMMIT_COLUMN_ORDER.filter((col) => visibleColumns.has(col)).map((col) => {
-    const originalColumn = commitsColumns.find((_, index) => COMMIT_COLUMN_ORDER[index] === col);
+  const columnConfigs = COMMIT_COLUMN_ORDER.filter((col) => columnsToUse.has(col)).map((col) => {
+    const idx = COMMIT_COLUMN_ORDER.indexOf(col);
+    const originalColumn = commitsColumns[idx];
     return {
       ...originalColumn,
-      className: dynamicClasses[col] || originalColumn?.className,
+      className: dynamicClasses[col] ?? originalColumn.className,
     };
   });
 
@@ -32,20 +38,16 @@ const getCommitsListHeader = (visibleColumns: Set<CommitColumnKeys>) => {
     },
   ];
 
-  return createTableHeaders(finalColumns)(undefined, undefined, undefined);
+  return createTableHeaders(finalColumns)(activeSortIndex, activeSortDirection, onSort);
+};
+
+const getCommitsListHeaderWithColumns = (visibleColumns: Set<CommitColumnKeys>) => {
+  return getCommitsListHeader(undefined, undefined, undefined, visibleColumns);
 };
 
 const CommitsListHeader = ({ visibleColumns }: CommitsListHeaderProps) => {
-  const headerFunc = getCommitsListHeader(visibleColumns);
-  return headerFunc({
-    data: [],
-    unfilteredData: [],
-    filters: [],
-    selected: false,
-    match: null,
-    kindObj: null,
-  });
+  return getCommitsListHeaderWithColumns(visibleColumns);
 };
 
-export { getCommitsListHeader, commitsTableColumnClasses };
+export { getCommitsListHeader, getCommitsListHeaderWithColumns, commitsTableColumnClasses };
 export default CommitsListHeader;

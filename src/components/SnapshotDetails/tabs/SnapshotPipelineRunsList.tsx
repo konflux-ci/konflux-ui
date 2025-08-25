@@ -51,19 +51,17 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   });
   const { name, status, type } = filters;
 
-  // Column management state
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [visibleColumns, setVisibleColumns] = useLocalStorage<Set<PipelineRunColumnKeys>>(
+  const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
     `snapshot-pipeline-runs-columns-${applicationName}`,
   );
 
-  // Initialize visible columns with default if not set
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (visibleColumns instanceof Set) {
-      return visibleColumns;
+    if (Array.isArray(visibleColumnKeys) && visibleColumnKeys.length > 0) {
+      return new Set(visibleColumnKeys as PipelineRunColumnKeys[]);
     }
-    return DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT;
-  }, [visibleColumns]);
+    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT);
+  }, [visibleColumnKeys]);
 
   const statusFilterObj = React.useMemo(
     () =>
@@ -170,7 +168,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
         visibleColumns={safeVisibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
+        onVisibleColumnsChange={(cols) => setVisibleColumnKeys(Array.from(cols))}
         columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
         defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT}
         nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}

@@ -20,7 +20,7 @@ import {
   DEFAULT_VISIBLE_COMMIT_COLUMNS,
   NON_HIDABLE_COMMIT_COLUMNS,
 } from './commits-columns-config';
-import { getCommitsListHeader } from './CommitsListHeader';
+import { getCommitsListHeaderWithColumns } from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
 
 interface CommitsListViewProps {
@@ -35,7 +35,6 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
-  // Column management state
   const [visibleColumns, setVisibleColumns] = React.useState<Set<CommitColumnKeys>>(() => {
     try {
       const saved = sessionStorage.getItem('commits-visible-columns');
@@ -147,7 +146,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         NoDataEmptyMsg={NoDataEmptyMessage}
         Toolbar={DataToolbar}
         aria-label="Commit List"
-        Header={getCommitsListHeader(visibleColumns)}
+        Header={getCommitsListHeaderWithColumns(visibleColumns)}
         Row={(props) => (
           <CommitsListRow obj={props.obj as Commit} visibleColumns={visibleColumns} />
         )}

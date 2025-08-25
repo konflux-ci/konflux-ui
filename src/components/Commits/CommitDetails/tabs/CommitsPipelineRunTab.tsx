@@ -46,19 +46,17 @@ const CommitsPipelineRunTab: React.FC = () => {
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
 
-  // Column management state
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [visibleColumns, setVisibleColumns] = useLocalStorage<Set<PipelineRunColumnKeys>>(
+  const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
     `commit-pipeline-runs-columns-${applicationName}-${commitName}`,
   );
 
-  // Initialize visible columns with default if not set
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (visibleColumns instanceof Set) {
-      return visibleColumns;
+    if (Array.isArray(visibleColumnKeys) && visibleColumnKeys.length > 0) {
+      return new Set(visibleColumnKeys as PipelineRunColumnKeys[]);
     }
-    return DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS;
-  }, [visibleColumns]);
+    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
+  }, [visibleColumnKeys]);
 
   const { name, status, type } = filters;
 
@@ -166,7 +164,7 @@ const CommitsPipelineRunTab: React.FC = () => {
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
         visibleColumns={safeVisibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
+        onVisibleColumnsChange={(cols) => setVisibleColumnKeys(Array.from(cols))}
         columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
         defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS}
         nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}

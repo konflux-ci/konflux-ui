@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {
-  Button,
   capitalize,
   InputGroup,
   InputGroupItem,
@@ -14,8 +13,8 @@ import {
   ToolbarGroup,
   ToolbarItem,
 } from '@patternfly/react-core';
-import { CogIcon, FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
-import { IfFeature } from '~/feature-flags/hooks';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons';
+import ColumnManagementButton from '../components/ColumnManagementButton';
 
 type Props = {
   value: string;
@@ -87,20 +86,9 @@ export const ReleasesFilterToolbar: React.FC<Props> = ({
               </InputGroupItem>
             </InputGroup>
           </ToolbarItem>
-          <IfFeature flag="column-management">
-            {openColumnManagement && totalColumns > 6 && (
-              <ToolbarItem>
-                <Button
-                  variant="plain"
-                  aria-label="Manage columns"
-                  onClick={openColumnManagement}
-                  icon={<CogIcon />}
-                >
-                  Manage columns
-                </Button>
-              </ToolbarItem>
-            )}
-          </IfFeature>
+          <ToolbarItem>
+            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+          </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
     </Toolbar>

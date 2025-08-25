@@ -52,19 +52,17 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
 
-  // Column management state
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-  const [visibleColumns, setVisibleColumns] = useLocalStorage<Set<PipelineRunColumnKeys>>(
+  const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
     `pipeline-runs-columns-${applicationName}${componentName ? `-${componentName}` : ''}`,
   );
 
-  // Initialize visible columns with default if not set
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (visibleColumns instanceof Set) {
-      return visibleColumns;
+    if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {
+      return new Set(persistedColumns as PipelineRunColumnKeys[]);
     }
-    return DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS;
-  }, [visibleColumns]);
+    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
+  }, [persistedColumns]);
 
   const { name, status, type } = filters;
 
@@ -199,7 +197,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
         visibleColumns={safeVisibleColumns}
-        onVisibleColumnsChange={setVisibleColumns}
+        onVisibleColumnsChange={(cols) => setPersistedColumns(Array.from(cols))}
         columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
         defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS}
         nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}

@@ -260,9 +260,8 @@ const DynamicPipelineRunListRow: React.FC<
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
   const { releaseName, integrationTestName, releasePlan, release } = customData || {};
-  const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
   const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
-  const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
+  const scanResults = scanLoaded ? customData?.vulnerabilities?.[obj.metadata.name] : undefined;
 
   const status = pipelineRunStatus(obj);
   const actions = usePipelinerunActions(obj);
