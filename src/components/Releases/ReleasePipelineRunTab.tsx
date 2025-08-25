@@ -30,9 +30,17 @@ interface PipelineRunProcessing {
   prNamespace: string;
 }
 
-type PipelineRunColumnKeys = 'name' | 'startTime' | 'duration' | 'type' | 'snapshot' | 'namespace' | 'status' | 'completionTime';
+type ReleasePipelineRunColumnKeys =
+  | 'name'
+  | 'startTime'
+  | 'duration'
+  | 'type'
+  | 'snapshot'
+  | 'namespace'
+  | 'status'
+  | 'completionTime';
 
-const pipelineRunColumns: readonly ColumnDefinition<PipelineRunColumnKeys>[] = [
+const pipelineRunColumns: readonly ColumnDefinition<ReleasePipelineRunColumnKeys>[] = [
   { key: 'name', title: 'Name', sortable: true },
   { key: 'startTime', title: 'Started', sortable: true },
   { key: 'duration', title: 'Duration', sortable: true },
@@ -43,8 +51,15 @@ const pipelineRunColumns: readonly ColumnDefinition<PipelineRunColumnKeys>[] = [
   { key: 'completionTime', title: 'Completed', sortable: true },
 ];
 
-const defaultVisibleColumns: Set<PipelineRunColumnKeys> = new Set(['name', 'startTime', 'duration', 'type', 'snapshot', 'namespace']);
-const nonHidableColumns: readonly PipelineRunColumnKeys[] = ['name'];
+const defaultVisibleColumns: Set<ReleasePipelineRunColumnKeys> = new Set([
+  'name',
+  'startTime',
+  'duration',
+  'type',
+  'snapshot',
+  'namespace',
+]);
+const nonHidableColumns: readonly ReleasePipelineRunColumnKeys[] = ['name'];
 
 const createPipelineRunEntry = (
   type: string,
@@ -75,27 +90,32 @@ const ReleasePipelineRunTab: React.FC = () => {
   const namespace = useNamespace();
 
   const { filters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  
+
   // Column management state
-  const [visibleColumns, setVisibleColumns] = React.useState<Set<PipelineRunColumnKeys>>(() => {
-    try {
-      const saved = sessionStorage.getItem('release-pipeline-visible-columns');
-      if (saved) {
-        const parsedColumns = JSON.parse(saved) as PipelineRunColumnKeys[];
-        if (Array.isArray(parsedColumns)) {
-          return new Set(parsedColumns);
+  const [visibleColumns, setVisibleColumns] = React.useState<Set<ReleasePipelineRunColumnKeys>>(
+    () => {
+      try {
+        const saved = sessionStorage.getItem('release-pipeline-visible-columns');
+        if (saved) {
+          const parsedColumns = JSON.parse(saved) as ReleasePipelineRunColumnKeys[];
+          if (Array.isArray(parsedColumns)) {
+            return new Set(parsedColumns);
+          }
         }
+      } catch {
+        // Silent error handling
       }
-    } catch {
-      // Silent error handling
-    }
-    return defaultVisibleColumns;
-  });
+      return defaultVisibleColumns;
+    },
+  );
 
   // Save visible columns to session storage whenever they change
   React.useEffect(() => {
     try {
-      sessionStorage.setItem('release-pipeline-visible-columns', JSON.stringify([...visibleColumns]));
+      sessionStorage.setItem(
+        'release-pipeline-visible-columns',
+        JSON.stringify([...visibleColumns]),
+      );
     } catch {
       // Silent error handling
     }
@@ -178,7 +198,7 @@ const ReleasePipelineRunTab: React.FC = () => {
         })}
         virtualize
       />
-      <ColumnManagement<PipelineRunColumnKeys>
+      <ColumnManagement<ReleasePipelineRunColumnKeys>
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
         visibleColumns={visibleColumns}

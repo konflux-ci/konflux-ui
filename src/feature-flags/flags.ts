@@ -60,6 +60,12 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
     defaultEnabled: true,
     status: 'ready',
   },
+  'system-notifications': {
+    key: 'system-notifications',
+    description: 'Enable system notifications badge and notification center',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 };
 
 export type FlagKey = keyof typeof FLAGS;

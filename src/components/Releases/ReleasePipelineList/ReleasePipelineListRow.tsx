@@ -7,7 +7,7 @@ import { calculateDuration } from '~/utils/pipeline-utils';
 import { getDynamicReleasePipelineColumnClasses } from './ReleasePipelineListHeader';
 
 // Type defined in ReleasePipelineRunTab.tsx to avoid duplication
-type PipelineRunColumnKeys =
+type ReleasePipelineRunColumnKeys =
   | 'name'
   | 'startTime'
   | 'duration'
@@ -31,7 +31,7 @@ type PipelineRunListRowProps = {
   releasePlan: ReleasePlanKind;
   releaseName?: string;
   namespace: string;
-  visibleColumns: Set<PipelineRunColumnKeys>;
+  visibleColumns: Set<ReleasePipelineRunColumnKeys>;
 };
 
 const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
@@ -108,7 +108,7 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
   };
 
   // Define the order of columns to maintain consistent ordering
-  const columnOrder: PipelineRunColumnKeys[] = [
+  const columnOrder: ReleasePipelineRunColumnKeys[] = [
     'name',
     'startTime',
     'duration',

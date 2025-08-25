@@ -3,7 +3,7 @@ import {
   COMMON_COLUMN_CONFIGS,
 } from '../../../shared/components/table/dynamic-columns';
 
-type PipelineRunColumnKeys =
+type ReleasePipelineRunColumnKeys =
   | 'name'
   | 'startTime'
   | 'duration'
@@ -14,7 +14,7 @@ type PipelineRunColumnKeys =
   | 'completionTime';
 
 export const getDynamicReleasePipelineColumnClasses = (
-  visibleColumns: Set<PipelineRunColumnKeys>,
+  visibleColumns: Set<ReleasePipelineRunColumnKeys>,
 ) => {
   return generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS, {
     specialClasses: { name: 'wrap-column' },
@@ -33,7 +33,7 @@ export const releasePipelineRunListColumnClasses = {
 };
 
 interface ReleasePipelineListHeaderProps {
-  visibleColumns: Set<PipelineRunColumnKeys>;
+  visibleColumns: Set<ReleasePipelineRunColumnKeys>;
 }
 
 const ReleasePipelineListHeader = ({ visibleColumns }: ReleasePipelineListHeaderProps) => {
@@ -83,7 +83,16 @@ const ReleasePipelineListHeader = ({ visibleColumns }: ReleasePipelineListHeader
     },
   ];
 
-  return allColumns.filter((column) => visibleColumns.has(column.key as PipelineRunColumnKeys));
+  const filtered = allColumns.filter((column) =>
+    visibleColumns.has(column.key as ReleasePipelineRunColumnKeys),
+  );
+  return [
+    ...filtered,
+    {
+      title: ' ',
+      props: { className: getDynamicReleasePipelineColumnClasses(visibleColumns).kebab },
+    },
+  ];
 };
 
 export default ReleasePipelineListHeader;
