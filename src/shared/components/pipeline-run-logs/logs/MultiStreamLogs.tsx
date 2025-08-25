@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { TaskRunKind } from '../../../../types';
 import { PodKind } from '../../types';
 import Logs from './Logs';
@@ -22,19 +23,23 @@ export const MultiStreamLogs: React.FC<MultiStreamLogsProps> = ({
   const { containers, stillFetching } = getRenderContainers(resource);
   const loadingContainers = resource?.metadata?.name !== resourceName;
 
+  if (loadingContainers) {
+    return (
+      <Bullseye>
+        <Spinner size="lg" />
+      </Bullseye>
+    );
+  }
+
   return (
-    <>
-      {!loadingContainers && (
-        <Logs
-          resource={resource}
-          containers={containers}
-          allowAutoScroll
-          downloadAllLabel={downloadAllLabel}
-          onDownloadAll={onDownloadAll}
-          taskRun={taskRun}
-          isLoading={!!((loadingContainers || stillFetching) && resource)}
-        />
-      )}
-    </>
+    <Logs
+      resource={resource}
+      containers={containers}
+      allowAutoScroll
+      downloadAllLabel={downloadAllLabel}
+      onDownloadAll={onDownloadAll}
+      taskRun={taskRun}
+      isLoading={!!((loadingContainers || stillFetching) && resource)}
+    />
   );
 };

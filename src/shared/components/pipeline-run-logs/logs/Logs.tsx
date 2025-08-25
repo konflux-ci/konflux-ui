@@ -14,6 +14,8 @@ import LogViewer, { type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
 
+const WEB_SOCKET_RETRY_COUNT = 5;
+
 export const processLogs = (logSources: LogSources, containers: ContainerSpec[]): string => {
   let allLogs = '';
   for (const container of containers) {
@@ -43,7 +45,7 @@ const retryWebSocket = (
 
   const handleError = () => {
     // stop retrying after 5 attempts
-    if (retryCount < 5) {
+    if (retryCount < WEB_SOCKET_RETRY_COUNT) {
       setTimeout(() => {
         retryWebSocket(watchURL, wsOpts, onMessage, onError, retryCount + 1);
       }, 3000); // retry after 3 seconds
