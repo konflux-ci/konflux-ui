@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Tooltip } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
-import relationIcon from '../../../assets/RelationsIcon.svg';
+import RelationIcon from '../../../assets/RelationsIcon.svg';
 import { ComponentKind } from '../../../types';
 
 import './ComponentRelationStatusIcon.scss';
@@ -14,12 +14,13 @@ export const ComponentRelationStatusIcon: React.FC<{
   const isInRelationship = !!(
     component.spec?.['build-nudges-ref']?.length ?? component.status?.['build-nudged-by']?.length
   );
+
   return isInRelationship ? (
     <Tooltip content="This component is in a relationship">
-      <img
+      <RelationIcon
         style={style}
         className={css('component-relation-status-icon', className)}
-        src={relationIcon}
+        role="img"
         alt="Component is in a relationship icon"
       />
     </Tooltip>
