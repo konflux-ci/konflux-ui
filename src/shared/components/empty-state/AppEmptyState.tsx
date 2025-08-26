@@ -11,7 +11,7 @@ import { css } from '@patternfly/react-styles';
 import './EmptyState.scss';
 
 type AppEmptyStateProps = {
-  emptyStateImg: string;
+  emptyStateImg: React.ComponentType<SVGSVGElement> | string;
   isXl?: boolean;
   title: React.ReactNode;
 } & EmptyStateProps;
@@ -28,15 +28,23 @@ const AppEmptyState: React.FC<React.PropsWithChildren<AppEmptyStateProps>> = ({
     <EmptyStateHeader
       titleText={<>{title}</>}
       icon={
-        <EmptyStateIcon
-          icon={() => (
-            <img
-              className={css('app-empty-state__icon', isXl && 'm-is-xl')}
-              src={emptyStateImg}
-              alt=""
-            />
-          )}
-        />
+        typeof emptyStateImg === 'string' ? (
+          <EmptyStateIcon
+            icon={() => (
+              <img
+                className={css('app-empty-state__icon', isXl && 'm-is-xl')}
+                src={emptyStateImg}
+                alt=""
+              />
+            )}
+          />
+        ) : (
+          <EmptyStateIcon
+            className={css('app-empty-state__icon', isXl && 'm-is-xl')}
+            icon={emptyStateImg}
+            alt=""
+          />
+        )
       }
       headingLevel="h3"
     />
