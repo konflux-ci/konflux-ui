@@ -4,9 +4,14 @@ import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 
 const StatusPageCard: React.FC = () => {
-  const [konfluxInfo] = useKonfluxPublicInfo();
+  let konfluxInfo;
+  try {
+    [konfluxInfo] = useKonfluxPublicInfo();
+  } catch (e) {
+    return null;
+  }
   const statusPageUrlRaw = konfluxInfo?.statusPageUrl ?? '';
-  const statusPageUrl = statusPageUrlRaw.trim();
+  const statusPageUrl = statusPageUrlRaw.trim() as string;
   // Only allow http/https URLs
   if (!statusPageUrl || !/^https?:\/\//i.test(statusPageUrl)) {
     return null;
