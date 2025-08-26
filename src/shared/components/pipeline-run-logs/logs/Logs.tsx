@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
-import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
@@ -10,7 +9,6 @@ import { MessageHandler, WebSocketOptions } from '../../../../k8s/web-socket/typ
 import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
-import { useNamespace } from '../../../providers/Namespace';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
 import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
@@ -84,8 +82,7 @@ const Logs: React.FC<LogsProps> = ({
   source,
 }) => {
   const { t } = useTranslation();
-  const namespace = useNamespace();
-  const isKubearchiveEnabled = useIsOnFeatureFlag(FLAGS['kubearchive-logs'].key);
+  const isKubearchiveEnabled = useIsOnFeatureFlag('kubearchive-logs');
   const { metadata = {} } = resource;
   const { name: resName, namespace: resNamespace } = metadata;
 
