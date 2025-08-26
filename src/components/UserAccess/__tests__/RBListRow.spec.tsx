@@ -20,7 +20,11 @@ describe('RBListRow', () => {
     const mockUseRoleMap = useRoleMap as jest.Mock;
     watchMock.mockReturnValueOnce([mockRoleBinding, false]);
     mockUseRoleMap.mockReturnValueOnce([defaultKonfluxRoleMap, true, null]);
-    const wrapper = render(<RBListRow obj={mockRoleBinding} columns={[]} />, {
+    const rowData = {
+      roleBinding: mockRoleBinding,
+      subject: mockRoleBinding.subjects?.[0] || null,
+    };
+    const wrapper = render(<RBListRow obj={rowData} columns={[]} />, {
       container: document.createElement('tr'),
     });
     const cells = wrapper.container.getElementsByTagName('td');
@@ -35,7 +39,11 @@ describe('RBListRow', () => {
     const mockUseRoleMap = useRoleMap as jest.Mock;
     watchMock.mockReturnValueOnce([mockRoleBinding, false]);
     mockUseRoleMap.mockReturnValueOnce([defaultKonfluxRoleMap, true, null]);
-    const wrapper = render(<RBListRow obj={mockRoleBinding} columns={[]} />, {
+    const rowData = {
+      roleBinding: mockRoleBinding,
+      subject: mockRoleBinding.subjects?.[0] || null,
+    };
+    const wrapper = render(<RBListRow obj={rowData} columns={[]} />, {
       container: document.createElement('div'),
     });
     wrapper.container.getElementsByTagName('spinner');

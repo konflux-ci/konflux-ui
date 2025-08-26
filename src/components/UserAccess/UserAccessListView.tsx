@@ -69,17 +69,30 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   const { username: usernameFilter } = filters;
   const [roleBindings, loaded] = useRoleBindings(namespace);
 
-  const filterRBs = React.useMemo(
-    () =>
-      roleBindings.filter(
-        (rb) =>
-          !rb.subjects ||
-          rb.subjects?.some((subject) =>
-            subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
-          ),
-      ),
-    [roleBindings, usernameFilter],
-  );
+  const filterRBs = React.useMemo(() => {
+    const flattenedRows: Array<{
+      roleBinding: RoleBinding;
+      subject: RoleBinding['subjects'][0] | null;
+    }> = [];
+
+    roleBindings.forEach((rb) => {
+      if (!rb.subjects || rb.subjects.length === 0) {
+        // RoleBinding with no subjects
+        flattenedRows.push({ roleBinding: rb, subject: null });
+      } else {
+        // Create a row for each subject
+        rb.subjects.forEach((subject) => {
+          flattenedRows.push({ roleBinding: rb, subject });
+        });
+      }
+    });
+
+    // Apply username filter
+    return flattenedRows.filter(
+      (row) =>
+        !row.subject || row.subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
+    );
+  }, [roleBindings, usernameFilter]);
   if (!loaded) {
     return (
       <Bullseye>
@@ -124,8 +137,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           Header={RBListHeader}
           Row={RBListRow}
           loaded
-          getRowProps={(obj: RoleBinding) => ({
-            id: obj.metadata.name,
+          getRowProps={(obj: {
+            roleBinding: RoleBinding;
+            subject: RoleBinding['subjects'][0] | null;
+          }) => ({
+            id: `${obj.roleBinding.metadata.name}-${obj.subject?.name || 'no-subject'}`,
           })}
         />
       ) : (

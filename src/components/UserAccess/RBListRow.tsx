@@ -7,21 +7,27 @@ import { RoleBinding } from '../../types';
 import { rbTableColumnClasses } from './RBListHeader';
 import { useRBActions } from './user-access-actions';
 
-export const RBListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<RoleBinding>>> = ({
-  obj,
-}) => {
-  const actions = useRBActions(obj);
+export const RBListRow: React.FC<
+  React.PropsWithChildren<
+    RowFunctionArgs<{ roleBinding: RoleBinding; subject: RoleBinding['subjects'][0] | null }>
+  >
+> = ({ obj }) => {
+  const actions = useRBActions(obj.roleBinding);
   const [roleMap, loaded] = useRoleMap();
 
   return (
     <>
-      <TableData className={rbTableColumnClasses.username}>
-        {obj.subjects ? obj.subjects[0]?.name : '-'}
-      </TableData>
+      <TableData className={rbTableColumnClasses.username}>{obj.subject?.name || '-'}</TableData>
       <TableData className={rbTableColumnClasses.role}>
-        {!loaded ? <Skeleton width="200px" height="20px" /> : roleMap?.roleMap[obj.roleRef.name]}
+        {!loaded ? (
+          <Skeleton width="200px" height="20px" />
+        ) : (
+          roleMap?.roleMap[obj.roleBinding.roleRef.name]
+        )}
       </TableData>
-      <TableData className={rbTableColumnClasses.rolebinding}>{obj.metadata.name}</TableData>
+      <TableData className={rbTableColumnClasses.rolebinding}>
+        {obj.roleBinding.metadata.name}
+      </TableData>
       <TableData className={rbTableColumnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
