@@ -1,22 +1,27 @@
 import * as React from 'react';
 import {
-  Modal,
-  ModalVariant,
   Button,
   Form,
   Alert,
   AlertVariant,
-  ModalBoxBody,
+  Stack,
+  StackItem,
+  ButtonVariant,
 } from '@patternfly/react-core';
-import { Formik, FormikHelpers } from 'formik';
+import { Formik } from 'formik';
 import { RadioGroupField } from 'formik-pf';
-import { K8sQueryCreateResource, K8sQueryDeleteResource, useK8sWatchResource } from '~/k8s';
-import { RoleBindingModel, RoleBindingGroupVersionKind } from '~/models';
+import { useK8sWatchResource } from '~/k8s';
+import { RoleBindingGroupVersionKind, RoleBindingModel } from '~/models';
 import { NamespaceKind, RoleBinding } from '~/types';
-import { RawComponentProps } from '../modal/createModalLauncher';
+import {
+  findPublicRoleBinding,
+  createPublicRoleBinding,
+  deletePublicRoleBinding,
+} from '~/utils/namespace-visibility-utils';
 
-type ManageVisibilityModalProps = RawComponentProps & {
+type ManageVisibilityModalProps = {
   namespace: NamespaceKind;
+  onClose?: () => void;
 };
 
 enum VisibilityOption {
@@ -28,26 +33,7 @@ interface FormValues {
   visibility: VisibilityOption;
 }
 
-const PUBLIC_ROLE_BINDING_NAME = 'konflux-public-viewer';
-const VIEWER_ROLE_NAME = 'konflux-viewer-user-actions';
-
-const findPublicRoleBinding = (
-  roleBindings: RoleBinding[] | undefined,
-): RoleBinding | undefined => {
-  return roleBindings?.find(
-    (rb) =>
-      rb.roleRef.name === VIEWER_ROLE_NAME &&
-      rb.subjects?.some(
-        (subject) => subject.kind === 'Group' && subject.name === 'system:authenticated',
-      ),
-  );
-};
-
-const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
-  namespace,
-  modalProps,
-  onClose,
-}) => {
+const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace, onClose }) => {
   const [error, setError] = React.useState<string>();
 
   // Use useK8sWatchResource to watch role bindings in the namespace
@@ -80,60 +66,25 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
     visibility: currentVisibility,
   };
 
-  const handleSubmit = async (values: FormValues, formikHelpers: FormikHelpers<FormValues>) => {
+  const handleSubmit = async (values: FormValues) => {
     setError(undefined);
 
     try {
       if (values.visibility === VisibilityOption.PUBLIC) {
         // Create the role binding to make namespace public
-        const roleBinding: RoleBinding = {
-          apiVersion: 'rbac.authorization.k8s.io/v1',
-          kind: 'RoleBinding',
-          metadata: {
-            name: PUBLIC_ROLE_BINDING_NAME,
-            namespace: namespace.metadata.name,
-          },
-          roleRef: {
-            apiGroup: 'rbac.authorization.k8s.io',
-            kind: 'ClusterRole',
-            name: VIEWER_ROLE_NAME,
-          },
-          subjects: [
-            {
-              apiGroup: 'rbac.authorization.k8s.io',
-              kind: 'Group',
-              name: 'system:authenticated',
-            },
-          ],
-        };
-
-        await K8sQueryCreateResource({
-          model: RoleBindingModel,
-          resource: roleBinding,
-          queryOptions: {
-            ns: namespace.metadata.name,
-          },
-        });
+        await createPublicRoleBinding(namespace.metadata.name);
       } else {
         // Delete the role binding to make namespace private
         const publicRoleBinding = findPublicRoleBinding(roleBindings);
 
         if (publicRoleBinding) {
-          await K8sQueryDeleteResource({
-            model: RoleBindingModel,
-            queryOptions: {
-              name: publicRoleBinding.metadata.name,
-              ns: namespace.metadata.name,
-            },
-          });
+          await deletePublicRoleBinding(namespace.metadata.name, publicRoleBinding);
         }
       }
-
-      onClose();
+      onClose?.();
     } catch (err) {
-      setError(`Failed to save visibility setting: ${err.message || String(err)}`);
-    } finally {
-      formikHelpers.setSubmitting(false);
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`Failed to save visibility setting: ${message}`);
     }
   };
 
@@ -143,35 +94,17 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
         const hasChanges = values.visibility !== currentVisibility;
 
         return (
-          <Modal
-            {...modalProps}
-            variant={ModalVariant.small}
-            title="Manage visibility"
-            data-testid="manage-visibility-modal"
-            description="Manage visibility for a namespace. Private namespaces are only accessible to members, while public namespaces allow read-only access to all authenticated users."
-            actions={[
-              <Button
-                key="save"
-                variant="primary"
-                onClick={() => formikHandleSubmit()}
-                isLoading={isSubmitting}
-                isDisabled={isLoading || !hasChanges || isSubmitting || !!roleBindingsError}
-              >
-                Save
-              </Button>,
-              <Button key="cancel" variant="link" onClick={onClose} isDisabled={isSubmitting}>
-                Cancel
-              </Button>,
-            ]}
-          >
-            <ModalBoxBody>
-              {(error || roleBindingsError) && (
-                <Alert variant={AlertVariant.danger} title="Error" isInline>
-                  {error ||
-                    `Failed to load current visibility state: ${roleBindingsError?.message || String(roleBindingsError)}`}
-                </Alert>
-              )}
-              <Form>
+          <Form onSubmit={formikHandleSubmit}>
+            <Stack hasGutter>
+              <StackItem>
+                {(error || roleBindingsError) && (
+                  <Alert variant={AlertVariant.danger} title="Error" isInline>
+                    {error ||
+                      `Failed to load current visibility state: ${roleBindingsError?.message || String(roleBindingsError)}`}
+                  </Alert>
+                )}
+              </StackItem>
+              <StackItem>
                 <RadioGroupField
                   name="visibility"
                   options={[
@@ -188,9 +121,28 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({
                   ]}
                   required={false}
                 />
-              </Form>
-            </ModalBoxBody>
-          </Modal>
+              </StackItem>
+              <StackItem>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  isLoading={isSubmitting}
+                  isDisabled={isLoading || !hasChanges || isSubmitting || !!roleBindingsError}
+                  data-test="save-visibility"
+                >
+                  Save
+                </Button>
+                <Button
+                  type="button"
+                  variant={ButtonVariant.link}
+                  onClick={onClose}
+                  isDisabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </StackItem>
+            </Stack>
+          </Form>
         );
       }}
     </Formik>
