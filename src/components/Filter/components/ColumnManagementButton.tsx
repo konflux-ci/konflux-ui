@@ -1,7 +1,5 @@
 import React from 'react';
 import { Button } from '@patternfly/react-core';
-import { CogIcon } from '@patternfly/react-icons/dist/esm/icons/cog-icon';
-import { IfFeature } from '~/feature-flags/hooks';
 
 interface ColumnManagementButtonProps {
   onClick: () => void;
@@ -17,11 +15,9 @@ const ColumnManagementButton: React.FC<ColumnManagementButtonProps> = ({
   }
 
   return (
-    <IfFeature flag="column-management">
-      <Button variant="plain" aria-label="Manage columns" onClick={onClick} icon={<CogIcon />}>
-        Manage columns
-      </Button>
-    </IfFeature>
+    <Button variant="secondary" aria-label="Manage columns" onClick={onClick}>
+      Manage columns
+    </Button>
   );
 };
 

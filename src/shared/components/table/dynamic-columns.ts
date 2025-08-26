@@ -26,17 +26,11 @@ export const generateDynamicColumnClasses = <T extends string>(
   const classes: Record<string, string> = {};
   const { specialClasses = {} } = options;
 
-  const getBaseWidth = (column: T, baseConfig: number): number => {
-    const isLargeColumn = Object.keys(specialClasses).includes(column) || baseConfig >= 20;
-
-    if (totalColumns <= 4) {
-      return isLargeColumn ? Math.min(baseConfig * 1.2, 40) : baseConfig;
-    }
-    if (totalColumns <= 6) {
-      return isLargeColumn ? Math.min(baseConfig * 1.1, 30) : Math.max(baseConfig * 0.9, 15);
-    }
-    return isLargeColumn ? Math.min(baseConfig, 25) : Math.max(baseConfig * 0.8, 10);
-  };
+  const totalConfigWidth =
+    visibleColumnsList.reduce((sum, column) => {
+      const config = columnConfigs[column];
+      return config ? sum + config.base : sum;
+    }, 0) + 5;
 
   visibleColumnsList.forEach((column) => {
     const config = columnConfigs[column];
@@ -44,17 +38,17 @@ export const generateDynamicColumnClasses = <T extends string>(
       return;
     }
 
-    const targetWidth = getBaseWidth(column, config.base);
-    const validWidth = getValidWidthClass(targetWidth);
+    const proportionalWidth = Math.round((config.base / totalConfigWidth) * 100);
+    const validWidth = getValidWidthClass(Math.min(proportionalWidth, 50));
     const specialClass = specialClasses[column] ? ` ${specialClasses[column]}` : '';
 
     if (totalColumns <= 4) {
       classes[column] = `pf-m-width-${validWidth}${specialClass}`;
     } else if (totalColumns <= 6) {
-      const mobileWidth = getValidWidthClass(validWidth * 0.7);
+      const mobileWidth = getValidWidthClass(validWidth * 0.8);
       classes[column] = `pf-m-width-${mobileWidth} pf-m-width-${validWidth}-on-lg${specialClass}`;
     } else {
-      const compactWidth = getValidWidthClass(validWidth * 0.8);
+      const compactWidth = getValidWidthClass(Math.max(validWidth * 0.7, 10));
       if (config.priority > 3) {
         classes[column] =
           `pf-m-hidden pf-m-visible-on-md pf-m-width-${compactWidth}-on-md pf-m-width-${validWidth}-on-xl${specialClass}`;

@@ -58,7 +58,7 @@ describe('CommitsListRow', () => {
     commits[0].isPullRequest = true;
     commits[0].pullRequestNumber = '23';
     render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />);
-    screen.getByAltText('Pull request icon');
+    expect(screen.getByAltText('Pull request icon')).toBeInTheDocument();
     screen.getAllByText(`#23 ${commits[0].shaTitle}`);
   });
 
