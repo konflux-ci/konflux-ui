@@ -10,6 +10,7 @@ import {
   SECRET_LIST_PATH,
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
@@ -43,7 +44,9 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                   exact: true,
                 })}
               >
-                <NavLink to={RELEASE_MONITOR_PATH.createPath({} as never)}>Release Monitor</NavLink>
+                <NavLink to={RELEASE_MONITOR_PATH.createPath({} as never)}>
+                  Release Monitor <FeatureFlagIndicator flags={['release-monitor']} />
+                </NavLink>
               </NavItem>
             </IfFeature>
 

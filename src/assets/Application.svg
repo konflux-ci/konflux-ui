@@ -1,8 +1,8 @@
 <svg width="83" height="81" viewBox="0 0 83 81" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M81.9083 70.93L76.5383 51.94V14.83C76.5383 10.82 73.2883 7.57001 69.2783 7.57001H19.9183C15.9083 7.57001 12.6583 10.82 12.6583 14.83V51.93L7.28829 70.92C5.97829 75.55 9.45829 80.15 14.2683 80.15H74.9183C79.7283 80.15 83.2083 75.55 81.8983 70.92L81.9083 70.93Z" fill="#FF9D76"/>
-<path d="M7.64828 46.36V9.26C7.64828 5.25 10.8983 2 14.9083 2H64.2683C68.2783 2 71.5283 5.25 71.5283 9.26V46.36M7.64828 46.36H71.5183L76.8883 65.35C78.1983 69.98 74.7183 74.58 69.9083 74.58H9.25828C4.44828 74.58 0.968276 69.98 2.27828 65.35L7.64828 46.36Z" stroke="#1A1A1A" stroke-width="4" stroke-miterlimit="6.67"/>
-<path d="M35.9583 63.7H43.2183" stroke="#1A1A1A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M41.2983 15.58L36.5383 32.58" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M31.7783 18.98L27.0183 23.74L31.7783 28.5" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M46.7383 18.98L51.4983 23.74L46.7383 28.5" stroke="#1A1A1A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M81.9083 70.93L76.5383 51.94V14.83C76.5383 10.82 73.2883 7.57001 69.2783 7.57001H19.9183C15.9083 7.57001 12.6583 10.82 12.6583 14.83V51.93L7.28829 70.92C5.97829 75.55 9.45829 80.15 14.2683 80.15H74.9183C79.7283 80.15 83.2083 75.55 81.8983 70.92L81.9083 70.93Z" fill="var(--konflux-primary-color, #FF9D76)"/>
+<path d="M7.64828 46.36V9.26C7.64828 5.25 10.8983 2 14.9083 2H64.2683C68.2783 2 71.5283 5.25 71.5283 9.26V46.36M7.64828 46.36H71.5183L76.8883 65.35C78.1983 69.98 74.7183 74.58 69.9083 74.58H9.25828C4.44828 74.58 0.968276 69.98 2.27828 65.35L7.64828 46.36Z" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="4" stroke-miterlimit="6.67"/>
+<path d="M35.9583 63.7H43.2183" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" style="stroke: var(--konflux-icon-color, #1A1A1A)"/>
+<path d="M41.2983 15.58L36.5383 32.58" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M31.7783 18.98L27.0183 23.74L31.7783 28.5" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M46.7383 18.98L51.4983 23.74L46.7383 28.5" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

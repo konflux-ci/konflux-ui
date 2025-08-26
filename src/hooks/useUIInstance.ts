@@ -1,44 +1,20 @@
 import React from 'react';
 import { PLACEHOLDER, REPO_PUSH, SBOM_EVENT_TO_BOMBINO } from '../consts/constants';
 import {
+  KonfluxInstanceEnvironments,
+  KonfluxInstanceEnvironmentType,
   KonfluxInstanceVisibility,
   KonfluxInstanceVisibilityType,
   SBOMEventNotification,
 } from '../types/konflux-public-info';
 import { useKonfluxPublicInfo } from './useKonfluxPublicInfo';
 
-export enum ConsoleDotEnvironments {
-  dev = 'dev',
-  stage = 'stage',
-  qa = 'qa',
-  prod = 'prod',
-  // eslint-disable-next-line
-  internalProd = 'prod',
-  // eslint-disable-next-line
-  internalStage = 'stage',
-}
-
-export const getEnv = (): ConsoleDotEnvironments => ConsoleDotEnvironments.prod;
-
-const internalInstance = (host: string) => (env: 'prod' | 'stage') =>
-  new RegExp(`stone-${env}-([A-Za-z0-9]+).([a-z]+).([a-z0-9]+).openshiftapps.com`, 'g').test(host);
-
-export const getInternalInstance = () => {
-  const matchInternalInstance = internalInstance(window.location.hostname);
-  if (matchInternalInstance('prod')) {
-    return ConsoleDotEnvironments.internalProd;
-  } else if (matchInternalInstance('stage')) {
-    return ConsoleDotEnvironments.internalStage;
+export const useUIInstance = (): KonfluxInstanceEnvironmentType => {
+  const [konfluxPublicInfo, loaded, error] = useKonfluxPublicInfo();
+  if (loaded && !error && konfluxPublicInfo) {
+    return konfluxPublicInfo.environment || KonfluxInstanceEnvironments.PRODUCTION;
   }
-  return undefined;
-};
-
-export const useUIInstance = (): ConsoleDotEnvironments => {
-  /**
-   * [TODO]: get the environment based on the new UI
-   */
-  const env = getEnv();
-  return getInternalInstance() ?? env;
+  return KonfluxInstanceEnvironments.PRODUCTION;
 };
 
 const getBombinoUrl = (

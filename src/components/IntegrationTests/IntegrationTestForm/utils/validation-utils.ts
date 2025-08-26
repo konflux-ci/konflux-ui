@@ -22,5 +22,6 @@ export const integrationTestValidationSchema = yup.object({
       )
       .required('Required')
       .min(1),
+    resourceKind: yup.string().required('Required'),
   }),
 });

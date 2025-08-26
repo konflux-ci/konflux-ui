@@ -30,6 +30,7 @@ const initialValues: IntegrationTestFormValues = {
   url: 'test-url',
   optional: true,
   contexts: contextOptions,
+  resourceKind: 'pipelinerun',
 };
 
 const setup = () =>
