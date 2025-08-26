@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
@@ -177,16 +176,7 @@ const Logs: React.FC<LogsProps> = ({
         }
       });
     };
-  }, [
-    containers,
-    resource,
-    resName,
-    resNamespace,
-    appendLog,
-    namespace,
-    source,
-    isKubearchiveEnabled,
-  ]);
+  }, [containers, resource, resName, resNamespace, appendLog, source, isKubearchiveEnabled]);
 
   const formattedLogs = React.useMemo(
     () => processLogs(logSources, containers),

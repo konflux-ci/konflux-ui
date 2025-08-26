@@ -22,18 +22,11 @@ const K8sAndTektonLogsWrapper: React.FC<React.PropsWithChildren<K8sAndTektonLogs
   downloadAllLabel = 'Download all',
   ...props
 }) => {
-  const resourceRef = React.useRef(null);
   const {
     data: obj,
     isLoading,
     error,
   } = useK8sWatchResource<PodKind>({ ...resource, watch: true }, PodModel, { retry: false });
-
-  if (!isLoading && !error && resource.name === obj.metadata.name) {
-    resourceRef.current = obj;
-  } else if (error) {
-    resourceRef.current = null;
-  }
 
   return (
     <>
@@ -44,7 +37,7 @@ const K8sAndTektonLogsWrapper: React.FC<React.PropsWithChildren<K8sAndTektonLogs
               {...props}
               taskRun={taskRun}
               resourceName={resource?.name}
-              resource={resourceRef.current}
+              resource={obj}
               onDownloadAll={onDownloadAll}
               downloadAllLabel={downloadAllLabel}
             />

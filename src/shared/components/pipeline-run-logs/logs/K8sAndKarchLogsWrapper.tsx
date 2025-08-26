@@ -21,7 +21,6 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
   downloadAllLabel = 'Download all',
   ...props
 }) => {
-  const resourceRef = React.useRef(null);
   const resourceInit = React.useMemo(
     () => ({
       model: PodModel,
@@ -39,13 +38,7 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
     source,
     isLoading,
     fetchError,
-  } = useK8sAndKarchResource(resourceInit, queryOptions, true);
-
-  if (!isLoading && !fetchError && resource.name === obj.metadata?.name) {
-    resourceRef.current = obj;
-  } else if (fetchError) {
-    resourceRef.current = null;
-  }
+  } = useK8sAndKarchResource<PodKind>(resourceInit, queryOptions, true);
 
   if (isLoading) {
     return (
@@ -67,7 +60,7 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
       {...props}
       taskRun={taskRun}
       resourceName={resource?.name}
-      resource={resourceRef.current}
+      resource={obj}
       onDownloadAll={onDownloadAll}
       downloadAllLabel={downloadAllLabel}
       source={source}
