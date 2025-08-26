@@ -14,7 +14,7 @@ import { Action, ActionMenuVariant } from '../../shared/components/action-menu/t
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 
 type PageLayoutProps = {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
   description?: React.ReactNode;

@@ -5,9 +5,9 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import yaml from 'js-yaml';
 import * as yup from 'yup';
-import { BannerConfig, RepeatType } from '~/components/KonfluxBanner/banner-type';
 import { KONFLUX_INFO_NAMESPACE } from '~/consts/constants';
 import { useK8sWatchResource } from '~/k8s';
+import { BannerConfig, RepeatType } from '~/types/banner-type';
 import { ConfigMap } from '~/types/configmap';
 import { ConfigMapGroupVersionKind, ConfigMapModel } from '../../models/config-map';
 import { bannerConfigYupSchema } from './banner-validation-utils';
@@ -147,7 +147,6 @@ export const useBanner = () => {
       groupVersionKind: ConfigMapGroupVersionKind,
       namespace: KONFLUX_INFO_NAMESPACE,
       name: BANNER_CONTENT_FILE,
-      watch: true,
     },
     ConfigMapModel,
   );
