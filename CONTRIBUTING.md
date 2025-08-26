@@ -168,6 +168,28 @@ This helps keep contributions transparent and compliant with our policies.
 
 ---
 
+## AI Assistance in Development
+
+We encourage contributors to use AI tools to speed up development, but please ensure they follow the same rules as human-written code.
+
+Our project tracks AI development guidelines in [.cursor/rules/](.cursor/rules/), which includes:
+
+- Project structure and conventions
+- Styling components
+- Package management
+- Feature flags workflow
+- Testing best practices
+- AI-assisted workflow
+
+When using AI tools, please make sure these rules are loaded into your environment before generating code.
+
+For example, with **Claude AI**, you can create a `CLAUDE.local.md` file that imports all the rules. When Claude starts, these rules will be auto-loaded.
+Other AI tools may have different ways of configuring rules—please check their documentation.
+
+This ensures that pull requests remain consistent with the team’s existing styles and conventions.
+
+---
+
 ## Reporting Issues
 
 If you find a bug or have a feature request:

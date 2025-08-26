@@ -147,7 +147,6 @@ export const useBanner = () => {
       groupVersionKind: ConfigMapGroupVersionKind,
       namespace: KONFLUX_INFO_NAMESPACE,
       name: BANNER_CONTENT_FILE,
-      watch: true,
     },
     ConfigMapModel,
   );

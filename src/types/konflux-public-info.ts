@@ -43,8 +43,16 @@ export const KonfluxInstanceVisibility = {
 export type KonfluxInstanceVisibilityType =
   (typeof KonfluxInstanceVisibility)[keyof typeof KonfluxInstanceVisibility];
 
+export const KonfluxInstanceEnvironments = {
+  STAGING: 'staging',
+  PRODUCTION: 'production',
+} as const;
+
+export type KonfluxInstanceEnvironmentType =
+  (typeof KonfluxInstanceEnvironments)[keyof typeof KonfluxInstanceEnvironments];
+
 export type KonfluxPublicInfo = {
-  environment?: string;
+  environment?: KonfluxInstanceEnvironmentType;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
   visibility?: KonfluxInstanceVisibilityType;
