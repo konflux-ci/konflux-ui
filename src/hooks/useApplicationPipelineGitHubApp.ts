@@ -1,4 +1,5 @@
-import { ConsoleDotEnvironments, useUIInstance } from './useUIInstance';
+import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
+import { useUIInstance } from './useUIInstance';
 
 type ApplicationPipelineGitHubAppDataType = {
   url: string;
@@ -23,10 +24,9 @@ export const useApplicationPipelineGitHubApp = (): ApplicationPipelineGitHubAppD
   const environment = useUIInstance();
 
   switch (environment) {
-    case ConsoleDotEnvironments.prod:
+    case KonfluxInstanceEnvironments.PRODUCTION:
       return ApplicationPipelineGitHubAppData.prod;
-    case ConsoleDotEnvironments.dev:
-    case ConsoleDotEnvironments.stage:
+    case KonfluxInstanceEnvironments.STAGING:
       return ApplicationPipelineGitHubAppData.stage;
     default:
       return ApplicationPipelineGitHubAppData.dev;

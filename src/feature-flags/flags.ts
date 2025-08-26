@@ -1,3 +1,5 @@
+import { KonfluxInstanceEnvironmentType } from '~/types/konflux-public-info';
+
 export const FLAGS_STATUS = {
   wip: 'Unstable',
   ready: 'Stable',
@@ -15,7 +17,7 @@ export interface FeatureMeta {
    * Unique key for the feature flag.
    * This key is used to identify the feature flag in the codebase.
    */
-  key: FlagKey;
+  key: string;
   /**
    * Description of the feature flag.
    * This description is used to provide context for the feature flag.
@@ -31,19 +33,18 @@ export interface FeatureMeta {
    * This status is used to determine if the feature flag is a work in progress or ready for production.
    */
   status: FlagStatus;
+  /**
+   * Optional environment constraints.
+   * If specified, the flag is only available in the listed environments.
+   * If not specified, the flag is available in all environments.
+   */
+  environments?: KonfluxInstanceEnvironmentType[];
 }
 
-type FeatureFlagDefinition = {
-  key: string;
-  description: string;
-  defaultEnabled: boolean;
-  status: 'wip' | 'enabled';
-};
-
-export const FLAGS: Record<string, FeatureFlagDefinition> = {
+const InternalFLAGS = {
   'dark-theme': {
     key: 'dark-theme',
-    description: 'Enable dark theme selector in the header',
+    description: 'Enable the theme switcher in the header to toggle between light and dark modes.',
     defaultEnabled: false,
     status: 'wip',
   },
@@ -60,6 +61,8 @@ export const FLAGS: Record<string, FeatureFlagDefinition> = {
     defaultEnabled: false,
     status: 'wip',
   },
-};
+} satisfies Record<string, FeatureMeta>;
 
-export type FlagKey = keyof typeof FLAGS;
+export type FlagKey = keyof typeof InternalFLAGS;
+
+export const FLAGS = InternalFLAGS as unknown as Record<FlagKey, FeatureMeta>;
