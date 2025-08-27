@@ -5,6 +5,7 @@ import { TaskRunKind } from '../../../../types';
 import { WatchK8sResource } from '../../../../types/k8s';
 import ErrorEmptyState from '../../empty-state/ErrorEmptyState';
 import { LoadingInline } from '../../status-box/StatusBox';
+import { PodKind } from '../../types';
 import { MultiStreamLogs } from './MultiStreamLogs';
 
 type K8sAndKarchLogWrapperProps = {
