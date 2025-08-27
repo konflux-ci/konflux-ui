@@ -103,7 +103,8 @@ const ReleasePipelineRunTab: React.FC = () => {
           }
         }
       } catch {
-        // Silent error handling
+        // Failed to parse saved column preferences from sessionStorage
+        // This is expected if the stored data is corrupted or in an old format
       }
       return defaultVisibleColumns;
     },
@@ -117,7 +118,8 @@ const ReleasePipelineRunTab: React.FC = () => {
         JSON.stringify([...visibleColumns]),
       );
     } catch {
-      // Silent error handling
+      // Failed to save column preferences to sessionStorage
+      // This can happen if sessionStorage is full or unavailable
     }
   }, [visibleColumns]);
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);

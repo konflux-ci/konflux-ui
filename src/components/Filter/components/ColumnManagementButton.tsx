@@ -10,7 +10,7 @@ const ColumnManagementButton: React.FC<ColumnManagementButtonProps> = ({
   onClick,
   totalColumns = 0,
 }) => {
-  if (!onClick || totalColumns <= 6) {
+  if (totalColumns <= 6) {
     return null;
   }
 

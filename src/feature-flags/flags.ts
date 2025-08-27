@@ -41,13 +41,6 @@ export interface FeatureMeta {
   environments?: KonfluxInstanceEnvironmentType[];
 }
 
-type FeatureFlagDefinition = {
-  key: string;
-  description: string;
-  defaultEnabled: boolean;
-  status: 'wip' | 'ready';
-};
-
 const InternalFLAGS = {
   'dark-theme': {
     key: 'dark-theme',

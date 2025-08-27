@@ -28,6 +28,8 @@ interface CommitsListViewProps {
   componentName?: string;
 }
 
+const COMMITS_VISIBLE_COLUMNS_KEY = 'commits-visible-columns';
+
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,
@@ -37,7 +39,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   const [visibleColumns, setVisibleColumns] = React.useState<Set<CommitColumnKeys>>(() => {
     try {
-      const saved = sessionStorage.getItem('commits-visible-columns');
+      const saved = sessionStorage.getItem(COMMITS_VISIBLE_COLUMNS_KEY);
       if (saved) {
         const parsedColumns = JSON.parse(saved) as CommitColumnKeys[];
         if (Array.isArray(parsedColumns)) {
@@ -45,7 +47,8 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         }
       }
     } catch {
-      // Silent error handling
+      // Failed to load commits column preferences from sessionStorage
+      // This is expected if the stored data is corrupted or in an old format
     }
     return DEFAULT_VISIBLE_COMMIT_COLUMNS;
   });
@@ -53,9 +56,10 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   React.useEffect(() => {
     try {
-      sessionStorage.setItem('commits-visible-columns', JSON.stringify([...visibleColumns]));
+      sessionStorage.setItem(COMMITS_VISIBLE_COLUMNS_KEY, JSON.stringify([...visibleColumns]));
     } catch {
-      // Silent error handling
+      // Failed to save commits column preferences to sessionStorage
+      // This can happen if sessionStorage is full or unavailable
     }
   }, [visibleColumns]);
   const filters = useDeepCompareMemoize({

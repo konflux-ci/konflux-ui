@@ -41,8 +41,13 @@ const getCommitsListHeader = (
   return createTableHeaders(finalColumns)(activeSortIndex, activeSortDirection, onSort);
 };
 
-const getCommitsListHeaderWithColumns = (visibleColumns: Set<CommitColumnKeys>) => {
-  return getCommitsListHeader(undefined, undefined, undefined, visibleColumns);
+const getCommitsListHeaderWithColumns = (
+  visibleColumns: Set<CommitColumnKeys>,
+  activeSortIndex?: number,
+  activeSortDirection?: SortByDirection,
+  onSort?: ThProps['sort']['onSort'],
+) => {
+  return getCommitsListHeader(activeSortIndex, activeSortDirection, onSort, visibleColumns);
 };
 
 const CommitsListHeader = ({ visibleColumns }: CommitsListHeaderProps) => {
