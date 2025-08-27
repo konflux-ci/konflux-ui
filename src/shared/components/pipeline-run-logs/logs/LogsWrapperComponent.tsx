@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { FLAGS } from '~/feature-flags/flags';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { TaskRunKind } from '../../../../types';
 import { WatchK8sResource } from '../../../../types/k8s';
@@ -18,7 +17,7 @@ type LogsWrapperComponentProps = {
 const LogsWrapperComponent: React.FC<React.PropsWithChildren<LogsWrapperComponentProps>> = (
   props,
 ) => {
-  const isKubearchiveEnabled = useIsOnFeatureFlag(FLAGS['kubearchive-logs'].key);
+  const isKubearchiveEnabled = useIsOnFeatureFlag('kubearchive-logs');
 
   return (
     <React.Suspense

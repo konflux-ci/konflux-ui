@@ -1,5 +1,4 @@
 import { saveAs } from 'file-saver';
-import { FLAGS } from '~/feature-flags/flags';
 import { FeatureFlagsStore } from '~/feature-flags/store';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 import { ResourceSource } from '~/types/k8s';
@@ -64,7 +63,7 @@ const getOrderedStepsFromPod = (ns: string, name?: string): Promise<OrderedSteps
     queryOptions: { ns, name },
   })
     .then((res) => {
-      const isKubearchiveEnabled = FeatureFlagsStore.isOn(FLAGS['kubearchive-logs'].key);
+      const isKubearchiveEnabled = FeatureFlagsStore.isOn('kubearchive-logs');
       // Legacy option to support getting logs from Tekton
       if (res.source === ResourceSource.Archive && !isKubearchiveEnabled) {
         return {
@@ -153,7 +152,7 @@ export const getDownloadAllLogsCallback = (
 
   const fetchLogs = async (tasksPromise: Promise<StepsWatchUrl>) => {
     const tasks = await tasksPromise;
-    const isKubearchiveEnabled = FeatureFlagsStore.isOn(FLAGS['kubearchive-logs'].key);
+    const isKubearchiveEnabled = FeatureFlagsStore.isOn('kubearchive-logs');
     let allLogs = '';
     for (const currTask of sortedTaskRunNames) {
       const task = tasks[currTask];
