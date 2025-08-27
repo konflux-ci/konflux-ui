@@ -50,4 +50,17 @@ describe('NamespaceListRow', () => {
 
     expect(screen.getByText('Loading application count')).toBeInTheDocument();
   });
+
+  it('should pluralize application count ', () => {
+    (useApplications as jest.Mock).mockReturnValueOnce([[{}], true]);
+
+    const { rerender } = routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    expect(screen.getByText('1 Application')).toBeInTheDocument();
+    (useApplications as jest.Mock).mockReturnValueOnce([[{}, {}], true]);
+
+    rerender(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    expect(screen.getByText('2 Applications')).toBeInTheDocument();
+  });
 });

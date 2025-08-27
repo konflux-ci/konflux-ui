@@ -76,7 +76,7 @@ export function checkReviewAccesses(
     .catch((e) => {
       // eslint-disable-next-line no-console
       console.warn(`SelfSubjectAccessReview failed: ${e}`);
-      return true;
+      return false; // secure default deny
     });
 }
 
@@ -103,7 +103,7 @@ export const useAccessReview = (
         .catch((e) => {
           // eslint-disable-next-line no-console
           console.warn(`SelfSubjectAccessReview failed: ${e}`);
-          setIsAllowed(true);
+          setIsAllowed(false); // secure default deny
           setLoaded(true);
         });
     }
@@ -157,7 +157,7 @@ export const useAccessReviews = (
         .catch((e) => {
           // eslint-disable-next-line no-console
           console.warn(`SelfSubjectAccessReview failed: ${e}`);
-          setIsAllowed(true);
+          setIsAllowed(false); // secure default deny
           setLoaded(true);
         });
     }
