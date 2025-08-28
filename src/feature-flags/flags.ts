@@ -72,6 +72,12 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'taskruns-kubearchive': {
+    key: 'taskruns-kubearchive',
+    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
