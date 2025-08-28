@@ -1,12 +1,19 @@
+import { isFeatureFlagOn } from '../../feature-flags/utils';
 import { TaskRunModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
-import { QueryTaskRun } from '../../utils/pipelinerun-utils';
+import { QueryTaskRun, QueryTaskRunWithKubearchive } from '../../utils/pipelinerun-utils';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
 
 export const taskRunDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = params[RouterParams.workspaceName];
-    return QueryTaskRun(ns, params[RouterParams.taskRunName]);
+    const taskRunName = params[RouterParams.taskRunName];
+
+    if (isFeatureFlagOn('taskruns-kubearchive')) {
+      return QueryTaskRunWithKubearchive(ns, taskRunName);
+    }
+
+    return QueryTaskRun(ns, taskRunName);
   },
   { model: TaskRunModel, verb: 'list' },
 );
