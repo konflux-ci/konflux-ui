@@ -36,13 +36,25 @@ describe('ReleaseDetailsView', () => {
     },
   };
   it('should render spinner if release data is not loaded', () => {
-    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: true, error: false });
+    useMockRelease.mockReturnValue({
+      data: mockRelease,
+      isLoading: true,
+      fetchError: undefined,
+      wsError: undefined,
+      isError: false,
+    });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getByRole('progressbar')).toBeVisible();
   });
 
   it('should render the error state if the release is not found', () => {
-    useMockRelease.mockReturnValue({ data: {}, isLoading: false, error: { code: 404 } });
+    useMockRelease.mockReturnValue({
+      data: {},
+      isLoading: false,
+      fetchError: { code: 404 },
+      wsError: undefined,
+      isError: true,
+    });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getByText('404: Page not found')).toBeVisible();
     expect(screen.getByText('Go to applications list')).toBeVisible();
