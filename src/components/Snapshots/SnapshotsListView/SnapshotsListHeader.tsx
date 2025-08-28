@@ -8,7 +8,7 @@ export const snapshotsTableColumnClasses = {
   kebab: 'pf-c-table__action',
 };
 
-const snapshotColumns = [
+export const snapshotColumns = [
   { title: 'Name', className: snapshotsTableColumnClasses.name, sortable: true },
   { title: 'Created at', className: snapshotsTableColumnClasses.createdAt, sortable: true },
   { title: 'Components', className: snapshotsTableColumnClasses.components },

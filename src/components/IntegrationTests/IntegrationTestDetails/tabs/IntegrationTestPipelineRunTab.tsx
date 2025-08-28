@@ -14,7 +14,7 @@ import { PipelineRunKind } from '../../../../types';
 import { BaseTextFilterToolbar } from '../../../Filter/toolbars/BaseTextFIlterToolbar';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import {
-  PIPELINE_RUN_COLUMNS_DEFINITIONS,
+  INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES,
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
@@ -91,7 +91,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
           setText={() => {}}
           onClearFilters={() => {}}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
-          totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
+          totalColumns={INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
       )}
       <Table
@@ -136,7 +136,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
         onClose={() => setIsColumnManagementOpen(false)}
         visibleColumns={safeVisibleColumns}
         onVisibleColumnsChange={(cols) => setPersistedColumns(Array.from(cols))}
-        columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
+        columns={INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS}
         defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES}
         nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}
         title="Manage pipeline run columns"
