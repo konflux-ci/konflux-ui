@@ -38,14 +38,6 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
 }) => {
   const namespace = useNamespace();
 
-  const backButtonState = {
-    backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
-      workspaceName: namespace,
-      applicationName,
-    }),
-    backButtonText: RELEASE_LIST_LINK_TEXT,
-  };
-
   const status = useReleaseStatus(obj);
   const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
     getManagedPipelineRunFromRelease(obj),
@@ -60,6 +52,17 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
     getFinalPipelineRunFromRelease(obj),
   );
   const actions = useReleaseActions(obj);
+
+  const backButtonState =
+    namespace !== managedPrNamespace
+      ? {
+          backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+          }),
+          backButtonText: RELEASE_LIST_LINK_TEXT,
+        }
+      : {};
 
   const columnOrder: ReleaseColumnKeys[] = RELEASE_COLUMN_ORDER as ReleaseColumnKeys[];
 
