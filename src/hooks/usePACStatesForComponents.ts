@@ -3,10 +3,12 @@ import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../cons
 import { ComponentKind } from '../types';
 import {
   BUILD_REQUEST_ANNOTATION,
+  BUILD_STATUS_ANNOTATION,
   BuildRequest,
   ComponentBuildState,
   getComponentBuildStatus,
   getPACProvision,
+  LAST_CONFIGURATION_ANNOTATION,
   SAMPLE_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
@@ -24,6 +26,8 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
     const pacProvision = getPACProvision(component);
     const isConfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
+    const isMigrationRequested =
+      component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
     const isUnconfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.unconfigurePac;
 
@@ -31,7 +35,7 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
       acc[component.metadata.name] = PACState.sample;
       return acc;
     }
-    if (isConfigureRequested) {
+    if (isConfigureRequested || isMigrationRequested) {
       acc[component.metadata.name] = PACState.configureRequested;
       return acc;
     }
@@ -105,10 +109,26 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
       let allLoaded = true;
 
       neededNames.forEach((componentName) => {
-        const buildStatus = getComponentBuildStatus(
-          components.find((c) => c.metadata.name === componentName),
-        );
-        const configurationTime = buildStatus?.pac?.['configuration-time'];
+        const component = components.find((c) => c.metadata.name === componentName);
+        const buildStatus = getComponentBuildStatus(component);
+        let lastConfiguration = null;
+        try {
+          lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
+            ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+            : undefined;
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('Error parsing last-applied-configuration annotation:', e);
+        }
+        const lastPACStateIsMigration =
+          lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
+          BuildRequest.migratePac;
+
+        const configurationTime: string = lastPACStateIsMigration
+          ? lastConfiguration?.metadata?.annotations?.[BUILD_STATUS_ANNOTATION].pac?.[
+              'configuration-time'
+            ]
+          : buildStatus?.pac?.['configuration-time'];
 
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>
