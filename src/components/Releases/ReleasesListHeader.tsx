@@ -1,21 +1,14 @@
 import { SortByDirection, ThProps } from '@patternfly/react-table';
 import {
+  ReleaseColumnKeys,
+  RELEASE_COLUMNS_DEFINITIONS,
+  RELEASE_COLUMN_ORDER,
+} from '../../consts/release';
+import {
   generateDynamicColumnClasses,
   COMMON_COLUMN_CONFIGS,
 } from '../../shared/components/table/dynamic-columns';
 import { createTableHeaders } from '../../shared/components/table/utils';
-
-type ReleaseColumnKeys =
-  | 'name'
-  | 'created'
-  | 'duration'
-  | 'status'
-  | 'releasePlan'
-  | 'releaseSnapshot'
-  | 'tenantCollectorPipelineRun'
-  | 'tenantPipelineRun'
-  | 'managedPipelineRun'
-  | 'finalPipelineRun';
 
 export const getDynamicReleaseColumnClasses = (visibleColumns: Set<ReleaseColumnKeys>) => {
   return generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS, {
@@ -37,24 +30,11 @@ export const releasesTableColumnClasses = {
   kebab: 'pf-v5-c-table__action',
 };
 
-export const enum SortableHeaders {
-  name,
-  created,
-}
-
-const releaseColumns = [
-  { title: 'Name', className: releasesTableColumnClasses.name, sortable: true },
-  { title: 'Created', className: releasesTableColumnClasses.created, sortable: true },
-  { title: 'Duration', className: releasesTableColumnClasses.duration },
-  { title: 'Status', className: releasesTableColumnClasses.status },
-  { title: 'Release Plan', className: releasesTableColumnClasses.releasePlan },
-  { title: 'Release Snapshot', className: releasesTableColumnClasses.releaseSnapshot },
-  { title: 'Tenant Collector', className: releasesTableColumnClasses.tenantCollectorPipelineRun },
-  { title: 'Tenant Pipeline', className: releasesTableColumnClasses.tenantPipelineRun },
-  { title: 'Managed Pipeline', className: releasesTableColumnClasses.managedPipelineRun },
-  { title: 'Final Pipeline', className: releasesTableColumnClasses.finalPipelineRun },
-  { title: ' ', className: releasesTableColumnClasses.kebab },
-];
+const releaseColumns = RELEASE_COLUMNS_DEFINITIONS.map((col) => ({
+  title: col.title,
+  className: releasesTableColumnClasses[col.key],
+  sortable: col.sortable,
+})).concat([{ title: ' ', className: releasesTableColumnClasses.kebab, sortable: false }]);
 
 // Create columns map with dynamic classes
 const createAllColumnsMap = (visibleColumns?: Set<ReleaseColumnKeys>) => {
@@ -62,66 +42,20 @@ const createAllColumnsMap = (visibleColumns?: Set<ReleaseColumnKeys>) => {
     ? getDynamicReleaseColumnClasses(visibleColumns)
     : releasesTableColumnClasses;
 
-  return {
-    name: {
-      title: 'Name',
-      className: dynamicClasses.name || releasesTableColumnClasses.name,
-      sortable: true,
+  return RELEASE_COLUMNS_DEFINITIONS.reduce(
+    (acc, col) => {
+      acc[col.key] = {
+        title: col.title,
+        className: dynamicClasses[col.key] || releasesTableColumnClasses[col.key],
+        sortable: col.sortable,
+      };
+      return acc;
     },
-    created: {
-      title: 'Created',
-      className: dynamicClasses.created || releasesTableColumnClasses.created,
-      sortable: true,
-    },
-    duration: {
-      title: 'Duration',
-      className: dynamicClasses.duration || releasesTableColumnClasses.duration,
-    },
-    status: {
-      title: 'Status',
-      className: dynamicClasses.status || releasesTableColumnClasses.status,
-    },
-    releasePlan: {
-      title: 'Release Plan',
-      className: dynamicClasses.releasePlan || releasesTableColumnClasses.releasePlan,
-    },
-    releaseSnapshot: {
-      title: 'Release Snapshot',
-      className: dynamicClasses.releaseSnapshot || releasesTableColumnClasses.releaseSnapshot,
-    },
-    tenantCollectorPipelineRun: {
-      title: 'Tenant Collector',
-      className:
-        dynamicClasses.tenantCollectorPipelineRun ||
-        releasesTableColumnClasses.tenantCollectorPipelineRun,
-    },
-    tenantPipelineRun: {
-      title: 'Tenant Pipeline',
-      className: dynamicClasses.tenantPipelineRun || releasesTableColumnClasses.tenantPipelineRun,
-    },
-    managedPipelineRun: {
-      title: 'Managed Pipeline',
-      className: dynamicClasses.managedPipelineRun || releasesTableColumnClasses.managedPipelineRun,
-    },
-    finalPipelineRun: {
-      title: 'Final Pipeline',
-      className: dynamicClasses.finalPipelineRun || releasesTableColumnClasses.finalPipelineRun,
-    },
-  } as Record<ReleaseColumnKeys, { title: string; className: string; sortable?: boolean }>;
+    {} as Record<ReleaseColumnKeys, { title: string; className: string; sortable?: boolean }>,
+  );
 };
 
-const columnOrder: ReleaseColumnKeys[] = [
-  'name',
-  'created',
-  'duration',
-  'status',
-  'releasePlan',
-  'releaseSnapshot',
-  'tenantCollectorPipelineRun',
-  'tenantPipelineRun',
-  'managedPipelineRun',
-  'finalPipelineRun',
-];
+const columnOrder: ReleaseColumnKeys[] = RELEASE_COLUMN_ORDER as ReleaseColumnKeys[];
 
 const getReleasesListHeaderWithColumns = (visibleColumns?: Set<ReleaseColumnKeys>) => {
   if (!visibleColumns) {

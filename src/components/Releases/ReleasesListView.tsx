@@ -3,19 +3,26 @@ import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
+import {
+  ReleaseColumnKeys,
+  RELEASE_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_RELEASE_COLUMNS,
+  NON_HIDABLE_RELEASE_COLUMNS,
+  SortableHeaders,
+} from '../../consts/release';
 import { useK8sAndKarchResources } from '../../hooks/useK8sAndKarchResources';
 import { useSortedResources } from '../../hooks/useSortedResources';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
-import ColumnManagement, { ColumnDefinition } from '../../shared/components/table/ColumnManagement';
+import ColumnManagement from '../../shared/components/table/ColumnManagement';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { ReleasesFilterToolbar } from '../Filter/toolbars/ReleasesFilterToolbar';
 import ReleasesEmptyState from './ReleasesEmptyState';
-import { getReleasesListHeader, SortableHeaders } from './ReleasesListHeader';
+import { getReleasesListHeader } from './ReleasesListHeader';
 import ReleasesListRow from './ReleasesListRow';
 
 enum FilterTypes {
@@ -24,23 +31,10 @@ enum FilterTypes {
   releaseSnapshot = 'release snapshot',
 }
 
-type ReleaseColumnKeys = 'name' | 'created' | 'duration' | 'status' | 'releasePlan' | 'releaseSnapshot' | 'tenantCollectorPipelineRun' | 'tenantPipelineRun' | 'managedPipelineRun' | 'finalPipelineRun';
-
-const releasesColumns: readonly ColumnDefinition<ReleaseColumnKeys>[] = [
-  { key: 'name', title: 'Name', sortable: true },
-  { key: 'created', title: 'Created', sortable: true },
-  { key: 'duration', title: 'Duration' },
-  { key: 'status', title: 'Status' },
-  { key: 'releasePlan', title: 'Release Plan' },
-  { key: 'releaseSnapshot', title: 'Release Snapshot' },
-  { key: 'tenantCollectorPipelineRun', title: 'Tenant Collector' },
-  { key: 'tenantPipelineRun', title: 'Tenant Pipeline' },
-  { key: 'managedPipelineRun', title: 'Managed Pipeline' },
-  { key: 'finalPipelineRun', title: 'Final Pipeline' },
-];
-
-const defaultVisibleReleaseColumns: Set<ReleaseColumnKeys> = new Set(['name', 'created', 'duration', 'status', 'releasePlan', 'releaseSnapshot']);
-const nonHidableReleaseColumns: readonly ReleaseColumnKeys[] = ['name'];
+// Using centralized column definitions from consts/release.ts
+const releasesColumns = RELEASE_COLUMNS_DEFINITIONS;
+const defaultVisibleReleaseColumns = DEFAULT_VISIBLE_RELEASE_COLUMNS;
+const nonHidableReleaseColumns = NON_HIDABLE_RELEASE_COLUMNS;
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'metadata.name',
@@ -171,10 +165,15 @@ const ReleasesListView: React.FC = () => {
             data-test="releases__table"
             data={sortedReleases}
             aria-label="Release List"
-            Header={getReleasesListHeader(activeSortIndex, activeSortDirection, (_, index: number, direction: SortByDirection) => {
-              setActiveSortIndex(index);
-              setActiveSortDirection(direction);
-            }, visibleColumns)}
+            Header={getReleasesListHeader(
+              activeSortIndex,
+              activeSortDirection,
+              (_, index: number, direction: SortByDirection) => {
+                setActiveSortIndex(index);
+                setActiveSortDirection(direction);
+              },
+              visibleColumns,
+            )}
             Row={(props) => (
               <ReleasesListRow
                 obj={props.obj as ReleaseKind}

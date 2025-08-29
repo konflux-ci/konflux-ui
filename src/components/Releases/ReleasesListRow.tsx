@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
+import { ReleaseColumnKeys, RELEASE_COLUMN_ORDER } from '../../consts/release';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
@@ -22,18 +23,6 @@ import {
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 import { useReleaseActions } from './release-actions';
 import { releasesTableColumnClasses, getDynamicReleaseColumnClasses } from './ReleasesListHeader';
-
-type ReleaseColumnKeys =
-  | 'name'
-  | 'created'
-  | 'duration'
-  | 'status'
-  | 'releasePlan'
-  | 'releaseSnapshot'
-  | 'tenantCollectorPipelineRun'
-  | 'tenantPipelineRun'
-  | 'managedPipelineRun'
-  | 'finalPipelineRun';
 
 interface ReleasesListRowProps extends RowFunctionArgs<ReleaseKind, { applicationName: string }> {
   visibleColumns?: Set<ReleaseColumnKeys>;
@@ -60,18 +49,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
   );
   const actions = useReleaseActions(obj);
 
-  const columnOrder: ReleaseColumnKeys[] = [
-    'name',
-    'created',
-    'duration',
-    'status',
-    'releasePlan',
-    'releaseSnapshot',
-    'tenantCollectorPipelineRun',
-    'tenantPipelineRun',
-    'managedPipelineRun',
-    'finalPipelineRun',
-  ];
+  const columnOrder: ReleaseColumnKeys[] = RELEASE_COLUMN_ORDER as ReleaseColumnKeys[];
 
   // Use dynamic classes if visibleColumns is provided, otherwise fall back to static classes
   const columnClasses = visibleColumns

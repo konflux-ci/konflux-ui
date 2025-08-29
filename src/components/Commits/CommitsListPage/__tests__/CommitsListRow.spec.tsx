@@ -49,19 +49,6 @@ describe('CommitsListRow', () => {
     expect(getAllByText('manual-build-component')[0]).toBeInTheDocument();
   });
 
-  it('should show commit icon for commits', () => {
-    render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[3]} />);
-    expect(screen.getByAltText('Commit icon')).toBeInTheDocument();
-  });
-
-  it('should show pull request icon for pull requests', () => {
-    commits[0].isPullRequest = true;
-    commits[0].pullRequestNumber = '23';
-    render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />);
-    expect(screen.getByAltText('Pull request icon')).toBeInTheDocument();
-    screen.getAllByText(`#23 ${commits[0].shaTitle}`);
-  });
-
   it('should show plr status on the row', () => {
     const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
     render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />);

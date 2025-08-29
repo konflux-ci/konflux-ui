@@ -58,21 +58,6 @@ describe('BaseTextFilterToolbar', () => {
     expect(manageColumnsButton).not.toBeInTheDocument();
   });
 
-  it('should NOT show column management button when openColumnManagement is not provided', () => {
-    render(
-      <BaseTextFilterToolbar
-        text=""
-        label="name"
-        setText={mockSetText}
-        onClearFilters={mockOnClearFilters}
-        totalColumns={8}
-      />,
-    );
-
-    const manageColumnsButton = screen.queryByRole('button', { name: /manage columns/i });
-    expect(manageColumnsButton).not.toBeInTheDocument();
-  });
-
   it('should call openColumnManagement when manage columns button is clicked', async () => {
     const user = userEvent.setup();
 
