@@ -49,7 +49,7 @@ describe('ReleasePipelineRunTab', () => {
   });
 
   it('renders spinner while data is loading', () => {
-    useMockRelease.mockReturnValue([null, false]);
+    useMockRelease.mockReturnValue([null, false, undefined, undefined, false]);
     useMockReleasePlan.mockReturnValue([null, false]);
     render(wrapper);
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -64,6 +64,9 @@ describe('ReleasePipelineRunTab', () => {
         },
       },
       true,
+      undefined,
+      undefined,
+      false,
     ]);
     useMockReleasePlan.mockReturnValue([{}, true]);
     render(wrapper);

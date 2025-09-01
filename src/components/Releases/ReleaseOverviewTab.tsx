@@ -26,7 +26,7 @@ import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [release, loaded, isError] = useRelease(namespace, releaseName);
+  const [release, loaded, error] = useRelease(namespace, releaseName);
   const status = useReleaseStatus(release);
 
   if (!loaded) {
@@ -36,13 +36,13 @@ const ReleaseOverviewTab: React.FC = () => {
       </Bullseye>
     );
   }
-  if (isError) {
-    const httpError = HttpError.fromCode((isError as { code: number }).code);
+  if (error) {
+    const httpError = HttpError.fromCode((error as { code: number }).code);
     return (
       <ErrorEmptyState
         httpError={httpError}
         title={`Unable to load release ${releaseName}`}
-        body={(isError as { message: string }).message}
+        body={(error as { message: string }).message}
       />
     );
   }
