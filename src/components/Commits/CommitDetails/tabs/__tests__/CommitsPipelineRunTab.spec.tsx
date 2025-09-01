@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, MemoryRouter } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
@@ -30,12 +30,16 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('react-router-dom', () => ({
-  Link: (props) => <a href={props.to}>{props.children}</a>,
-  useNavigate: jest.fn(),
-  useParams: jest.fn(),
-  useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
-}));
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    Link: (props) => <a href={props.to}>{props.children}</a>,
+    useNavigate: jest.fn(),
+    useParams: jest.fn(),
+    useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
+  };
+});
 jest.mock('../../../../../hooks/useTektonResults');
 jest.mock('../../../../../hooks/usePipelineRuns', () => ({
   usePipelineRunsForCommit: jest.fn(),
@@ -82,11 +86,13 @@ const commitPlrs = [
 ];
 
 const TestedComponent = () => (
-  <div style={{ overflow: 'auto' }}>
-    <FilterContextProvider filterParams={['name', 'status', 'type']}>
-      <CommitsPipelineRunTab />
-    </FilterContextProvider>
-  </div>
+  <MemoryRouter>
+    <div style={{ overflow: 'auto' }}>
+      <FilterContextProvider filterParams={['name', 'status', 'type']}>
+        <CommitsPipelineRunTab />
+      </FilterContextProvider>
+    </div>
+  </MemoryRouter>
 );
 
 describe('Commit Pipelinerun List', () => {
