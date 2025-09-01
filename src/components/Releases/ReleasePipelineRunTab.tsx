@@ -17,6 +17,7 @@ import {
   getTenantCollectorProcessingFromRelease,
   getTenantProcessingFromRelease,
 } from '~/utils/release-utils';
+import { SESSION_STORAGE_KEYS } from '../../consts/constants';
 import ReleasePipelineListHeader from './ReleasePipelineList/ReleasePipelineListHeader';
 import ReleasePipelineListRow from './ReleasePipelineList/ReleasePipelineListRow';
 import ReleasesEmptyState from './ReleasesEmptyState';
@@ -95,7 +96,7 @@ const ReleasePipelineRunTab: React.FC = () => {
   const [visibleColumns, setVisibleColumns] = React.useState<Set<ReleasePipelineRunColumnKeys>>(
     () => {
       try {
-        const saved = sessionStorage.getItem('release-pipeline-visible-columns');
+        const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS);
         if (saved) {
           const parsedColumns = JSON.parse(saved) as ReleasePipelineRunColumnKeys[];
           if (Array.isArray(parsedColumns)) {
@@ -114,7 +115,7 @@ const ReleasePipelineRunTab: React.FC = () => {
   React.useEffect(() => {
     try {
       sessionStorage.setItem(
-        'release-pipeline-visible-columns',
+        SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS,
         JSON.stringify([...visibleColumns]),
       );
     } catch {

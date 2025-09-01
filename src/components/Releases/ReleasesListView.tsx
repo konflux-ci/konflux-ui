@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { SESSION_STORAGE_KEYS } from '../../consts/constants';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import {
   ReleaseColumnKeys,
@@ -48,7 +49,7 @@ const ReleasesListView: React.FC = () => {
   // Column management state
   const [visibleColumns, setVisibleColumns] = React.useState<Set<ReleaseColumnKeys>>(() => {
     try {
-      const saved = sessionStorage.getItem('releases-visible-columns');
+      const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.RELEASES_VISIBLE_COLUMNS);
       if (saved) {
         const parsedColumns = JSON.parse(saved) as ReleaseColumnKeys[];
         if (Array.isArray(parsedColumns)) {
@@ -64,7 +65,10 @@ const ReleasesListView: React.FC = () => {
   // Save visible columns to session storage whenever they change
   React.useEffect(() => {
     try {
-      sessionStorage.setItem('releases-visible-columns', JSON.stringify([...visibleColumns]));
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEYS.RELEASES_VISIBLE_COLUMNS,
+        JSON.stringify([...visibleColumns]),
+      );
     } catch {
       // Silent error handling
     }

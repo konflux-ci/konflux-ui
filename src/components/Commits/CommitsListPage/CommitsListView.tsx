@@ -4,6 +4,7 @@ import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
+import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
 import { HttpError } from '../../../k8s/error';
 import { Table, useDeepCompareMemoize } from '../../../shared';
@@ -28,8 +29,6 @@ interface CommitsListViewProps {
   componentName?: string;
 }
 
-const COMMITS_VISIBLE_COLUMNS_KEY = 'commits-visible-columns';
-
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,
@@ -39,7 +38,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   const [visibleColumns, setVisibleColumns] = React.useState<Set<CommitColumnKeys>>(() => {
     try {
-      const saved = sessionStorage.getItem(COMMITS_VISIBLE_COLUMNS_KEY);
+      const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.COMMITS_VISIBLE_COLUMNS);
       if (saved) {
         const parsedColumns = JSON.parse(saved) as CommitColumnKeys[];
         if (Array.isArray(parsedColumns)) {
@@ -56,7 +55,10 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   React.useEffect(() => {
     try {
-      sessionStorage.setItem(COMMITS_VISIBLE_COLUMNS_KEY, JSON.stringify([...visibleColumns]));
+      sessionStorage.setItem(
+        SESSION_STORAGE_KEYS.COMMITS_VISIBLE_COLUMNS,
+        JSON.stringify([...visibleColumns]),
+      );
     } catch {
       // Failed to save commits column preferences to sessionStorage
       // This can happen if sessionStorage is full or unavailable
