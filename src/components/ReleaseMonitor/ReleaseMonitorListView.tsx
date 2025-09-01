@@ -42,16 +42,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     component: unparsedFilters.component ? (unparsedFilters.component as string[]) : [],
   });
 
-  const setMonitoredReleasesFilters = React.useCallback<
-    React.Dispatch<React.SetStateAction<MonitoredReleasesFilterState>>
-  >(
-    (data) => {
-      const newFilters = typeof data === 'function' ? data(filters) : data;
-      setFilters(newFilters);
-    },
-    [filters, setFilters],
-  );
-
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
     SortableHeaders.completionTime,
   );
@@ -227,7 +217,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       {(isFiltered || sortedMonitoredReleases.length > 0) && (
         <MonitoredReleasesFilterToolbar
           filters={filters}
-          setFilters={setMonitoredReleasesFilters}
+          setFilters={setFilters}
           onClearFilters={onClearFilters}
           statusOptions={statusFilterObj}
           applicationOptions={applicationFilterObj}
