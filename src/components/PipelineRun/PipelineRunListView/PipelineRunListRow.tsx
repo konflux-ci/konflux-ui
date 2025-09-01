@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Popover, Skeleton } from '@patternfly/react-core';
+import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { ScanResults } from '../../../hooks/useScanResults';
 import {
@@ -24,7 +25,6 @@ import {
 } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActions } from './pipelinerun-actions';
-import { PipelineRunColumnKeys } from './pipelinerun-columns-config';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
 

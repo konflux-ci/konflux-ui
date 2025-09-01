@@ -1,19 +1,22 @@
+import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import {
   generateDynamicColumnClasses,
   COMMON_COLUMN_CONFIGS,
 } from '../../../shared/components/table/dynamic-columns';
-import { PipelineRunColumnKeys } from './pipelinerun-columns-config';
 
 export const getDynamicColumnClasses = (visibleColumns: Set<PipelineRunColumnKeys>) => {
   const rawClasses = generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS);
 
-  const mappedClasses: Record<string, string> = {};
-  Object.entries(rawClasses).forEach(([key, value]) => {
-    let mappedKey = key;
-    if (key === 'testResult') mappedKey = 'testResultStatus';
-    if (key === 'namespace') mappedKey = 'workspace';
-    mappedClasses[mappedKey] = value;
-  });
+  const mappedClasses: Record<string, string> = Object.entries(rawClasses).reduce(
+    (acc, [key, value]) => {
+      let mappedKey = key;
+      if (key === 'testResult') mappedKey = 'testResultStatus';
+      if (key === 'namespace') mappedKey = 'workspace';
+      acc[mappedKey] = value;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   return mappedClasses;
 };

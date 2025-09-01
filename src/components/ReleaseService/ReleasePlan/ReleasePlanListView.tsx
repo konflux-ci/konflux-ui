@@ -5,6 +5,12 @@ import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlt
 import { useApplications } from '~/hooks/useApplications';
 import { useLocalStorage } from '~/hooks/useLocalStorage';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
+import {
+  RELEASE_PLAN_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_RELEASE_PLAN_COLUMNS,
+  NON_HIDABLE_RELEASE_PLAN_COLUMNS,
+  ReleasePlanColumnKeys,
+} from '../../../consts/release';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
 import { ReleasePlanModel } from '../../../models';
@@ -15,12 +21,6 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleaseKind } from '../../../types';
 import { withPageAccessCheck } from '../../PageAccess/withPageAccessCheck';
 import { ReleaseServiceEmptyState } from '../ReleaseServiceEmptyState';
-import {
-  RELEASE_PLAN_COLUMNS_DEFINITIONS,
-  DEFAULT_VISIBLE_RELEASE_PLAN_COLUMNS,
-  NON_HIDABLE_RELEASE_PLAN_COLUMNS,
-  ReleasePlanColumnKeys,
-} from './releaseplan-columns-config';
 import { getReleasePlanListHeader } from './ReleasePlanListHeader';
 import ReleasePlanListRow, { ReleasePlanWithApplicationData } from './ReleasePlanListRow';
 

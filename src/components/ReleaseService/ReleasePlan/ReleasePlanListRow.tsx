@@ -5,13 +5,13 @@ import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-ci
 import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
 import { ApplicationKind } from '~/types';
 import { getApplicationDisplayName } from '~/utils/common-utils';
+import { ReleasePlanColumnKeys } from '../../../consts/release';
 import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { ReleasePlanKind, ReleasePlanLabel } from '../../../types/coreBuildService';
 import { useReleasePlanActions } from './releaseplan-actions';
-import { ReleasePlanColumnKeys } from './releaseplan-columns-config';
 import {
   releasesPlanTableColumnClasses,
   getDynamicReleasePlanColumnClasses,

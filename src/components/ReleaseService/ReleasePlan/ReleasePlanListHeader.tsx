@@ -1,4 +1,4 @@
-import { ReleasePlanColumnKeys } from './releaseplan-columns-config';
+import { ReleasePlanColumnKeys } from '../../../consts/release';
 
 export const releasesPlanTableColumnClasses = {
   name: 'pf-m-width-20 wrap-column',

@@ -4,6 +4,12 @@ import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
+import {
+  PIPELINE_RUN_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  NON_HIDABLE_PIPELINE_RUN_COLUMNS,
+  PipelineRunColumnKeys,
+} from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
@@ -25,12 +31,6 @@ import {
   PipelineRunsFilterState,
 } from '../../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
-import {
-  PIPELINE_RUN_COLUMNS_DEFINITIONS,
-  DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
-  NON_HIDABLE_PIPELINE_RUN_COLUMNS,
-  PipelineRunColumnKeys,
-} from '../../../PipelineRun/PipelineRunListView/pipelinerun-columns-config';
 import { getPipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 

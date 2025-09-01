@@ -2,6 +2,12 @@ import * as React from 'react';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import {
+  PIPELINE_RUN_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  NON_HIDABLE_PIPELINE_RUN_COLUMNS,
+  PipelineRunColumnKeys,
+} from '../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useLocalStorage } from '../../../hooks/useLocalStorage';
@@ -23,12 +29,6 @@ import {
   PipelineRunsFilterState,
 } from '../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
-import {
-  PIPELINE_RUN_COLUMNS_DEFINITIONS,
-  DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
-  NON_HIDABLE_PIPELINE_RUN_COLUMNS,
-  PipelineRunColumnKeys,
-} from './pipelinerun-columns-config';
 import { getPipelineRunListHeader } from './PipelineRunListHeader';
 import { PipelineRunListRowWithColumns } from './PipelineRunListRow';
 
