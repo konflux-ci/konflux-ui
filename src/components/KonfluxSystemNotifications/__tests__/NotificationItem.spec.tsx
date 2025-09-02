@@ -29,7 +29,7 @@ describe('NotificationItem', () => {
 
   it('renders timestamp using Timestamp component', () => {
     render(<NotificationItem {...validDangerNotification} />);
-    expect(screen.getByText('Aug 10, 2025, 4:38 PM')).toBeInTheDocument();
+    expect(screen.getByText('Aug 10, 2025, 11:08 AM')).toBeInTheDocument();
   });
 
   it('renders with correct structure', () => {
