@@ -1,13 +1,17 @@
 import * as React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { createTestQueryClient, createK8sUtilMock } from '~/utils/test-utils';
+import { createTestQueryClient, createK8sUtilMock } from '~/unit-test-utils';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
 import { useKubearchiveListResourceQuery } from '../hooks';
 
 // Mock the kubearchive utilities
 jest.mock('../fetch-utils', () => ({
   withKubearchivePathPrefix: jest.fn((options) => options),
+}));
+
+jest.mock('../conditional-checks', () => ({
+  useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: true })),
 }));
 
 const mockK8sListResource = createK8sUtilMock('k8sListResource');
