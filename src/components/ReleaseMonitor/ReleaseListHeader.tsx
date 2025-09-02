@@ -8,7 +8,7 @@ export const releaseTableColumnClasses = {
   application: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   releasePlan: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   namespace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-};
+} as const;
 
 export enum SortableHeaders {
   name,
@@ -46,6 +46,6 @@ const releaseColumns = [
     title: 'Namespace',
     className: releaseTableColumnClasses.namespace,
   },
-];
+] satisfies Parameters<typeof createTableHeaders>[0];
 
 export default createTableHeaders(releaseColumns);
