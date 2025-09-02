@@ -16,6 +16,7 @@ import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
 import { useApplication } from './useApplications';
 import { useComponents } from './useComponents';
+import { useK8sAndKarchResources } from './useK8sAndKarchResources';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
 const useRuns = <Kind extends K8sResourceCommon>(
@@ -307,6 +308,81 @@ export const usePipelineRunsForCommit = (
     nextPageProps,
     pipelineRuns,
     plrError,
+  ]);
+};
+
+export const usePipelineRunsForCommitV2 = (
+  namespace: string,
+  applicationName: string,
+  commit: string,
+  limit?: number,
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
+
+  const componentNames = React.useMemo(
+    () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
+    [components, componentsLoaded],
+  );
+
+  const resourceInit = React.useMemo(
+    () => ({
+      groupVersionKind: PipelineRunGroupVersionKind,
+      namespace,
+      selector: {
+        matchLabels: {
+          [PipelineRunLabel.APPLICATION]: applicationName,
+          [PipelineRunLabel.COMMIT_LABEL]: commit,
+        },
+        matchExpressions: [
+          { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
+        ],
+      },
+    }),
+    [namespace, applicationName, commit, componentNames],
+  );
+
+  // Remove overload properties once is ready for review
+  const { data, isLoading, hasError, hasNextPage, fetchNextPage } =
+    useK8sAndKarchResources<PipelineRunKind>(
+      namespace && applicationName && commit && componentsLoaded && applicationLoaded
+        ? resourceInit
+        : undefined,
+      PipelineRunModel,
+    );
+
+  const loaded = !isLoading && componentsLoaded;
+
+  // TODO: Remove this if/when tekton results are really filtered by component names above
+  return React.useMemo(() => {
+    if (!loaded || hasError) {
+      // Adjut the GetNextPage and NextPageProps
+      return [[], loaded, hasError, fetchNextPage, { hasNextPage, isFetchingNextPage: false }];
+    }
+    return [
+      data
+        .filter((plr) =>
+          plr.metadata?.creationTimestamp.localeCompare(
+            application?.metadata?.creationTimestamp,
+          ) === 1
+            ? true
+            : false,
+        )
+        .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
+        .slice(0, limit ? limit : undefined),
+      true,
+      undefined,
+      fetchNextPage,
+      { hasNextPage, isFetchingNextPage: false },
+    ];
+  }, [
+    application?.metadata?.creationTimestamp,
+    hasNextPage,
+    limit,
+    loaded,
+    fetchNextPage,
+    data,
+    hasError,
   ]);
 };
 
