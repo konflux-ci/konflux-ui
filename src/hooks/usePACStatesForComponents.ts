@@ -7,7 +7,7 @@ import {
   ComponentBuildState,
   getComponentBuildStatus,
   getPACProvision,
-  MIGRATION_REQUEST_ANMOTATION,
+  MIGRATION_REQUEST_ANNOTATION,
   SAMPLE_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
@@ -22,9 +22,7 @@ export type PacStatesForComponents = {
 const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponents =>
   components.reduce((acc, component) => {
     const isSample = component.metadata?.annotations?.[SAMPLE_ANNOTATION] === 'true';
-    const isMigrationRequested = Object.keys(component.metadata?.annotations).includes(
-      MIGRATION_REQUEST_ANMOTATION,
-    );
+    const isMigrationRequested = !!component.metadata?.annotations?.[MIGRATION_REQUEST_ANNOTATION];
     const pacProvision = getPACProvision(component);
     const isConfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
