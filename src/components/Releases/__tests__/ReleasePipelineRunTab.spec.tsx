@@ -41,7 +41,13 @@ describe('ReleasePipelineRunTab', () => {
 
     mockUseParams.mockReturnValue({ releaseName: 'test-release' });
     mockUseNamespace.mockReturnValue('test-namespace');
-    mockUseRelease.mockReturnValue([mockReleaseWithAllProcessing, true, undefined]);
+    mockUseRelease.mockReturnValue([
+      mockReleaseWithAllProcessing,
+      true,
+      undefined,
+      undefined,
+      false,
+    ]);
     mockUseReleasePlan.mockReturnValue([mockReleasePlan, true, undefined]);
 
     // Mock sessionStorage
@@ -199,7 +205,7 @@ describe('ReleasePipelineRunTab', () => {
   });
 
   it('should show loading spinner when data is not loaded', () => {
-    mockUseRelease.mockReturnValue([null, false, undefined]);
+    mockUseRelease.mockReturnValue([null, false, undefined, undefined, false]);
     mockUseReleasePlan.mockReturnValue([null, false, undefined]);
 
     render(
