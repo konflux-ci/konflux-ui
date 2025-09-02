@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { ComponentKind } from '../../../types';
 import {
@@ -245,6 +246,9 @@ describe('CustomizePipeline', () => {
             },
             metadata: {
               name: 'my-component-test',
+              annotations: {
+                [PipelineRunLabel.COMMIT_USER_LABEL]: 'botName',
+              } as Record<string, string>,
             },
             status: {
               lastPromotedImage: 'quay.io/org/test:latest',
