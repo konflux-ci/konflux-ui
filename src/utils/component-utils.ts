@@ -13,7 +13,7 @@ export const BUILD_REQUEST_ANNOTATION = 'build.appstudio.openshift.io/request';
 
 export const BUILD_STATUS_ANNOTATION = 'build.appstudio.openshift.io/status';
 
-export const MIGRATION_REQUEST_ANMOTATION = 'kubectl.kubernetes.io/last-applied-configuration';
+export const MIGRATION_REQUEST_ANNOTATION = 'kubectl.kubernetes.io/last-applied-configuration';
 
 export const GIT_PROVIDER_ANNOTATION = 'git-provider';
 export const GIT_PROVIDER_ANNOTATION_VALUE = {
