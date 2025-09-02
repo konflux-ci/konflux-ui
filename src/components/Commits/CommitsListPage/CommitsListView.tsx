@@ -6,6 +6,7 @@ import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
+import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { HttpError } from '../../../k8s/error';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -36,34 +37,11 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
-  const [visibleColumns, setVisibleColumns] = React.useState<Set<CommitColumnKeys>>(() => {
-    try {
-      const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.COMMITS_VISIBLE_COLUMNS);
-      if (saved) {
-        const parsedColumns = JSON.parse(saved) as CommitColumnKeys[];
-        if (Array.isArray(parsedColumns)) {
-          return new Set(parsedColumns);
-        }
-      }
-    } catch {
-      // Failed to load commits column preferences from sessionStorage
-      // This is expected if the stored data is corrupted or in an old format
-    }
-    return DEFAULT_VISIBLE_COMMIT_COLUMNS;
-  });
+  const [visibleColumns, setVisibleColumns] = useVisibleColumns(
+    SESSION_STORAGE_KEYS.COMMITS_VISIBLE_COLUMNS,
+    DEFAULT_VISIBLE_COMMIT_COLUMNS,
+  );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
-
-  React.useEffect(() => {
-    try {
-      sessionStorage.setItem(
-        SESSION_STORAGE_KEYS.COMMITS_VISIBLE_COLUMNS,
-        JSON.stringify([...visibleColumns]),
-      );
-    } catch {
-      // Failed to save commits column preferences to sessionStorage
-      // This can happen if sessionStorage is full or unavailable
-    }
-  }, [visibleColumns]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],

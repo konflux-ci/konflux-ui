@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { mockReleasePlans } from '~/components/ReleaseService/ReleasePlan/__data__/release-plan.mock';
+import { SESSION_STORAGE_KEYS } from '~/consts/constants';
 import { useReleasePlan } from '~/hooks/useReleasePlans';
 import { useRelease } from '~/hooks/useReleases';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -134,7 +135,7 @@ describe('ReleasePipelineRunTab', () => {
     // Should save default columns to session storage
     await waitFor(() => {
       expect(mockSetItem).toHaveBeenCalledWith(
-        'release-pipeline-visible-columns',
+        SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS,
         expect.stringContaining('name'),
       );
     });
@@ -150,7 +151,7 @@ describe('ReleasePipelineRunTab', () => {
       </TestWrapper>,
     );
 
-    expect(mockGetItem).toHaveBeenCalledWith('release-pipeline-visible-columns');
+    expect(mockGetItem).toHaveBeenCalledWith(SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS);
   });
 
   it('should handle session storage errors gracefully', () => {

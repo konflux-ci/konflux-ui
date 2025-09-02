@@ -18,6 +18,7 @@ import {
   getTenantProcessingFromRelease,
 } from '~/utils/release-utils';
 import { SESSION_STORAGE_KEYS } from '../../consts/constants';
+import { useVisibleColumns } from '../../hooks/useVisibleColumns';
 import ReleasePipelineListHeader from './ReleasePipelineList/ReleasePipelineListHeader';
 import ReleasePipelineListRow from './ReleasePipelineList/ReleasePipelineListRow';
 import ReleasesEmptyState from './ReleasesEmptyState';
@@ -93,36 +94,10 @@ const ReleasePipelineRunTab: React.FC = () => {
   const { filters, setFilters, onClearFilters } = React.useContext(FilterContext);
 
   // Column management state
-  const [visibleColumns, setVisibleColumns] = React.useState<Set<ReleasePipelineRunColumnKeys>>(
-    () => {
-      try {
-        const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS);
-        if (saved) {
-          const parsedColumns = JSON.parse(saved) as ReleasePipelineRunColumnKeys[];
-          if (Array.isArray(parsedColumns)) {
-            return new Set(parsedColumns);
-          }
-        }
-      } catch {
-        // Failed to parse saved column preferences from sessionStorage
-        // This is expected if the stored data is corrupted or in an old format
-      }
-      return defaultVisibleColumns;
-    },
+  const [visibleColumns, setVisibleColumns] = useVisibleColumns(
+    SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS,
+    defaultVisibleColumns,
   );
-
-  // Save visible columns to session storage whenever they change
-  React.useEffect(() => {
-    try {
-      sessionStorage.setItem(
-        SESSION_STORAGE_KEYS.RELEASE_PIPELINE_VISIBLE_COLUMNS,
-        JSON.stringify([...visibleColumns]),
-      );
-    } catch {
-      // Failed to save column preferences to sessionStorage
-      // This can happen if sessionStorage is full or unavailable
-    }
-  }, [visibleColumns]);
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [release, loaded] = useRelease(namespace, releaseName);
 

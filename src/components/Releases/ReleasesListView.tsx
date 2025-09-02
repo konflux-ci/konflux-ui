@@ -13,6 +13,7 @@ import {
 } from '../../consts/release';
 import { useK8sAndKarchResources } from '../../hooks/useK8sAndKarchResources';
 import { useSortedResources } from '../../hooks/useSortedResources';
+import { useVisibleColumns } from '../../hooks/useVisibleColumns';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
@@ -47,32 +48,10 @@ const ReleasesListView: React.FC = () => {
   const namespace = useNamespace();
 
   // Column management state
-  const [visibleColumns, setVisibleColumns] = React.useState<Set<ReleaseColumnKeys>>(() => {
-    try {
-      const saved = sessionStorage.getItem(SESSION_STORAGE_KEYS.RELEASES_VISIBLE_COLUMNS);
-      if (saved) {
-        const parsedColumns = JSON.parse(saved) as ReleaseColumnKeys[];
-        if (Array.isArray(parsedColumns)) {
-          return new Set(parsedColumns);
-        }
-      }
-    } catch {
-      // Silent error handling
-    }
-    return defaultVisibleReleaseColumns;
-  });
-
-  // Save visible columns to session storage whenever they change
-  React.useEffect(() => {
-    try {
-      sessionStorage.setItem(
-        SESSION_STORAGE_KEYS.RELEASES_VISIBLE_COLUMNS,
-        JSON.stringify([...visibleColumns]),
-      );
-    } catch {
-      // Silent error handling
-    }
-  }, [visibleColumns]);
+  const [visibleColumns, setVisibleColumns] = useVisibleColumns(
+    SESSION_STORAGE_KEYS.RELEASES_VISIBLE_COLUMNS,
+    defaultVisibleReleaseColumns,
+  );
 
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
 
