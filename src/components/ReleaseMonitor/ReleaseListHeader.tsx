@@ -10,7 +10,7 @@ export const releaseTableColumnClasses = {
   namespace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
 };
 
-export const enum SortableHeaders {
+export enum SortableHeaders {
   name,
   completionTime,
 }

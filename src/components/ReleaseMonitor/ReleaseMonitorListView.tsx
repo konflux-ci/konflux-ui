@@ -106,71 +106,48 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     sortPaths,
   );
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(sortedMonitoredReleases, (mr) => monitoredReleaseStatus(mr), statuses),
-    [sortedMonitoredReleases],
-  );
+  const filterOptions = React.useMemo(() => {
+    const apps = new Set<string>();
+    const plans = new Set<string>();
+    const comps = new Set<string>();
 
-  const applications = React.useMemo(() => {
-    return Array.from(
-      new Set(
-        releases
-          .map((r) => r.metadata.labels?.[PipelineRunLabel.APPLICATION])
-          .filter((v): v is string => Boolean(v)),
+    releases.forEach((r) => {
+      const app = r.metadata.labels?.[PipelineRunLabel.APPLICATION];
+      if (app) apps.add(app);
+      const plan = r.spec.releasePlan;
+      if (plan) plans.add(plan);
+      const comp = r.metadata.labels?.[PipelineRunLabel.COMPONENT];
+      if (comp) comps.add(comp);
+    });
+
+    return {
+      statusOptions: createFilterObj(
+        sortedMonitoredReleases,
+        (mr) => monitoredReleaseStatus(mr),
+        statuses,
       ),
-    );
-  }, [releases]);
-
-  const applicationFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
+      applicationOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
-        applications,
+        Array.from(apps),
       ),
-    [sortedMonitoredReleases, applications],
-  );
-
-  const releasePlans = React.useMemo(() => {
-    return Array.from(
-      new Set(releases.map((release) => release.spec.releasePlan).filter((v): v is string => !!v)),
-    );
-  }, [releases]);
-
-  const releasePlanFilterObj = React.useMemo(
-    () => createFilterObj(sortedMonitoredReleases, (mr) => mr?.spec.releasePlan, releasePlans),
-    [sortedMonitoredReleases, releasePlans],
-  );
-
-  const namespaceFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
+      releasePlanOptions: createFilterObj(
+        sortedMonitoredReleases,
+        (mr) => mr?.spec.releasePlan,
+        Array.from(plans),
+      ),
+      namespaceOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.namespace,
         namespaces.map((ns) => ns.metadata.name),
       ),
-    [sortedMonitoredReleases, namespaces],
-  );
-
-  const components = React.useMemo(() => {
-    return Array.from(
-      new Set(
-        releases
-          .map((r) => r.metadata.labels?.[PipelineRunLabel.COMPONENT])
-          .filter((v): v is string => Boolean(v)),
-      ),
-    );
-  }, [releases]);
-
-  const componentFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
+      componentOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
-        components,
+        Array.from(comps),
       ),
-    [sortedMonitoredReleases, components],
-  );
+    };
+  }, [sortedMonitoredReleases, releases, namespaces]);
 
   const filteredMRs = React.useMemo(
     () => filterMonitoredReleases(sortedMonitoredReleases, filters),
@@ -219,11 +196,11 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}
-          statusOptions={statusFilterObj}
-          applicationOptions={applicationFilterObj}
-          releasePlanOptions={releasePlanFilterObj}
-          namespaceOptions={namespaceFilterObj}
-          componentOptions={componentFilterObj}
+          statusOptions={filterOptions.statusOptions}
+          applicationOptions={filterOptions.applicationOptions}
+          releasePlanOptions={filterOptions.releasePlanOptions}
+          namespaceOptions={filterOptions.namespaceOptions}
+          componentOptions={filterOptions.componentOptions}
         />
       )}
 
