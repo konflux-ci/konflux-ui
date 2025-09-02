@@ -2,21 +2,21 @@ import * as React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useNamespaceInfo } from '../../../shared/providers/Namespace';
-import { mockReleases, mockNamespaces } from '../__data__/mock-release-data';
-import ReleaseMonitorListView from '../ReleaseMonitorListView';
-import ReleasesInNamespace from '../ReleasesInNamespace';
+import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { mockReleases, mockNamespaces } from '~/components/ReleaseMonitor/__data__/mock-release-data';
+import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
+import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 
 // Mock dependencies
 jest.useFakeTimers();
 
 // Mock useNamespaceInfo
-jest.mock('../../../shared/providers/Namespace', () => ({
+jest.mock('~/shared/providers/Namespace', () => ({
   useNamespaceInfo: jest.fn(),
 }));
 
 // Mock ReleasesInNamespace
-jest.mock('../ReleasesInNamespace', () => {
+jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => {
   return jest.fn(({ namespace, onReleasesLoaded, onError }) => {
     React.useEffect(() => {
       const namespaceReleases = mockReleases.filter(
@@ -33,7 +33,7 @@ jest.mock('../ReleasesInNamespace', () => {
 
 // Mock table component
 
-jest.mock('../../../shared/components/table/TableComponent', () => {
+jest.mock('~/shared/components/table/TableComponent', () => {
   return ({ data }) => (
     <table role="table" aria-label="mock-table">
       <thead>
@@ -57,27 +57,21 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../utils/commits-utils', () => ({
+jest.mock('~/utils/commits-utils', () => ({
   statuses: ['Succeeded', 'Failed', 'Progressing'],
 }));
 
-//jest.mock('../ReleaseListHeader', () => {
-//  return jest.fn(() => <div data-test="release-list-header">Release List Header</div>);
-//});
-
-jest.mock('../ReleaseEmptyState', () => {
-  return jest.fn(() => <div data-test="release-empty-state">No releases found</div>);
+jest.mock('~/components/ReleaseMonitor/ReleaseEmptyState', () => {
+  return jest.fn(() => <div>No releases found</div>);
 });
 
-jest.mock('../../../shared/components/empty-state/ErrorEmptyState', () => {
-  return jest.fn(({ httpError }) => (
-    <div data-test="error-empty-state">Error: {httpError?.message}</div>
-  ));
+jest.mock('~/shared/components/empty-state/ErrorEmptyState', () => {
+  return jest.fn(({ httpError }) => <div>Error: {httpError?.message}</div>);
 });
 
-jest.mock('../../../shared/components/empty-state/FilteredEmptyState', () => {
+jest.mock('~/shared/components/empty-state/FilteredEmptyState', () => {
   return jest.fn(({ onClearFilters }) => (
-    <div data-test="filtered-empty-state">
+    <div>
       No matching releases
       <button onClick={onClearFilters}>Clear filters</button>
     </div>
@@ -439,7 +433,7 @@ describe('ReleaseMonitorListView', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('filtered-empty-state')).toBeInTheDocument();
+      expect(screen.getByText('No matching releases')).toBeInTheDocument();
     });
 
     const clearButton = screen.getByText('Clear filters');
@@ -464,7 +458,7 @@ describe('ReleaseMonitorListView', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('release-empty-state')).toBeInTheDocument();
+      expect(screen.getByText('No releases found')).toBeInTheDocument();
     });
   });
 
@@ -487,7 +481,7 @@ describe('ReleaseMonitorListView', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('error-empty-state')).toBeInTheDocument();
+      expect(screen.getByText('Error: Failed to load releases')).toBeInTheDocument();
     });
   });
 });
