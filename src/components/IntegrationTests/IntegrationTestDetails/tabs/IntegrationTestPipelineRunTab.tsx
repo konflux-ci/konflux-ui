@@ -90,6 +90,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
           label="name"
           setText={() => {}}
           onClearFilters={() => {}}
+          showSearchInput={false}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />

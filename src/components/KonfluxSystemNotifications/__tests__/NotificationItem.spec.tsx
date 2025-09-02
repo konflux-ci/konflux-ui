@@ -27,6 +27,11 @@ describe('NotificationItem', () => {
     expect(item).toHaveClass('pf-m-info');
   });
 
+  it('renders timestamp using Timestamp component', () => {
+    render(<NotificationItem {...validDangerNotification} />);
+    expect(screen.getByText('Aug 10, 2025, 4:38 PM')).toBeInTheDocument();
+  });
+
   it('renders with correct structure', () => {
     render(<NotificationItem {...validDangerNotification} />);
 

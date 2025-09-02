@@ -161,7 +161,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
       </TableData>
 
-      {showSnapshot && release?.spec?.snapshot && releasePlan?.spec?.application ? (
+      {showSnapshot ? (
         <TableData className={pipelineRunTableColumnClasses.snapshot}>
           <Link
             to={SNAPSHOT_DETAILS_PATH.createPath({
@@ -353,21 +353,19 @@ const DynamicPipelineRunListRow: React.FC<
         </TableData>
       )}
 
-      {visibleColumns.has('snapshot') &&
-        release?.spec?.snapshot &&
-        releasePlan?.spec?.application && (
-          <TableData className={dynamicClasses.snapshot}>
-            <Link
-              to={SNAPSHOT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: releasePlan.spec.application,
-                snapshotName: release.spec.snapshot,
-              })}
-            >
-              {release.spec.snapshot}
-            </Link>
-          </TableData>
-        )}
+      {visibleColumns.has('snapshot') && (
+        <TableData className={dynamicClasses.snapshot}>
+          <Link
+            to={SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName: releasePlan.spec.application,
+              snapshotName: release.spec.snapshot,
+            })}
+          >
+            {release.spec.snapshot}
+          </Link>
+        </TableData>
+      )}
       {visibleColumns.has('snapshot') &&
         (!release?.spec?.snapshot || !releasePlan?.spec?.application) && (
           <TableData className={dynamicClasses.snapshot}>-</TableData>
