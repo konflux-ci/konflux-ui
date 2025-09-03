@@ -26,50 +26,53 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   componentOptions,
 }) => {
   const { name, status, application, releasePlan, namespace, component } = filters;
+  const filtersRef = React.useRef(filters);
+  React.useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
 
   return (
     <BaseTextFilterToolbar
       text={name}
       label="name"
-      setText={(newName) => setFilters({ ...filters, name: newName })} // Changed: manual spread
+      setText={(newName) => setFilters({ ...filtersRef.current, name: newName })}
       onClearFilters={onClearFilters}
     >
       <MultiSelect
         label="Status"
         filterKey="status"
         values={status}
-        setValues={(newValues) => setFilters({ ...filters, status: newValues })} // Changed: manual spread
+        setValues={(newValues) => setFilters({ ...filtersRef.current, status: newValues })}
         options={statusOptions}
+      />
+      <MultiSelect
+        label="Component"
+        filterKey="component"
+        values={component}
+        setValues={(newValues) => setFilters({ ...filtersRef.current, component: newValues })}
+        options={componentOptions}
       />
       <MultiSelect
         label="Application"
         filterKey="application"
         values={application}
-        setValues={(newValues) => setFilters({ ...filters, application: newValues })} // Changed: manual spread
+        setValues={(newValues) => setFilters({ ...filtersRef.current, application: newValues })}
         options={applicationOptions}
       />
       <MultiSelect
         label="Release Plan"
         filterKey="releasePlan"
         values={releasePlan}
-        setValues={(newValues) => setFilters({ ...filters, releasePlan: newValues })} // Changed: manual spread
+        setValues={(newValues) => setFilters({ ...filtersRef.current, releasePlan: newValues })}
         options={releasePlanOptions}
       />
       <MultiSelect
         label="Namespace"
         filterKey="namespace"
         values={namespace}
-        setValues={(newValues) => setFilters({ ...filters, namespace: newValues })} // Changed: manual spread
+        setValues={(newValues) => setFilters({ ...filtersRef.current, namespace: newValues })}
         options={namespaceOptions}
       />
-      <MultiSelect
-        label="Component"
-        filterKey="component"
-        values={component}
-        setValues={(newValues) => setFilters({ ...filters, component: newValues })} // Changed: manual spread
-        options={componentOptions}
-      />
-      {/* ... similar pattern for other MultiSelect components */}
     </BaseTextFilterToolbar>
   );
 };

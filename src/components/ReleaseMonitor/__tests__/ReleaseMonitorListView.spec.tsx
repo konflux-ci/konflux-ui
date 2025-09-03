@@ -2,10 +2,10 @@ import * as React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { mockReleases, mockNamespaces } from '~/components/ReleaseMonitor/__data__/mock-release-data';
 import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
+import { useNamespaceInfo } from '~/shared/providers/Namespace';
 
 // Mock dependencies
 jest.useFakeTimers();
@@ -148,14 +148,6 @@ describe('ReleaseMonitorListView', () => {
         expect(screen.getByText(release.metadata.name)).toBeInTheDocument();
       });
     });
-
-    screen.queryByText('Release Name');
-    screen.queryByText('Completion Time');
-    screen.queryAllByText('Status');
-    screen.queryByText('Component');
-    screen.queryByText('Namespace');
-    screen.queryByText('Application');
-    screen.queryByText('Release Plan');
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -465,10 +457,7 @@ describe('ReleaseMonitorListView', () => {
   it('should handle error state', async () => {
     mockReleasesInNamespace.mockImplementation(({ onError }) => {
       React.useEffect(() => {
-        const handleError = () => {
-          onError(new Error('Failed to load releases'));
-        };
-        setTimeout(handleError, 0);
+        onError(new Error('Failed to load releases'));
       }, [onError]);
 
       return null;

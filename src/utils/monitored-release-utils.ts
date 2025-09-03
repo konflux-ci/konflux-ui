@@ -1,23 +1,23 @@
-import { MonitoredReleaseKind } from '../types';
-import { conditionsRunStatus, runStatus } from './pipeline-utils';
+import { MonitoredReleaseKind, ReleaseCondition } from '~/types';
+import { runStatus, conditionsRunStatus } from '~/utils/pipeline-utils';
 
 export const monitoredReleaseStatus = (monitoredRelease: MonitoredReleaseKind): runStatus => {
   const conditions = monitoredRelease?.status?.conditions;
-  if (!conditions?.length) {
-    return runStatus.Pending;
-  }
+  if (!conditions?.length) return runStatus.Unknown;
 
-  // Find the 'Released' condition and create a modified conditions array
-  // that conditionsRunStatus can work with (it expects 'Succeeded' type)
-  const releasedCondition = conditions.find((c) => c.type === 'Released');
-  if (!releasedCondition) {
-    // If the dataset already uses 'Succeeded', reuse existing utility directly.
-    return conditionsRunStatus(conditions);
-  }
 
-  // Transform only the 'Released' condition, preserving others (incl. reasons).
-  const transformedConditions = conditions.map((c) =>
-    c.type === 'Released' ? { ...c, type: 'Succeeded' } : c,
+  const releasedCondition = monitoredRelease.status.conditions.find(
+    (c) => c.type === ReleaseCondition.Released,
   );
-  return conditionsRunStatus(transformedConditions);
+
+  const progressing = releasedCondition.reason === 'Progressing';
+  if (progressing) {
+    return runStatus['In Progress'];
+  }
+
+  // Transform only 'Released' → 'Succeeded' and preserve other conditions.
+  const transformed = conditions.map((c) =>
+    c.type === ReleaseCondition.Released ? { ...c, type: 'Succeeded' } : c,
+  );
+  return conditionsRunStatus(transformed);
 };
