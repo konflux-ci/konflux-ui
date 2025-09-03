@@ -1,9 +1,4 @@
 .log-viewer {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  height: 100%;
-
   &--fullscreen {
     padding: var(--pf-v5-global--spacer--sm);
   }
