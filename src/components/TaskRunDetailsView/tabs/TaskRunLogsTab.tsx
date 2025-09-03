@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { useTaskRun } from '../../../hooks/usePipelineRuns';
-import { RouterParams } from '../../../routes/utils';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { TaskRunKind } from '../../../types';
-import { taskRunStatus } from '../../../utils/pipeline-utils';
-import TaskRunLogs from '../../TaskRuns/TaskRunLogs';
+import { RouterParams } from '@routes/utils';
+import TaskRunLogs from '~/components/TaskRuns/TaskRunLogs';
+import { useTaskRunV2 } from '~/hooks/usePipelineRuns';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { TaskRunKind } from '~/types';
+import { taskRunStatus } from '~/utils/pipeline-utils';
 
 export type TaskRunLogProps = {
   taskRun: TaskRunKind;
@@ -14,7 +14,7 @@ export type TaskRunLogProps = {
 const TaskRunLogsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [taskRun] = useTaskRun(namespace, taskRunName);
+  const [taskRun] = useTaskRunV2(namespace, taskRunName);
   const status = taskRunStatus(taskRun);
 
   return <TaskRunLogs taskRun={taskRun} status={status} namespace={namespace} />;
