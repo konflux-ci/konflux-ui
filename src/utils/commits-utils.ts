@@ -7,10 +7,12 @@ import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
 export const statuses = [
   runStatus.Running,
-  runStatus.Cancelled,
-  runStatus.Failed,
+  runStatus['In Progress'],
   runStatus.Pending,
   runStatus.Succeeded,
+  runStatus.Failed,
+  runStatus.Cancelled,
+  runStatus.Unknown,
 ];
 
 export const getCommitSha = (pipelineRun: PipelineRunKind) =>
