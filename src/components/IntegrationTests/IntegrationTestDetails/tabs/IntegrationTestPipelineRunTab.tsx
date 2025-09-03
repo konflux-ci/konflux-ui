@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
+import { getErrorState } from '~/shared/utils/error-utils';
 import {
   INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES,
@@ -10,10 +11,8 @@ import {
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-import { HttpError } from '../../../../k8s/error';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
-import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
@@ -57,14 +56,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   }, [persistedColumns]);
 
   if (error) {
-    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title="Unable to load pipeline runs"
-        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
-      />
-    );
+    return getErrorState(error, loaded, 'pipeline runs');
   }
 
   if (!loaded) {

@@ -45,6 +45,12 @@ describe('IntegrationTestsListView', () => {
     expect(wrapper.findByText('Test any code changes')).toBeTruthy();
   });
 
+  it('should render the error state if there is an error', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true, { code: 403 }]);
+    const wrapper = render(IntegrationTestsList);
+    expect(wrapper.getByText('Unable to load integration tests')).toBeInTheDocument();
+  });
+
   it('should render a table when there are integration tests', () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     const wrapper = render(IntegrationTestsList);

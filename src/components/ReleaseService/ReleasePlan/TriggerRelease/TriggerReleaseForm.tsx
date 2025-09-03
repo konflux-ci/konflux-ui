@@ -14,6 +14,7 @@ import { FormikProps, useField } from 'formik';
 import { InputField, TextAreaField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useReleasePlans } from '../../../../../src/hooks/useReleasePlans';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { RELEASE_SERVICE_PATH } from '../../../../routes/paths';
@@ -33,7 +34,7 @@ type Props = FormikProps<TriggerReleaseFormValues> & {
 };
 
 export const getApplicationNameForReleasePlan = (releasePlans, selectedReleasePlan, loaded) => {
-  if (!loaded || !releasePlans.length) {
+  if (!loaded || !releasePlans || !releasePlans.length) {
     return '';
   }
 
@@ -52,11 +53,15 @@ export const TriggerReleaseForm: React.FC<Props> = ({
 }) => {
   const namespace = useNamespace();
   const [{ value: labels }] = useField<TriggerReleaseFormValues['labels']>('labels');
-  const [releasePlans, loaded] = useReleasePlans(namespace);
+  const [releasePlans, loaded, error] = useReleasePlans(namespace);
   const [selectedReleasePlanField] = useField('releasePlan');
   const [reference, setReference] = React.useState<string>('');
   const [references, , { setValue }] =
     useField<TriggerReleaseFormValues['references']>('references');
+
+  if (error) {
+    return getErrorState(error, loaded, 'release plans');
+  }
 
   const releasePlanApplicationName = getApplicationNameForReleasePlan(
     releasePlans,

@@ -47,6 +47,15 @@ describe('TriggerReleaseForm', () => {
     useReleasePlansMock.mockReturnValue([[], false]);
     useSnapshotsMock.mockReturnValue({ data: [], isLoading: true });
   });
+
+  it('should show error state if release plans fail to load', () => {
+    useReleasePlansMock.mockReturnValue([undefined, true, { code: 401 }]);
+    const values = {};
+    const props = { values } as FormikProps<TriggerReleaseFormValues>;
+    const result = formikRenderer(TriggerRelease(props), values);
+    expect(result.getByText('Unable to load release plans')).toBeVisible();
+  });
+
   it('should show trigger release button and heading', () => {
     const values = {};
     const props = { values } as FormikProps<TriggerReleaseFormValues>;

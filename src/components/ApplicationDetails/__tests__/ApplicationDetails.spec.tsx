@@ -82,7 +82,7 @@ describe('ApplicationDetails', () => {
   });
 
   it('should render the error state if the application is not found', () => {
-    useApplicationMock.mockReturnValue([[], false, { code: 404 }]);
+    useApplicationMock.mockReturnValue([[], true, { code: 404 }]);
     renderWithQueryClientAndRouter(<ApplicationDetails />);
     screen.getByText('404: Page not found');
     screen.getByText('Go to applications list');

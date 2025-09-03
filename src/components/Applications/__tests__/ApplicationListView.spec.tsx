@@ -137,6 +137,13 @@ describe('Application List', () => {
     screen.getByRole('progressbar');
   });
 
+  it('should render the error state if there is an error loading the secrets', () => {
+    watchResourceMock.mockReturnValue([[], true, Error()]);
+    renderWithQueryClient(ApplicationList);
+    expect(screen.getByText('Unable to load applications')).toBeInTheDocument();
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+  });
+
   it('should render empty state if no application is present', () => {
     watchResourceMock.mockReturnValue([[], true]);
     renderWithQueryClient(ApplicationList);
