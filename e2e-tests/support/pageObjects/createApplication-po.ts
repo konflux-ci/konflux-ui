@@ -83,7 +83,7 @@ export const componentsListPagePO = {
 export const buildLogModalContentPO = {
   modal: 'div[data-ouia-component-type="PF5/ModalContent"]',
   closeButton: '[aria-label="Close"]',
-  logText: '[class="logs__content"]',
+  logText: '.pf-v5-c-log-viewer__text',
   logsTasklist: 'div[data-test="logs-tasklist"]',
   failedPipelineRunLogs: 'div[class="pipeline-run-logs"] [class*="pf-m-danger"]',
   podLogNavList: '[data-ouia-component-type="PF5/Nav"]',

@@ -1,5 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
+import { useEventListener } from '../../hooks/useEventListener';
 import { THEME_SYSTEM, THEME_DARK, THEME_LIGHT } from '../const';
+import { ThemeProvider } from '../ThemeContext';
 import { useTheme } from '../useTheme';
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
@@ -16,6 +18,13 @@ const mockLocalStorage = {
 // Mock matchMedia
 const mockMatchMedia = jest.fn();
 
+// Mock useEventListener hook
+jest.mock('../../hooks/useEventListener', () => ({
+  useEventListener: jest.fn(),
+}));
+
+const mockUseEventListener = useEventListener as jest.Mock;
+
 beforeEach(() => {
   Object.defineProperty(window, 'localStorage', {
     value: mockLocalStorage,
@@ -31,10 +40,13 @@ beforeEach(() => {
   mockLocalStorage.getItem.mockClear();
   mockLocalStorage.setItem.mockClear();
   mockMatchMedia.mockClear();
+  mockUseEventListener.mockClear();
 
   // Clear any existing classes
   document.documentElement.classList.remove(DARK_THEME_CLASS);
 });
+
+const TestWrapper = ({ children }) => <ThemeProvider>{children}</ThemeProvider>;
 
 describe('useTheme', () => {
   it('should initialize with system preference by default', () => {
@@ -45,7 +57,7 @@ describe('useTheme', () => {
       removeEventListener: jest.fn(),
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     expect(result.current.preference).toBe(THEME_SYSTEM);
     expect(result.current.systemPreference).toBe(THEME_LIGHT);
@@ -60,7 +72,7 @@ describe('useTheme', () => {
       removeEventListener: jest.fn(),
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     expect(result.current.preference).toBe(THEME_DARK);
     expect(result.current.effectiveTheme).toBe(THEME_DARK);
@@ -74,7 +86,7 @@ describe('useTheme', () => {
       removeEventListener: jest.fn(),
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     expect(result.current.systemPreference).toBe(THEME_DARK);
     expect(result.current.effectiveTheme).toBe(THEME_DARK);
@@ -88,7 +100,7 @@ describe('useTheme', () => {
       removeEventListener: jest.fn(),
     });
 
-    renderHook(() => useTheme());
+    renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     expect(document.documentElement.classList.contains(DARK_THEME_CLASS)).toBe(true);
   });
@@ -101,7 +113,7 @@ describe('useTheme', () => {
       removeEventListener: jest.fn(),
     });
 
-    renderHook(() => useTheme());
+    renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     expect(document.documentElement.classList.contains(DARK_THEME_CLASS)).toBe(false);
   });
@@ -114,7 +126,7 @@ describe('useTheme', () => {
       removeEventListener: jest.fn(),
     });
 
-    const { result } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     act(() => {
       result.current.setThemePreference(THEME_DARK);
@@ -126,19 +138,22 @@ describe('useTheme', () => {
 
   it('should listen for system preference changes', () => {
     let eventHandler: ((e: MediaQueryListEvent) => void) | undefined;
-    const mockAddEventListener = jest.fn((_, handler) => {
-      eventHandler = handler;
+
+    // Mock useEventListener to capture the event handler
+    mockUseEventListener.mockImplementation((eventName, handler, target) => {
+      if (eventName === 'change' && target?.matches !== undefined) {
+        eventHandler = handler;
+      }
     });
-    const mockRemoveEventListener = jest.fn();
 
     mockLocalStorage.getItem.mockReturnValue(THEME_SYSTEM);
     mockMatchMedia.mockReturnValue({
       matches: false,
-      addEventListener: mockAddEventListener,
-      removeEventListener: mockRemoveEventListener,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     });
 
-    const { result, unmount } = renderHook(() => useTheme());
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
 
     // Simulate system preference change
     act(() => {
@@ -148,8 +163,11 @@ describe('useTheme', () => {
     expect(result.current.systemPreference).toBe(THEME_DARK);
     expect(result.current.effectiveTheme).toBe(THEME_DARK);
 
-    // Cleanup should remove event listener
-    unmount();
-    expect(mockRemoveEventListener).toHaveBeenCalled();
+    // Verify useEventListener was called with correct parameters
+    expect(mockUseEventListener).toHaveBeenCalledWith(
+      'change',
+      expect.any(Function),
+      expect.objectContaining({ matches: false }),
+    );
   });
 });
