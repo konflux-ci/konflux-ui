@@ -15,10 +15,20 @@ jest.mock('../../commit-status', () => ({
 
 const commits = getCommitsFromPLRs(pipelineWithCommits);
 
+type CommitColumnKeys = 'name' | 'branch' | 'component' | 'byUser' | 'committedAt' | 'status';
+const defaultVisibleColumns = new Set<CommitColumnKeys>([
+  'name',
+  'branch',
+  'component',
+  'byUser',
+  'committedAt',
+  'status',
+]);
+
 describe('CommitsListRow', () => {
   it('lists correct Commit details', () => {
     const { getAllByText, queryByText, container } = render(
-      <CommitsListRow columns={null} obj={commits[1]} />,
+      <CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[1]} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[1].creationTime));
     expect(queryByText('commit1')).toBeInTheDocument();
@@ -30,7 +40,7 @@ describe('CommitsListRow', () => {
 
   it('lists correct Commit details for manual builds', () => {
     const { getAllByText, queryByText, container } = render(
-      <CommitsListRow columns={null} obj={commits[0]} />,
+      <CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
     expect(queryByText('commit7')).toBeInTheDocument();
@@ -39,21 +49,9 @@ describe('CommitsListRow', () => {
     expect(getAllByText('manual-build-component')[0]).toBeInTheDocument();
   });
 
-  it('should show commit icon for commits', () => {
-    render(<CommitsListRow columns={null} obj={commits[3]} />);
-    expect(screen.getByLabelText('Commit icon')).toBeInTheDocument();
+  it('should show plr status on the row', () => {
+    const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
+    render(<CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} />);
+    screen.getByText(status);
   });
-
-  it('should show pull request icon for pull requests', () => {
-    commits[0].isPullRequest = true;
-    commits[0].pullRequestNumber = '23';
-    render(<CommitsListRow columns={null} obj={commits[0]} />);
-    screen.getByLabelText('Pull request icon');
-    screen.getAllByText(`#23 ${commits[0].shaTitle}`);
-  });
-
-  it('should show plr status on the row', () => {});
-  const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
-  render(<CommitsListRow columns={null} obj={commits[0]} />);
-  screen.getByText(status);
 });

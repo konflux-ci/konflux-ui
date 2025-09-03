@@ -2,19 +2,29 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { SESSION_STORAGE_KEYS } from '../../consts/constants';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
+import {
+  ReleaseColumnKeys,
+  RELEASE_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_RELEASE_COLUMNS,
+  NON_HIDABLE_RELEASE_COLUMNS,
+  SortableHeaders,
+} from '../../consts/release';
 import { useK8sAndKarchResources } from '../../hooks/useK8sAndKarchResources';
 import { useSortedResources } from '../../hooks/useSortedResources';
+import { useVisibleColumns } from '../../hooks/useVisibleColumns';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
+import ColumnManagement from '../../shared/components/table/ColumnManagement';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { ReleasesFilterToolbar } from '../Filter/toolbars/ReleasesFilterToolbar';
 import ReleasesEmptyState from './ReleasesEmptyState';
-import getReleasesListHeader, { SortableHeaders } from './ReleasesListHeader';
+import { getReleasesListHeader } from './ReleasesListHeader';
 import ReleasesListRow from './ReleasesListRow';
 
 enum FilterTypes {
@@ -22,6 +32,11 @@ enum FilterTypes {
   releasePlan = 'release plan',
   releaseSnapshot = 'release snapshot',
 }
+
+// Using centralized column definitions from consts/release.ts
+const releasesColumns = RELEASE_COLUMNS_DEFINITIONS;
+const defaultVisibleReleaseColumns = DEFAULT_VISIBLE_RELEASE_COLUMNS;
+const nonHidableReleaseColumns = NON_HIDABLE_RELEASE_COLUMNS;
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'metadata.name',
@@ -31,6 +46,14 @@ const sortPaths: Record<SortableHeaders, string> = {
 const ReleasesListView: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
+
+  // Column management state
+  const [visibleColumns, setVisibleColumns] = useVisibleColumns(
+    SESSION_STORAGE_KEYS.RELEASES_VISIBLE_COLUMNS,
+    defaultVisibleReleaseColumns,
+  );
+
+  const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
 
   const {
     data: releases,
@@ -67,15 +90,6 @@ const ReleasesListView: React.FC = () => {
   });
 
   const { [filterType]: searchFilter } = filters;
-
-  const ReleasesListHeader = React.useMemo(
-    () =>
-      getReleasesListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
-        setActiveSortIndex(index);
-        setActiveSortDirection(direction);
-      }),
-    [activeSortDirection, activeSortIndex],
-  );
 
   const filteredReleases = React.useMemo(() => {
     if (isLoading && !releases.length) return [];
@@ -124,6 +138,8 @@ const ReleasesListView: React.FC = () => {
             setFilters({ ...filters, [filterType]: '' });
             setFilterType(val as FilterTypes);
           }}
+          totalColumns={releasesColumns.length}
+          openColumnManagement={() => setIsColumnManagementOpen(true)}
         />
         {!sortedReleases?.length ? (
           <FilteredEmptyState onClearFilters={() => onClearFilters()} />
@@ -132,8 +148,23 @@ const ReleasesListView: React.FC = () => {
             data-test="releases__table"
             data={sortedReleases}
             aria-label="Release List"
-            Header={ReleasesListHeader}
-            Row={ReleasesListRow}
+            Header={getReleasesListHeader(
+              activeSortIndex,
+              activeSortDirection,
+              (_, index: number, direction: SortByDirection) => {
+                setActiveSortIndex(index);
+                setActiveSortDirection(direction);
+              },
+              visibleColumns,
+            )}
+            Row={(props) => (
+              <ReleasesListRow
+                obj={props.obj as ReleaseKind}
+                columns={props.columns || []}
+                customData={props.customData as { applicationName: string }}
+                visibleColumns={visibleColumns}
+              />
+            )}
             loaded={!isLoading || releases.length > 0}
             getRowProps={(obj: ReleaseKind) => ({
               id: obj?.metadata?.uid,
@@ -151,6 +182,17 @@ const ReleasesListView: React.FC = () => {
             }}
           />
         )}
+        <ColumnManagement<ReleaseColumnKeys>
+          isOpen={isColumnManagementOpen}
+          onClose={() => setIsColumnManagementOpen(false)}
+          visibleColumns={visibleColumns}
+          onVisibleColumnsChange={setVisibleColumns}
+          columns={releasesColumns}
+          defaultVisibleColumns={defaultVisibleReleaseColumns}
+          nonHidableColumns={nonHidableReleaseColumns}
+          title="Manage release columns"
+          description="Selected columns will be displayed in the releases table."
+        />
       </>
     </PageSection>
   );

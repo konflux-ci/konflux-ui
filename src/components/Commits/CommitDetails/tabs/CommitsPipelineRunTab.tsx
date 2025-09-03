@@ -4,7 +4,14 @@ import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
+import {
+  PIPELINE_RUN_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  NON_HIDABLE_PIPELINE_RUN_COLUMNS,
+  PipelineRunColumnKeys,
+} from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
+import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { HttpError } from '../../../../k8s/error';
@@ -12,6 +19,7 @@ import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../../shared/components/empty-state/FilteredEmptyState';
+import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
@@ -23,8 +31,8 @@ import {
   PipelineRunsFilterState,
 } from '../../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
-import { PipelineRunListHeaderWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
-import { PipelineRunListRowWithVulnerabilities } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
+import { getPipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
+import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
@@ -37,6 +45,18 @@ const CommitsPipelineRunTab: React.FC = () => {
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
+
+  const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
+  const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
+    `commit-pipeline-runs-columns-${applicationName}-${commitName}`,
+  );
+
+  const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
+    if (Array.isArray(visibleColumnKeys) && visibleColumnKeys.length > 0) {
+      return new Set(visibleColumnKeys as PipelineRunColumnKeys[]);
+    }
+    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
+  }, [visibleColumnKeys]);
 
   const { name, status, type } = filters;
 
@@ -95,6 +115,8 @@ const CommitsPipelineRunTab: React.FC = () => {
             onClearFilters={onClearFilters}
             typeOptions={typeFilterObj}
             statusOptions={statusFilterObj}
+            openColumnManagement={() => setIsColumnManagementOpen(true)}
+            totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
           />
         )}
         <Table
@@ -102,12 +124,20 @@ const CommitsPipelineRunTab: React.FC = () => {
           unfilteredData={pipelineRuns}
           data={filteredPLRs}
           aria-label="Pipelinerun List"
-          Header={PipelineRunListHeaderWithVulnerabilities}
+          Header={getPipelineRunListHeader(safeVisibleColumns)}
           loaded={isFetchingNextPage || loaded}
           customData={vulnerabilities}
           EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
           NoDataEmptyMsg={NoDataEmptyMsg}
-          Row={PipelineRunListRowWithVulnerabilities}
+          Row={(props) => (
+            <PipelineRunListRowWithColumns
+              obj={props.obj as PipelineRunKind}
+              columns={props.columns || []}
+              customData={vulnerabilities}
+              index={props.index}
+              visibleColumns={safeVisibleColumns}
+            />
+          )}
           getRowProps={(obj: PipelineRunKind) => ({
             id: obj.metadata.name,
           })}
@@ -130,6 +160,17 @@ const CommitsPipelineRunTab: React.FC = () => {
           </Stack>
         ) : null}
       </div>
+      <ColumnManagement<PipelineRunColumnKeys>
+        isOpen={isColumnManagementOpen}
+        onClose={() => setIsColumnManagementOpen(false)}
+        visibleColumns={safeVisibleColumns}
+        onVisibleColumnsChange={(cols) => setVisibleColumnKeys(Array.from(cols))}
+        columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
+        defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS}
+        nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}
+        title="Manage pipeline run columns"
+        description="Selected columns will be displayed in the pipeline runs table."
+      />
     </>
   );
 };

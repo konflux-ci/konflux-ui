@@ -27,6 +27,7 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import SnapshotsList from './SnapshotsList';
+import { snapshotColumns } from './SnapshotsListHeader';
 import { SnapshotsListViewProps } from './types';
 
 const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps>> = ({
@@ -117,6 +118,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
             setText={(name) => setFilters({ name })}
             onClearFilters={onClearFilters}
             dataTest="snapshots-list-toolbar"
+            totalColumns={snapshotColumns.length}
           />
 
           {filteredSnapshots.length === 0 ? (
