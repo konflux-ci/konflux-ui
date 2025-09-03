@@ -16,8 +16,8 @@ import './main.scss';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
+      <ThemeProvider>
+        <AuthProvider>
           <RouterProvider
             router={router}
             fallbackElement={
@@ -26,9 +26,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               </Bullseye>
             }
           />
-        </ThemeProvider>
-        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-      </AuthProvider>
+          <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );
