@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { useTaskRun } from '../../../hooks/usePipelineRuns';
+import { useTaskRunV2 } from '../../../hooks/usePipelineRuns';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunDetailsView } from '../TaskRunDetailsView';
@@ -23,10 +23,10 @@ jest.mock('react-router-dom', () => {
 });
 
 jest.mock('../../../hooks/usePipelineRuns', () => ({
-  useTaskRun: jest.fn(),
+  useTaskRunV2: jest.fn(),
 }));
 
-const useTaskRunMock = useTaskRun as jest.Mock;
+const useTaskRunMock = useTaskRunV2 as jest.Mock;
 // const sanitizeHtmlMock = sanitizeHtml as jest.Mock;
 
 describe('TaskRunDetailsView', () => {
