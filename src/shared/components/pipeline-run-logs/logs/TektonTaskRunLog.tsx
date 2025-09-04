@@ -1,13 +1,14 @@
 import * as React from 'react';
+import { PageSection } from '@patternfly/react-core';
 import { useTRTaskRunLog } from '../../../../hooks/useTektonResults';
 import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
 import LogViewer from './LogViewer';
 
 type TektonTaskRunLogProps = {
-  taskRun?: TaskRunKind;
+  taskRun: TaskRunKind | null;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<void>;
+  onDownloadAll?: () => Promise<Error>;
 };
 
 export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLogProps>> = ({
@@ -16,7 +17,7 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
   onDownloadAll,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
-  const [trResults, trLoaded, trError] = useTRTaskRunLog(taskRun.metadata.namespace, taskRun);
+  const [trResults, trLoaded, trError] = useTRTaskRunLog(taskRun?.metadata.namespace, taskRun);
 
   const errorMessage =
     (trError as HttpError)?.code === 404
@@ -24,19 +25,15 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
       : null;
 
   return (
-    <>
-      {!errorMessage && trLoaded ? (
-        <div data-testid="tr-logs-container">
-          <LogViewer
-            data={trResults}
-            downloadAllLabel={downloadAllLabel}
-            onDownloadAll={onDownloadAll}
-            taskRun={taskRun}
-            isLoading={!trLoaded}
-            errorMessage={errorMessage}
-          />
-        </div>
-      ) : null}
-    </>
+    <PageSection isFilled data-testid="tr-logs-container">
+      <LogViewer
+        data={trResults ?? ''}
+        downloadAllLabel={downloadAllLabel}
+        onDownloadAll={onDownloadAll}
+        taskRun={taskRun}
+        isLoading={!trLoaded && !errorMessage}
+        errorMessage={errorMessage}
+      />
+    </PageSection>
   );
 };

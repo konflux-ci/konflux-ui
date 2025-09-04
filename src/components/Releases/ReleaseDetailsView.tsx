@@ -1,14 +1,13 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useRelease } from '../../hooks/useReleases';
-import { HttpError } from '../../k8s/error';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
   APPLICATION_RELEASE_LIST_PATH,
 } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
@@ -28,16 +27,11 @@ const ReleaseDetailsView: React.FC = () => {
       </Bullseye>
     );
   }
+
   if (error) {
-    const httpError = HttpError.fromCode((error as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title={`Unable to load release ${releaseName}`}
-        body={(error as { message: string }).message}
-      />
-    );
+    return getErrorState(error, loaded, 'release');
   }
+
   return (
     <DetailsPage
       headTitle={release.metadata.name}

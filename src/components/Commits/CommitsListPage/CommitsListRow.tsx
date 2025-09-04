@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Truncate } from '@patternfly/react-core';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
-import { RowFunctionArgs, TableData, Timestamp } from '../../../shared';
+import { TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace';
@@ -13,19 +13,41 @@ import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
 import { CommitIcon } from '../CommitIcon';
-import { commitsTableColumnClasses } from './CommitsListHeader';
+import {
+  CommitColumnKeys,
+  commitsTableColumnClasses,
+  DEFAULT_VISIBLE_COMMIT_COLUMNS,
+  COMMIT_COLUMN_ORDER,
+  getDynamicCommitsColumnClasses,
+} from './commits-columns-config';
 
 import './CommitsListRow.scss';
 
-const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>> = ({ obj }) => {
+interface CommitsListRowProps {
+  obj: Commit;
+  visibleColumns?: Set<CommitColumnKeys>;
+}
+
+const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({
+  obj,
+  visibleColumns,
+}) => {
   const actions = useCommitActions(obj);
   const namespace = useNamespace();
   const status = pipelineRunStatus(obj.pipelineRuns[0]);
 
   const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
-  return (
-    <>
-      <TableData className={commitsTableColumnClasses.name}>
+
+  const columnsToShow = visibleColumns || DEFAULT_VISIBLE_COMMIT_COLUMNS;
+
+  // Use dynamic classes based on visible columns
+  const columnClasses = visibleColumns
+    ? getDynamicCommitsColumnClasses(visibleColumns)
+    : commitsTableColumnClasses;
+
+  const columnComponents = {
+    name: (
+      <TableData key="name" className={columnClasses.name}>
         <CommitIcon isPR={obj.isPullRequest} className="sha-title-icon" />
         <Link
           to={COMMIT_DETAILS_PATH.createPath({
@@ -43,14 +65,18 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
           </>
         )}
       </TableData>
-      <TableData className={commitsTableColumnClasses.branch}>
+    ),
+    branch: (
+      <TableData key="branch" className={columnClasses.branch}>
         {createRepoBranchURL(obj) ? (
           <ExternalLink href={createRepoBranchURL(obj)} text={`${obj.branch}`} />
         ) : (
           `${obj.branch || '-'}`
         )}
       </TableData>
-      <TableData className={commitsTableColumnClasses.component}>
+    ),
+    component: (
+      <TableData key="component" className={columnClasses.component}>
         <div className="commits-component-list">
           {obj.components.length > 0
             ? obj.components.map((c) => (
@@ -68,16 +94,30 @@ const CommitsListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Commit>>>
             : '-'}
         </div>
       </TableData>
-      <TableData className={commitsTableColumnClasses.byUser}>
+    ),
+    byUser: (
+      <TableData key="byUser" className={columnClasses.byUser}>
         <Truncate content={obj.user ?? '-'} />
       </TableData>
-      <TableData className={commitsTableColumnClasses.committedAt}>
+    ),
+    committedAt: (
+      <TableData key="committedAt" className={columnClasses.committedAt}>
         <Timestamp timestamp={obj.creationTime} />
       </TableData>
-      <TableData className={commitsTableColumnClasses.status}>
+    ),
+    status: (
+      <TableData key="status" className={columnClasses.status}>
         {statuses.includes(status) ? <StatusIconWithText status={status} /> : '-'}
       </TableData>
-      <TableData className={commitsTableColumnClasses.kebab}>
+    ),
+  };
+
+  return (
+    <>
+      {COMMIT_COLUMN_ORDER.filter((columnKey) => columnsToShow.has(columnKey)).map(
+        (columnKey) => columnComponents[columnKey],
+      )}
+      <TableData className={columnClasses.kebab}>
         <ActionMenu actions={actions} />
       </TableData>
     </>

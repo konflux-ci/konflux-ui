@@ -14,18 +14,26 @@ export const ApplicationDropdown: React.FC<React.PropsWithChildren<ApplicationDr
   props,
 ) => {
   const namespace = useNamespace();
-  const [applications, loaded] = useApplications(namespace);
+  const [applications, loaded, error] = useApplications(namespace);
   const [, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(
     () =>
       loaded
-        ? applications.map((a) => ({
-            key: a.metadata.name,
-            value: getApplicationDisplayName(a),
-          }))
+        ? error
+          ? [
+              {
+                key: 'error',
+                value: 'Unable to load applications',
+                isDisabled: true,
+              },
+            ]
+          : applications.map((a) => ({
+              key: a.metadata.name,
+              value: getApplicationDisplayName(a),
+            }))
         : [],
-    [applications, loaded],
+    [applications, loaded, error],
   );
 
   return (

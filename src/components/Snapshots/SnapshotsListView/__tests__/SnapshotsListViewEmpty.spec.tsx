@@ -65,7 +65,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: [],
       isLoading: false,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -78,7 +79,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: undefined,
       isLoading: false,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -91,7 +93,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: null,
       isLoading: false,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -104,7 +107,8 @@ describe('SnapshotsListView - Empty State', () => {
     useMockSnapshots.mockReturnValue({
       data: [],
       isLoading: true,
-      hasError: false,
+      archiveError: undefined,
+      clusterError: undefined,
     });
 
     renderWithQueryClientAndRouter(createWrappedComponent());
@@ -125,6 +129,19 @@ describe('SnapshotsListView - Empty State', () => {
       renderWithQueryClientAndRouter(createWrappedComponent());
 
       expect(screen.getByText('Unable to load snapshots')).toBeInTheDocument();
+    });
+
+    it("should render cluster ErrorEmptyState when it' error code is not 404", () => {
+      useMockSnapshots.mockReturnValue({
+        data: [],
+        isLoading: false,
+        clusterError: { code: 403 },
+        archiveError: { code: 404 },
+      });
+
+      renderWithQueryClientAndRouter(createWrappedComponent());
+
+      expect(screen.getByText('Forbidden')).toBeInTheDocument();
     });
 
     it('should not render ErrorEmptyState when only cluster error occurs', () => {

@@ -11,6 +11,7 @@ type ActionMenuProps = {
   variant?: ActionMenuVariant;
   label?: string;
   isDisabled?: boolean;
+  onOpen?: (isOpen: boolean) => void;
 };
 
 type MenuRendererProps = {
@@ -53,6 +54,7 @@ const ActionMenu: React.FC<React.PropsWithChildren<ActionMenuProps>> = ({
   label,
   isDisabled,
   actions,
+  onOpen,
 }) => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
@@ -61,6 +63,14 @@ const ActionMenu: React.FC<React.PropsWithChildren<ActionMenuProps>> = ({
 
   const hideMenu = () => {
     setIsOpen(false);
+  };
+
+  const handleToggle = (setOpen: React.SetStateAction<boolean>) => {
+    const newOpen = typeof setOpen === 'function' ? setOpen(isOpen) : setOpen;
+    if (onOpen) {
+      onOpen(newOpen);
+    }
+    setIsOpen(newOpen);
   };
 
   return (
@@ -72,7 +82,7 @@ const ActionMenu: React.FC<React.PropsWithChildren<ActionMenuProps>> = ({
         toggleVariant={variant}
         toggleTitle={label}
         menuRef={menuRef}
-        onToggleClick={setIsOpen}
+        onToggleClick={handleToggle}
       />
       <MenuRenderer
         isOpen={isOpen}

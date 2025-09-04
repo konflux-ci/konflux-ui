@@ -18,6 +18,17 @@ describe('ApplicationDropdown', () => {
     expect(screen.getByText('Loading applications...')).toBeVisible();
   });
 
+  it('should show error message if applications arent loaded', async () => {
+    useApplicationsMock.mockReturnValue([undefined, true, Error()]);
+    formikRenderer(<ApplicationDropdown name="app" />);
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+    await waitFor(() => {
+      const errorMenuItem = screen.getByRole('menuitem', { name: 'Unable to load applications' });
+      expect(errorMenuItem).toBeVisible();
+      expect(errorMenuItem).toHaveClass('pf-m-disabled');
+    });
+  });
+
   it('should show dropdown if applications are loaded', async () => {
     useApplicationsMock.mockReturnValue([
       [{ metadata: { name: 'app1' } }, { metadata: { name: 'app2' } }],

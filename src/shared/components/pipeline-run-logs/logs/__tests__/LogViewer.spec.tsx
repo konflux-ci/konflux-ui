@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { saveAs } from 'file-saver';
 import { useFullscreen } from '../../../../hooks/fullscreen';
+import { useTheme } from '../../../../theme';
 import LogViewer from '../LogViewer';
 
 jest.mock('file-saver', () => ({
@@ -11,6 +12,15 @@ jest.mock('file-saver', () => ({
 
 jest.mock('../../../../hooks/fullscreen', () => ({
   useFullscreen: jest.fn(() => [false, jest.fn(), jest.fn(), true]),
+}));
+
+jest.mock('../../../../theme', () => ({
+  useTheme: jest.fn(() => ({
+    preference: 'system',
+    effectiveTheme: 'light',
+    systemPreference: 'light',
+    setThemePreference: jest.fn(),
+  })),
 }));
 
 jest.mock('../../../status-box/StatusBox', () => ({
@@ -40,14 +50,9 @@ jest.mock('@patternfly/react-log-viewer', () => ({
 
 const mockSaveAs = saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
+const mockUseTheme = useTheme as jest.Mock;
 
 describe('LogViewer', () => {
-  const defaultProps = {
-    data: 'line 1\nline 2\nline 3',
-    isLoading: false,
-    errorMessage: null,
-  };
-
   const mockTaskRun = {
     apiVersion: 'tekton.dev/v1beta1',
     kind: 'TaskRun',
@@ -63,9 +68,22 @@ describe('LogViewer', () => {
     status: {},
   };
 
+  const defaultProps = {
+    data: 'line 1\nline 2\nline 3',
+    isLoading: false,
+    errorMessage: null,
+    taskRun: null,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseFullscreen.mockReturnValue([false, jest.fn(), jest.fn(), true]);
+    mockUseTheme.mockReturnValue({
+      preference: 'system',
+      effectiveTheme: 'light',
+      systemPreference: 'light',
+      setThemePreference: jest.fn(),
+    });
   });
 
   describe('rendering', () => {
@@ -104,7 +122,7 @@ describe('LogViewer', () => {
     it('should show loading indicator when isLoading is true', () => {
       render(<LogViewer {...defaultProps} isLoading={true} taskRun={mockTaskRun} />);
 
-      expect(screen.getByTestId('loading-inline')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
 
     it('should show error message when errorMessage is provided', () => {

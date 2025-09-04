@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, FormGroup, HelperText, Spinner } from '@patternfly/react-core';
 import { FieldArray, useField, FieldArrayRenderProps } from 'formik';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { getFieldId } from '../../../src/shared/components/formik-fields/field-utils';
 import { useComponents } from '../../hooks/useComponents';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -21,7 +22,7 @@ interface IntegrationTestContextProps {
 const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldName }) => {
   const namespace = useNamespace();
   const { applicationName } = useParams();
-  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
   const [, { value: contexts, error }] = useField(fieldName);
   const fieldId = getFieldId(fieldName, 'dropdown');
   const [inputValue, setInputValue] = React.useState('');
@@ -82,26 +83,30 @@ const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldNa
 
   return (
     <FormGroup fieldId={fieldId} label={heading ?? 'Contexts'} style={{ maxWidth: '750px' }}>
-      {componentsLoaded && components ? (
-        <>
-          <FieldArray
-            name={fieldName}
-            render={(arrayHelpers) => (
-              <ContextSelectList
-                allContexts={allContexts}
-                filteredContexts={filteredContexts}
-                onSelect={(contextName: string) => handleSelect(arrayHelpers, contextName)}
-                inputValue={inputValue}
-                onInputValueChange={setInputValue}
-                onRemoveAll={() => handleRemoveAll(arrayHelpers)}
-                error={error}
-              />
-            )}
-          />
-          <HelperText>
-            Must select at least one context but you have option to pick more if needed.
-          </HelperText>
-        </>
+      {componentsLoaded ? (
+        componentsError ? (
+          getErrorState(componentsError, componentsLoaded, 'contexts', true)
+        ) : (
+          <>
+            <FieldArray
+              name={fieldName}
+              render={(arrayHelpers) => (
+                <ContextSelectList
+                  allContexts={allContexts}
+                  filteredContexts={filteredContexts}
+                  onSelect={(contextName: string) => handleSelect(arrayHelpers, contextName)}
+                  inputValue={inputValue}
+                  onInputValueChange={setInputValue}
+                  onRemoveAll={() => handleRemoveAll(arrayHelpers)}
+                  error={error}
+                />
+              )}
+            />
+            <HelperText>
+              Must select at least one context but you have option to pick more if needed.
+            </HelperText>
+          </>
+        )
       ) : (
         <Bullseye>
           <Spinner size="xl" />

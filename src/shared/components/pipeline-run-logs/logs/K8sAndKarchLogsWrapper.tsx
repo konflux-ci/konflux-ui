@@ -11,7 +11,7 @@ import { MultiStreamLogs } from './MultiStreamLogs';
 type K8sAndKarchLogWrapperProps = {
   taskRun: TaskRunKind;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<void>;
+  onDownloadAll?: () => Promise<Error>;
   resource: WatchK8sResource;
 };
 

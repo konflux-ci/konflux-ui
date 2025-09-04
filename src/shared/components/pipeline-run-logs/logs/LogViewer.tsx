@@ -2,8 +2,10 @@ import React from 'react';
 import {
   Alert,
   Banner,
+  Bullseye,
   Button,
   Checkbox,
+  Spinner,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
@@ -24,6 +26,7 @@ import classNames from 'classnames';
 import { saveAs } from 'file-saver';
 import { TaskRunKind } from '../../../../types';
 import { useFullscreen } from '../../../hooks/fullscreen';
+import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
 
@@ -34,8 +37,8 @@ export type Props = LogViewerProps & {
   data: string;
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<void>;
-  taskRun?: TaskRunKind;
+  onDownloadAll?: () => Promise<Error>;
+  taskRun: TaskRunKind | null;
   isLoading: boolean;
   errorMessage: string | null;
 };
@@ -52,6 +55,7 @@ const LogViewer: React.FC<Props> = ({
   ...props
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
+  const { effectiveTheme } = useTheme();
   const [logTheme, setLogTheme] = React.useState<LogViewerProps['theme']>('dark');
 
   const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
@@ -62,7 +66,8 @@ const LogViewer: React.FC<Props> = ({
     [autoScroll, data],
   );
 
-  const [isFullscreen, fullscreenRef, fullscreenToggle] = useFullscreen<HTMLDivElement>();
+  const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
+    useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
   const showResumeStreamButton = allowAutoScroll && scrollDirection === 'backward';
@@ -99,10 +104,7 @@ const LogViewer: React.FC<Props> = ({
     <div
       ref={fullscreenRef}
       style={{ height: isFullscreen ? '100vh' : '100%' }}
-      className={classNames('log-viewer__container', 'log-viewer-theme-isolation', {
-        'log-viewer-theme-isolation--dark': logTheme === 'dark',
-        'log-viewer-theme-isolation--light': logTheme === 'light',
-      })}
+      className={classNames('log-viewer__container')}
     >
       <PatternFlyLogViewer
         {...props}
@@ -125,7 +127,11 @@ const LogViewer: React.FC<Props> = ({
         header={
           <Banner data-testid="logs-taskName">
             {taskName} <LogsTaskDuration taskRun={taskRun} />
-            {isLoading && <LoadingInline />}
+            {isLoading && (
+              <Bullseye>
+                <Spinner size="lg" />
+              </Bullseye>
+            )}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
         }
@@ -149,13 +155,10 @@ const LogViewer: React.FC<Props> = ({
                   <Checkbox
                     id="theme"
                     label="Dark theme"
+                    // theme toggle should be disabled if global theme is dark
+                    isDisabled={effectiveTheme === 'dark'}
                     checked={logTheme === 'dark'}
-                    onClick={() =>
-                      setLogTheme((prev) => {
-                        if (prev === 'dark') return 'light';
-                        return 'dark';
-                      })
-                    }
+                    onClick={() => setLogTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
                   />
                 </ToolbarItem>
                 <ToolbarItem variant="separator" className="log-viewer__divider" />
@@ -183,7 +186,7 @@ const LogViewer: React.FC<Props> = ({
                     <ToolbarItem variant="separator" className="log-viewer__divider" />
                   </>
                 )}
-                {fullscreenToggle && (
+                {fullscreenToggle && isFullscreenSupported && (
                   <ToolbarItem spacer={{ default: 'spacerMd' }}>
                     <Button variant="link" onClick={fullscreenToggle} isInline>
                       {isFullscreen ? (

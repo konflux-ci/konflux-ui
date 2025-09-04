@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { hashKey } from '@tanstack/react-query';
+import { hashKey } from '@tanstack/query-core';
 import { useK8sQueryWatch } from '~/k8s/hooks/useK8sQueryWatch';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
@@ -186,7 +186,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
       });
   }, [resourceInit, enabled, queryOptions]);
 
-  const shouldWatch = watch && result?.source === ResourceSource.Cluster && resourceInit;
+  const shouldWatch = enabled && watch && result?.source === ResourceSource.Cluster && resourceInit;
 
   const wsError = useK8sQueryWatch(
     shouldWatch ? resourceInit : null,
@@ -196,7 +196,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
           createQueryKeys({
             model: resourceInit.model,
             queryOptions: resourceInit.queryOptions,
-            prefix: resourceInit.fetchOptions?.requestInit?.pathPrefix,
+            prefix: watchOptions?.pathPrefix ?? resourceInit.fetchOptions?.requestInit?.pathPrefix,
           }),
         )
       : hashKey(['disabled', 'no-resource']),

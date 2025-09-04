@@ -40,7 +40,7 @@ describe('TaskRunDetailsView', () => {
   });
 
   it('should render the error state if the taskrun is not found', () => {
-    useTaskRunMock.mockReturnValue([null, false, { code: 404 }]);
+    useTaskRunMock.mockReturnValue([null, true, { code: 404 }]);
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
     screen.getByText('404: Page not found');
     screen.getByText('Go to applications list');

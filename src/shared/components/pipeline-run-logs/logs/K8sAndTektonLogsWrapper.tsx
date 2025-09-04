@@ -11,7 +11,7 @@ import { TektonTaskRunLog } from './TektonTaskRunLog';
 type K8sAndTektonLogsWrapperProps = {
   taskRun: TaskRunKind;
   downloadAllLabel?: string;
-  onDownloadAll?: () => Promise<void>;
+  onDownloadAll?: () => Promise<Error>;
   resource: WatchK8sResource;
 };
 

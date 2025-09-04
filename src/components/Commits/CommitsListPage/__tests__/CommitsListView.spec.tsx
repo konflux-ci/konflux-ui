@@ -47,7 +47,7 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         <tbody>
           {props.data.map((d, i) => (
             <tr key={i}>
-              <CommitsListRow columns={null} obj={d} />
+              <CommitsListRow obj={d} />
             </tr>
           ))}
         </tbody>
@@ -103,7 +103,7 @@ describe('CommitsListView', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<CommitsList />);
-    screen.getByText('Unable to load pipeline runs');
+    screen.getByText('Unable to load commits');
   });
 
   it('should render empty state if no commits are present', () => {
@@ -129,7 +129,7 @@ describe('CommitsListView', () => {
 
   it('renders correct commit data', () => {
     const { getByText, queryByText, container } = render(
-      <CommitsListRow columns={null} obj={commits[0]} />,
+      <CommitsListRow obj={commits[0]} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
     expect(queryByText('commit1')).toBeInTheDocument();

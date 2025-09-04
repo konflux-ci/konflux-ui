@@ -55,6 +55,12 @@ const InternalFLAGS = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'column-management': {
+    key: 'column-management',
+    description: 'Enable the "Manage columns" button for tables with more than six columns',
+    defaultEnabled: true,
+    status: 'ready',
+  },
   'system-notifications': {
     key: 'system-notifications',
     description: 'Enable system notifications badge and notification center',

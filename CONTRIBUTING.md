@@ -9,7 +9,7 @@ This document will help you get started with contributing code, documentation, o
 
 We welcome contributions of all kinds! Follow these steps to get started:
 
-1. **Fork the repository** and create your branch from `main`.
+1. Fork the repository and create your branch from `main`.
 
 2. Install dependencies in the root of your local repository and in the `e2e-tests` directory with `yarn install`.
 
@@ -19,7 +19,7 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - Type check (`yarn tsc`)
    - Tests (`yarn test`)
 
-4. **Write or update tests**:
+4. Write or update tests:
 
    - Use [Jest](https://jestjs.io/) for unit tests.
    - Add tests for new components, utility functions, or any logic added/changed.
@@ -29,7 +29,7 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - If your changes impact end-to-end behavior or UI flows, consider updating or adding to the e2e tests located in the `e2e-tests/` folder.  
      For guidance on contributing to e2e tests, please refer to the [e2e-tests/README.md](e2e-tests/README.md) documentation.
 
-5. **Use feature flags when needed**:
+5. Use feature flags when needed:
 
    - If you're contributing a feature that is not yet fully implemented or will be completed in follow-up PRs, please wrap it with a feature flag.
    - Refer to our [feature flags guide](./docs/feature-flags.md) for more information.
@@ -42,13 +42,14 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - **Screenshots**: required for any UI changes
    - **How to test or reproduce**: how to verify the change
 
-Tip: If your PR is still a work in progress and not ready for review, mark it as a draft to let others know that it's not ready for approval yet.
+> Tip: If your PR is still a work in progress and not ready for review, mark it as a draft to let others know that it's not ready for approval yet.
 
-7. **Tag reviewers in your Pull Request**:
+7. Tag reviewers in your Pull Request:
 
    - Please tag at least one or two active maintainers who are responsible for reviewing PRs.
    - You can also tag the [konflux-ui team](https://github.com/orgs/konflux-ci/teams/konflux-ui) for broader visibility if needed.
    - If you’re unsure who to tag, check recent contributors.
+   - The reviewer reviews the code. If the code is safe to run, reviewer may add `ok-to-test` label to enable the E2E tests on this PR.
 
 8. Once your PR is ready:
 

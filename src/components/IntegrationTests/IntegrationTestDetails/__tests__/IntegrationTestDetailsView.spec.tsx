@@ -58,7 +58,7 @@ describe('IntegrationTestDetailsView', () => {
   it('should show error state if test cannot be loaded', () => {
     watchResourceMock.mockReturnValue([
       [],
-      false,
+      true,
       { message: 'Application does not exist', code: 404 },
     ]);
     useParamsMock.mockReturnValue({ integrationTestName: 'int-test', applicationName: 'test-app' });
