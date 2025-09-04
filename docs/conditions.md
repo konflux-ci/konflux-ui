@@ -55,10 +55,10 @@ export const FLAGS = {
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],  // Requires Kubearchive
-      reason: 'Kubearchive must be installed',
-      visible: true,  // when guard fails, show the flag entry disabled with the reason
-      // visible: true => show the flag disabled with its reason
-      // visible: false => hide the flag entirely when guard conditions aren’t met
+      failureReason: 'Kubearchive must be installed',
+      visibleInFeatureFlagPanel: true,  // when guard fails, show the flag entry disabled with the reason
+      // visibleInFeatureFlagPanel: true => show the flag disabled with its reason
+      // visibleInFeatureFlagPanel: false => hide the flag entirely when guard conditions aren’t met
     },
   },
 } satisfies Record<string, FeatureMeta>;
@@ -87,8 +87,8 @@ const MyComponent = () => {
 guard: {
   allOf: ['condition1', 'condition2'],  // ALL must be true (AND logic)
   anyOf: ['condition3', 'condition4'],  // ANY can be true (OR logic)  
-  reason: 'Shown to users when disabled',
-  visible: true,  // Show condition status in dev panel
+  failureReason: 'Shown to users when disabled',
+  visibleInFeatureFlagPanel: true,  // Show condition status in dev panel
 }
 ```
 
@@ -108,8 +108,8 @@ export const FLAGS = {
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'], 
-      reason: 'Kubearchive not installed',
-      visible: true,
+      failureReason: 'Kubearchive not installed',
+      visibleInFeatureFlagPanel: true,
     },
   },
 };
@@ -158,15 +158,15 @@ const MyPage = () => {
 // Only show in staging
 guard: {
   anyOf: ['isStagingCluster'],
-  reason: 'Only available in staging',
-  visible: true,
+  failureReason: 'Only available in staging',
+  visibleInFeatureFlagPanel: true,
 }
 
 // Need both staging AND kubearchive
 guard: {
   allOf: ['isStagingCluster', 'isKubearchiveEnabled'],
-  reason: 'Requires staging environment with Kubearchive',
-  visible: true,
+  failureReason: 'Requires staging environment with Kubearchive',
+  visibleInFeatureFlagPanel: true,
 }
 ```
 
@@ -176,8 +176,8 @@ guard: {
 // Feature needs Kubearchive service
 guard: {
   allOf: ['isKubearchiveEnabled'],
-  reason: 'Kubearchive service not available',
-  visible: true,
+  failureReason: 'Kubearchive service not available',
+  visibleInFeatureFlagPanel: true,
 }
 ```
 
@@ -353,8 +353,8 @@ registerCondition('serviceHealth', expensiveApiCall); // Cached forever!
 // src/feature-flags/flags.ts
 guard: {
   allOf: ['condition1'],  // Must be true
-  reason: 'User-friendly explanation',
-  visible: false, // will be hidden in the FeatureFlag Panel
+  failureReason: 'User-friendly explanation',
+  visibleInFeatureFlagPanel: false, // will be hidden in the FeatureFlag Panel
 }
 ```
 
