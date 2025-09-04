@@ -75,14 +75,15 @@ export function useKubearchiveListResourceQuery(
  * Unlike the list hook, this is designed for fetching individual resources when you
  * know the exact name and namespace.
  *
- * @param resourceInit - K8s resource watch configuration specifying the resource to fetch
+ * @param resourceInit - K8s resource watch configuration specifying the resource to fetch.
+ *                       If null, the query will be disabled and no request will be made.
  * @param model - K8s model definition containing API group, version, and kind information
  * @param queryOptions - Optional React Query options for customizing query behavior
  * @param options - Optional request configuration (headers, timeout, etc.)
  * @returns UseQueryResult<K8sResourceCommon, unknown>
  */
 export function useKubearchiveGetResourceQuery(
-  resourceInit: WatchK8sResource,
+  resourceInit: WatchK8sResource | null,
   model: K8sModelCommon,
   queryOptions?: TQueryOptions<K8sResourceCommon>,
   options: Partial<RequestInit & { wsPrefix?: string; pathPrefix?: string }> = {},
