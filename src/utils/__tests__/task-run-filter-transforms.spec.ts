@@ -1,3 +1,4 @@
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { MatchExpression, MatchLabels, Selector } from '~/types/k8s';
 import {
   convertFilterToKubearchiveSelectors,
@@ -70,7 +71,7 @@ describe('task-run-filter-transforms', () => {
       expect(result.matchExpressions).toEqual(matchExpressions);
     });
 
-    it('should convert filterByCommit to match expressions', () => {
+    it('should convert filterByCommit to match expression', () => {
       const commitSha = 'abc123def456';
       const result = convertFilterToKubearchiveSelectors({
         filterByCommit: commitSha,
@@ -78,24 +79,14 @@ describe('task-run-filter-transforms', () => {
 
       expect(result.matchExpressions).toEqual([
         {
-          key: 'pipelinesascode.tekton.dev/sha',
-          operator: 'In',
-          values: [commitSha],
-        },
-        {
-          key: 'tekton.dev/pipeline',
-          operator: 'In',
-          values: [commitSha],
-        },
-        {
-          key: 'appstudio.openshift.io/commit',
+          key: PipelineRunLabel.COMMIT_LABEL,
           operator: 'In',
           values: [commitSha],
         },
       ]);
     });
 
-    it('should combine existing matchExpressions with commit expressions', () => {
+    it('should combine existing matchExpressions with commit expression', () => {
       const existingExpressions: MatchExpression[] = [
         {
           key: 'custom.label',
@@ -108,25 +99,13 @@ describe('task-run-filter-transforms', () => {
         filterByCommit: 'abc123',
       });
 
-      expect(result.matchExpressions).toHaveLength(4); // 1 existing + 3 commit expressions
+      expect(result.matchExpressions).toHaveLength(2); // 1 existing + 1 commit expression
       expect(result.matchExpressions[0]).toEqual(existingExpressions[0]);
-      expect(result.matchExpressions.slice(1)).toEqual([
-        {
-          key: 'pipelinesascode.tekton.dev/sha',
-          operator: 'In',
-          values: ['abc123'],
-        },
-        {
-          key: 'tekton.dev/pipeline',
-          operator: 'In',
-          values: ['abc123'],
-        },
-        {
-          key: 'appstudio.openshift.io/commit',
-          operator: 'In',
-          values: ['abc123'],
-        },
-      ]);
+      expect(result.matchExpressions[1]).toEqual({
+        key: PipelineRunLabel.COMMIT_LABEL,
+        operator: 'In',
+        values: ['abc123'],
+      });
     });
 
     it('should handle empty input', () => {
@@ -192,7 +171,6 @@ describe('task-run-filter-transforms', () => {
       const result = createKubearchiveSelector(selector);
 
       expect(result).toEqual({
-        ...selector,
         matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
         matchExpressions: [
           {
@@ -200,20 +178,7 @@ describe('task-run-filter-transforms', () => {
             operator: 'In',
             values: ['abc123'],
           },
-          {
-            key: 'tekton.dev/pipeline',
-            operator: 'In',
-            values: ['abc123'],
-          },
-          {
-            key: 'appstudio.openshift.io/commit',
-            operator: 'In',
-            values: ['abc123'],
-          },
         ],
-        filterByName: undefined,
-        filterByCreationTimestampAfter: undefined,
-        filterByCommit: undefined,
       });
     });
 
@@ -237,13 +202,7 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBe(
         'metadata.name=my-task-run,metadata.creationTimestamp=>2024-01-01T00:00:00Z',
       );
-      expect(result.selector).toEqual({
-        ...selector,
-        matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        filterByName: undefined,
-        filterByCreationTimestampAfter: undefined,
-        filterByCommit: undefined,
-      });
+      expect(result.selector).toEqual(createKubearchiveSelector(selector));
     });
 
     it('should handle selector with only labels', () => {
@@ -255,12 +214,7 @@ describe('task-run-filter-transforms', () => {
 
       expect(result.namespace).toBe('default');
       expect(result.fieldSelector).toBeUndefined();
-      expect(result.selector).toEqual({
-        ...selector,
-        filterByName: undefined,
-        filterByCreationTimestampAfter: undefined,
-        filterByCommit: undefined,
-      });
+      expect(result.selector).toEqual(createKubearchiveSelector(selector));
     });
 
     it('should handle no selector', () => {

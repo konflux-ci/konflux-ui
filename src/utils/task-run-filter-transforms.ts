@@ -1,3 +1,4 @@
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { MatchLabels, MatchExpression, Selector } from '~/types/k8s';
 
 /**
@@ -11,20 +12,24 @@ export interface KubearchiveTaskRunFilters {
 }
 
 /**
- * Converts filterBy options to Kubearchive label/field selectors
+ * Extended selector type that includes typed filter fields for TaskRuns
  */
-export const convertFilterToKubearchiveSelectors = (
-  filterBy: Partial<{
+export type TaskRunSelector = Selector &
+  Partial<{
     filterByName: string;
     filterByCreationTimestampAfter: string;
     filterByCommit: string;
-    matchLabels: MatchLabels;
-    matchExpressions: MatchExpression[];
-  }>,
+  }>;
+
+/**
+ * Converts filterBy options to Kubearchive label/field selectors
+ */
+export const convertFilterToKubearchiveSelectors = (
+  filterBy: TaskRunSelector,
 ): KubearchiveTaskRunFilters => {
   const result: KubearchiveTaskRunFilters = {};
 
-  // Handle field selectors
+  // Handle field selectors - convert custom filters to Kubernetes field selectors
   const fieldSelectors: Record<string, string> = {};
 
   if (filterBy.filterByName) {
@@ -48,28 +53,16 @@ export const convertFilterToKubearchiveSelectors = (
     result.matchExpressions = filterBy.matchExpressions;
   }
 
-  // Handle commit filter as match expression or label
+  // Handle commit filter as match expression
   if (filterBy.filterByCommit) {
-    const commitLabels = {
-      'pipelinesascode.tekton.dev/sha': filterBy.filterByCommit,
-      'tekton.dev/pipeline': filterBy.filterByCommit,
-      'appstudio.openshift.io/commit': filterBy.filterByCommit,
+    // Use only the primary SHA label; OR across keys isn't supported by Kubernetes selectors.
+    const sha = filterBy.filterByCommit;
+    const expr: MatchExpression = {
+      key: PipelineRunLabel.COMMIT_LABEL,
+      operator: 'In',
+      values: [sha],
     };
-
-    // Convert commit filter to match expressions (OR logic)
-    const commitExpressions: MatchExpression[] = Object.entries(commitLabels).map(
-      ([key, value]) => ({
-        key,
-        operator: 'In',
-        values: [value],
-      }),
-    );
-
-    if (result.matchExpressions) {
-      result.matchExpressions.push(...commitExpressions);
-    } else {
-      result.matchExpressions = commitExpressions;
-    }
+    result.matchExpressions = [...(result.matchExpressions ?? []), expr];
   }
 
   return result;
@@ -120,21 +113,19 @@ export const convertKubearchiveSelectorsToFilter = (
 };
 
 /**
- * Creates a Kubearchive-compatible selector from a standard Selector object
+ * Creates a Kubearchive-compatible selector from a TaskRunSelector object
  */
-export const createKubearchiveSelector = (selector?: Selector): Selector | undefined => {
+export const createKubearchiveSelector = (selector?: TaskRunSelector): Selector | undefined => {
   if (!selector) return undefined;
 
   const kubearchiveFilters = convertFilterToKubearchiveSelectors(selector);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = selector;
 
   return {
-    ...selector,
+    ...rest,
     matchLabels: kubearchiveFilters.matchLabels,
     matchExpressions: kubearchiveFilters.matchExpressions,
-    // Remove custom filter properties for Kubearchive
-    filterByName: undefined,
-    filterByCreationTimestampAfter: undefined,
-    filterByCommit: undefined,
   };
 };
 
@@ -143,7 +134,7 @@ export const createKubearchiveSelector = (selector?: Selector): Selector | undef
  */
 export const createKubearchiveWatchResource = (
   namespace: string,
-  selector?: Selector,
+  selector?: TaskRunSelector,
 ): {
   namespace: string;
   selector?: Selector;

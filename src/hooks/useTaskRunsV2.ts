@@ -4,12 +4,14 @@ import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
 import { TaskRunKind } from '../types';
-import { Selector } from '../types/k8s';
-import { createKubearchiveWatchResource } from '../utils/task-run-filter-transforms';
+import {
+  createKubearchiveWatchResource,
+  TaskRunSelector,
+} from '../utils/task-run-filter-transforms';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 
 export interface UseTaskRunsV2Options {
-  selector?: Selector;
+  selector?: TaskRunSelector;
   limit?: number;
   enabled?: boolean;
   watch?: boolean;
@@ -72,12 +74,9 @@ export const useTaskRunsV2 = (
     if (!enableKubearchive) return [];
 
     const data = kubearchiveData as TaskRunKind[];
-
-    // Sort by creation timestamp (newest first)
-    const sorted = data.sort(
-      (a, b) =>
-        b.metadata?.creationTimestamp?.localeCompare(a.metadata?.creationTimestamp || '') || 0,
-    );
+    const toKey = (tr?: TaskRunKind) => tr?.metadata?.creationTimestamp ?? '';
+    // Sort by creationTimestamp (newest first); stable for equal keys
+    const sorted = [...data].sort((a, b) => toKey(b).localeCompare(toKey(a)));
 
     // Apply limit if specified
     return optionsMemo?.limit && optionsMemo.limit > 0
