@@ -46,12 +46,30 @@ const useApplicationsMock = useApplications as jest.Mock;
 
 describe('ReleasePlanListView', () => {
   mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
-  useApplicationsMock.mockReturnValue([[mockApplication], true]);
+
+  beforeEach(() => {
+    useApplicationsMock.mockReturnValue([[mockApplication], true]);
+  });
 
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);
     const wrapper = render(ReleasePlanList);
     expect(await wrapper.findByRole('progressbar')).toBeTruthy();
+  });
+
+  it('should render the error state if there is an error loading the applications', () => {
+    mockReleasePlanHook.mockReturnValue([[mockReleasePlan], true]);
+    useApplicationsMock.mockReturnValue([undefined, true, { code: 403 }]);
+    render(ReleasePlanList);
+    expect(screen.getByText('Unable to load release plans')).toBeInTheDocument();
+    expect(screen.getByText('Forbidden')).toBeInTheDocument();
+  });
+
+  it('should render the error state if there is an error loading the release plans', () => {
+    mockReleasePlanHook.mockReturnValue([undefined, true, { code: 403 }]);
+    render(ReleasePlanList);
+    expect(screen.getByText('Unable to load release plans')).toBeInTheDocument();
+    expect(screen.getByText('Forbidden')).toBeInTheDocument();
   });
 
   it('should render empty state when no release Plans present', () => {

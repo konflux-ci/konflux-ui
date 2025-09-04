@@ -15,18 +15,18 @@ import {
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
-import emptySnapshotImgUrl from '../../../assets/snapshots/empty-snapshot.png';
+import { getErrorState } from '~/shared/utils/error-utils';
+import emptySnapshotImgUrl from '../../../assets/iconsUrl/empty-snapshot.png';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
-import { HttpError } from '../../../k8s/error';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import SnapshotsList from './SnapshotsList';
+import { snapshotColumns } from './SnapshotsListHeader';
 import { SnapshotsListViewProps } from './types';
 
 const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps>> = ({
@@ -66,16 +66,26 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       : snapshots || [];
   }, [snapshots, nameFilter]);
 
-  if (archiveError && clusterError) {
-    return <ErrorEmptyState httpError={HttpError.fromCode(500)} title="Unable to load snapshots" />;
-  }
-
   if (isLoading) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
+  }
+
+  if (clusterError && archiveError) {
+    // Don't display cluster error if the code is 404 as this error is expected
+    if (
+      typeof clusterError === 'object' &&
+      clusterError !== null &&
+      'code' in clusterError &&
+      clusterError.code !== 404
+    ) {
+      return getErrorState(clusterError, !isLoading, 'snapshots');
+    }
+
+    return getErrorState(archiveError, !isLoading, 'snapshots');
   }
 
   return (
@@ -117,6 +127,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
             setText={(name) => setFilters({ name })}
             onClearFilters={onClearFilters}
             dataTest="snapshots-list-toolbar"
+            totalColumns={snapshotColumns.length}
           />
 
           {filteredSnapshots.length === 0 ? (

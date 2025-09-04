@@ -1,39 +1,42 @@
 import { renderHook } from '@testing-library/react';
+import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
+import { mockUseKonfluxPublicInfo } from '~/unit-test-utils';
 import { useApplicationPipelineGitHubApp } from '../useApplicationPipelineGitHubApp';
-import { useUIInstance } from '../useUIInstance';
 
-jest.mock('../useUIInstance', () => {
-  const actual = jest.requireActual('../useUIInstance');
-  return { ...actual, useUIInstance: jest.fn() };
-});
-
-const mockUIInstance = useUIInstance as jest.Mock;
+const useKonfluxPublicInfoMock = mockUseKonfluxPublicInfo();
 
 describe('useApplicationPipelineGithubApp', () => {
   it('should return correct github app', () => {
-    mockUIInstance.mockReturnValue('stage');
-    const { result, rerender } = renderHook(() => useApplicationPipelineGitHubApp());
-    expect(result.current).toEqual({
+    // staging
+    useKonfluxPublicInfoMock.mockReturnValue([
+      { environment: KonfluxInstanceEnvironments.STAGING, rbac: [] },
+      true,
+      null,
+    ]);
+    let hook = renderHook(() => useApplicationPipelineGitHubApp());
+    expect(hook.result.current).toEqual({
       url: 'https://github.com/apps/konflux-staging',
       name: 'konflux-staging',
     });
-    mockUIInstance.mockReturnValue('prod');
-    rerender();
-    expect(result.current).toEqual({
+
+    // production
+    useKonfluxPublicInfoMock.mockReturnValue([
+      { environment: KonfluxInstanceEnvironments.PRODUCTION, rbac: [] },
+      true,
+      null,
+    ]);
+    hook = renderHook(() => useApplicationPipelineGitHubApp());
+    expect(hook.result.current).toEqual({
       url: 'https://github.com/apps/red-hat-konflux',
       name: 'red-hat-konflux',
     });
-    mockUIInstance.mockReturnValue('dev');
-    rerender();
-    expect(result.current).toEqual({
-      url: 'https://github.com/apps/konflux-staging',
-      name: 'konflux-staging',
-    });
-    mockUIInstance.mockReturnValue('qa');
-    rerender();
-    expect(result.current).toEqual({
-      url: 'https://github.com/apps/konflux-staging',
-      name: 'konflux-staging',
+
+    // default (dev)
+    useKonfluxPublicInfoMock.mockReturnValue([{ environment: undefined, rbac: [] }, true, null]);
+    hook = renderHook(() => useApplicationPipelineGitHubApp());
+    expect(hook.result.current).toEqual({
+      url: 'https://github.com/apps/red-hat-konflux',
+      name: 'red-hat-konflux',
     });
   });
 });

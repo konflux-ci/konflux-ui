@@ -22,13 +22,13 @@ describe('ReleaseOverviewTab', () => {
   });
 
   it('should render loading indicator', () => {
-    useMockRelease.mockImplementation(() => [mockReleases[1], false]);
+    useMockRelease.mockImplementation(() => [mockReleases[1], false, undefined, undefined, false]);
     render(<ReleaseOverviewTab />);
     expect(screen.getByRole('progressbar')).toBeVisible();
   });
 
   it('should render correct details', () => {
-    useMockRelease.mockImplementation(() => [mockReleases[0], true]);
+    useMockRelease.mockImplementation(() => [mockReleases[0], true, undefined, undefined, false]);
     render(<ReleaseOverviewTab />);
     expect(screen.getByText('Duration')).toBeVisible();
     expect(screen.getByText('10 seconds')).toBeVisible();

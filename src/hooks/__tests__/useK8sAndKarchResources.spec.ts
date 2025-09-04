@@ -3,21 +3,42 @@
 
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
+import { useK8sQueryWatch } from '../../k8s/hooks/useK8sQueryWatch';
+import { K8sResourceReadOptions } from '../../k8s/k8s-fetch';
 import { useKubearchiveListResourceQuery } from '../../kubearchive/hooks';
-import { K8sResourceCommon, K8sModelCommon, WatchK8sResource } from '../../types/k8s';
+import { fetchResourceWithK8sAndKubeArchive } from '../../kubearchive/resource-utils';
+import {
+  K8sResourceCommon,
+  K8sModelCommon,
+  WatchK8sResource,
+  ResourceSource,
+} from '../../types/k8s';
 import { createK8sWatchResourceMock, createTestQueryClient } from '../../utils/test-utils';
-import { useK8sAndKarchResources } from '../useK8sAndKarchResources';
+import { useK8sAndKarchResources, useK8sAndKarchResource } from '../useK8sAndKarchResources';
 
-// Mock the kubearchive hooks
+// Mock the kubearchive hooks and functions
 jest.mock('../../kubearchive/hooks', () => ({
   useKubearchiveListResourceQuery: jest.fn(),
+}));
+
+jest.mock('../../kubearchive/resource-utils', () => ({
+  fetchResourceWithK8sAndKubeArchive: jest.fn(),
+}));
+
+jest.mock('../../k8s/hooks/useK8sQueryWatch', () => ({
+  useK8sQueryWatch: jest.fn(),
 }));
 
 const mockUseK8sWatchResource = createK8sWatchResourceMock();
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.MockedFunction<
   typeof useKubearchiveListResourceQuery
 >;
+const mockFetchResourceWithK8sAndKubeArchive =
+  fetchResourceWithK8sAndKubeArchive as jest.MockedFunction<
+    typeof fetchResourceWithK8sAndKubeArchive
+  >;
+const mockUseK8sQueryWatch = useK8sQueryWatch as jest.MockedFunction<typeof useK8sQueryWatch>;
 
 // Sample test data
 interface TestResource extends K8sResourceCommon {
@@ -459,5 +480,246 @@ describe('useK8sAndKarchResources', () => {
     });
 
     expect(result.current.data).toEqual([testResource1]); // Should only have cluster data
+  });
+});
+
+describe('useK8sAndKarchResource', () => {
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    queryClient = createTestQueryClient();
+    jest.clearAllMocks();
+    mockUseK8sQueryWatch.mockReturnValue(undefined);
+  });
+
+  const mockResourceInit: K8sResourceReadOptions = {
+    model: mockModel,
+    queryOptions: {
+      name: 'test-resource',
+      ns: 'test-ns',
+    },
+  };
+
+  const renderHookWithQueryClient = (
+    resourceInit: K8sResourceReadOptions | null,
+    queryOptions?: any,
+    watch: boolean = false,
+    watchOptions: any = {},
+    enabled: boolean = true,
+  ) => {
+    return renderHook(
+      () =>
+        useK8sAndKarchResource<TestResource>(
+          resourceInit,
+          queryOptions,
+          watch,
+          watchOptions,
+          enabled,
+        ),
+      {
+        wrapper: ({ children }) =>
+          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      },
+    );
+  };
+
+  it('should fetch resource successfully from cluster', async () => {
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Cluster,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit);
+
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.data).toBeUndefined();
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockFetchResourceWithK8sAndKubeArchive).toHaveBeenCalledWith(
+      mockResourceInit,
+      undefined,
+    );
+    expect(result.current.data).toBe(testResource1);
+    expect(result.current.source).toBe(ResourceSource.Cluster);
+    expect(result.current.fetchError).toBeNull();
+    expect(result.current.isError).toBe(false);
+  });
+
+  it('should fetch resource from kubearchive when cluster returns 404', async () => {
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Archive,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.data).toBe(testResource1);
+    expect(result.current.source).toBe(ResourceSource.Archive);
+  });
+
+  it('should handle fetch errors correctly', async () => {
+    const fetchError = new Error('Failed to fetch resource');
+    mockFetchResourceWithK8sAndKubeArchive.mockRejectedValue(fetchError);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.data).toBeUndefined();
+    expect(result.current.source).toBeUndefined();
+    expect(result.current.fetchError).toBe(fetchError);
+    expect(result.current.isError).toBe(true);
+  });
+
+  it('should enable watching when watch=true and source is cluster', async () => {
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Cluster,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit, undefined, true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    await waitFor(() => {
+      expect(mockUseK8sQueryWatch).toHaveBeenCalledWith(
+        mockResourceInit,
+        false,
+        expect.any(String), // hashed key
+        {},
+      );
+    });
+  });
+
+  it('should not enable watching when watch=false', async () => {
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Cluster,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit, undefined, false);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockUseK8sQueryWatch).toHaveBeenCalledWith(null, false, expect.any(String), {});
+  });
+
+  it('should not enable watching when source is kubearchive', async () => {
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Archive,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit, undefined, true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockUseK8sQueryWatch).toHaveBeenCalledWith(null, false, expect.any(String), {});
+  });
+
+  it('should handle websocket errors correctly', async () => {
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Cluster,
+    };
+    const wsError = { code: 1000, message: 'WebSocket connection failed' };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+    mockUseK8sQueryWatch.mockReturnValue(wsError);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit, undefined, true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.wsError).toBe(wsError);
+    expect(result.current.isError).toBe(true);
+    expect(result.current.data).toBe(testResource1); // data should still be available
+  });
+
+  it('should not fetch when enabled=false', () => {
+    const { result } = renderHookWithQueryClient(mockResourceInit, undefined, false, {}, false);
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).toBeUndefined();
+    expect(mockFetchResourceWithK8sAndKubeArchive).not.toHaveBeenCalled();
+  });
+
+  it('should not fetch when resourceInit is null', () => {
+    const { result } = renderHookWithQueryClient(null);
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).toBeUndefined();
+    expect(mockFetchResourceWithK8sAndKubeArchive).not.toHaveBeenCalled();
+  });
+
+  it('should pass query options to fetch function', async () => {
+    const queryOptions = { timeout: 5000 };
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Cluster,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit, queryOptions);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockFetchResourceWithK8sAndKubeArchive).toHaveBeenCalledWith(
+      mockResourceInit,
+      queryOptions,
+    );
+  });
+
+  it('should pass watch options to useK8sQueryWatch', async () => {
+    const watchOptions = { wsPrefix: 'custom-prefix', timeout: 1000 };
+    const mockResourceWithSource = {
+      resource: testResource1,
+      source: ResourceSource.Cluster,
+    };
+
+    mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue(mockResourceWithSource);
+
+    const { result } = renderHookWithQueryClient(mockResourceInit, undefined, true, watchOptions);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(mockUseK8sQueryWatch).toHaveBeenCalledWith(
+      mockResourceInit,
+      false,
+      expect.any(String),
+      watchOptions,
+    );
   });
 });

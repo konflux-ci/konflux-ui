@@ -60,13 +60,16 @@ describe('ReleaseArtifactsTab', () => {
         status: { artifacts: { images: mockImages } },
       },
       true,
+      undefined,
+      undefined,
+      false,
     ]);
     (useSortedResources as jest.Mock).mockReturnValue(mockImages);
     (useSearchParam as jest.Mock).mockReturnValue(['', jest.fn()]);
   });
 
   it('renders spinner while loading', () => {
-    (useRelease as jest.Mock).mockReturnValue([{}, false]);
+    (useRelease as jest.Mock).mockReturnValue([{}, false, undefined, undefined, false]);
 
     render(
       <MemoryRouter
@@ -91,6 +94,9 @@ describe('ReleaseArtifactsTab', () => {
         status: { artifacts: { images: [] } },
       },
       true,
+      undefined,
+      undefined,
+      false,
     ]);
     (useSortedResources as jest.Mock).mockReturnValue([]);
 

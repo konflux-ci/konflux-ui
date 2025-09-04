@@ -4,7 +4,10 @@ import { SnapshotGroupVersionKind, SnapshotModel } from '../models';
 import { Snapshot } from '../types/coreBuildService';
 import { useK8sAndKarchResource, useK8sAndKarchResources } from './useK8sAndKarchResources';
 
-export const useSnapshot = (namespace: string, name: string): [Snapshot, boolean, unknown] => {
+export const useSnapshot = (
+  namespace: string,
+  name: string,
+): [Snapshot | undefined, boolean, unknown, unknown, boolean] => {
   const resourceInit = React.useMemo(
     () =>
       namespace
@@ -19,9 +22,15 @@ export const useSnapshot = (namespace: string, name: string): [Snapshot, boolean
     [namespace, name],
   );
 
-  const { data: snapshot, isLoading, error } = useK8sAndKarchResource<Snapshot>(resourceInit);
+  const {
+    data: snapshot,
+    isLoading,
+    fetchError,
+    wsError,
+    isError,
+  } = useK8sAndKarchResource<Snapshot>(resourceInit);
 
-  return [snapshot, !isLoading, error];
+  return [snapshot, !isLoading, fetchError, wsError, isError];
 };
 
 export const useSnapshotsForApplication = (namespace, applicationName) => {

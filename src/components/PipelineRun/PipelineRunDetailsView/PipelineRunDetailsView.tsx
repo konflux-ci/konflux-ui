@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
-import { HttpError } from '../../../k8s/error';
 import { PipelineRunModel } from '../../../models';
 import {
   INTEGRATION_TEST_PIPELINE_LIST_PATH,
@@ -12,7 +12,6 @@ import {
   RELEASE_PIPELINE_LIST_PATH,
 } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
@@ -41,24 +40,16 @@ export const PipelineRunDetailsView: React.FC = () => {
     [loaded, pipelineRun],
   );
 
-  const loadError = error;
-  if (loadError) {
-    const httpError = HttpError.fromCode((loadError as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title={`Unable to load pipeline run ${pipelineRunName}`}
-        body={httpError.message}
-      />
-    );
-  }
-
   if (!loaded) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
     );
+  }
+
+  if (error) {
+    return getErrorState(error, loaded, 'pipeline run');
   }
 
   const isEnterpriseContract = isResourceEnterpriseContract(pipelineRun);

@@ -24,7 +24,13 @@ describe('Basic Happy Path', () => {
   const repoOwner = 'redhat-hac-qe';
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
-  const piplinerunlogsTasks = ['init', 'clone-repository', 'build-container', 'show-sbom'];
+  const piplinerunlogsTasks = [
+    'init',
+    'clone-repository',
+    'build-container',
+    'apply-tags',
+    'push-dockerfile',
+  ];
   const pipeline = 'docker-build-oci-ta';
 
   before(function () {

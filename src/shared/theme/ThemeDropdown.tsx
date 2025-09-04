@@ -11,7 +11,8 @@ import { CogIcon } from '@patternfly/react-icons/dist/esm/icons/cog-icon';
 import { MoonIcon } from '@patternfly/react-icons/dist/esm/icons/moon-icon';
 import { SunIcon } from '@patternfly/react-icons/dist/esm/icons/sun-icon';
 import { THEME_SYSTEM, THEME_DARK, THEME_LIGHT, THEME_LABELS } from './const';
-import { useTheme, ThemePreference } from './useTheme';
+import { ThemePreference } from './types';
+import { useTheme } from './useTheme';
 
 interface ThemeDropdownProps {
   /** Custom class for the dropdown toggle */

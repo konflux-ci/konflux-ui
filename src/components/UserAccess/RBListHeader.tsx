@@ -7,8 +7,14 @@ export const rbTableColumnClasses = {
 
 export const RBListHeader = () => [
   {
-    title: 'Username',
-    props: { className: rbTableColumnClasses.username },
+    title: <>Username </>,
+    props: {
+      className: rbTableColumnClasses.username,
+      info: {
+        popover:
+          'The primary user or service account from the role binding. Shows the first subject after sanitization for Kubernetes compatibility. Displays "-" when no subjects are defined.',
+      },
+    },
   },
   {
     title: 'Role',

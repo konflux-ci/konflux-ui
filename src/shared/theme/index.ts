@@ -1,6 +1,6 @@
 export { useTheme } from './useTheme';
 export { ThemeDropdown } from './ThemeDropdown';
-export type { ThemePreference } from './useTheme';
+export type { ThemePreference } from './types';
 export {
   THEME_SYSTEM,
   THEME_DARK,

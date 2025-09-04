@@ -7,6 +7,7 @@ import ReactDOM from 'react-dom/client';
 import { AuthProvider } from './auth/AuthContext';
 import { queryClient } from './k8s/query/core';
 import { router } from './routes';
+import { ThemeProvider } from './shared/theme/ThemeContext';
 
 import '@patternfly/react-core/dist/styles/base.css';
 import '@patternfly/react-styles/css/utilities/Spacing/spacing.css';
@@ -15,17 +16,19 @@ import './main.scss';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider
-          router={router}
-          fallbackElement={
-            <Bullseye>
-              <Spinner />
-            </Bullseye>
-          }
-        />
-        <ReactQueryDevtools initialIsOpen={false} position="bottom" />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <RouterProvider
+            router={router}
+            fallbackElement={
+              <Bullseye>
+                <Spinner />
+              </Bullseye>
+            }
+          />
+          <ReactQueryDevtools initialIsOpen={false} position="bottom" />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>,
 );

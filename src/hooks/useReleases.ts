@@ -30,7 +30,10 @@ export const useReleases = (
   return [data, !isLoading, error];
 };
 
-export const useRelease = (namespace: string, name: string): [ReleaseKind, boolean, unknown] => {
+export const useRelease = (
+  namespace: string,
+  name: string,
+): [ReleaseKind, boolean, unknown, unknown, boolean] => {
   const resourceInit = React.useMemo(
     () => ({
       model: ReleaseModel,
@@ -41,6 +44,7 @@ export const useRelease = (namespace: string, name: string): [ReleaseKind, boole
     }),
     [namespace, name],
   );
-  const { data, isLoading, error } = useK8sAndKarchResource<ReleaseKind>(resourceInit);
-  return [data, !isLoading, error];
+  const { data, isLoading, fetchError, wsError, isError } =
+    useK8sAndKarchResource<ReleaseKind>(resourceInit);
+  return [data, !isLoading, fetchError, wsError, isError];
 };

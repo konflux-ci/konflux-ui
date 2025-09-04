@@ -3,17 +3,25 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import ColumnManagement from '~/shared/components/table/ColumnManagement';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
 import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
-import { HttpError } from '../../../k8s/error';
+import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit } from '../../../types';
 import { getCommitsFromPLRs, statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import CommitsEmptyState from '../CommitsEmptyState';
-import CommitsListHeader from './CommitsListHeader';
+import {
+  CommitColumnKeys,
+  COMMIT_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_COMMIT_COLUMNS,
+  NON_HIDABLE_COMMIT_COLUMNS,
+} from './commits-columns-config';
+import { getCommitsListHeaderWithColumns } from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
 
 interface CommitsListViewProps {
@@ -27,6 +35,12 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 }) => {
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+
+  const [visibleColumns, setVisibleColumns] = useVisibleColumns(
+    SESSION_STORAGE_KEYS.COMMITS_VISIBLE_COLUMNS,
+    DEFAULT_VISIBLE_COMMIT_COLUMNS,
+  );
+  const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
@@ -82,6 +96,8 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       setText={(name) => setFilters({ ...filters, name })}
       onClearFilters={onClearFilters}
       data-test="commit-list-toolbar"
+      totalColumns={COMMIT_COLUMNS_DEFINITIONS.length}
+      openColumnManagement={() => setIsColumnManagementOpen(true)}
     >
       <MultiSelect
         label="Status"
@@ -94,41 +110,49 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   );
 
   if (error) {
-    const httpError = HttpError.fromCode(error ? (error as { code: number }).code : 404);
-    return (
-      <ErrorEmptyState
-        httpError={httpError}
-        title="Unable to load pipeline runs"
-        body={httpError?.message.length ? httpError?.message : 'Something went wrong'}
-      />
-    );
+    return getErrorState(error, loaded, 'commits');
   }
   return (
-    <Table
-      virtualize
-      data={filteredCommits}
-      unfilteredData={commits}
-      EmptyMsg={EmptyMessage}
-      NoDataEmptyMsg={NoDataEmptyMessage}
-      Toolbar={DataToolbar}
-      aria-label="Commit List"
-      Header={CommitsListHeader}
-      Row={CommitsListRow}
-      loaded={loaded}
-      getRowProps={(obj: Commit) => ({
-        id: obj.sha,
-      })}
-      onRowsRendered={({ stopIndex }) => {
-        if (
-          loaded &&
-          stopIndex === filteredCommits.length - 1 &&
-          hasNextPage &&
-          !isFetchingNextPage
-        ) {
-          getNextPage?.();
-        }
-      }}
-    />
+    <>
+      <Table
+        virtualize
+        data={filteredCommits}
+        unfilteredData={commits}
+        EmptyMsg={EmptyMessage}
+        NoDataEmptyMsg={NoDataEmptyMessage}
+        Toolbar={DataToolbar}
+        aria-label="Commit List"
+        Header={getCommitsListHeaderWithColumns(visibleColumns)}
+        Row={(props) => (
+          <CommitsListRow obj={props.obj as Commit} visibleColumns={visibleColumns} />
+        )}
+        loaded={loaded}
+        getRowProps={(obj: Commit) => ({
+          id: obj.sha,
+        })}
+        onRowsRendered={({ stopIndex }) => {
+          if (
+            loaded &&
+            stopIndex === filteredCommits.length - 1 &&
+            hasNextPage &&
+            !isFetchingNextPage
+          ) {
+            getNextPage?.();
+          }
+        }}
+      />
+      <ColumnManagement<CommitColumnKeys>
+        isOpen={isColumnManagementOpen}
+        onClose={() => setIsColumnManagementOpen(false)}
+        visibleColumns={visibleColumns}
+        onVisibleColumnsChange={setVisibleColumns}
+        columns={COMMIT_COLUMNS_DEFINITIONS}
+        defaultVisibleColumns={DEFAULT_VISIBLE_COMMIT_COLUMNS}
+        nonHidableColumns={NON_HIDABLE_COMMIT_COLUMNS}
+        title="Manage commit columns"
+        description="Selected columns will be displayed in the commits table."
+      />
+    </>
   );
 };
 

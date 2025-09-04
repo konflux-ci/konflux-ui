@@ -96,7 +96,13 @@ describe('Commit Pipelinerun List', () => {
     useParamsMock.mockReturnValue({ applicationName: appName, commitName: 'test-sha-1' });
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue('test-ns');
-    useSnapshotMock.mockReturnValue({ data: MockSnapshots[0], isLoading: false, error: undefined });
+    useSnapshotMock.mockReturnValue({
+      data: MockSnapshots[0],
+      isLoading: false,
+      fetchError: undefined,
+      wsError: undefined,
+      isError: false,
+    });
   });
   it('should render error state if the API errors out', () => {
     usePipelineRunsForCommitMock.mockReturnValue([

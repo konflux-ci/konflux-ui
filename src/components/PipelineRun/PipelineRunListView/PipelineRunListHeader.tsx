@@ -1,3 +1,26 @@
+import { PipelineRunColumnKeys } from '../../../consts/pipeline';
+import {
+  generateDynamicColumnClasses,
+  COMMON_COLUMN_CONFIGS,
+} from '../../../shared/components/table/dynamic-columns';
+
+export const getDynamicColumnClasses = (visibleColumns: Set<PipelineRunColumnKeys>) => {
+  const rawClasses = generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS);
+
+  const mappedClasses: Record<string, string> = Object.entries(rawClasses).reduce(
+    (acc, [key, value]) => {
+      let mappedKey = key;
+      if (key === 'testResult') mappedKey = 'testResultStatus';
+      if (key === 'namespace') mappedKey = 'workspace';
+      acc[mappedKey] = value;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
+  return mappedClasses;
+};
+
 export const pipelineRunTableColumnClasses = {
   name: 'pf-m-width-10 pf-m-width-15-on-xl',
   status: 'pf-m-width-10 pf-m-width-5-on-xl',
@@ -146,3 +169,108 @@ export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
   false,
   false,
 );
+
+// New dynamic header function that works with visible columns
+export const getPipelineRunListHeader = (visibleColumns: Set<PipelineRunColumnKeys>) => () => {
+  const dynamicClasses = getDynamicColumnClasses(visibleColumns);
+  const columns = [];
+
+  if (visibleColumns.has('name')) {
+    columns.push({
+      title: 'Name',
+      props: {
+        className: dynamicClasses.name,
+      },
+    });
+  }
+
+  if (visibleColumns.has('started')) {
+    columns.push({
+      title: 'Started',
+      props: { className: dynamicClasses.started },
+    });
+  }
+
+  if (visibleColumns.has('vulnerabilities')) {
+    columns.push({
+      title: 'Fixable vulnerabilities',
+      props: { className: dynamicClasses.vulnerabilities },
+    });
+  }
+
+  if (visibleColumns.has('duration')) {
+    columns.push({
+      title: 'Duration',
+      props: { className: dynamicClasses.duration },
+    });
+  }
+
+  if (visibleColumns.has('status')) {
+    columns.push({
+      title: 'Status',
+      props: { className: dynamicClasses.status },
+    });
+  }
+
+  if (visibleColumns.has('testResult')) {
+    columns.push({
+      title: <div>Test result</div>,
+      props: {
+        className: dynamicClasses.testResultStatus,
+        info: {
+          popover: 'The test result is the TEST_OUTPUT of the pipeline run integration test.',
+        },
+      },
+    });
+  }
+
+  if (visibleColumns.has('type')) {
+    columns.push({
+      title: 'Type',
+      props: { className: dynamicClasses.type },
+    });
+  }
+
+  if (visibleColumns.has('component')) {
+    columns.push({
+      title: 'Component',
+      props: { className: dynamicClasses.component },
+    });
+  }
+
+  if (visibleColumns.has('snapshot')) {
+    columns.push({
+      title: 'Snapshot',
+      props: { className: dynamicClasses.snapshot },
+    });
+  }
+
+  if (visibleColumns.has('namespace')) {
+    columns.push({
+      title: 'Namespace',
+      props: { className: dynamicClasses.workspace },
+    });
+  }
+
+  if (visibleColumns.has('trigger')) {
+    columns.push({
+      title: 'Trigger',
+      props: { className: dynamicClasses.trigger },
+    });
+  }
+
+  if (visibleColumns.has('reference')) {
+    columns.push({
+      title: 'Reference',
+      props: { className: dynamicClasses.reference },
+    });
+  }
+
+  // Always add kebab menu
+  columns.push({
+    title: ' ',
+    props: { className: dynamicClasses.kebab },
+  });
+
+  return columns;
+};

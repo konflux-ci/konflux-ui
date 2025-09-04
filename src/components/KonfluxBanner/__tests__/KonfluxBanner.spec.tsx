@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import * as useBannerHook from '~/components/KonfluxBanner/useBanner';
-import { BannerType } from '../banner-type';
+import { BannerType } from '~/types/banner-type';
 import { KonfluxBanner } from '../KonfluxBanner';
 
 jest.mock('../useBanner', () => ({
