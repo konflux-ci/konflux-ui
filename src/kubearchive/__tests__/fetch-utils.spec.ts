@@ -2,10 +2,19 @@ import { createK8sUtilMock, createKubearchiveUtilMock } from '~/utils/test-utils
 import { HttpError } from '../../k8s/error';
 import { TQueryOptions } from '../../k8s/query/type';
 import { K8sResourceCommon, ResourceSource } from '../../types/k8s';
+import { isKubeArchiveEnabled } from '../conditional-checks';
 import { fetchResourceWithK8sAndKubeArchive } from '../resource-utils';
 
 const mockK8sQueryGetResource = createK8sUtilMock('k8sQueryGetResource');
 const mockKubearchiveQueryGetResource = createKubearchiveUtilMock('kubearchiveQueryGetResource');
+
+jest.mock('../conditional-checks', () => ({
+  isKubeArchiveEnabled: jest.fn(() => true),
+}));
+
+const mockIsKubeArchiveEnabled = isKubeArchiveEnabled as jest.MockedFunction<
+  typeof isKubeArchiveEnabled
+>;
 
 describe('fetchResourceWithK8sAndKubeArchive', () => {
   const mockResourceInit = {
@@ -138,6 +147,21 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
       'Bad Request',
     );
 
+    expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
+    expect(mockKubearchiveQueryGetResource).not.toHaveBeenCalled();
+  });
+
+  it('should not fetch from kubearchive when isKubeArchiveEnabled is false', async () => {
+    mockIsKubeArchiveEnabled.mockReturnValue(false);
+    mockK8sQueryGetResource.mockResolvedValue(mockResource);
+    const mockResult = {
+      resource: mockResource,
+      source: ResourceSource.Cluster,
+    };
+
+    const result = await fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions);
+
+    expect(result).toEqual(mockResult);
     expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
     expect(mockKubearchiveQueryGetResource).not.toHaveBeenCalled();
   });
