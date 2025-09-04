@@ -332,18 +332,17 @@ export const usePipelineRunsForCommitV2 = (
       selector: {
         matchLabels: {
           [PipelineRunLabel.APPLICATION]: applicationName,
-          [PipelineRunLabel.COMMIT_LABEL]: commit,
         },
         matchExpressions: [
           { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
         ],
       },
     }),
-    [namespace, applicationName, commit, componentNames],
+    [namespace, applicationName, componentNames],
   );
 
   // Remove overload properties once is ready for review
-  const { data, isLoading, hasError, hasNextPage, fetchNextPage } =
+  const { data, isLoading, hasNextPage, hasError, isFetchingNextPage, fetchNextPage } =
     useK8sAndKarchResources<PipelineRunKind>(
       namespace && applicationName && commit && componentsLoaded && applicationLoaded
         ? resourceInit
@@ -355,25 +354,29 @@ export const usePipelineRunsForCommitV2 = (
 
   // TODO: Remove this if/when tekton results are really filtered by component names above
   return React.useMemo(() => {
-    if (!loaded || hasError) {
-      // Adjut the GetNextPage and NextPageProps
-      return [[], loaded, hasError, fetchNextPage, { hasNextPage, isFetchingNextPage: false }];
+    if (loaded || hasError) {
+      return [
+        [],
+        loaded,
+        hasError,
+        hasNextPage ? fetchNextPage : null,
+        { hasNextPage, isFetchingNextPage },
+      ];
     }
     return [
       data
-        .filter((plr) =>
-          plr.metadata?.creationTimestamp.localeCompare(
-            application?.metadata?.creationTimestamp,
-          ) === 1
-            ? true
-            : false,
+        .filter((plr) => plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION] === commit)
+        .filter(
+          (plr) =>
+            new Date(plr.metadata?.creationTimestamp).getTime() >=
+            new Date(application?.metadata?.creationTimestamp).getTime(),
         )
         .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
         .slice(0, limit ? limit : undefined),
       true,
       undefined,
-      fetchNextPage,
-      { hasNextPage, isFetchingNextPage: false },
+      hasNextPage ? fetchNextPage : null,
+      { hasNextPage, isFetchingNextPage },
     ];
   }, [
     application?.metadata?.creationTimestamp,
@@ -383,6 +386,8 @@ export const usePipelineRunsForCommitV2 = (
     fetchNextPage,
     data,
     hasError,
+    commit,
+    isFetchingNextPage,
   ]);
 };
 
