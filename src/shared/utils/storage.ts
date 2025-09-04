@@ -32,14 +32,14 @@ export function createJSONStorage<Value>(
   const storage: JSONStorage<Value> = {
     getItem: (key, initialValue) => {
       const parse = (str: string | null) => {
-        str = str || '';
-        if (lastStr !== str) {
+        const s = str || '';
+        if (lastStr !== s) {
           try {
-            lastValue = JSON.parse(str);
+            lastValue = JSON.parse(s);
           } catch {
             return initialValue;
           }
-          lastStr = str;
+          lastStr = s;
         }
         return lastValue;
       };

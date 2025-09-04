@@ -164,7 +164,7 @@ export const FeatureFlagsStore = {
     if (!condsChanged) return;
 
     // Persist for next boot
-    conditionsLocalStorage.set(fresh);
+    conditionsLocalStorage.set(_conditions);
 
     // Re-apply guards and notify only if flags changed
     const next = applyGuards(compose(location.search), _conditions);

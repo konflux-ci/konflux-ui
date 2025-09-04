@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useDeepCompareMemoize } from '~/shared';
 import type { ConditionKey } from './conditions';
 import { type FlagKey } from './flags';
 import { FeatureFlagsStore } from './store';
@@ -40,23 +39,22 @@ export const createConditionsHook = (
   keys: ConditionKey[],
 ): (() => Record<(typeof keys)[number], boolean>) => {
   return () => {
-    const memoizedKeys = useDeepCompareMemoize(keys);
 
     React.useEffect(() => {
-      void FeatureFlagsStore.ensureConditions(memoizedKeys);
-    }, [memoizedKeys]);
+      void FeatureFlagsStore.ensureConditions(keys);
+    }, []);
 
     const conditions = React.useSyncExternalStore(
       (cb) => FeatureFlagsStore.subscribe(cb),
       () => FeatureFlagsStore.conditions,
     );
 
-    return memoizedKeys.reduce(
+    return keys.reduce(
       (acc, key) => {
         acc[key] = conditions[key] ?? false;
         return acc;
       },
-      {} as Record<(typeof memoizedKeys)[number], boolean>,
+      {} as Record<(typeof keys)[number], boolean>,
     );
   };
 };

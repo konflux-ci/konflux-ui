@@ -12,10 +12,15 @@ export interface GuardSpec {
   allOf?: ConditionKey[];
   /** At least one of these must be true (OR) */
   anyOf?: ConditionKey[];
-  /** Optional message for Dev Panel / tooltips */
-  reason: string;
-  /** Optional visibility flag for Dev Panel / tooltips. default: false */
-  visible: boolean;
+  /** message for Dev Panel / tooltips
+   *  when guard fails, show the flag entry disabled with the reason
+   */
+  failureReason: string;
+  /** visibility flag for Dev Panel / tooltips. default: false
+   *  visible: true => show the flag disabled with its reason
+   *  visible: false => hide the flag entirely when guard conditions aren't met
+   */
+  visibleInFeatureFlagPanel: boolean;
 }
 
 export type ConditionResolver = <T>(ctx?: T) => Promise<boolean>;

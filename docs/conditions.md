@@ -56,7 +56,9 @@ export const FLAGS = {
     guard: {
       allOf: ['isKubearchiveEnabled'],  // Requires Kubearchive
       reason: 'Kubearchive must be installed',
-      visible: true,  // Show in dev panel/ hide feature flag in panel if guard condition is not satisfied
+      visible: true,  // when guard fails, show the flag entry disabled with the reason
+      // visible: true => show the flag disabled with its reason
+      // visible: false => hide the flag entirely when guard conditions aren’t met
     },
   },
 } satisfies Record<string, FeatureMeta>;

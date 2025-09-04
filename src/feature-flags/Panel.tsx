@@ -13,7 +13,7 @@ export const FeatureFlagPanel: React.FC = () => {
 
   const flagList = Object.values(FLAGS).filter((flag) => {
     if (!flag.guard) return true;
-    return guardSatisfied(flag.guard, conditions) || flag.guard.visible;
+    return guardSatisfied(flag.guard, conditions) || flag.guard.visibleInFeatureFlagPanel;
   });
 
   if (flagList.length === 0) {
@@ -45,8 +45,8 @@ export const FeatureFlagPanel: React.FC = () => {
         );
         return (
           <StackItem key={flagKey}>
-            {isDisabled && flag.guard?.reason ? (
-              <Tooltip content={flag.guard.reason}>{switchComponent}</Tooltip>
+            {isDisabled && flag.guard?.failureReason ? (
+              <Tooltip content={flag.guard.failureReason}>{switchComponent}</Tooltip>
             ) : (
               switchComponent
             )}

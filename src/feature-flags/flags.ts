@@ -69,9 +69,14 @@ const InternalFLAGS = {
   },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
-    description: 'Use KubeArchive to fetch logs instead of Tekton',
+    description: 'Use Kubearchive to fetch logs instead of Tekton',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not installed on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

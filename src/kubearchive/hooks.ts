@@ -98,8 +98,8 @@ export function useKubearchiveGetResourceQuery(
         fetchOptions: baseOptions,
       },
       {
-        enabled: isKubearchiveEnabled && queryOptions?.enabled,
         ...queryOptions,
+        enabled: isKubearchiveEnabled && queryOptions?.enabled,
       } as UseQueryOptions<K8sResourceCommon>,
     ),
   );
