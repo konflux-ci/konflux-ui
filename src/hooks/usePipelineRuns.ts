@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { useFeatureFlags } from '~/feature-flags/hooks';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -243,6 +244,10 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
   return [latestSuccess, loaded, error];
 };
 
+/**
+ *
+ * @deprecated
+ */
 export const usePipelineRunsForCommit = (
   namespace: string,
   applicationName: string,
@@ -317,8 +322,16 @@ export const usePipelineRunsForCommitV2 = (
   commit: string,
   limit?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+  const isKubearchiveEnabled = useFeatureFlags('kubearchive-logs');
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
+
+  const legacyPipelineRunsForCommit = usePipelineRunsForCommit(
+    namespace,
+    applicationName,
+    commit,
+    limit,
+  );
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
@@ -332,18 +345,17 @@ export const usePipelineRunsForCommitV2 = (
       selector: {
         matchLabels: {
           [PipelineRunLabel.APPLICATION]: applicationName,
-          [PipelineRunLabel.COMMIT_LABEL]: commit,
         },
         matchExpressions: [
           { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
         ],
       },
     }),
-    [namespace, applicationName, commit, componentNames],
+    [namespace, applicationName, componentNames],
   );
 
   // Remove overload properties once is ready for review
-  const { data, isLoading, hasError, hasNextPage, fetchNextPage } =
+  const { data, isLoading, hasNextPage, hasError, isFetchingNextPage, fetchNextPage } =
     useK8sAndKarchResources<PipelineRunKind>(
       namespace && applicationName && commit && componentsLoaded && applicationLoaded
         ? resourceInit
@@ -355,27 +367,34 @@ export const usePipelineRunsForCommitV2 = (
 
   // TODO: Remove this if/when tekton results are really filtered by component names above
   return React.useMemo(() => {
-    if (!loaded || hasError) {
-      // Adjut the GetNextPage and NextPageProps
-      return [[], loaded, hasError, fetchNextPage, { hasNextPage, isFetchingNextPage: false }];
+    if (isKubearchiveEnabled) return legacyPipelineRunsForCommit;
+    if (loaded || hasError) {
+      return [
+        [],
+        loaded,
+        hasError,
+        hasNextPage ? fetchNextPage : null,
+        { hasNextPage, isFetchingNextPage },
+      ];
     }
     return [
       data
-        .filter((plr) =>
-          plr.metadata?.creationTimestamp.localeCompare(
-            application?.metadata?.creationTimestamp,
-          ) === 1
-            ? true
-            : false,
+        .filter((plr) => plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION] === commit)
+        .filter(
+          (plr) =>
+            new Date(plr.metadata?.creationTimestamp).getTime() >=
+            new Date(application?.metadata?.creationTimestamp).getTime(),
         )
         .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
         .slice(0, limit ? limit : undefined),
       true,
       undefined,
-      fetchNextPage,
-      { hasNextPage, isFetchingNextPage: false },
+      hasNextPage ? fetchNextPage : null,
+      { hasNextPage, isFetchingNextPage },
     ];
   }, [
+    isKubearchiveEnabled,
+    legacyPipelineRunsForCommit,
     application?.metadata?.creationTimestamp,
     hasNextPage,
     limit,
@@ -383,6 +402,8 @@ export const usePipelineRunsForCommitV2 = (
     fetchNextPage,
     data,
     hasError,
+    commit,
+    isFetchingNextPage,
   ]);
 };
 
