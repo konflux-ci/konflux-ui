@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import { useK8sWatchResource } from '../../../../k8s';
-import { PodModel } from '../../../../models/pod';
-import { TaskRunKind } from '../../../../types';
-import { WatchK8sResource } from '../../../../types/k8s';
+import { useK8sWatchResource } from '~/k8s';
+import { PodModel } from '~/models/pod';
+import { TaskRunKind } from '~/types';
+import { WatchK8sResource } from '~/types/k8s';
 import { PodKind } from '../../types';
 import { MultiStreamLogs } from './MultiStreamLogs';
 import { TektonTaskRunLog } from './TektonTaskRunLog';

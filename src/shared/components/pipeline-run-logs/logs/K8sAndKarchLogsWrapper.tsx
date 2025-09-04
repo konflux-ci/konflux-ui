@@ -1,10 +1,10 @@
 import * as React from 'react';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useK8sAndKarchResource } from '~/hooks/useK8sAndKarchResources';
-import { PodModel } from '../../../../models/pod';
-import { TaskRunKind } from '../../../../types';
-import { WatchK8sResource } from '../../../../types/k8s';
-import ErrorEmptyState from '../../empty-state/ErrorEmptyState';
-import { LoadingInline } from '../../status-box/StatusBox';
+import { PodModel } from '~/models/pod';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { TaskRunKind } from '~/types';
+import { WatchK8sResource } from '~/types/k8s';
 import { PodKind } from '../../types';
 import { MultiStreamLogs } from './MultiStreamLogs';
 
@@ -20,7 +20,6 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
   taskRun,
   onDownloadAll,
   downloadAllLabel = 'Download all',
-  ...props
 }) => {
   const resourceInit = React.useMemo(
     () => ({
@@ -43,22 +42,18 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
 
   if (isLoading) {
     return (
-      <span
-        className="multi-stream-logs__taskName__loading-indicator"
-        data-testid="loading-indicator"
-      >
-        <LoadingInline />
-      </span>
+      <Bullseye>
+        <Spinner size="xl" />
+      </Bullseye>
     );
   }
 
   if (fetchError) {
-    return <ErrorEmptyState title="Error loading logs" body="Please try again later." />;
+    return getErrorState(fetchError, !isLoading, 'logs');
   }
 
   return (
     <MultiStreamLogs
-      {...props}
       taskRun={taskRun}
       resourceName={resource?.name}
       resource={obj}

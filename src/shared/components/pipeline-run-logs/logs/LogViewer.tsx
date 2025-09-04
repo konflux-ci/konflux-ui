@@ -24,7 +24,8 @@ import {
 } from '@patternfly/react-log-viewer';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
-import { TaskRunKind } from '../../../../types';
+import { v4 as uuidv4 } from 'uuid';
+import { TaskRunKind } from '~/types';
 import { useFullscreen } from '../../../hooks/fullscreen';
 import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
@@ -84,7 +85,7 @@ const LogViewer: React.FC<Props> = ({
     const blob = new Blob([data], {
       type: 'text/plain;charset=utf-8',
     });
-    saveAs(blob, `${taskName || 'logs'}.log`);
+    saveAs(blob, `${taskName || `task-run-${uuidv4()}`}.log`);
   };
 
   const startDownloadAll = () => {
