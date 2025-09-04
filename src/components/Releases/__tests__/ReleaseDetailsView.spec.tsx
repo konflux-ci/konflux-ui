@@ -61,7 +61,7 @@ describe('ReleaseDetailsView', () => {
   });
 
   it('should render release name if release data is loaded', () => {
-    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false, error: false });
+    useMockRelease.mockReturnValue({ data: mockRelease, isLoading: false, fetchError: undefined });
     renderWithQueryClientAndRouter(<ReleaseDetailsView />);
     expect(screen.getAllByRole('heading')[0]).toHaveTextContent('test-release');
   });

@@ -67,6 +67,12 @@ const InternalFLAGS = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'kubearchive-logs': {
+    key: 'kubearchive-logs',
+    description: 'Use KubeArchive to fetch logs instead of Tekton',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

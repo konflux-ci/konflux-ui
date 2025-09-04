@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
 import { MessageHandler, WebSocketOptions } from '../../../../k8s/web-socket/types';
 import { WebSocketFactory } from '../../../../k8s/web-socket/WebSocketFactory';
 import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
-import { useNamespace } from '../../../providers/Namespace';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
 import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
 import LogViewer, { type Props as LogViewerProps } from './LogViewer';
@@ -68,6 +69,7 @@ type LogsProps = {
   taskRun: TaskRunKind | null;
   isLoading: boolean;
   allowAutoScroll: boolean;
+  source: ResourceSource;
 };
 
 const Logs: React.FC<LogsProps> = ({
@@ -79,17 +81,18 @@ const Logs: React.FC<LogsProps> = ({
   taskRun,
   isLoading,
   allowAutoScroll,
+  source,
 }) => {
   const { t } = useTranslation();
-  const namespace = useNamespace();
+  const isKubearchiveEnabled = useIsOnFeatureFlag('kubearchive-logs');
   const { metadata = {} } = resource;
   const { name: resName, namespace: resNamespace } = metadata;
 
   // state to hold the logs for each container individually
   const [logSources, setLogSources] = React.useState<LogSources>({});
   const [error, setError] = React.useState<boolean>(false);
-  // state to track which containers we've already started fetching
-  const [activeContainers, setActiveContainers] = React.useState<Set<string>>(new Set());
+  // to track which containers already started fetching
+  const connectionManagerRef = React.useRef(new Map<string, () => void>());
 
   const appendLog = React.useCallback((containerName: string, message: string) => {
     setLogSources((prev) => ({
@@ -98,64 +101,81 @@ const Logs: React.FC<LogsProps> = ({
     }));
   }, []);
 
-  const wsRefs = React.useRef<Map<string, WebSocketFactory>>(new Map());
-
   // loops through the containers and initiates fetching for each one
   React.useEffect(() => {
+    const activeConnections = connectionManagerRef.current;
+
     containers.forEach((container) => {
-      if (activeContainers.has(container.name)) return;
-      setActiveContainers((prev) => new Set(prev).add(container.name));
+      if (activeConnections.has(container.name)) {
+        return;
+      }
 
-      let loaded = false;
       const { name } = container;
-
       const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
       const status = allStatuses.find((c) => c.name === name);
       const resourceStatus = containerToLogSourceStatus(status);
 
       const urlOpts = {
         ns: resNamespace,
-        ws: namespace,
         name: resName,
         path: 'log',
-        queryParams: { container: name, follow: 'true' },
+        queryParams: {
+          container: name,
+          follow: resourceStatus === LOG_SOURCE_TERMINATED ? 'false' : 'true',
+        },
       };
       const watchURL = getK8sResourceURL(PodModel, undefined, urlOpts);
 
       if (resourceStatus === LOG_SOURCE_TERMINATED) {
-        commonFetchText(watchURL)
-          .then((res) => !loaded && appendLog(name, res))
-          .catch(() => !loaded && setError(true));
+        const controller = new AbortController();
+        const { signal } = controller;
+
+        commonFetchText(watchURL, {
+          signal,
+          ...(isKubearchiveEnabled && source === ResourceSource.Archive
+            ? { pathPrefix: 'plugins/kubearchive' }
+            : undefined),
+        })
+          .then((res) => appendLog(name, res))
+          .catch((err) => {
+            if (err.name !== 'AbortError') {
+              appendLog(
+                name,
+                `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,
+              );
+            }
+          });
+
+        activeConnections.set(name, () => controller.abort());
       } else {
         const wsOpts = getWebsocketSubProtocolAndPathPrefix(watchURL);
         const ws = retryWebSocket(
           watchURL,
           wsOpts,
           (msg) => {
-            // onMessage callback
-            if (loaded) return;
-            setError(false); // clear any previous errors on success
+            setError(false);
             appendLog(name, Base64.decode(msg as string));
           },
           () => {
-            // onError callback
-            if (loaded) return;
             setError(true);
           },
         );
-        wsRefs.current.set(name, ws);
-      }
 
-      return () => {
-        loaded = true;
-        const ws = wsRefs.current.get(name);
-        if (ws) {
-          ws.destroy();
-          wsRefs.current.delete(name);
-        }
-      };
+        activeConnections.set(name, () => ws.destroy());
+      }
     });
-  }, [containers, resource, resName, resNamespace, activeContainers, appendLog, t, namespace]);
+
+    return () => {
+      const containerNames = new Set(containers.map((c) => c.name));
+
+      activeConnections.forEach((destroy, name) => {
+        if (!containerNames.has(name)) {
+          destroy();
+          activeConnections.delete(name);
+        }
+      });
+    };
+  }, [containers, resource, resName, resNamespace, appendLog, source, isKubearchiveEnabled]);
 
   const formattedLogs = React.useMemo(
     () => processLogs(logSources, containers),
