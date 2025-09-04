@@ -23,6 +23,8 @@ import { useTRPipelineRuns, useTRTaskRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('../useComponents');
+jest.mock('~/feature-flags/hooks');
+jest.mock('~/kubearchive/hooks');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
