@@ -20,7 +20,10 @@ export const useTRPipelineRuns = (
   options?: TektonResultsOptions,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
-    useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, options));
+    useInfiniteQuery({
+      ...createPipelineRunTektonResultsQueryOptions(namespace, options),
+      enabled: !!namespace,
+    });
   const resourceData = React.useMemo(() => {
     return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
   }, [data]);

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { useK8sWatchResource } from '~/k8s';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
-import { useK8sWatchResource } from '../k8s';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
