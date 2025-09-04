@@ -1,4 +1,4 @@
-import { KonfluxInstanceEnvironmentType } from '~/types/konflux-public-info';
+import type { GuardSpec } from './conditions';
 
 export const FLAGS_STATUS = {
   wip: 'Unstable',
@@ -34,11 +34,11 @@ export interface FeatureMeta {
    */
   status: FlagStatus;
   /**
-   * Optional environment constraints.
-   * If specified, the flag is only available in the listed environments.
-   * If not specified, the flag is available in all environments.
+   * Optional validator function for conditional flags.
+   * If specified, the flag can only be enabled when the validator returns true.
+   * The validator is called before allowing the user to enable the flag.
    */
-  environments?: KonfluxInstanceEnvironmentType[];
+  guard?: GuardSpec;
 }
 
 const InternalFLAGS = {
@@ -55,18 +55,23 @@ const InternalFLAGS = {
     defaultEnabled: false,
     status: 'wip',
   },
-  'column-management': {
-    key: 'column-management',
-    description: 'Enable the "Manage columns" button for tables with more than six columns',
-    defaultEnabled: true,
-    status: 'ready',
-  },
   'system-notifications': {
     key: 'system-notifications',
     description: 'Enable system notifications badge and notification center',
     defaultEnabled: false,
     status: 'wip',
   },
+  // 'kubearchive-integration': {
+  //   key: 'kubearchive-integration',
+  //   description: 'Enable Kubearchive integration',
+  //   defaultEnabled: true,
+  //   status: 'wip',
+  //   guard: {
+  //     allOf: ['isKubearchiveEnabled'],
+  //     reason: 'Kubearchive is not installed on this cluster',
+  //     visible: true,
+  //   },
+  // },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
