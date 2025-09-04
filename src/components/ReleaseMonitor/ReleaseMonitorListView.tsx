@@ -159,8 +159,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     [onClearFilters],
   );
 
-  const NoDataEmptyMsg = () => <MonitoredReleaseEmptyState />;
-
   if (error) {
     return <ErrorEmptyState httpError={error as HttpError} />;
   }
@@ -207,7 +205,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       <Table
         data={filteredMRs}
         unfilteredData={sortedMonitoredReleases}
-        EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
+        EmptyMsg={EmptyMsg}
+        NoDataEmptyMsg={MonitoredReleaseEmptyState}
         aria-label="Release List"
         Header={ReleasesListHeader}
         Row={ReleaseListRow}

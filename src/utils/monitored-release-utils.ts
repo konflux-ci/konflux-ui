@@ -5,10 +5,11 @@ export const monitoredReleaseStatus = (monitoredRelease: MonitoredReleaseKind): 
   const conditions = monitoredRelease?.status?.conditions;
   if (!conditions?.length) return runStatus.Unknown;
 
-
-  const releasedCondition = monitoredRelease.status.conditions.find(
-    (c) => c.type === ReleaseCondition.Released,
-  );
+  const releasedCondition = conditions.find((c) => c.type === ReleaseCondition.Released);
+  if (!releasedCondition) {
+    // If backend already uses 'Succeeded', delegate to the shared utility.
+    return conditionsRunStatus(conditions);
+  }
 
   const progressing = releasedCondition.reason === 'Progressing';
   if (progressing) {
