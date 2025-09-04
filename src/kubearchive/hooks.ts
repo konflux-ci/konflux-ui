@@ -79,6 +79,7 @@ export function useKubearchiveListResourceQuery(
  * @param model - K8s model definition containing API group, version, and kind information
  * @param queryOptions - Optional React Query options for customizing query behavior
  * @param options - Optional request configuration (headers, timeout, etc.)
+ * @param enabled - Whether the query should be enabled (defaults to true)
  * @returns UseQueryResult<K8sResourceCommon, unknown>
  */
 export function useKubearchiveGetResourceQuery(
@@ -90,8 +91,9 @@ export function useKubearchiveGetResourceQuery(
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const baseOptions = { requestInit: { ...options, pathPrefix: KUBEARCHIVE_PATH_PREFIX } };
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
-  return useQuery<K8sResourceCommon>(
-    createGetQueryOptions<K8sResourceCommon>(
+
+  return useQuery<K8sResourceCommon>({
+    ...createGetQueryOptions<K8sResourceCommon>(
       {
         model,
         queryOptions: k8sQueryOptions,
@@ -99,8 +101,8 @@ export function useKubearchiveGetResourceQuery(
       },
       {
         ...queryOptions,
-        enabled: isKubearchiveEnabled && queryOptions?.enabled,
+        enabled: queryOptions?.enabled && isKubearchiveEnabled,
       } as UseQueryOptions<K8sResourceCommon>,
     ),
-  );
+  });
 }
