@@ -5,7 +5,7 @@ import { MonitoredReleasesFilterState } from '~/components/Filter/utils/monitore
 
 type MonitoredReleasesFilterToolbarProps = {
   filters: MonitoredReleasesFilterState;
-  setFilters: (filters: MonitoredReleasesFilterState) => void; // Changed: remove React.Dispatch
+  setFilters: (filters: MonitoredReleasesFilterState) => void;
   onClearFilters: () => void;
   statusOptions: { [key: string]: number };
   applicationOptions: { [key: string]: number };
@@ -34,7 +34,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   return (
     <BaseTextFilterToolbar
       text={name}
-      label="name"
+      label="Name"
       setText={(newName) => setFilters({ ...filtersRef.current, name: newName })}
       onClearFilters={onClearFilters}
     >
