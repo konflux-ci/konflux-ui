@@ -90,3 +90,104 @@ describe('useKonfluxPublicInfo', () => {
     expect(result.current[0]).not.toBe(initiaInfoJson);
   });
 });
+
+// Additional scenarios to increase coverage and robustness
+describe('useKonfluxPublicInfo - additional scenarios', () => {
+  it('should treat missing info.json as empty object when loaded', () => {
+    k8sWatchMock.mockReturnValue({
+      data: { data: {} } as unknown as typeof mockConfigMap,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useKonfluxPublicInfo());
+
+    expect(result.current[0]).toEqual({});
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+  });
+
+  it('should handle empty string info.json gracefully', () => {
+    k8sWatchMock.mockReturnValue({
+      data: { data: { 'info.json': '' } } as unknown as typeof mockConfigMap,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useKonfluxPublicInfo());
+
+    expect(result.current[0]).toEqual({});
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+  });
+
+  it('should handle whitespace-only info.json gracefully', () => {
+    k8sWatchMock.mockReturnValue({
+      data: { data: { 'info.json': '   \n\t  ' } } as unknown as typeof mockConfigMap,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useKonfluxPublicInfo());
+
+    expect(result.current[0]).toEqual({});
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+  });
+
+  it('should handle non-string info.json values safely', () => {
+    k8sWatchMock.mockReturnValue({
+      data: { data: { 'info.json': 42 as unknown as string } } as unknown as typeof mockConfigMap,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useKonfluxPublicInfo());
+
+    expect(result.current[0]).toEqual({});
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+  });
+
+  it('should consider loaded=true when not loading and no error but data is undefined', () => {
+    k8sWatchMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result } = renderHook(() => useKonfluxPublicInfo());
+
+    expect(result.current[0]).toEqual({});
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+  });
+
+  it('should reset infoJson to {} if data becomes undefined after being set', () => {
+    // Initial valid data
+    k8sWatchMock.mockReturnValue({
+      data: mockConfigMap,
+      isLoading: false,
+      error: null,
+    });
+
+    const { result, rerender } = renderHook(() => useKonfluxPublicInfo());
+
+    expect(result.current[0]).toEqual(expect.objectContaining(MockInfo));
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+
+    // Now simulate the config map disappearing
+    k8sWatchMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    });
+
+    rerender();
+
+    expect(result.current[0]).toEqual({});
+    expect(result.current[1]).toBe(true);
+    expect(result.current[2]).toBeNull();
+  });
+});

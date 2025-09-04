@@ -142,3 +142,109 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
     expect(mockKubearchiveQueryGetResource).not.toHaveBeenCalled();
   });
 });
+
+// Additional edge cases focused on error propagation and object identity.
+// Test framework: Jest (TypeScript via ts-jest).
+
+describe('fetchResourceWithK8sAndKubeArchive - additional edge cases', () => {
+  const mockResourceInit = {
+    model: {
+      apiGroup: 'apps',
+      apiVersion: 'v1',
+      kind: 'Release',
+      plural: 'Releases',
+      namespaced: true,
+    },
+    queryOptions: {
+      name: 'test-Release',
+      ns: 'test-namespace',
+    },
+  };
+
+  const baseResource: K8sResourceCommon = {
+    apiVersion: 'v1',
+    kind: 'Release',
+    metadata: {
+      name: 'test-Release',
+      namespace: 'test-namespace',
+      uid: 'test-uid',
+    },
+  };
+
+  const mockOptions: TQueryOptions<K8sResourceCommon> = {};
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('throws original cluster error when cluster returns 404 and kubearchive throws a non-HttpError', async () => {
+    const clusterError = new HttpError('Not Found', 404, { status: 404 } as Response);
+    const archiveError = new Error('Archive network failure');
+
+    mockK8sQueryGetResource.mockRejectedValue(clusterError);
+    mockKubearchiveQueryGetResource.mockRejectedValue(archiveError);
+
+    await expect(
+      fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions),
+    ).rejects.toThrow('Not Found');
+
+    expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
+    expect(mockKubearchiveQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
+  });
+
+  it('throws original cluster error when cluster returns 404 and kubearchive fails with 404 and undefined response', async () => {
+    const clusterError = new HttpError('Not Found', 404, { status: 404 } as Response);
+    const archiveError = new HttpError('Archive Not Found', 404, undefined);
+
+    mockK8sQueryGetResource.mockRejectedValue(clusterError);
+    mockKubearchiveQueryGetResource.mockRejectedValue(archiveError);
+
+    await expect(
+      fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions),
+    ).rejects.toThrow('Not Found');
+
+    expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
+    expect(mockKubearchiveQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
+  });
+
+  it('returns the exact resource instance from cluster (no cloning)', async () => {
+    const clusterResource: K8sResourceCommon = {
+      ...baseResource,
+      metadata: {
+        ...baseResource.metadata!,
+        uid: 'cluster-uid',
+        annotations: { example: '1' },
+      },
+    };
+
+    mockK8sQueryGetResource.mockResolvedValue(clusterResource);
+
+    const result = await fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions);
+
+    expect(result.source).toBe(ResourceSource.Cluster);
+    expect(result.resource).toBe(clusterResource);
+    expect(mockK8sQueryGetResource).toHaveBeenCalledTimes(1);
+    expect(mockKubearchiveQueryGetResource).not.toHaveBeenCalled();
+  });
+
+  it('returns the exact resource instance from kubearchive (no cloning)', async () => {
+    const archiveResource: K8sResourceCommon = {
+      ...baseResource,
+      metadata: {
+        ...baseResource.metadata!,
+        uid: 'archive-uid',
+        labels: { from: 'archive' },
+      },
+    };
+
+    mockK8sQueryGetResource.mockRejectedValue(HttpError.fromCode(404));
+    mockKubearchiveQueryGetResource.mockResolvedValue(archiveResource);
+
+    const result = await fetchResourceWithK8sAndKubeArchive(mockResourceInit, mockOptions);
+
+    expect(result.source).toBe(ResourceSource.Archive);
+    expect(result.resource).toBe(archiveResource);
+    expect(mockK8sQueryGetResource).toHaveBeenCalledTimes(1);
+    expect(mockKubearchiveQueryGetResource).toHaveBeenCalledTimes(1);
+  });
+});

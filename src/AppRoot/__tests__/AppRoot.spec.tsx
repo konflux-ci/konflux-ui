@@ -17,6 +17,7 @@ jest.mock('~/feature-flags/hooks', () => {
       const isEnabled = mockFn(flag);
       return isEnabled ? children : null;
     },
+    createConditionsHook: jest.fn(),
   };
 });
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
@@ -129,5 +130,76 @@ describe('AppRoot', () => {
     // Check that the notification drawer content is visible
     expect(screen.getByText('Notifications')).toBeInTheDocument();
     expect(document.querySelector('.pf-v5-c-notification-drawer__list')).toBeInTheDocument();
+  });
+});
+
+// -----------------------------------------------------------------------------
+// Additional coverage: Jest + React Testing Library
+// Focus: diff-adjacent behaviors — banner loading/error states and notification drawer toggle edge cases
+// -----------------------------------------------------------------------------
+
+describe('AppRoot - additional scenarios', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Default mocks, aligned with the primary suite
+    k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: null });
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'system-notifications');
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+  });
+
+  it('does not render banner while banner config is loading', () => {
+    k8sWatchMock.mockReturnValue({ data: null, isLoading: true, error: null });
+
+    routerRenderer(<AppRoot />);
+
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    // Core layout should still render
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-toggle')).toBeInTheDocument();
+  });
+
+  it('does not render banner when fetching banner config fails', () => {
+    k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: new Error('fetch failed') });
+
+    routerRenderer(<AppRoot />);
+
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    // Core layout resilient to banner errors
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-toggle')).toBeInTheDocument();
+  });
+
+  it('toggles the notification drawer open and closed when the feature flag is enabled', () => {
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'system-notifications');
+
+    routerRenderer(<AppRoot />);
+
+    const notificationButton = screen.getByLabelText('Notifications');
+    // Open
+    fireEvent.click(notificationButton);
+    expect(document.querySelector('.pf-v5-c-notification-drawer__list')).toBeInTheDocument();
+
+    // Close (toggle again)
+    fireEvent.click(notificationButton);
+    expect(document.querySelector('.pf-v5-c-notification-drawer__list')).not.toBeInTheDocument();
+  });
+
+  it('does not render notifications UI if only unrelated feature flags are enabled', () => {
+    // Enable an unrelated flag; keep system-notifications disabled
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => flag === 'some-other-flag');
+
+    routerRenderer(<AppRoot />);
+
+    expect(screen.queryByLabelText('Notifications')).not.toBeInTheDocument();
+  });
+
+  it('renders base layout even when banner watch errors (resilience test)', () => {
+    k8sWatchMock.mockReturnValue({ data: null, isLoading: false, error: new Error('boom') });
+
+    routerRenderer(<AppRoot />);
+
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar-toggle')).toBeInTheDocument();
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
   });
 });
