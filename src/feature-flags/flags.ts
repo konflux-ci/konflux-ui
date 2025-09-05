@@ -77,6 +77,11 @@ const InternalFLAGS = {
     description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not installed on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 
