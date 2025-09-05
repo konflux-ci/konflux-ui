@@ -43,11 +43,9 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
               toggleDrawer={toggleDrawer}
             />
           </IfFeature>
-          <IfFeature flag="dark-theme">
-            <ToolbarItem>
-              <ThemeDropdown />
-            </ToolbarItem>
-          </IfFeature>
+          <ToolbarItem>
+            <ThemeDropdown />
+          </ToolbarItem>
           <ToolbarItem>
             <UserDropdown />
           </ToolbarItem>
