@@ -89,7 +89,7 @@ describe('commit-utils', () => {
     });
 
     it('Should return isPullRequest false if the labels are missing', () => {
-      const result = createCommitObjectFromPLR(pipelineWithCommits[2]);
+      const result = createCommitObjectFromPLR(pipelineWithCommits[3]);
       expect(result.isPullRequest).toBe(false);
       expect(result.pullRequestNumber).toBe('');
     });
