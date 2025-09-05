@@ -129,25 +129,15 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       applicationOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
-        Array.from(apps),
       ),
-      releasePlanOptions: createFilterObj(
-        sortedMonitoredReleases,
-        (mr) => mr?.spec.releasePlan,
-        Array.from(plans),
-      ),
-      namespaceOptions: createFilterObj(
-        sortedMonitoredReleases,
-        (mr) => mr?.metadata.namespace,
-        namespaces.map((ns) => ns.metadata.name),
-      ),
+      releasePlanOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.spec.releasePlan),
+      namespaceOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.metadata.namespace),
       componentOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
-        Array.from(comps),
       ),
     };
-  }, [sortedMonitoredReleases, releases, namespaces]);
+  }, [sortedMonitoredReleases, releases]);
 
   const filteredMRs = React.useMemo(
     () => filterMonitoredReleases(sortedMonitoredReleases, filters),
