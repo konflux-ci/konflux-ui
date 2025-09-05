@@ -10,7 +10,7 @@ export const PREFERS_COLOR_SCHEME_DARK = '(prefers-color-scheme: dark)';
 export const THEME_PREFERENCES = [THEME_SYSTEM, THEME_DARK, THEME_LIGHT] as const;
 
 export const THEME_LABELS = {
-  [THEME_SYSTEM]: 'Auto',
+  [THEME_SYSTEM]: 'System',
   [THEME_DARK]: 'Dark',
   [THEME_LIGHT]: 'Light',
 } as const;
