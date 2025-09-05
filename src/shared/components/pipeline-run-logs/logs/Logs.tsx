@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
@@ -133,7 +134,7 @@ const Logs: React.FC<LogsProps> = ({
         commonFetchText(watchURL, {
           signal,
           ...(isKubearchiveEnabled && source === ResourceSource.Archive
-            ? { pathPrefix: 'plugins/kubearchive' }
+            ? { pathPrefix: KUBEARCHIVE_PATH_PREFIX }
             : undefined),
         })
           .then((res) => appendLog(name, res))

@@ -12,6 +12,7 @@ import {
 } from '@patternfly/react-core';
 import { FlaskIcon } from '@patternfly/react-icons/dist/esm/icons/flask-icon';
 import { FLAGS, FLAGS_STATUS, type FlagKey } from './flags';
+import { useFeatureFlags } from './hooks';
 
 type FeatureFlagIndicatorProps = {
   flags: FlagKey[];
@@ -26,7 +27,9 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   fullLabel = false,
   'data-test': dataTest,
 }) => {
-  const metas = flags.map((f) => FLAGS[f]).filter(Boolean);
+  const [allFlags] = useFeatureFlags();
+  const activeFlags = flags.filter((f) => allFlags[f]);
+  const metas = activeFlags.map((f) => FLAGS[f]).filter(Boolean);
   if (metas.length === 0) return null;
 
   const anyWip = metas.some((m) => m.status === 'wip');
@@ -55,13 +58,19 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   );
 
   const trigger = fullLabel ? (
-    <Label
-      icon={<FlaskIcon style={{ color: warningColor }} />}
-      color={labelColor}
+    <Button
+      isInline
+      variant="plain"
+      aria-label="Feature flag information"
       data-test={dataTest ?? `ff-indicator-${flags.join('-')}`}
     >
-      {statusText}
-    </Label>
+      <Label
+        icon={<FlaskIcon style={{ color: warningColor }} />}
+        color={labelColor}
+      >
+        {statusText}
+      </Label>
+    </Button>
   ) : (
     <Button
       isInline
@@ -74,7 +83,11 @@ export const FeatureFlagIndicator: React.FC<FeatureFlagIndicatorProps> = ({
   );
 
   return (
-    <Popover position="right" headerContent={header} bodyContent={body}>
+    <Popover
+      position="right"
+      headerContent={header}
+      bodyContent={body}
+    >
       {trigger}
     </Popover>
   );

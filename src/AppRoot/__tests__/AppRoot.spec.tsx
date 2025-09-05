@@ -17,6 +17,7 @@ jest.mock('~/feature-flags/hooks', () => {
       const isEnabled = mockFn(flag);
       return isEnabled ? children : null;
     },
+    createConditionsHook: jest.fn(),
   };
 });
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({

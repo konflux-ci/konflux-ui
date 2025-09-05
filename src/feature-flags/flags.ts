@@ -1,4 +1,4 @@
-import { KonfluxInstanceEnvironmentType } from '~/types/konflux-public-info';
+import { GuardSpec } from './conditions';
 
 export const FLAGS_STATUS = {
   wip: 'Unstable',
@@ -34,11 +34,11 @@ export interface FeatureMeta {
    */
   status: FlagStatus;
   /**
-   * Optional environment constraints.
-   * If specified, the flag is only available in the listed environments.
-   * If not specified, the flag is available in all environments.
+   * Optional validator function for conditional flags.
+   * If specified, the flag can only be enabled when the validator returns true.
+   * The validator is called before allowing the user to enable the flag.
    */
-  environments?: KonfluxInstanceEnvironmentType[];
+  guard?: GuardSpec;
 }
 
 const InternalFLAGS = {
@@ -69,9 +69,14 @@ const InternalFLAGS = {
   },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
-    description: 'Use KubeArchive to fetch logs instead of Tekton',
+    description: 'Use Kubearchive to fetch logs instead of Tekton',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not installed on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

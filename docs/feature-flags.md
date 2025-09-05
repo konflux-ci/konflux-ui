@@ -9,10 +9,12 @@ This document explains how our **client‑side** feature‐flag system works, ho
 ```
 src/
   feature-flags/
-    flags.ts     # canonical list, default states, metadata
-    store.ts     # runtime state resolver (localStorage + URL)
-    panel.tsx    # React component to disable and enable a feature flag
-    hooks.ts     # React hooks and component to disable code
+    flags.ts       # canonical list, default states, metadata
+    store.ts       # runtime state resolver (localStorage + URL)  
+    conditions.ts  # condition evaluation engine for guards
+    panel.tsx      # React component to disable and enable a feature flag
+    hooks.ts       # React hooks and component to disable code
+  registers.ts     # condition resolvers registration
 ```
 
 *There is **no** backend call. Everything happens in the browser.*
@@ -54,9 +56,15 @@ src/
        description: 'Kubearchive integration',
        defaultEnabled: false,        // off by default in prod
        status: 'wip',                // 'wip' | 'ready'
+       // Optional: Add guards for conditional enablement
+       guard: {
+         allOf: ['isKubearchiveEnabled'],
+         reason: 'Kubearchive service must be available',
+         visible: true,
+       },
      },
      // …existing flags
-   } as const;
+   } satisfies Record<string, FeatureMeta>;
    ```
 
 2. **Gate code paths**
@@ -82,6 +90,8 @@ src/
    ```
 
 4. **Commit** your changes; reviewers can now enable the flag locally or via URL to test.
+
+> **Note:** If using guards, the flag will be automatically disabled when conditions aren't met, and users won't be able to enable it in the dev panel. See [conditions documentation](./conditions.md) for details.
 
 ---
 
@@ -135,29 +145,32 @@ export const loader = () => {
 
 ### Environment‑scoped flags
 
-You can scope a flag to specific deployment environments (for example, staging vs. production) using the `environments` field in `flags.ts`.
-
-Define:
+For environment-specific flags, use **guards** with the `isStagingCluster` condition.
 
 ```ts
-import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
-
 export const FLAGS = {
   releaseMonitor: {
     key: 'releaseMonitor',
     description: 'New Release Monitor page',
     defaultEnabled: false,
     status: 'wip',
-    environments: [KonfluxInstanceEnvironments.STAGING], // Only available on staging
+    guard: {
+      anyOf: ['isStagingCluster'],
+      reason: 'Only available in staging environment',
+      visible: false, // flag will be only shown on the panel of staging clusters
+    },
   },
-};
+} satisfies Record<string, FeatureMeta>;
 ```
 
-Behavior and usage:
+**Available environment conditions:**
+- `isStagingCluster` - Detects if running in staging environment (checks `KonfluxInstanceEnvironments.STAGING`)
 
-- If `environments` is omitted, the flag is available in all environments.
-- The Feature Flags panel hides flags that are not allowed in the current environment.
-- In UI code (components/elements), you can check environment with `useUIInstance()` if needed.
+**Benefits of condition-based approach:**
+- Dynamic environment detection at runtime
+- Can combine with other conditions using `allOf`/`anyOf` logic
+
+See [conditions documentation](./conditions.md) for more details on guards and conditions.
 
 ---
 

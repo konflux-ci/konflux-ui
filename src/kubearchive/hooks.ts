@@ -4,6 +4,7 @@ import {
   UseInfiniteQueryResult,
   UseQueryResult,
   InfiniteData,
+  UseQueryOptions,
 } from '@tanstack/react-query';
 import {
   k8sListResource,
@@ -14,6 +15,8 @@ import {
 } from '~/k8s';
 import { TQueryOptions } from '../k8s/query/type';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
+import { useIsKubeArchiveEnabled } from './conditional-checks';
+import { KUBEARCHIVE_PATH_PREFIX } from './const';
 import { withKubearchivePathPrefix } from './fetch-utils';
 
 /**
@@ -33,8 +36,9 @@ export function useKubearchiveListResourceQuery(
 ): UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown> {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const queryKey = createQueryKeys({ model, queryOptions: k8sQueryOptions, prefix: 'kubearchive' });
-
+  const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
   return useInfiniteQuery<K8sResourceCommon[]>({
+    enabled: isKubearchiveEnabled,
     queryKey,
     queryFn: async ({ pageParam = undefined }) => {
       const pagedOptions = {
@@ -84,8 +88,8 @@ export function useKubearchiveGetResourceQuery(
   options: Partial<RequestInit & { wsPrefix?: string; pathPrefix?: string }> = {},
 ): UseQueryResult<K8sResourceCommon, unknown> {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
-  const baseOptions = { requestInit: { ...options, pathPrefix: 'plugins/kubearchive' } };
-
+  const baseOptions = { requestInit: { ...options, pathPrefix: KUBEARCHIVE_PATH_PREFIX } };
+  const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
   return useQuery<K8sResourceCommon>(
     createGetQueryOptions<K8sResourceCommon>(
       {
@@ -93,7 +97,10 @@ export function useKubearchiveGetResourceQuery(
         queryOptions: k8sQueryOptions,
         fetchOptions: baseOptions,
       },
-      queryOptions,
+      {
+        ...queryOptions,
+        enabled: isKubearchiveEnabled && queryOptions?.enabled,
+      } as UseQueryOptions<K8sResourceCommon>,
     ),
   );
 }

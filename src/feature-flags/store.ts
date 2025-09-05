@@ -1,7 +1,18 @@
+import { createKeyedJSONStorage } from '~/shared/utils';
+import {
+  type ConditionKey,
+  type ConditionState,
+  evaluateConditions,
+  guardSatisfied,
+} from './conditions';
 import { FLAGS, FlagKey } from './flags';
 
 type FlagState = Record<FlagKey, boolean>;
-const LS_KEY = '__ff_overrides__';
+const FLAGS_LOCAL_STORAGE_KEY = '__ff_overrides__';
+const CONDITIONS_LOCAL_STORAGE_KEY = '__ff_conditions__';
+
+const flagsLocalStorage = createKeyedJSONStorage(FLAGS_LOCAL_STORAGE_KEY, 'localStorage');
+const conditionsLocalStorage = createKeyedJSONStorage(CONDITIONS_LOCAL_STORAGE_KEY, 'localStorage');
 
 /**
  * Parse URL search params to extract feature flags.
@@ -33,11 +44,7 @@ export function parseUrlForFeatureFlags(search: string): Partial<FlagState> {
  * @returns Partial<FlagState>
  */
 function parseStorage(): Partial<FlagState> {
-  try {
-    return JSON.parse(localStorage.getItem(LS_KEY) ?? '{}');
-  } catch {
-    return {};
-  }
+  return flagsLocalStorage.get({});
 }
 
 function compose(search: string): FlagState {
@@ -94,6 +101,22 @@ function resetUrlSearchParams() {
   history.replaceState(null, '', newUrl);
 }
 
+const applyGuards = (
+  state: Record<FlagKey, boolean>,
+  conds: ConditionState,
+): Record<FlagKey, boolean> => {
+  return Object.keys(FLAGS).reduce(
+    (acc, key: FlagKey) => {
+      const g = FLAGS[key].guard;
+      if (g && !guardSatisfied(g, conds)) {
+        acc[key] = false;
+      }
+      return acc;
+    },
+    { ...state },
+  );
+};
+
 /**
  * Feature flags are stored in localStorage and can be overridden by URL params.
  * The URL params take precedence over localStorage.
@@ -106,37 +129,78 @@ function resetUrlSearchParams() {
  * The flags are stored in localStorage in the format:
  * - __ff_overrides__ = {"flag1": true, "flag2": false}
  */
-
-let state: FlagState = compose(location.search);
+const _conditions: ConditionState = conditionsLocalStorage.get({});
+let _state: FlagState = applyGuards(compose(location.search), _conditions);
 const subs = new Set<() => void>();
+
+const notify = () => {
+  subs.forEach((fn) => fn());
+};
 
 export const FeatureFlagsStore = {
   get state() {
-    return state;
+    return _state;
   },
+
+  get conditions() {
+    return _conditions;
+  },
+
   isOn(key: FlagKey) {
-    return state[key];
+    return _state[key];
   },
+
+  async ensureConditions(keys: ConditionKey[], ctx = {}) {
+    const fresh = await evaluateConditions(keys, ctx);
+
+    // Merge; detect if any condition actually changed
+    let condsChanged = false;
+    for (const k of Object.keys(fresh) as ConditionKey[]) {
+      if (_conditions[k] !== fresh[k]) {
+        _conditions[k] = fresh[k];
+        condsChanged = true;
+      }
+    }
+    if (!condsChanged) return;
+
+    // Persist for next boot
+    conditionsLocalStorage.set(_conditions);
+
+    // Re-apply guards and notify only if flags changed
+    const next = applyGuards(compose(location.search), _conditions);
+    let flagsChanged = false;
+    for (const k of Object.keys(next) as FlagKey[]) {
+      if (next[k] !== _state[k]) {
+        flagsChanged = true;
+        break;
+      }
+    }
+    if (flagsChanged) {
+      _state = next;
+      notify();
+    }
+  },
+
   set(key: FlagKey, value: boolean) {
-    if (state[key] === value) {
+    if (_state[key] === value) {
       return;
     }
-    const next = { ...state, [key]: value };
-    localStorage.setItem(LS_KEY, JSON.stringify(next));
+    const next = { ..._state, [key]: value };
+    flagsLocalStorage.set(next);
     updateUrlSearchParams(key, value);
-    state = compose(location.search);
-    subs.forEach((fn) => fn());
+    _state = applyGuards(compose(location.search), _conditions);
+    notify();
   },
   resetAll() {
     resetUrlSearchParams();
-    localStorage.removeItem(LS_KEY);
+    flagsLocalStorage.remove();
 
-    state = compose(location.search);
-    subs.forEach((fn) => fn());
+    _state = applyGuards(compose(location.search), _conditions);
+    notify();
   },
   refresh(search = location.search) {
-    state = compose(search);
-    subs.forEach((fn) => fn());
+    _state = applyGuards(compose(search), _conditions);
+    notify();
   },
   subscribe(cb: () => void) {
     subs.add(cb);
