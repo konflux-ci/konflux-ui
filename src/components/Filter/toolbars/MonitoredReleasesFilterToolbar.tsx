@@ -14,7 +14,6 @@ type MonitoredReleasesFilterToolbarProps = {
   componentOptions: { [key: string]: number };
 };
 
-// Update the implementation:
 const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarProps> = ({
   filters,
   setFilters,
@@ -24,53 +23,49 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   releasePlanOptions,
   namespaceOptions,
   componentOptions,
-}) => {
+}: MonitoredReleasesFilterToolbarProps) => {
   const { name, status, application, releasePlan, namespace, component } = filters;
-  const filtersRef = React.useRef(filters);
-  React.useEffect(() => {
-    filtersRef.current = filters;
-  }, [filters]);
 
   return (
     <BaseTextFilterToolbar
       text={name}
-      label="Name"
-      setText={(newName) => setFilters({ ...filtersRef.current, name: newName })}
+      label="name"
+      setText={(newValues) => setFilters({ ...filters, name: newValues })}
       onClearFilters={onClearFilters}
     >
       <MultiSelect
         label="Status"
         filterKey="status"
         values={status}
-        setValues={(newValues) => setFilters({ ...filtersRef.current, status: newValues })}
+        setValues={(newValues) => setFilters({ ...filters, status: newValues })}
         options={statusOptions}
       />
       <MultiSelect
         label="Component"
         filterKey="component"
         values={component}
-        setValues={(newValues) => setFilters({ ...filtersRef.current, component: newValues })}
+        setValues={(newValues) => setFilters({ ...filters, component: newValues })}
         options={componentOptions}
       />
       <MultiSelect
         label="Application"
         filterKey="application"
         values={application}
-        setValues={(newValues) => setFilters({ ...filtersRef.current, application: newValues })}
+        setValues={(newValues) => setFilters({ ...filters, application: newValues })}
         options={applicationOptions}
       />
       <MultiSelect
         label="Release Plan"
         filterKey="releasePlan"
         values={releasePlan}
-        setValues={(newValues) => setFilters({ ...filtersRef.current, releasePlan: newValues })}
+        setValues={(newValues) => setFilters({ ...filters, releasePlan: newValues })}
         options={releasePlanOptions}
       />
       <MultiSelect
         label="Namespace"
         filterKey="namespace"
         values={namespace}
-        setValues={(newValues) => setFilters({ ...filtersRef.current, namespace: newValues })}
+        setValues={(newValues) => setFilters({ ...filters, namespace: newValues })}
         options={namespaceOptions}
       />
     </BaseTextFilterToolbar>

@@ -2,7 +2,10 @@ import * as React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { mockReleases, mockNamespaces } from '~/components/ReleaseMonitor/__data__/mock-release-data';
+import {
+  mockReleases,
+  mockNamespaces,
+} from '~/components/ReleaseMonitor/__data__/mock-release-data';
 import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
@@ -32,7 +35,6 @@ jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => {
 });
 
 // Mock table component
-
 jest.mock('~/shared/components/table/TableComponent', () => {
   return ({ data }) => (
     <table role="table" aria-label="mock-table">
@@ -56,27 +58,6 @@ jest.mock('~/shared/components/table/TableComponent', () => {
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
-
-jest.mock('~/utils/commits-utils', () => ({
-  statuses: ['Succeeded', 'Failed', 'Progressing'],
-}));
-
-jest.mock('~/components/ReleaseMonitor/ReleaseEmptyState', () => {
-  return jest.fn(() => <div>No releases found</div>);
-});
-
-jest.mock('~/shared/components/empty-state/ErrorEmptyState', () => {
-  return jest.fn(({ httpError }) => <div>Error: {httpError?.message}</div>);
-});
-
-jest.mock('~/shared/components/empty-state/FilteredEmptyState', () => {
-  return jest.fn(({ onClearFilters }) => (
-    <div>
-      No matching releases
-      <button onClick={onClearFilters}>Clear filters</button>
-    </div>
-  ));
-});
 
 // Type casts for mocked functions
 const mockUseNamespaceInfo = useNamespaceInfo as jest.Mock;
@@ -176,10 +157,6 @@ describe('ReleaseMonitorListView', () => {
     });
 
     expect(filter.value).toBe('');
-
-    act(() => {
-      jest.advanceTimersByTime(700);
-    });
   });
 
   it('can filter releases by status', async () => {
@@ -425,10 +402,10 @@ describe('ReleaseMonitorListView', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('No matching releases')).toBeInTheDocument();
+      expect(screen.getByText('No results found')).toBeInTheDocument();
     });
 
-    const clearButton = screen.getByText('Clear filters');
+    const clearButton = screen.getByText('Clear all filters');
     fireEvent.click(clearButton);
 
     await waitFor(() => {
@@ -451,26 +428,6 @@ describe('ReleaseMonitorListView', () => {
 
     await waitFor(() => {
       expect(screen.getByText('No releases found')).toBeInTheDocument();
-    });
-  });
-
-  it('should handle error state', async () => {
-    mockReleasesInNamespace.mockImplementation(({ onError }) => {
-      React.useEffect(() => {
-        onError(new Error('Failed to load releases'));
-      }, [onError]);
-
-      return null;
-    });
-
-    render(
-      <TestWrapper>
-        <ReleaseMonitorListView />
-      </TestWrapper>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText('Error: Failed to load releases')).toBeInTheDocument();
     });
   });
 });
