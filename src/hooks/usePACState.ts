@@ -8,6 +8,7 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   useComponentBuildStatus,
+  MIGRATION_REQUEST_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { usePipelineRuns } from './usePipelineRuns';
@@ -25,6 +26,7 @@ export enum PACState {
 
 const usePACState = (component: ComponentKind) => {
   const isSample = component.metadata?.annotations?.[SAMPLE_ANNOTATION] === 'true';
+  const isMigrationRequested = !!component.metadata?.annotations?.[MIGRATION_REQUEST_ANNOTATION];
   const pacProvision = getPACProvision(component);
   const isConfigureRequested =
     component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
@@ -84,7 +86,7 @@ const usePACState = (component: ComponentKind) => {
         : pacProvision === ComponentBuildState.enabled
           ? !pipelineBuildRunsLoaded
             ? PACState.loading
-            : prMerged
+            : prMerged || isMigrationRequested
               ? PACState.ready
               : PACState.pending
           : !pacProvision || pacProvision === ComponentBuildState.disabled
