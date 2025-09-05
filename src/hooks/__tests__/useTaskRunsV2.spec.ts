@@ -5,7 +5,7 @@ import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { TaskRunKind } from '~/types/task-run';
 import { createK8sWatchResourceMock, createTestQueryClient } from '~/utils/test-utils';
-import { useTaskRunsV2, UseTaskRunsV2Options } from '../useTaskRunsV2';
+import { useTaskRunsV2, TaskRunsV2Options } from '../useTaskRunsV2';
 import { useTRTaskRuns } from '../useTektonResults';
 
 // Mock dependencies
@@ -73,7 +73,7 @@ const mockTaskRun3: TaskRunKind = {
 describe('useTaskRunsV2', () => {
   let queryClient: QueryClient;
 
-  const renderHookWithQueryClient = (namespace: string, options?: UseTaskRunsV2Options) => {
+  const renderHookWithQueryClient = (namespace: string, options?: TaskRunsV2Options) => {
     return renderHook(() => useTaskRunsV2(namespace, options), {
       wrapper: ({ children }) =>
         React.createElement(QueryClientProvider, { client: queryClient }, children),

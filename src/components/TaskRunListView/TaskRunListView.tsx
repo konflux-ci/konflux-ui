@@ -1,29 +1,43 @@
 import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
+import { TaskRunsOptions, useTaskRunsForPipelineRuns } from '~/hooks/useTaskRuns';
 import { Table, useDeepCompareMemoize } from '../../shared';
+import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
-import { TaskRunKind } from '../../types';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { TaskRunListHeader } from './TaskRunListHeader';
 import TaskRunListRow from './TaskRunListRow';
 
-type Props = { taskRuns: TaskRunKind[]; loaded: boolean };
+type Props = {
+  namespace: string;
+  pipelineRunName: string;
+  taskName?: string;
+  options?: TaskRunsOptions;
+};
 
-const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, loaded }) => {
+const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
+  namespace,
+  pipelineRunName,
+  taskName,
+  options,
+}) => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
   });
   const { name: nameFilter } = filters;
 
-  const sortedTaskRuns = React.useMemo(
-    () =>
-      taskRuns?.sort(
-        (a, b) => +new Date(a.metadata.creationTimestamp) - +new Date(b.metadata.creationTimestamp),
-      ),
-    [taskRuns],
+  // Use useTaskRunsForPipelineRuns which handles feature flag switching and sorting
+  const [taskRuns, loaded, error] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+    taskName,
+    options,
   );
+
+  // TaskRuns are already sorted by useTaskRunsV2, no need to re-sort
+  const sortedTaskRuns = taskRuns;
 
   const filteredTaskRun = React.useMemo(
     () =>
@@ -37,6 +51,16 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({ taskRuns, l
         : sortedTaskRuns,
     [nameFilter, sortedTaskRuns],
   );
+
+  // Handle error state
+  if (error) {
+    return (
+      <ErrorEmptyState
+        title="Unable to load task runs"
+        body={(error as { message: string }).message}
+      />
+    );
+  }
 
   if (!loaded) {
     return (
