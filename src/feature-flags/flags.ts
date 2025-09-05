@@ -72,6 +72,17 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'kubearchive-pipeline-runs': {
+    key: 'kubearchive-pipeline-runs',
+    description: 'Enable fetching pipeline runs data from KubeArchive instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not installed on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

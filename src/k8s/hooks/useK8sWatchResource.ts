@@ -24,7 +24,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
 ): UseQueryResult<R> => {
   const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
   const wsError = useK8sQueryWatch(
-    resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
+    queryOptions?.enabled && resourceInit?.watch ? { model, queryOptions: k8sQueryOptions } : null,
     resourceInit?.isList,
     hashKey(createQueryKeys({ model, queryOptions: k8sQueryOptions })),
     options,
@@ -35,7 +35,7 @@ export const useK8sWatchResource = <R extends K8sResourceCommon | K8sResourceCom
       ? queryOptions
       : (queryOptions as Omit<ReactQueryOptions<R>, 'queryKey' | 'queryFn'>);
     const baseQueryOptions = {
-      enabled: !!resourceInit,
+      enabled: queryOptions?.enabled && !!resourceInit,
       refetchInterval: wsError ? POLLING_INTERVAL : undefined,
       ...queryOptionsTyped,
     };

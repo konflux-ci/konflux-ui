@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useK8sWatchResource } from '~/k8s';
+import { TQueryOptions } from '~/k8s/query/type';
+import { WebSocketOptions } from '~/k8s/web-socket/types';
+import { useKubearchiveGetResourceQuery } from '~/kubearchive/hooks';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
-import { useK8sWatchResource } from '../k8s';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
@@ -329,6 +333,77 @@ export const usePipelineRun = (
     () => [result[0]?.[0], result[1], result[0]?.[0] ? undefined : result[2]],
     [result],
   );
+};
+
+export const usePipelineRunV2 = (
+  namespace: string,
+  pipelineRunName: string,
+  queryOptions?: TQueryOptions<PipelineRunKind>,
+  watch: boolean = false,
+  watchOptions?: Partial<
+    WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
+  >,
+): [PipelineRunKind, boolean, unknown] => {
+  const kubearchiveEnabled = useIsOnFeatureFlag('kubearchive-pipeline-runs');
+  const enabled = queryOptions?.enabled ?? true;
+
+  const resourceInit = React.useMemo(
+    () => ({
+      groupVersionKind: PipelineRunGroupVersionKind,
+      namespace,
+      watch,
+      isList: false,
+      name: pipelineRunName,
+      limit: 1,
+    }),
+    [namespace, pipelineRunName, watch],
+  );
+
+  const clusterResult = useK8sWatchResource<PipelineRunKind>(
+    resourceInit,
+    PipelineRunModel,
+    queryOptions,
+    watchOptions,
+  );
+
+  const tektonResult = useTRPipelineRuns(
+    namespace,
+    React.useMemo(
+      () => ({
+        filter: EQ('data.metadata.name', pipelineRunName),
+        limit: 1,
+      }),
+      [pipelineRunName],
+    ),
+    enabled && !kubearchiveEnabled,
+  );
+
+  const kubearchiveResult = useKubearchiveGetResourceQuery(resourceInit, PipelineRunModel, {
+    ...queryOptions,
+    enabled: enabled && kubearchiveEnabled,
+  });
+
+  if (!enabled) {
+    return [undefined, true, undefined]; // loaded: true because nothing is loading
+  }
+
+  if (clusterResult.data) {
+    return [clusterResult.data, !clusterResult.isLoading, clusterResult.error];
+  }
+
+  if (kubearchiveEnabled) {
+    return [
+      kubearchiveResult.error ? undefined : (kubearchiveResult.data as PipelineRunKind),
+      !kubearchiveResult.isLoading,
+      kubearchiveResult.error,
+    ];
+  }
+
+  return [
+    tektonResult[0]?.[0],
+    tektonResult[0]?.[0] ? tektonResult[1] : false,
+    tektonResult[0]?.[0] ? undefined : tektonResult[2],
+  ];
 };
 
 export const useTaskRun = (
