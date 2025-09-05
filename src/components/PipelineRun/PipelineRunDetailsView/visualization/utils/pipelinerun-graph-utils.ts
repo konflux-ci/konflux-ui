@@ -10,7 +10,6 @@ import {
   WhenStatus,
 } from '@patternfly/react-topology';
 import { PipelineNodeModel } from '@patternfly/react-topology/src/pipelines/types';
-import { TaskRunLabel } from '../../../../../consts/pipelinerun';
 import { isCVEScanResult } from '../../../../../hooks/useScanResults';
 import { formatPrometheusDuration } from '../../../../../shared/components/timestamp/datetime';
 import {
@@ -178,6 +177,7 @@ const createTaskWithStatus = (
 
   const mTask: PipelineTaskWithStatus = {
     ...task,
+    taskRun,
     status: { ...taskStatus, reason: runStatus.Pending },
   };
 
@@ -257,17 +257,16 @@ export const appendStatus = (
   const tasks = (isFinallyTasks ? pipeline.spec.finally : pipeline.spec.tasks) || [];
   const overallPipelineRunStatus = pipelineRunStatus(pipelineRun);
 
-  // Group TaskRuns by pipeline task name to detect matrix tasks
+  const pipelineTaskMap = new Map<string, PipelineTask>(tasks.map((t) => [t.name, t]));
+
   const taskRunsByTaskName = new Map<string, TaskRunKind[]>();
   taskRuns?.forEach((tr) => {
     const taskName = tr.metadata.labels?.[TektonResourceLabel.pipelineTask];
     if (taskName) {
-      const existingTaskRuns = taskRunsByTaskName.get(taskName);
-      if (existingTaskRuns) {
-        existingTaskRuns.push(tr);
-      } else {
-        taskRunsByTaskName.set(taskName, [tr]);
+      if (!taskRunsByTaskName.has(taskName)) {
+        taskRunsByTaskName.set(taskName, []);
       }
+      taskRunsByTaskName.get(taskName).push(tr);
     }
   });
 
@@ -296,25 +295,32 @@ export const appendStatus = (
       return;
     }
 
-    // Check if this is a matrix task (multiple TaskRuns with platform labels)
-    const platformTaskRuns = taskRunsForTask.filter(
-      (tr) => tr.metadata.labels?.[TaskRunLabel.TARGET_PLATFORM],
-    );
+    const pipelineTaskSpec = pipelineTaskMap.get(task.name);
+    const isMatrixInSpec = !!pipelineTaskSpec?.matrix;
 
-    if (platformTaskRuns.length > 1) {
-      // Matrix task detected - create one entry per platform
-      platformTaskRuns.forEach((taskRun) => {
-        const platform = taskRun.metadata.labels[TaskRunLabel.TARGET_PLATFORM];
-        const platformDisplay = platform?.replace(/-/g, '/') || 'unknown';
+    const matrixParamNames = isMatrixInSpec
+      ? pipelineTaskSpec.matrix.params?.map((p) => p.name) ?? []
+      : [];
 
-        const matrixTask = createMatrixTaskEntry(task, taskRun, platformDisplay);
+    if (isMatrixInSpec && matrixParamNames.length > 0 && taskRunsForTask.length > 1) {
+      taskRunsForTask.forEach((taskRun, index) => {
+        const paramValues = matrixParamNames
+          .map((name) => {
+            const param = taskRun.spec.params?.find((p) => p.name === name);
+            return param?.value ?? null;
+          })
+          .filter((v) => v !== null);
+
+        const displayName: string = paramValues.length > 0 ? paramValues.join(', ') : `${index}`;
+
+        const matrixTask = createMatrixTaskEntry(task, taskRun, displayName);
         result.push(matrixTask);
       });
     } else {
-      // Regular task or single-platform matrix - create single entry
-      const taskRun = taskRunsForTask[0];
-      const regularTask = createTaskWithStatus(task, taskRun);
-      result.push(regularTask);
+      taskRunsForTask.forEach((taskRun) => {
+        const regularTask = createTaskWithStatus(task, taskRun);
+        result.push(regularTask);
+      });
     }
   });
 
@@ -482,22 +488,7 @@ const getGraphDataModel = (
         ? `${matrixTask.originalName} (${matrixTask.matrixPlatform})`
         : task.name;
 
-      // For matrix tasks, find the specific TaskRun for this platform
-      let taskRunForTask: TaskRunKind | undefined;
-      if (matrixTask.matrixPlatform) {
-        // Matrix task - find TaskRun with matching platform label
-        const platformLabel = matrixTask.matrixPlatform.replace(/\//g, '-');
-        taskRunForTask = taskRuns.find(
-          (tr) =>
-            tr.metadata.labels[TektonResourceLabel.pipelineTask] === matrixTask.originalName &&
-            tr.metadata.labels[TaskRunLabel.TARGET_PLATFORM] === platformLabel,
-        );
-      } else {
-        // Regular task - find by task name
-        taskRunForTask = taskRuns.find(
-          (tr) => tr.metadata.labels[TektonResourceLabel.pipelineTask] === task.name,
-        );
-      }
+      const taskRunForTask: TaskRunKind | undefined = task.taskRun;
 
       return {
         id: task.name,
