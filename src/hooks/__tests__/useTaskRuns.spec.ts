@@ -1,11 +1,15 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { testTaskRuns } from '../../components/TaskRunListView/__data__/mock-TaskRun-data';
-import { useTaskRuns } from '../useTaskRuns';
+import { useTaskRuns, useTaskRunsForPipelineRuns } from '../useTaskRuns';
 import { useTaskRunsV2 } from '../useTaskRunsV2';
 
 jest.mock('../useTaskRunsV2');
+jest.mock('../usePipelineRuns', () => ({
+  useTaskRuns: jest.fn(),
+}));
 
 const useTaskRunsV2Mock = useTaskRunsV2 as jest.Mock;
+const usePipelineRunsTaskRunsMock = jest.requireMock('../usePipelineRuns').useTaskRuns;
 
 describe('useTaskRuns', () => {
   beforeEach(() => {
@@ -13,7 +17,7 @@ describe('useTaskRuns', () => {
   });
 
   it('should return sorted taskruns', () => {
-    useTaskRunsV2Mock.mockReturnValue([testTaskRuns, true, undefined]);
+    usePipelineRunsTaskRunsMock.mockReturnValue([testTaskRuns, true, undefined]);
     const { result } = renderHook(() => useTaskRuns('test-ns', 'test-pipelinerun', 'test-task'));
 
     const [taskRuns, loaded] = result.current;
@@ -38,7 +42,7 @@ describe('useTaskRuns', () => {
       },
     ];
 
-    useTaskRunsV2Mock.mockReturnValue([taskRuns, true, undefined]);
+    usePipelineRunsTaskRunsMock.mockReturnValue([taskRuns, true, undefined]);
     const { result } = renderHook(() => useTaskRuns('test-ns', 'test-pipelinerun', 'test-task'));
 
     const [tRuns, loaded] = result.current;
@@ -47,7 +51,7 @@ describe('useTaskRuns', () => {
   });
 
   it('returns empty array if results are not fetched', () => {
-    useTaskRunsV2Mock.mockReturnValue([[], false, undefined]);
+    usePipelineRunsTaskRunsMock.mockReturnValue([[], false, undefined]);
     const { result } = renderHook(() => useTaskRuns('test-ns', 'test'));
 
     expect(result.current).toEqual([[], false, undefined]);
@@ -57,7 +61,7 @@ describe('useTaskRuns', () => {
     const options = { enabled: false, limit: 10 };
     useTaskRunsV2Mock.mockReturnValue([[], false, undefined]);
 
-    renderHook(() => useTaskRuns('test-ns', 'test-pipelinerun', undefined, options));
+    renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, options));
 
     expect(useTaskRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',

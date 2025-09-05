@@ -2,8 +2,6 @@ import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { MatchExpression, MatchLabels, Selector } from '~/types/k8s';
 import {
   convertFilterToKubearchiveSelectors,
-  convertKubearchiveSelectorsToFilter,
-  createKubearchiveSelector,
   createKubearchiveWatchResource,
 } from '../task-run-filter-transforms';
 
@@ -14,32 +12,25 @@ describe('task-run-filter-transforms', () => {
         filterByName: 'my-task-run',
       });
 
-      expect(result.fieldSelectors).toEqual({
-        'metadata.name': 'my-task-run',
-      });
+      expect(result.fieldSelector).toEqual('metadata.name=my-task-run');
     });
 
-    it('should convert filterByCreationTimestampAfter to field selector', () => {
+    it('should not create field selectors for filterByCreationTimestampAfter', () => {
       const timestamp = '2024-01-01T00:00:00Z';
       const result = convertFilterToKubearchiveSelectors({
         filterByCreationTimestampAfter: timestamp,
       });
 
-      expect(result.fieldSelectors).toEqual({
-        'metadata.creationTimestamp': `>${timestamp}`,
-      });
+      expect(result.fieldSelector).toBeUndefined();
     });
 
-    it('should handle multiple field selectors', () => {
+    it('should handle multiple field selectors, excluding timestamp', () => {
       const result = convertFilterToKubearchiveSelectors({
         filterByName: 'my-task-run',
         filterByCreationTimestampAfter: '2024-01-01T00:00:00Z',
       });
 
-      expect(result.fieldSelectors).toEqual({
-        'metadata.name': 'my-task-run',
-        'metadata.creationTimestamp': '>2024-01-01T00:00:00Z',
-      });
+      expect(result.fieldSelector).toEqual('metadata.name=my-task-run');
     });
 
     it('should preserve matchLabels', () => {
@@ -52,7 +43,7 @@ describe('task-run-filter-transforms', () => {
         matchLabels,
       });
 
-      expect(result.matchLabels).toEqual(matchLabels);
+      expect(result.selector.matchLabels).toEqual(matchLabels);
     });
 
     it('should preserve matchExpressions', () => {
@@ -68,7 +59,7 @@ describe('task-run-filter-transforms', () => {
         matchExpressions,
       });
 
-      expect(result.matchExpressions).toEqual(matchExpressions);
+      expect(result.selector.matchExpressions).toEqual(matchExpressions);
     });
 
     it('should convert filterByCommit to match expression', () => {
@@ -77,10 +68,10 @@ describe('task-run-filter-transforms', () => {
         filterByCommit: commitSha,
       });
 
-      expect(result.matchExpressions).toEqual([
+      expect(result.selector.matchExpressions).toEqual([
         {
           key: PipelineRunLabel.COMMIT_LABEL,
-          operator: 'In',
+          operator: 'Equals',
           values: [commitSha],
         },
       ]);
@@ -99,92 +90,24 @@ describe('task-run-filter-transforms', () => {
         filterByCommit: 'abc123',
       });
 
-      expect(result.matchExpressions).toHaveLength(2); // 1 existing + 1 commit expression
-      expect(result.matchExpressions[0]).toEqual(existingExpressions[0]);
-      expect(result.matchExpressions[1]).toEqual({
+      expect(result.selector.matchExpressions).toHaveLength(2); // 1 existing + 1 commit expression
+      expect(result.selector.matchExpressions[0]).toEqual(existingExpressions[0]);
+      expect(result.selector.matchExpressions[1]).toEqual({
         key: PipelineRunLabel.COMMIT_LABEL,
-        operator: 'In',
+        operator: 'Equals',
         values: ['abc123'],
       });
     });
 
     it('should handle empty input', () => {
       const result = convertFilterToKubearchiveSelectors({});
-      expect(result).toEqual({});
-    });
-  });
-
-  describe('convertKubearchiveSelectorsToFilter', () => {
-    it('should convert field selectors back to filter format', () => {
-      const result = convertKubearchiveSelectorsToFilter({
-        fieldSelectors: {
-          'metadata.name': 'my-task-run',
-          'metadata.creationTimestamp': '>2024-01-01T00:00:00Z',
+      expect(result).toEqual({
+        fieldSelector: undefined,
+        selector: {
+          matchLabels: undefined,
+          matchExpressions: [],
         },
       });
-
-      expect(result).toEqual({
-        filterByName: 'my-task-run',
-        filterByCreationTimestampAfter: '2024-01-01T00:00:00Z',
-      });
-    });
-
-    it('should preserve matchLabels and matchExpressions', () => {
-      const matchLabels: MatchLabels = { 'tekton.dev/pipelineRun': 'test-pr' };
-      const matchExpressions: MatchExpression[] = [
-        { key: 'tekton.dev/task', operator: 'In', values: ['task1', 'task2'] },
-      ];
-
-      const result = convertKubearchiveSelectorsToFilter({
-        matchLabels,
-        matchExpressions,
-      });
-
-      expect(result.matchLabels).toEqual(matchLabels);
-      expect(result.matchExpressions).toEqual(matchExpressions);
-    });
-
-    it('should handle creation timestamp without > prefix', () => {
-      const result = convertKubearchiveSelectorsToFilter({
-        fieldSelectors: {
-          'metadata.creationTimestamp': '2024-01-01T00:00:00Z',
-        },
-      });
-
-      expect(result.filterByCreationTimestampAfter).toBeUndefined();
-    });
-
-    it('should handle empty input', () => {
-      const result = convertKubearchiveSelectorsToFilter({});
-      expect(result).toEqual({});
-    });
-  });
-
-  describe('createKubearchiveSelector', () => {
-    it('should create kubearchive selector from standard selector', () => {
-      const selector: Selector = {
-        matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        filterByName: 'my-task-run',
-        filterByCommit: 'abc123',
-      };
-
-      const result = createKubearchiveSelector(selector);
-
-      expect(result).toEqual({
-        matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        matchExpressions: [
-          {
-            key: 'pipelinesascode.tekton.dev/sha',
-            operator: 'In',
-            values: ['abc123'],
-          },
-        ],
-      });
-    });
-
-    it('should return undefined for undefined selector', () => {
-      const result = createKubearchiveSelector(undefined);
-      expect(result).toBeUndefined();
     });
   });
 
@@ -199,10 +122,11 @@ describe('task-run-filter-transforms', () => {
       const result = createKubearchiveWatchResource('default', selector);
 
       expect(result.namespace).toBe('default');
-      expect(result.fieldSelector).toBe(
-        'metadata.name=my-task-run,metadata.creationTimestamp=>2024-01-01T00:00:00Z',
-      );
-      expect(result.selector).toEqual(createKubearchiveSelector(selector));
+      expect(result.fieldSelector).toBe('metadata.name=my-task-run');
+      expect(result.selector).toEqual({
+        matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
+        matchExpressions: [],
+      });
     });
 
     it('should handle selector with only labels', () => {
@@ -214,7 +138,10 @@ describe('task-run-filter-transforms', () => {
 
       expect(result.namespace).toBe('default');
       expect(result.fieldSelector).toBeUndefined();
-      expect(result.selector).toEqual(createKubearchiveSelector(selector));
+      expect(result.selector).toEqual({
+        matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
+        matchExpressions: [],
+      });
     });
 
     it('should handle no selector', () => {

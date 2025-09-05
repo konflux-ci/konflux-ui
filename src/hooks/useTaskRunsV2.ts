@@ -2,20 +2,17 @@ import * as React from 'react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
-import { useDeepCompareMemoize } from '../shared';
 import { TaskRunKind } from '../types';
 import {
   createKubearchiveWatchResource,
   TaskRunSelector,
 } from '../utils/task-run-filter-transforms';
+import { TaskRunsOptions } from './useTaskRuns';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 
-export interface UseTaskRunsV2Options {
+export type TaskRunsV2Options = TaskRunsOptions & {
   selector?: TaskRunSelector;
-  limit?: number;
-  enabled?: boolean;
-  watch?: boolean;
-}
+};
 
 /**
  * Hook for fetching TaskRuns with feature flag controlled data source switching.
@@ -27,47 +24,41 @@ export interface UseTaskRunsV2Options {
  */
 export const useTaskRunsV2 = (
   namespace: string,
-  options?: UseTaskRunsV2Options,
+  options?: TaskRunsV2Options,
+  queryOptions?: { enabled?: boolean },
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const enableKubearchive = useIsOnFeatureFlag('taskruns-kubearchive');
-  const optionsMemo = useDeepCompareMemoize(options);
-  const enabledMomo = optionsMemo?.enabled !== false;
-  const watch = optionsMemo?.watch !== false;
+  const isEnabled = (queryOptions?.enabled ?? options?.enabled) !== false;
+  const watch = options?.watch !== false;
 
-  // Always call all hooks unconditionally to follow Rules of Hooks
-
+  //
   // Tekton Results implementation
-  const [trTaskRuns, trLoaded, trError, trGetNextPage, trNextPageProps] = useTRTaskRuns(
-    !enableKubearchive && enabledMomo && namespace ? namespace : null,
-    {
-      selector: optionsMemo?.selector,
-      limit: optionsMemo?.limit,
-    },
-  );
+  //
+  const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
+    useTRTaskRuns(!enableKubearchive && isEnabled && namespace ? namespace : null, {
+      selector: options?.selector,
+      limit: options?.limit,
+    });
 
+  //
   // KubeArchive implementation
+  //
   const kubearchiveResourceInit = React.useMemo(() => {
-    if (enableKubearchive && enabledMomo && namespace) {
-      const watchResource = createKubearchiveWatchResource(namespace, optionsMemo?.selector);
-      return {
-        groupVersionKind: TaskRunGroupVersionKind,
-        namespace: watchResource.namespace,
-        isList: true,
-        selector: watchResource.selector,
-        fieldSelector: watchResource.fieldSelector,
-        watch,
-      };
-    }
-    return undefined;
-  }, [enableKubearchive, enabledMomo, namespace, optionsMemo?.selector, watch]);
+    if (!enableKubearchive || !isEnabled || !namespace) return undefined;
+    return {
+      groupVersionKind: TaskRunGroupVersionKind,
+      isList: true,
+      watch,
+      ...createKubearchiveWatchResource(namespace, options?.selector),
+    };
+  }, [enableKubearchive, isEnabled, namespace, options?.selector, watch]);
 
   const kubearchiveQuery = useKubearchiveListResourceQuery(kubearchiveResourceInit, TaskRunModel);
 
-  // Process KubeArchive data with infinite loading support
   const kubearchiveData = React.useMemo(() => {
-    if (!enableKubearchive) return [];
-    return kubearchiveQuery.data?.pages ? kubearchiveQuery.data.pages.flatMap((page) => page) : [];
-  }, [enableKubearchive, kubearchiveQuery.data?.pages]);
+    const pages = kubearchiveQuery.data?.pages;
+    return pages?.flatMap((page) => page) ?? [];
+  }, [kubearchiveQuery.data?.pages]);
 
   // Apply sorting and limit to KubeArchive data
   const processedKubearchiveData = React.useMemo(() => {
@@ -79,16 +70,14 @@ export const useTaskRunsV2 = (
     const sorted = [...data].sort((a, b) => toKey(b).localeCompare(toKey(a)));
 
     // Apply limit if specified
-    return optionsMemo?.limit && optionsMemo.limit > 0
-      ? sorted.slice(0, optionsMemo.limit)
-      : sorted;
-  }, [enableKubearchive, kubearchiveData, optionsMemo?.limit]);
+    return options?.limit && options.limit > 0 ? sorted.slice(0, options.limit) : sorted;
+  }, [enableKubearchive, kubearchiveData, options?.limit]);
 
   // Return the appropriate data based on feature flag
   return React.useMemo(() => {
     if (enableKubearchive) {
-      const isLoading = !enabledMomo || !namespace ? false : kubearchiveQuery.isLoading;
-      const error = !enabledMomo || !namespace ? undefined : kubearchiveQuery.error;
+      const isLoading = !isEnabled || !namespace ? false : kubearchiveQuery.isLoading;
+      const error = !isEnabled || !namespace ? undefined : kubearchiveQuery.error;
       const getNextPage = kubearchiveQuery.hasNextPage ? kubearchiveQuery.fetchNextPage : undefined;
       const nextPageProps = {
         hasNextPage: kubearchiveQuery.hasNextPage || false,
@@ -97,7 +86,13 @@ export const useTaskRunsV2 = (
 
       return [processedKubearchiveData, !isLoading, error, getNextPage, nextPageProps];
     }
-    return [trTaskRuns || [], trLoaded, trError, trGetNextPage, trNextPageProps];
+    return [
+      tektonTaskRuns || [],
+      tektonLoaded,
+      tektonError,
+      tektonGetNextPage,
+      tektonNextPageProps,
+    ];
   }, [
     enableKubearchive,
     processedKubearchiveData,
@@ -106,12 +101,12 @@ export const useTaskRunsV2 = (
     kubearchiveQuery.hasNextPage,
     kubearchiveQuery.fetchNextPage,
     kubearchiveQuery.isFetchingNextPage,
-    trTaskRuns,
-    trLoaded,
-    trError,
-    trGetNextPage,
-    trNextPageProps,
-    enabledMomo,
+    tektonTaskRuns,
+    tektonLoaded,
+    tektonError,
+    tektonGetNextPage,
+    tektonNextPageProps,
+    isEnabled,
     namespace,
   ]);
 };
