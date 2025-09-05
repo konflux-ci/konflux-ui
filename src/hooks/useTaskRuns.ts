@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { TaskRunKind, TektonResourceLabel } from '~/types';
+import { useTaskRuns as useTaskRuns2 } from './usePipelineRuns';
 import { useTaskRunsV2 } from './useTaskRunsV2';
 
 /**
@@ -36,9 +37,34 @@ const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
       return bStart - aStart || compareByName(a, b);
     }
 
-    // 3. Final fallback → sort by name
+    // 3. Final fallback → sort by name when there is no startTime or completed time.
     return compareByName(a, b);
   });
+};
+
+export const useTaskRuns = (
+  namespace: string,
+  pipelineRunName: string,
+  taskName?: string,
+): [TaskRunKind[], boolean, unknown] => {
+  const [taskRuns, loaded, error] = useTaskRuns2(
+    namespace,
+    React.useMemo(
+      () => ({
+        selector: {
+          matchLabels: {
+            [TektonResourceLabel.pipelinerun]: pipelineRunName,
+            ...(taskName ? { [TektonResourceLabel.pipelineTask]: taskName } : {}),
+          },
+        },
+      }),
+      [pipelineRunName, taskName],
+    ),
+  );
+
+  const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
+
+  return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
 };
 
 /**
@@ -56,11 +82,11 @@ const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
  * @param options - Configuration options for the hook
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
-export const useTaskRuns = (
+export const useTaskRunsForPipelineRuns = (
   namespace: string,
   pipelineRunName: string,
   taskName?: string,
-  options?: UseTaskRunsOptions,
+  options?: TaskRunsOptions,
 ): [TaskRunKind[], boolean, unknown] => {
   const selector = React.useMemo(
     () => ({
@@ -84,11 +110,11 @@ export const useTaskRuns = (
   return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
 };
 
-export interface UseTaskRunsOptions {
+export type TaskRunsOptions = {
   /** Whether the hook should be enabled (default: true) */
   enabled?: boolean;
   /** Whether to watch for real-time updates (default: true) */
   watch?: boolean;
   /** Maximum number of TaskRuns to return */
   limit?: number;
-}
+};

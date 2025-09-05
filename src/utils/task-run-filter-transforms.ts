@@ -1,15 +1,5 @@
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { MatchLabels, MatchExpression, Selector } from '~/types/k8s';
-
-/**
- * Transform utilities for converting between Tekton Results filters and Kubearchive selectors
- */
-
-export interface KubearchiveTaskRunFilters {
-  matchLabels?: MatchLabels;
-  matchExpressions?: MatchExpression[];
-  fieldSelectors?: Record<string, string>;
-}
+import { MatchExpression, Selector, WatchK8sResource } from '~/types/k8s';
 
 /**
  * Extended selector type that includes typed filter fields for TaskRuns
@@ -22,111 +12,57 @@ export type TaskRunSelector = Selector &
   }>;
 
 /**
- * Converts filterBy options to Kubearchive label/field selectors
+ * Converts a TaskRunSelector (Tekton-style filter object) into a format
+ * suitable for KubeArchive resource queries.
+ *
+ * Specifically:
+ * - Converts `filterByName` into a Kubernetes field selector string (`metadata.name=...`).
+ * - Converts `filterByCommit` into a label-based matchExpression.
+ * - Preserves any existing `matchLabels` and `matchExpressions`.
+ * - Returns an object containing:
+ *   - `selector`: a Selector object with labels and expressions for KubeArchive.
+ *   - `fieldSelector`: a pre-built string suitable for K8s API field selectors.
+ *
+ * Notes:
+ * - `filterByCreationTimestampAfter` cannot be expressed as a K8s fieldSelector
+ *   (Kubernetes does not support comparison operators in field selectors). This
+ *   filter must be applied client-side.
+ *
+ * @param filterBy - TaskRunSelector object containing Tekton-style filter options.
+ * @returns An object with `selector` and `fieldSelector` ready for use with KubeArchive hooks.
  */
 export const convertFilterToKubearchiveSelectors = (
   filterBy: TaskRunSelector,
-): KubearchiveTaskRunFilters => {
-  const result: KubearchiveTaskRunFilters = {};
-
-  // Handle field selectors - convert custom filters to Kubernetes field selectors
+): Pick<WatchK8sResource, 'fieldSelector' | 'selector'> => {
   const fieldSelectors: Record<string, string> = {};
+  if (filterBy.filterByName) fieldSelectors['metadata.name'] = filterBy.filterByName;
 
-  if (filterBy.filterByName) {
-    fieldSelectors['metadata.name'] = filterBy.filterByName;
-  }
+  const fieldSelector = Object.keys(fieldSelectors).length
+    ? Object.entries(fieldSelectors)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(',')
+    : undefined;
 
-  if (filterBy.filterByCreationTimestampAfter) {
-    fieldSelectors['metadata.creationTimestamp'] = `>${filterBy.filterByCreationTimestampAfter}`;
-  }
+  // Build matchExpressions (including commit filter)
+  const matchExpressions: MatchExpression[] = [
+    ...(filterBy.matchExpressions ?? []),
+    ...(filterBy.filterByCommit
+      ? [
+          {
+            key: PipelineRunLabel.COMMIT_LABEL,
+            operator: 'Equals',
+            values: [filterBy.filterByCommit],
+          },
+        ]
+      : []),
+  ];
 
-  if (Object.keys(fieldSelectors).length > 0) {
-    result.fieldSelectors = fieldSelectors;
-  }
-
-  // Handle label selectors
-  if (filterBy.matchLabels) {
-    result.matchLabels = filterBy.matchLabels;
-  }
-
-  if (filterBy.matchExpressions) {
-    result.matchExpressions = filterBy.matchExpressions;
-  }
-
-  // Handle commit filter as match expression
-  if (filterBy.filterByCommit) {
-    // Use only the primary SHA label; OR across keys isn't supported by Kubernetes selectors.
-    const sha = filterBy.filterByCommit;
-    const expr: MatchExpression = {
-      key: PipelineRunLabel.COMMIT_LABEL,
-      operator: 'In',
-      values: [sha],
-    };
-    result.matchExpressions = [...(result.matchExpressions ?? []), expr];
-  }
-
-  return result;
-};
-
-/**
- * Converts Kubearchive selectors back to filterBy format for compatibility
- */
-export const convertKubearchiveSelectorsToFilter = (
-  selectors: KubearchiveTaskRunFilters,
-): Partial<{
-  filterByName: string;
-  filterByCreationTimestampAfter: string;
-  matchLabels: MatchLabels;
-  matchExpressions: MatchExpression[];
-}> => {
-  const result: Partial<{
-    filterByName: string;
-    filterByCreationTimestampAfter: string;
-    matchLabels: MatchLabels;
-    matchExpressions: MatchExpression[];
-  }> = {};
-
-  // Handle field selectors
-  if (selectors.fieldSelectors) {
-    if (selectors.fieldSelectors['metadata.name']) {
-      result.filterByName = selectors.fieldSelectors['metadata.name'];
-    }
-
-    if (selectors.fieldSelectors['metadata.creationTimestamp']) {
-      const timestamp = selectors.fieldSelectors['metadata.creationTimestamp'];
-      if (timestamp.startsWith('>')) {
-        result.filterByCreationTimestampAfter = timestamp.substring(1);
-      }
-    }
-  }
-
-  // Handle label selectors
-  if (selectors.matchLabels) {
-    result.matchLabels = selectors.matchLabels;
-  }
-
-  if (selectors.matchExpressions) {
-    result.matchExpressions = selectors.matchExpressions;
-  }
-
-  return result;
-};
-
-/**
- * Creates a Kubearchive-compatible selector from a TaskRunSelector object
- */
-export const createKubearchiveSelector = (selector?: TaskRunSelector): Selector | undefined => {
-  if (!selector) return undefined;
-
-  const kubearchiveFilters = convertFilterToKubearchiveSelectors(selector);
+  // Build the final selector (excluding custom filter fields)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = selector;
+  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = filterBy;
+  const selector: Selector = { ...rest, matchLabels: filterBy.matchLabels, matchExpressions };
 
-  return {
-    ...rest,
-    matchLabels: kubearchiveFilters.matchLabels,
-    matchExpressions: kubearchiveFilters.matchExpressions,
-  };
+  return { selector, fieldSelector };
 };
 
 /**
@@ -140,21 +76,10 @@ export const createKubearchiveWatchResource = (
   selector?: Selector;
   fieldSelector?: string;
 } => {
-  if (!selector) {
-    return { namespace };
-  }
+  if (!selector) return { namespace };
 
-  const kubearchiveFilters = convertFilterToKubearchiveSelectors(selector);
-  const kubearchiveSelector = createKubearchiveSelector(selector);
-
-  // Build field selector string
-  let fieldSelector: string | undefined;
-  if (kubearchiveFilters.fieldSelectors) {
-    const fieldPairs = Object.entries(kubearchiveFilters.fieldSelectors).map(
-      ([key, value]) => `${key}=${value}`,
-    );
-    fieldSelector = fieldPairs.join(',');
-  }
+  const { selector: kubearchiveSelector, fieldSelector } =
+    convertFilterToKubearchiveSelectors(selector);
 
   return {
     namespace,
