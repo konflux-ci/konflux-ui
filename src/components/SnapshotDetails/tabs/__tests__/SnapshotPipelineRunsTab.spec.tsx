@@ -1,12 +1,15 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen } from '@testing-library/react';
+import { MockSnapshots } from '~/components/Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
+import { useK8sAndKarchResource } from '~/hooks/useK8sAndKarchResources';
+import { IntegrationTestScenarioKind } from '~/types/coreBuildService';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRun, usePipelineRuns } from '../../../../hooks/usePipelineRuns';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -23,6 +26,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('../../../../hooks/usePipelineRuns', () => ({
+  usePipelineRun: jest.fn(),
   usePipelineRuns: jest.fn(),
 }));
 
@@ -37,6 +41,10 @@ jest.mock('../../../../hooks/useScanResults', () => ({
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParamBatch: jest.fn(),
+}));
+
+jest.mock('../../../../hooks/useK8sAndKarchResources', () => ({
+  useK8sAndKarchResource: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => {
@@ -82,11 +90,30 @@ jest.mock('../../../../utils/rbac', () => ({
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
+const usePipelineRunMock = usePipelineRun as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
+const useSnapshotMock = useK8sAndKarchResource as jest.Mock;
 
 const appName = 'my-test-app';
 
-const snapShotPLRs = [
+const mockSnapshots: IntegrationTestScenarioKind[] = [...MockSnapshots];
+
+const buildPLR = {
+  ...mockPipelineRuns[1],
+  metadata: {
+    ...mockPipelineRuns[1].metadata,
+    labels: {
+      ...mockPipelineRuns[1].metadata.labels,
+      [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+    },
+    annotations: {
+      ...mockPipelineRuns[2].metadata.annotations,
+      [PipelineRunLabel.SNAPSHOT]: 'test-snapshot',
+    },
+  },
+};
+
+const testPLRs = [
   {
     ...mockPipelineRuns[0],
     metadata: {
@@ -94,20 +121,6 @@ const snapShotPLRs = [
       labels: {
         ...mockPipelineRuns[0].metadata.labels,
         [PipelineRunLabel.PIPELINE_TYPE]: 'test',
-      },
-      annotations: {
-        ...mockPipelineRuns[2].metadata.annotations,
-        [PipelineRunLabel.SNAPSHOT]: 'test-snapshot',
-      },
-    },
-  },
-  {
-    ...mockPipelineRuns[1],
-    metadata: {
-      ...mockPipelineRuns[1].metadata,
-      labels: {
-        ...mockPipelineRuns[1].metadata.labels,
-        [PipelineRunLabel.PIPELINE_TYPE]: 'build',
       },
       annotations: {
         ...mockPipelineRuns[2].metadata.annotations,
@@ -130,6 +143,7 @@ const snapShotPLRs = [
     },
   },
 ];
+
 describe('SnapshotPipelinerunsTab', () => {
   mockUseNamespaceHook('test-ns');
 
@@ -142,15 +156,21 @@ describe('SnapshotPipelinerunsTab', () => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     useNamespaceMock.mockReturnValue('test-ns');
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+    });
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
+    usePipelineRunMock.mockReturnValue([null, true, false]);
     usePipelineRunsMock.mockReturnValue([[], false]);
     render(<SnapshotPipelineRunsTab />);
     screen.getByRole('progressbar');
   });
 
   it('should render empty state if no pipelinerun is present', () => {
+    usePipelineRunMock.mockReturnValue([undefined, false, false]);
     usePipelineRunsMock.mockReturnValue([[], true, false]);
     render(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Not found/);
@@ -161,8 +181,9 @@ describe('SnapshotPipelinerunsTab', () => {
     );
   });
 
-  it('should render pipelineRuns list when pipelineRuns are present', () => {
-    usePipelineRunsMock.mockReturnValue([[snapShotPLRs], true, false]);
+  it('should render pipelineRuns list when test pipelineRuns are present', () => {
+    usePipelineRunMock.mockReturnValue([undefined, false, false]);
+    usePipelineRunsMock.mockReturnValue([[testPLRs], true, false]);
     render(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Pipeline runs/);
     screen.queryByText('Name');
@@ -171,10 +192,26 @@ describe('SnapshotPipelinerunsTab', () => {
     screen.queryAllByText('Status');
     screen.queryAllByText('Type');
     screen.queryByText('Component');
+    screen.queryByText('Test');
+  });
+
+  it('should render pipelineRuns list when build pipelineRun is present', () => {
+    usePipelineRunMock.mockReturnValue([buildPLR, true, false]);
+    usePipelineRunsMock.mockReturnValue([[], true, false, () => {}, {}]);
+    render(<SnapshotPipelineRunsTab />);
+    screen.queryByText(/Pipeline runs/);
+    screen.queryByText('Name');
+    screen.queryByText('Started');
+    screen.queryByText('Duration');
+    screen.queryAllByText('Status');
+    screen.queryAllByText('Type');
+    screen.queryByText('Component');
+    screen.queryByText('Build');
   });
 
   it('should render both Build and Test pipelineruns in the pipelinerun list', () => {
-    usePipelineRunsMock.mockReturnValue([[snapShotPLRs], true, false]);
+    usePipelineRunMock.mockReturnValue([buildPLR, true, false]);
+    usePipelineRunsMock.mockReturnValue([[testPLRs], true, false, () => {}, {}]);
     render(<SnapshotPipelineRunsTab />);
 
     screen.queryByText('Build');
@@ -184,6 +221,7 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render pipelineruns with Snapshot label instead of annotation as well', () => {
+    usePipelineRunMock.mockReturnValue([buildPLR, true, false]);
     usePipelineRunsMock.mockReturnValue([
       [
         {

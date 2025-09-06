@@ -243,7 +243,7 @@ describe('tekton-results', () => {
           selectorToFilter({
             filterByCreationTimestampAfter: '2021-01-01T00:00:00Z',
           }),
-        ).toStrictEqual('data.metadata.creationTimestamp > "2021-01-01T00:00:00Z"');
+        ).toStrictEqual('data.metadata.creationTimestamp >= "2021-01-01T00:00:00Z"');
 
         expect(
           selectorToFilter({
