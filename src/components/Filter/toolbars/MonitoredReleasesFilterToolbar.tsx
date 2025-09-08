@@ -5,7 +5,7 @@ import { MonitoredReleasesFilterState } from '~/components/Filter/utils/monitore
 
 type MonitoredReleasesFilterToolbarProps = {
   filters: MonitoredReleasesFilterState;
-  setFilters: (filters: MonitoredReleasesFilterState) => void;
+  setFilters: React.Dispatch<React.SetStateAction<MonitoredReleasesFilterState>>;
   onClearFilters: () => void;
   statusOptions: { [key: string]: number };
   applicationOptions: { [key: string]: number };

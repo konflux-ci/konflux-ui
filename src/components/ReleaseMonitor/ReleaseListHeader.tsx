@@ -10,9 +10,11 @@ export const releaseTableColumnClasses = {
   namespace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
 } as const;
 
+export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
+
 export enum SortableHeaders {
-  name,
-  completionTime,
+  name = 0,
+  completionTime = 2,
 }
 
 const releaseColumns = [
