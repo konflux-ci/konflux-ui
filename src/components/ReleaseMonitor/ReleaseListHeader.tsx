@@ -13,8 +13,8 @@ export const releaseTableColumnClasses = {
 export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
 
 export enum SortableHeaders {
-  name = 0,
-  completionTime = 2,
+  name,
+  completionTime,
 }
 
 const releaseColumns = [
