@@ -6,7 +6,8 @@ import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
 import { runStatus, taskRunStatus } from '~/utils/pipeline-utils';
-import { useTaskRunV2 } from '../../hooks/usePipelineRuns';
+import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
+import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
 import {
   PIPELINERUN_DETAILS_PATH,
   PIPELINERUN_LIST_PATH,
@@ -96,6 +97,7 @@ export const TaskRunDetailsView: React.FC = () => {
       ]}
       title={
         <>
+          <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           <span className="pf-v5-u-mr-sm">{taskRunName}</span>
           <StatusIconWithTextLabel status={trStatus} />
         </>

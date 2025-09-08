@@ -16,7 +16,7 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useTaskRunV2 } from '../../../hooks/usePipelineRuns';
+import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import {
   APPLICATION_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,

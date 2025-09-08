@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useTaskRunV2 } from '../../../hooks/usePipelineRuns';
+import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../../types';
