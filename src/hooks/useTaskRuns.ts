@@ -68,25 +68,25 @@ export const useTaskRuns = (
 };
 
 /**
- * Hook for fetching TaskRuns for a specific pipeline run.
+ * Hook for fetching TaskRuns associated with a specific PipelineRun.
  *
- * Uses feature flag controlled data source switching:
- * - When 'taskruns-kubearchive' feature flag is enabled, uses KubeArchive data
- * - Otherwise, uses the existing Tekton Results implementation
+ * The `taskruns-kubearchive` feature flag controls which data source is used:
+ * - Enabled  → fetches data from KubeArchive
+ * - Disabled → falls back to Tekton Results
  *
- * Supports infinite loading and advanced configuration options.
+ * Internally, this hook relies on `useTaskRunsV2(namespace, { selector })`.
+ * It is intended to replace `useTaskRuns` in the future.
+ *
  *
  * @param namespace - Kubernetes namespace
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
- * @param options - Configuration options for the hook
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
 export const useTaskRunsForPipelineRuns = (
   namespace: string,
   pipelineRunName: string,
   taskName?: string,
-  options?: TaskRunsOptions,
 ): [TaskRunKind[], boolean, unknown] => {
   const selector = React.useMemo(
     () => ({
@@ -98,23 +98,9 @@ export const useTaskRunsForPipelineRuns = (
     [pipelineRunName, taskName],
   );
 
-  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, {
-    selector,
-    enabled: options?.enabled,
-    watch: options?.watch,
-    limit: options?.limit,
-  });
+  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, { selector });
 
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
   return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
-};
-
-export type TaskRunsOptions = {
-  /** Whether the hook should be enabled (default: true) */
-  enabled?: boolean;
-  /** Whether to watch for real-time updates (default: true) */
-  watch?: boolean;
-  /** Maximum number of TaskRuns to return */
-  limit?: number;
 };

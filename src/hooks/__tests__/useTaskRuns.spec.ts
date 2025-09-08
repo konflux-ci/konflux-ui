@@ -57,17 +57,20 @@ describe('useTaskRuns', () => {
     expect(result.current).toEqual([[], false, undefined]);
   });
 
-  it('should pass options to useTaskRunsV2', () => {
-    const options = { enabled: false, limit: 10 };
+  it('should call useTaskRunsV2 with selector for useTaskRunsForPipelineRuns', () => {
     useTaskRunsV2Mock.mockReturnValue([[], false, undefined]);
 
-    renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', undefined, options));
+    renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'));
 
     expect(useTaskRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
-        enabled: false,
-        limit: 10,
+        selector: {
+          matchLabels: {
+            'tekton.dev/pipelineRun': 'test-pipelinerun',
+            'tekton.dev/pipelineTask': 'test-task',
+          },
+        },
       }),
     );
   });

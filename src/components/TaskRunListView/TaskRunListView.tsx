@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
-import { TaskRunsOptions, useTaskRunsForPipelineRuns } from '~/hooks/useTaskRuns';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRuns';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
@@ -13,14 +13,12 @@ type Props = {
   namespace: string;
   pipelineRunName: string;
   taskName?: string;
-  options?: TaskRunsOptions;
 };
 
 const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   namespace,
   pipelineRunName,
   taskName,
-  options,
 }) => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -33,7 +31,6 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
     namespace,
     pipelineRunName,
     taskName,
-    options,
   );
 
   // TaskRuns are already sorted by useTaskRunsV2, no need to re-sort

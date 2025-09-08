@@ -1,7 +1,7 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useTaskRunsV2 } from '../../../hooks/useTaskRunsV2';
+import { useTaskRunsForPipelineRuns } from '../../../hooks/useTaskRuns';
 import { testTaskRuns } from '../__data__/mock-TaskRun-data';
 import TaskRunListView from '../TaskRunListView';
 
@@ -9,24 +9,12 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../hooks/useTaskRunsV2');
+jest.mock('../../../hooks/useTaskRuns');
 
-const useTaskRunsV2Mock = useTaskRunsV2 as jest.Mock;
+const useTaskRunsForPipelineRunsMock = useTaskRunsForPipelineRuns as jest.Mock;
 
-const TaskRunList = (
-  taskRuns,
-  loaded,
-  error = null,
-  hasNextPage = false,
-  isFetchingNextPage = false,
-) => {
-  useTaskRunsV2Mock.mockReturnValue([
-    taskRuns,
-    loaded,
-    error,
-    jest.fn(), // getNextPage
-    { hasNextPage, isFetchingNextPage }, // nextPageProps
-  ]);
+const TaskRunList = (taskRuns, loaded, error = null) => {
+  useTaskRunsForPipelineRunsMock.mockReturnValue([taskRuns, loaded, error]);
 
   return (
     <MemoryRouter>
@@ -71,18 +59,13 @@ describe('TaskRunListView', () => {
     expect(wrapper.container.getElementsByTagName('table')).toHaveLength(1);
   });
 
-  it('should call useTaskRunsV2 with correct parameters', () => {
+  it('should call useTaskRunsForPipelineRuns with correct parameters', () => {
     render(TaskRunList(testTaskRuns, true));
 
-    expect(useTaskRunsV2Mock).toHaveBeenCalledWith('test-namespace', {
-      selector: {
-        matchLabels: {
-          'tekton.dev/pipelineRun': 'test-pipeline-run',
-        },
-      },
-      enabled: undefined,
-      watch: undefined,
-      limit: undefined,
-    });
+    expect(useTaskRunsForPipelineRunsMock).toHaveBeenCalledWith(
+      'test-namespace',
+      'test-pipeline-run',
+      undefined,
+    );
   });
 });
