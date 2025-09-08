@@ -8,6 +8,7 @@ import {
   EmptyStateHeader,
   EmptyStateFooter,
 } from '@patternfly/react-core';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useComponents } from '../../hooks/useComponents';
 import { ComponentModel } from '../../models';
 import { APPLICATION_DETAILS_PATH } from '../../routes/paths';
@@ -30,7 +31,7 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
   onClose,
   modalProps,
 }) => {
-  const [components, loaded] = useComponents(namespace, applicationName);
+  const [components, loaded, error] = useComponents(namespace, applicationName);
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const filteredComponents = React.useMemo(
     () => (loaded ? (filter ? components.filter(filter) : components) : []),
@@ -38,6 +39,10 @@ const CustomizeAllPipelines: React.FC<React.PropsWithChildren<Props>> = ({
   );
 
   if (loaded) {
+    if (error) {
+      return <Modal {...modalProps}>{getErrorState(error, loaded, 'components')}</Modal>;
+    }
+
     if (filteredComponents.length > 0) {
       return (
         <CustomizePipeline

@@ -15,23 +15,29 @@ import {
   TextVariants,
   Title,
 } from '@patternfly/react-core';
+import { capitalize } from 'lodash-es';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { statuses } from '~/utils/commits-utils';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useComponents } from '../../../hooks/useComponents';
+import { useComponents, useURLForComponentPRs } from '../../../hooks/useComponents';
 import { useLatestBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
 import { PACState } from '../../../hooks/usePACState';
 import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents';
-import { useSearchParam } from '../../../hooks/useSearchParam';
 import { ComponentModel } from '../../../models';
 import { IMPORT_PATH } from '../../../routes/paths';
-import { Table } from '../../../shared';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../types';
-import { useURLForComponentPRs } from '../../../utils/component-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { createCustomizeAllPipelinesModalLauncher } from '../../CustomizedPipeline/CustomizePipelinesModal';
@@ -39,7 +45,6 @@ import { GettingStartedCard } from '../../GettingStartedCard/GettingStartedCard'
 import { useModalLauncher } from '../../modal/ModalProvider';
 import ComponentsListHeader from './ComponentsListHeader';
 import ComponentsListRow from './ComponentsListRow';
-import ComponentsToolbar, { pipelineRunStatusFilterId } from './ComponentsToolbar';
 
 import './ComponentListView.scss';
 
@@ -54,8 +59,14 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
 }) => {
   const namespace = useNamespace();
 
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
-  const [statusFiltersParam, setStatusFiltersParam] = useSearchParam('status', '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+  });
+
+  const { name: nameFilter, status: statusFilter } = filters;
+
   const [mergeAlertHidden, setMergeAlertHidden] = React.useState<boolean>(false);
 
   const [components, componentsLoaded, componentsError] = useComponents(
@@ -90,16 +101,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     }));
   }, [components, componentsError, componentsLoaded, pipelineRuns]);
 
-  const statusFilters = React.useMemo(
-    () => (statusFiltersParam ? statusFiltersParam.split(',') : []),
-    [statusFiltersParam],
-  );
-
-  const onClearFilters = () => {
-    setNameFilter('');
-    setStatusFiltersParam('');
-  };
-
   const pendingCount = React.useMemo(
     () => Object.values(componentPACStates).filter((c) => c === PACState.pending).length,
     [componentPACStates],
@@ -108,15 +109,26 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
   const filteredComponents = React.useMemo(
     () =>
       componentsWithLatestBuild.filter((component) => {
-        const compStatus = statusFilters?.length
-          ? pipelineRunStatusFilterId(component.latestBuildPipelineRun)
-          : '';
+        const compStatus = statusFilter?.length
+          ? pipelineRunStatus(component.latestBuildPipelineRun)
+          : 'unknown';
+
         return (
           (!nameFilter || component.metadata.name.indexOf(nameFilter) !== -1) &&
-          (!statusFilters?.length || statusFilters.includes(compStatus))
+          (!statusFilter?.length || statusFilter.includes(capitalize(compStatus)))
         );
       }),
-    [componentsWithLatestBuild, statusFilters, nameFilter],
+    [componentsWithLatestBuild, statusFilter, nameFilter],
+  );
+
+  const statusFilterObj = React.useMemo(
+    () =>
+      createFilterObj(
+        componentsWithLatestBuild,
+        (c) => pipelineRunStatus(c.latestBuildPipelineRun),
+        statuses,
+      ),
+    [componentsWithLatestBuild],
   );
 
   const NoDataEmptyMessage = () => (
@@ -194,6 +206,47 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     [applicationName, namespace, showModal, canPatchComponent],
   );
 
+  const toolbar = (
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="name"
+      setText={(name) => setFilters({ ...filters, name })}
+      onClearFilters={onClearFilters}
+      dataTest="component-list-toolbar"
+    >
+      <MultiSelect
+        label="Status"
+        filterKey="status"
+        values={statusFilter}
+        setValues={(status) => setFilters({ ...filters, status })}
+        options={statusFilterObj}
+      />
+      <ButtonWithAccessTooltip
+        variant="secondary"
+        component={(p) => (
+          <Link
+            {...p}
+            data-test="add-component-button"
+            to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
+          />
+        )}
+        isDisabled={!canCreateComponent}
+        tooltip="You don't have access to add a component"
+        analytics={{
+          link_name: 'add-component',
+          app_name: applicationName,
+          namespace,
+        }}
+      >
+        Add component
+      </ButtonWithAccessTooltip>
+    </BaseTextFilterToolbar>
+  );
+
+  if (componentsError) {
+    return getErrorState(componentsError, componentsLoaded, 'components');
+  }
+
   return (
     <>
       <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
@@ -252,12 +305,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           unfilteredData={componentsWithLatestBuild}
           EmptyMsg={EmptyMessage}
           NoDataEmptyMsg={NoDataEmptyMessage}
-          Toolbar={
-            <ComponentsToolbar
-              applicationName={applicationName}
-              components={componentsWithLatestBuild}
-            />
-          }
+          Toolbar={toolbar}
           aria-label="Components List"
           Header={ComponentsListHeader}
           Row={ComponentsListRow}

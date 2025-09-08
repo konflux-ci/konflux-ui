@@ -114,8 +114,7 @@ export const editRB = async (
   roleBinding: RoleBinding,
   dryRun?: boolean,
 ): Promise<RoleBinding[]> => {
-  const usernames = roleBinding.subjects.map((subject) => subject.name);
-  const { role, roleMap } = values;
+  const { usernames, role, roleMap } = values;
 
   if (!dryRun) {
     await deleteRB(roleBinding, dryRun);

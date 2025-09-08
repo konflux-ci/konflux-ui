@@ -1,7 +1,9 @@
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { SnapshotLabels } from '../consts/snapshots';
 import { PipelineRunKind, Commit } from '../types';
+import { Snapshot } from '../types/coreBuildService';
 import { runStatus } from './pipeline-utils';
-import { getSourceUrl } from './pipelinerun-utils';
+import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
 export const statuses = [
   runStatus.Running,
@@ -14,7 +16,8 @@ export const statuses = [
 export const getCommitSha = (pipelineRun: PipelineRunKind) =>
   pipelineRun?.metadata.labels?.[PipelineRunLabel.COMMIT_LABEL] ||
   pipelineRun?.metadata.labels?.[PipelineRunLabel.TEST_SERVICE_COMMIT] ||
-  pipelineRun?.metadata.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION];
+  pipelineRun?.metadata.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION] ||
+  pipelineRun?.metadata?.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT];
 
 export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   if (!plr || !getCommitSha(plr)) {
@@ -28,14 +31,19 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   const component = plr.metadata.labels[PipelineRunLabel.COMPONENT] ?? '';
   const repoName = plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL];
   const repoURL = getSourceUrl(plr);
-  const repoOrg = plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
+  const repoOrg =
+    plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
+    plr.metadata.annotations[PipelineRunLabel.COMMIT_REPO_ORG_LABEL];
   const shaURL =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
     `${repoURL}/commit/${commitSHA}`;
   const shaTitle =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
-  const gitProvider = plr.metadata.labels[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
+  const gitProvider =
+    plr.metadata.labels[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
+    plr.metadata.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL];
   const pullRequestNumber = plr.metadata.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
+  const eventType = plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL];
   const isPullRequest =
     plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
 
@@ -57,6 +65,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     pipelineRuns: [plr],
     application,
     shaTitle,
+    eventType,
     isPullRequest,
     pullRequestNumber,
   };
@@ -177,4 +186,82 @@ export const createRepoPullRequestURL = (commit: Commit): string | null => {
     return `${repoURL}/pull/${commit.pullRequestNumber}`;
   }
   return null;
+};
+
+export const getSnapshotSourceUrl = (snapshot: Snapshot): string => {
+  if (!snapshot) {
+    return undefined;
+  }
+
+  const repoFromBuildServiceAnnotation =
+    snapshot.metadata?.annotations?.[SnapshotLabels.BUILD_SERVICE_REPO_ANNOTATION];
+  const repoFromPACAnnotation =
+    snapshot.metadata?.annotations?.[SnapshotLabels.COMMIT_FULL_REPO_URL_ANNOTATION] ??
+    snapshot.metadata?.annotations?.[SnapshotLabels.PAC_REPO_URL];
+
+  return stripQueryStringParams(repoFromPACAnnotation || repoFromBuildServiceAnnotation);
+};
+
+export const getCommitShaFromSnapshot = (snapshot: Snapshot) =>
+  snapshot?.metadata.labels?.[SnapshotLabels.COMMIT_LABEL] ||
+  snapshot?.metadata.labels?.[SnapshotLabels.PAC_SHA_LABEL] ||
+  snapshot?.metadata.annotations?.[SnapshotLabels.COMMIT_ANNOTATION] ||
+  snapshot?.metadata?.annotations?.[SnapshotLabels.PAC_SHA_LABEL];
+
+export const createCommitObjectFromSnapshot = (snapshot: Snapshot): Commit => {
+  const commitSHA = getCommitShaFromSnapshot(snapshot);
+  if (!snapshot || !commitSHA) {
+    return null;
+  }
+
+  const commitBranch =
+    snapshot.metadata.annotations?.[SnapshotLabels.COMMIT_BRANCH_ANNOTATION] ??
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_BRANCH] ??
+    '';
+  const commitUser =
+    snapshot.metadata.annotations?.[SnapshotLabels.COMMIT_USER_LABEL] ??
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SENDER];
+  const creationTime = snapshot.metadata.creationTimestamp;
+  const application = snapshot.metadata.labels[SnapshotLabels.APPLICATION];
+  const component = snapshot.metadata.labels[SnapshotLabels.COMPONENT] ?? '';
+  const repoName = snapshot.metadata.labels[SnapshotLabels.PAC_URL_REPOSITORY_LABEL];
+  const repoURL = getSnapshotSourceUrl(snapshot);
+  const repoOrg =
+    snapshot.metadata.labels[SnapshotLabels.PAC_URL_ORG_LABEL] ||
+    snapshot.metadata.annotations[SnapshotLabels.PAC_URL_ORG_LABEL];
+  const shaURL =
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
+    `${repoURL}/commit/${commitSHA}`;
+  const shaTitle =
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
+  const gitProvider =
+    snapshot.metadata.labels[SnapshotLabels.PAC_GIT_PROVIDER] ||
+    snapshot.metadata.annotations[SnapshotLabels.PAC_GIT_PROVIDER];
+  const pullRequestNumber = snapshot.metadata.labels[SnapshotLabels.PAC_PULL_REQUEST_LABEL] ?? '';
+  const eventType = snapshot.metadata.labels[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
+  const isPullRequest =
+    snapshot.metadata.labels[SnapshotLabels.PAC_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
+
+  return {
+    metadata: {
+      uid: commitSHA,
+      name: commitSHA,
+    },
+    components: [component],
+    user: commitUser,
+    sha: commitSHA,
+    shaURL,
+    repoName,
+    repoURL,
+    repoOrg,
+    gitProvider,
+    branch: commitBranch,
+    creationTime,
+    pipelineRuns: [],
+    application,
+    shaTitle,
+    eventType,
+    isPullRequest,
+    pullRequestNumber,
+  };
 };

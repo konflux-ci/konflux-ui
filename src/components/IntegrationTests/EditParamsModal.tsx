@@ -80,7 +80,7 @@ export const EditParamsModal: React.FC<React.PropsWithChildren<EditParamsModalPr
           <Form data-test="edit-params-modal">
             <Stack hasGutter>
               <StackItem>
-                <FormikParamsField fieldName="params" initExpanded />
+                <FormikParamsField fieldName="params" heading="Show parameters" initExpanded />
               </StackItem>
               <StackItem>
                 {error && (

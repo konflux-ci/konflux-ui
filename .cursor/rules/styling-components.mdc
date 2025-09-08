@@ -1,0 +1,129 @@
+
+---
+globs: *.scss,*.tsx
+---
+
+# Styling & Component Structure
+
+> 📖 **Also see**: [CONTRIBUTING.md](mdc:CONTRIBUTING.md) for complete styling guidelines and project conventions.
+
+## PatternFly Layout Components - CRITICAL
+
+**NEVER use raw HTML layout tags (`<div>`, `<section>`, `<header>`) or custom CSS layouts.** Always use PatternFly layout components for responsive, accessible layouts.
+
+### Core Layout Components
+
+```tsx
+import { 
+  Flex, FlexItem,           // Most common - flexible layouts
+  Grid, GridItem,           // Complex responsive layouts  
+  Stack, StackItem,         // Vertical layouts
+  Split, SplitItem,         // Two-column layouts
+  Level, LevelItem,         // Horizontal alignment
+  Gallery, GalleryItem,     // Responsive card grids
+  Bullseye                  // Centering content
+} from '@patternfly/react-core';
+
+// ✅ Good - PatternFly layout
+const Header = () => (
+  <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }}>
+    <FlexItem><Title headingLevel="h1">Applications</Title></FlexItem>
+    <FlexItem><Button variant="primary">Create</Button></FlexItem>
+  </Flex>
+);
+
+// ❌ Avoid - Raw HTML
+const Header = () => (
+  <div className="header-flex">
+    <h1>Applications</h1>
+    <button>Create</button>
+  </div>
+);
+```
+
+### Responsive Layouts
+
+```tsx
+// Use Grid for responsive layouts
+<Grid hasGutter>
+  <GridItem span={12} lg={8}>Main content</GridItem>
+  <GridItem span={12} lg={4}>Sidebar</GridItem>
+</Grid>
+
+// Use Gallery for card grids
+<Gallery hasGutter minWidths={{ default: '300px' }}>
+  {items.map(item => (
+    <GalleryItem key={item.id}>
+      <Card>{item.content}</Card>
+    </GalleryItem>
+  ))}
+</Gallery>
+```
+
+## PatternFly First Approach
+
+Always prefer PatternFly components over custom styling:
+
+```tsx
+// ✅ Good - PatternFly components
+import { Card, CardBody, Button, Nav, NavItem, Modal } from '@patternfly/react-core';
+
+// ❌ Avoid - Custom HTML/CSS
+<div className="custom-card">
+<button className="custom-button">
+<nav className="custom-nav">
+```
+
+## Styling Conventions
+
+### SCSS Modules
+```
+src/components/MyComponent/
+├── MyComponent.tsx
+├── MyComponent.scss      # Component-specific styles only
+└── __tests__/
+```
+
+### BEM Classes + PatternFly Tokens
+```scss
+.my-component {
+  // Use PatternFly tokens, not hardcoded values
+  padding: var(--pf-global--spacer--md);
+  color: var(--pf-global--primary-color--100);
+  
+  &__section {
+    margin-bottom: var(--pf-global--spacer--lg);
+    
+    &--loading {
+      opacity: 0.6;
+    }
+  }
+}
+```
+
+### Component Structure
+```tsx
+// 1. React + external imports
+import * as React from 'react';
+import { Button, Flex, FlexItem } from '@patternfly/react-core';
+
+// 2. Internal imports
+import { MyType } from '~/types';
+import { useMyHook } from '~/hooks';
+import './MyComponent.scss';
+
+// 3. Component
+const MyComponent: React.FC<Props> = ({ prop1, prop2 }) => (
+  <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+    <FlexItem>Content</FlexItem>
+  </Flex>
+);
+```
+
+## Key Principles
+
+1. **PatternFly Layout Components Only** - No `<div>`, `<section>`, custom CSS layouts
+2. **PatternFly Components First** - Use Card, Button, Nav, Modal, etc.
+3. **PatternFly Tokens** - Use design tokens for spacing, colors, borders
+4. **Responsive by Default** - PatternFly layout components support breakpoint props (default, sm, md, lg, xl, 2xl)
+5. **Accessible by Default** - PatternFly includes proper ARIA attributes

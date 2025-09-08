@@ -10,6 +10,7 @@ import {
   WhenStatus,
 } from '@patternfly/react-topology';
 import { PipelineNodeModel } from '@patternfly/react-topology/src/pipelines/types';
+import { TaskRunLabel } from '../../../../../consts/pipelinerun';
 import { isCVEScanResult } from '../../../../../hooks/useScanResults';
 import { formatPrometheusDuration } from '../../../../../shared/components/timestamp/datetime';
 import {
@@ -155,6 +156,98 @@ export const createStepStatus = (
  * @param taskRuns
  * @param isFinallyTasks
  */
+// Extended type for matrix tasks
+type MatrixPipelineTaskWithStatus = PipelineTaskWithStatus & {
+  originalName?: string;
+  matrixPlatform?: string;
+};
+
+// Helper function to create a task with status from a TaskRun
+const createTaskWithStatus = (
+  task: PipelineTask,
+  taskRun?: TaskRunKind,
+): PipelineTaskWithStatus => {
+  if (!taskRun) {
+    return { ...task, status: { reason: runStatus.Idle } };
+  }
+
+  const taskStatus: TaskRunStatus = taskRun.status;
+  const taskResults = isTaskV1Beta1(taskRun)
+    ? taskRun.status?.taskResults
+    : taskRun.status?.results;
+
+  const mTask: PipelineTaskWithStatus = {
+    ...task,
+    status: { ...taskStatus, reason: runStatus.Pending },
+  };
+
+  // append task duration
+  if (mTask.status.completionTime && mTask.status.startTime) {
+    const date =
+      new Date(mTask.status.completionTime).getTime() - new Date(mTask.status.startTime).getTime();
+    mTask.status.duration = formatPrometheusDuration(date);
+  }
+
+  // append task status
+  if (mTask.status.conditions) {
+    mTask.status.reason = taskRunStatus(taskRun);
+  }
+
+  // Determine any task test status
+  if (taskResults) {
+    const testOutput: TektonResultsRun = taskResults.find(
+      (result) => result.name === 'HACBS_TEST_OUTPUT' || result.name === 'TEST_OUTPUT',
+    );
+    if (testOutput) {
+      try {
+        const outputValues = JSON.parse(testOutput.value);
+        mTask.status.testFailCount = parseInt(outputValues.failures as string, 10);
+        mTask.status.testWarnCount = parseInt(outputValues.warnings as string, 10);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn(e);
+      }
+    }
+    const scanResult = taskResults?.find((result) => isCVEScanResult(result));
+
+    if (scanResult) {
+      try {
+        mTask.status.scanResults = JSON.parse(scanResult.value);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn(e);
+      }
+    }
+  }
+
+  // Get the steps status
+  const stepList = taskStatus?.steps || mTask?.steps || mTask?.taskSpec?.steps || [];
+  mTask.steps = stepList.map((step, i, { length }) =>
+    createStepStatus(step.name as string, mTask.status, i + 1 === length),
+  );
+
+  return mTask;
+};
+
+// Helper function to create a matrix task entry
+const createMatrixTaskEntry = (
+  task: PipelineTask,
+  taskRun: TaskRunKind,
+  platform: string,
+): MatrixPipelineTaskWithStatus => {
+  const matrixTask = createTaskWithStatus(task, taskRun) as MatrixPipelineTaskWithStatus;
+
+  // Add platform suffix to make the name unique for React rendering
+  // But preserve original name for dependency resolution
+  matrixTask.name = `${task.name}-${platform.replace(/[^a-zA-Z0-9]/g, '-')}`;
+
+  // Store original name and platform info for later use
+  matrixTask.originalName = task.name;
+  matrixTask.matrixPlatform = platform;
+
+  return matrixTask;
+};
+
 export const appendStatus = (
   pipeline: PipelineKind,
   pipelineRun: PipelineRunKind,
@@ -164,78 +257,68 @@ export const appendStatus = (
   const tasks = (isFinallyTasks ? pipeline.spec.finally : pipeline.spec.tasks) || [];
   const overallPipelineRunStatus = pipelineRunStatus(pipelineRun);
 
-  return tasks.map((task) => {
+  // Group TaskRuns by pipeline task name to detect matrix tasks
+  const taskRunsByTaskName = new Map<string, TaskRunKind[]>();
+  taskRuns?.forEach((tr) => {
+    const taskName = tr.metadata.labels?.[TektonResourceLabel.pipelineTask];
+    if (taskName) {
+      const existingTaskRuns = taskRunsByTaskName.get(taskName);
+      if (existingTaskRuns) {
+        existingTaskRuns.push(tr);
+      } else {
+        taskRunsByTaskName.set(taskName, [tr]);
+      }
+    }
+  });
+
+  // Process each pipeline task, expanding matrix tasks into multiple entries
+  const result: PipelineTaskWithStatus[] = [];
+
+  tasks.forEach((task) => {
     if (!pipelineRun?.status) {
-      return { ...task, status: { reason: runStatus.Pending } };
+      result.push({ ...task, status: { reason: runStatus.Pending } });
+      return;
     }
     if (!taskRuns || taskRuns.length === 0) {
-      return { ...task, status: { reason: overallPipelineRunStatus } };
+      result.push({ ...task, status: { reason: overallPipelineRunStatus } });
+      return;
     }
 
-    const taskRun = taskRuns.find(
-      (tr) => tr.metadata.labels[TektonResourceLabel.pipelineTask] === task.name,
-    );
-    const taskStatus: TaskRunStatus = taskRun?.status;
-    const taskResults = isTaskV1Beta1(taskRun)
-      ? taskRun?.status?.taskResults
-      : taskRun?.status?.results;
+    const taskRunsForTask = taskRunsByTaskName.get(task.name) || [];
 
-    const mTask: PipelineTaskWithStatus = {
-      ...task,
-      status: { ...taskStatus, reason: runStatus.Pending },
-    };
-
-    // append task duration
-    if (mTask.status.completionTime && mTask.status.startTime) {
-      const date =
-        new Date(mTask.status.completionTime).getTime() -
-        new Date(mTask.status.startTime).getTime();
-      mTask.status.duration = formatPrometheusDuration(date);
-    }
-    // append task status
-    if (!taskStatus) {
+    // If no TaskRuns found, create a single task entry
+    if (taskRunsForTask.length === 0) {
       const isSkipped = !!pipelineRun.status.skippedTasks?.find((t) => t.name === task.name);
-      if (isSkipped) {
-        mTask.status.reason = runStatus.Skipped;
-      } else {
-        mTask.status.reason = runStatus.Idle;
-      }
-    } else if (mTask.status.conditions) {
-      mTask.status.reason = taskRunStatus(taskRun);
+      result.push({
+        ...task,
+        status: { reason: isSkipped ? runStatus.Skipped : runStatus.Idle },
+      });
+      return;
     }
 
-    // Determine any task test status
-    if (taskResults) {
-      const testOutput: TektonResultsRun = taskResults.find(
-        (result) => result.name === 'HACBS_TEST_OUTPUT' || result.name === 'TEST_OUTPUT',
-      );
-      if (testOutput) {
-        try {
-          const outputValues = JSON.parse(testOutput.value);
-          mTask.status.testFailCount = parseInt(outputValues.failures as string, 10);
-          mTask.status.testWarnCount = parseInt(outputValues.warnings as string, 10);
-        } catch (e) {
-          // ignore
-        }
-      }
-      const scanResult = taskResults?.find((result) => isCVEScanResult(result));
-
-      if (scanResult) {
-        try {
-          mTask.status.scanResults = JSON.parse(scanResult.value);
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
-    // Get the steps status
-    const stepList = taskStatus?.steps || mTask?.steps || mTask?.taskSpec?.steps || [];
-    mTask.steps = stepList.map((step, i, { length }) =>
-      createStepStatus(step.name as string, mTask.status, i + 1 === length),
+    // Check if this is a matrix task (multiple TaskRuns with platform labels)
+    const platformTaskRuns = taskRunsForTask.filter(
+      (tr) => tr.metadata.labels?.[TaskRunLabel.TARGET_PLATFORM],
     );
 
-    return mTask;
+    if (platformTaskRuns.length > 1) {
+      // Matrix task detected - create one entry per platform
+      platformTaskRuns.forEach((taskRun) => {
+        const platform = taskRun.metadata.labels[TaskRunLabel.TARGET_PLATFORM];
+        const platformDisplay = platform?.replace(/-/g, '/') || 'unknown';
+
+        const matrixTask = createMatrixTaskEntry(task, taskRun, platformDisplay);
+        result.push(matrixTask);
+      });
+    } else {
+      // Regular task or single-platform matrix - create single entry
+      const taskRun = taskRunsForTask[0];
+      const regularTask = createTaskWithStatus(task, taskRun);
+      result.push(regularTask);
+    }
   });
+
+  return result;
 };
 
 export const taskHasWhenExpression = (task: PipelineTask): boolean => task?.when?.length > 0;
@@ -270,7 +353,8 @@ export const getTaskBadgeCount = (data: PipelineRunNodeData): number =>
   (data.scanResults?.vulnerabilities?.critical ?? 0) +
     (data.scanResults?.vulnerabilities?.high ?? 0) +
     (data.scanResults?.vulnerabilities?.medium ?? 0) +
-    (data.scanResults?.vulnerabilities?.low ?? 0);
+    (data.scanResults?.vulnerabilities?.low ?? 0) +
+    (data.scanResults?.vulnerabilities?.unknown ?? 0);
 
 const getBadgeWidth = (data: PipelineRunNodeData, font: string = '0.875rem RedHatText'): number => {
   const BADGE_PADDING = 24; // 8 before the badge and 8 on each side of the text inside the badge
@@ -312,11 +396,47 @@ const hasParentDep = (
       continue;
     }
     const depNode = nodes.find((n) => n.id === otherDep);
+    if (!depNode) {
+      // Try to find by original name (for matrix tasks)
+      const depNodeByOriginal = nodes.find((n) => {
+        const matrixTask = n.data.task as MatrixPipelineTaskWithStatus;
+        return matrixTask.originalName === otherDep;
+      });
+      if (
+        depNodeByOriginal?.runAfterTasks?.includes(dep) ||
+        hasParentDep(dep, depNodeByOriginal?.runAfterTasks || [], nodes)
+      ) {
+        return true;
+      }
+    }
     if (depNode.runAfterTasks?.includes(dep) || hasParentDep(dep, depNode.runAfterTasks, nodes)) {
       return true;
     }
   }
   return false;
+};
+
+// Helper function to expand matrix task dependencies
+const expandMatrixDependencies = (deps: string[], taskList: PipelineTaskWithStatus[]): string[] => {
+  const expandedDeps: string[] = [];
+
+  deps.forEach((dep) => {
+    // Find all matrix instances of this dependency
+    const matrixInstances = taskList.filter((task) => {
+      const matrixTask = task as MatrixPipelineTaskWithStatus;
+      return matrixTask.originalName === dep || task.name === dep;
+    });
+
+    if (matrixInstances.length > 1) {
+      // This is a matrix task - add all instances
+      matrixInstances.forEach((instance) => expandedDeps.push(instance.name));
+    } else {
+      // Regular task or single instance
+      expandedDeps.push(dep);
+    }
+  });
+
+  return expandedDeps;
 };
 
 const getGraphDataModel = (
@@ -353,11 +473,37 @@ const getGraphDataModel = (
         });
       }
 
+      // Expand matrix task dependencies
+      const expandedRunAfterTasks = expandMatrixDependencies(runAfterTasks, taskList);
+
+      // For matrix tasks, use a display name that includes platform info
+      const matrixTask = task as MatrixPipelineTaskWithStatus;
+      const displayName = matrixTask.matrixPlatform
+        ? `${matrixTask.originalName} (${matrixTask.matrixPlatform})`
+        : task.name;
+
+      // For matrix tasks, find the specific TaskRun for this platform
+      let taskRunForTask: TaskRunKind | undefined;
+      if (matrixTask.matrixPlatform) {
+        // Matrix task - find TaskRun with matching platform label
+        const platformLabel = matrixTask.matrixPlatform.replace(/\//g, '-');
+        taskRunForTask = taskRuns.find(
+          (tr) =>
+            tr.metadata.labels[TektonResourceLabel.pipelineTask] === matrixTask.originalName &&
+            tr.metadata.labels[TaskRunLabel.TARGET_PLATFORM] === platformLabel,
+        );
+      } else {
+        // Regular task - find by task name
+        taskRunForTask = taskRuns.find(
+          (tr) => tr.metadata.labels[TektonResourceLabel.pipelineTask] === task.name,
+        );
+      }
+
       return {
         id: task.name,
         type: PipelineRunNodeType.TASK_NODE,
-        label: task.name,
-        runAfterTasks,
+        label: displayName,
+        runAfterTasks: expandedRunAfterTasks,
         height: DEFAULT_NODE_HEIGHT,
         data: {
           namespace: pipelineRun.metadata.namespace,
@@ -368,9 +514,7 @@ const getGraphDataModel = (
           whenStatus: taskWhenStatus(task),
           task,
           steps: task.steps,
-          taskRun: taskRuns.find(
-            (tr) => tr.metadata.labels[TektonResourceLabel.pipelineTask] === task.name,
-          ),
+          taskRun: taskRunForTask,
         },
       };
     },

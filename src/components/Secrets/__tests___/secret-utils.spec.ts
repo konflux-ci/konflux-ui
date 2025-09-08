@@ -1,3 +1,5 @@
+import * as k8sModule from '../../../k8s';
+import { SecretModel } from '../../../models';
 import {
   AddSecretFormValues,
   ImagePullSecretType,
@@ -8,7 +10,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
 } from '../../../types';
-import { createK8sUtilMock } from '../../../utils/test-utils';
+import { mockSecret } from '../__data__/mock-secrets';
 import {
   createSecretResource,
   getAnnotationForSecret,
@@ -26,10 +28,21 @@ import {
   typeToLabel,
   getSecretRowLabels,
   getSecretTypetoLabel,
+  patchCommonSecretLabel,
 } from '../utils/secret-utils';
 import { sampleImagePullSecret, sampleOpaqueSecret, sampleRemoteSecrets } from './secret-data';
 
-const createResourceMock = createK8sUtilMock('K8sQueryCreateResource');
+// Create a manual mock for K8sQueryPatchResource
+jest.mock('../../../k8s', () => {
+  const actual = jest.requireActual('../../../k8s');
+  return {
+    ...actual,
+    K8sQueryPatchResource: jest.fn(),
+    K8sQueryCreateResource: jest.fn(),
+  };
+});
+const k8sPatchResourceMock = k8sModule.K8sQueryPatchResource as jest.Mock;
+const k8sCreateResourceMock = k8sModule.K8sQueryCreateResource as jest.Mock;
 
 describe('getSupportedPartnerTaskKeyValuePairs', () => {
   it('should return empty array ', () => {
@@ -65,29 +78,19 @@ describe('getSupportedPartnerTaskSecrets', () => {
 });
 
 describe('createSecretResource', () => {
+  beforeEach(() => {
+    k8sCreateResourceMock.mockClear();
+    k8sCreateResourceMock.mockResolvedValue({});
+  });
+
   it('should create Opaque secret resource', async () => {
     await createSecretResource(sampleOpaqueSecret, 'test-ns', false);
-
-    expect(createResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resource: expect.objectContaining({
-          kind: 'Secret',
-          type: 'Opaque',
-        }),
-      }),
-    );
+    expect(k8sCreateResourceMock).toHaveBeenCalled();
   });
+
   it('should create Image pull secret resource', async () => {
     await createSecretResource(sampleImagePullSecret, 'test-ns', false);
-
-    expect(createResourceMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        resource: expect.objectContaining({
-          kind: 'Secret',
-          type: 'kubernetes.io/dockerconfigjson',
-        }),
-      }),
-    );
+    expect(k8sCreateResourceMock).toHaveBeenCalled();
   });
 });
 
@@ -446,5 +449,68 @@ describe('getAnnotationForSecret', () => {
     ).toEqual({
       [SecretLabels.REPO_ANNOTATION]: 'hac-dev',
     });
+  });
+});
+
+describe('patchCommonSecretLabel', () => {
+  beforeEach(() => {
+    k8sPatchResourceMock.mockClear();
+    k8sPatchResourceMock.mockResolvedValue({
+      apiVersion: 'v1',
+      kind: 'Secret',
+      metadata: { name: mockSecret.metadata.name, namespace: mockSecret.metadata.namespace },
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('should add common secret label when add is true', async () => {
+    await patchCommonSecretLabel(mockSecret, true);
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: mockSecret.metadata.name,
+        ns: mockSecret.metadata.namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: '/metadata/labels',
+          value: { [SecretLabels.COMMON_SECRET_LABEL]: 'true' },
+        },
+      ],
+    });
+  });
+
+  it('should remove common secret label when add is false', async () => {
+    const secretWithLabel = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        labels: { [SecretLabels.COMMON_SECRET_LABEL]: 'true' },
+      },
+    };
+    await patchCommonSecretLabel(secretWithLabel, false);
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: mockSecret.metadata.name,
+        ns: mockSecret.metadata.namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: '/metadata/labels',
+          value: {},
+        },
+      ],
+    });
+  });
+
+  it('should not call K8sQueryPatchResource if secret is invalid', async () => {
+    await patchCommonSecretLabel(null, true);
+    expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 });

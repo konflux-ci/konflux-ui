@@ -1,19 +1,27 @@
-import { ServiceAccountModel } from '../../../../models';
+import { SecretModel, ServiceAccountModel } from '../../../../models';
 import { SecretKind, SecretType } from '../../../../types';
 import { createK8sUtilMock } from '../../../../utils/test-utils';
+import { mockSecret } from '../../__data__/mock-secrets';
 import { SecretForComponentOption } from '../secret-utils';
 import {
   linkCommonSecretsToServiceAccount,
   linkSecretToServiceAccounts,
-  linkSecretToServiceAccount,
-  unLinkSecretFromServiceAccount,
+  linkSecretToBuildServiceAccount,
+  unLinkSecretFromBuildServiceAccount,
+  isLinkableSecret,
+  updateAnnotateForSecret,
 } from '../service-account-utils';
 
 const imagePullSecret = {
   apiVersion: 'v1',
   kind: 'secret',
-  metadata: { name: 'test-secret', namespace: 'test-ns' },
+  metadata: { name: 'test-secret' },
   type: SecretType.dockerconfigjson,
+};
+
+const imagePullSecretWithNamespace = {
+  ...imagePullSecret,
+  metadata: { ...imagePullSecret.metadata, namespace: 'test-ns' },
 };
 
 const testComponent = {
@@ -36,10 +44,10 @@ const testComponents = [
 const testComponentsNames = [testComponent.metadata.name, 'test-component-2'];
 
 const testSecrets = [
-  imagePullSecret,
+  imagePullSecretWithNamespace,
   {
-    ...imagePullSecret,
-    metadata: { ...imagePullSecret.metadata, name: 'test-secret-2' },
+    ...imagePullSecretWithNamespace,
+    metadata: { ...imagePullSecretWithNamespace.metadata, name: 'test-secret-2' },
   },
 ] as SecretKind[];
 
@@ -47,7 +55,36 @@ const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 const k8sGetResourceMock = createK8sUtilMock('K8sGetResource');
 const K8sListResourceItemsMock = createK8sUtilMock('K8sListResourceItems');
 
-describe('linkSecretToServiceAccount', () => {
+describe('isLinkableSecret', () => {
+  it('should return true for dockerjson/dockercfg/basicAuth', () => {
+    for (const validType of [
+      SecretType.dockercfg,
+      SecretType.dockerconfigjson,
+      SecretType.basicAuth,
+    ]) {
+      const validSecret = { ...imagePullSecret, type: validType };
+      expect(isLinkableSecret(validSecret)).toBe(true);
+    }
+  });
+
+  it('should return false for invalid secret types', () => {
+    for (const invalidType of [
+      SecretType.opaque,
+      SecretType.sshAuth,
+      SecretType.tls,
+      SecretType.serviceAccountToken,
+    ]) {
+      const invalidSecret = { ...imagePullSecret, type: invalidType };
+      expect(isLinkableSecret(invalidSecret)).toBe(false);
+    }
+  });
+
+  it('should return false when secret is undefined', () => {
+    expect(isLinkableSecret(undefined)).toBe(false);
+  });
+});
+
+describe('linkSecretToBuildServiceAccount', () => {
   beforeEach(() => {
     k8sGetResourceMock.mockReturnValue({
       metadata: { name: 'test-cdq' },
@@ -60,8 +97,10 @@ describe('linkSecretToServiceAccount', () => {
       secrets: [{ name: 'secret1' }, { name: 'secret2' }],
     });
   });
+
   it('should return early if no component ', async () => {
-    await linkSecretToServiceAccount(imagePullSecret, null);
+    jest.clearAllMocks();
+    await linkSecretToBuildServiceAccount(imagePullSecretWithNamespace, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -72,7 +111,7 @@ describe('linkSecretToServiceAccount', () => {
       imagePullSecrets: [],
       secrets: [],
     });
-    await linkSecretToServiceAccount(imagePullSecret, testComponent);
+    await linkSecretToBuildServiceAccount(imagePullSecretWithNamespace, testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -95,7 +134,7 @@ describe('linkSecretToServiceAccount', () => {
 
   it('should append to imagePull secrets list ', async () => {
     k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, testComponent);
+    await linkSecretToBuildServiceAccount(imagePullSecretWithNamespace, testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -127,7 +166,7 @@ describe('linkSecretToServiceAccount', () => {
       metadata: { name: 'test-cdq' },
     });
     k8sPatchResourceMock.mockClear();
-    await linkSecretToServiceAccount(imagePullSecret, testComponent);
+    await linkSecretToBuildServiceAccount(imagePullSecretWithNamespace, testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalled();
     expect(k8sPatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -149,7 +188,7 @@ describe('linkSecretToServiceAccount', () => {
   });
 });
 
-describe('UnLinkSecretFromServiceAccount', () => {
+describe('UnLinkSecretFromBuildServiceAccount', () => {
   beforeEach(() => {
     k8sGetResourceMock.mockReturnValue({
       metadata: { name: 'test-cdq' },
@@ -164,7 +203,7 @@ describe('UnLinkSecretFromServiceAccount', () => {
   });
   it('should return early if no namespace ', async () => {
     k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(imagePullSecret, null);
+    await unLinkSecretFromBuildServiceAccount(imagePullSecret, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -173,7 +212,7 @@ describe('UnLinkSecretFromServiceAccount', () => {
       metadata: { name: 'test-cdq' },
     });
     k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(imagePullSecret, null);
+    await unLinkSecretFromBuildServiceAccount(imagePullSecret, null);
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -184,7 +223,7 @@ describe('UnLinkSecretFromServiceAccount', () => {
       secrets: [],
     });
     k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(
+    await unLinkSecretFromBuildServiceAccount(
       {
         metadata: { name: 'ip-secret3', namespace: 'test-ns' },
         type: imagePullSecret.type,
@@ -215,7 +254,7 @@ describe('UnLinkSecretFromServiceAccount', () => {
 
   it('should remove correct imagePull secrets list ', async () => {
     k8sPatchResourceMock.mockClear();
-    await unLinkSecretFromServiceAccount(
+    await unLinkSecretFromBuildServiceAccount(
       {
         metadata: { name: 'ip-secret3', namespace: 'test-ns' },
         type: imagePullSecret.type,
@@ -275,6 +314,7 @@ describe('linkCommonSecretsToServiceAccount', () => {
   });
 
   it('should call linkSecretToServiceAccount for each secret', async () => {
+    K8sListResourceItemsMock.mockReturnValue(testSecrets);
     await linkCommonSecretsToServiceAccount(testComponent);
     expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testSecrets.length);
   });
@@ -286,24 +326,24 @@ describe('linkSecretToAllServiceAccounts', () => {
     k8sPatchResourceMock.mockClear();
   });
 
-  it('should call linkSecretToServiceAccount for each component', async () => {
+  it('should call linkSecretToServiceAccounts for each component', async () => {
     K8sListResourceItemsMock.mockReturnValue(testComponents);
     await linkSecretToServiceAccounts(
-      imagePullSecret,
+      imagePullSecretWithNamespace,
       [], // when select all components, we do not need relatedComponents
       SecretForComponentOption.all,
     );
     expect(k8sPatchResourceMock).toHaveBeenCalledTimes(testComponentsNames.length);
   });
 
-  it('should call linkSecretToServiceAccount for selected component', async () => {
+  it('should call linkSecretToServiceAccounts for selected component', async () => {
     const selectedComponentsNames = [testComponent.metadata.name];
     K8sListResourceItemsMock.mockReturnValue([
       testComponent,
       { ...testComponent, metadata: { ...testComponent.metadata, name: 'test-component-2' } },
     ]);
     await linkSecretToServiceAccounts(
-      imagePullSecret,
+      imagePullSecretWithNamespace,
       selectedComponentsNames,
       SecretForComponentOption.partial,
     );
@@ -316,7 +356,11 @@ describe('linkSecretToAllServiceAccounts', () => {
   });
 
   it('should return early if components is invalid', async () => {
-    await linkSecretToServiceAccounts(imagePullSecret, null, SecretForComponentOption.partial);
+    await linkSecretToServiceAccounts(
+      imagePullSecretWithNamespace,
+      null,
+      SecretForComponentOption.partial,
+    );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
   });
 
@@ -328,5 +372,67 @@ describe('linkSecretToAllServiceAccounts', () => {
       SecretForComponentOption.partial,
     );
     expect(k8sPatchResourceMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('annotateSecretWithError', () => {
+  const LINKING_ERROR_ANNOTATION = 'konflux-ui/linking-secret-action-error';
+  const annotationPath = `/metadata/annotations/${LINKING_ERROR_ANNOTATION.replace(/\//g, '~1')}`;
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should add annotation if not present', async () => {
+    const errorMessage = 'Link failed';
+
+    await updateAnnotateForSecret(mockSecret, LINKING_ERROR_ANNOTATION, errorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'add',
+          path: '/metadata/annotations',
+          value: {
+            'konflux-ui/linking-secret-action-error': 'Link failed',
+          },
+        },
+      ],
+    });
+  });
+
+  it('should replace annotation if already present', async () => {
+    const secretWithAnnotation: SecretKind = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        annotations: {
+          [LINKING_ERROR_ANNOTATION]: 'old message',
+        },
+      },
+    };
+    const newErrorMessage = 'Updated failure message';
+
+    await updateAnnotateForSecret(secretWithAnnotation, LINKING_ERROR_ANNOTATION, newErrorMessage);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: SecretModel,
+      queryOptions: {
+        name: 'my-secret',
+        ns: 'my-namespace',
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: annotationPath,
+          value: newErrorMessage,
+        },
+      ],
+    });
   });
 });

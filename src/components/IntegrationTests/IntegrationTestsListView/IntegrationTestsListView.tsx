@@ -7,20 +7,17 @@ import {
   TextContent,
   TextVariants,
   Title,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
   EmptyStateActions,
-  SearchInput,
 } from '@patternfly/react-core';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
-import { useSearchParam } from '../../../hooks/useSearchParam';
 import { IntegrationTestScenarioModel } from '../../../models';
 import { INTEGRATION_TEST_ADD_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
-import { Table } from '../../../shared';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
@@ -29,6 +26,7 @@ import { useAccessReviewForModel } from '../../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { IntegrationTestListHeader } from './IntegrationTestListHeader';
 import IntegrationTestListRow from './IntegrationTestListRow';
+
 const IntegrationTestsEmptyState: React.FC<
   React.PropsWithChildren<{
     handleAddTest: () => void;
@@ -72,11 +70,13 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   );
 
   const navigate = useNavigate();
-  const [integrationTests, integrationTestsLoaded] = useIntegrationTestScenarios(
-    namespace,
-    applicationName,
-  );
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
+  const [integrationTests, integrationTestsLoaded, integrationTestsError] =
+    useIntegrationTestScenarios(namespace, applicationName);
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
 
   const filteredIntegrationTests = React.useMemo(
     () =>
@@ -90,10 +90,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
     navigate(INTEGRATION_TEST_ADD_PATH.createPath({ applicationName, workspaceName: namespace }));
   }, [navigate, applicationName, namespace]);
 
-  const onClearFilters = () => setNameFilter('');
-  const onNameInput = (name: string) => setNameFilter(name);
-
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => setNameFilter('')} />;
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => (
     <IntegrationTestsEmptyState
       handleAddTest={handleAddTest}
@@ -101,35 +98,28 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
     />
   );
   const DataToolbar = (
-    <Toolbar data-test="component-list-toolbar" clearAllFilters={onClearFilters}>
-      <ToolbarContent>
-        <ToolbarGroup align={{ default: 'alignLeft' }}>
-          <ToolbarItem>
-            <SearchInput
-              name="nameInput"
-              data-test="name-input-filter"
-              type="search"
-              aria-label="name filter"
-              placeholder="Filter by name..."
-              onChange={(_event, name) => onNameInput(name)}
-              value={nameFilter}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <ButtonWithAccessTooltip
-              variant={ButtonVariant.secondary}
-              onClick={handleAddTest}
-              isDisabled={!canCreateIntegrationTest}
-              tooltip="You don't have access to add an integration test"
-              data-test="add-integration-test"
-            >
-              Add integration test
-            </ButtonWithAccessTooltip>
-          </ToolbarItem>
-        </ToolbarGroup>
-      </ToolbarContent>
-    </Toolbar>
+    <BaseTextFilterToolbar
+      text={nameFilter}
+      label="name"
+      setText={(name) => setFilters({ name })}
+      onClearFilters={onClearFilters}
+      dataTest="integration-list-toolbar"
+    >
+      <ButtonWithAccessTooltip
+        variant={ButtonVariant.secondary}
+        onClick={handleAddTest}
+        isDisabled={!canCreateIntegrationTest}
+        tooltip="You don't have access to add an integration test"
+        data-test="add-integration-test"
+      >
+        Add integration test
+      </ButtonWithAccessTooltip>
+    </BaseTextFilterToolbar>
   );
+
+  if (integrationTestsError) {
+    return getErrorState(integrationTestsError, integrationTestsLoaded, 'integration tests');
+  }
 
   return (
     <>

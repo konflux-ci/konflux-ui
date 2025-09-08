@@ -4,6 +4,7 @@ import KeyValueFileInputField, {
 } from '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import { formikRenderer } from '../../../utils/test-utils';
 import {
+  addSecretFormValues,
   existingSecrets,
   secretFormValues,
   secretFormValuesForSourceSecret,
@@ -47,7 +48,7 @@ describe('SecretForm', () => {
     });
     fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
     await waitFor(() => {
-      expect(screen.getByTestId('key-0').getAttribute('name')).toBe('image.keyValues.0.key');
+      expect(screen.getByTestId('key-0').getAttribute('name')).toBe('opaque.keyValues.0.key');
       expect(screen.getByTestId('key-0').getAttribute('value')).toBe('key1');
     });
   });
@@ -134,6 +135,18 @@ describe('SecretForm SourceSecret', () => {
   });
 });
 
+describe('SecretForm Image Pull Secret', () => {
+  it('should show correct fields for Image Pull Secret', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, addSecretFormValues);
+    await waitFor(() => {
+      expect(screen.getByText('Registry server address')).toBeInTheDocument();
+      expect(screen.getByText('Email')).toBeInTheDocument();
+      expect(screen.getByText('Username')).toBeInTheDocument();
+      expect(screen.getByText('Password')).toBeInTheDocument();
+    });
+  });
+});
+
 describe('SecretForm KeyValueFileInputField', () => {
   beforeEach(() => {
     mockKeyValueFileInputField.mockImplementation((props) => (
@@ -152,7 +165,7 @@ describe('SecretForm KeyValueFileInputField', () => {
   it('should render KeyValueFileInput with correct props', async () => {
     formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
     await waitFor(() => {
-      expect(screen.getByTestId('key-value-input').getAttribute('name')).toBe('image.keyValues');
+      expect(screen.getByTestId('key-value-input').getAttribute('name')).toBe('opaque.keyValues');
     });
   });
 
@@ -162,7 +175,7 @@ describe('SecretForm KeyValueFileInputField', () => {
       expect.objectContaining({
         disableRemoveAction: true,
         entries: [{ key: '', readOnlyKey: false, value: '' }],
-        name: 'image.keyValues',
+        name: 'opaque.keyValues',
         required: true,
       }),
       {},

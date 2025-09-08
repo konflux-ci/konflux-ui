@@ -10,7 +10,7 @@ import {
   EmptyStateVariant,
 } from '@patternfly/react-core';
 import { css } from '@patternfly/react-styles';
-import emptySearchImgUrl from '../../../assets/Not-found.svg';
+import EmptySearchImgUrl from '../../assets/Not-found.svg';
 
 export const NotFoundEmptyState: React.FC<React.PropsWithChildren<{ className?: string }>> = ({
   className,
@@ -23,7 +23,7 @@ export const NotFoundEmptyState: React.FC<React.PropsWithChildren<{ className?: 
         icon={
           <EmptyStateIcon
             className={css('app-empty-state__icon m-is-error')}
-            icon={() => <img className="app-empty-state__icon" src={emptySearchImgUrl} alt="" />}
+            icon={() => <EmptySearchImgUrl className="app-empty-state__icon m-is-xl" role="img" />}
           />
         }
         headingLevel="h2"

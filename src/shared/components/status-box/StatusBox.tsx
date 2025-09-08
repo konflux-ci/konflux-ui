@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { Alert, Button } from '@patternfly/react-core';
+import { Alert, Button, HelperText, HelperTextItem } from '@patternfly/react-core';
 import classNames from 'classnames';
 import get from 'lodash/get';
 import isEmpty from 'lodash/isEmpty';
 import isString from 'lodash/isString';
-import * as restrictedSignImg from '../../../assets/restricted-sign.svg';
 import { TimeoutError } from '../../../k8s/error';
-import { AnyObject } from '../../../types/common';
+import * as restrictedSignImg from '../../assets/restricted-sign.svg';
 
 import './StatusBox.scss';
 
@@ -62,7 +61,7 @@ export const Loading: React.FC<React.PropsWithChildren<LoadingProps>> = ({ class
 );
 Loading.displayName = 'Loading';
 
-export const LoadingInline: React.FC<React.PropsWithChildren<AnyObject>> = () => (
+export const LoadingInline: React.FC<React.PropsWithChildren<Record<string, unknown>>> = () => (
   <Loading className="loader--inline" />
 );
 LoadingInline.displayName = 'LoadingInline';
@@ -101,9 +100,15 @@ export const MsgBox: React.FC<React.PropsWithChildren<MsgBoxProps>> = ({
       </div>
     )}
     {detail && (
-      <div className="pf-v5-u-text-align-center status-box__detail" data-test="msg-box-detail">
-        {detail}
-      </div>
+      <HelperText>
+        <HelperTextItem
+          variant="indeterminate"
+          className="pf-v5-u-text-align-center status-box__detail"
+          data-test="msg-box-detail"
+        >
+          {detail}
+        </HelperTextItem>
+      </HelperText>
     )}
   </Box>
 );

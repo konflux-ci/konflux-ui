@@ -96,7 +96,7 @@ describe('ComponentDetailsView', () => {
   });
 
   it('should show an error state when component cannot be loaded', () => {
-    useComponentMock.mockReturnValue([{}, false, { code: 404, message: 'Not found' }]);
+    useComponentMock.mockReturnValue([undefined, true, { code: 404, message: 'Not found' }]);
     renderWithQueryClientAndRouter(<ComponentDetailsViewWrapper />);
     screen.getByText('404: Page not found');
   });

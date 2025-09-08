@@ -11,8 +11,8 @@ import { ImportFormValues } from '../type';
 import GitOptions from './GitOptions';
 
 export const SourceSection = () => {
-  const [, { touched, error }] = useField('source.git.url');
-  const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(false);
+  const [, { touched, error }] = useField<string>('source.git.url');
+  const [isGitAdvancedOpen, setGitAdvancedOpen] = React.useState<boolean>(true);
   const { touched: touchedValues, setFieldValue } = useFormikContext<ImportFormValues>();
   const validated = touched
     ? touched && !error
@@ -36,15 +36,12 @@ export const SourceSection = () => {
         const gitType = detectGitType(event.target?.value as string);
         if (gitType !== GitProvider.GITHUB && gitType !== GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', '');
-          setGitAdvancedOpen(true);
         }
         if (gitType === GitProvider.GITHUB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITHUB);
-          setGitAdvancedOpen(false);
         }
         if (gitType === GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITLAB);
-          setGitAdvancedOpen(false);
         }
 
         let parsed: GitUrlParse.GitUrl;
@@ -72,7 +69,7 @@ export const SourceSection = () => {
       <InputField
         name="source.git.url"
         label="Git repository url"
-        placeholder="Enter your source"
+        placeholder="Enter a GitHub or GitLab repository URL"
         validated={validated}
         isRequired
         data-testid="enter-source"

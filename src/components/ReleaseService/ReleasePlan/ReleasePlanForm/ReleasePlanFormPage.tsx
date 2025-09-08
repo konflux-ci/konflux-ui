@@ -33,7 +33,6 @@ export const ReleasePlanFormPage: React.FC<Props> = ({ releasePlan }) => {
     if (edit) {
       track(TrackEvents.ButtonClicked, {
         link_name: 'edit-release-plan-submit',
-        // eslint-disable-next-line camelcase
         release_plan_name: releasePlan.metadata.name,
         // eslint-disable-next-line camelcase
         target_namespace: releasePlan.spec.target,
@@ -54,7 +53,6 @@ export const ReleasePlanFormPage: React.FC<Props> = ({ releasePlan }) => {
         ? await editReleasePlan(releasePlan, values, namespace)
         : await createReleasePlan(values, namespace);
       track(edit ? 'Release plan edited' : 'Release plan created', {
-        // eslint-disable-next-line camelcase
         release_plan_name: newReleasePlan.metadata.name,
         // eslint-disable-next-line camelcase
         target_namesapce: newReleasePlan.spec.target,
@@ -74,7 +72,6 @@ export const ReleasePlanFormPage: React.FC<Props> = ({ releasePlan }) => {
     if (edit) {
       track(TrackEvents.ButtonClicked, {
         link_name: 'edit-release-plan-leave',
-        // eslint-disable-next-line camelcase
         release_plan_name: releasePlan.metadata.name,
         // eslint-disable-next-line camelcase
         target_namespace: releasePlan.spec.target,

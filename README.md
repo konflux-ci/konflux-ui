@@ -2,9 +2,21 @@
 
 UI for [Konflux](https://github.com/konflux-ci/konflux-ci)
 
-### Installing
+## Contributing
+
+We welcome contributions! Please read our [Contributing Guidelines](./CONTRIBUTING.md) to get started.
+If you find a bug or want to request a feature, feel free to open an issue as well.
+
+## Setting up development environment
+
+This project contains a DevContainer which has all dependencies for developing Konflux UI pre-installed. You can find out more information for how to configure your environment to use the DevContainer in the included [README.md](.devcontainer/README.md).
+
+### Manual installation
+
+If you do not want to or cannot use the DevContainer, you can also setup the repository yourself.
 
 **Prerequisites:**
+
 - Node.js version >= 20
 - Yarn version 1.22
 
@@ -16,9 +28,10 @@ A step by step series of examples that tell you how to get a development environ
    yarn install
    ```
 3. Runs the app in development mode
-    ```
-    yarn start
-    ```
+   ```
+   yarn start
+   ```
+
 ## Running with Konflux-ci
 
 By default, the UI uses the stage cluster for API calls. However, if you want to run the UI with a local Konflux deployment, follow the steps below.
@@ -39,6 +52,7 @@ By default, the UI uses the stage cluster for API calls. However, if you want to
 - PROXY_URL=https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
 - PROXY_WEBSOCKET_URL=wss://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
 ```
+
 3. Update your webpack.dev.config.js file with the following changes:
 
 ```diff
@@ -77,17 +91,17 @@ By default, the UI uses the stage cluster for API calls. However, if you want to
 
 In the project directory, you can run:
 
-* `yarn build`: Builds the app for production using webpack with the production configuration file.
-* `yarn start`: Runs the app in development mode. Opens the app in your default browser.
-* `yarn test`: Runs unit tests using jest.
-* `yarn coverage`: Runs the test suite with coverage report. 
-* `yarn lint`: Runs both TypeScript and SASS linting.
-* `yarn lint:ts`: Lints TypeScript files.
-* `yarn lint:sass`: Lints SASS files.
+- `yarn build`: Builds the app for production using webpack with the production configuration file.
+- `yarn start`: Runs the app in development mode. Opens the app in your default browser.
+- `yarn test`: Runs unit tests using jest.
+- `yarn coverage`: Runs the test suite with coverage report.
+- `yarn lint`: Runs both TypeScript and SASS linting.
+- `yarn lint:ts`: Lints TypeScript files.
+- `yarn lint:sass`: Lints SASS files.
 
 ## Built With
 
-* [Webpack](https://webpack.js.org/) - Module bundler
-* [Jest](https://jestjs.io/) - Testing framework
-* [ESLint](https://eslint.org/) - TypeScript linting
-* [Stylelint](https://stylelint.io/) - SASS linting
+- [Webpack](https://webpack.js.org/) - Module bundler
+- [Jest](https://jestjs.io/) - Testing framework
+- [ESLint](https://eslint.org/) - TypeScript linting
+- [Stylelint](https://stylelint.io/) - SASS linting

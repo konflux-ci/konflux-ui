@@ -10,9 +10,11 @@ import {
   Skeleton,
   Title,
 } from '@patternfly/react-core';
-import { SnapshotLabels } from '../../../consts/pipelinerun';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { usePipelineRun } from '../../../hooks/usePipelineRuns';
 import { useScanResults } from '../../../hooks/useScanResults';
+import { useScrollToHash } from '../../../hooks/useScrollToHash';
 import { useSnapshot } from '../../../hooks/useSnapshots';
 import { COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
@@ -47,15 +49,20 @@ const SnapshotOverviewTab: React.FC = () => {
 
   const componentsTableData: SnapshotComponentTableData[] = React.useMemo(
     () =>
-      snapshot.spec.components.map((component) => {
+      snapshot?.spec?.components?.map((component) => {
         return {
           metadata: { uid: component.name, name: component.name },
-          application: snapshot.spec.application,
+          application: snapshot?.spec?.application,
           ...component,
         };
-      }),
-    [snapshot.spec],
+      }) || [],
+    [snapshot?.spec],
   );
+
+  useScrollToHash({
+    loaded: Boolean(loaded),
+    loadErr: Boolean(loadErr),
+  });
 
   return (
     <>
@@ -74,7 +81,7 @@ const SnapshotOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Created at</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <Timestamp timestamp={snapshot.metadata.creationTimestamp ?? '-'} />
+                  <Timestamp timestamp={snapshot?.metadata?.creationTimestamp ?? '-'} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               {commit && (
@@ -84,7 +91,7 @@ const SnapshotOverviewTab: React.FC = () => {
                     <Link
                       to={COMMIT_DETAILS_PATH.createPath({
                         workspaceName: namespace,
-                        applicationName: snapshot.spec.application,
+                        applicationName: snapshot?.spec?.application,
                         commitName: commit.sha,
                       })}
                       title={commit.displayName || commit.shaTitle}
@@ -121,11 +128,13 @@ const SnapshotOverviewTab: React.FC = () => {
           </FlexItem>
         </Flex>
       </Flex>
-      <div className="pf-vf-u-mt-lg">
-        <SnapshotComponentsList
-          components={componentsTableData}
-          applicationName={snapshot.spec.application}
-        />
+      <div id="snapshot-components" className="pf-vf-u-mt-lg">
+        <FilterContextProvider filterParams={['name']}>
+          <SnapshotComponentsList
+            components={componentsTableData}
+            applicationName={snapshot?.spec?.application}
+          />
+        </FilterContextProvider>
       </div>
     </>
   );

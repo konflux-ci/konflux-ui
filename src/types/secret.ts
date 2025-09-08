@@ -3,6 +3,11 @@ import { K8sResourceCommon } from './k8s';
 
 export const SecretByUILabel = 'ui.appstudio.redhat.com/secret-for';
 
+export type CurrentComponentRef = {
+  componentName: null | string;
+  applicationName: null | string;
+};
+
 export type ImportSecret = {
   secretName: string;
   type: string;
@@ -14,13 +19,10 @@ export type ImportSecret = {
       readOnlyKey?: boolean;
     }[];
   };
-  image?: {
-    keyValues: {
-      key: string;
-      value: string;
-      readOnlyKey?: boolean;
-    }[];
-  };
+  image?: Image;
+  currentComponent?: null | CurrentComponentRef;
+  relatedComponents?: [];
+  secretForComponentOption?: null | SecretForComponentOption;
 };
 
 export enum SecretSPILabel {
@@ -132,14 +134,7 @@ export type BuildTimeSecret = {
       readOnlyValue?: boolean;
     }[];
   };
-  image?: {
-    keyValuePairs: {
-      key: string;
-      value: string;
-      readOnlyKey?: boolean;
-      readOnlyValue?: boolean;
-    }[];
-  };
+  image?: Image;
 };
 
 export type SecretFormValues = ImportSecret & {
@@ -160,6 +155,12 @@ export enum SecretType {
   serviceAccountToken = 'kubernetes.io/service-account-token',
   sshAuth = 'kubernetes.io/ssh-auth',
   tls = 'kubernetes.io/tls',
+}
+
+export enum LinkableSecretType {
+  dockerconfigjson = 'kubernetes.io/dockerconfigjson',
+  basicAuth = 'kubernetes.io/basic-auth',
+  dockercfg = 'kubernetes.io/dockercfg',
 }
 
 export type ServiceAccountKind = {

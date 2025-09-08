@@ -1,259 +1,152 @@
-import * as React from 'react';
-import * as ReactRouterDom from 'react-router-dom';
-import { Form } from '@patternfly/react-core';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+/**
+ * MIGRATION NOTE: This file serves as a backward compatibility layer during the transition
+ * to the new organized test utilities in ~/unit-test-utils. Once all tests have been migrated
+ * to import directly from ~/unit-test-utils, these re-exports should be removed.
+ *
+ */
+
+import { createUseApplicationMock as _createUseApplicationMock } from '../unit-test-utils/mock-application-hooks';
 import {
-  RenderOptions,
-  render,
-  screen,
-  waitForElementToBeRemoved,
-  fireEvent,
-  act,
-} from '@testing-library/react';
-import { FormikValues, Formik } from 'formik';
-import * as ApplicationHook from '../hooks/useApplications';
-import * as k8s from '../k8s';
-import * as NamespaceUtils from '../shared/providers/Namespace/namespace-context';
+  mockLocation as _mockLocation,
+  mockWindowFetch as _mockWindowFetch,
+} from '../unit-test-utils/mock-browser';
+import {
+  transformReturnDataForUseK8sWatchResource as _transformReturnDataForUseK8sWatchResource,
+  createK8sWatchResourceMock as _createK8sWatchResourceMock,
+  createK8sUtilMock as _createK8sUtilMock,
+  createKubearchiveUtilMock as _createKubearchiveUtilMock,
+} from '../unit-test-utils/mock-k8s';
+import {
+  createTestQueryClient as _createTestQueryClient,
+  renderWithQueryClient as _renderWithQueryClient,
+} from '../unit-test-utils/mock-react-query';
+import {
+  createUseParamsMock as _createUseParamsMock,
+  createReactRouterMock as _createReactRouterMock,
+  routerRenderer as _routerRenderer,
+} from '../unit-test-utils/mock-react-router';
+import {
+  formikRenderer as _formikRenderer,
+  namespaceRenderer as _namespaceRenderer,
+  renderWithQueryClientAndRouter as _renderWithQueryClientAndRouter,
+  WithTestNamespaceContext as _WithTestNamespaceContext,
+} from '../unit-test-utils/rendering-utils';
+import {
+  waitForLoadingToFinish as _waitForLoadingToFinish,
+  openIntegrationTestContextDropdown as _openIntegrationTestContextDropdown,
+  getIntegrationTestContextOptionButton as _getIntegrationTestContextOptionButton,
+} from '../unit-test-utils/test-helpers';
 
-export function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-}
-export const formikRenderer = (
-  element: React.ReactElement,
-  initialValues?: FormikValues,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) => {
-  const client = createTestQueryClient();
-  return render(element, {
-    wrapper: ({ children }) => (
-      <QueryClientProvider client={client}>
-        <Formik initialValues={initialValues} onSubmit={() => {}}>
-          {({ handleSubmit }) => <Form onSubmit={handleSubmit}>{children}</Form>}
-        </Formik>
-      </QueryClientProvider>
-    ),
-    ...options,
-  });
-};
+/**
+ * @deprecated Use createTestQueryClient from ~/unit-test-utils/mock-react-query instead
+ * Creates a test QueryClient with optimized settings for testing
+ */
+export const createTestQueryClient = _createTestQueryClient;
 
-export const namespaceRenderer = (
-  element: React.ReactElement,
-  namespace: string,
-  contextValues?: Partial<NamespaceUtils.NamespaceContextData>,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) =>
-  render(element, {
-    wrapper: ({ children }) => (
-      <NamespaceUtils.NamespaceContext.Provider
-        value={{
-          namespace,
-          lastUsedNamespace: 'test-ws',
-          namespaceResource: undefined,
-          namespaces: [],
-          namespacesLoaded: false,
-          ...contextValues,
-        }}
-      >
-        {children}
-      </NamespaceUtils.NamespaceContext.Provider>
-    ),
-    ...options,
-  });
+/**
+ * @deprecated Use formikRenderer from ~/unit-test-utils/rendering-utils instead
+ * Renders a component with Formik wrapper and QueryClient
+ */
+export const formikRenderer = _formikRenderer;
 
-export const routerRenderer = (
-  element: React.ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>,
-) =>
-  render(element, {
-    wrapper: ({ children }) => (
-      <ReactRouterDom.BrowserRouter>{children}</ReactRouterDom.BrowserRouter>
-    ),
-    ...options,
-  });
+/**
+ * @deprecated Use namespaceRenderer from ~/unit-test-utils/rendering-utils instead
+ * Renders a component with NamespaceContext provider
+ */
+export const namespaceRenderer = _namespaceRenderer;
 
-export const mockLocation = (location?: {
-  hash?: string;
-  port?: number;
-  pathname?: string;
-  search?: string;
-  origin?: string;
-  hostname?: string;
-}) => {
-  const windowLocation = JSON.stringify(window.location);
-  delete window.location;
-  Object.defineProperty(window, 'location', {
-    configurable: true,
-    writable: true,
-    value: JSON.parse(windowLocation),
-  });
-  if (location) {
-    Object.assign(window.location, location);
-  }
-};
+/**
+ * @deprecated Use renderWithQueryClient from ~/unit-test-utils/mock-react-query instead
+ * Renders a component with QueryClient provider
+ */
+export const renderWithQueryClient = _renderWithQueryClient;
 
-export const mockWindowFetch = () => {
-  const originalFetch = window.fetch;
+/**
+ * @deprecated Use renderWithQueryClientAndRouter from ~/unit-test-utils/rendering-utils instead
+ * Renders a component with QueryClient and Router providers
+ */
+export const renderWithQueryClientAndRouter = _renderWithQueryClientAndRouter;
 
-  // Ensure window.fetch exists before mocking
-  if (typeof window.fetch !== 'function') {
-    window.fetch = jest.fn();
-  }
+/**
+ * @deprecated Use routerRenderer from ~/unit-test-utils/mock-react-router instead
+ * Renders a component with BrowserRouter wrapper
+ */
+export const routerRenderer = _routerRenderer;
 
-  // Use jest.spyOn to mock fetch
-  jest.spyOn(window, 'fetch').mockImplementation(() =>
-    Promise.resolve({
-      json: () => Promise.resolve({ data: 'mocked data' }),
-      // Add other methods as needed, e.g.:
-      // text: () => Promise.resolve('mocked text'),
-      // blob: () => Promise.resolve(new Blob(['mocked blob'])),
-    } as Response),
-  );
+/**
+ * @deprecated Use mockLocation from ~/unit-test-utils/mock-browser instead
+ * Mock window.location with custom properties
+ */
+export const mockLocation = _mockLocation;
 
-  // Return a cleanup function
-  return () => {
-    window.fetch = originalFetch;
-    jest.restoreAllMocks();
-  };
-};
+/**
+ * @deprecated Use mockWindowFetch from ~/unit-test-utils/mock-browser instead
+ * Mock window.fetch for testing HTTP requests
+ */
+export const mockWindowFetch = _mockWindowFetch;
 
-export const transformReturnDataForUseK8sWatchResource = (args) => {
-  const [data, loaded, error] = args;
-  return {
-    data,
-    isLoading: typeof loaded === 'boolean' ? !loaded : undefined,
-    error,
-  };
-};
+/**
+ * @deprecated Use transformReturnDataForUseK8sWatchResource from ~/unit-test-utils/mock-k8s instead
+ * Transforms return data for useK8sWatchResource hook to new format
+ */
+export const transformReturnDataForUseK8sWatchResource = _transformReturnDataForUseK8sWatchResource;
 
-export const createK8sWatchResourceMock = () => {
-  const mockFn = jest.fn();
+/**
+ * @deprecated Use createK8sWatchResourceMock from ~/unit-test-utils/mock-k8s instead
+ * Creates a mock for useK8sWatchResource hook
+ */
+export const createK8sWatchResourceMock = _createK8sWatchResourceMock;
 
-  const mockImplementation = (returnValue) => {
-    if (Array.isArray(returnValue)) {
-      const [data, loaded, error] = returnValue;
-      return {
-        data: data ?? [],
-        isLoading: typeof loaded === 'boolean' ? !loaded : undefined,
-        error,
-      };
-    }
-    return returnValue;
-  };
+/**
+ * @deprecated Use createK8sUtilMock from ~/unit-test-utils/mock-k8s instead
+ * Creates a type-safe mock for any k8s utility function
+ */
+export const createK8sUtilMock = _createK8sUtilMock;
 
-  jest
-    .spyOn(k8s, 'useK8sWatchResource')
-    .mockImplementation((...args) => mockImplementation(mockFn(...args)));
+/**
+ * @deprecated Use createKubearchiveUtilMock from ~/unit-test-utils/mock-k8s instead
+ * Creates a type-safe mock for any kubearchive utility function
+ */
+export const createKubearchiveUtilMock = _createKubearchiveUtilMock;
 
-  return mockFn;
-};
+/**
+ * @deprecated Use createUseParamsMock from ~/unit-test-utils/mock-react-router instead
+ * Creates a mock for useParams hook with initial values
+ */
+export const createUseParamsMock = _createUseParamsMock;
 
-export const createK8sUtilMock = (name) => {
-  const mockFn = jest.fn();
+/**
+ * @deprecated Use createReactRouterMock from ~/unit-test-utils/mock-react-router instead
+ * Creates a type-safe mock for any React Router hook
+ */
+export const createReactRouterMock = _createReactRouterMock;
 
-  jest.spyOn(k8s, name).mockImplementation((...args) => mockFn(...args));
+/**
+ * @deprecated Use createUseApplicationMock from ~/unit-test-utils/mock-application-hooks instead
+ * Creates a type-safe mock for useApplication hook with initial value
+ */
+export const createUseApplicationMock = _createUseApplicationMock;
 
-  return mockFn;
-};
+/**
+ * @deprecated Use WithTestNamespaceContext from ~/unit-test-utils/rendering-utils instead
+ * Higher-order component for providing test namespace context
+ */
+export const WithTestNamespaceContext = _WithTestNamespaceContext;
 
-export function renderWithQueryClient(
-  ui: React.ReactElement,
-  client?: QueryClient,
-  renderOptions?: Omit<RenderOptions, 'wrapper'>,
-) {
-  const queryClient = client ?? createTestQueryClient();
+/**
+ * @deprecated Use waitForLoadingToFinish from ~/unit-test-utils/test-helpers instead
+ * Waits for loading spinner to finish
+ */
+export const waitForLoadingToFinish = _waitForLoadingToFinish;
 
-  function Wrapper({ children }: { children: React.ReactNode }) {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
-  }
+/**
+ * @deprecated Use openIntegrationTestContextDropdown from ~/unit-test-utils/test-helpers instead
+ * Opens integration test context dropdown
+ */
+export const openIntegrationTestContextDropdown = _openIntegrationTestContextDropdown;
 
-  return render(ui, { wrapper: Wrapper, ...renderOptions });
-}
-
-export function renderWithQueryClientAndRouter(
-  ui: React.ReactElement,
-  client?: QueryClient,
-  renderOptions?: Omit<RenderOptions, 'wrapper'>,
-) {
-  const queryClient = client ?? createTestQueryClient();
-
-  function Wrapper({ children }: { children: React.ReactNode }) {
-    return (
-      <ReactRouterDom.BrowserRouter>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      </ReactRouterDom.BrowserRouter>
-    );
-  }
-
-  return render(ui, { wrapper: Wrapper, ...renderOptions });
-}
-
-export const createUseParamsMock = (initialValue: Record<string, string> = {}): jest.Mock => {
-  const mockFn = jest.fn().mockReturnValue(initialValue);
-
-  jest.spyOn(ReactRouterDom, 'useParams').mockImplementation(mockFn);
-
-  return mockFn;
-};
-
-export const createReactRouterMock = (name): jest.Mock => {
-  const mockFn = jest.fn();
-
-  jest.spyOn(ReactRouterDom, name).mockImplementation(mockFn);
-
-  return mockFn;
-};
-
-export const createUseApplicationMock = (
-  initialValue: [{ metadata: { name: string } }, boolean] = [{ metadata: { name: '' } }, false],
-): jest.Mock => {
-  const mockFn = jest.fn().mockReturnValue(initialValue);
-
-  jest.spyOn(ApplicationHook, 'useApplication').mockImplementation(mockFn);
-
-  beforeEach(() => {
-    mockFn.mockReturnValue(initialValue);
-  });
-
-  return mockFn;
-};
-
-export const WithTestNamespaceContext =
-  (children, data?: NamespaceUtils.NamespaceContextData) => () => (
-    <NamespaceUtils.NamespaceContext.Provider
-      value={{
-        namespace: 'test-ws',
-        lastUsedNamespace: 'test-ws',
-        namespaceResource: undefined,
-        namespaces: [],
-        namespacesLoaded: false,
-        ...data,
-      }}
-    >
-      {children}
-    </NamespaceUtils.NamespaceContext.Provider>
-  );
-
-export const waitForLoadingToFinish = async () =>
-  await waitForElementToBeRemoved(() => screen.getByRole('progressbar'));
-
-// Ignore this check for the tests.
-// If not, the test will throw an error.
-/* eslint-disable @typescript-eslint/require-await */
-export const openIntegrationTestContextDropdown = async () => {
-  const toggleButton = screen.getByTestId('context-dropdown-toggle').childNodes[1];
-  expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
-  await act(async () => {
-    fireEvent.click(toggleButton);
-  });
-  expect(toggleButton).toHaveAttribute('aria-expanded', 'true');
-};
-
-export const getIntegrationTestContextOptionButton = (name: string) => {
-  return screen.getByTestId(`context-option-${name}`).childNodes[0];
-};
+/**
+ * @deprecated Use getIntegrationTestContextOptionButton from ~/unit-test-utils/test-helpers instead
+ * Gets integration test context option button by name
+ */
+export const getIntegrationTestContextOptionButton = _getIntegrationTestContextOptionButton;

@@ -2,56 +2,62 @@ import * as React from 'react';
 import {
   Bullseye,
   EmptyStateBody,
+  Flex,
   PageSection,
   PageSectionVariants,
-  SearchInput,
   Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
+  Tooltip,
 } from '@patternfly/react-core';
-import { debounce } from 'lodash-es';
+import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/question-circle-icon';
+import { GETTING_ACCESS_INTERNAL } from '~/consts/documentation';
+import { useInstanceVisibility } from '~/hooks/useUIInstance';
+import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
 import emptyStateImgUrl from '../../assets/namespace.svg';
-import { useSearchParam } from '../../hooks/useSearchParam';
-import { ExternalLink, Table } from '../../shared';
+import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespaceInfo } from '../../shared/providers/Namespace';
 import { NamespaceKind } from '../../types';
+import { FilterContext } from '../Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import PageLayout from '../PageLayout/PageLayout';
 import { NamespaceListHeader } from './NamespaceListHeader';
 import NamespaceListRow from './NamespaceListRow';
 
-const NamespaceCreateButton = () => (
-  <ExternalLink
-    variant="primary"
-    href="https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html"
-  >
-    Go to create namespace instructions
-  </ExternalLink>
-);
+const NamespaceCreateButton = React.memo(() => {
+  const instanceVisibility = useInstanceVisibility();
+
+  if (instanceVisibility === KonfluxInstanceVisibility.PRIVATE) {
+    return (
+      <ExternalLink variant="primary" href={GETTING_ACCESS_INTERNAL}>
+        Go to create namespace instructions
+      </ExternalLink>
+    );
+  }
+
+  return (
+    <Tooltip content={<>Contact your platform engineer to create a new namespace.</>}>
+      <Flex className="pf-v5-u-mt-sm" data-testid="namespace-create-tooltip">
+        <QuestionCircleIcon />
+      </Flex>
+    </Tooltip>
+  );
+});
 
 const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
 
-  const [nameFilter, setNameFilter] = useSearchParam('name', '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
 
-  namespaces?.sort(
-    (app1, app2) =>
-      +new Date(app2.metadata?.creationTimestamp) - +new Date(app1.metadata?.creationTimestamp),
-  );
+  namespaces?.sort((app1, app2) => app1.metadata.name.localeCompare(app2.metadata.name));
   const filteredNamespaces = React.useMemo(() => {
     const lowerCaseNameFilter = nameFilter.toLowerCase();
     return namespaces?.filter((app) => app.metadata.name.includes(lowerCaseNameFilter));
   }, [nameFilter, namespaces]);
-
-  const onClearFilters = () => {
-    setNameFilter('');
-  };
-
-  const onNameInput = debounce((n: string) => {
-    setNameFilter(n);
-  }, 600);
 
   if (!loaded) {
     return (
@@ -85,24 +91,15 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
             </AppEmptyState>
           ) : (
             <>
-              <Toolbar usePageInsets>
-                <ToolbarContent>
-                  <ToolbarItem className="pf-v5-u-ml-0">
-                    <SearchInput
-                      name="nameInput"
-                      data-test="name-input-filter"
-                      type="search"
-                      aria-label="name filter"
-                      placeholder="Filter by name..."
-                      onChange={(_, n) => onNameInput(n)}
-                      value={nameFilter}
-                    />
-                  </ToolbarItem>
-                  <ToolbarItem>
-                    <NamespaceCreateButton />
-                  </ToolbarItem>
-                </ToolbarContent>
-              </Toolbar>
+              <BaseTextFilterToolbar
+                text={nameFilter}
+                label="name"
+                setText={(name) => setFilters({ name })}
+                onClearFilters={onClearFilters}
+                dataTest="namespace-list-toolbar"
+              >
+                <NamespaceCreateButton />
+              </BaseTextFilterToolbar>
               {filteredNamespaces.length !== 0 ? (
                 <Table
                   data={filteredNamespaces}
@@ -115,7 +112,7 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
                   })}
                 />
               ) : (
-                <FilteredEmptyState onClearFilters={onClearFilters} />
+                <FilteredEmptyState onClearFilters={() => onClearFilters()} />
               )}
             </>
           )}

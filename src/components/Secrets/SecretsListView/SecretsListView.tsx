@@ -1,17 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Bullseye,
-  EmptyStateBody,
-  SearchInput,
-  Spinner,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
-} from '@patternfly/react-core';
+import { Bullseye, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { SECRET_CREATE_PATH } from '@routes/paths';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useDeepCompareMemoize } from '~/shared';
+import { getErrorState } from '~/shared/utils/error-utils';
 import secretEmptyStateIcon from '../../../assets/secret.svg';
-import { useSearchParam } from '../../../hooks/useSearchParam';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -24,8 +19,12 @@ import SecretsList from './SecretsList';
 const SecretsListView: React.FC = () => {
   const namespace = useNamespace();
 
-  const [secrets, secretsLoaded] = useSecrets(namespace);
-  const [nameFilter, setNameFilter, unsetNameFilter] = useSearchParam('name', '');
+  const [secrets, secretsLoaded, error] = useSecrets(namespace, true);
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+  });
+  const { name: nameFilter } = filters;
   const [canCreateRemoteSecret] = useAccessReviewForModel(SecretModel, 'create');
 
   const filteredRemoteSecrets = React.useMemo(() => {
@@ -69,10 +68,6 @@ const SecretsListView: React.FC = () => {
     </AppEmptyState>
   );
 
-  const onClearFilters = React.useCallback(() => {
-    unsetNameFilter();
-  }, [unsetNameFilter]);
-
   if (!secretsLoaded) {
     return (
       <Bullseye>
@@ -80,32 +75,26 @@ const SecretsListView: React.FC = () => {
       </Bullseye>
     );
   }
+
+  if (error) {
+    return getErrorState(error, secretsLoaded, 'secrets');
+  }
+
   if (secrets.length === 0) return emptyState;
 
   return (
     <>
-      <Toolbar collapseListedFiltersBreakpoint="xl" clearFiltersButtonText="Clear filters">
-        <ToolbarContent className="pf-u-pl-0">
-          {secrets.length > 0 ? (
-            <>
-              <ToolbarItem>
-                <SearchInput
-                  name="nameInput"
-                  data-test="env-name-filter-input"
-                  type="search"
-                  aria-label="name filter"
-                  placeholder="Search secrets"
-                  value={nameFilter}
-                  onChange={(_, name) => setNameFilter(name)}
-                />
-              </ToolbarItem>
-            </>
-          ) : null}
-          <ToolbarItem>{createSecretButton}</ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
+      <BaseTextFilterToolbar
+        text={nameFilter}
+        label="name"
+        setText={(name) => setFilters({ name })}
+        onClearFilters={onClearFilters}
+        dataTest="secrets-list-toolbar"
+      >
+        {createSecretButton}
+      </BaseTextFilterToolbar>
       {filteredRemoteSecrets.length === 0 ? (
-        <FilteredEmptyState onClearFilters={onClearFilters} />
+        <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       ) : (
         <SecretsList secrets={filteredRemoteSecrets} />
       )}

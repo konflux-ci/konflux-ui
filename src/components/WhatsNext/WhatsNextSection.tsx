@@ -18,9 +18,11 @@ export type WhatsNextItem = {
   id: number;
   title: string;
   description: string;
-  icon: string;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   helpId?: string;
+  noAction?: boolean;
   helpLink?: string;
+  helpText?: string;
   cta?: {
     label: string;
     href?: string;
@@ -62,40 +64,44 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
         What&apos;s next?
       </Title>
       {whatsNextItems.map((item) => {
+        const ItemIcon = item.icon;
+
         return (
           !(localStorageItem as number[])?.includes(item?.id) && (
             <Card className="whats-next-card" key={item.id} isFlat>
               <SplitItem>
-                <img src={item.icon} alt={item.title} className="whats-next-card__icon" />
+                <ItemIcon aria-label={item.title} role="img" className="whats-next-card__icon" />
               </SplitItem>
               <SplitItem className="whats-next-card__content" isFilled>
                 <Title headingLevel="h4">{item.title}</Title>
                 <HelperText>{item.description}</HelperText>
               </SplitItem>
-              <SplitItem className="whats-next-card__cta" data-test={item.cta.testId}>
-                <ButtonWithAccessTooltip
-                  {...(item.cta.onClick
-                    ? { onClick: item.cta.onClick }
-                    : !item.cta.external
-                      ? {
-                          component: (props) => <Link {...props} to={item.cta.href} />,
-                        }
-                      : {
-                          component: 'a',
-                          href: item.cta.href,
-                          target: '_blank',
-                          rel: 'noreferrer',
-                        })}
-                  isDisabled={item.cta.disabled}
-                  tooltip={item.cta.disabledTooltip}
-                  variant="secondary"
-                  analytics={item.cta.analytics}
-                >
-                  {item.cta.label}
-                </ButtonWithAccessTooltip>
+              <SplitItem className="whats-next-card__cta" data-test={item.cta?.testId}>
+                {item.cta && (
+                  <ButtonWithAccessTooltip
+                    {...(item.cta.onClick
+                      ? { onClick: item.cta.onClick }
+                      : !item.cta.external
+                        ? {
+                            component: (props) => <Link {...props} to={item.cta.href} />,
+                          }
+                        : {
+                            component: 'a',
+                            href: item.cta.href,
+                            target: '_blank',
+                            rel: 'noreferrer',
+                          })}
+                    isDisabled={item.cta.disabled}
+                    tooltip={item.cta.disabledTooltip}
+                    variant="secondary"
+                    analytics={item.cta.analytics}
+                  >
+                    {item.cta.label}
+                  </ButtonWithAccessTooltip>
+                )}
                 {item.helpLink && (
                   <ExternalLink href={item.helpLink} isInline={false}>
-                    Learn more
+                    {item.helpText ?? 'Learn more'}
                   </ExternalLink>
                 )}
                 <CloseButton

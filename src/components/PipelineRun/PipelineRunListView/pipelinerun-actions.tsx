@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -7,6 +8,7 @@ import {
   PipelineRunLabel,
   PipelineRunType,
 } from '../../../consts/pipelinerun';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { useComponent } from '../../../hooks/useComponents';
 import { K8sQueryPatchResource } from '../../../k8s';
 import { ComponentModel, PipelineRunModel, SnapshotModel } from '../../../models';
@@ -39,8 +41,27 @@ export const rerunTestPipeline = (snapshot: Snapshot, scenario) => {
   });
 };
 
-export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
+type RerunActionReturnType = {
+  cta: () => Promise<void>;
+  isDisabled: boolean;
+  disabledTooltip: string | null;
+  key: string;
+  label: string;
+};
+
+const defaultEmptyAction: RerunActionReturnType = {
+  cta: () => Promise.resolve(),
+  isDisabled: true,
+  disabledTooltip: 'Action not available for this build type',
+  key: 'rerun',
+  label: 'Rerun',
+};
+
+export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActionReturnType => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const isIntegrationTestsPage = pathname?.includes('integrationtests') ?? false;
+  const isSnapshotsPage = pathname?.includes('snapshots') ?? false;
   const namespace = useNamespace();
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canPatchSnapshot] = useAccessReviewForModel(SnapshotModel, 'patch');
@@ -63,46 +84,96 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind) => {
 
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
 
-  return {
-    cta: () =>
-      runType === PipelineRunType.BUILD && isPushBuildType
-        ? componentLoaded &&
-          !componentError &&
-          startNewBuild(component).then(() => {
-            navigate(
-              `${PIPELINE_RUNS_LIST_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: component.spec.application,
-              })}?name=${component.metadata.name}`,
-            );
-          })
-        : runType === PipelineRunType.TEST &&
-          snapshot &&
-          scenario &&
-          rerunTestPipeline(snapshot, scenario).then(() => {
-            navigate(
-              `${PIPELINE_RUNS_LIST_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: component.spec.application,
-              })}?name=${component.metadata.name}`,
-            );
-          }),
-    isDisabled:
-      (runType === PipelineRunType.BUILD && (!isPushBuildType || !canPatchComponent)) ||
-      (runType === PipelineRunType.TEST && (!canPatchSnapshot || !snapshot || !scenario)),
+  return React.useMemo<RerunActionReturnType>(() => {
+    if (!canPatchComponent || !canPatchSnapshot) {
+      return {
+        ...defaultEmptyAction,
+        disabledTooltip: "You don't have access to rerun",
+      };
+    }
 
-    disabledTooltip:
-      (runType === PipelineRunType.BUILD && !canPatchComponent) ||
-      (runType === PipelineRunType.TEST && !canPatchSnapshot)
-        ? "You don't have access to rerun"
-        : runType === PipelineRunType.TEST && (!snapshot || snapshotError || !scenario)
-          ? 'Missing snapshot or scenario'
-          : runType === PipelineRunType.BUILD && !isPushBuildType
-            ? 'Comment `/retest` on pull request to rerun'
-            : null,
-    key: 'rerun',
-    label: 'Rerun',
-  };
+    switch (runType) {
+      case PipelineRunType.BUILD: {
+        if (!isPushBuildType || !componentLoaded || componentError) {
+          return {
+            ...defaultEmptyAction,
+            disabledTooltip: 'Comment `/retest` on pull request to rerun',
+          };
+        }
+
+        return {
+          ...defaultEmptyAction,
+          cta: () =>
+            startNewBuild(component).then(() => {
+              if (isSnapshotsPage) return;
+              navigate(
+                `${PIPELINE_RUNS_LIST_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: component.spec.application,
+                })}?name=${component.metadata.name}`,
+              );
+            }),
+          isDisabled: false,
+          disabledTooltip: null,
+        };
+      }
+
+      case PipelineRunType.TEST: {
+        if (!snapshot || !scenario || snapshotError) {
+          return {
+            ...defaultEmptyAction,
+            disabledTooltip: 'Missing snapshot or scenario',
+          };
+        }
+
+        return {
+          ...defaultEmptyAction,
+          cta: () =>
+            rerunTestPipeline(snapshot, scenario).then(() => {
+              if (isIntegrationTestsPage || isSnapshotsPage) return;
+              const componentName = snapshot.metadata.labels?.[SnapshotLabels.COMPONENT];
+              navigate(
+                `${PIPELINE_RUNS_LIST_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName: snapshot.spec.application,
+                })}?name=${componentName}`,
+              );
+            }),
+          isDisabled: false,
+          disabledTooltip: null,
+        };
+      }
+
+      case PipelineRunType.TENANT:
+      case PipelineRunType.MANAGED:
+      case PipelineRunType.RELEASE:
+      case PipelineRunType.FINAL: {
+        return {
+          ...defaultEmptyAction,
+          disabledTooltip: `Cannot re-run pipeline run for the type ${runType}`,
+        };
+      }
+
+      default: {
+        return defaultEmptyAction;
+      }
+    }
+  }, [
+    canPatchComponent,
+    canPatchSnapshot,
+    runType,
+    isPushBuildType,
+    componentLoaded,
+    componentError,
+    component,
+    navigate,
+    namespace,
+    snapshot,
+    scenario,
+    snapshotError,
+    isIntegrationTestsPage,
+    isSnapshotsPage,
+  ]);
 };
 
 export const usePipelinerunActions = (pipelineRun: PipelineRunKind): Action[] => {

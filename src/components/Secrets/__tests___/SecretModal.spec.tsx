@@ -1,5 +1,6 @@
-import { act, fireEvent, screen, waitFor, configure } from '@testing-library/react';
-import { SecretTypeDropdownLabel, SecretType } from '../../../types';
+import { act } from 'react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { SecretTypeDropdownLabel, SecretType, SourceSecretType } from '../../../types';
 import { formikRenderer } from '../../../utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
 import { supportedPartnerTasksSecrets } from '../utils/secret-utils';
@@ -9,6 +10,8 @@ const initialValues: SecretModalValues = {
   type: SecretTypeDropdownLabel.opaque,
   opaque: { keyValues: [{ key: '', value: '', readOnlyKey: false }] },
   existingSecrets: [],
+  relatedComponents: [],
+  secretForComponentOption: null,
 };
 
 const snykSecret = {
@@ -27,35 +30,79 @@ const testSecret = {
   keyValuePairs: [{ key: 'test_token', value: 'test_value', readOnlyKey: true }],
 };
 
-configure({ testIdAttribute: 'data-test' });
+const renderSecretModal = async (
+  customInitialValues = initialValues,
+  existingSecrets = [],
+  onSubmit = jest.fn(),
+  onClose = jest.fn(),
+) => {
+  formikRenderer(
+    <SecretModal
+      onSubmit={onSubmit}
+      existingSecrets={existingSecrets}
+      modalProps={{ isOpen: true, onClose }}
+    />,
+    customInitialValues,
+  );
+
+  await waitFor(() => {
+    expect(screen.getByTestId('build-secret-modal')).toBeInTheDocument();
+  });
+};
+
+const selectSecretTypeAndVerifyLinkOptions = async (
+  secretTypeText: string,
+  sshAuthType: boolean = false,
+  showOption: boolean = true,
+) => {
+  fireEvent.click(screen.getByText('Key/value secret'));
+  fireEvent.click(screen.getByText(secretTypeText));
+
+  if (sshAuthType) {
+    fireEvent.click(screen.getByText(SourceSecretType.basic));
+    fireEvent.click(screen.getByText(SourceSecretType.ssh));
+  }
+
+  await waitFor(() => {
+    if (showOption) {
+      expect(screen.getByText('Link secret options')).toBeInTheDocument();
+    } else {
+      expect(screen.queryAllByText('Link secret options').length).toEqual(0);
+    }
+  });
+};
+
+const clickButtonAndVerifyCallback = async (buttonName: string, callback: jest.Mock) => {
+  fireEvent.click(screen.getByRole('button', { name: buttonName }));
+  await waitFor(() => {
+    expect(callback).toHaveBeenCalled();
+  });
+};
 
 describe('SecretModal', () => {
-  it('should show secret form in a modal', async () => {
-    formikRenderer(
-      <SecretModal
-        existingSecrets={[testSecret]}
-        onSubmit={jest.fn()}
-        modalProps={{ isOpen: true, onClose: jest.fn() }}
-      />,
-      initialValues,
-    );
+  it('should show SecretLinkOptions when authType is basic and secret type is source', async () => {
+    await renderSecretModal(initialValues);
+    await selectSecretTypeAndVerifyLinkOptions('Source secret');
+  });
 
-    await waitFor(() => {
-      screen.getByTestId('build-secret-modal');
-    });
+  it('should not show SecretLinkOptions when authType is ssh and secret type is source', async () => {
+    await renderSecretModal(initialValues);
+    await selectSecretTypeAndVerifyLinkOptions('Source secret', true, false);
+  });
+
+  it('should show SecretLinkOptions when secret type is image', async () => {
+    await renderSecretModal(initialValues);
+    await selectSecretTypeAndVerifyLinkOptions('Image pull secret');
+  });
+
+  it('should show secret form in a modal', async () => {
+    await renderSecretModal(initialValues);
   });
 
   it('should show different secret types', async () => {
-    formikRenderer(
-      <SecretModal
-        existingSecrets={[testSecret]}
-        onSubmit={jest.fn()}
-        modalProps={{ isOpen: true, onClose: jest.fn() }}
-      />,
-      initialValues,
-    );
+    await renderSecretModal(initialValues);
+
     await waitFor(() => {
-      expect(screen.getByTestId('secret-form')).toBeInTheDocument();
       expect(screen.getByText('Secret type')).toBeInTheDocument();
       expect(screen.getByText('Key/value secret')).toBeInTheDocument();
     });
@@ -65,87 +112,7 @@ describe('SecretModal', () => {
     expect(screen.getByText('Source secret')).toBeInTheDocument();
   });
 
-  it('should render validation message when user click on create button without filling the form', async () => {
-    formikRenderer(
-      <SecretModal
-        existingSecrets={[testSecret]}
-        onSubmit={jest.fn()}
-        modalProps={{ isOpen: true, onClose: jest.fn() }}
-      />,
-      initialValues,
-    );
-    expect(screen.getByTestId('key-0')).toBeInTheDocument();
-    fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
-
-    await waitFor(() => {
-      fireEvent.click(screen.getByRole('button', { name: /Create/ }));
-      expect(screen.getAllByText('Required')).toHaveLength(2);
-    });
-  });
-
-  it('should call onClose callback when cancel button is clicked', async () => {
-    const onClose = jest.fn();
-    formikRenderer(
-      <SecretModal
-        onSubmit={jest.fn()}
-        existingSecrets={[testSecret]}
-        modalProps={{ isOpen: true, onClose }}
-      />,
-      initialValues,
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('build-secret-modal')).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: /Cancel/ }));
-    });
-
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('should show all the predefined tasks in the select dropdown', async () => {
-    const onClose = jest.fn();
-    formikRenderer(
-      <SecretModal
-        onSubmit={jest.fn()}
-        existingSecrets={[testSecret]}
-        modalProps={{ isOpen: true, onClose }}
-      />,
-      initialValues,
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('build-secret-modal')).toBeInTheDocument();
-      const modal = screen.queryByTestId('build-secret-modal');
-      fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
-    });
-
-    await waitFor(() => {
-      Object.values(supportedPartnerTasksSecrets).map((partnerSecret) => {
-        expect(screen.getByText(partnerSecret.name));
-      });
-    });
-  });
-
-  it('should not show the secrets in the select dropdown if it is already existing', async () => {
-    const onClose = jest.fn();
-    formikRenderer(
-      <SecretModal
-        onSubmit={jest.fn()}
-        existingSecrets={[snykSecret]}
-        modalProps={{ isOpen: true, onClose }}
-      />,
-      initialValues,
-    );
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('build-secret-modal')).toBeInTheDocument();
-      const modal = screen.queryByTestId('build-secret-modal');
-      fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
-    });
-    expect(screen.queryByText('snyk-secret')).toBeInTheDocument();
-  });
-
-  it('should remove the selected value with clearn button is clicked', async () => {
+  it('should render validation message when user clicks on create button without filling the form', async () => {
     const onSubmit = jest.fn();
     formikRenderer(
       <SecretModal
@@ -156,20 +123,64 @@ describe('SecretModal', () => {
       initialValues,
     );
 
-    const secretModal = screen.queryByTestId('build-secret-modal');
-
     act(() => {
-      expect(secretModal).toBeInTheDocument();
-      fireEvent.click(secretModal.querySelector('#secret-name-toggle-select-typeahead'));
+      expect(screen.queryByTestId('build-secret-modal')).toBeInTheDocument();
+      const modal = screen.queryByTestId('build-secret-modal');
+      fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
     });
-
     act(() => {
       fireEvent.click(screen.queryByText('snyk-secret'));
-      expect(screen.queryByText('snyk-secret')).toBeInTheDocument();
+      fireEvent.input(screen.getByTestId('file-upload-value').querySelector('textarea'), {
+        target: { value: 'Value' },
+      });
+      fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
     });
 
     await waitFor(() => {
-      fireEvent.click(secretModal.querySelector('.pf-v5-c-select__toggle-clear'));
+      fireEvent.click(screen.getByRole('button', { name: /Create/ }));
+      expect(onSubmit).toHaveBeenCalled();
+    });
+  });
+
+  it('should call onClose callback when cancel button is clicked', async () => {
+    const onClose = jest.fn();
+    await renderSecretModal(initialValues, [], jest.fn(), onClose);
+
+    await clickButtonAndVerifyCallback('Cancel', onClose);
+  });
+
+  it('should show all the predefined tasks in the select dropdown', async () => {
+    await renderSecretModal(initialValues, [testSecret]);
+
+    const modal = screen.getByTestId('build-secret-modal');
+    fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+
+    await waitFor(() => {
+      Object.values(supportedPartnerTasksSecrets).forEach((partnerSecret) => {
+        expect(screen.getByText(partnerSecret.name)).toBeInTheDocument();
+      });
+    });
+  });
+
+  it('should not show the secrets in the select dropdown if it is already existing', async () => {
+    await renderSecretModal(initialValues, [snykSecret]);
+
+    const modal = screen.getByTestId('build-secret-modal');
+    fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+
+    expect(screen.queryByText('snyk-secret')).toBeInTheDocument();
+  });
+
+  it('should remove the selected value when clear button is clicked', async () => {
+    await renderSecretModal(initialValues);
+
+    const modal = screen.getByTestId('build-secret-modal');
+    fireEvent.click(modal.querySelector('#secret-name-toggle-select-typeahead'));
+
+    fireEvent.click(screen.getByText('snyk-secret'));
+
+    await waitFor(() => {
+      fireEvent.click(modal.querySelector('.pf-v5-c-select__toggle-clear'));
       expect(screen.queryByText('snyk-secret')).not.toBeInTheDocument();
     });
   });

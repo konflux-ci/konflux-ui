@@ -8,7 +8,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import FormFooter from '../../../shared/components/form-components/FormFooter';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../../types';
-import { addSecret } from '../../../utils/create-utils';
+import { addSecretWithLinkingComponents } from '../../../utils/create-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import { getAddSecretBreadcrumbs } from '../utils/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
@@ -48,7 +48,7 @@ const AddSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        addSecret(values, namespace)
+        addSecretWithLinkingComponents(values, namespace)
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })

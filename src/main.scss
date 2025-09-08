@@ -1,28 +1,40 @@
+:root {
+  --konflux-primary-color: #fc783d;
+  --konflux-primary-hover-color: #d36634;
+  --konflux-icon-color: var(--pf-v5-global--icon--Color--dark);
+}
+
+html.pf-v5-theme-dark {
+  --konflux-primary-color: #e05c3b;
+  --konflux-primary-hover-color: #b94c2a;
+}
+
 #root {
   height: 100%;
 
-  //Konflux theme
   .pf-v5-c-button.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
-    background-color: #fc783d;
+    background-color: var(--konflux-primary-color);
 
     &:hover {
-      background-color: #d36634;
+      background-color: var(--konflux-primary-hover-color);
     }
   }
 
   .pf-v5-c-dropdown__toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
-    background-color: #fc783d;
+    background-color: var(--konflux-primary-color);
 
     &:hover {
-      background-color: #d36634;
+      background-color: var(--konflux-primary-hover-color);
     }
   }
 
   .pf-v5-c-menu-toggle.pf-m-primary:not(.pf-m-disabled):not(.pf-m-aria-disabled) {
-    background-color: #fc783d;
+    background-color: var(--konflux-primary-color);
 
     &:hover {
-      background-color: #d36634;
+      background-color: var(--konflux-primary-hover-color);
     }
   }
 }
+
+

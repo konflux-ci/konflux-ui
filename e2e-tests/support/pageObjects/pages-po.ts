@@ -38,7 +38,7 @@ export const pipelinerunsTabPO = {
   relatedPipelineCloseBtn: 'button[aria-label="Close"]',
 
   node: (nodeId) => `g[data-id="${nodeId}"]`,
-  logText: '[class="logs__content"]',
+  logText: '.pf-v5-c-log-viewer__text',
   drawerPanel: 'div[class*="drawer__panel-main"]',
   drawerClose: 'div[class="pf-v5-c-drawer__close"]',
   listGroup: 'div[class$="list__group"]',

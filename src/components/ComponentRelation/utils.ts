@@ -11,6 +11,15 @@ import {
 
 export const DUPLICATE_RELATONSHIP = 'duplicate-component-relationship';
 
+export const toCustomBoolean = (value: unknown) => {
+  // Treat empty array as false
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+
+  return !!value;
+};
+
 export const componentRelationValidationSchema = yup.mixed().test(
   (values: ComponentRelationFormikValue) =>
     yup
@@ -22,16 +31,19 @@ export const componentRelationValidationSchema = yup.mixed().test(
             yup
               .object()
               .shape({
-                source: yup.string().required(),
+                source: yup.string(),
 
                 nudgeType: yup.string().required(),
-                target: yup.array().of(yup.string()).required().min(0),
+                target: yup.array().of(yup.string()),
               })
               .test('duplicate-relation-test', DUPLICATE_RELATONSHIP, (value) => {
                 const filteredValue = values.relations.filter(
                   (val) => val.source === value.source && val.nudgeType === value.nudgeType,
                 );
                 return filteredValue.length < 2;
+              })
+              .test('incomplete-relation-test', (value) => {
+                return toCustomBoolean(value.source) === toCustomBoolean(value.target);
               }),
           )
           .required()

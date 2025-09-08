@@ -22,6 +22,7 @@ type Props = {
   showLogsLink?: boolean;
   hideIfNotFound?: boolean;
   popoverAppendTo?: boolean;
+  errorState?: React.ReactNode | null;
 };
 
 const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
@@ -29,9 +30,10 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
   hideIfNotFound,
   showLogsLink,
   popoverAppendTo = true,
+  errorState,
 }) => {
   const namespace = useNamespace();
-  const [scanResults, scanTaskRuns] = getScanResults(taskRuns);
+  const [scanResults, scanTaskRuns] = taskRuns ? getScanResults(taskRuns) : [null, []];
 
   if (!scanTaskRuns?.length && hideIfNotFound) {
     return null;
@@ -112,8 +114,14 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
     <DescriptionListGroup>
       <DescriptionListTerm>Fixable vulnerabilities scan</DescriptionListTerm>
       <DescriptionListDescription>
-        {scanResults?.vulnerabilities ? <ScanDetailStatus scanResults={scanResults} /> : '-'}
-        {scanResults?.vulnerabilities ? renderLogsLink() : null}
+        {errorState ? (
+          errorState
+        ) : (
+          <>
+            {scanResults?.vulnerabilities ? <ScanDetailStatus scanResults={scanResults} /> : '-'}
+            {scanResults?.vulnerabilities ? renderLogsLink() : null}
+          </>
+        )}
       </DescriptionListDescription>
     </DescriptionListGroup>
   );

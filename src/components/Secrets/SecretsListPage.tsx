@@ -3,6 +3,7 @@ import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-cor
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import ExternalLink from '../../shared/components/links/ExternalLink';
+import { FilterContextProvider } from '../Filter/generic/FilterContext';
 import PageLayout from '../PageLayout/PageLayout';
 import SecretsListView from './SecretsListView/SecretsListView';
 
@@ -22,10 +23,12 @@ const SecretsListPage: React.FC = () => {
         </>
       }
     >
-      <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
+      <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
 
       <PageSection variant={PageSectionVariants.light} isFilled>
-        <SecretsListView />
+        <FilterContextProvider filterParams={['name']}>
+          <SecretsListView />
+        </FilterContextProvider>
       </PageSection>
     </PageLayout>
   );

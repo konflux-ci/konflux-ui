@@ -12,7 +12,7 @@ export const AuthContext = React.createContext<AuthContextType>({
   isAuthenticated: false,
 });
 
-export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ children }) => {
   const [user, setUser] = React.useState<AuthContextType['user']>({
     email: null,
     preferredUsername: null,
@@ -64,4 +64,4 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       )}
     </AuthContext.Provider>
   );
-};
+});

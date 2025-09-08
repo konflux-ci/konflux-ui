@@ -1,0 +1,70 @@
+name: CodeRabbit check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created, edited]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+
+jobs:
+  check-coderabbit-resolved:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check for unresolved CodeRabbit comments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          EVENT_JSON: ${{ toJSON(github.event) }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+
+          # Determine PR number safely
+          if [[ "$GITHUB_EVENT_NAME" == "issue_comment" ]]; then
+            IS_PR=$(echo "$EVENT_JSON" | jq -r '.issue.pull_request // empty')
+            if [[ -z "$IS_PR" ]]; then
+              echo "ℹ️ Comment is on an issue, not a PR. Skipping check."
+              exit 0
+            fi
+            PR_NUMBER=$(echo "$EVENT_JSON" | jq -r '.issue.number')
+          else
+            PR_NUMBER=$(echo "$EVENT_JSON" | jq -r '.pull_request.number')
+          fi
+
+          echo "🔍 Checking unresolved CodeRabbit comments for PR #$PR_NUMBER in $OWNER/$REPO"
+
+          # Run the GraphQL query and jq filter in one line to avoid syntax issues
+          UNRESOLVED=$(gh api graphql -F owner=$OWNER -F repo=$REPO -F pr=$PR_NUMBER -f query='
+          query($owner:String!, $repo:String!, $pr:Int!) {
+            repository(owner:$owner, name:$repo) {
+              pullRequest(number:$pr) {
+                reviewThreads(first:100) {
+                  nodes {
+                    isResolved
+                    comments(first:50) {
+                      nodes {
+                        url
+                        author { login }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }' | jq '[.data.repository.pullRequest.reviewThreads.nodes[]
+            | select((.isResolved == false) and any(.comments.nodes[]; .author.login == "coderabbitai"))] // []')
+
+
+          if [[ "$UNRESOLVED" != "[]" ]]; then
+            echo "❌ There are unresolved CodeRabbit comments:"
+            echo "$UNRESOLVED" | jq '.'
+            exit 1
+          fi
+
+          echo "✅ All CodeRabbit comments resolved."

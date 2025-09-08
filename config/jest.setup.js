@@ -13,6 +13,10 @@ if (typeof Request !== 'function') {
 }
 
 jest.mock('../src/k8s', () => ({ __esModule: true, ...jest.requireActual('../src/k8s') }));
+jest.mock('../src/kubearchive/fetch-utils', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/kubearchive/fetch-utils'),
+}));
 
 jest.mock('react-router-dom', () => ({
   __esModule: true,
@@ -32,6 +36,17 @@ jest.mock('../src/utils/rbac', () => ({
 jest.mock('../src/hooks/useApplications', () => ({
   __esModule: true,
   ...jest.requireActual('../src/hooks/useApplications'),
+}));
+
+jest.mock('../src/hooks/useKonfluxPublicInfo', () => ({
+  __esModule: true,
+  ...jest.requireActual('../src/hooks/useKonfluxPublicInfo'),
+}));
+
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
 }));
 
 afterAll(() => {

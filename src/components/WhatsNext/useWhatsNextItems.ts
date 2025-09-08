@@ -1,18 +1,18 @@
-import {
-  APPLICATION_ACTIVITY_PATH,
-  IMPORT_PATH,
-  INTEGRATION_TEST_ADD_PATH,
-  RELEASEPLAN_CREATE_PATH,
-} from '@routes/paths';
-import { useNamespace } from '~/shared/providers/Namespace';
 import componentsIcon from '../../assets/Components.svg';
 import editCodeIcon from '../../assets/Edit code.svg';
 import gitAppIcon from '../../assets/git-app.svg';
 import integrationTestIcon from '../../assets/Integration-test.svg';
 import pipelineIcon from '../../assets/Pipeline.svg';
 import releaseIcon from '../../assets/Release.svg';
-import { useApplicationPipelineGitHubApp } from '../../hooks/useApplicationPipelineGitHubApp';
+import { useApplicationUrl } from '../../hooks/useUIInstance';
 import { ComponentModel, IntegrationTestScenarioModel, ReleasePlanModel } from '../../models';
+import {
+  APPLICATION_ACTIVITY_PATH,
+  IMPORT_PATH,
+  INTEGRATION_TEST_ADD_PATH,
+  RELEASEPLAN_CREATE_PATH,
+} from '../../routes/paths';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import { useModalLauncher } from '../modal/ModalProvider';
@@ -21,7 +21,7 @@ import { WhatsNextItem } from '../WhatsNext/WhatsNextSection';
 export const useWhatsNextItems = (applicationName: string) => {
   const showModal = useModalLauncher();
   const namespace = useNamespace();
-  const { url: githubAppURL } = useApplicationPipelineGitHubApp();
+  const githubAppURL = useApplicationUrl();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canCreateIntegrationTest] = useAccessReviewForModel(
@@ -113,6 +113,15 @@ export const useWhatsNextItems = (applicationName: string) => {
     },
     {
       id: 4,
+      title: 'Install our GitLab app',
+      description: 'Install the GitLab app to monitor your work from a commit to deployment.',
+      icon: gitAppIcon,
+      noAction: true,
+      helpText: 'Learn more about installing GitLab app',
+      helpLink: 'https://konflux-ci.dev/docs/building/creating/',
+    },
+    {
+      id: 5,
       title: 'Make a code change',
       description: 'Make a change to your source code to automatically trigger a new build.',
       icon: editCodeIcon,
@@ -129,7 +138,7 @@ export const useWhatsNextItems = (applicationName: string) => {
       helpLink: 'https://konflux-ci.dev/docs/building/creating/',
     },
     {
-      id: 5,
+      id: 6,
       title: 'Manage build pipelines',
       description:
         'Add some automation by upgrading your default build pipelines to custom build pipelines.',

@@ -1,0 +1,95 @@
+---
+description: AI assistant workflow patterns and best practices for Konflux UI development
+alwaysApply: true
+---
+
+# AI Assistant Development Workflow
+
+> 📖 **Project Context**: This is Konflux UI, a React TypeScript application for Kubernetes CI/CD management.
+> 📖 **See Also**: [project-structure.mdc](mdc:.cursor/rules/project-structure.mdc) for architecture details.
+
+Guidelines for effective collaboration between developers and AI assistants on Konflux UI.
+
+## Task Planning & Management
+
+### Always Use Todo Lists
+For any non-trivial task (3+ steps), AI assistants should create and maintain a todo list:
+
+```markdown
+✅ Research existing component patterns
+🔄 Implement new feature component
+⏳ Add unit tests
+⏳ Update integration tests
+⏳ Run lint and typecheck
+```
+
+### Task Breakdown Patterns
+- **Feature Addition**: Research → Design → Implement → Test → Lint/Typecheck
+- **Bug Fix**: Reproduce → Identify → Fix → Test → Verify
+- **Refactoring**: Analyze → Plan → Execute → Test → Validate
+
+## Code Understanding Workflow
+
+### Before Making Changes
+1. **Search and understand** - Use search tools to understand existing patterns
+2. **Read related files** - Check imports, types, and similar components
+3. **Follow project conventions** - Match existing code style and architecture
+
+### Research Commands
+```bash
+# Find component patterns
+find src/components -name "*.tsx" | head -10
+
+# Search for similar functionality
+grep -r "useK8sWatchResource" src/components/
+
+# Check test patterns
+find . -name "*.spec.tsx" -path "*/components/*"
+```
+
+## Development Best Practices
+
+### Component Development
+- **Check existing patterns** first (see `project-structure.mdc` for directory organization)
+- **Follow project conventions** and existing code style
+
+### Testing Requirements
+- **Create unit tests** using patterns from `testing.mdc`
+- **Test both success and error scenarios**
+
+### Code Quality Checks
+Always run lint and typecheck commands after code changes (see `package-management.mdc` for yarn commands).
+
+## File Navigation & References
+
+### Provide Line References
+When discussing code, always include file paths with line numbers:
+```
+The error handling is in src/hooks/useApplications.ts:45
+```
+
+## Communication Patterns
+
+### Progress Updates
+- Mark todos as `in_progress` when starting work
+- Mark todos as `completed` immediately after finishing
+- Update user on significant discoveries or blockers
+
+### Code Explanations
+- Focus on **why** rather than **what**
+- Explain architectural decisions and trade-offs
+- Reference existing patterns and conventions
+
+### Error Handling
+- Reproduce errors when possible
+- Check common issues: imports, types, missing dependencies
+- Provide specific file paths and line numbers for fixes
+
+## Pull Request Checklist
+See [CONTRIBUTING.md#pull-request-checklist](../../CONTRIBUTING.md) for the full, up-to-date list.
+
+## Common Commands
+
+Refer to `package-management.mdc` for yarn commands and development workflow.
+
+This workflow ensures efficient collaboration and maintains code quality standards specific to Konflux UI's development practices.

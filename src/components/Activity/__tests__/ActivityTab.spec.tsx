@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
-import { ACTIVITY_SECONDARY_TAB_KEY, ActivityTab } from '../ActivityTab';
+import { ActivityTab } from '../ActivityTab';
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -44,7 +44,7 @@ describe('Activity Tab', () => {
 
   it('should render Activity Tab', () => {
     routerRenderer(<ActivityTab />);
-    screen.getByText('Activity By');
+    screen.getByText('Activity by');
   });
 
   it('should render two tabs under activity', () => {
@@ -85,29 +85,20 @@ describe('Activity Tab', () => {
     activitiesPage.unmount();
   });
 
-  it('should read from localstorage and display the last used tab', () => {
-    localStorage.setItem(ACTIVITY_SECONDARY_TAB_KEY, 'pipelineruns');
-
-    useParamsMock.mockReturnValue({
-      applicationName: 'test-app',
-      workspaceName: 'test-ws',
-      activityTab: null,
-    });
-    const activitiesPage = routerRenderer(<ActivityTab />);
-    const tabs = activitiesPage.getByTestId('activities-tabs-id');
-    const activeTab = tabs.querySelector(
-      '.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text',
-    );
-    expect(activeTab).toHaveTextContent('Pipeline runs');
-    activitiesPage.unmount();
-  });
-
-  it('should replace url if full path was not used', () => {
-    localStorage.setItem(ACTIVITY_SECONDARY_TAB_KEY, 'pipelineruns');
+  it('should navigate to the correct tab when clicked', () => {
     routerRenderer(<ActivityTab />);
+    const latestCommitsTab = screen.getByTestId('activity__tabItem latest-commits');
+    const pipelineRunsTab = screen.getByTestId('activity__tabItem pipelineruns');
+
+    act(() => {
+      fireEvent.click(latestCommitsTab);
+    });
+
+    act(() => {
+      fireEvent.click(pipelineRunsTab);
+    });
     expect(navigateMock).toHaveBeenCalledWith(
       '/ns/test-ws/applications/test-app/activity/pipelineruns',
-      { replace: true },
     );
   });
 });

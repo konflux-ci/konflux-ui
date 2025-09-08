@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
@@ -46,6 +46,7 @@ jest.mock('react-router-dom', () => {
     ...actual,
     Link: (props) => <a href={props.to}>{props.children}</a>,
     useNavigate: jest.fn(),
+    useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
   };
 });
 
@@ -108,7 +109,11 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658df1',
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
+        'pipelinesascode.tekton.dev/event-type': 'pull_request',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST as string,
+      },
+      annotations: {
+        [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
       },
     },
     spec: {
@@ -143,7 +148,11 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658dfb',
       labels: {
         'appstudio.openshift.io/component': 'test-component',
+        'pipelinesascode.tekton.dev/event-type': 'pull_request',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
+      },
+      annotations: {
+        [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
       },
     },
     spec: {
@@ -170,7 +179,11 @@ const pipelineRuns: PipelineRunKind[] = [
       uid: '9c1f121c-1eb6-490f-b2d9-befbfc658dfc',
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
+        'pipelinesascode.tekton.dev/event-type': 'push',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
+      },
+      annotations: {
+        [PipelineRunLabel.COMMIT_PROVIDER_LABEL]: 'github',
       },
     },
     spec: {
@@ -182,9 +195,9 @@ const pipelineRuns: PipelineRunKind[] = [
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 
 const TestedComponent = ({ name }) => (
-  <PipelineRunsFilterContextProvider>
+  <FilterContextProvider filterParams={['name', 'status', 'type']}>
     <PipelineRunsListView applicationName={name} />
-  </PipelineRunsFilterContextProvider>
+  </FilterContextProvider>
 );
 
 describe('Pipeline run List', () => {
@@ -253,6 +266,7 @@ describe('Pipeline run List', () => {
     screen.queryAllByText('Status');
     screen.queryAllByText('Type');
     screen.queryByText('Component');
+    screen.queryByText('Triggered By');
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {

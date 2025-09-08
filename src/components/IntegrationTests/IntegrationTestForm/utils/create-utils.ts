@@ -58,8 +58,17 @@ export const editIntegrationTest = (
   integrationTestValues: IntegrationTestFormValues,
   dryRun?: boolean,
 ): Promise<IntegrationTestScenarioKind> => {
-  const { url, revision, path, optional, environmentName, environmentType, params, contexts } =
-    integrationTestValues;
+  const {
+    url,
+    revision,
+    path,
+    optional,
+    environmentName,
+    environmentType,
+    params,
+    contexts,
+    resourceKind,
+  } = integrationTestValues;
   const integrationTestResource: IntegrationTestScenarioKind = {
     ...integrationTest,
     metadata: {
@@ -79,6 +88,8 @@ export const editIntegrationTest = (
             }
           : null,
       resolverRef: {
+        ...integrationTest.spec.resolverRef,
+        resourceKind,
         resolver: ResolverType.GIT,
         params: [
           { name: ResolverRefParams.URL, value: url },
@@ -118,7 +129,8 @@ export const createIntegrationTest = (
   namespace: string,
   dryRun?: boolean,
 ): Promise<IntegrationTestScenarioKind> => {
-  const { name, url, revision, path, optional, params, contexts } = integrationTestValues;
+  const { name, url, revision, path, optional, params, contexts, resourceKind } =
+    integrationTestValues;
   const isEC =
     url === EC_INTEGRATION_TEST_URL &&
     revision === EC_INTEGRATION_TEST_REVISION &&
@@ -135,6 +147,7 @@ export const createIntegrationTest = (
     spec: {
       application,
       resolverRef: {
+        resourceKind,
         resolver: ResolverType.GIT,
         params: [
           { name: ResolverRefParams.URL, value: url },
@@ -202,10 +215,10 @@ export const getURLForParam = (params: ResolverParam[], paramName: string): stri
 
 export const getLabelForParam = (paramName: string): string => {
   if (paramName === ResolverRefParams.URL) {
-    return 'Git URL';
+    return 'Git Repository URL';
   }
   if (paramName === ResolverRefParams.PATH) {
-    return 'Path in repository';
+    return 'Path in the repository';
   }
   return `${paramName.charAt(0).toUpperCase()}${paramName.slice(1)}`;
 };

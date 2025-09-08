@@ -25,13 +25,16 @@ export type InfiniteLoaderProps = {
   isRowLoaded: (params: { index: number }) => boolean;
 };
 
-export type HeaderFunc = (componentProps: ComponentProps) => { title: string; props: ThProps }[];
+export type HeaderFunc = (
+  componentProps: ComponentProps,
+) => { title: string | React.ReactNode; props: ThProps }[];
 
 export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & {
   customData?: C;
   Header: HeaderFunc;
   loadError?: string | object;
   Row?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
+  ExpandedContent?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   'aria-label': string;
   onSelect?: OnSelect;
   NoDataEmptyMsg?: React.ComponentType<React.PropsWithChildren<object>>;

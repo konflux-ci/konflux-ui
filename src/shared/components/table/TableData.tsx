@@ -5,6 +5,7 @@ export type TableDataProps = {
   columnID?: string;
   columns?: Set<string>;
   id?: string;
+  style?: React.CSSProperties;
 };
 
 export const TableData: React.FC<React.PropsWithChildren<TableDataProps>> = ({

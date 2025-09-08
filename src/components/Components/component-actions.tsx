@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { ComponentModel } from '../../models';
+import { ComponentModel, ServiceAccountModel } from '../../models';
+import { COMPONENT_LINKED_SECRETS_PATH } from '../../routes/paths';
 import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../types';
@@ -15,6 +16,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   const applicationName = component?.spec.application;
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canDeleteComponent] = useAccessReviewForModel(ComponentModel, 'delete');
+  const [canManageLinkedSecrets] = useAccessReviewForModel(ServiceAccountModel, 'patch');
 
   const actions: Action[] = React.useMemo(() => {
     if (!component) {
@@ -55,6 +57,19 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
           namespace,
         },
       },
+      {
+        cta: {
+          href: COMPONENT_LINKED_SECRETS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            componentName: component.metadata.name,
+          }),
+        },
+        id: `linked-secrets-${name.toLowerCase()}`,
+        label: 'Manage linked secrets',
+        disabled: !canManageLinkedSecrets,
+        disabledTooltip: "You don't have access to manage linked secrets",
+      },
     ];
 
     updatedActions.push({
@@ -66,13 +81,14 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
     });
     return updatedActions;
   }, [
-    applicationName,
-    canDeleteComponent,
-    canPatchComponent,
     component,
+    canPatchComponent,
     name,
-    showModal,
+    applicationName,
     namespace,
+    canManageLinkedSecrets,
+    canDeleteComponent,
+    showModal,
   ]);
 
   return actions;

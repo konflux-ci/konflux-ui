@@ -1,7 +1,7 @@
 import React from 'react';
 import { defer, LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
-import { getUserDataFromLocalStorage } from '~/auth/utils';
+import { getUserDataWithFallback } from '~/auth/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
 import { SelfSubjectAccessReviewModel } from '../models/rbac';
 import { useNamespace } from '../shared/providers/Namespace';
@@ -16,7 +16,8 @@ import {
 
 export const checkAccess = memoize(
   async (group, resource, subresource, namespace, verb) => {
-    const user = getUserDataFromLocalStorage();
+    const user = await getUserDataWithFallback();
+
     return k8sCreateResource<SelfSubjectAccessReviewKind>({
       model: SelfSubjectAccessReviewModel,
       resource: {
@@ -75,7 +76,7 @@ export function checkReviewAccesses(
     .catch((e) => {
       // eslint-disable-next-line no-console
       console.warn(`SelfSubjectAccessReview failed: ${e}`);
-      return true;
+      return false; // secure default deny
     });
 }
 
@@ -102,7 +103,7 @@ export const useAccessReview = (
         .catch((e) => {
           // eslint-disable-next-line no-console
           console.warn(`SelfSubjectAccessReview failed: ${e}`);
-          setIsAllowed(true);
+          setIsAllowed(false); // secure default deny
           setLoaded(true);
         });
     }
@@ -150,15 +151,13 @@ export const useAccessReviews = (
               allowed: result.status.allowed,
             });
           });
-          if (resourceAccess.every((access) => access.allowed)) {
-            setIsAllowed(true);
-          }
+          setIsAllowed(resourceAccess.every((access) => access.allowed));
           setLoaded(true);
         })
         .catch((e) => {
           // eslint-disable-next-line no-console
           console.warn(`SelfSubjectAccessReview failed: ${e}`);
-          setIsAllowed(true);
+          setIsAllowed(false); // secure default deny
           setLoaded(true);
         });
     }

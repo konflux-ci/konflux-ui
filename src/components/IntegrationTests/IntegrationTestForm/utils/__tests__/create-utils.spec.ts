@@ -1,4 +1,5 @@
 import { IntegrationTestScenarioModel } from '../../../../../models';
+import { ResolverType } from '../../../../../types/coreBuildService';
 import { createK8sUtilMock } from '../../../../../utils/test-utils';
 import { MockIntegrationTestsWithGit } from '../../../IntegrationTestsListView/__data__/mock-integration-tests';
 import {
@@ -11,6 +12,7 @@ import { IntegrationTestAnnotations, IntegrationTestLabels } from '../../types';
 import {
   ResolverRefParams,
   createIntegrationTest,
+  editIntegrationTest,
   getLabelForParam,
   getURLForParam,
   formatParams,
@@ -18,6 +20,7 @@ import {
 } from '../create-utils';
 
 const createResourceMock = createK8sUtilMock('K8sQueryCreateResource');
+const updateResourceMock = createK8sUtilMock('K8sQueryUpdateResource');
 
 const integrationTestData = {
   apiVersion: `${IntegrationTestScenarioModel.apiGroup}/${IntegrationTestScenarioModel.apiVersion}`,
@@ -30,6 +33,7 @@ const integrationTestData = {
     application: 'Test Application',
     params: null,
     resolverRef: {
+      resourceKind: 'pipeline',
       resolver: 'git',
       params: [
         { name: 'url', value: 'test-url' },
@@ -56,6 +60,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipeline',
         contexts: [
           {
             name: 'application',
@@ -87,6 +92,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: true,
+        resourceKind: 'pipeline',
       },
       'Test Application',
       'test-ns',
@@ -104,6 +110,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipelinerun',
       },
       'Test Application',
       'test-ns',
@@ -120,6 +127,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipelinerun',
         params: [{ name: 'param1', values: ['value'] }],
       },
       'Test Application',
@@ -139,6 +147,7 @@ describe('Create Utils', () => {
         url: 'test-url',
         path: 'test-path',
         optional: false,
+        resourceKind: 'pipeline',
         params: [{ name: 'param1', values: ['value1', 'value2', 'value3'] }],
       },
       'Test Application',
@@ -154,9 +163,11 @@ describe('Create Utils', () => {
 
   it('Should return correct labels for params', () => {
     const resource = MockIntegrationTestsWithGit[0];
-    expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('Git URL');
+    expect(getLabelForParam(resource.spec.resolverRef.params[0].name)).toBe('Git Repository URL');
     expect(getLabelForParam(resource.spec.resolverRef.params[1].name)).toBe('Revision');
-    expect(getLabelForParam(resource.spec.resolverRef.params[2].name)).toBe('Path in repository');
+    expect(getLabelForParam(resource.spec.resolverRef.params[2].name)).toBe(
+      'Path in the repository',
+    );
     expect(getLabelForParam('test-param' as ResolverRefParams)).toBe('Test-param');
   });
 
@@ -198,6 +209,7 @@ describe('Create Utils', () => {
         url: EC_INTEGRATION_TEST_URL,
         path: EC_INTEGRATION_TEST_PATH,
         optional: false,
+        resourceKind: 'pipelinerun',
       },
       'Test Application',
       'test-ns',
@@ -263,5 +275,76 @@ describe('Create Utils formatContexts', () => {
       { name: 'orange', description: 'an orange' },
     ]);
     expect(formattedContexts.length).toBe(3);
+  });
+});
+
+describe('Edit Integration Test Utils', () => {
+  const mockIntegrationTest = {
+    apiVersion: 'appstudio.redhat.com/v1beta1',
+    kind: 'IntegrationTestScenario',
+    metadata: {
+      name: 'existing-test',
+      namespace: 'test-ns',
+      resourceVersion: '12345',
+      uid: 'abc-123',
+    },
+    spec: {
+      application: 'Test Application',
+      resolverRef: {
+        resolver: ResolverType.GIT,
+        params: [
+          { name: 'url', value: 'old-url' },
+          { name: 'revision', value: 'old-revision' },
+          { name: 'pathInRepo', value: 'old-path' },
+        ],
+        resourceKind: 'pipelinerun',
+      },
+      params: null,
+      contexts: null,
+    },
+  };
+
+  it('Should preserve existing resolverRef properties when editing', async () => {
+    updateResourceMock.mockImplementation(({ resource }) => resource);
+    const resource = await editIntegrationTest(mockIntegrationTest, {
+      name: 'existing-test',
+      revision: 'new-revision',
+      url: 'new-url',
+      path: 'new-path',
+      optional: true,
+      environmentName: 'development',
+      environmentType: 'POC',
+      resourceKind: 'pipelinerun',
+    });
+
+    expect(resource.spec.resolverRef.resolver).toBe('git');
+    expect(resource.spec.resolverRef.params).toEqual([
+      { name: 'url', value: 'new-url' },
+      { name: 'revision', value: 'new-revision' },
+      { name: 'pathInRepo', value: 'new-path' },
+    ]);
+    expect(resource.spec.resolverRef.resourceKind).toEqual('pipelinerun');
+  });
+
+  it('Should update integration test with new values while preserving metadata', async () => {
+    updateResourceMock.mockImplementation(({ resource }) => resource);
+    const resource = await editIntegrationTest(mockIntegrationTest, {
+      name: 'existing-test',
+      revision: 'updated-revision',
+      url: 'updated-url',
+      path: 'updated-path',
+      optional: false,
+      resourceKind: 'pipeline',
+    });
+
+    expect(resource.metadata.name).toBe('existing-test');
+    expect(resource.metadata.namespace).toBe('test-ns');
+    expect(resource.metadata.resourceVersion).toBe('12345');
+    expect(resource.metadata.uid).toBe('abc-123');
+    expect(resource.spec.resolverRef.params).toEqual([
+      { name: 'url', value: 'updated-url' },
+      { name: 'revision', value: 'updated-revision' },
+      { name: 'pathInRepo', value: 'updated-path' },
+    ]);
   });
 });

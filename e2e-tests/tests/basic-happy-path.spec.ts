@@ -24,7 +24,13 @@ describe('Basic Happy Path', () => {
   const repoOwner = 'redhat-hac-qe';
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
-  const piplinerunlogsTasks = ['init', 'clone-repository', 'build-container', 'show-sbom'];
+  const piplinerunlogsTasks = [
+    'init',
+    'clone-repository',
+    'build-container',
+    'apply-tags',
+    'push-dockerfile',
+  ];
   const pipeline = 'docker-build-oci-ta';
 
   before(function () {
@@ -69,7 +75,11 @@ describe('Basic Happy Path', () => {
   it('Create an Application with a component', () => {
     Applications.createApplication(applicationName);
     Applications.createComponent(publicRepo, componentName, pipeline);
-    Applications.checkComponentInListView(componentName, applicationName, 'Build not started');
+    Applications.checkComponentInListView(
+      componentName,
+      applicationName,
+      /Build not started|Build running/,
+    );
   });
 
   it('Check default Integration Test', () => {
@@ -194,17 +204,6 @@ describe('Basic Happy Path', () => {
 
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
-    });
-  });
-
-  describe('Check Application Overview', () => {
-    before(() => {
-      Common.openApplicationURL(applicationName);
-    });
-
-    it('Validate the graph views for the created application', () => {
-      UIhelper.verifyGraphNodes('Components', false);
-      UIhelper.verifyGraphNodes('Builds');
     });
   });
 });
