@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { screen } from '@testing-library/react';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { useTaskRunV2 } from '../../../hooks/usePipelineRuns';
+import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunDetailsView } from '../TaskRunDetailsView';
@@ -22,7 +22,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../hooks/usePipelineRuns', () => ({
+jest.mock('../../../hooks/useTaskRunsV2', () => ({
   useTaskRunV2: jest.fn(),
 }));
 
