@@ -5,14 +5,14 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   ComponentBuildState,
-  getComponentBuildStatus,
+  getConfigurationTime,
   getPACProvision,
   SAMPLE_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export type PacStatesForComponents = {
   [componentName: string]: PACState;
@@ -24,6 +24,8 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
     const pacProvision = getPACProvision(component);
     const isConfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
+    const isMigrationRequested =
+      component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
     const isUnconfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.unconfigurePac;
 
@@ -31,7 +33,7 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
       acc[component.metadata.name] = PACState.sample;
       return acc;
     }
-    if (isConfigureRequested) {
+    if (isConfigureRequested || isMigrationRequested) {
       acc[component.metadata.name] = PACState.configureRequested;
       return acc;
     }
@@ -74,7 +76,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
     [componentPacStates, components],
   );
 
-  const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRuns(
+  const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRunsV2(
     applicationLoaded ? namespace : null,
     React.useMemo(
       () => ({
@@ -83,10 +85,14 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.APPLICATION]: applicationName,
-            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
           matchExpressions: [
             { key: PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL, operator: 'DoesNotExist' },
+            {
+              key: PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+              operator: 'In',
+              values: [PipelineRunEventType.PUSH, PipelineRunEventType.GITLAB_PUSH],
+            },
           ],
         },
       }),
@@ -101,10 +107,8 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
       let allLoaded = true;
 
       neededNames.forEach((componentName) => {
-        const buildStatus = getComponentBuildStatus(
-          components.find((c) => c.metadata.name === componentName),
-        );
-        const configurationTime = buildStatus?.pac?.['configuration-time'];
+        const component = components.find((c) => c.metadata.name === componentName);
+        const configurationTime: string = getConfigurationTime(component);
 
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>

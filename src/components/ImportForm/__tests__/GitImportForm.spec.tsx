@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { fireEvent, screen } from '@testing-library/react';
 import { useBuildPipelineConfig } from '../../../hooks/useBuildPipelineConfig';
+import { useKonfluxPublicInfo } from '../../../hooks/useKonfluxPublicInfo';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { routerRenderer } from '../../../utils/test-utils';
 import { GitImportForm } from '../GitImportForm';
-import { createResources } from '../submit-utils';
+import { createResourcesWithLinkingComponents } from '../submit-utils';
 
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
@@ -16,7 +17,7 @@ jest.mock('../../../hooks/useSecrets', () => ({
 }));
 
 jest.mock('../submit-utils', () => ({
-  createResources: jest.fn(),
+  createResourcesWithLinkingComponents: jest.fn(),
 }));
 
 jest.mock('../../../hooks/useUIInstance', () => {
@@ -32,10 +33,15 @@ jest.mock('../../../hooks/useBuildPipelineConfig', () => ({
   useBuildPipelineConfig: jest.fn(),
 }));
 
+jest.mock('../../../hooks/useKonfluxPublicInfo', () => ({
+  useKonfluxPublicInfo: jest.fn(() => []),
+}));
+
 const mockUseBuildPipelineConfig = useBuildPipelineConfig as jest.Mock;
 const mockUseSecrets = useSecrets as jest.Mock;
-const mockCreateResources = createResources as jest.Mock;
+const mockCreateResources = createResourcesWithLinkingComponents as jest.Mock;
 const mockUseQuery = useQuery as jest.Mock;
+const mockUseKonfluxPublicInfo = useKonfluxPublicInfo as jest.Mock;
 
 describe('GitImportForm', () => {
   beforeEach(() => {
@@ -57,6 +63,9 @@ describe('GitImportForm', () => {
     ]);
     mockUseSecrets.mockReturnValue([[], true]);
     mockCreateResources.mockImplementation(jest.fn());
+    mockUseKonfluxPublicInfo.mockReturnValue([
+      { integrations: { github: { application_url: 'https://github.com/apps/konflux-staging' } } },
+    ]);
   });
   afterEach(() => {
     jest.clearAllMocks();
@@ -74,7 +83,7 @@ describe('GitImportForm', () => {
     screen.getByText('Create application');
     fireEvent.click(componentButton);
     expect(screen.queryByText('Add a component')).not.toBeInTheDocument();
-    screen.getByPlaceholderText('Enter your source');
+    screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
     screen.getByTestId('component-name');
   });
 
@@ -94,5 +103,63 @@ describe('GitImportForm', () => {
     expect(screen.getByText('Create application')).not.toBeDisabled();
     fireEvent.click(screen.getByText('Create application'));
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  describe('"Onboarding components to Konflux" alert info', () => {
+    it('should render the alert info', () => {
+      routerRenderer(<GitImportForm applicationName="test-app" />);
+      expect(screen.queryByText('Onboarding components to Konflux')).toBeInTheDocument();
+    });
+
+    it('should render ExternalLink to GitHub App if application_url is defined (non-empty string)', () => {
+      mockUseKonfluxPublicInfo.mockReturnValue([
+        {
+          integrations: { github: { application_url: 'https://github.com/apps/konflux-staging' } },
+        },
+      ]);
+      routerRenderer(<GitImportForm applicationName="test-app" />);
+      expect(
+        screen.getByTestId('git-import-form-konflux-gh-app-external-link'),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Konflux GitHub App/)).toBeInTheDocument();
+    });
+
+    it('should render plain text if application_url is undefined', () => {
+      mockUseKonfluxPublicInfo.mockReturnValue([{ integrations: { github: {} } }]);
+      routerRenderer(<GitImportForm applicationName="test-app" />);
+      expect(
+        screen.queryByTestId('git-import-form-konflux-gh-app-external-link'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText(/Konflux GitHub App/)).toBeInTheDocument();
+    });
+
+    it('should render plain text if application_url is null', () => {
+      mockUseKonfluxPublicInfo.mockReturnValue([
+        { integrations: { github: { application_url: null } } },
+      ]);
+      routerRenderer(<GitImportForm applicationName="test-app" />);
+      expect(
+        screen.queryByTestId('git-import-form-konflux-gh-app-external-link'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText(/Konflux GitHub App/)).toBeInTheDocument();
+    });
+
+    it('should render plain text if application_url is an empty string', () => {
+      mockUseKonfluxPublicInfo.mockReturnValue([
+        { integrations: { github: { application_url: '' } } },
+      ]);
+      routerRenderer(<GitImportForm applicationName="test-app" />);
+      expect(
+        screen.queryByTestId('git-import-form-konflux-gh-app-external-link'),
+      ).not.toBeInTheDocument();
+      expect(screen.getByText(/Konflux GitHub App/)).toBeInTheDocument();
+    });
+
+    it('should render ExternalLink to #creating-source-control-secrets doc', () => {
+      routerRenderer(<GitImportForm applicationName="test-app" />);
+      expect(
+        screen.getByTestId('git-import-form-konflux-create-secret-external-link'),
+      ).toBeInTheDocument();
+    });
   });
 });

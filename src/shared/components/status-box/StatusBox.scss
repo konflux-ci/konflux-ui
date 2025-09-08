@@ -16,8 +16,7 @@
   }
 
   &__detail {
-    color: $color-text-muted;
-    font-size: $font-size-base;
+    font-size: var(--pf-v5-global--FontSize--md);
     max-width: 500px;
     margin: 0 auto;
   }

@@ -1,12 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
+import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import {
-  createK8sWatchResourceMock,
-  createUseApplicationMock,
-  routerRenderer,
-} from '../../../../utils/test-utils';
+import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
 import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import { ComponentActivityTab } from '../tabs/ComponentActivityTab';
@@ -28,13 +26,17 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
+jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(),
+}));
+
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
-const watchResourceMock = createK8sWatchResourceMock();
 const useComponentsMock = useComponents as jest.Mock;
 const componentMock = useComponent as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 describe('ComponentActivityTab', () => {
   let navigateMock: jest.Mock;
@@ -42,7 +44,13 @@ describe('ComponentActivityTab', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
-    watchResourceMock.mockReturnValue([pipelineWithCommits.slice(0, 4), true]);
+    usePipelineRunsV2Mock.mockReturnValue([
+      pipelineWithCommits.slice(0, 4),
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     useComponentsMock.mockReturnValue([MockComponents, true]);
 
     navigateMock = jest.fn();
@@ -59,14 +67,14 @@ describe('ComponentActivityTab', () => {
 
   it('should render the component activity', () => {
     componentMock.mockReturnValue([MockComponents[0], true]);
-    routerRenderer(<ComponentActivityTab />);
+    renderWithQueryClientAndRouter(<ComponentActivityTab />);
     screen.getByTestId('comp__activity__tabItem commits');
     screen.getByTestId('comp__activity__tabItem pipelineruns');
   });
 
   it('should render two tabs under component activity', async () => {
     componentMock.mockReturnValue([MockComponents[0], true]);
-    routerRenderer(<ComponentActivityTab />);
+    renderWithQueryClientAndRouter(<ComponentActivityTab />);
     screen.getByTestId('comp__activity__tabItem commits');
     const plrTab = screen.getByTestId('comp__activity__tabItem pipelineruns');
 

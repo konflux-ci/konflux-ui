@@ -1,12 +1,14 @@
 import { omit } from 'lodash-es';
-import { ApplicationModel, ComponentModel } from '../../../models';
+import { ApplicationModel, ComponentModel, ServiceAccountModel } from '../../../models';
 import {
   AddSecretFormValues,
   BuildTimeSecret,
   ComponentKind,
   ComponentSpecs,
+  ImagePullSecretType,
   SecretFor,
   SecretFormValues,
+  SecretKind,
   SecretType,
   SecretTypeDropdownLabel,
   SourceSecretType,
@@ -22,6 +24,30 @@ export const mockApplicationRequestData = {
   spec: {
     displayName: 'test-application',
   },
+};
+
+export const mockServiceAccounts = [
+  {
+    apiVersion: `${ServiceAccountModel.apiGroup}/${ServiceAccountModel.apiVersion}`,
+    kind: ServiceAccountModel.kind,
+    metadata: { name: 'sa-1' },
+  },
+  {
+    apiVersion: `${ServiceAccountModel.apiGroup}/${ServiceAccountModel.apiVersion}`,
+    kind: ServiceAccountModel.kind,
+    metadata: { name: 'sa-2' },
+  },
+];
+
+export const mockSecret: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'my-secret',
+    namespace: 'my-namespace',
+  },
+  data: {},
+  type: 'Opaque',
 };
 
 export const mockComponent: ComponentSpecs = {
@@ -109,7 +135,7 @@ export const addSecretFormValues: AddSecretFormValues = {
     ],
   },
   image: {
-    authType: 'Image registry credentials',
+    authType: ImagePullSecretType.ImageRegistryCreds,
     registryCreds: [
       {
         registry: 'test.io',
@@ -140,7 +166,7 @@ export const existingSecrets: BuildTimeSecret[] = [
 ];
 
 export const secretFormValues: SecretFormValues = {
-  type: SecretTypeDropdownLabel.image,
+  type: SecretTypeDropdownLabel.opaque,
   secretName: 'test',
   opaque: {
     keyValues: [
@@ -151,13 +177,10 @@ export const secretFormValues: SecretFormValues = {
     ],
   },
   image: {
-    keyValues: [
-      {
-        key: 'test',
-        value: 'dGVzdA==',
-      },
-    ],
+    authType: ImagePullSecretType.ImageRegistryCreds,
   },
+  relatedComponents: [],
+  secretForComponentOption: null,
   existingSecrets,
 };
 
@@ -169,5 +192,7 @@ export const secretFormValuesForSourceSecret: SecretFormValues = {
     username: 'username-test',
     password: 'password-test',
   },
+  relatedComponents: [],
+  secretForComponentOption: null,
   existingSecrets,
 };

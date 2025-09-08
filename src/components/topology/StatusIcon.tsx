@@ -8,7 +8,8 @@ import {
   StatusIcon as PfStatusIcon,
 } from '@patternfly/react-topology';
 import pipelineStyles from '@patternfly/react-topology/dist/esm/css/topology-pipelines';
-import { getLabelColorFromStatus, runStatus } from '../../utils/pipeline-utils';
+import { runStatus } from '~/consts/pipelinerun';
+import { getLabelColorFromStatus } from '../../utils/pipeline-utils';
 import { runStatusToRunStatus } from './utils';
 
 import './StatusIcon.scss';

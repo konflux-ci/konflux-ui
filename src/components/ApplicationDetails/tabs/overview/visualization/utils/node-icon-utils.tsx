@@ -18,6 +18,6 @@ export const getWorkflowNodeIcon = (type: WorkflowNodeType): React.ReactNode => 
     case WorkflowNodeType.RELEASE:
     case WorkflowNodeType.PIPELINE:
     default:
-      return <img src={PipelineIcon} />;
+      return <PipelineIcon />;
   }
 };

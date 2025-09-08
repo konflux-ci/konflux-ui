@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Divider, ToolbarFilter } from '@patternfly/react-core';
 import {
   Select,
   SelectGroup,
@@ -6,6 +7,8 @@ import {
   SelectVariant,
 } from '@patternfly/react-core/deprecated';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
+
+export const MENU_DIVIDER = "--divider--";
 
 type MultiSelectProps = {
   label: string;
@@ -31,36 +34,53 @@ export const MultiSelect = ({
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
   return (
-    <Select
-      placeholderText={placeholderText ?? label}
-      toggleIcon={<FilterIcon />}
-      toggleAriaLabel={toggleAriaLabel ?? `${label} filter menu`}
-      variant={SelectVariant.checkbox}
-      isOpen={expanded}
-      onToggle={(_, exp: boolean) => setExpanded(exp)}
-      onSelect={(event, selection) => {
-        const checked = (event.target as HTMLInputElement).checked;
-        setValues(
-          checked ? [...values, String(selection)] : values.filter((value) => value !== selection),
-        );
+    <ToolbarFilter
+      chips={values}
+      deleteChip={(_type, chip) => {
+        setValues(values.filter((v) => v !== chip));
       }}
-      selections={values}
-      isGrouped
+      deleteChipGroup={() => {
+        setValues([]);
+      }}
+      categoryName={label}
     >
-      {[
-        <SelectGroup label={label} key={filterKey}>
-          {Object.keys(options).map((filter) => (
-            <SelectOption
-              key={filter}
-              value={filter}
-              isChecked={values.includes(filter)}
-              itemCount={options[filter] ?? 0}
-            >
-              {filter}
-            </SelectOption>
-          ))}
-        </SelectGroup>,
-      ]}
-    </Select>
+      <Select
+        placeholderText={placeholderText ?? label}
+        toggleIcon={<FilterIcon />}
+        toggleAriaLabel={toggleAriaLabel ?? `${label} filter menu`}
+        variant={SelectVariant.checkbox}
+        isOpen={expanded}
+        onToggle={(_, exp: boolean) => setExpanded(exp)}
+        onSelect={(event, selection) => {
+          const checked = (event.target as HTMLInputElement).checked;
+          setValues(
+            checked
+              ? [...values, String(selection)]
+              : values.filter((value) => value !== selection),
+          );
+        }}
+        selections={values}
+        isGrouped
+      >
+        {[
+          <SelectGroup label={label} key={filterKey}>
+            {Object.keys(options).map((filter) =>
+              filter.startsWith(MENU_DIVIDER) ? (
+                <Divider key={filter} />
+              ) : (
+                <SelectOption
+                  key={filter}
+                  value={filter}
+                  isChecked={values.includes(filter)}
+                  itemCount={options[filter] ?? 0}
+                >
+                  {filter}
+                </SelectOption>
+              ),
+            )}
+          </SelectGroup>,
+        ]}
+      </Select>
+    </ToolbarFilter>
   );
 };

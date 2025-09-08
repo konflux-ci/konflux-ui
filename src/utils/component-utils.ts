@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useApplicationPipelineGitHubApp } from '../hooks/useApplicationPipelineGitHubApp';
 import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel } from '../models';
 import { ComponentKind } from '../types';
@@ -13,6 +12,8 @@ export const SAMPLE_ANNOTATION = 'appstudio.openshift.io/sample';
 export const BUILD_REQUEST_ANNOTATION = 'build.appstudio.openshift.io/request';
 
 export const BUILD_STATUS_ANNOTATION = 'build.appstudio.openshift.io/status';
+
+export const LAST_CONFIGURATION_ANNOTATION = 'kubectl.kubernetes.io/last-applied-configuration';
 
 export const GIT_PROVIDER_ANNOTATION = 'git-provider';
 export const GIT_PROVIDER_ANNOTATION_VALUE = {
@@ -88,10 +89,6 @@ export const isPACEnabled = (component: ComponentKind) =>
 
 export enum BuildRequest {
   /**
-   * submits a new simple build pipeline. The build could be requested at any time regardless PaC Component configuration
-   */
-  triggerSimpleBuild = 'trigger-simple-build',
-  /**
    * submits a new pac build pipeline. The build could be requested at any time regardless PaC Component configuration
    */
   triggerPACBuild = 'trigger-pac-build',
@@ -103,6 +100,10 @@ export enum BuildRequest {
    * requests Pipelines-as-Code clean up for the Component
    */
   unconfigurePac = 'unconfigure-pac',
+  /**
+   * requests Pipelines-as-Code provision for the Component migration
+   */
+  migratePac = 'configure-pac-no-mr',
 }
 
 export const enablePAC = (component: ComponentKind) =>
@@ -148,26 +149,40 @@ export const startNewBuild = (component: ComponentKind) =>
       {
         op: 'add',
         path: `/metadata/annotations/${BUILD_REQUEST_ANNOTATION.replace('/', '~1')}`,
-        value: isPACEnabled(component)
-          ? BuildRequest.triggerPACBuild
-          : BuildRequest.triggerSimpleBuild,
+        value: BuildRequest.triggerPACBuild,
       },
     ],
   });
 
-const GIT_URL_PREFIX = 'https://github.com/';
-
-export const useURLForComponentPRs = (components: ComponentKind[]): string => {
-  const { name: PR_BOT_NAME } = useApplicationPipelineGitHubApp();
-  const repos = components.reduce((acc, component) => {
-    const gitURL = component.spec.source?.git?.url;
-    if (gitURL && isPACEnabled(component) && gitURL.startsWith('https://github.com/')) {
-      acc = `${acc}+repo:${gitURL.replace(GIT_URL_PREFIX, '').replace(/.git$/i, '')}`;
-    }
-    return acc;
-  }, '');
-  return `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
-};
-
 export const useComponentBuildStatus = (component: ComponentKind): ComponentBuildStatus =>
   React.useMemo(() => getComponentBuildStatus(component), [component]);
+
+export const getConfigurationTime = (component: ComponentKind): string => {
+  const buildStatus = getComponentBuildStatus(component);
+  try {
+    const lastConfiguration: ComponentKind | undefined = component.metadata?.annotations?.[
+      LAST_CONFIGURATION_ANNOTATION
+    ]
+      ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+      : undefined;
+
+    const lastPACStateIsMigration =
+      lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
+      BuildRequest.migratePac;
+
+    const lastPACConfiguration = lastConfiguration?.metadata?.annotations?.[BUILD_STATUS_ANNOTATION]
+      ? JSON.parse(lastConfiguration.metadata.annotations[BUILD_STATUS_ANNOTATION])
+      : undefined;
+
+    return lastPACStateIsMigration && lastPACConfiguration
+      ? lastPACConfiguration.pac?.['configuration-time']
+      : buildStatus?.pac?.['configuration-time'];
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Error parsing last-applied-configuration annotation:', e);
+    return buildStatus?.pac?.['configuration-time'];
+  }
+};
+
+export const useConfigurationTime = (component: ComponentKind) =>
+  React.useMemo(() => getConfigurationTime(component), [component]);

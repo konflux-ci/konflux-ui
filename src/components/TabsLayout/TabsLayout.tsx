@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Outlet, resolvePath, useLocation, useNavigate, useResolvedPath } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { HttpError } from '../../k8s/error';
@@ -34,8 +35,8 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
   const basePath = baseURL ?? resolveBase.pathname;
   const currentTab = tabs
     // @ts-expect-error Array types doesn't include toReversed
-    .toReversed()
-    .find((t: TabProps) =>
+    ?.toReversed()
+    ?.find?.((t: TabProps) =>
       location.pathname.includes(resolvePath(getRouteFromKey(t.key), basePath).pathname),
     )?.key;
 
@@ -67,13 +68,17 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
     return <ErrorEmptyState httpError={HttpError.fromCode(404)} />;
   }
 
-  const tabComponents = tabs?.map(({ key, label, ...rest }) => {
+  const tabComponents = tabs?.map(({ key, label, featureFlag, ...rest }) => {
     return (
       <Tab
         data-test={`${id}__tabItem ${label.toLocaleLowerCase().replace(/\s/g, '')}`}
         key={key}
         eventKey={key}
-        title={<TabTitleText>{label}</TabTitleText>}
+        title={
+          <TabTitleText>
+            {label} {featureFlag && <FeatureFlagIndicator flags={featureFlag} />}
+          </TabTitleText>
+        }
         {...rest}
       >
         <Outlet />

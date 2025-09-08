@@ -1,14 +1,17 @@
 import { useParams } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
+import { renderWithQueryClient } from '~/unit-test-utils';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
-import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
+import { useK8sAndKarchResource } from '../../../../../hooks/useK8sAndKarchResources';
 import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../../../../utils/test-utils';
 import { PipelineRunListRow } from '../../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { pipelineWithCommits } from '../../../__data__/pipeline-with-commits';
+import { MockSnapshots } from '../../visualization/__data__/MockCommitWorkflowData';
 import CommitsPipelineRunTab from '../CommitsPipelineRunTab';
 
 jest.useFakeTimers();
@@ -32,10 +35,19 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(),
   useParams: jest.fn(),
+  useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
-jest.mock('../../../../../hooks/useTektonResults');
-jest.mock('../../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRunsForCommit: jest.fn(),
+jest.mock('../../../../../hooks/useTektonResults', () => ({
+  useTRTaskRuns: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+}));
+jest.mock('../../../../../hooks/usePipelineRunsForCommitV2', () => ({
+  usePipelineRunsForCommitV2: jest.fn(),
 }));
 
 jest.mock('../../../../../utils/rbac', () => ({
@@ -51,12 +63,17 @@ jest.mock('../../../../../hooks/useSearchParam', () => ({
   useSearchParamBatch: jest.fn(),
 }));
 
+jest.mock('../../../../../hooks/useK8sAndKarchResources', () => ({
+  useK8sAndKarchResource: jest.fn(),
+}));
+
 const appName = 'my-test-app';
 
 const watchResourceMock = createK8sWatchResourceMock();
-const usePipelineRunsForCommitMock = usePipelineRunsForCommit as jest.Mock;
+const usePipelineRunsForCommitMock = usePipelineRunsForCommitV2 as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
+const useSnapshotMock = useK8sAndKarchResource as jest.Mock;
 
 const commitPlrs = [
   pipelineWithCommits[0],
@@ -75,9 +92,9 @@ const commitPlrs = [
 
 const TestedComponent = () => (
   <div style={{ overflow: 'auto' }}>
-    <PipelineRunsFilterContextProvider>
+    <FilterContextProvider filterParams={['name', 'status', 'type']}>
       <CommitsPipelineRunTab />
-    </PipelineRunsFilterContextProvider>
+    </FilterContextProvider>
   </div>
 );
 
@@ -88,6 +105,13 @@ describe('Commit Pipelinerun List', () => {
     useParamsMock.mockReturnValue({ applicationName: appName, commitName: 'test-sha-1' });
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue('test-ns');
+    useSnapshotMock.mockReturnValue({
+      data: MockSnapshots[0],
+      isLoading: false,
+      fetchError: undefined,
+      wsError: undefined,
+      isError: false,
+    });
   });
   it('should render error state if the API errors out', () => {
     usePipelineRunsForCommitMock.mockReturnValue([
@@ -130,7 +154,7 @@ describe('Commit Pipelinerun List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent />);
     screen.getByText(/Pipeline runs/);
     screen.getByText('Name');
     screen.getByText('Started');
@@ -140,14 +164,14 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render both Build and Test pipelineruns in the pipelinerun list', () => {
-    render(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent />);
 
     screen.getByText('Build');
     screen.getByText('Test');
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
-    render(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent />);
 
     expect(screen.queryByText('java-springboot-sample-x778q')).toBeInTheDocument();
     expect(screen.queryByText('nodejs-sample-zth6t')).toBeInTheDocument();
@@ -156,7 +180,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render filtered pipelinerun list by name', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -187,7 +211,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render filtered pipelinerun list by status', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const statusFilter = screen.getByRole('button', {
       name: /status filter menu/i,
@@ -221,7 +245,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render filtered pipelinerun list by type', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const typeFilter = screen.getByRole('button', {
       name: /type filter menu/i,
@@ -255,7 +279,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should clear the filters and render the list again in the table', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 

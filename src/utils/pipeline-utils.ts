@@ -1,5 +1,6 @@
 import { RunStatus } from '@patternfly/react-topology';
 import { curry, merge } from 'lodash-es';
+import { runStatus, SucceedConditionReason } from '~/consts/pipelinerun';
 import { preferredNameAnnotation } from '../consts/pipeline';
 import { isCVEScanResult, ScanResults } from '../hooks/useScanResults';
 import { PipelineRunModel } from '../models';
@@ -23,36 +24,9 @@ export const STATIC_ENV_DESC = `A static environment is a set of compute resourc
 export const RELEASE_DESC = `After pushing your application to release, your application goes through a series of tests through the release pipeline to ensure the application complies with the  release policy set on the release target, also known as the "managed environment".`;
 export const MANAGED_ENV_DESC = `A managed environment is your application release target. This release target is an external environment, set up in an external namespace, and managed by another team. It is set for each application and not automatically shared among applications within the namespace.`;
 
-export enum runStatus {
-  Succeeded = 'Succeeded',
-  Failed = 'Failed',
-  Running = 'Running',
-  'In Progress' = 'In Progress',
-  FailedToStart = 'FailedToStart',
-  PipelineNotStarted = 'Starting',
-  NeedsMerge = 'PR needs merge',
-  Skipped = 'Skipped',
-  Cancelled = 'Cancelled',
-  Cancelling = 'Cancelling',
-  Pending = 'Pending',
-  Idle = 'Idle',
-  TestWarning = 'Test Warnings',
-  TestFailed = 'Test Failures',
-  Unknown = 'Unknown',
-}
-
-export enum SucceedConditionReason {
-  PipelineRunStopped = 'StoppedRunFinally',
-  PipelineRunCancelled = 'CancelledRunFinally',
-  TaskRunCancelled = 'TaskRunCancelled',
-  Cancelled = 'Cancelled',
-  PipelineRunStopping = 'PipelineRunStopping',
-  PipelineRunPending = 'PipelineRunPending',
-  TaskRunStopping = 'TaskRunStopping',
-  CreateContainerConfigError = 'CreateContainerConfigError',
-  ExceededNodeResources = 'ExceededNodeResources',
-  ExceededResourceQuota = 'ExceededResourceQuota',
-  ConditionCheckFailed = 'ConditionCheckFailed',
+export enum SBOMResultKeys {
+  IMAGE_DIGEST = 'IMAGE_DIGEST',
+  SBOM_SHA = 'SBOM_BLOB_URL',
 }
 
 export const getDuration = (seconds: number, long?: boolean): string => {
@@ -227,6 +201,31 @@ export const conditionsRunStatus = (conditions: Condition[], specStatus?: string
     default:
       return status;
   }
+};
+
+type TaskTestResult = {
+  result: string;
+  note?: string;
+};
+export const taskTestResultStatus = (
+  taskResults: TektonResultsRun[],
+): TaskTestResult | undefined => {
+  const testOutput = taskResults?.find(
+    (result) => result.name === 'HACBS_TEST_OUTPUT' || result.name === 'TEST_OUTPUT',
+  );
+
+  if (!testOutput) return;
+
+  try {
+    const outputValues = JSON.parse(testOutput.value);
+    if (!outputValues.result) return;
+    return { result: outputValues.result, note: outputValues.note ?? undefined };
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('Error when trying to parse testOutput.value');
+  }
+
+  return;
 };
 
 export const taskResultsStatus = (taskResults: TektonResultsRun[]): runStatus => {

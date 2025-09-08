@@ -1,7 +1,9 @@
+import React from 'react';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import { ReleaseGroupVersionKind, ReleaseModel } from '../models';
 import { ReleaseKind } from '../types';
+import { useK8sAndKarchResource } from './useK8sAndKarchResources';
 
 export const useReleases = (
   namespace: string,
@@ -31,25 +33,18 @@ export const useReleases = (
 export const useRelease = (
   namespace: string,
   name: string,
-  applicationName?: string,
-): [ReleaseKind, boolean, unknown] => {
-  const { data, isLoading, error } = useK8sWatchResource<ReleaseKind>(
-    {
-      groupVersionKind: ReleaseGroupVersionKind,
-      namespace,
-      name,
-      watch: true,
-      ...(applicationName
-        ? {
-            selector: {
-              matchLabels: {
-                [PipelineRunLabel.APPLICATION]: applicationName,
-              },
-            },
-          }
-        : {}),
-    },
-    ReleaseModel,
+): [ReleaseKind, boolean, unknown, unknown, boolean] => {
+  const resourceInit = React.useMemo(
+    () => ({
+      model: ReleaseModel,
+      queryOptions: {
+        ns: namespace,
+        name,
+      },
+    }),
+    [namespace, name],
   );
-  return [data, !isLoading, error];
+  const { data, isLoading, fetchError, wsError, isError } =
+    useK8sAndKarchResource<ReleaseKind>(resourceInit);
+  return [data, !isLoading, fetchError, wsError, isError];
 };

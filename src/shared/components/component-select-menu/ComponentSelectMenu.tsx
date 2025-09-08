@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Divider,
   MenuGroup,
@@ -7,10 +7,13 @@ import {
   MenuSearch,
   MenuSearchInput,
   SearchInput,
+  Truncate,
 } from '@patternfly/react-core';
 import { useField } from 'formik';
-import { flatten } from 'lodash-es';
+import { flatten, isArray } from 'lodash-es';
+import { CurrentComponentRef } from '~/types/secret';
 import SelectComponentsDropdown from './SelectComponnetsDropdown';
+
 import './ComponentSelectMenu.scss';
 
 type ComponentSelectMenuProps = {
@@ -18,11 +21,16 @@ type ComponentSelectMenuProps = {
   options: string[] | { [application: string]: string[] };
   isMulti?: boolean;
   disableItem?: (item: string) => boolean;
+  defaultSelected?: null | CurrentComponentRef[];
   sourceComponentName?: string;
   includeSelectAll?: boolean;
   defaultToggleText?: string;
   selectedToggleText?: string | ((value: string | string[]) => string);
   title?: string;
+  defaultPlaceholderText?: string;
+  defaultAriaLabel?: string;
+  linkedSecrets?: (data: string[]) => void;
+  entity?: string;
 };
 
 export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
@@ -30,14 +38,23 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   options,
   isMulti = false,
   disableItem,
+  defaultSelected,
   sourceComponentName,
   includeSelectAll = false,
   defaultToggleText = 'Select components',
   selectedToggleText = 'Select components',
+  defaultPlaceholderText = 'Search components...',
+  defaultAriaLabel = 'Search components',
+  linkedSecrets,
+  entity,
 }) => {
   const [{ value }, , { setValue }] = useField<string[] | string>(name);
   const [searchQuery, setSearchQuery] = React.useState<string>('');
   const isGrouped = typeof options === 'object' && !Array.isArray(options);
+
+  useEffect(() => {
+    if (isArray(value) && entity === 'secret') linkedSecrets(value);
+  }, [value, linkedSecrets, entity]);
 
   const allItems = React.useMemo(() => {
     if (isGrouped) {
@@ -54,9 +71,9 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
     if (includeSelectAll && item === 'select-all') {
       if (!isMulti) return;
       const selectable = allItems?.filter((v) => !isItemDisabled(v));
-      const selectedCount = Array.isArray(value) ? value.length : 0;
+      const selectedCount = Array.isArray(value) ? value?.length : 0;
 
-      if (selectedCount === selectable.length) {
+      if (selectedCount === selectable?.length) {
         void setValue([]);
       } else {
         void setValue(selectable);
@@ -99,6 +116,29 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
     return selectedComponents?.length > 0 ? selectedToggleText : defaultToggleText;
   }, [defaultToggleText, value, selectedToggleText]);
 
+  useEffect(() => {
+    if (!defaultSelected || defaultSelected.length === 0) return;
+
+    const filterDefaultSelected = defaultSelected.filter(
+      (c) => c?.componentName && c?.applicationName,
+    );
+
+    if (filterDefaultSelected.length === 0) return;
+
+    const defaultValues = filterDefaultSelected.map((c) => c.componentName);
+
+    if (isMulti) {
+      if (Array.isArray(value) && value.length === 0) {
+        void setValue(defaultValues);
+      }
+    } else {
+      if (!value) {
+        void setValue(defaultValues[0]);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultSelected, setValue, isMulti]);
+
   return (
     <>
       <SelectComponentsDropdown
@@ -113,8 +153,8 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               type="text"
               value={searchQuery}
               onChange={(_, v) => setSearchQuery(v)}
-              placeholder="Search components..."
-              aria-label="Search components"
+              placeholder={defaultPlaceholderText}
+              aria-label={defaultAriaLabel}
             />
           </MenuSearchInput>
         </MenuSearch>
@@ -155,7 +195,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
                         : undefined
                     }
                   >
-                    {item}
+                    <Truncate content={item} position="middle" />
                   </MenuItem>
                 ))}
               </MenuList>
@@ -167,10 +207,12 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
               <MenuItem
                 key={item}
                 itemId={item}
+                hasCheckbox={isMulti}
+                isSelected={isSelected(item)}
                 selected={!isMulti && isSelected(item)}
                 isDisabled={isItemDisabled(item)}
               >
-                {item}
+                <Truncate content={item} position="middle" />
               </MenuItem>
             ))}
           </MenuList>

@@ -6,7 +6,7 @@ inputs:
     required: true
 
 runs:
-  using: "composite"  
+  using: "composite"
   steps:
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@main
@@ -68,13 +68,6 @@ runs:
         ./konflux-ci/wait-for-all.sh
       shell: bash
 
-    - name: WORKAROUND - Reduce CPU/Memory requirements in build pipeline
-      run: |
-        : WORKAROUND - Reduce CPU/Memory requirements in build pipeline
-        sed -i "s|pipelinesascode.tekton.dev/original-prname:.*|pipelinesascode.tekton.dev/original-prname: \"java-quarkus-*\"|g" ./konflux-ci/dependencies/kyverno/policy/e2e-reduce-resources.yaml
-        kubectl create -f  ./konflux-ci/dependencies/kyverno/policy/e2e-reduce-resources.yaml
-      shell: bash
-
     - name: Build konflux-ui image
       env:
         CYPRESS_GH_TOKEN: ${{ env.HAC_TEST_GH_TOKEN }}
@@ -82,7 +75,6 @@ runs:
         SOURCE_BRANCH: ${{ env.SOURCE_BRANCH }}
         PR_NUMBER: ${{ env.PR_NUMBER }}
         HEAD_SHA: ${{ env.HEAD_SHA }}
-        SEALIGHTS_TOKEN: ${{ env.SEALIGHTS_TOKEN }}
         FORKED_REPO_URL: ${{ env.FORKED_REPO_URL }}
         BASE_REPO_URL: ${{ env.BASE_REPO_URL }}
         JOB_TYPE: ${{ inputs.job-type }}
@@ -122,32 +114,3 @@ runs:
         : Prepare resources for E2E tests
         ./konflux-ci/test/e2e/prepare-e2e.sh
       shell: bash
-
-    - name: Run Konflux UI E2E tests
-      env:
-        CYPRESS_GH_TOKEN: ${{ env.HAC_TEST_GH_TOKEN }}
-        TARGET_BRANCH: ${{ env.TARGET_BRANCH }}
-        PR_NUMBER: ${{ env.PR_NUMBER }}
-        HEAD_SHA: ${{ env.HEAD_SHA }}
-        CYPRESS_USERNAME: ${{ env.CYPRESS_USERNAME }}
-        CYPRESS_PASSWORD: ${{ env.CYPRESS_PASSWORD }}
-        SEALIGHTS_TOKEN: ${{ env.SEALIGHTS_TOKEN }}
-      run: |
-        : Run Konflux UI E2E tests
-        ./pr_check.sh test
-      shell: bash
-
-    - name: Generate error logs
-      if: ${{ !cancelled() }}
-      run: |
-        : Generate error logs
-        ./konflux-ci/generate-err-logs.sh
-        cp -r artifacts logs
-      shell: bash
-
-    - name: Archive logs
-      if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: logs
-        path: logs

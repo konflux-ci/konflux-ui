@@ -1,13 +1,12 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
-import { SnapshotLabels } from '../../consts/pipelinerun';
-import { usePipelineRun } from '../../hooks/usePipelineRuns';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { SnapshotLabels } from '../../consts/snapshots';
 import { useSnapshot } from '../../hooks/useSnapshots';
-import { HttpError } from '../../k8s/error';
-import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
+import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
@@ -21,14 +20,15 @@ const SnapshotDetailsView: React.FC = () => {
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
+  const [snapshot, loaded, snapshotError] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
-    () => loaded && !loadErr && snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
-    [snapshot, loaded, loadErr],
+    () =>
+      loaded && !snapshotError && snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
+    [snapshot, loaded, snapshotError],
   );
 
-  const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
+  const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRunV2(
     snapshot?.metadata?.namespace,
     buildPipelineName,
   );
@@ -38,17 +38,7 @@ const SnapshotDetailsView: React.FC = () => {
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
 
-  if (loadErr || (loaded && !snapshot)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
-        title="Snapshot not found"
-        body="No such snapshot"
-      />
-    );
-  }
-
-  if (!plrLoadError && !plrLoaded) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner size="lg" />
@@ -56,14 +46,22 @@ const SnapshotDetailsView: React.FC = () => {
     );
   }
 
+  if (snapshotError) {
+    return getErrorState(snapshotError, loaded, 'snapshot');
+  }
+
   if (snapshot?.metadata) {
     return (
       <DetailsPage
         headTitle={snapshot.metadata.name}
+        featureFlags={['pipelineruns-kubearchive', 'taskruns-kubearchive']}
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `#`,
+            path: SNAPSHOT_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+            }),
             name: 'Snapshots',
           },
           {
@@ -80,7 +78,7 @@ const SnapshotDetailsView: React.FC = () => {
             <Text component={TextVariants.h2} data-test="snapshot-name">
               {snapshotName}
             </Text>
-            {commit?.sha && (
+            {plrLoaded && !plrLoadError && commit?.sha && (
               <>
                 <Text component={TextVariants.p} data-test="snapshot-header-details">
                   Triggered by {commit.shaTitle}{' '}

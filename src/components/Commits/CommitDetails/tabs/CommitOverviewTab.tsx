@@ -11,13 +11,11 @@ import {
   Spinner,
   Text,
 } from '@patternfly/react-core';
-import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
-import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
-import { HttpError } from '../../../../k8s/error';
-import { PipelineRunGroupVersionKind } from '../../../../models';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { PipelineRunType, runStatus } from '../../../../consts/pipelinerun';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
-import ErrorEmptyState from '../../../../shared/components/empty-state/ErrorEmptyState';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import {
@@ -25,7 +23,6 @@ import {
   createRepoBranchURL,
   createRepoPullRequestURL,
 } from '../../../../utils/commits-utils';
-import { runStatus } from '../../../../utils/pipeline-utils';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { useCommitStatus } from '../../commit-status';
@@ -35,42 +32,32 @@ import './CommitsOverviewTab.scss';
 const CommitOverviewTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
+  const [pipelineRuns, loaded, error] = usePipelineRunsForCommitV2(
     namespace,
     applicationName,
     commitName,
+    1,
+    undefined,
+    PipelineRunType.BUILD,
   );
 
   const commit = React.useMemo(
-    () =>
-      loaded &&
-      pipelineruns?.length &&
-      createCommitObjectFromPLR(
-        pipelineruns.find(
-          (p) => p.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-        ),
-      ),
-    [loaded, pipelineruns],
+    () => loaded && pipelineRuns?.length && createCommitObjectFromPLR(pipelineRuns[0]),
+    [loaded, pipelineRuns],
   );
 
   const [commitStatus] = useCommitStatus(applicationName, commitName);
 
-  if (loadErr || (loaded && !commit)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
-        title={`Could not load ${PipelineRunGroupVersionKind.kind}`}
-        body={(loadErr as { message: string })?.message ?? 'Not found'}
-      />
-    );
-  }
-
-  if (!commit) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
+  }
+
+  if (error) {
+    return getErrorState(error, loaded, 'commit');
   }
 
   return (

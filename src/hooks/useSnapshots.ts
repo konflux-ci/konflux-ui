@@ -1,26 +1,40 @@
+import * as React from 'react';
 import { PipelineRunLabel } from '../consts/pipelinerun';
-import { useK8sWatchResource } from '../k8s';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../models';
 import { Snapshot } from '../types/coreBuildService';
+import { useK8sAndKarchResource, useK8sAndKarchResources } from './useK8sAndKarchResources';
 
-export const useSnapshot = (namespace: string, name: string): [Snapshot, boolean, unknown] => {
+export const useSnapshot = (
+  namespace: string,
+  name: string,
+): [Snapshot | undefined, boolean, unknown, unknown, boolean] => {
+  const resourceInit = React.useMemo(
+    () =>
+      namespace
+        ? {
+            model: SnapshotModel,
+            queryOptions: {
+              ns: namespace,
+              name,
+            },
+          }
+        : null,
+    [namespace, name],
+  );
+
   const {
     data: snapshot,
     isLoading,
-    error,
-  } = useK8sWatchResource<Snapshot>(
-    {
-      groupVersionKind: SnapshotGroupVersionKind,
-      namespace,
-      name,
-    },
-    SnapshotModel,
-  );
-  return [snapshot, !isLoading, error];
+    fetchError,
+    wsError,
+    isError,
+  } = useK8sAndKarchResource<Snapshot>(resourceInit);
+
+  return [snapshot, !isLoading, fetchError, wsError, isError];
 };
 
 export const useSnapshotsForApplication = (namespace, applicationName) => {
-  return useK8sWatchResource<Snapshot[]>(
+  return useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
       namespace,

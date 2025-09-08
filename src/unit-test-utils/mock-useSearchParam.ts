@@ -1,8 +1,8 @@
 let params = {};
 
 export const mockUseSearchParamBatch = () => {
-  const getter = (value) => {
-    return { [value]: params[value] };
+  const getter = () => {
+    return params;
   };
   const setter = (newValues: Record<string, string>) => {
     Object.keys(newValues).forEach((key) => {

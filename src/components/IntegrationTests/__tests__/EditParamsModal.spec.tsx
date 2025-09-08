@@ -10,6 +10,7 @@ const initialValues: IntegrationTestFormValues = {
   url: 'test-url',
   optional: true,
   params: MockIntegrationTestsWithParams[1].spec.params,
+  resourceKind: 'pipeline',
 };
 
 const patchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
@@ -19,7 +20,7 @@ describe('EditParamsModal', () => {
     formikRenderer(<EditParamsModal intTest={MockIntegrationTestsWithParams[1]} />, initialValues);
 
     await waitFor(() => {
-      screen.getByText('Parameters');
+      screen.getByText('Show parameters');
       screen.queryByText('colors');
       screen.queryByText('animals');
     });
@@ -29,7 +30,7 @@ describe('EditParamsModal', () => {
     formikRenderer(<EditParamsModal intTest={MockIntegrationTestsWithParams[0]} />, initialValues);
 
     await waitFor(() => {
-      screen.getByText('Parameters');
+      screen.getByText('Show parameters');
       screen.queryByText('colors');
       screen.queryByText('red');
       screen.queryByText('green');

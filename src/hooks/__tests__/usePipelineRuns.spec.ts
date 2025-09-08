@@ -23,6 +23,8 @@ import { useTRPipelineRuns, useTRTaskRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('../useComponents');
+jest.mock('~/feature-flags/hooks');
+jest.mock('~/kubearchive/hooks');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
@@ -95,6 +97,20 @@ const resultMock3 = [
       },
       annotations: {
         'build.appstudio.redhat.com/commit_sha': 'other-sha',
+      },
+    },
+  },
+];
+
+const resultMock4 = [
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'fifth',
+      creationTimestamp: '2022-04-11T19:36:25Z',
+      labels: {
+        'pac.test.appstudio.openshift.io/sha': 'sample-sha',
+        'appstudio.openshift.io/component': 'test-component-2',
       },
     },
   },
@@ -486,6 +502,46 @@ describe('usePipelineRuns', () => {
       );
       expect(result.current).toEqual([[...resultMock, ...resultMock2], true, undefined, undefined]);
     });
+
+    it('should return pipeline runs without filtering by components', () => {
+      useComponentsMock.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      useK8sWatchResourceMock.mockReturnValueOnce([
+        [...resultMock, ...resultMock2, ...resultMock3, ...resultMock4],
+        true,
+      ]);
+      useTRPipelineRunsMock.mockReturnValue([[], true]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha', undefined, false),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock4, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        undefined,
+      ]);
+    });
+
+    it('should return pipeline runs filtering by components', () => {
+      useComponentsMock.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      useK8sWatchResourceMock.mockReturnValueOnce([
+        [...resultMock, ...resultMock2, ...resultMock3, ...resultMock4],
+        true,
+      ]);
+      useTRPipelineRunsMock.mockReturnValue([[], true]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommit('test-ns', 'test-app', 'sample-sha', undefined, true),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        undefined,
+      ]);
+    });
   });
 
   [
@@ -567,7 +623,7 @@ describe('usePipelineRuns', () => {
       });
 
       it('should return not loaded if we have no result', () => {
-        useK8sWatchResourceMock.mockReturnValue([null, false, undefined]);
+        useK8sWatchResourceMock.mockReturnValue([null, false]);
         useTRRunsMock.mockReturnValue([[], true, undefined]);
         const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([undefined, false, undefined]);

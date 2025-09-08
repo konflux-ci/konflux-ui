@@ -2,7 +2,7 @@ import * as React from 'react';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useComponents } from './useComponents';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export const useLatestIntegrationTestPipelines = (
   namespace: string,
@@ -12,7 +12,7 @@ export const useLatestIntegrationTestPipelines = (
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestTestPipelines, setLatestTestPipelines] = React.useState<PipelineRunKind[]>([]);
 
-  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
@@ -28,7 +28,7 @@ export const useLatestIntegrationTestPipelines = (
     [integrationTestNames, foundNames],
   );
 
-  const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRuns(
+  const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRunsV2(
     !componentsLoaded || !neededNames.length ? null : namespace,
     React.useMemo(
       () => ({
@@ -53,7 +53,7 @@ export const useLatestIntegrationTestPipelines = (
   React.useEffect(() => {
     let canceled = false;
 
-    if (plrError || !pipelineRunsLoaded || !componentNames || !pipelineRuns) {
+    if (plrError || !pipelineRunsLoaded || componentsError || !componentNames || !pipelineRuns) {
       return;
     }
 
@@ -95,6 +95,7 @@ export const useLatestIntegrationTestPipelines = (
     pipelineRuns,
     pipelineRunsLoaded,
     plrError,
+    componentsError,
   ]);
 
   return [

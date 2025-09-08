@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
+import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
 import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import CustomizeAllPipelines from '../CustomizeAllPipelines';
 
@@ -12,6 +13,7 @@ jest.mock('../../../hooks/useApplicationPipelineGitHubApp', () => ({
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
+  useNavigate: () => jest.fn(),
 }));
 
 jest.mock('../../../utils/rbac', () => ({
@@ -29,6 +31,14 @@ describe('CustomizeAllPipelines', () => {
       <CustomizeAllPipelines applicationName="" namespace="" modalProps={{ isOpen: true }} />,
     );
     expect(result.baseElement.textContent).toBe('');
+  });
+
+  it('should render error state', () => {
+    useK8sWatchResourceMock.mockReturnValue([[], true, { code: 400 }]);
+    const result = render(
+      <CustomizeAllPipelines applicationName="" namespace="" modalProps={{ isOpen: true }} />,
+    );
+    expect(result.getByText('Unable to load components')).toBeInTheDocument();
   });
 
   it('should render empty state', () => {
@@ -59,7 +69,7 @@ describe('CustomizeAllPipelines', () => {
       ],
       true,
     ]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizeAllPipelines applicationName="test" namespace="" modalProps={{ isOpen: true }} />,
     );
     expect(result.getByTestId('component-row', { exact: false })).toBeInTheDocument();

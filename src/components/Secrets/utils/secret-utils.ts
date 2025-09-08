@@ -1,7 +1,8 @@
 import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
 import { SECRET_LIST_PATH } from '@routes/paths';
-import { K8sQueryCreateResource } from '../../../k8s';
+import { IMAGE_PULL_SECRET_TYPES } from '~/consts/secrets';
+import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../../k8s';
 import { SecretModel } from '../../../models';
 import {
   AddSecretFormValues,
@@ -20,7 +21,12 @@ import {
   BuildTimeSecret,
 } from '../../../types';
 
+export const isImagePullSecret = (secret: SecretKind): boolean => {
+  return IMAGE_PULL_SECRET_TYPES.includes(secret.type as (typeof IMAGE_PULL_SECRET_TYPES)[number]);
+};
+
 export enum SecretForComponentOption {
+  none = 'none',
   all = 'all',
   partial = 'partial',
 }
@@ -280,4 +286,31 @@ export const getAddSecretBreadcrumbs = (namespace) => {
     { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
     { path: '#', name: 'Add secret' },
   ];
+};
+
+export const patchCommonSecretLabel = async (secret: SecretKind, add: boolean) => {
+  if (!secret || !secret.metadata?.name || !secret.metadata?.namespace) {
+    return;
+  }
+  const currentLabels = secret.metadata.labels || {};
+  const updatedLabels = { ...currentLabels };
+  if (add) {
+    updatedLabels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
+  } else {
+    delete updatedLabels[SecretLabels.COMMON_SECRET_LABEL];
+  }
+  return K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: '/metadata/labels',
+        value: updatedLabels,
+      },
+    ],
+  });
 };

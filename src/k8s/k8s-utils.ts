@@ -37,7 +37,7 @@ const FILTERED_CREATE_QUERY_PARAMS: Array<keyof CreateQueryParams> = [
 export const isK8sStatus = (data: unknown): data is K8sStatus =>
   isPlainObject(data) && (data as K8sStatus).kind === 'Status';
 
-const getQueryString = (queryParams: QueryParams) =>
+export const getQueryString = (queryParams: QueryParams) =>
   Object.entries(queryParams)
     .map(([key, value = '']) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&');
@@ -85,7 +85,7 @@ const requirementToString = (requirement: MatchExpression): string => {
   return '';
 };
 
-const createEquals = (key: string, value: string): MatchExpression => ({
+export const createEquals = (key: string, value: string): MatchExpression => ({
   key,
   operator: 'Equals',
   values: [value],

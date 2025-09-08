@@ -86,6 +86,12 @@ describe('Application List Row', () => {
     expect(getByText('Loading component count')).toBeInTheDocument();
   });
 
+  it('renders error message in the component column if the components are not loaded', () => {
+    watchResourceMock.mockReturnValue([undefined, true, Error()]);
+    const { getByText } = render(<ApplicationListRow columns={null} obj={application} />);
+    expect(getByText('Failed to load components')).toBeInTheDocument();
+  });
+
   it('should render metadata name if there is no display name', () => {
     watchResourceMock.mockReturnValue([[], false]);
     const { getByRole } = render(

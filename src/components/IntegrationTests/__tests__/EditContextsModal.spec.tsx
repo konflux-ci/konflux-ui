@@ -30,6 +30,7 @@ const initialValues: IntegrationTestFormValues = {
   url: 'test-url',
   optional: true,
   contexts: contextOptions,
+  resourceKind: 'pipelinerun',
 };
 
 const setup = () =>
@@ -108,7 +109,7 @@ describe('EditContextsModal', () => {
       expect.objectContaining({
         model: {
           apiGroup: 'appstudio.redhat.com',
-          apiVersion: 'v1beta1',
+          apiVersion: 'v1beta2',
           kind: 'IntegrationTestScenario',
           namespaced: true,
           plural: 'integrationtestscenarios',

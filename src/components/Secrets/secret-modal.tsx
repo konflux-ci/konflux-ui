@@ -1,10 +1,10 @@
-import { SecretModel } from '../../models';
-import { SecretKind } from '../../types';
+import { SecretModel } from '~/models';
+import { SecretKind } from '~/types';
 import { createDeleteModalLauncher } from '../modal/DeleteResourceModal';
 import { unlinkSecretFromServiceAccounts } from './utils/service-account-utils';
 
-export const secretDeleteModal = (secret: SecretKind) =>
-  createDeleteModalLauncher(secret.kind)({
+export const secretDeleteModal = (secret: SecretKind) => {
+  return createDeleteModalLauncher(secret.kind)({
     obj: secret,
     model: SecretModel,
     submitCallback: unlinkSecretFromServiceAccounts,
@@ -16,3 +16,4 @@ export const secretDeleteModal = (secret: SecretKind) =>
       </>
     ),
   });
+};

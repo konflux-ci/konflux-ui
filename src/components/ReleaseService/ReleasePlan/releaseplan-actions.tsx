@@ -15,13 +15,12 @@ export const useReleasePlanActions = (obj: ReleasePlanKind) => {
 
   return [
     {
-      label: 'Trigger release plan',
+      label: 'Trigger release',
       id: `trigger-releaseplan-${obj.metadata.name}`,
       cta: {
-        href: RELEASEPLAN_TRIGGER_PATH.createPath({
+        href: `${RELEASEPLAN_TRIGGER_PATH.createPath({
           workspaceName: namespace,
-          releasePlanName: obj.metadata?.name,
-        }),
+        })}?releasePlan=${obj.metadata?.name}`,
       },
       disabled: !canTrigger,
       disabledTooltip: "You don't have permission to trigger this release plan",

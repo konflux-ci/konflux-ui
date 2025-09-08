@@ -1,0 +1,62 @@
+FROM quay.io/fedora/fedora:44
+
+# Install Node.js 20 and development tools
+RUN dnf update -y && \
+    dnf install -y \
+    nodejs \
+    npm \
+    git \
+    gh \
+    curl \
+    wget \
+    unzip \
+    sudo \
+    which \
+    findutils \
+    tar \
+    gzip \
+    gnupg2 \
+    pinentry-curses \
+    openssh-clients \
+    vim \
+    && dnf clean all
+
+# Create vscode user (to match devcontainer expectations)
+RUN groupadd --gid 1000 vscode \
+    && useradd --uid 1000 --gid vscode --shell /bin/bash --create-home vscode
+
+# Add vscode user to sudoers
+RUN echo vscode ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/vscode \
+    && chmod 0440 /etc/sudoers.d/vscode
+
+# Install Yarn 1.22 globally
+RUN npm install -g yarn@1.22.22
+
+# Create directories for git configuration
+RUN mkdir -p /home/vscode/.ssh \
+    && chown -R vscode:vscode /home/vscode/.ssh \
+    && chmod 700 /home/vscode/.ssh
+
+# Copy git configuration files if they exist (using build context)
+# First copy the setup script and any gitconfig files
+COPY --chown=vscode:vscode container-files /container-files/
+
+# Verify installations
+RUN node --version && \
+    npm --version && \
+    yarn --version && \
+    gh --version && \
+    git --version
+
+# Set up the working directory
+WORKDIR /workspaces/konflux-ui
+
+# Change ownership to vscode user
+RUN chown -R vscode:vscode /workspaces
+
+# Switch to vscode user
+USER vscode
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV FORCE_COLOR=1 

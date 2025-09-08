@@ -1,6 +1,7 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { PipelineRunsFilterContextProvider } from '~/components/Filter/utils/PipelineRunsFilterContext';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { PipelineRunListRow } from '~/components/PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
@@ -9,7 +10,6 @@ import { useComponents } from '../../../../hooks/useComponents';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { PipelineRunStatus } from '../../../../types';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
-import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsList from '../SnapshotPipelineRunsList';
 
 jest.useFakeTimers();
@@ -28,12 +28,20 @@ jest.mock('../../../../hooks/useComponents', () => ({
 }));
 
 jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(),
+  useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
@@ -152,18 +160,18 @@ const snapShotPLRs = [
 ];
 
 const TestedComponent = ({ name, pipelineruns, loaded }) => (
-  <PipelineRunsFilterContextProvider>
+  <FilterContextProvider filterParams={['name', 'status', 'type']}>
     <SnapshotPipelineRunsList
       applicationName={name}
       getNextPage={null}
       snapshotPipelineRuns={pipelineruns}
       loaded={loaded}
-      nextPageProps={{ hasNextPage: true }}
+      nextPageProps={{ hasNextPage: true, isFetchingNextPage: false }}
     />
-  </PipelineRunsFilterContextProvider>
+  </FilterContextProvider>
 );
 
-describe('SnapshotPipelinerunsTab', () => {
+describe('SnapshotPipelinerunslist', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {

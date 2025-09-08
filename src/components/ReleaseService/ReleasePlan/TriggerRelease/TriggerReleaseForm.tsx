@@ -1,24 +1,40 @@
 import * as React from 'react';
-import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import {
+  Button,
+  Form,
+  Grid,
+  GridItem,
+  PageSection,
+  PageSectionVariants,
+  TextInput,
+  TextInputTypes,
+} from '@patternfly/react-core';
+import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FormikProps, useField } from 'formik';
-import { TextAreaField } from 'formik-pf';
+import { InputField, TextAreaField } from 'formik-pf';
 import isEmpty from 'lodash-es/isEmpty';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useReleasePlans } from '../../../../../src/hooks/useReleasePlans';
 import PageLayout from '../../../../components/PageLayout/PageLayout';
 import { RELEASE_SERVICE_PATH } from '../../../../routes/paths';
 import { FormFooter } from '../../../../shared';
 import KeyValueField from '../../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
+import TextColumnField from '../../../../shared/components/formik-fields/text-column-field/TextColumnField';
 import { useNamespace } from '../../../../shared/providers/Namespace';
+import { Snapshot } from '../../../../types/coreBuildService';
 import { IssueType } from './AddIssueSection/AddIssueModal';
 import { AddIssueSection } from './AddIssueSection/AddIssueSection';
 import { TriggerReleaseFormValues } from './form-utils';
 import { ReleasePlanDropdown } from './ReleasePlanDropdown';
 import { SnapshotDropdown } from './SnapshotDropdown';
 
-type Props = FormikProps<TriggerReleaseFormValues>;
+type Props = FormikProps<TriggerReleaseFormValues> & {
+  snapshotDetails?: Snapshot;
+};
 
 export const getApplicationNameForReleasePlan = (releasePlans, selectedReleasePlan, loaded) => {
-  if (!loaded || !releasePlans.length) {
+  if (!loaded || !releasePlans || !releasePlans.length) {
     return '';
   }
 
@@ -33,22 +49,33 @@ export const TriggerReleaseForm: React.FC<Props> = ({
   dirty,
   errors,
   status,
+  snapshotDetails,
 }) => {
   const namespace = useNamespace();
   const [{ value: labels }] = useField<TriggerReleaseFormValues['labels']>('labels');
-  const [releasePlans, loaded] = useReleasePlans(namespace);
+  const [releasePlans, loaded, error] = useReleasePlans(namespace);
   const [selectedReleasePlanField] = useField('releasePlan');
+  const [reference, setReference] = React.useState<string>('');
+  const [references, , { setValue }] =
+    useField<TriggerReleaseFormValues['references']>('references');
 
-  const applicationName = getApplicationNameForReleasePlan(
+  if (error) {
+    return getErrorState(error, loaded, 'release plans');
+  }
+
+  const releasePlanApplicationName = getApplicationNameForReleasePlan(
     releasePlans,
     selectedReleasePlanField.value,
     loaded,
   );
 
+  // Use application name from release plan if available, otherwise use from snapshot details
+  const applicationName = releasePlanApplicationName || snapshotDetails?.spec?.application || '';
+
   return (
     <PageLayout
-      title="Trigger release plan"
-      description="A release plan schedules when to send your code to production."
+      title="Trigger release"
+      description="Provide the metadata to be included in this release."
       breadcrumbs={[
         {
           path: RELEASE_SERVICE_PATH.createPath({ workspaceName: namespace }),
@@ -56,12 +83,12 @@ export const TriggerReleaseForm: React.FC<Props> = ({
         },
         {
           path: '#',
-          name: 'Trigger release plan',
+          name: 'Trigger release',
         },
       ]}
       footer={
         <FormFooter
-          submitLabel="Trigger"
+          submitLabel="Trigger release"
           handleCancel={handleReset}
           handleSubmit={handleSubmit}
           isSubmitting={isSubmitting}
@@ -74,20 +101,24 @@ export const TriggerReleaseForm: React.FC<Props> = ({
         <Form style={{ maxWidth: '70%' }}>
           <ReleasePlanDropdown
             name="releasePlan"
-            helpText="The release you want to release to the environments in your target namespace."
+            helpText="Which release plan would you like to use for the release? "
             releasePlans={releasePlans}
             loaded={loaded}
             required
           />
           <SnapshotDropdown
             name="snapshot"
-            helpText="The release you want to release to the environments in your target namespace."
+            helpText="Which snapshot would you like to release?"
             required
             applicationName={applicationName}
           />
-          <AddIssueSection field="issues" issueType={IssueType.BUG} />
+          <FilterContextProvider filterParams={['issues']}>
+            <AddIssueSection field="issues" issueType={IssueType.BUG} />
+          </FilterContextProvider>
 
-          <AddIssueSection field="cves" issueType={IssueType.CVE} />
+          <FilterContextProvider filterParams={['cves']}>
+            <AddIssueSection field="cves" issueType={IssueType.CVE} />
+          </FilterContextProvider>
 
           <TextAreaField
             name="synopsis"
@@ -102,11 +133,43 @@ export const TriggerReleaseForm: React.FC<Props> = ({
 
           <TextAreaField name="description" label="Description" />
           <TextAreaField name="solution" label="Solution" />
-          <TextAreaField
+          <TextColumnField
             name="references"
             label="References"
-            helperText="Please enter at least 1 reference"
+            helpText="Any URLs entered must be separated by commas."
+            isReadOnly
+            onChange={(v) => setValue(references.value.filter?.((r) => v.includes(r)))}
+          >
+            {(props) => {
+              return (
+                <Grid>
+                  <GridItem span={6}>
+                    <InputField name={props.name} type={TextInputTypes.text} isDisabled />
+                  </GridItem>
+                  <GridItem span={6}>{props.removeButton}</GridItem>
+                </Grid>
+              );
+            }}
+          </TextColumnField>
+          <TextInput
+            name="reference"
+            type={TextInputTypes.text}
+            onChange={(_, val) => setReference(val)}
+            value={reference}
           />
+          <Button
+            data-test="add-reference-button"
+            variant="link"
+            onClick={() => {
+              void setValue([...references.value, reference]);
+              setReference('');
+            }}
+            icon={<PlusCircleIcon />}
+            isInline
+            isDisabled={!reference}
+          >
+            {'Add reference'}
+          </Button>
           <KeyValueField
             name="labels"
             label="Labels"

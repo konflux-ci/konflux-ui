@@ -7,10 +7,10 @@ import {
   ComponentBuildState,
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
-  useComponentBuildStatus,
+  useConfigurationTime,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export enum PACState {
   sample,
@@ -25,6 +25,8 @@ export enum PACState {
 
 const usePACState = (component: ComponentKind) => {
   const isSample = component.metadata?.annotations?.[SAMPLE_ANNOTATION] === 'true';
+  const isMigrationRequested =
+    component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
   const pacProvision = getPACProvision(component);
   const isConfigureRequested =
     component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
@@ -32,11 +34,9 @@ const usePACState = (component: ComponentKind) => {
     component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.unconfigurePac;
 
   const { name: prBotName } = useApplicationPipelineGitHubApp();
+  const configurationTime = useConfigurationTime(component);
 
-  const buildStatus = useComponentBuildStatus(component);
-  const configurationTime = buildStatus?.pac?.['configuration-time'];
-
-  const [pipelineBuildRuns, pipelineBuildRunsLoaded] = usePipelineRuns(
+  const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRunsV2(
     !isSample && pacProvision ? component.metadata.namespace : null,
     React.useMemo(
       () => ({
@@ -61,12 +61,14 @@ const usePACState = (component: ComponentKind) => {
   // filter out runs that were created if the component previously had pac configured
   const runsForComponent = React.useMemo(
     () =>
-      pipelineBuildRuns?.filter((p) =>
-        configurationTime
-          ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
-          : true,
-      ),
-    [configurationTime, pipelineBuildRuns],
+      !pipelineBuildRunsLoaded || pipelineBuildRunsError
+        ? []
+        : pipelineBuildRuns?.filter((p) =>
+            configurationTime
+              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
+              : true,
+          ),
+    [configurationTime, pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError],
   );
 
   const prMerged = runsForComponent.find(
@@ -75,7 +77,7 @@ const usePACState = (component: ComponentKind) => {
 
   return isSample
     ? PACState.sample
-    : isConfigureRequested
+    : isConfigureRequested || isMigrationRequested
       ? PACState.configureRequested
       : isUnconfigureRequested
         ? PACState.unconfigureRequested

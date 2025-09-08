@@ -1,8 +1,10 @@
 import * as React from 'react';
+import { isPACEnabled } from '~/utils/component-utils';
 import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
 import { useNamespace } from '../shared/providers/Namespace';
 import { ComponentKind } from '../types';
+import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 
 export const useComponent = (
   namespace: string,
@@ -141,4 +143,17 @@ export const useSortedGroupComponents = (
   }, [groupedComponents]);
 
   return [sortedGroupedComponents, allCompsLoaded, allCompsError];
+};
+
+export const useURLForComponentPRs = (components: ComponentKind[]): string => {
+  const GIT_URL_PREFIX = 'https://github.com/';
+  const { name: PR_BOT_NAME } = useApplicationPipelineGitHubApp();
+  const repos = components.reduce((acc, component) => {
+    const gitURL = component.spec.source?.git?.url;
+    if (gitURL && isPACEnabled(component) && gitURL.startsWith(GIT_URL_PREFIX)) {
+      acc = `${acc}+repo:${gitURL.replace(GIT_URL_PREFIX, '').replace(/.git$/i, '')}`;
+    }
+    return acc;
+  }, '');
+  return `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
 };

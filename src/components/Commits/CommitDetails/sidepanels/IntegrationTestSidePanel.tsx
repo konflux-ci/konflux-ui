@@ -14,9 +14,10 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import {
   COMPONENT_DETAILS_PATH,
   INTEGRATION_TEST_DETAILS_PATH,
@@ -43,7 +44,10 @@ const IntegrationTestSidePanel: React.FC<
   const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const integrationTestPipeline = workflowData.resource as PipelineRunKind;
-  const [taskRuns] = useTaskRuns(namespace, integrationTestPipeline?.metadata.name);
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
+    namespace,
+    integrationTestPipeline?.metadata.name,
+  );
 
   const duration = integrationTestPipeline
     ? calculateDuration(
@@ -78,9 +82,10 @@ const IntegrationTestSidePanel: React.FC<
               workflowNode.getLabel()
             )}
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
+            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <img src={PipelineIcon} alt="pipeline run" /> Integration test
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
@@ -147,7 +152,7 @@ const IntegrationTestSidePanel: React.FC<
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>
-            {integrationTestPipeline ? (
+            {integrationTestPipeline && taskRunsLoaded && !taskRunsError ? (
               <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound showLogsLink />
             ) : null}
           </DescriptionList>

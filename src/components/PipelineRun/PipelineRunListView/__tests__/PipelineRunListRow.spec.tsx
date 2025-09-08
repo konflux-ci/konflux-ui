@@ -12,10 +12,22 @@ jest.mock('react-router-dom', () => {
     useNavigate: () => jest.fn(),
     Link: (props) => <a href={props.to}>{props.children}</a>,
     useSearchParams: jest.fn(),
+    useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
   };
 });
 
 const watchResourceMock = createK8sWatchResourceMock();
+
+jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+  usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
+}));
 
 describe('Pipeline run Row', () => {
   beforeEach(() => {
@@ -27,7 +39,7 @@ describe('Pipeline run Row', () => {
       <PipelineRunListRowWithVulnerabilities obj={runningPipelineRun} columns={[]} />,
     );
 
-    expect(row.getByText('-')).toBeDefined();
+    expect(row.getAllByText('-')).toBeDefined();
     expect(row.getByText('Running')).toBeDefined();
   });
 
@@ -45,7 +57,7 @@ describe('Pipeline run Row', () => {
       />,
     );
 
-    expect(row.getByText('-')).toBeDefined();
+    expect(row.getAllByText('-')).toBeDefined();
     expect(row.getByText('Succeeded')).toBeDefined();
   });
 

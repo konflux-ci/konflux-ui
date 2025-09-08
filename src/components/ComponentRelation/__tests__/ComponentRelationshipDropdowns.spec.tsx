@@ -50,7 +50,9 @@ describe('SingleSelectComponentDropdown', () => {
     const menu = screen.getByRole('menu');
     const disabledItem = menu.querySelectorAll('.pf-m-disabled');
     expect(disabledItem).toHaveLength(1);
-    expect(disabledItem[0].querySelector('.pf-v5-c-menu__item-text').innerHTML).toEqual('b');
+    expect(disabledItem[0].querySelector('.pf-v5-c-menu__item-text').innerHTML).toEqual(
+      '<div style="display: contents;"><span class="pf-v5-c-truncate">b</span></div>',
+    );
   });
 
   it('should render items in sorted order', () => {

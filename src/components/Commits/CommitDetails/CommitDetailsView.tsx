@@ -1,17 +1,17 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
+import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
-import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
-import { HttpError } from '../../../k8s/error';
-import { PipelineRunGroupVersionKind } from '../../../models';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { PipelineRunType, runStatus } from '../../../consts/pipelinerun';
 import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR, getCommitShortName } from '../../../utils/commits-utils';
-import { runStatus } from '../../../utils/pipeline-utils';
 import { DetailsPage } from '../../DetailsPage';
 import SidePanelHost from '../../SidePanel/SidePanelHost';
 import { StatusIconWithTextLabel } from '../../topology/StatusIcon';
@@ -27,21 +27,17 @@ const CommitDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
+  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommitV2(
     namespace,
     applicationName,
     commitName,
+    1,
+    undefined,
+    PipelineRunType.BUILD,
   );
 
   const commit = React.useMemo(
-    () =>
-      loaded &&
-      pipelineruns?.length &&
-      createCommitObjectFromPLR(
-        pipelineruns.find(
-          (p) => p.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-        ),
-      ),
+    () => loaded && pipelineruns?.length && createCommitObjectFromPLR(pipelineruns[0]),
     [loaded, pipelineruns],
   );
 
@@ -49,23 +45,28 @@ const CommitDetailsView: React.FC = () => {
 
   const commitDisplayName = getCommitShortName(commitName);
 
-  if (loadErr || (loaded && !commit)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
-        title={`Could not load ${PipelineRunGroupVersionKind.kind}`}
-        body={(loadErr as { message: string })?.message ?? 'Not found'}
-      />
-    );
-  }
-
-  if (!commit) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
       </Bullseye>
     );
   }
+
+  if (loadErr) {
+    return getErrorState(loadErr, loaded, 'commit details');
+  }
+
+  if (!commit) {
+    return (
+      <ErrorEmptyState
+        httpError={HttpError.fromCode(404)}
+        title={`Unable to load commit details`}
+        body={'Not found'}
+      />
+    );
+  }
+
   return (
     <SidePanelHost>
       <DetailsPage
@@ -95,6 +96,7 @@ const CommitDetailsView: React.FC = () => {
               <b>{commit.shaTitle}</b>
             </span>
             <StatusIconWithTextLabel status={commitStatus as runStatus} />
+            <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
           </Text>
         }
         actions={[

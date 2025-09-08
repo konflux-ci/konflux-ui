@@ -1,17 +1,19 @@
 import * as React from 'react';
-import { Title } from '@patternfly/react-core';
+import { HelperText, HelperTextItem, Title } from '@patternfly/react-core';
 
 import './DetailsSection.scss';
 
 type DetailsSectionProps = {
   title?: React.ReactNode;
   description?: React.ReactNode;
+  featureFlag?: React.ReactNode;
   children: React.ReactNode;
 };
 
 export const DetailsSection: React.FC<React.PropsWithChildren<DetailsSectionProps>> = ({
   title,
   description,
+  featureFlag,
   children,
 }) => {
   return (
@@ -19,9 +21,16 @@ export const DetailsSection: React.FC<React.PropsWithChildren<DetailsSectionProp
       {title ? (
         <Title headingLevel="h4" className="details-section__title" size="lg">
           {title}
+          {featureFlag}
         </Title>
       ) : null}
-      {description ? <div className="details-section__description">{description}</div> : null}
+      {description ? (
+        <HelperText>
+          <HelperTextItem variant="indeterminate" className="details-section__description">
+            {description}
+          </HelperTextItem>
+        </HelperText>
+      ) : null}
       {children}
     </div>
   );

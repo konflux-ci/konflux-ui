@@ -15,14 +15,10 @@ export const CVEComponentDropDown: React.FC<React.PropsWithChildren<CVEComponent
 }) => {
   const namespace = useNamespace();
   const [, , { setValue, setTouched }] = useField<string>(name);
-  const [components, componentsLoaded] = useAllComponents(namespace);
+  const [components, componentsLoaded, componentsError] = useAllComponents(namespace);
 
   const dropdownItems = React.useMemo(
-    () => [
-      { key: 'all-components', value: TargetDropdownDefaults.ALL_COMPONENTS },
-      { key: 'separator', value: 'separator', separator: true },
-      ...components.map((a) => ({ key: a.metadata.name, value: a.metadata.name })),
-    ],
+    () => components.map((a) => ({ key: a.metadata.name, value: a.metadata.name })),
     [components],
   );
 
@@ -31,7 +27,11 @@ export const CVEComponentDropDown: React.FC<React.PropsWithChildren<CVEComponent
       name={name}
       label="Select component"
       placeholder={
-        !componentsLoaded ? 'Loading components...' : TargetDropdownDefaults.ALL_COMPONENTS
+        !componentsLoaded
+          ? 'Loading components...'
+          : componentsError
+            ? 'Error loading components'
+            : TargetDropdownDefaults.ALL_COMPONENTS
       }
       onChange={(component: string) => {
         void setValue(component, true);

@@ -1,15 +1,23 @@
 import { buildRoute, type RouteDefinition, RouterParams } from './utils';
 
 type NamespacePath = 'ns';
+type ReleaseMonitorPath = 'releasemonitor';
 
 /* Namespace/Workspace Paths */
 export const NAMESPACE_LIST_PATH: RouteDefinition<NamespacePath> = buildRoute('ns');
+
+export const RELEASE_MONITOR_PATH: RouteDefinition<ReleaseMonitorPath> =
+  buildRoute('releasemonitor');
 
 export const WORKSPACE_PATH = NAMESPACE_LIST_PATH.extend(`:${RouterParams.workspaceName}`);
 
 export const IMPORT_PATH = WORKSPACE_PATH.extend('import');
 
 export const APPLICATION_LIST_PATH = WORKSPACE_PATH.extend(`applications`);
+
+export const ISSUES_PATH = WORKSPACE_PATH.extend(`issues`);
+
+export const ISSUES_LIST_PATH = ISSUES_PATH.extend(`list`);
 
 export const SECRET_LIST_PATH = WORKSPACE_PATH.extend(`secrets`);
 
@@ -24,6 +32,8 @@ export const APPLICATION_ACTIVITY_PATH = APPLICATION_DETAILS_PATH.extend('activi
 export const COMPONENT_LIST_PATH = APPLICATION_DETAILS_PATH.extend('components');
 
 export const COMPONENT_DETAILS_PATH = COMPONENT_LIST_PATH.extend(`:${RouterParams.componentName}`);
+
+export const COMPONENT_LINKED_SECRETS_PATH = COMPONENT_DETAILS_PATH.extend(`linked-secrets`);
 
 export const COMPONENT_ACTIVITY_PATH = COMPONENT_DETAILS_PATH.extend('activity');
 
@@ -47,9 +57,7 @@ export const RELEASEPLAN_PATH = RELEASE_SERVICE_PATH.extend(`release-plan`);
 
 export const RELEASEPLANADMISSION_LIST_PATH = RELEASE_SERVICE_PATH.extend(`release-plan-admission`);
 
-export const RELEASEPLAN_TRIGGER_PATH = RELEASEPLAN_PATH.extend(
-  `trigger/:${RouterParams.releasePlanName}`,
-);
+export const RELEASEPLAN_TRIGGER_PATH = RELEASEPLAN_PATH.extend(`trigger`);
 
 export const RELEASEPLAN_EDIT_PATH = RELEASEPLAN_PATH.extend(
   `edit/:${RouterParams.releasePlanName}`,
@@ -62,6 +70,10 @@ export const INTEGRATION_TEST_LIST_PATH = APPLICATION_DETAILS_PATH.extend(`integ
 
 export const INTEGRATION_TEST_DETAILS_PATH = INTEGRATION_TEST_LIST_PATH.extend(
   `:${RouterParams.integrationTestName}`,
+);
+
+export const INTEGRATION_TEST_PIPELINE_LIST_PATH = INTEGRATION_TEST_LIST_PATH.extend(
+  `:${RouterParams.integrationTestName}/pipelineruns`,
 );
 
 export const INTEGRATION_TEST_ADD_PATH = INTEGRATION_TEST_LIST_PATH.extend('add');
@@ -77,6 +89,10 @@ export const ACTIVITY_PATH_LATEST_COMMIT = ACTIVITY_PATH.extend('latest-commits'
 export const PIPELINE_RUNS_LIST_PATH = ACTIVITY_PATH.extend('pipelineruns');
 
 export const PLR_LIST_PATH = APPLICATION_DETAILS_PATH.extend('pipelineruns');
+
+export const RELEASE_PIPELINE_LIST_PATH = APPLICATION_RELEASE_LIST_PATH.extend(
+  `:${RouterParams.releaseName}/pipelineruns`,
+);
 
 export const PIPELINE_RUNS_DETAILS_PATH = PLR_LIST_PATH.extend(`:${RouterParams.pipelineRunName}`);
 

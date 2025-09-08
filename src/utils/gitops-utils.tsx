@@ -6,12 +6,12 @@ import { NotStartedIcon } from '@patternfly/react-icons/dist/esm/icons/not-start
 import { global_palette_green_400 as greenColor } from '@patternfly/react-tokens/dist/js/global_palette_green_400';
 import { global_palette_orange_100 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_100';
 import { global_palette_red_100 as redColor } from '@patternfly/react-tokens/dist/js/global_palette_red_100';
+import { runStatus } from '~/consts/pipelinerun';
 import {
   GitOpsDeploymentHealthStatus,
   GitOpsDeploymentKind,
   GitOpsDeploymentStrategy,
 } from '../types/gitops-deployment';
-import { runStatus } from './pipeline-utils';
 
 import './gitops-utils.scss';
 

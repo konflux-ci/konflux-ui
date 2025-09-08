@@ -10,9 +10,11 @@ import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
 import componentRoutes from './page-routes/components';
 import integrationTestRoutes from './page-routes/integration-test';
+import issuesRoutes from './page-routes/issues';
 import workspaceRoutes from './page-routes/namespace';
 import pipelineRoutes from './page-routes/pipeline';
 import releaseRoutes from './page-routes/release';
+import releaseMonitorRoutes from './page-routes/release-monitor';
 import releaseServiceRoutes from './page-routes/release-service';
 import secretRoutes from './page-routes/secrets';
 import snapshotRoutes from './page-routes/snapshots';
@@ -41,18 +43,19 @@ export const router = createBrowserRouter([
         element: <Overview />,
       },
       ...workspaceRoutes,
+      ...releaseMonitorRoutes,
       ...applicationRoutes,
       ...componentRoutes,
       ...releaseRoutes,
       ...releaseServiceRoutes,
       ...secretRoutes,
+      ...issuesRoutes,
       ...integrationTestRoutes,
       ...snapshotRoutes,
       ...commitRoutes,
       ...pipelineRoutes,
       ...taskRunRoutes,
       ...userAccessRoutes,
-
       // '/ns/:ns',
       //   '/ns/:ns/pipelinerun/:pipelineRun',
       //   '/ns/:ns/pipelinerun/:pipelineRun/logs',

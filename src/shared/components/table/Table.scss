@@ -6,6 +6,12 @@
   overflow: visible !important;
 }
 
+/* Reserve scrollbar space to prevent width thrash while rows load */
+.table .pf-v5-c-window-scroller {
+  overflow-y: scroll;
+  scrollbar-gutter: stable both-edges;
+}
+
 .table .pf-v5-c-table .wrap-column {
   overflow-wrap: anywhere;
 }
@@ -204,4 +210,16 @@
   display: flex;
   flex-direction: column;
   gap: var(--pf-v5-global--spacer--md);
+}
+
+.table .pf-v5-c-table {
+  --expand-cell-width: 5%;
+
+  tr > td[data-test='virtual-body-expand-row'] {
+    width: var(--expand-cell-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+  }
 }

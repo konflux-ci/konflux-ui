@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { BrowserRouter, useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getCommitShortName } from '../../../../utils/commits-utils';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
@@ -23,17 +23,17 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../hooks/useLocalStorage', () => ({
+jest.mock('../../../../shared/hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRunsForCommit: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRunsForCommitV2', () => ({
+  usePipelineRunsForCommitV2: jest.fn(),
 }));
 
 jest.mock('../visualization/CommitVisualization', () => () => <div />);
 
-const watchCommitPrsMock = usePipelineRunsForCommit as jest.Mock;
+const watchCommitPrsMock = usePipelineRunsForCommitV2 as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 const watchParams = useParams as jest.Mock;
 
@@ -54,10 +54,9 @@ describe('CommitDetailsView', () => {
 
   it('should show plr fetching error if unable to load plrs', () => {
     watchResourceMock.mockReturnValueOnce([[], true, { code: 503 }]);
-    watchCommitPrsMock.mockReturnValueOnce([[], false, { code: 503 }]);
+    watchCommitPrsMock.mockReturnValueOnce([[], true, { code: 503 }]);
     renderWithQueryClient(<CommitDetailsView />);
-    screen.getByText('Could not load PipelineRun');
-    screen.getByText('Not found');
+    screen.getByText('Unable to load commit details');
   });
 
   it('should show commit not found error if no matching pipelineruns are found ', () => {

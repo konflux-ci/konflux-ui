@@ -1,15 +1,11 @@
 .intro-banner {
-  background: url(/src/assets/overview/Rectangle.svg);
-  background-size: cover;
+  background: linear-gradient(90deg, var(--banner-gradient, white) 0%, var(--banner-gradient, white) 40%, var(--banner-gradient-end, #D1D1D1) 100%);
 
   &__content {
     background-color: transparent;
+    box-shadow: none;
   }
 
-  &__image {
-    background: url(/src/assets/overview/overview-banner.svg);
-    background-size: cover;
-  }
 
   &__cta {
     margin-top: var(--pf-v5-global--spacer--sm);
@@ -18,5 +14,19 @@
     & + &__cta {
       margin-right: none;
     }
+  }
+}
+
+
+:root {
+  --banner-gradient: var(--pf-v5-global--BackgroundColor--100);
+  --banner-gradient-end: #D1D1D1;
+}
+
+html.pf-v5-theme-dark {
+  --banner-gradient-end: #404040;
+
+  .intro-banner path  {
+    stroke: var(--pf-v5-global--icon--Color--dark);
   }
 }

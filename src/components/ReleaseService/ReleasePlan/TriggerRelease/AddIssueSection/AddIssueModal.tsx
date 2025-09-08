@@ -51,11 +51,11 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
   return (
     <>
       <Button variant="primary" onClick={handleModalToggle} data-test="modal-launch-btn">
-        {isBug ? 'Add a bug' : 'Add a CVE'}
+        {isBug ? 'Add Jira issue' : 'Add CVE'}
       </Button>
       <Modal
         variant={ModalVariant.medium}
-        title={isBug ? 'Add a bug fix' : 'Add a CVE'}
+        title={isBug ? 'Add Jira issue' : 'Add a CVE'}
         isOpen={isModalOpen}
         onClose={handleModalToggle}
         data-test="add-issue-modal"
@@ -67,7 +67,8 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
               ? { id: '', source: '', uploadDate: dateFormat(new Date()) }
               : {
                   key: '',
-                  components: [],
+                  component: '',
+                  packages: [],
                 }
           }
           validationSchema={isBug ? IssueFormSchema : CVEFormSchema}

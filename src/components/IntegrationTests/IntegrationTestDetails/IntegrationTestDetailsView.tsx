@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useIntegrationTestScenario } from '../../../hooks/useIntegrationTestScenarios';
-import { HttpError } from '../../../k8s/error';
 import { IntegrationTestScenarioModel } from '../../../models';
 import {
   INTEGRATION_TEST_DETAILS_PATH,
@@ -10,7 +10,6 @@ import {
   INTEGRATION_TEST_LIST_PATH,
 } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
-import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
@@ -40,14 +39,8 @@ const IntegrationTestDetailsView: React.FC<React.PropsWithChildren> = () => {
     integrationTestName,
   );
 
-  if (loadErr || (loaded && !integrationTest)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
-        title="Integration test not found"
-        body="No such Integration test"
-      />
-    );
+  if (loadErr) {
+    return getErrorState(loadErr, loaded, 'integration test');
   }
 
   if (integrationTest?.metadata) {

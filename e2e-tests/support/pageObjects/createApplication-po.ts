@@ -5,6 +5,7 @@ export const addComponentPagePO = {
   verifiedSource: '[class="pf-v5-c-form-control pf-m-success"]',
   gitOptions: 'Git options',
   gitReference: '[data-test="git-reference"]',
+  hideAdvancedGitOptions: 'Hide advanced Git options',
   contextDir: '[data-test="context-dir"]',
   next: 'button[type=submit]',
   cancel: 'button[type=reset]',
@@ -82,7 +83,7 @@ export const componentsListPagePO = {
 export const buildLogModalContentPO = {
   modal: 'div[data-ouia-component-type="PF5/ModalContent"]',
   closeButton: '[aria-label="Close"]',
-  logText: '[class="logs__content"]',
+  logText: '.pf-v5-c-log-viewer__text',
   logsTasklist: 'div[data-test="logs-tasklist"]',
   failedPipelineRunLogs: 'div[class="pipeline-run-logs"] [class*="pf-m-danger"]',
   podLogNavList: '[data-ouia-component-type="PF5/Nav"]',

@@ -1,9 +1,18 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { ComponentKind } from '~/types';
+import { BUILD_STATUS_ANNOTATION } from '~/utils/component-utils';
 import { mockComponentsData } from '../../components/ApplicationDetails/__data__/WorkflowComponentsData';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
-import { useAllComponents, useComponents } from '../useComponents';
+import { useApplicationPipelineGitHubApp } from '../useApplicationPipelineGitHubApp';
+import { useAllComponents, useComponents, useURLForComponentPRs } from '../useComponents';
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
+
+jest.mock('../useApplicationPipelineGitHubApp', () => ({
+  useApplicationPipelineGitHubApp: jest.fn(),
+}));
+
+const useApplicationPipelineGitHubAppMock = useApplicationPipelineGitHubApp as jest.Mock;
 
 describe('useComponents', () => {
   it('should return empty array when call is inflight', () => {
@@ -44,5 +53,52 @@ describe('useAllComponents', () => {
     const { result } = renderHook(() => useAllComponents('test-ns'));
     const [components] = result.current;
     expect(components).toHaveLength(3);
+  });
+});
+
+describe('useURLForComponentPRs', () => {
+  it('should create git URL for component PRs', () => {
+    useApplicationPipelineGitHubAppMock.mockReturnValue({
+      name: 'appstudio-staging-ci',
+      url: 'https://github.com/apps/appstudio-staging-ci.git',
+    });
+    const createComponent = (url: string, pacEnabled = true): ComponentKind =>
+      ({
+        metadata: {
+          annotations: {
+            [BUILD_STATUS_ANNOTATION]: pacEnabled && JSON.stringify({ pac: { state: 'enabled' } }),
+          },
+        },
+        spec: {
+          source: {
+            git: {
+              url,
+            },
+          },
+        },
+      }) as unknown as ComponentKind;
+
+    expect(renderHook(() => useURLForComponentPRs([])).result.current).toBe(
+      'https://github.com/pulls?q=is:pr+is:open+author:app/appstudio-staging-ci',
+    );
+    expect(
+      renderHook(() =>
+        useURLForComponentPRs([
+          createComponent('test', false),
+          createComponent('https://github.com/org/repo', false),
+        ]),
+      ).result.current,
+    ).toBe('https://github.com/pulls?q=is:pr+is:open+author:app/appstudio-staging-ci');
+    expect(
+      renderHook(() =>
+        useURLForComponentPRs([
+          createComponent('test', true),
+          createComponent('https://github.com/org/repo1', true),
+          createComponent('https://github.com/org/repo2', true),
+        ]),
+      ).result.current,
+    ).toBe(
+      'https://github.com/pulls?q=is:pr+is:open+author:app/appstudio-staging-ci+repo:org/repo1+repo:org/repo2',
+    );
   });
 });

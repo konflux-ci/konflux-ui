@@ -1,19 +1,32 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import {
+  PIPELINE_RUN_COLUMNS_DEFINITIONS,
+  DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT,
+  NON_HIDABLE_PIPELINE_RUN_COLUMNS,
+  PipelineRunColumnKeys,
+} from '../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
-import { Table } from '../../../shared';
+import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
+import ColumnManagement from '../../../shared/components/table/ColumnManagement';
+import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
-import PipelineRunsFilterToolbar from '../../Filter/PipelineRunsFilterToolbar';
-import { createFilterObj, filterPipelineRuns } from '../../Filter/utils/pipelineruns-filter-utils';
-import { PipelineRunsFilterContext } from '../../Filter/utils/PipelineRunsFilterContext';
+import PipelineRunsFilterToolbar from '../../Filter/toolbars/PipelineRunsFilterToolbar';
+import {
+  filterPipelineRuns,
+  PipelineRunsFilterState,
+} from '../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
-import { PipelineRunListHeaderWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
-import { PipelineRunListRowWithVulnerabilities } from '../../PipelineRun/PipelineRunListView/PipelineRunListRow';
+import { getPipelineRunListHeader } from '../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
+import { PipelineRunListRowWithColumns } from '../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 
 type SnapshotPipelineRunListProps = {
   snapshotPipelineRuns: PipelineRunKind[];
@@ -31,8 +44,25 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   nextPageProps,
   customFilter,
 }) => {
-  const { filters, setFilters, onClearFilters } = React.useContext(PipelineRunsFilterContext);
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters: PipelineRunsFilterState = useDeepCompareMemoize({
+    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
+    type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
+  });
   const { name, status, type } = filters;
+
+  const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
+  const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
+    `snapshot-pipeline-runs-columns-${applicationName}`,
+  );
+
+  const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
+    if (Array.isArray(visibleColumnKeys) && visibleColumnKeys.length > 0) {
+      return new Set(visibleColumnKeys as PipelineRunColumnKeys[]);
+    }
+    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT);
+  }, [visibleColumnKeys]);
 
   const statusFilterObj = React.useMemo(
     () =>
@@ -90,7 +120,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg"
         data-test="snapshot-plr-title"
       >
-        Pipeline runs
+        Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       {(isFiltered || snapshotPipelineRuns.length > 0) && (
         <PipelineRunsFilterToolbar
@@ -99,6 +129,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
           onClearFilters={onClearFilters}
           typeOptions={typeFilterObj}
           statusOptions={statusFilterObj}
+          openColumnManagement={() => setIsColumnManagementOpen(true)}
+          totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
       )}
       <Table
@@ -106,8 +138,16 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         data={filteredPLRs}
         aria-label="Pipeline run List"
         customData={vulnerabilities}
-        Header={PipelineRunListHeaderWithVulnerabilities}
-        Row={PipelineRunListRowWithVulnerabilities}
+        Header={getPipelineRunListHeader(safeVisibleColumns)}
+        Row={(props) => (
+          <PipelineRunListRowWithColumns
+            obj={props.obj as PipelineRunKind}
+            columns={props.columns || []}
+            customData={vulnerabilities}
+            index={props.index}
+            visibleColumns={safeVisibleColumns}
+          />
+        )}
         unfilteredData={snapshotPipelineRuns}
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         loaded
@@ -124,6 +164,17 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
           },
           rowCount: nextPageProps.hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
         }}
+      />
+      <ColumnManagement<PipelineRunColumnKeys>
+        isOpen={isColumnManagementOpen}
+        onClose={() => setIsColumnManagementOpen(false)}
+        visibleColumns={safeVisibleColumns}
+        onVisibleColumnsChange={(cols) => setVisibleColumnKeys(Array.from(cols))}
+        columns={PIPELINE_RUN_COLUMNS_DEFINITIONS}
+        defaultVisibleColumns={DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT}
+        nonHidableColumns={NON_HIDABLE_PIPELINE_RUN_COLUMNS}
+        title="Manage pipeline run columns"
+        description="Selected columns will be displayed in the pipeline runs table."
       />
     </>
   );

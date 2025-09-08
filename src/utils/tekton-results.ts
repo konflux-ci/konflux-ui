@@ -97,7 +97,7 @@ export const labelsToFilter = (labels?: MatchLabels): string =>
     : '';
 
 export const nameFilter = (name?: string): string =>
-  name ? AND(`data.metadata.name.startsWith("${name.trim().toLowerCase()}")`) : '';
+  name ? AND(`data.metadata.name.contains("${name.trim().toLowerCase()}")`) : '';
 
 export const commitShaFilter = (commitSha: string): string =>
   OR(
@@ -221,6 +221,7 @@ const commonFields = [
   'records.data.value.status.results',
   'records.data.value.status.startTime',
   'records.data.value.status.completionTime',
+  'next_page_token',
 ];
 
 const remainingTaskrunFields = [
@@ -228,6 +229,7 @@ const remainingTaskrunFields = [
   'records.data.value.status.taskSpec.description',
   'records.data.value.spec.taskRef.params',
   'records.data.value.spec.taskRef.name',
+  'records.data.value.spec.params',
   'records.data.value.spec.containers',
   'records.data.value.spec.status',
   'records.data.value.status.taskResults',
@@ -427,7 +429,7 @@ export const createTektonResultQueryOptions = curry(
       queryKey: createTektonResultsQueryKeys(model, options?.selector, options?.filter),
       queryFn: async ({ pageParam }) => {
         const trData = await fetchFn(namespace, options, pageParam as string);
-        return { data: trData[0], nextPage: trData[1].nextPageToken };
+        return { data: trData[0], nextPage: trData[1].nextPageToken || trData[1].next_page_token };
       },
       enabled: !!namespace,
       initialPageParam: null,

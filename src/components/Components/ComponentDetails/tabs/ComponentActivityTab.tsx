@@ -1,11 +1,13 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { COMPONENT_ACTIVITY_CHILD_TAB_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
+import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
@@ -68,6 +70,7 @@ export const ComponentActivityTab: React.FC = () => {
     <div>
       <DetailsSection
         title="Activity"
+        featureFlag={<FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />}
         description="Monitor CI/CD activity for this component. Each item in the list represents a process that was started by a user, generated a snapshot, and released."
       >
         <Tabs
@@ -89,10 +92,12 @@ export const ComponentActivityTab: React.FC = () => {
             eventKey="latest-commits"
             className="activity-tab"
           >
-            <CommitsListView
-              applicationName={applicationName}
-              componentName={component.spec.componentName}
-            />
+            <FilterContextProvider filterParams={['name', 'status']}>
+              <CommitsListView
+                applicationName={applicationName}
+                componentName={component.spec.componentName}
+              />
+            </FilterContextProvider>
           </Tab>
           <Tab
             data-test={`comp__activity__tabItem pipelineruns`}

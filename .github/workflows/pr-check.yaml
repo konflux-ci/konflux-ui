@@ -2,54 +2,95 @@ name: PR Check Test
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened, labeled, unlabeled]  
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   check-org-membership:
+    if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Check if PR author is a member of the organization
+      - name: Checking rights to run a PR checks
         run: |
-          ORG="${{ github.repository_owner }}"
-          PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
-          
-          if gh api "/orgs/$ORG/members/$PR_AUTHOR"; then
-            echo "PR author is a member of $ORG GitHub organization, running tests."
+          if [ "${{ github.event_name }}" != 'pull_request_target' ]; then
+            echo "The workflow is not triggered from PR, but ${{ github.event_name }} - skipping further checks."
             exit 0
           fi
 
-          echo "PR author is NOT a member of $ORG GitHub organization, skipping further checks."
+          WHITELISTED_BOT_NAME="red-hat-konflux[bot]"
+          REQUIRED_LABEL_NAME="ok-to-test"
+
+          ORG="${{ github.repository_owner }}"
+          PR_AUTHOR=$(jq --raw-output .pull_request.user.login $GITHUB_EVENT_PATH)
+          PR_LABELS=$(jq --raw-output .pull_request.labels[].name $GITHUB_EVENT_PATH)
+
+          if [ "$PR_AUTHOR" == "$WHITELISTED_BOT_NAME" ]; then
+            echo "PR author is "$WHITELISTED_BOT_NAME", skipping further checks."
+            exit 0
+          fi
+
+          if [[ "$PR_LABELS" == *$REQUIRED_LABEL_NAME* ]]; then
+            echo "PR has '$REQUIRED_LABEL_NAME' label, skipping further checks."
+            exit 0
+          fi
+
+          if gh api "/orgs/$ORG/members/$PR_AUTHOR"; then
+            echo "PR author is a member of $ORG GitHub organization, skipping further checks"
+            exit 0
+          fi
+
+          ERROR_SUMMARY=$(cat <<EOF
+
+          ### ❌ Cannot run E2E tests - at least one of the following conditions must be met:
+          * PR author is '$WHITELISTED_BOT_NAME'
+          * PR has label '$REQUIRED_LABEL_NAME'
+          * PR author is a public member of '$ORG' GitHub organization
+          EOF
+          )
+          echo "$ERROR_SUMMARY" >> $GITHUB_STEP_SUMMARY
+          echo "$ERROR_SUMMARY"
+
           exit 1
         env:
           GITHUB_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
 
-  e2e-test:
+  deploy-konfux-ui:
     needs: check-org-membership
     runs-on: ubuntu-latest
+    env:
+      TARGET_BRANCH: ${{ github.base_ref }}
+      SOURCE_BRANCH: ${{ github.head_ref }}
+      PR_NUMBER: ${{ github.event.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+      BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+      # secrets
+      CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+      QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+      QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
+      SMEE_URL: ${{ secrets.SMEE_URL }}
+      CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
+      CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
+          repository: ${{ github.repository }}
           ref: "${{ github.event.pull_request.head.sha }}"
-      - name: Deploy konflux-ci, build konflux-ui image and test
+
+      - name: Deploy konflux-ci
         id: pr-check-action
         uses: ./.github/actions/konflux-ui-deploy-test
-        env:
-          TARGET_BRANCH: ${{ github.base_ref }}
-          SOURCE_BRANCH: ${{ github.head_ref }}
-          PR_NUMBER: ${{ github.event.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
-          BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
-          # secrets
-          HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-          SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
-          GH_APP_ID: ${{ secrets.GH_APP_ID }}
-          GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
-          QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
-          QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
-          SMEE_URL: ${{ secrets.SMEE_URL }}
-          CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
-          CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
         with:
           job-type: 'on-pr'
+  
+      - name: Konflux-ui e2e test
+        uses: ./.github/actions/konflux-ui-e2e-test
+  
+      - name: Generate error logs
+        if: ${{ always() }}
+        uses: ./.github/actions/generate-error-logs
