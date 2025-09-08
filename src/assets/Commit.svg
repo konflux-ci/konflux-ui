@@ -1,13 +1,1 @@
-<svg width="69" height="64" viewBox="0 0 69 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_87_2866)">
-<path d="M59.94 6.72H15.14C10.6665 6.72 7.04004 10.3465 7.04004 14.82V55.62C7.04004 60.0935 10.6665 63.72 15.14 63.72H59.94C64.4135 63.72 68.04 60.0935 68.04 55.62V14.82C68.04 10.3465 64.4135 6.72 59.94 6.72Z" fill="var(--konflux-primary-color, #FF9D76)"/>
-<path d="M2 46.33V10.87C2 5.97 5.97 2 10.87 2H16.78C21.68 2 25.65 5.97 25.65 10.87V46.33C25.65 51.23 21.68 55.2 16.78 55.2H10.87C5.97 55.2 2 51.23 2 46.33Z" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="4" stroke-miterlimit="6.67"/>
-<path d="M43.3701 2H49.2801C55.8101 2 61.1001 7.29 61.1001 13.82V43.37C61.1001 49.9 55.8101 55.19 49.2801 55.19H43.3701" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M25.6401 28.6H49.2801M49.2801 28.6L40.4101 19.73M49.2801 28.6L40.4101 37.47" stroke="var(--konflux-icon-color, #1A1A1A)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<defs>
-<clipPath id="clip0_87_2866">
-<rect width="68.04" height="63.72" fill="white"/>
-</clipPath>
-</defs>
-</svg>
+<?xml version="1.0" encoding="UTF-8"?><svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68.04 63.72"><defs><style>.cls-1{fill:none;stroke:var(--konflux-icon-color, #1A1A1A);stroke-linecap:round;stroke-linejoin:round;stroke-width:4px;}.cls-2{fill:var(--konflux-primary-color, #FF9D76);stroke-width:0px;}</style></defs><g id="Layer_1-2"><rect class="cls-2" x="7.04" y="6.72" width="61" height="57" rx="8.1" ry="8.1"/><path class="cls-1" d="M2,46.33V10.87C2,5.97,5.97,2,10.87,2h5.91c4.9,0,8.87,3.97,8.87,8.87v35.46c0,4.9-3.97,8.87-8.87,8.87h-5.91c-4.9,0-8.87-3.97-8.87-8.87Z"/><path class="cls-1" d="M43.37,2h5.91c6.53,0,11.82,5.29,11.82,11.82v29.55c0,6.53-5.29,11.82-11.82,11.82h-5.91"/><path class="cls-1" d="M25.64,28.6h23.64M49.28,28.6l-8.87-8.87M49.28,28.6l-8.87,8.87"/></g></svg>
