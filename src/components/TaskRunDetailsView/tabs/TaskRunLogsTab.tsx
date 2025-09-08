@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { RouterParams } from '@routes/utils';
 import TaskRunLogs from '~/components/TaskRuns/TaskRunLogs';
-import { useTaskRunV2 } from '~/hooks/usePipelineRuns';
+import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { TaskRunKind } from '~/types';
 import { taskRunStatus } from '~/utils/pipeline-utils';
