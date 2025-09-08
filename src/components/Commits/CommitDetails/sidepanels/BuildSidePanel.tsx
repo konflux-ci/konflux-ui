@@ -83,7 +83,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <img src={PipelineIcon} alt="pipeline run" /> Pipeline run
+            <PipelineIcon alt="pipeline run" /> Pipeline run
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
