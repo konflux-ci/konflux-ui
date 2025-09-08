@@ -55,10 +55,15 @@ const TaskRunDetailsTab: React.FC = () => {
 
   const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
-  const duration = calculateDuration(
-    typeof taskRun?.status?.startTime === 'string' ? taskRun?.status?.startTime : '',
-    typeof taskRun?.status?.completionTime === 'string' ? taskRun?.status?.completionTime : '',
-  );
+  const hasStart = typeof taskRun?.status?.startTime === 'string' && !!taskRun.status.startTime;
+  const hasEnd =
+    typeof taskRun?.status?.completionTime === 'string' && !!taskRun.status.completionTime;
+  const duration = hasStart
+    ? calculateDuration(
+        taskRun.status.startTime,
+        hasEnd ? taskRun.status.completionTime : undefined,
+      )
+    : undefined;
 
   const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const status = !error ? taskRunStatus(taskRun) : null;
@@ -230,13 +235,13 @@ const TaskRunDetailsTab: React.FC = () => {
                           to={COMPONENT_DETAILS_PATH.createPath({
                             workspaceName: namespace,
                             applicationName,
-                            componentName: taskRun?.metadata.labels[PipelineRunLabel.COMPONENT],
+                            componentName: taskRun?.metadata.labels?.[PipelineRunLabel.COMPONENT],
                           })}
                         >
-                          {taskRun?.metadata.labels[PipelineRunLabel.COMPONENT]}
+                          {taskRun?.metadata.labels?.[PipelineRunLabel.COMPONENT]}
                         </Link>
                       ) : (
-                        taskRun?.metadata.labels[PipelineRunLabel.COMPONENT]
+                        taskRun?.metadata.labels?.[PipelineRunLabel.COMPONENT]
                       )
                     ) : (
                       '-'
