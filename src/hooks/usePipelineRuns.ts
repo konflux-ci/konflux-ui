@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
-import { useFeatureFlags } from '~/feature-flags/hooks';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -17,7 +16,6 @@ import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
 import { useApplication } from './useApplications';
 import { useComponents } from './useComponents';
-import { useK8sAndKarchResources } from './useK8sAndKarchResources';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
 const useRuns = <Kind extends K8sResourceCommon>(
@@ -244,10 +242,6 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
   return [latestSuccess, loaded, error];
 };
 
-/**
- *
- * @deprecated
- */
 export const usePipelineRunsForCommit = (
   namespace: string,
   applicationName: string,
@@ -322,89 +316,59 @@ export const usePipelineRunsForCommitV2 = (
   commit: string,
   limit?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const isKubearchiveEnabled = useFeatureFlags('kubearchive-logs');
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
-
-  const legacyPipelineRunsForCommit = usePipelineRunsForCommit(
-    namespace,
-    applicationName,
-    commit,
-    limit,
-  );
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
     [components, componentsLoaded],
   );
 
-  const resourceInit = React.useMemo(
-    () => ({
-      groupVersionKind: PipelineRunGroupVersionKind,
-      namespace,
-      selector: {
-        matchLabels: {
-          [PipelineRunLabel.APPLICATION]: applicationName,
-        },
-        matchExpressions: [
-          { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
-        ],
-      },
-    }),
-    [namespace, applicationName, componentNames],
+  const enabled =
+    !!namespace && !!applicationName && !!commit && !!application && applicationLoaded;
+
+  // k8sQuery
+  const {
+    data: resources,
+    isLoading,
+    error,
+  } = useK8sWatchResource<PipelineRunKind>(
+    enabled
+      ? {
+          groupVersionKind: PipelineRunGroupVersionKind,
+          namespace,
+          isList: true,
+          selector: {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+            },
+            matchExpressions: [
+              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
+            ],
+          },
+          watch: true,
+        }
+      : undefined,
+    PipelineRunModel,
+    { retry: false },
   );
 
-  // Remove overload properties once is ready for review
-  const { data, isLoading, hasNextPage, hasError, isFetchingNextPage, fetchNextPage } =
-    useK8sAndKarchResources<PipelineRunKind>(
-      namespace && applicationName && commit && componentsLoaded && applicationLoaded
-        ? resourceInit
-        : undefined,
-      PipelineRunModel,
-    );
-
-  const loaded = !isLoading && componentsLoaded;
-
-  // TODO: Remove this if/when tekton results are really filtered by component names above
+  // Return should be [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps]
   return React.useMemo(() => {
-    if (isKubearchiveEnabled) return legacyPipelineRunsForCommit;
-    if (loaded || hasError) {
+    if (resources) {
+      const resourcesArray = Array.isArray(resources) ? resources : [resources];
       return [
-        [],
-        loaded,
-        hasError,
-        hasNextPage ? fetchNextPage : null,
-        { hasNextPage, isFetchingNextPage },
+        resourcesArray
+          .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
+          .slice(0, limit ? limit : undefined),
+        !isLoading,
+        error,
+        undefined,
+        undefined,
       ];
     }
-    return [
-      data
-        .filter((plr) => plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_ANNOTATION] === commit)
-        .filter(
-          (plr) =>
-            new Date(plr.metadata?.creationTimestamp).getTime() >=
-            new Date(application?.metadata?.creationTimestamp).getTime(),
-        )
-        .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
-        .slice(0, limit ? limit : undefined),
-      true,
-      undefined,
-      hasNextPage ? fetchNextPage : null,
-      { hasNextPage, isFetchingNextPage },
-    ];
-  }, [
-    isKubearchiveEnabled,
-    legacyPipelineRunsForCommit,
-    application?.metadata?.creationTimestamp,
-    hasNextPage,
-    limit,
-    loaded,
-    fetchNextPage,
-    data,
-    hasError,
-    commit,
-    isFetchingNextPage,
-  ]);
+    return [[], true, 'Noting', undefined, undefined];
+  }, [resources, isLoading, error, commit, limit]);
 };
 
 export const usePipelineRun = (
