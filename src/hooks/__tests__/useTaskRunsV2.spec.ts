@@ -67,6 +67,9 @@ describe('useTaskRunV2', () => {
           name: 'test-taskrun',
         },
         TaskRunModel,
+        {
+          enabled: true,
+        },
       );
       expect(useTRTaskRunsMock).toHaveBeenCalledWith(null, {
         name: 'test-taskrun',
@@ -179,7 +182,17 @@ describe('useTaskRunV2', () => {
         TaskRunModel,
         { retry: false },
       );
-      expect(useKubearchiveGetResourceQueryMock).toHaveBeenCalledWith(null, TaskRunModel);
+      expect(useKubearchiveGetResourceQueryMock).toHaveBeenCalledWith(
+        {
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace: 'test-ns',
+          name: 'test-taskrun',
+        },
+        TaskRunModel,
+        {
+          enabled: false,
+        },
+      );
       expect(useTRTaskRunsMock).toHaveBeenCalledWith('test-ns', {
         name: 'test-taskrun',
         limit: 1,
