@@ -12,7 +12,7 @@ import {
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useLocalStorage } from '../../../hooks/useLocalStorage';
-import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -66,7 +66,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const { name, status, type } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRuns(
+    usePipelineRunsV2(
       applicationLoaded ? namespace : null,
       React.useMemo(
         () => ({

@@ -1,20 +1,80 @@
 import * as React from 'react';
 import { differenceBy } from 'lodash-es';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
-import { K8sGroupVersionKind, K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
+import { K8sResourceCommon, MatchExpression, Selector, WatchK8sResource } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
 import { EQ } from '../utils/tekton-results';
-import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
+import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
-const useRuns = <Kind extends K8sResourceCommon>(
-  groupVersionKind: K8sGroupVersionKind,
-  model: K8sModelCommon,
-  namespace: string,
+type PipelineRunSelector = Selector &
+  Partial<{
+    filterByName: string;
+    filterByCreationTimestampAfter: string;
+    filterByCommit: string;
+  }>;
+
+export const convertFilterToKubearchiveSelectors = (
+  filterBy: PipelineRunSelector,
+): Pick<WatchK8sResource, 'fieldSelector' | 'selector'> => {
+  const fieldSelectors: Record<string, string> = {};
+  if (filterBy.filterByName) fieldSelectors['metadata.name'] = filterBy.filterByName;
+
+  const fieldSelector = Object.keys(fieldSelectors).length
+    ? Object.entries(fieldSelectors)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(',')
+    : undefined;
+
+  // Build matchExpressions (including commit filter)
+  const matchExpressions: MatchExpression[] = [
+    ...(filterBy.matchExpressions ?? []),
+    ...(filterBy.filterByCommit
+      ? [
+          {
+            key: PipelineRunLabel.COMMIT_LABEL,
+            operator: 'Equals',
+            values: [filterBy.filterByCommit],
+          },
+        ]
+      : []),
+  ];
+
+  // Build the final selector (excluding custom filter fields)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = filterBy;
+  const selector: Selector = { ...rest, matchLabels: filterBy.matchLabels, matchExpressions };
+
+  return { selector, fieldSelector };
+};
+
+export const createKubearchiveWatchResource = (
+  namespace: string | null,
+  selector?: PipelineRunSelector,
+): {
+  namespace: string;
+  selector?: Selector;
+  fieldSelector?: string;
+} => {
+  if (!selector) return { namespace };
+
+  const { selector: kubearchiveSelector, fieldSelector } =
+    convertFilterToKubearchiveSelectors(selector);
+
+  return {
+    namespace,
+    selector: kubearchiveSelector,
+    fieldSelector,
+  };
+};
+
+export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
+  namespace: string | null,
   options?: {
     selector?: Selector;
     limit?: number;
@@ -22,23 +82,19 @@ const useRuns = <Kind extends K8sResourceCommon>(
     watch?: boolean;
     enabled?: boolean;
   },
-  queryOptions?: { enabled?: boolean },
 ): [Kind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  //   console.log('Version 2 called');
   const etcdRunsRef = React.useRef<Kind[]>([]);
   const optionsMemo = useDeepCompareMemoize(options);
   const limit = optionsMemo?.limit;
   const isList = !optionsMemo?.name;
   const kubearchiveEnabled = useIsOnFeatureFlag('pipelineruns-kubearchive');
-  const isEnabled = (queryOptions?.enabled ?? options?.enabled) !== false;
-  //   const watch = options?.watch !== false;
   // do not include the limit when querying etcd because result order is not sorted
   const watchOptions = React.useMemo(() => {
     // reset cached runs as the options have changed
     etcdRunsRef.current = [];
     return namespace
       ? {
-          groupVersionKind,
+          groupVersionKind: PipelineRunGroupVersionKind,
           namespace,
           isList,
           selector: optionsMemo?.selector,
@@ -46,12 +102,12 @@ const useRuns = <Kind extends K8sResourceCommon>(
           watch: true,
         }
       : null;
-  }, [namespace, groupVersionKind, isList, optionsMemo?.selector, optionsMemo?.name]);
+  }, [namespace, isList, optionsMemo?.selector, optionsMemo?.name]);
   const {
     data: resources,
     isLoading,
     error,
-  } = useK8sWatchResource<Kind[]>(watchOptions, model, { retry: false });
+  } = useK8sWatchResource<Kind[]>(watchOptions, PipelineRunModel, { retry: false });
   // if a pipeline run was removed from etcd, we want to still include it in the return value without re-querying tekton-results
   const etcdRuns = React.useMemo(() => {
     if (isLoading || error) {
@@ -109,27 +165,24 @@ const useRuns = <Kind extends K8sResourceCommon>(
 
   // tekton-results includes items in etcd, therefore options must use the same limit
   // these duplicates will later be de-duped
-  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = (
-    groupVersionKind === PipelineRunGroupVersionKind ? useTRPipelineRuns : useTRTaskRuns
-  )(queryTr ? namespace : null, trOptions) as [
-    Kind[],
-    boolean,
-    unknown,
-    GetNextPage,
-    NextPageProps,
-  ];
+  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
+    queryTr ? namespace : null,
+    trOptions,
+  );
 
-  //   console.log('Tekton Results', trResources);
-
+  //kubearchive results
   const resourceInit = React.useMemo(
-    () => ({
-      groupVersionKind: PipelineRunGroupVersionKind,
-      namespace,
-      //   watch:true,
-      isList: true,
-      //   limit: options.limit,
-    }),
-    [namespace],
+    () =>
+      kubearchiveEnabled
+        ? {
+            groupVersionKind: PipelineRunGroupVersionKind,
+            namespace,
+            ...createKubearchiveWatchResource(namespace, options?.selector),
+            isList: true,
+            limit: options?.limit,
+          }
+        : undefined,
+    [namespace, options?.limit, options?.selector, kubearchiveEnabled],
   );
 
   const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
@@ -138,15 +191,6 @@ const useRuns = <Kind extends K8sResourceCommon>(
     const pages = kubearchiveResult.data?.pages;
     return pages?.flatMap((page) => page) ?? [];
   }, [kubearchiveResult.data?.pages]);
-
-  //   console.log(
-  //     'Kubearchive Result',
-  //     kubearchiveResult,
-  //     'Data',
-  //     kubearchiveResult?.data,
-  //     'processed',
-  //     kubearchiveData,
-  //   );
 
   // Apply sorting and limit to KubeArchive data
   const processedKubearchiveData = React.useMemo(() => {
@@ -164,8 +208,8 @@ const useRuns = <Kind extends K8sResourceCommon>(
   // Return the appropriate data based on feature flag
   return React.useMemo(() => {
     if (kubearchiveEnabled) {
-      const isLoadingKubeArchive = !isEnabled || !namespace ? false : kubearchiveResult.isLoading;
-      const isError = !isEnabled || !namespace ? undefined : kubearchiveResult.error;
+      const isLoadingKubeArchive = !namespace ? false : kubearchiveResult.isLoading;
+      const isError = !namespace ? undefined : kubearchiveResult.error;
       const getNextPage = kubearchiveResult.hasNextPage
         ? kubearchiveResult.fetchNextPage
         : undefined;
@@ -196,18 +240,6 @@ const useRuns = <Kind extends K8sResourceCommon>(
     trError,
     trGetNextPage,
     nextPageProps,
-    isEnabled,
     namespace,
   ]);
 };
-
-// ---------------------------------------------------------
-
-export const usePipelineRunsV2 = (
-  namespace: string,
-  options?: {
-    selector?: Selector;
-    limit?: number;
-  },
-): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
-  useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
