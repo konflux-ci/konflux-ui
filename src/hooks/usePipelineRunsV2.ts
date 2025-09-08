@@ -1,0 +1,265 @@
+import * as React from 'react';
+import { differenceBy, uniqBy } from 'lodash-es';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import { useK8sWatchResource } from '../k8s';
+import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
+import { useDeepCompareMemoize } from '../shared';
+import { PipelineRunKind } from '../types';
+import {  MatchExpression, Selector, WatchK8sResource } from '../types/k8s';
+import { getCommitSha } from '../utils/commits-utils';
+import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
+
+type PipelineRunSelector = Selector &
+  Partial<{
+    filterByName: string;
+    filterByCreationTimestampAfter: string;
+    filterByCommit: string;
+  }>;
+
+export const convertFilterToKubearchiveSelectors = (
+  filterBy: PipelineRunSelector,
+): Pick<WatchK8sResource, 'fieldSelector' | 'selector'> => {
+  const fieldSelectors: Record<string, string> = {};
+  if (filterBy.filterByName) fieldSelectors['metadata.name'] = filterBy.filterByName;
+
+  const fieldSelector = Object.keys(fieldSelectors).length
+    ? Object.entries(fieldSelectors)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(',')
+    : undefined;
+
+  // Build matchExpressions (including commit filter)
+  const matchExpressions: MatchExpression[] = [
+    ...(filterBy.matchExpressions ?? []),
+    ...(filterBy.filterByCommit
+      ? [
+          {
+            key: PipelineRunLabel.COMMIT_LABEL,
+            operator: 'Equals',
+            values: [filterBy.filterByCommit],
+          },
+        ]
+      : []),
+  ];
+
+  // Build the final selector (excluding custom filter fields)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = filterBy;
+  const selector: Selector = { ...rest, matchLabels: filterBy.matchLabels, matchExpressions };
+
+  return { selector, fieldSelector };
+};
+
+export const createKubearchiveWatchResource = (
+  namespace: string | null,
+  selector?: PipelineRunSelector,
+): {
+  namespace: string;
+  selector?: Selector;
+  fieldSelector?: string;
+} => {
+  if (!selector) return { namespace };
+
+  const { selector: kubearchiveSelector, fieldSelector } =
+    convertFilterToKubearchiveSelectors(selector);
+
+  return {
+    namespace,
+    selector: kubearchiveSelector,
+    fieldSelector,
+  };
+};
+
+export const usePipelineRunsV2 = (
+  namespace: string | null,
+  options?: {
+    selector?: PipelineRunSelector;
+    limit?: number;
+    watch?: boolean;
+  },
+): [ PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+  const etcdRunsRef = React.useRef<PipelineRunKind[]>([]);
+  const optionsMemo = useDeepCompareMemoize(options);
+  const limit = optionsMemo?.limit;
+  const isList = true;
+  const kubearchiveEnabled = useIsOnFeatureFlag('pipelineruns-kubearchive');
+  // do not include the limit when querying etcd because result order is not sorted
+  const watchOptions = React.useMemo(() => {
+    // reset cached runs as the options have changed
+    etcdRunsRef.current = [];
+    return namespace
+      ? {
+          groupVersionKind: PipelineRunGroupVersionKind,
+          namespace,
+          isList,
+          selector: optionsMemo?.selector,
+          watch: true,
+        }
+      : null;
+  }, [namespace, optionsMemo?.selector,isList]);
+  const {
+    data: resources,
+    isLoading,
+    error,
+  } = useK8sWatchResource<PipelineRunKind[]>(watchOptions, PipelineRunModel, { retry: false });
+  // if a pipeline run was removed from etcd, we want to still include it in the return value without re-querying tekton-results
+  const etcdRuns = React.useMemo(() => {
+    if (isLoading || error) {
+      return [];
+    }
+   
+    if (!options?.selector?.filterByCommit) {
+      return resources;
+    }
+
+    return (
+      resources?.filter(
+        (plr) =>
+          getCommitSha(plr as unknown as PipelineRunKind) === options.selector.filterByCommit,
+      ) ?? []
+    );
+  }, [ options?.selector?.filterByCommit, resources, isLoading, error]);
+
+  const runs = React.useMemo(() => {
+    if (!etcdRuns) {
+      return etcdRuns;
+    }
+    let value = etcdRunsRef.current
+      ? [
+          ...etcdRuns,
+          // identify the runs that were removed
+          ...differenceBy(etcdRunsRef.current, etcdRuns, (plr) => plr.metadata.uid),
+        ]
+      : etcdRuns;
+    value.sort((a, b) => b.metadata.creationTimestamp.localeCompare(a.metadata.creationTimestamp));
+    if (limit && limit < value.length) {
+      value = value.slice(0, limit);
+    }
+    return value;
+  }, [etcdRuns, limit]);
+
+  // cache the last set to identify removed runs
+  etcdRunsRef.current = runs;
+
+  const processedClusterData = React.useMemo(() => {
+    if (isLoading || error || !resources) return [];
+
+    const sorted =resources.sort((a, b) =>
+      (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
+    );
+
+    return sorted;
+  }, [resources, isLoading, error]);
+
+  let shouldQuery = true;
+  if (options?.limit && processedClusterData.length >= options.limit) {
+    shouldQuery = false;
+  }
+
+  // Query tekton results if there's no limit or we received less items from etcd than the current limit
+  const queryTr =
+    !!namespace &&
+    !kubearchiveEnabled &&
+    shouldQuery &&
+    (!limit || (runs && !isLoading && (limit ?? 0) > (runs?.length ?? 0)) || !!error);
+
+  const trOptions: typeof optionsMemo = React.useMemo(() => {
+    return optionsMemo;
+  }, [optionsMemo]);
+
+  // tekton-results includes items in etcd, therefore options must use the same limit
+  // these duplicates will later be de-duped
+  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
+    queryTr ? namespace : null,
+    trOptions,
+  );
+
+  //kubearchive results
+  const resourceInit = React.useMemo(
+    () =>
+      kubearchiveEnabled && shouldQuery
+        ? {
+            groupVersionKind: PipelineRunGroupVersionKind,
+            namespace,
+            ...createKubearchiveWatchResource(namespace, options?.selector),
+            isList: true,
+            limit: options?.limit || 200,
+          }
+        : undefined,
+    [namespace, options?.limit, options?.selector, kubearchiveEnabled, shouldQuery],
+  );
+
+  const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
+
+  const kubearchiveData = React.useMemo(() => {
+    const pages = kubearchiveResult.data?.pages;
+    const archiveData = pages?.flatMap((page) => page) ?? [];
+    // Apply sorting and limit to KubeArchive data
+    if (!kubearchiveEnabled) return [];
+    const data = archiveData as PipelineRunKind[];
+    const toKey = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
+    // Sort by creationTimestamp (newest first); stable for equal keys
+    const sorted = [...data].sort((a, b) => toKey(b).localeCompare(toKey(a)));
+
+    // Apply limit if specified
+    return options?.limit && options.limit > 0 ? sorted.slice(0, options.limit) : sorted;
+  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, options?.limit]);
+
+  //combine cluster data with tekton results/kubeArchive results based on flag
+  let combinedData = !kubearchiveEnabled
+    ? uniqBy([...processedClusterData, ...(trResources || [])], (r) => r.metadata?.uid)
+    : uniqBy([...processedClusterData, ...(kubearchiveData || [])], (r) => r.metadata?.uid);
+
+  combinedData.sort((a, b) =>
+    (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
+  );
+
+  // Apply limit if specified
+  if (options?.limit && options.limit < combinedData.length) {
+    combinedData = combinedData.slice(0, options.limit);
+  }
+
+  // Return the appropriate data based on feature flag
+  return React.useMemo(() => {
+    if (kubearchiveEnabled) {
+      const isLoadingKubeArchive = !namespace ? false : kubearchiveResult.isLoading;
+      const isError = !namespace ? undefined : kubearchiveResult.error;
+      const getNextPage: GetNextPage = kubearchiveResult.hasNextPage
+      ? kubearchiveResult.fetchNextPage
+      : undefined;
+      const nextPagePropsKubeArchive: NextPageProps = {
+        hasNextPage: kubearchiveResult.hasNextPage || false,
+        isFetchingNextPage: kubearchiveResult.isFetchingNextPage || false,
+      };
+
+      return [
+        combinedData as PipelineRunKind[],
+        !namespace? false: !(isLoadingKubeArchive || isLoading) ,
+        isError || error,
+        getNextPage,
+        nextPagePropsKubeArchive,
+      ];
+    }
+    return [
+      combinedData as PipelineRunKind[],
+      !namespace? false: (queryTr ? trLoaded : true) && !isLoading,
+      trError || error,
+      trGetNextPage,
+      nextPageProps,
+    ];
+  }, [
+    kubearchiveEnabled,
+    trLoaded,
+    trError,
+    trGetNextPage,
+    nextPageProps,
+    namespace,
+    combinedData,
+    error,
+    isLoading,
+    kubearchiveResult,
+    queryTr,
+  ]);
+};
