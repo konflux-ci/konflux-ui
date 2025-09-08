@@ -18,9 +18,7 @@ import SecurityShieldImg from '../../assets/shield-security.svg';
 
 import '../../shared/components/empty-state/EmptyState.scss';
 
-const EmptyStateImg = () => (
-  <SecurityShieldImg className="app-empty-state__icon" role="img" alt="" />
-);
+const EmptyStateImg = () => <SecurityShieldImg className="app-empty-state__icon" role="img" />;
 
 const SecurityTabEmptyState: React.FC<
   React.PropsWithChildren<Omit<EmptyStateProps, 'children'>>
