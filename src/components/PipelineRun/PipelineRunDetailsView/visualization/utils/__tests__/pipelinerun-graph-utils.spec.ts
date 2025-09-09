@@ -599,7 +599,7 @@ describe('pipelinerun-graph-utils', () => {
       expect(matrixTasks).toHaveLength(2);
 
       // Find tasks by their names since order might vary
-      const firstMatrixTask = matrixTasks.find((task) => task.name === 'matrix-task-0');
+      const firstMatrixTask = matrixTasks.find((task) => task.name === 'matrix-task-Instance-1');
       const secondMatrixTask = matrixTasks.find((task) => task.name === 'matrix-task-linux-arm64');
 
       // First matrix task should have index-based name due to missing params
