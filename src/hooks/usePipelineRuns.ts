@@ -317,6 +317,7 @@ export const usePipelineRunsForCommitV2 = (
   applicationName: string,
   commit: string,
   limit?: number,
+  filterByComponents = true,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const isKubearchiveEnabled = useFeatureFlags('kubearchive-logs');
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
@@ -345,9 +346,9 @@ export const usePipelineRunsForCommitV2 = (
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
             },
-            matchExpressions: [
-              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
-            ],
+            matchExpressions: filterByComponents
+              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
+              : undefined,
           },
           watch: true,
         }
@@ -374,9 +375,9 @@ export const usePipelineRunsForCommitV2 = (
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
             },
-            matchExpressions: [
-              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
-            ],
+            matchExpressions: filterByComponents
+              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
+              : undefined,
           },
         }
       : undefined,
@@ -392,17 +393,17 @@ export const usePipelineRunsForCommitV2 = (
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
           },
-          matchExpressions: [
-            { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
-          ],
+          matchExpressions: filterByComponents
+            ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
+            : undefined,
         },
       }),
-      [applicationName, componentNames],
+      [applicationName, componentNames, filterByComponents],
     ),
   );
 
   return React.useMemo(() => {
-    if (resources) {
+    if (!isLoading && resources) {
       const resourcesArray: PipelineRunKind[] = Array.isArray(resources) ? resources : [resources];
       return [
         resourcesArray
@@ -419,7 +420,7 @@ export const usePipelineRunsForCommitV2 = (
         undefined,
       ];
     }
-    if (isKubearchiveEnabled && !isLoadingKubearchive && data.pages.length) {
+    if (isKubearchiveEnabled && !isLoadingKubearchive && data?.pages?.length) {
       return [
         (data.pages[0] as PipelineRunKind[])
           .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
