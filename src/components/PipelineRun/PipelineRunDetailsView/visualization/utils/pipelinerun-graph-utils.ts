@@ -309,9 +309,10 @@ export const appendStatus = (
             const param = taskRun.spec.params?.find((p) => p.name === name);
             return param?.value ?? null;
           })
-          .filter((v) => v !== null);
+          .filter((v) => v !== null && v !== '');
 
-        const displayName: string = paramValues.length > 0 ? paramValues.join(', ') : `${index}`;
+        const displayName: string =
+          paramValues.length > 0 ? paramValues.join(', ') : `Instance ${index + 1}`;
 
         const matrixTask = createMatrixTaskEntry(task, taskRun, displayName);
         result.push(matrixTask);
