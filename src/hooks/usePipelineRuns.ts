@@ -318,7 +318,7 @@ export const usePipelineRunsForCommitV2 = (
   commit: string,
   limit?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const isKubearchiveEnabled = useFeatureFlags('kubearchive');
+  const isKubearchiveEnabled = useFeatureFlags('kubearchive-logs');
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
 
@@ -356,7 +356,7 @@ export const usePipelineRunsForCommitV2 = (
     { retry: false },
   );
 
-  // kubearchive query
+  // kubearchive query (when kubearchive is enabled)
   const {
     data,
     isLoading: isLoadingKubearchive,
@@ -365,7 +365,7 @@ export const usePipelineRunsForCommitV2 = (
     hasNextPage,
     isFetchingNextPage,
   } = useKubearchiveListResourceQuery(
-    isKubearchiveEnabled
+    isKubearchiveEnabled && enabled
       ? {
           groupVersionKind: PipelineRunGroupVersionKind,
           namespace,
@@ -383,13 +383,35 @@ export const usePipelineRunsForCommitV2 = (
     PipelineRunModel,
   );
 
-  // Return should be [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps]
+  // tekton results query (when kubearchive is disabled)
+  const [trResources, trLoaded, trError, trGetNextPage, trNextPageProps] = useTRPipelineRuns(
+    !isKubearchiveEnabled && enabled ? namespace : null,
+    React.useMemo(
+      () => ({
+        selector: {
+          matchLabels: {
+            [PipelineRunLabel.APPLICATION]: applicationName,
+          },
+          matchExpressions: [
+            { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
+          ],
+        },
+      }),
+      [applicationName, componentNames],
+    ),
+  );
+
   return React.useMemo(() => {
     if (resources) {
-      const resourcesArray = Array.isArray(resources) ? resources : [resources];
+      const resourcesArray: PipelineRunKind[] = Array.isArray(resources) ? resources : [resources];
       return [
         resourcesArray
           .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
+          .filter(
+            (plr) =>
+              new Date(plr.metadata?.creationTimestamp).getTime() >=
+              new Date(application?.metadata?.creationTimestamp).getTime(),
+          )
           .slice(0, limit ? limit : undefined),
         !isLoading,
         error,
@@ -397,30 +419,66 @@ export const usePipelineRunsForCommitV2 = (
         undefined,
       ];
     }
-    if (!isLoadingKubearchive && data.pages.length) {
+    if (isKubearchiveEnabled && !isLoadingKubearchive && data.pages.length) {
       return [
-        data.pages[0].filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit),
+        (data.pages[0] as PipelineRunKind[])
+          .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
+          .filter(
+            (plr) =>
+              new Date(plr.metadata?.creationTimestamp).getTime() >=
+              new Date(application?.metadata?.creationTimestamp).getTime(),
+          ),
         !isLoadingKubearchive,
         errorKubearchive,
         hasNextPage ? fetchNextPage : null,
         { hasNextPage, isFetchingNextPage },
       ];
     }
-    return [[], true, 'Noting', undefined, undefined];
+    if (!isKubearchiveEnabled && trResources) {
+      return [
+        trResources
+          .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
+          .filter(
+            (plr) =>
+              new Date(plr.metadata?.creationTimestamp).getTime() >=
+              new Date(application?.metadata?.creationTimestamp).getTime(),
+          )
+          .slice(0, limit ? limit : undefined),
+        trLoaded,
+        trError,
+        trGetNextPage,
+        trNextPageProps,
+      ];
+    }
+    return [
+      [],
+      isLoading || isLoadingKubearchive || !trLoaded,
+      error ?? (isKubearchiveEnabled ? errorKubearchive : trError),
+      undefined,
+      undefined,
+    ];
   }, [
     commit,
     limit,
+    application?.metadata?.creationTimestamp,
     // k8Query
     resources,
     isLoading,
     error,
-    data,
     // Kubearchive
+    isKubearchiveEnabled,
+    data,
     isLoadingKubearchive,
     errorKubearchive,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
+    // Tekton Results
+    trResources,
+    trLoaded,
+    trError,
+    trGetNextPage,
+    trNextPageProps,
   ]);
 };
 
