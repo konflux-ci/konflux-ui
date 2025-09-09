@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { useFeatureFlags } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -316,6 +318,7 @@ export const usePipelineRunsForCommitV2 = (
   commit: string,
   limit?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+  const isKubearchiveEnabled = useFeatureFlags('kubearchive');
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
 
@@ -353,6 +356,33 @@ export const usePipelineRunsForCommitV2 = (
     { retry: false },
   );
 
+  // kubearchive query
+  const {
+    data,
+    isLoading: isLoadingKubearchive,
+    error: errorKubearchive,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useKubearchiveListResourceQuery(
+    isKubearchiveEnabled
+      ? {
+          groupVersionKind: PipelineRunGroupVersionKind,
+          namespace,
+          limit,
+          selector: {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+            },
+            matchExpressions: [
+              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
+            ],
+          },
+        }
+      : undefined,
+    PipelineRunModel,
+  );
+
   // Return should be [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps]
   return React.useMemo(() => {
     if (resources) {
@@ -367,8 +397,31 @@ export const usePipelineRunsForCommitV2 = (
         undefined,
       ];
     }
+    if (!isLoadingKubearchive && data.pages.length) {
+      return [
+        data.pages[0].filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit),
+        !isLoadingKubearchive,
+        errorKubearchive,
+        hasNextPage ? fetchNextPage : null,
+        { hasNextPage, isFetchingNextPage },
+      ];
+    }
     return [[], true, 'Noting', undefined, undefined];
-  }, [resources, isLoading, error, commit, limit]);
+  }, [
+    commit,
+    limit,
+    // k8Query
+    resources,
+    isLoading,
+    error,
+    data,
+    // Kubearchive
+    isLoadingKubearchive,
+    errorKubearchive,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  ]);
 };
 
 export const usePipelineRun = (
