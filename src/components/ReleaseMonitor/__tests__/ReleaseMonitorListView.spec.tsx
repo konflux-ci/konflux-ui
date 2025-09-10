@@ -102,7 +102,7 @@ describe('ReleaseMonitorListView', () => {
       </TestWrapper>,
     );
 
-    expect(screen.getByTestId('data-table-skeleton')).toBeVisible();
+    expect(screen.getByRole('progressbar')).toBeVisible();
   });
 
   it('should render ReleasesInNamespace for each namespace', async () => {

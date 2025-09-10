@@ -1,25 +1,33 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import * as FilterContext from '~/components/Filter/generic/FilterContext';
 import ReleaseMonitor from '../ReleaseMonitor';
 
 // Mock child components
 jest.mock('../ReleaseMonitorListView', () => {
-  return jest.fn(() => <div data-test="release-monitor-list-view">Release Monitor List View</div>);
+  return jest.fn(() => (
+    <section role="region" aria-label="Release Monitor List View">
+      Release Monitor List View
+    </section>
+  ));
 });
 
-jest.mock('../../Filter/generic/FilterContext', () => {
+jest.mock('~/components/Filter/generic/FilterContext', () => {
   return {
     FilterContextProvider: jest.fn(({ children, filterParams }) => (
-      <div data-test="filter-context-provider" data-filter-params={filterParams.join(',')}>
+      <section
+        role="region"
+        aria-label="filter-context-provider"
+        data-filter-params={filterParams.join(',')}
+      >
         {children}
-      </div>
+      </section>
     )),
   };
 });
 
 // Type casts for mocked functions
-const mockFilterContextProvider = FilterContextProvider as jest.Mock;
+const mockFilterContextProvider = jest.mocked(FilterContext.FilterContextProvider);
 
 describe('ReleaseMonitor', () => {
   beforeEach(() => {
@@ -33,8 +41,12 @@ describe('ReleaseMonitor', () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByTestId('filter-context-provider')).toBeInTheDocument();
-    expect(await screen.findByTestId('release-monitor-list-view')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('region', { name: 'filter-context-provider' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('region', { name: 'Release Monitor List View' }),
+    ).toBeInTheDocument();
   });
 
   it('should provide correct filter parameters to FilterContextProvider', async () => {
@@ -53,7 +65,7 @@ describe('ReleaseMonitor', () => {
       );
     });
 
-    const filterProvider = await screen.findByTestId('filter-context-provider');
+    const filterProvider = await screen.findByRole('region', { name: 'filter-context-provider' });
     expect(filterProvider).toHaveAttribute(
       'data-filter-params',
       'name,status,application,releasePlan,namespace,component',
@@ -67,8 +79,8 @@ describe('ReleaseMonitor', () => {
       </MemoryRouter>,
     );
 
-    const filterProvider = await screen.findByTestId('filter-context-provider');
-    const listView = await screen.findByTestId('release-monitor-list-view');
+    const filterProvider = await screen.findByRole('region', { name: 'filter-context-provider' });
+    const listView = await screen.findByRole('region', { name: 'Release Monitor List View' });
 
     expect(filterProvider).toContainElement(listView);
   });
