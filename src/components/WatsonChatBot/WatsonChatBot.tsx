@@ -14,7 +14,22 @@ const chatSettings = {
       </>
     ),
   },
-  general: { primaryColor: '#ffcc99', secondaryColor: '#ff7700' },
+  general: {
+    primaryColor: 'var(--konflux-primary-color)',
+    secondaryColor: 'var(--konflux-primary-color)',
+  },
+  fileAttachment: {
+    disabled: true,
+  },
+  notification: {
+    disabled: true,
+  },
+  chatHistory: {
+    disabled: false,
+  },
+  emoji: {
+    disabled: true,
+  },
 };
 
 const WatsonChatBot: React.FC = () => {
