@@ -1,15 +1,84 @@
 import * as React from 'react';
 import { differenceBy } from 'lodash-es';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
-import { K8sGroupVersionKind, K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
+import {
+  K8sGroupVersionKind,
+  K8sModelCommon,
+  K8sResourceCommon,
+  MatchExpression,
+  Selector,
+  WatchK8sResource,
+} from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
 import { EQ } from '../utils/tekton-results';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
+
+type PipelineRunSelector = Selector &
+  Partial<{
+    filterByName: string;
+    filterByCreationTimestampAfter: string;
+    filterByCommit: string;
+  }>;
+
+export const convertFilterToKubearchiveSelectors = (
+  filterBy: PipelineRunSelector,
+): Pick<WatchK8sResource, 'fieldSelector' | 'selector'> => {
+  const fieldSelectors: Record<string, string> = {};
+  if (filterBy.filterByName) fieldSelectors['metadata.name'] = filterBy.filterByName;
+
+  const fieldSelector = Object.keys(fieldSelectors).length
+    ? Object.entries(fieldSelectors)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(',')
+    : undefined;
+
+  // Build matchExpressions (including commit filter)
+  const matchExpressions: MatchExpression[] = [
+    ...(filterBy.matchExpressions ?? []),
+    ...(filterBy.filterByCommit
+      ? [
+          {
+            key: PipelineRunLabel.COMMIT_LABEL,
+            operator: 'Equals',
+            values: [filterBy.filterByCommit],
+          },
+        ]
+      : []),
+  ];
+
+  // Build the final selector (excluding custom filter fields)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = filterBy;
+  const selector: Selector = { ...rest, matchLabels: filterBy.matchLabels, matchExpressions };
+
+  return { selector, fieldSelector };
+};
+
+export const createKubearchiveWatchResource = (
+  namespace: string,
+  selector?: PipelineRunSelector,
+): {
+  namespace: string;
+  selector?: Selector;
+  fieldSelector?: string;
+} => {
+  if (!selector) return { namespace };
+
+  const { selector: kubearchiveSelector, fieldSelector } =
+    convertFilterToKubearchiveSelectors(selector);
+
+  return {
+    namespace,
+    selector: kubearchiveSelector,
+    fieldSelector,
+  };
+};
 
 const useRunsv2 = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
@@ -122,11 +191,11 @@ const useRunsv2 = <Kind extends K8sResourceCommon>(
     () => ({
       groupVersionKind: PipelineRunGroupVersionKind,
       namespace,
-      // watch,
+      ...createKubearchiveWatchResource(namespace, options?.selector),
       isList: true,
-      // limit: 100,
+      limit: options?.limit,
     }),
-    [namespace],
+    [namespace, options?.limit, options?.selector],
   );
 
   const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
