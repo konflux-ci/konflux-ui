@@ -33,7 +33,7 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
     taskName,
   );
 
-  // TaskRuns are already sorted by useTaskRunsV2, no need to re-sort
+  // TaskRuns are already sorted by useTaskRunsForPipelineRuns, no need to re-sort
   const sortedTaskRuns = taskRuns;
 
   const filteredTaskRun = React.useMemo(

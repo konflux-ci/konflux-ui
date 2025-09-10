@@ -1,4 +1,5 @@
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { createEquals } from '~/k8s/k8s-utils';
 import { MatchExpression, MatchLabels, Selector } from '~/types/k8s';
 import {
   convertFilterToKubearchiveSelectors,
@@ -69,11 +70,7 @@ describe('task-run-filter-transforms', () => {
       });
 
       expect(result.selector.matchExpressions).toEqual([
-        {
-          key: PipelineRunLabel.COMMIT_LABEL,
-          operator: 'Equals',
-          values: [commitSha],
-        },
+        createEquals(PipelineRunLabel.COMMIT_LABEL, commitSha),
       ]);
     });
 
@@ -92,11 +89,9 @@ describe('task-run-filter-transforms', () => {
 
       expect(result.selector.matchExpressions).toHaveLength(2); // 1 existing + 1 commit expression
       expect(result.selector.matchExpressions[0]).toEqual(existingExpressions[0]);
-      expect(result.selector.matchExpressions[1]).toEqual({
-        key: PipelineRunLabel.COMMIT_LABEL,
-        operator: 'Equals',
-        values: ['abc123'],
-      });
+      expect(result.selector.matchExpressions[1]).toEqual(
+        createEquals(PipelineRunLabel.COMMIT_LABEL, 'abc123'),
+      );
     });
 
     it('should handle empty input', () => {

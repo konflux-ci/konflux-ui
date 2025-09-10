@@ -8,8 +8,9 @@ jest.mock('../usePipelineRuns', () => ({
   useTaskRuns: jest.fn(),
 }));
 
-const useTaskRunsV2Mock = useTaskRunsV2 as jest.Mock;
-const usePipelineRunsTaskRunsMock = jest.requireMock('../usePipelineRuns').useTaskRuns;
+const useTaskRunsV2Mock: jest.MockedFunction<typeof useTaskRunsV2> = jest.mocked(useTaskRunsV2);
+const usePipelineRunsTaskRunsMock: jest.Mock =
+  jest.requireMock('~/hooks/usePipelineRuns').useTaskRuns;
 
 describe('useTaskRuns', () => {
   beforeEach(() => {
@@ -58,7 +59,13 @@ describe('useTaskRuns', () => {
   });
 
   it('should call useTaskRunsV2 with selector for useTaskRunsForPipelineRuns', () => {
-    useTaskRunsV2Mock.mockReturnValue([[], false, undefined]);
+    useTaskRunsV2Mock.mockReturnValue([
+      [],
+      false,
+      undefined,
+      jest.fn(),
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
 
     renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'));
 

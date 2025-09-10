@@ -1,7 +1,7 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { useTaskRunsForPipelineRuns } from '../../../hooks/useTaskRuns';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRuns';
 import { testTaskRuns } from '../__data__/mock-TaskRun-data';
 import TaskRunListView from '../TaskRunListView';
 
@@ -9,7 +9,7 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../hooks/useTaskRuns');
+jest.mock('~/hooks/useTaskRuns');
 
 const useTaskRunsForPipelineRunsMock = useTaskRunsForPipelineRuns as jest.Mock;
 

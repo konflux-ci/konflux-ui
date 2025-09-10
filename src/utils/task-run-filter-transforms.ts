@@ -1,4 +1,5 @@
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { createEquals } from '~/k8s/k8s-utils';
 import { MatchExpression, Selector, WatchK8sResource } from '~/types/k8s';
 
 /**
@@ -47,13 +48,7 @@ export const convertFilterToKubearchiveSelectors = (
   const matchExpressions: MatchExpression[] = [
     ...(filterBy.matchExpressions ?? []),
     ...(filterBy.filterByCommit
-      ? [
-          {
-            key: PipelineRunLabel.COMMIT_LABEL,
-            operator: 'Equals',
-            values: [filterBy.filterByCommit],
-          },
-        ]
+      ? [createEquals(PipelineRunLabel.COMMIT_LABEL, filterBy.filterByCommit)]
       : []),
   ];
 

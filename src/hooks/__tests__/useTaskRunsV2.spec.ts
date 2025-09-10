@@ -139,9 +139,9 @@ describe('useTaskRunsV2', () => {
       const mockGetNextPage = jest.fn();
       const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
 
-      // Mock cluster data (live)
+      // Mock cluster data (live) - not enough to satisfy limit
       mockUseK8sWatchResource.mockReturnValue({
-        data: [mockTaskRun1], // Live cluster data
+        data: [mockTaskRun1], // Live cluster data - only 1 item
         isLoading: false,
         error: null,
       });
@@ -157,6 +157,7 @@ describe('useTaskRunsV2', () => {
 
       const { result } = renderHookWithQueryClient('default', {
         selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
+        limit: 5, // Set limit higher than cluster data to trigger needsMoreData
       });
 
       await waitFor(() => {
@@ -180,7 +181,7 @@ describe('useTaskRunsV2', () => {
       expect(mockUseK8sWatchResource).toHaveBeenCalled();
       expect(mockUseTRTaskRuns).toHaveBeenCalledWith('default', {
         selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
-        limit: undefined,
+        limit: 5,
       });
     });
 
@@ -256,9 +257,9 @@ describe('useTaskRunsV2', () => {
     it('should handle Tekton Results errors gracefully', async () => {
       const mockError = new Error('Tekton Results error');
 
-      // Mock successful cluster data
+      // Mock cluster data with insufficient results to trigger needsMoreData
       mockUseK8sWatchResource.mockReturnValue({
-        data: [mockTaskRun1],
+        data: [mockTaskRun1], // Only 1 item
         isLoading: false,
         error: null,
       });
@@ -272,7 +273,9 @@ describe('useTaskRunsV2', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { result } = renderHookWithQueryClient('default');
+      const { result } = renderHookWithQueryClient('default', {
+        limit: 5, // Set limit higher than cluster data to trigger Tekton Results query
+      });
 
       await waitFor(() => {
         expect(result.current[1]).toBe(true); // loaded

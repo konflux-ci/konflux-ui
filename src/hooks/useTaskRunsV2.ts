@@ -37,9 +37,8 @@ export const useTaskRunsV2 = (
           groupVersionKind: TaskRunGroupVersionKind,
           namespace,
           isList: true,
-          selector: options?.selector?.matchLabels
-            ? { matchLabels: options.selector.matchLabels }
-            : undefined,
+          selector: options?.selector,
+          fieldSelector: options?.fieldSelector,
           watch: options?.watch !== false,
         }
       : null,
@@ -58,25 +57,26 @@ export const useTaskRunsV2 = (
     return sorted;
   }, [clusterResources, clusterLoading, clusterError]);
 
-  // should query when there is no limit or no enough data in cluster
+  // should query when there is no limit or no enough data in cluster or cluster meets error
   const needsMoreData =
-    !options?.limit ||
-    (clusterResources && !clusterLoading && options.limit > clusterResources.length) ||
-    clusterError;
+    !clusterLoading &&
+    (!options?.limit || // no limit case
+      (clusterResources && options.limit > clusterResources.length) || // not enough data
+      !!clusterError); // error after load
 
-  const shouldQueryTekton = !enableKubearchive && needsMoreData;
-  const shouldQueryKubearchive = enableKubearchive && needsMoreData;
+  const shouldQueryTekton = !enableKubearchive && namespace && needsMoreData;
+  const shouldQueryKubearchive = enableKubearchive && namespace && needsMoreData;
 
   // tekton historical data - only when we need more data
   const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
-    useTRTaskRuns(shouldQueryTekton && namespace ? namespace : null, {
+    useTRTaskRuns(shouldQueryTekton ? namespace : null, {
       selector: options?.selector,
       limit: options?.limit,
     } as TektonResultsOptions); // useTRTaskRuns only accept two paramets: namespaces and options
 
   // KubeArchive historical data - only when we need more data
   const kubearchiveQuery = useKubearchiveListResourceQuery(
-    shouldQueryKubearchive && namespace
+    shouldQueryKubearchive
       ? {
           groupVersionKind: TaskRunGroupVersionKind,
           isList: true,
