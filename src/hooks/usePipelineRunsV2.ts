@@ -11,7 +11,7 @@ import { getCommitSha } from '../utils/commits-utils';
 import { EQ } from '../utils/tekton-results';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
-const useRuns = <Kind extends K8sResourceCommon>(
+const useRunsv2 = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
   model: K8sModelCommon,
   namespace: string,
@@ -24,14 +24,13 @@ const useRuns = <Kind extends K8sResourceCommon>(
   },
   queryOptions?: { enabled?: boolean },
 ): [Kind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  //   console.log('Version 2 called');
   const etcdRunsRef = React.useRef<Kind[]>([]);
   const optionsMemo = useDeepCompareMemoize(options);
   const limit = optionsMemo?.limit;
   const isList = !optionsMemo?.name;
   const kubearchiveEnabled = useIsOnFeatureFlag('pipelineruns-kubearchive');
   const isEnabled = (queryOptions?.enabled ?? options?.enabled) !== false;
-  //   const watch = options?.watch !== false;
+  // const watch = options?.watch !== false;
   // do not include the limit when querying etcd because result order is not sorted
   const watchOptions = React.useMemo(() => {
     // reset cached runs as the options have changed
@@ -119,15 +118,13 @@ const useRuns = <Kind extends K8sResourceCommon>(
     NextPageProps,
   ];
 
-  //   console.log('Tekton Results', trResources);
-
   const resourceInit = React.useMemo(
     () => ({
       groupVersionKind: PipelineRunGroupVersionKind,
       namespace,
-      //   watch:true,
+      // watch,
       isList: true,
-      //   limit: options.limit,
+      // limit: 100,
     }),
     [namespace],
   );
@@ -138,15 +135,6 @@ const useRuns = <Kind extends K8sResourceCommon>(
     const pages = kubearchiveResult.data?.pages;
     return pages?.flatMap((page) => page) ?? [];
   }, [kubearchiveResult.data?.pages]);
-
-  //   console.log(
-  //     'Kubearchive Result',
-  //     kubearchiveResult,
-  //     'Data',
-  //     kubearchiveResult?.data,
-  //     'processed',
-  //     kubearchiveData,
-  //   );
 
   // Apply sorting and limit to KubeArchive data
   const processedKubearchiveData = React.useMemo(() => {
@@ -201,8 +189,6 @@ const useRuns = <Kind extends K8sResourceCommon>(
   ]);
 };
 
-// ---------------------------------------------------------
-
 export const usePipelineRunsV2 = (
   namespace: string,
   options?: {
@@ -210,4 +196,4 @@ export const usePipelineRunsV2 = (
     limit?: number;
   },
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
-  useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
+  useRunsv2<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
