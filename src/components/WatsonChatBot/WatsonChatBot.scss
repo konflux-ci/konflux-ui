@@ -1,7 +1,173 @@
 .watson-chatbot {
   & .rcb-toggle-button {
+    background-color: var(--konflux-primary-color);
+    border-color: var(--konflux-primary-color);
+    
     &:hover {
-      background-image: linear-gradient(to right, rgb(244, 141, 72), rgb(41, 22, 2));
+      background-color: var(--konflux-primary-hover-color);
+      border-color: var(--konflux-primary-hover-color);
+      background-image: none;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 2px var(--konflux-primary-color);
+    }
+  }
+  & .rcb-chat-input {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    border-top: 1px solid var(--pf-v5-global--BorderColor--100);
+    border-bottom: 1px solid var(--pf-v5-global--BorderColor--100);
+    color: var(--pf-v5-global--Color--dark-100);
+  }
+  & .rcb-chat-input-textarea {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    border: 1px solid var(--pf-v5-global--BorderColor--100);
+    color: var(--pf-v5-global--Color--dark-100);
+  }
+
+
+  & .rcb-chat-body {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+  }
+
+
+  & .rcb-user-message {
+    background-color: var(--konflux-primary-color);
+    color: var(--pf-v5-global--Color--light-100);
+    
+    &:hover {
+      background-color: var(--konflux-primary-hover-color);
+    }
+  }
+
+  & .rcb-bot-message {
+    background-color: var(--konflux-primary-color);
+    color: var(--pf-v5-global--Color--light-100);
+    border: 1px solid var(--konflux-primary-color);
+    
+    &:hover {
+      background-color: var(--konflux-primary-hover-color);
+      border-color: var(--konflux-primary-hover-color);
+    }
+  }
+
+  & .rcb-chat-input-container {
+    background-color: var(--konflux-primary-color);
+    border-top: 1px solid var(--konflux-primary-color);
+    
+    .rcb-chat-input {
+      background-color: var(--pf-v5-global--BackgroundColor--100);
+      border: 1px solid var(--konflux-primary-color);
+      color: var(--pf-v5-global--Color--dark-100);
+      
+      &:focus {
+        border-color: var(--konflux-primary-hover-color);
+        box-shadow: 0 0 0 1px var(--konflux-primary-hover-color);
+      }
+      
+      &:hover {
+        border-color: var(--konflux-primary-hover-color);
+      }
+    }
+  }
+
+  & .rcb-view-history-button {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    border-color: var(--pf-v5-global--BorderColor--100);
+    
+    &:hover {
+      background-color: var(--pf-v5-global--BackgroundColor--200);
+      border-color: var(--pf-v5-global--BorderColor--200);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 2px var(--pf-v5-global--BorderColor--200);
+    }
+
+    &:disabled {
+      background-color: var(--pf-v5-global--disabled-color--200);
+      border-color: var(--pf-v5-global--disabled-color--200);
+      opacity: 0.6;
+    }
+  }
+  & .rcb-chat-footer-container {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    border-top: 1px solid var(--pf-v5-global--BackgroundColor--100);
+    color: var(--pf-v5-global--Color--dark-100);
+  }
+
+  & .rcb-send-button {
+    height: 100%;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: var(--konflux-primary-color);
+    border-color: var(--konflux-primary-color);
+    padding: 0 !important;
+    
+    svg {
+      display: block !important;
+      margin: 0 auto !important;
+      position: relative;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    &:hover {
+      background-color: var(--konflux-primary-hover-color);
+      border-color: var(--konflux-primary-hover-color);
+      background-image: none;
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 2px var(--konflux-primary-color);
+    }
+  }
+
+  & .rcb-chat-body-container {
+    scrollbar-width: thin;
+    scrollbar-color: var(--konflux-primary-color) var(--pf-v5-global--BackgroundColor--100);
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: var(--pf-v5-global--BackgroundColor--100);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: var(--konflux-primary-color);
+      
+      &:hover {
+        background-color: var(--konflux-primary-hover-color);
+      }
+    }
+  }
+  & .rcb-chat-window {
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    border: 1px solid var(--pf-v5-global--BorderColor--100);
+  }
+
+
+  & .rcb-typing-indicator {
+    color: var(--konflux-primary-color);
+  }
+  
+  & .rcb-bot-message a,
+  & .rcb-user-message a {
+    color: var(--pf-v5-global--Color--light-100);
+    text-decoration: underline;
+    font-weight: var(--pf-v5-global--FontWeight--bold);
+    
+    &:hover {
+      color: var(--pf-v5-global--Color--light-200);
+      text-decoration: none;
+    }
+    
+    &:visited {
+      color: var(--pf-v5-global--Color--light-100);
     }
   }
 }
