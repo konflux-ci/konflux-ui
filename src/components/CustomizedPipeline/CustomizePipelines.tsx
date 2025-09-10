@@ -15,8 +15,8 @@ import {
   Truncate,
 } from '@patternfly/react-core';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
-import sendIconUrl from '../../assets/send.svg';
-import successIconUrl from '../../assets/success.svg';
+import SendIconUrl from '../../assets/send.svg';
+import SuccessIconUrl from '../../assets/success.svg';
 import { LEARN_MORE_GITLAB_URL } from '../../consts/documentation';
 import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { PACState } from '../../hooks/usePACState';
@@ -305,7 +305,11 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
             style={{ visibility: allLoading ? 'hidden' : undefined, textAlign: 'center' }}
           >
             <Text component={TextVariants.p}>
-              <img style={{ width: 100 }} src={completed ? successIconUrl : sendIconUrl} />
+              {completed ? (
+                <SuccessIconUrl style={{ width: 100 }} />
+              ) : (
+                <SendIconUrl style={{ width: 100 }} />
+              )}
             </Text>
             <Text component={TextVariants.h2}>{'Manage build pipeline'}</Text>
             <Text component={TextVariants.p}>
