@@ -18,7 +18,7 @@ const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
   const compareByName = (a: TaskRunKind, b: TaskRunKind) =>
     (a?.metadata?.name || '').localeCompare(b?.metadata?.name || '');
 
-  return [...taskRuns].sort((a, b) => {
+  const sortFunction = (a: TaskRunKind, b: TaskRunKind) => {
     const aCompletion = getCompletion(a);
     const bCompletion = getCompletion(b);
 
@@ -39,7 +39,14 @@ const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
 
     // 3. Final fallback → sort by name when there is no startTime or completed time.
     return compareByName(a, b);
-  });
+  };
+
+  // @ts-expect-error: toSorted might not be in TS yet
+  if (typeof taskRuns.toSorted === 'function') {
+    // @ts-expect-error: toSorted might not be in TS yet
+    return taskRuns.toSorted(sortFunction);
+  }
+  return [...taskRuns].sort(sortFunction);
 };
 
 export const useTaskRuns = (

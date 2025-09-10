@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRuns';
 import { Table, useDeepCompareMemoize } from '../../shared';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
+import { getErrorState } from '../../shared/utils/error-utils';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { TaskRunListHeader } from './TaskRunListHeader';
@@ -50,13 +50,9 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   );
 
   // Handle error state
-  if (error) {
-    return (
-      <ErrorEmptyState
-        title="Unable to load task runs"
-        body={(error as { message: string }).message}
-      />
-    );
+  const errorState = getErrorState(error, loaded, 'task runs');
+  if (errorState) {
+    return errorState;
   }
 
   if (!loaded) {

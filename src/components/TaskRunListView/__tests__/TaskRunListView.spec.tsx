@@ -42,9 +42,9 @@ describe('TaskRunListView', () => {
 
   it('should render error state when there is an error', () => {
     const error = new Error('Test error');
-    const wrapper = render(TaskRunList([], false, error));
+    const wrapper = render(TaskRunList([], true, error));
     expect(wrapper.queryByText('Unable to load task runs')).toBeTruthy();
-    expect(wrapper.queryByText('Test error')).toBeTruthy();
+    expect(wrapper.queryByText('Something went wrong')).toBeTruthy();
   });
 
   it('should render table when TaskRuns are present', () => {
