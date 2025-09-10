@@ -8467,6 +8467,11 @@ raw-body@2.5.2:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+react-chatbotify@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/react-chatbotify/-/react-chatbotify-2.3.0.tgz#eaca41d680c7d69f8abb0fdfcb34bb021e14e42e"
+  integrity sha512-6gG+8VJlLU48ziG+GYHyOaHUNSb59GQgcdl9KfD9Y+pVOCDT4AL1/Z2QM8F+sVQCDA71NlKk1tOdo5+TtELNRA==
+
 react-dnd-html5-backend@^16.0.1:
   version "16.0.1"
   resolved "https://registry.yarnpkg.com/react-dnd-html5-backend/-/react-dnd-html5-backend-16.0.1.tgz#87faef15845d512a23b3c08d29ecfd34871688b6"
