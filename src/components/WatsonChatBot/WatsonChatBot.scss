@@ -1,0 +1,7 @@
+.watson-chatbot {
+  & .rcb-toggle-button {
+    &:hover {
+      background-image: linear-gradient(to right, rgb(244, 141, 72), rgb(41, 22, 2));
+    }
+  }
+}
