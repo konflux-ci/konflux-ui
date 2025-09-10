@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useFeatureFlags } from '~/feature-flags/hooks';
-import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -18,6 +17,7 @@ import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
 import { useApplication } from './useApplications';
 import { useComponents } from './useComponents';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
 const useRuns = <Kind extends K8sResourceCommon>(
@@ -319,167 +319,57 @@ export const usePipelineRunsForCommitV2 = (
   limit?: number,
   filterByComponents = true,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const isKubearchiveEnabled = useFeatureFlags('kubearchive-logs');
+  const isKubearchiveEnabled = useFeatureFlags('pipelineruns-kubearchive');
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
-  const [application, applicationLoaded] = useApplication(namespace, applicationName);
+  const [application] = useApplication(namespace, applicationName);
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
     [components, componentsLoaded],
   );
 
-  const enabled =
-    !!namespace && !!applicationName && !!commit && !!application && applicationLoaded;
-
-  // k8sQuery
-  const {
-    data: resources,
-    isLoading,
-    error,
-  } = useK8sWatchResource<PipelineRunKind>(
-    enabled
-      ? {
-          groupVersionKind: PipelineRunGroupVersionKind,
-          namespace,
-          isList: true,
-          selector: {
-            matchLabels: {
-              [PipelineRunLabel.APPLICATION]: applicationName,
-            },
-            matchExpressions: filterByComponents
-              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
-              : undefined,
-          },
-          watch: true,
-        }
-      : undefined,
-    PipelineRunModel,
-    { retry: false },
-  );
-
-  // kubearchive query (when kubearchive is enabled)
-  const {
-    data,
-    isLoading: isLoadingKubearchive,
-    error: errorKubearchive,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useKubearchiveListResourceQuery(
-    isKubearchiveEnabled && enabled
-      ? {
-          groupVersionKind: PipelineRunGroupVersionKind,
-          namespace,
-          limit,
-          selector: {
-            matchLabels: {
-              [PipelineRunLabel.APPLICATION]: applicationName,
-            },
-            matchExpressions: filterByComponents
-              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
-              : undefined,
-          },
-        }
-      : undefined,
-    PipelineRunModel,
-  );
-
-  // tekton results query (when kubearchive is disabled)
-  const [trResources, trLoaded, trError, trGetNextPage, trNextPageProps] = useTRPipelineRuns(
-    !isKubearchiveEnabled && enabled ? namespace : null,
+  const [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps] = usePipelineRunsV2(
+    namespace,
     React.useMemo(
       () => ({
         selector: {
+          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
           },
-          matchExpressions: filterByComponents
-            ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
-            : undefined,
+          matchExpressions:
+            filterByComponents && componentNames.length > 0
+              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
+              : undefined,
+          filterByCommit: commit,
         },
+        enabled: isKubearchiveEnabled,
+        limit: filterByComponents ? limit : undefined,
       }),
-      [applicationName, componentNames, filterByComponents],
+      [
+        applicationName,
+        commit,
+        application,
+        componentNames,
+        filterByComponents,
+        limit,
+        isKubearchiveEnabled,
+      ],
     ),
   );
 
   return React.useMemo(() => {
-    if (!isLoading && resources) {
-      const resourcesArray: PipelineRunKind[] = Array.isArray(resources) ? resources : [resources];
-      return [
-        resourcesArray
-          .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
-          .filter(
-            (plr) =>
-              new Date(plr.metadata?.creationTimestamp).getTime() >=
-              new Date(application?.metadata?.creationTimestamp).getTime(),
-          )
-          .slice(0, limit ? limit : undefined),
-        !isLoading,
-        error,
-        undefined,
-        undefined,
-      ];
+    if (plrsLoaded) {
+      return [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps];
     }
-    if (isKubearchiveEnabled && !isLoadingKubearchive && data?.pages?.length) {
-      return [
-        (data.pages[0] as PipelineRunKind[])
-          .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
-          .filter(
-            (plr) =>
-              new Date(plr.metadata?.creationTimestamp).getTime() >=
-              new Date(application?.metadata?.creationTimestamp).getTime(),
-          ),
-        !isLoadingKubearchive,
-        errorKubearchive,
-        hasNextPage ? fetchNextPage : null,
-        { hasNextPage, isFetchingNextPage },
-      ];
-    }
-    if (!isKubearchiveEnabled && trResources) {
-      return [
-        trResources
-          .filter((plr) => getCommitSha(plr as unknown as PipelineRunKind) === commit)
-          .filter(
-            (plr) =>
-              new Date(plr.metadata?.creationTimestamp).getTime() >=
-              new Date(application?.metadata?.creationTimestamp).getTime(),
-          )
-          .slice(0, limit ? limit : undefined),
-        trLoaded,
-        trError,
-        trGetNextPage,
-        trNextPageProps,
-      ];
-    }
-    return [
-      [],
-      isLoading || isLoadingKubearchive || !trLoaded,
-      error ?? (isKubearchiveEnabled ? errorKubearchive : trError),
-      undefined,
-      undefined,
-    ];
+    return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
   }, [
-    commit,
-    limit,
-    application?.metadata?.creationTimestamp,
-    // k8Query
-    resources,
-    isLoading,
-    error,
-    // Kubearchive
-    isKubearchiveEnabled,
-    data,
-    isLoadingKubearchive,
-    errorKubearchive,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    // Tekton Results
-    trResources,
-    trLoaded,
-    trError,
-    trGetNextPage,
-    trNextPageProps,
+    // usePipelineRunV2 variables
+    pipelineRuns,
+    plrsLoaded,
+    plrError,
+    getNextPage,
+    nextPageProps,
   ]);
 };
 
