@@ -39,4 +39,8 @@
     overflow-x: hidden !important;
     width: 100% !important;
   }
+
+  .pf-v5-c-log-viewer__scroll-container {
+    overflow-y: visible !important;
+  }
 }
