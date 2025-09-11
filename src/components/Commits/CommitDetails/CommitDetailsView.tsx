@@ -119,6 +119,7 @@ const CommitDetailsView: React.FC = () => {
             key: 'index',
             label: 'Details',
             isFilled: true,
+            unstableFeature: 'pipelineruns-kubearchive',
           },
           {
             key: 'pipelineruns',
