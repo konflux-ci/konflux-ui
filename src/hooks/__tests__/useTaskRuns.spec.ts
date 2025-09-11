@@ -1,14 +1,10 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { testTaskRuns } from '../../components/TaskRunListView/__data__/mock-TaskRun-data';
-import { useTaskRuns, useTaskRunsForPipelineRuns } from '../useTaskRuns';
-import { useTaskRunsV2 } from '../useTaskRunsV2';
-
-jest.mock('../useTaskRunsV2');
+import { useTaskRuns } from '../useTaskRuns';
 jest.mock('../usePipelineRuns', () => ({
   useTaskRuns: jest.fn(),
 }));
 
-const useTaskRunsV2Mock: jest.MockedFunction<typeof useTaskRunsV2> = jest.mocked(useTaskRunsV2);
 const usePipelineRunsTaskRunsMock: jest.Mock =
   jest.requireMock('~/hooks/usePipelineRuns').useTaskRuns;
 
@@ -56,29 +52,5 @@ describe('useTaskRuns', () => {
     const { result } = renderHook(() => useTaskRuns('test-ns', 'test'));
 
     expect(result.current).toEqual([[], false, undefined]);
-  });
-
-  it('should call useTaskRunsV2 with selector for useTaskRunsForPipelineRuns', () => {
-    useTaskRunsV2Mock.mockReturnValue([
-      [],
-      false,
-      undefined,
-      jest.fn(),
-      { hasNextPage: false, isFetchingNextPage: false },
-    ]);
-
-    renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'));
-
-    expect(useTaskRunsV2Mock).toHaveBeenCalledWith(
-      'test-ns',
-      expect.objectContaining({
-        selector: {
-          matchLabels: {
-            'tekton.dev/pipelineRun': 'test-pipelinerun',
-            'tekton.dev/pipelineTask': 'test-task',
-          },
-        },
-      }),
-    );
   });
 });

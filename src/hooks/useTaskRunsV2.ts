@@ -5,8 +5,9 @@ import { WatchK8sResource } from '~/types/k8s';
 import { useK8sWatchResource } from '../k8s';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
-import { TaskRunKind } from '../types';
+import { TaskRunKind, TektonResourceLabel } from '../types';
 import { createKubearchiveWatchResource } from '../utils/task-run-filter-transforms';
+import { sortTaskRunsByTime } from './useTaskRuns';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 // eslint-disable-next-line import/order
 import { TektonResultsOptions } from '~/utils/tekton-results';
@@ -80,7 +81,6 @@ export const useTaskRunsV2 = (
       ? {
           groupVersionKind: TaskRunGroupVersionKind,
           isList: true,
-          watch: options?.watch !== false,
           ...createKubearchiveWatchResource(namespace, options?.selector),
         }
       : undefined,
@@ -95,13 +95,13 @@ export const useTaskRunsV2 = (
       // Legacy: cluster + Tekton
       combinedData = uniqBy(
         [...processedClusterData, ...(tektonTaskRuns || [])],
-        (r) => r.metadata?.name,
+        (r) => r.metadata?.uid,
       );
     } else {
       // KubeArchive: cluster + archive
       const archiveData = (kubearchiveQuery.data?.pages?.flatMap((page) => page) ??
         []) as TaskRunKind[];
-      combinedData = uniqBy([...processedClusterData, ...archiveData], (r) => r.metadata?.name);
+      combinedData = uniqBy([...processedClusterData, ...archiveData], (r) => r.metadata?.uid);
 
       combinedData.sort((a, b) =>
         (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
@@ -133,11 +133,7 @@ export const useTaskRunsV2 = (
       return clusterError || kubearchiveQuery.error;
     })();
 
-    const getNextPage = !enableKubearchive
-      ? tektonGetNextPage
-      : kubearchiveQuery.hasNextPage
-        ? kubearchiveQuery.fetchNextPage
-        : undefined;
+    const getNextPage = !enableKubearchive ? tektonGetNextPage : kubearchiveQuery.fetchNextPage;
 
     const nextPageProps: NextPageProps = !enableKubearchive
       ? tektonNextPageProps
@@ -167,4 +163,42 @@ export const useTaskRunsV2 = (
     tektonGetNextPage,
     tektonNextPageProps,
   ]);
+};
+
+/**
+ * Hook for fetching TaskRuns associated with a specific PipelineRun.
+ *
+ * The `taskruns-kubearchive` feature flag controls which data source is used:
+ * - Enabled  → fetches data from KubeArchive
+ * - Disabled → falls back to Tekton Results
+ *
+ * This hook relies on `useTaskRunsV2(namespace, { selector })`.
+ * It is intended to replace `useTaskRuns` in the future.
+ *
+ *
+ * @param namespace - Kubernetes namespace
+ * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
+ * @param taskName - Optional specific task name to filter by
+ * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
+ */
+export const useTaskRunsForPipelineRuns = (
+  namespace: string,
+  pipelineRunName: string,
+  taskName?: string,
+): [TaskRunKind[], boolean, unknown] => {
+  const selector = React.useMemo(
+    () => ({
+      matchLabels: {
+        [TektonResourceLabel.pipelinerun]: pipelineRunName,
+        ...(taskName ? { [TektonResourceLabel.pipelineTask]: taskName } : {}),
+      },
+    }),
+    [pipelineRunName, taskName],
+  );
+
+  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, { selector });
+
+  const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
+
+  return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
 };

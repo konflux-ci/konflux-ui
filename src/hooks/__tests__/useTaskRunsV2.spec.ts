@@ -6,7 +6,7 @@ import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { WatchK8sResource } from '~/types/k8s';
 import { TaskRunKind } from '~/types/task-run';
 import { createK8sWatchResourceMock, createTestQueryClient } from '~/utils/test-utils';
-import { useTaskRunsV2 } from '../useTaskRunsV2';
+import { useTaskRunsV2, useTaskRunsForPipelineRuns } from '../useTaskRunsV2';
 import { useTRTaskRuns } from '../useTektonResults';
 
 // Mock dependencies
@@ -632,6 +632,103 @@ describe('useTaskRunsV2', () => {
       expect(error).toBeNull();
 
       expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object));
+    });
+  });
+
+  describe('useTaskRunsForPipelineRuns', () => {
+    beforeEach(() => {
+      mockUseIsOnFeatureFlag.mockReturnValue(false); // Default to Tekton Results for this test
+    });
+
+    it('should call useTaskRunsV2 with correct selector', async () => {
+      // Mock the underlying useTaskRunsV2 to return sorted data
+      const mockTaskRuns = [mockTaskRun1, mockTaskRun2];
+
+      mockUseK8sWatchResource.mockReturnValue({
+        data: mockTaskRuns,
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      const { result } = renderHook(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'),
+        {
+          wrapper: ({ children }) =>
+            React.createElement(QueryClientProvider, { client: queryClient }, children),
+        },
+      );
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true); // loaded
+      });
+
+      const [taskRuns, loaded, error] = result.current;
+      expect(taskRuns).toBeDefined();
+      expect(loaded).toBe(true);
+      expect(error).toBeNull();
+
+      // Verify that useK8sWatchResource was called with the correct selector
+      expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selector: {
+            matchLabels: {
+              'tekton.dev/pipelineRun': 'test-pipelinerun',
+              'tekton.dev/pipelineTask': 'test-task',
+            },
+          },
+        }),
+        expect.any(Object),
+        expect.any(Object),
+      );
+    });
+
+    it('should call useTaskRunsV2 with selector without taskName when not provided', async () => {
+      mockUseK8sWatchResource.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+
+      const { result } = renderHook(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun'),
+        {
+          wrapper: ({ children }) =>
+            React.createElement(QueryClientProvider, { client: queryClient }, children),
+        },
+      );
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true); // loaded
+      });
+
+      // Verify that useK8sWatchResource was called with the correct selector (no taskName)
+      expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selector: {
+            matchLabels: {
+              'tekton.dev/pipelineRun': 'test-pipelinerun',
+            },
+          },
+        }),
+        expect.any(Object),
+        expect.any(Object),
+      );
     });
   });
 });

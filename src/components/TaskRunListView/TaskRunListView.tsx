@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Bullseye, EmptyState, EmptyStateBody, Spinner } from '@patternfly/react-core';
-import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRuns';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { Table, useDeepCompareMemoize } from '../../shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { getErrorState } from '../../shared/utils/error-utils';
@@ -26,7 +26,6 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   });
   const { name: nameFilter } = filters;
 
-  // Use useTaskRunsForPipelineRuns which handles feature flag switching and sorting
   const [taskRuns, loaded, error] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
@@ -34,19 +33,17 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   );
 
   // TaskRuns are already sorted by useTaskRunsForPipelineRuns, no need to re-sort
-  const sortedTaskRuns = taskRuns;
-
   const filteredTaskRun = React.useMemo(
     () =>
       nameFilter
-        ? sortedTaskRuns.filter(
+        ? taskRuns.filter(
             (taskrun) =>
               taskrun.metadata.name.indexOf(nameFilter) !== -1 ||
               (taskrun.spec?.taskRef?.name &&
                 taskrun.spec?.taskRef?.name?.indexOf(nameFilter) !== -1),
           )
-        : sortedTaskRuns,
-    [nameFilter, sortedTaskRuns],
+        : taskRuns,
+    [nameFilter, taskRuns],
   );
 
   // Handle error state

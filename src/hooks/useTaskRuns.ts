@@ -1,12 +1,11 @@
 import * as React from 'react';
 import { TaskRunKind, TektonResourceLabel } from '~/types';
 import { useTaskRuns as useTaskRuns2 } from './usePipelineRuns';
-import { useTaskRunsV2 } from './useTaskRunsV2';
 
 /**
  * Sorts TaskRuns by completion time, then by start time (newest first)
  */
-const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
+export const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
   if (!taskRuns?.length) return [];
 
   const getCompletion = (t: TaskRunKind) =>
@@ -68,44 +67,6 @@ export const useTaskRuns = (
       [pipelineRunName, taskName],
     ),
   );
-
-  const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
-
-  return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
-};
-
-/**
- * Hook for fetching TaskRuns associated with a specific PipelineRun.
- *
- * The `taskruns-kubearchive` feature flag controls which data source is used:
- * - Enabled  → fetches data from KubeArchive
- * - Disabled → falls back to Tekton Results
- *
- * Internally, this hook relies on `useTaskRunsV2(namespace, { selector })`.
- * It is intended to replace `useTaskRuns` in the future.
- *
- *
- * @param namespace - Kubernetes namespace
- * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
- * @param taskName - Optional specific task name to filter by
- * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
- */
-export const useTaskRunsForPipelineRuns = (
-  namespace: string,
-  pipelineRunName: string,
-  taskName?: string,
-): [TaskRunKind[], boolean, unknown] => {
-  const selector = React.useMemo(
-    () => ({
-      matchLabels: {
-        [TektonResourceLabel.pipelinerun]: pipelineRunName,
-        ...(taskName ? { [TektonResourceLabel.pipelineTask]: taskName } : {}),
-      },
-    }),
-    [pipelineRunName, taskName],
-  );
-
-  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, { selector });
 
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
