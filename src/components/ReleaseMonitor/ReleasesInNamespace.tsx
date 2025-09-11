@@ -26,7 +26,7 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
 
   React.useEffect(() => {
     if (!isLoading) {
-      const error = clusterError || archiveError;
+      const error = clusterError && archiveError;
       if (error) {
         onError(error);
       } else if (data) {

@@ -129,12 +129,16 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       applicationOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
+        [...apps],
       ),
-      releasePlanOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.spec.releasePlan),
+      releasePlanOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.spec.releasePlan, [
+        ...plans,
+      ]),
       namespaceOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.metadata.namespace),
       componentOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
+        [...comps],
       ),
     };
   }, [sortedMonitoredReleases, releases]);
