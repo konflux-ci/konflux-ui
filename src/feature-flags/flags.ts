@@ -1,3 +1,4 @@
+import { KonfluxInstanceEnvironmentType } from '~/types/konflux-public-info';
 import { GuardSpec } from './conditions';
 
 export const FLAGS_STATUS = {
@@ -39,9 +40,21 @@ export interface FeatureMeta {
    * The validator is called before allowing the user to enable the flag.
    */
   guard?: GuardSpec;
+  /**
+   * Optional environment constraints.
+   * If specified, the flag is only available in the listed environments.
+   * If not specified, the flag is available in all environments.
+   */
+  environments?: KonfluxInstanceEnvironmentType[];
 }
 
 const InternalFLAGS = {
+  'dark-theme': {
+    key: 'dark-theme',
+    description: 'Enable the theme switcher in the header to toggle between light and dark modes.',
+    defaultEnabled: false,
+    status: 'wip',
+  },
   'release-monitor': {
     key: 'release-monitor',
     description:
@@ -72,7 +85,13 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-} satisfies Record<string, FeatureMeta>;
+  'pipelineruns-kubearchive': {
+    key: 'pipelineruns-kubearchive',
+    description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+  },
+};
 
 export type FlagKey = keyof typeof InternalFLAGS;
 

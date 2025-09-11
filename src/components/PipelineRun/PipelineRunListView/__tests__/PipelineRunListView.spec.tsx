@@ -1,13 +1,15 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { createTestQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
@@ -25,8 +27,54 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(),
+}));
+
+jest.mock('~/kubearchive/hooks', () => ({
+  useKubearchiveListResourceQuery: jest.fn(() => ({
+    data: { pages: [] },
+    isLoading: false,
+    error: null,
+    hasNextPage: false,
+    fetchNextPage: jest.fn(),
+    isFetchingNextPage: false,
+  })),
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  useIsOnFeatureFlag: jest.fn(() => false),
+  createConditionsHook: jest.fn(() => jest.fn(() => false)),
+}));
+
+jest.mock('~/feature-flags/utils', () => ({
+  ensureConditionIsOn: jest.fn(() => jest.fn(() => false)),
+}));
+
+jest.mock('../../../../hooks/useTektonResults', () => ({
+  useTRPipelineRuns: jest.fn(() => [
+    [],
+    true,
+    null,
+    jest.fn(),
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+  useTRTaskRuns: jest.fn(() => [
+    [],
+    true,
+    null,
+    jest.fn(),
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+}));
+
+jest.mock('~/k8s', () => ({
+  useK8sWatchResource: jest.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
+  commonFetch: jest.fn(() => Promise.resolve({})),
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
@@ -192,13 +240,18 @@ const pipelineRuns: PipelineRunKind[] = [
   },
 ];
 
-const usePipelineRunsMock = usePipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
-const TestedComponent = ({ name }) => (
-  <FilterContextProvider filterParams={['name', 'status', 'type']}>
-    <PipelineRunsListView applicationName={name} />
-  </FilterContextProvider>
-);
+const TestedComponent = ({ name }) => {
+  const queryClient = createTestQueryClient();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <FilterContextProvider filterParams={['name', 'status', 'type']}>
+        <PipelineRunsListView applicationName={name} />
+      </FilterContextProvider>
+    </QueryClientProvider>
+  );
+};
 
 describe('Pipeline run List', () => {
   mockUseNamespaceHook('test-ns');
@@ -210,7 +263,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render spinner if application data is not loaded', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       false,
       null,
@@ -222,7 +275,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render empty state if no application is present', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       true,
       null,
@@ -240,7 +293,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render error state when there is an API error', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       true,
       new Error('500: Internal server error'),
@@ -252,7 +305,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render correct columns when pipelineRuns are present', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       pipelineRuns,
       true,
       null,
