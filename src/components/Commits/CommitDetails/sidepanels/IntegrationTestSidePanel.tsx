@@ -83,7 +83,7 @@ const IntegrationTestSidePanel: React.FC<
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <img src={PipelineIcon} alt="pipeline run" /> Integration test
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
