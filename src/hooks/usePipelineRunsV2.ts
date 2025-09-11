@@ -11,12 +11,18 @@ import { getCommitSha } from '../utils/commits-utils';
 import { EQ } from '../utils/tekton-results';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
+type PipelineRunSelector = Selector & {
+  filterByCommit?: string;
+  filterByCreationTimestampAfter?: string;
+  filterByName?: string;
+};
+
 const useRuns = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
   model: K8sModelCommon,
   namespace: string,
   options?: {
-    selector?: Selector;
+    selector?: PipelineRunSelector;
     limit?: number;
     name?: string;
     watch?: boolean;
@@ -150,9 +156,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
       data = data.filter(
         (plr) =>
           !!plr?.metadata?.creationTimestamp &&
-          plr.metadata.creationTimestamp.localeCompare(
-            sel.filterByCreationTimestampAfter as string,
-          ) > 0,
+          plr.metadata.creationTimestamp.localeCompare(sel.filterByCreationTimestampAfter) > 0,
       );
     }
     if (optionsMemo?.name) {
@@ -216,7 +220,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
 export const usePipelineRunsV2 = (
   namespace: string,
   options?: {
-    selector?: Selector;
+    selector?: PipelineRunSelector;
     limit?: number;
   },
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
