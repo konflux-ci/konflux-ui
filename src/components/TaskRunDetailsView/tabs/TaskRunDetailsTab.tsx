@@ -87,31 +87,31 @@ const TaskRunDetailsTab: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Name</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {taskRun?.metadata?.name ?? '-'}
+                    {taskRun.metadata?.name ?? '-'}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Namespace</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {taskRun?.metadata?.namespace ?? '-'}
+                    {taskRun.metadata?.namespace ?? '-'}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Labels</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <MetadataList metadata={taskRun?.metadata?.labels} />
+                    <MetadataList metadata={taskRun.metadata?.labels} />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Annotations</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <MetadataList metadata={taskRun?.metadata?.annotations} />
+                    <MetadataList metadata={taskRun.metadata?.annotations} />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Created at</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <Timestamp timestamp={taskRun?.metadata?.creationTimestamp ?? '-'} />
+                    <Timestamp timestamp={taskRun.metadata?.creationTimestamp ?? '-'} />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 <DescriptionListGroup>
@@ -140,7 +140,7 @@ const TaskRunDetailsTab: React.FC = () => {
                   <DescriptionListTerm>Description</DescriptionListTerm>
                   <DescriptionListDescription>
                     <SyncMarkdownView
-                      content={taskRun?.status?.taskSpec?.description || '-'}
+                      content={taskRun.status?.taskSpec?.description || '-'}
                       inline
                     />
                   </DescriptionListDescription>
@@ -219,7 +219,7 @@ const TaskRunDetailsTab: React.FC = () => {
                           workspaceName: namespace,
                         })}
                       >
-                        {taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION]}
+                        {taskRun.metadata?.labels?.[PipelineRunLabel.APPLICATION]}
                       </Link>
                     ) : (
                       '-'
@@ -229,19 +229,19 @@ const TaskRunDetailsTab: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Component</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {taskRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
+                    {taskRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                       applicationName ? (
                         <Link
                           to={COMPONENT_DETAILS_PATH.createPath({
                             workspaceName: namespace,
                             applicationName,
-                            componentName: taskRun?.metadata.labels?.[PipelineRunLabel.COMPONENT],
+                            componentName: taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT],
                           })}
                         >
-                          {taskRun?.metadata.labels?.[PipelineRunLabel.COMPONENT]}
+                          {taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]}
                         </Link>
                       ) : (
-                        taskRun?.metadata.labels?.[PipelineRunLabel.COMPONENT]
+                        taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]
                       )
                     ) : (
                       '-'
