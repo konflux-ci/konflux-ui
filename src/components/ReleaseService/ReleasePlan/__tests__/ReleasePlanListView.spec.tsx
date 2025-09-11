@@ -136,4 +136,38 @@ describe('ReleasePlanListView', () => {
     const clearFilterButton = screen.getAllByRole('button', { name: 'Clear all filters' })[0];
     fireEvent.click(clearFilterButton);
   });
+
+  describe('Access Control Scenarios', () => {
+    it('should show access denied state when user lacks list permissions', () => {
+      mockAccessReviewUtil('useAccessReviewForModels', [false, true]);
+      mockReleasePlanHook.mockReturnValue([[mockReleasePlan], true]);
+
+      render(ReleasePlanList);
+
+      expect(screen.getByTestId('no-access-state')).toBeInTheDocument();
+      expect(screen.queryByTestId('release-plan-list-toolbar')).not.toBeInTheDocument();
+    });
+
+    it('should show loading spinner while access review is being checked', () => {
+      mockAccessReviewUtil('useAccessReviewForModels', [true, false]);
+      mockReleasePlanHook.mockReturnValue([[mockReleasePlan], true]);
+
+      render(ReleasePlanList);
+
+      expect(screen.getByTestId('spinner')).toBeInTheDocument();
+    });
+
+    it('should render list view when user has proper list access', async () => {
+      mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
+      mockReleasePlanHook.mockReturnValue([[mockReleasePlan], true]);
+
+      render(ReleasePlanList);
+
+      expect(screen.queryByTestId('no-access-state')).not.toBeInTheDocument();
+      expect(screen.getByTestId('release-plan-list-toolbar')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByRole('grid')).toBeInTheDocument();
+      });
+    });
+  });
 });
