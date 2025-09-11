@@ -98,21 +98,26 @@
 
   & .rcb-send-button {
     height: 100%;
-    display: flex !important;
     align-items: center !important;
+    justify-items: center !important;
     justify-content: center !important;
     background-color: var(--konflux-primary-color);
     border-color: var(--konflux-primary-color);
     padding: 0 !important;
+
     
     svg {
-      display: block !important;
-      margin: 0 auto !important;
-      position: relative;
-      top: 45%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+       background-color: red;
+       align-self: center ;
+       margin: 0 auto;
     }
+    //  display: block !important;
+    //  margin: 0 auto !important;
+    //  position: relative;
+    //  //top: 45%;
+    //  //left: 50%;
+    //  transform: translate(-50%, -50%);
+    //}
     
     &:hover {
       background-color: var(--konflux-primary-hover-color);
@@ -123,6 +128,11 @@
     &:focus {
       box-shadow: 0 0 0 2px var(--konflux-primary-color);
     }
+  }
+
+  & .rcb-chat-header-container{
+    background-color: var(--pf-v5-global--BackgroundColor--100);
+    border-bottom: 1px solid var(--pf-v5-global--BorderColor--100);
   }
 
   & .rcb-chat-body-container {
