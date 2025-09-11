@@ -40,7 +40,7 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
             {release ? <StatusIconWithTextLabel status={workflowNode.getData().status} /> : null}
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <img src={PipelineIcon} alt="pipeline run" /> Release
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Release
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />

@@ -138,8 +138,5 @@ const ReleasePlanListViewWithContext = (
 );
 
 export default withPageAccessCheck(ReleasePlanListViewWithContext)({
-  accessReviewResources: [
-    { model: ReleasePlanModel, verb: 'patch' },
-    { model: ReleasePlanModel, verb: 'create' },
-  ],
+  accessReviewResources: [{ model: ReleasePlanModel, verb: 'list' }],
 });

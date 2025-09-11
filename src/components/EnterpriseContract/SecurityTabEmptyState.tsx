@@ -14,13 +14,11 @@ import {
 } from '@patternfly/react-core';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
 import { RouterParams } from '@routes/utils';
-import securityShieldImg from '../../assets/shield-security.svg';
+import SecurityShieldImg from '../../assets/shield-security.svg';
 
 import '../../shared/components/empty-state/EmptyState.scss';
 
-const EmptyStateImg = () => (
-  <img className="app-empty-state__icon" src={securityShieldImg} alt="" />
-);
+const EmptyStateImg = () => <SecurityShieldImg className="app-empty-state__icon" role="img" />;
 
 const SecurityTabEmptyState: React.FC<
   React.PropsWithChildren<Omit<EmptyStateProps, 'children'>>
