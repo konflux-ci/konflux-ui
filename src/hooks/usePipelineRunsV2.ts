@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { differenceBy } from 'lodash-es';
+import { differenceBy, uniqBy } from 'lodash-es';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
@@ -76,7 +76,7 @@ export const createKubearchiveWatchResource = (
 export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
   namespace: string | null,
   options?: {
-    selector?: Selector;
+    selector?: PipelineRunSelector;
     limit?: number;
     name?: string;
     watch?: boolean;
@@ -148,9 +148,21 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
   // cache the last set to identify removed runs
   etcdRunsRef.current = runs;
 
+  const processedClusterData = React.useMemo(() => {
+    if (isLoading || error || !resources) return [];
+
+    const sorted = [...resources].sort((a, b) =>
+      (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
+    );
+
+    return sorted;
+  }, [resources, isLoading, error]);
+
   // Query tekton results if there's no limit or we received less items from etcd than the current limit
   const queryTr =
-    !limit || (namespace && ((runs && !isLoading && optionsMemo.limit > runs.length) || error));
+    !!namespace &&
+    !kubearchiveEnabled &&
+    (!limit || (runs && !isLoading && (limit ?? 0) > (runs?.length ?? 0)) || !!error);
 
   const trOptions: typeof optionsMemo = React.useMemo(() => {
     if (optionsMemo?.name) {
@@ -179,7 +191,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
             namespace,
             ...createKubearchiveWatchResource(namespace, options?.selector),
             isList: true,
-            limit: options?.limit,
+            limit: options?.limit || 200,
           }
         : undefined,
     [namespace, options?.limit, options?.selector, kubearchiveEnabled],
@@ -189,29 +201,41 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
 
   const kubearchiveData = React.useMemo(() => {
     const pages = kubearchiveResult.data?.pages;
-    return pages?.flatMap((page) => page) ?? [];
-  }, [kubearchiveResult.data?.pages]);
-
-  // Apply sorting and limit to KubeArchive data
-  const processedKubearchiveData = React.useMemo(() => {
+    const archiveData = pages?.flatMap((page) => page) ?? [];
+    // Apply sorting and limit to KubeArchive data
     if (!kubearchiveEnabled) return [];
-
-    const data = kubearchiveData as PipelineRunKind[];
+    const data = archiveData as PipelineRunKind[];
     const toKey = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
     // Sort by creationTimestamp (newest first); stable for equal keys
     const sorted = [...data].sort((a, b) => toKey(b).localeCompare(toKey(a)));
 
     // Apply limit if specified
     return options?.limit && options.limit > 0 ? sorted.slice(0, options.limit) : sorted;
-  }, [kubearchiveEnabled, kubearchiveData, options?.limit]);
+  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, options?.limit]);
+
+  //combine cluster data with tekton results/kubeArchive results based on flag
+  let combinedData = !kubearchiveEnabled
+    ? uniqBy([...processedClusterData, ...(trResources || [])], (r) => r.metadata?.name)
+    : uniqBy([...processedClusterData, ...(kubearchiveData || [])], (r) => r.metadata?.name);
+
+  combinedData.sort((a, b) =>
+    (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
+  );
+
+  // Apply limit if specified
+  if (options?.limit && options.limit < combinedData.length) {
+    combinedData = combinedData.slice(0, options.limit);
+  }
 
   // Return the appropriate data based on feature flag
   return React.useMemo(() => {
     if (kubearchiveEnabled) {
       const isLoadingKubeArchive = !namespace ? false : kubearchiveResult.isLoading;
       const isError = !namespace ? undefined : kubearchiveResult.error;
-      const getNextPage = kubearchiveResult.hasNextPage
-        ? kubearchiveResult.fetchNextPage
+      const getNextPage: GetNextPage = kubearchiveResult.hasNextPage
+        ? () => {
+            void kubearchiveResult.fetchNextPage();
+          }
         : undefined;
       const nextPagePropsKubeArchive = {
         hasNextPage: kubearchiveResult.hasNextPage || false,
@@ -219,27 +243,30 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
       };
 
       return [
-        processedKubearchiveData,
-        !isLoadingKubeArchive,
-        isError,
+        combinedData,
+        !(isLoadingKubeArchive || isLoading),
+        isError || error,
         getNextPage,
         nextPagePropsKubeArchive,
       ];
     }
-    return [trResources || [], trLoaded, trError, trGetNextPage, nextPageProps];
+    return [
+      combinedData || [],
+      trLoaded && !isLoading,
+      trError || error,
+      trGetNextPage,
+      nextPageProps,
+    ];
   }, [
-    trResources,
     kubearchiveEnabled,
-    processedKubearchiveData,
-    kubearchiveResult.isLoading,
-    kubearchiveResult.error,
-    kubearchiveResult.hasNextPage,
-    kubearchiveResult.fetchNextPage,
-    kubearchiveResult.isFetchingNextPage,
     trLoaded,
     trError,
     trGetNextPage,
     nextPageProps,
     namespace,
+    combinedData,
+    error,
+    isLoading,
+    kubearchiveResult,
   ]);
 };
