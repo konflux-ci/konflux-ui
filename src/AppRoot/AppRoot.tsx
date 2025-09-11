@@ -5,7 +5,7 @@ import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import WatsonChatBot from '~/components/WatsonChatBot/WatsonChatBot';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useIsOnFeatureFlag, IfFeature } from '~/feature-flags/hooks';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { KonfluxBanner } from '../components/KonfluxBanner/KonfluxBanner';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
@@ -39,7 +39,9 @@ export const AppRoot: React.FC = () => {
   return (
     <>
       <KonfluxBanner />
-      <WatsonChatBot />
+      <IfFeature flag="watson-chatbot">
+        <WatsonChatBot />
+      </IfFeature>
       <Page
         sidebar={<AppSideBar isOpen={isSideBarOpen} />}
         header={
