@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { useFeatureFlags } from '~/feature-flags/hooks';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -16,6 +17,7 @@ import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
 import { useApplication } from './useApplications';
 import { useComponents } from './useComponents';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 import { GetNextPage, NextPageProps, useTRPipelineRuns, useTRTaskRuns } from './useTektonResults';
 
 const useRuns = <Kind extends K8sResourceCommon>(
@@ -307,6 +309,67 @@ export const usePipelineRunsForCommit = (
     nextPageProps,
     pipelineRuns,
     plrError,
+  ]);
+};
+
+export const usePipelineRunsForCommitV2 = (
+  namespace: string,
+  applicationName: string,
+  commit: string,
+  limit?: number,
+  filterByComponents = true,
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+  const isKubearchiveEnabled = useFeatureFlags('pipelineruns-kubearchive');
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const [application] = useApplication(namespace, applicationName);
+
+  const componentNames = React.useMemo(
+    () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
+    [components, componentsLoaded],
+  );
+
+  const [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps] = usePipelineRunsV2(
+    namespace,
+    React.useMemo(
+      () => ({
+        selector: {
+          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+          matchLabels: {
+            [PipelineRunLabel.APPLICATION]: applicationName,
+          },
+          matchExpressions:
+            filterByComponents && componentNames.length > 0
+              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
+              : undefined,
+          filterByCommit: commit,
+        },
+        enabled: isKubearchiveEnabled,
+        limit: filterByComponents ? limit : undefined,
+      }),
+      [
+        applicationName,
+        commit,
+        application,
+        componentNames,
+        filterByComponents,
+        limit,
+        isKubearchiveEnabled,
+      ],
+    ),
+  );
+
+  return React.useMemo(() => {
+    if (plrsLoaded) {
+      return [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps];
+    }
+    return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
+  }, [
+    // usePipelineRunV2 variables
+    pipelineRuns,
+    plrsLoaded,
+    plrError,
+    getNextPage,
+    nextPageProps,
   ]);
 };
 
