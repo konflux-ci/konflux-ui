@@ -2,6 +2,8 @@ import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useK8sWatchResource } from '~/k8s';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { useK8sWatchResource } from '../k8s';
+import { isAuthorizationError } from '../k8s/error';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
@@ -120,8 +122,10 @@ const useRuns = <Kind extends K8sResourceCommon>(
   ];
 
   return React.useMemo(() => {
-    const rResources =
-      runs && trResources
+    // If there's an auth error from tekton-results, just use cluster data
+    const rResources = isAuthorizationError(trError)
+      ? runs
+      : runs && trResources
         ? uniqBy([...runs, ...trResources], (r) => r.metadata.name)
         : runs || trResources;
 
@@ -130,10 +134,10 @@ const useRuns = <Kind extends K8sResourceCommon>(
       namespace
         ? queryTr
           ? isList
-            ? // return loaded only if both sources have loaded
-              trLoaded && !isLoading
-            : // when searching by name, loading fails if we have no result
-              !!rResources?.[0]
+            ? // return loaded only if both sources have loaded OR there's an auth error
+              (trLoaded && !isLoading) || isAuthorizationError(trError)
+            : // when searching by name, loading completes if we have result OR auth error
+              !!rResources?.[0] || isAuthorizationError(trError)
           : isList
             ? !isLoading
             : // when searching by name, loading fails if we have no result
