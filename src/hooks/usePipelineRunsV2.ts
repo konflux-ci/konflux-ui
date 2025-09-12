@@ -243,14 +243,14 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
             void kubearchiveResult.fetchNextPage();
           }
         : undefined;
-      const nextPagePropsKubeArchive = {
+      const nextPagePropsKubeArchive: NextPageProps = {
         hasNextPage: kubearchiveResult.hasNextPage || false,
         isFetchingNextPage: kubearchiveResult.isFetchingNextPage || false,
       };
 
       return [
         combinedData as PipelineRunKind[],
-        !(isLoadingKubeArchive || isLoading),
+        !namespace ? false : !(isLoadingKubeArchive || isLoading),
         isError || error,
         getNextPage,
         nextPagePropsKubeArchive,
@@ -258,7 +258,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
     }
     return [
       combinedData as PipelineRunKind[],
-      trLoaded && !isLoading,
+      !namespace ? false : (queryTr ? trLoaded : true) && !isLoading,
       trError || error,
       trGetNextPage,
       nextPageProps,
@@ -274,5 +274,6 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
     error,
     isLoading,
     kubearchiveResult,
+    queryTr,
   ]);
 };
