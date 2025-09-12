@@ -53,6 +53,7 @@ export type KonfluxInstanceEnvironmentType =
 
 export type KonfluxPublicInfo = {
   environment?: KonfluxInstanceEnvironmentType;
+  statusPageUrl?: string;
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
   visibility?: KonfluxInstanceVisibilityType;
