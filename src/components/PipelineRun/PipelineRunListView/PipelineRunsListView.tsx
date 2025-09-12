@@ -92,13 +92,13 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     if (typeof pipelineRuns.toSorted === 'function') {
       // @ts-expect-error: toSorted might not be in TS yet
       return pipelineRuns.toSorted((a, b) =>
-        b.status?.startTime?.localeCompare(a.status?.startTime),
+        String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
       );
     }
 
     return [...pipelineRuns].sort((a, b) =>
-      b.status?.startTime?.localeCompare(a.status?.startTime),
-    );
+      String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
+    ) as PipelineRunKind[];
   }, [pipelineRuns]);
 
   const statusFilterObj = React.useMemo(

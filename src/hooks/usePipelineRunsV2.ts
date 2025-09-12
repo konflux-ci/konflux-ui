@@ -82,7 +82,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
     watch?: boolean;
     enabled?: boolean;
   },
-): [Kind[], boolean, unknown, GetNextPage, NextPageProps] => {
+): [Kind[] | PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const etcdRunsRef = React.useRef<Kind[]>([]);
   const optionsMemo = useDeepCompareMemoize(options);
   const limit = optionsMemo?.limit;
@@ -158,10 +158,16 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
     return sorted;
   }, [resources, isLoading, error]);
 
+  let shouldQuery = true;
+  if (options?.limit && processedClusterData.length >= options.limit) {
+    shouldQuery = false;
+  }
+
   // Query tekton results if there's no limit or we received less items from etcd than the current limit
   const queryTr =
     !!namespace &&
     !kubearchiveEnabled &&
+    shouldQuery &&
     (!limit || (runs && !isLoading && (limit ?? 0) > (runs?.length ?? 0)) || !!error);
 
   const trOptions: typeof optionsMemo = React.useMemo(() => {
@@ -185,7 +191,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
   //kubearchive results
   const resourceInit = React.useMemo(
     () =>
-      kubearchiveEnabled
+      kubearchiveEnabled && shouldQuery
         ? {
             groupVersionKind: PipelineRunGroupVersionKind,
             namespace,
@@ -194,7 +200,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
             limit: options?.limit || 200,
           }
         : undefined,
-    [namespace, options?.limit, options?.selector, kubearchiveEnabled],
+    [namespace, options?.limit, options?.selector, kubearchiveEnabled, shouldQuery],
   );
 
   const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
@@ -243,7 +249,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
       };
 
       return [
-        combinedData,
+        combinedData as PipelineRunKind[],
         !(isLoadingKubeArchive || isLoading),
         isError || error,
         getNextPage,
@@ -251,7 +257,7 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
       ];
     }
     return [
-      combinedData || [],
+      combinedData as PipelineRunKind[],
       trLoaded && !isLoading,
       trError || error,
       trGetNextPage,
