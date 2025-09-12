@@ -3,6 +3,10 @@ import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import {
+  filterMonitoredReleases,
+  MonitoredReleasesFilterState,
+} from '~/components/Filter/utils/monitoredreleases-filter-utils';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import MonitoredReleaseEmptyState from '~/components/ReleaseMonitor/ReleaseEmptyState';
 import getReleasesListHeader, {
@@ -21,10 +25,6 @@ import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { MonitoredReleaseKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
 import { monitoredReleaseStatus } from '~/utils/monitored-release-utils';
-import {
-  filterMonitoredReleases,
-  MonitoredReleasesFilterState,
-} from '../Filter/utils/monitoredreleases-filter-utils';
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'metadata.name',
@@ -97,7 +97,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     } else if (loaded) {
       setLoading(false);
     }
-  }, [loaded, namespaces.length]);
+  }, [loaded, namespaces]);
 
   const sortedMonitoredReleases = useSortedResources(
     releases,
@@ -110,6 +110,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const apps = new Set<string>();
     const plans = new Set<string>();
     const comps = new Set<string>();
+    const nsKeys = namespaces.map((ns) => ns.metadata.name);
 
     releases.forEach((r) => {
       const app = r.metadata.labels?.[PipelineRunLabel.APPLICATION];
@@ -134,14 +135,18 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       releasePlanOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.spec.releasePlan, [
         ...plans,
       ]),
-      namespaceOptions: createFilterObj(sortedMonitoredReleases, (mr) => mr?.metadata.namespace),
+      namespaceOptions: createFilterObj(
+        sortedMonitoredReleases,
+        (mr) => mr?.metadata.namespace,
+        nsKeys,
+      ),
       componentOptions: createFilterObj(
         sortedMonitoredReleases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
         [...comps],
       ),
     };
-  }, [sortedMonitoredReleases, releases]);
+  }, [sortedMonitoredReleases, releases, namespaces]);
 
   const filteredMRs = React.useMemo(
     () => filterMonitoredReleases(sortedMonitoredReleases, filters),

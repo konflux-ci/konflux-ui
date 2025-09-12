@@ -90,6 +90,15 @@ describe('ReleaseMonitorListView', () => {
     jest.restoreAllMocks();
   });
 
+  it('should render ReleasesInNamespace for each namespace', async () => {
+    render(
+      <TestWrapper>
+        <ReleaseMonitorListView />
+      </TestWrapper>,
+    );
+    expect(mockReleasesInNamespace).toHaveBeenCalledTimes(mockNamespaces.length);
+  });
+
   it('should render loading state when namespaces are not loaded', () => {
     mockUseNamespaceInfo.mockReturnValue({
       ...mockNamespacesInfo,
@@ -103,18 +112,6 @@ describe('ReleaseMonitorListView', () => {
     );
 
     expect(screen.getByRole('progressbar')).toBeVisible();
-  });
-
-  it('should render ReleasesInNamespace for each namespace', async () => {
-    render(
-      <TestWrapper>
-        <ReleaseMonitorListView />
-      </TestWrapper>,
-    );
-
-    await waitFor(() => {
-      expect(mockReleasesInNamespace).toHaveBeenCalledTimes(mockNamespaces.length);
-    });
   });
 
   it('should display releases when loaded and can filter releases by name', async () => {
