@@ -80,9 +80,7 @@ jobs:
           repository: ${{ github.repository }}
           ref: "${{ github.event.pull_request.head.sha }}"
           path: base
-      - uses: actions/checkout@v4
-        with:
-          ref: "${{ github.event.pull_request.head.sha }}"
+          
       - name: Deploy konflux-ci
         id: pr-check-action
         uses: ./base/.github/actions/konflux-ui-deploy-test
