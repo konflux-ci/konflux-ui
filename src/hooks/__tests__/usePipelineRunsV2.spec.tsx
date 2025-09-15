@@ -5,12 +5,20 @@ import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { PipelineRunKind } from '~/types';
 import { WatchK8sResource } from '~/types/k8s';
-import { createK8sWatchResourceMock, createTestQueryClient } from '~/utils/test-utils';
-import { usePipelineRunsV2 } from '../usePipelineRunsV2';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import {
+  createUseApplicationMock,
+  createK8sWatchResourceMock,
+  createTestQueryClient,
+} from '~/utils/test-utils';
+import { PipelineRunGroupVersionKind, PipelineRunModel } from '../../models';
+import { useComponents } from '../useComponents';
+import { usePipelineRunsV2, usePipelineRunsForCommitV2 } from '../usePipelineRunsV2';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('~/kubearchive/hooks');
+jest.mock('../useComponents');
 jest.mock(
   '~/kubearchive/conditional-checks',
   () => ({
@@ -19,6 +27,9 @@ jest.mock(
   { virtual: true },
 );
 
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
+
+const mockUseComponents = useComponents as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseK8sWatchResource = createK8sWatchResourceMock();
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.MockedFunction<
@@ -71,6 +82,89 @@ const mockPipelineRun: PipelineRunKind[] = [
       creationTimestamp: '2024-01-03T00:00:00Z',
     },
     spec: {},
+  },
+];
+
+const resultMock = [
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'first',
+      creationTimestamp: '2023-04-11T19:36:25Z',
+      labels: {
+        'pipelinesascode.tekton.dev/sha': 'sample-sha',
+        'appstudio.openshift.io/component': 'test-component',
+      },
+    },
+  },
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'second',
+      creationTimestamp: '2022-04-11T19:36:25Z',
+      labels: {
+        'pac.test.appstudio.openshift.io/sha': 'sample-sha',
+        'appstudio.openshift.io/component': 'test-component',
+      },
+    },
+  },
+];
+
+const resultMock2 = [
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'third',
+      creationTimestamp: '2021-04-11T19:36:25Z',
+      labels: {
+        'appstudio.openshift.io/component': 'test-component',
+      },
+      annotations: {
+        'build.appstudio.redhat.com/commit_sha': 'sample-sha',
+      },
+    },
+  },
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'fourth',
+      creationTimestamp: '2020-04-11T19:36:25Z',
+      labels: {
+        'appstudio.openshift.io/component': 'test-component',
+      },
+      annotations: {
+        'build.appstudio.redhat.com/commit_sha': 'sample-sha',
+      },
+    },
+  },
+];
+const resultMock3 = [
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'third',
+      creationTimestamp: '2021-04-11T19:36:25Z',
+      labels: {
+        'appstudio.openshift.io/component': 'test-component',
+      },
+      annotations: {
+        'build.appstudio.redhat.com/commit_sha': 'other-sha',
+      },
+    },
+  },
+];
+
+const resultMock4 = [
+  {
+    kind: PipelineRunGroupVersionKind.kind,
+    metadata: {
+      name: 'fifth',
+      creationTimestamp: '2022-04-11T19:36:25Z',
+      labels: {
+        'pac.test.appstudio.openshift.io/sha': 'sample-sha',
+        'appstudio.openshift.io/component': 'test-component-2',
+      },
+    },
   },
 ];
 
@@ -633,6 +727,205 @@ describe('usePipelineRunsV2', () => {
       expect(error).toBeNull();
 
       expect(mockUseTRPipelineRuns).toHaveBeenCalledWith(null, undefined);
+    });
+  });
+});
+
+describe('usePipelineRunsForCommitV2', () => {
+  mockUseNamespaceHook('test-ns');
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when using KubeArchive (feature flag enabled)', () => {
+    beforeEach(() => {
+      mockUseIsOnFeatureFlag.mockReturnValue(true);
+    });
+
+    it('should create specific selector', () => {
+      mockUseComponents.mockReturnValue([[], true]);
+      renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'));
+
+      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
+      expect(mockUseK8sWatchResource.mock.calls).toEqual([
+        [
+          {
+            groupVersionKind: PipelineRunGroupVersionKind,
+            namespace: 'test-ns',
+            isList: true,
+            limit: undefined,
+            enabled: undefined,
+            selector: {
+              filterByCommit: 'sample-sha',
+              filterByCreationTimestampAfter: undefined,
+              matchLabels: {
+                'appstudio.openshift.io/application': 'test-app',
+              },
+              matchExpressions: [],
+            },
+            watch: true,
+          },
+          PipelineRunModel,
+          { retry: false },
+        ],
+      ]);
+    });
+
+    it('should return pipeline runs', () => {
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      mockUseK8sWatchResource.mockReturnValueOnce([
+        [...resultMock, ...resultMock2, ...resultMock3],
+        true,
+      ]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+    });
+
+    it('should return pipeline runs without filtering by components', () => {
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      mockUseK8sWatchResource.mockReturnValueOnce([
+        [...resultMock, ...resultMock2, ...resultMock3, ...resultMock4],
+        true,
+      ]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', undefined, false),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock4, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+    });
+
+    it('should return pipeline runs filtering by components', () => {
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      mockUseK8sWatchResource.mockReturnValueOnce([[...resultMock, ...resultMock2], true]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', undefined, true),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock2],
+        true,
+        undefined,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+    });
+  });
+
+  describe('when using Tekton Query (feature flag disabled)', () => {
+    beforeEach(() => {
+      mockUseIsOnFeatureFlag.mockReturnValue(false);
+    });
+
+    it('should create specific selector', () => {
+      mockUseComponents.mockReturnValue([[], true]);
+      renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'));
+
+      expect(mockUseTRPipelineRuns).toHaveBeenCalledTimes(1);
+      expect(mockUseTRPipelineRuns.mock.calls).toEqual([
+        [
+          'test-ns',
+          {
+            enabled: undefined,
+            limit: undefined,
+            selector: {
+              filterByCommit: 'sample-sha',
+              filterByCreationTimestampAfter: undefined,
+              matchLabels: {
+                'appstudio.openshift.io/application': 'test-app',
+              },
+              matchExpressions: [],
+            },
+          },
+        ],
+      ]);
+    });
+
+    it('should return pipeline runs', () => {
+      const mockGetNextPage = jest.fn();
+      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      mockUseTRPipelineRuns.mockReturnValue([
+        [...resultMock, ...resultMock2],
+        true,
+        undefined,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock2],
+        true,
+        null,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+    });
+
+    it('should return pipeline runs without filtering by components', () => {
+      const mockGetNextPage = jest.fn();
+      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      mockUseTRPipelineRuns.mockReturnValue([
+        [...resultMock, ...resultMock4, ...resultMock2],
+        true,
+        undefined,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock4, ...resultMock2],
+        true,
+        null,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+    });
+
+    it('should return pipeline runs filtering by components', () => {
+      const mockGetNextPage = jest.fn();
+      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      mockUseTRPipelineRuns.mockReturnValue([
+        [...resultMock, ...resultMock2],
+        true,
+        undefined,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', undefined, true),
+      );
+
+      expect(result.current).toEqual([
+        [...resultMock, ...resultMock2],
+        true,
+        null,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
     });
   });
 });
