@@ -319,7 +319,8 @@ export const usePipelineRunsForCommitV2 = (
   limit?: number,
   filterByComponents = true,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const isKubearchiveEnabled = useFeatureFlags('pipelineruns-kubearchive');
+  const [flags] = useFeatureFlags();
+  const isKubearchiveEnabled = flags['pipelineruns-kubearchive'];
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application] = useApplication(namespace, applicationName);
 
@@ -360,7 +361,7 @@ export const usePipelineRunsForCommitV2 = (
 
   return React.useMemo(() => {
     if (plrsLoaded) {
-      return [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps];
+      return [pipelineRuns as PipelineRunKind[], plrsLoaded, plrError, getNextPage, nextPageProps];
     }
     return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
   }, [
