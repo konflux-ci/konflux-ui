@@ -5,7 +5,7 @@ import { FilterContextProvider } from '~/components/Filter/generic/FilterContext
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
@@ -13,7 +13,7 @@ import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 const SnapshotPipelineRunTab: React.FC = () => {
   const { snapshotName, applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRuns(
+  const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRunsV2(
     namespace,
     React.useMemo(
       () => ({
