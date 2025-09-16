@@ -34,18 +34,7 @@ export const convertFilterToKubearchiveSelectors = (
     : undefined;
 
   // Build matchExpressions (including commit filter)
-  const matchExpressions: MatchExpression[] = [
-    ...(filterBy.matchExpressions ?? []),
-    ...(filterBy.filterByCommit
-      ? [
-          {
-            key: PipelineRunLabel.COMMIT_LABEL,
-            operator: 'Equals',
-            values: [filterBy.filterByCommit],
-          },
-        ]
-      : []),
-  ];
+  const matchExpressions: MatchExpression[] = [...(filterBy.matchExpressions ?? [])];
 
   // Build the final selector (excluding custom filter fields)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -212,14 +201,21 @@ export const usePipelineRunsV2 = <Kind extends K8sResourceCommon>(
     const archiveData = pages?.flatMap((page) => page) ?? [];
     // Apply sorting and limit to KubeArchive data
     if (!kubearchiveEnabled) return [];
-    const data = archiveData as PipelineRunKind[];
+    const data = archiveData.filter(
+      (plr) => getCommitSha(plr as unknown as PipelineRunKind) === options.selector.filterByCommit,
+    );
     const toKey = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
     // Sort by creationTimestamp (newest first); stable for equal keys
     const sorted = [...data].sort((a, b) => toKey(b).localeCompare(toKey(a)));
 
     // Apply limit if specified
     return options?.limit && options.limit > 0 ? sorted.slice(0, options.limit) : sorted;
-  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, options?.limit]);
+  }, [
+    kubearchiveResult.data?.pages,
+    options.selector.filterByCommit,
+    kubearchiveEnabled,
+    options?.limit,
+  ]);
 
   //combine cluster data with tekton results/kubeArchive results based on flag
   let combinedData = !kubearchiveEnabled
