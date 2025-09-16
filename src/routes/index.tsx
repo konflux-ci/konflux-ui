@@ -21,6 +21,7 @@ import taskRunRoutes from './page-routes/taskrun';
 import userAccessRoutes from './page-routes/user-access';
 import { RouteErrorBoundry } from './RouteErrorBoundary';
 import { GithubRedirectRouteParams } from './utils';
+import issuesRoutes from './page-routes/issues';
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       ...releaseRoutes,
       ...releaseServiceRoutes,
       ...secretRoutes,
+      ...issuesRoutes,
       ...integrationTestRoutes,
       ...snapshotRoutes,
       ...commitRoutes,
