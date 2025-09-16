@@ -4,6 +4,7 @@ import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly
 import { css } from '@patternfly/react-styles';
 import {
   APPLICATION_LIST_PATH,
+  ISSUES_PATH,
   NAMESPACE_LIST_PATH,
   RELEASE_MONITOR_PATH,
   RELEASE_SERVICE_PATH,
@@ -14,7 +15,7 @@ import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
-
+import isKiteServiceAvailable from '~/components/Issues/kite-service-check';
 import './AppSideBar.scss';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
@@ -49,6 +50,21 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 </NavLink>
               </NavItem>
             </IfFeature>
+
+            {isKiteServiceAvailable && <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(ISSUES_PATH.path)}
+            >
+              <Link
+                to={
+                  namespace
+                    ? ISSUES_PATH.createPath({ workspaceName: namespace })
+                    : undefined
+                }
+              >
+                Issues
+              </Link>
+            </NavItem>}
 
             <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
