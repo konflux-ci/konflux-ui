@@ -70,8 +70,14 @@ const InternalFLAGS = {
       allOf: ['isKubearchiveEnabled'],
       failureReason: 'Kubearchive is not installed on this cluster',
       visibleInFeatureFlagPanel: true,
-    },
+    }, 
   },
+  'issues-dashboard': {
+      key: 'issues-dashboard',
+      description: 'Shows Summary of issues in your Konflux content',
+      defaultEnabled: false,
+      status: 'wip',
+    },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
