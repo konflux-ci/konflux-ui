@@ -11,6 +11,9 @@ export const getReleaseStatus = (release: ReleaseKind): RunStatusValue => {
   const releasedCondition = release.status.conditions.find(
     (c) => c.type === ReleaseCondition.Released,
   );
+  if (!releasedCondition) {
+    return runStatus.Pending;
+  }
 
   const succeeded = releasedCondition.status === 'True' && releasedCondition.reason === 'Succeeded';
   if (succeeded) {
