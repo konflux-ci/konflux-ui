@@ -31,6 +31,7 @@ jest.mock('../../../hooks/usePipelineRunsV2', () => ({
 jest.mock('~/kubearchive/hooks');
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(() => false),
+  useFeatureFlags: jest.fn(() => [{}, jest.fn()]),
 }));
 jest.mock(
   '~/kubearchive/conditional-checks',

@@ -304,6 +304,7 @@ export const usePipelineRunsForCommitV2 = (
           filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
+            // [SnapshotLabels.PAC_SHA_LABEL]: commit,
           },
           matchExpressions:
             filterByComponents && componentNames.length > 0
@@ -328,7 +329,13 @@ export const usePipelineRunsForCommitV2 = (
 
   return React.useMemo(() => {
     if (!plrsLoaded || plrError) {
-      return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
+      return [
+        [],
+        plrsLoaded,
+        plrError ?? 'Error',
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ];
     }
     return [pipelineRuns as PipelineRunKind[], plrsLoaded, plrError, getNextPage, nextPageProps];
   }, [

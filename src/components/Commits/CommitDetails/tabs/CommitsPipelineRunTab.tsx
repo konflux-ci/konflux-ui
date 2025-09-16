@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsV2';
 import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
@@ -13,7 +14,6 @@ import {
 } from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
-import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
@@ -37,7 +37,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRunsForCommit(namespace, applicationName, commitName, undefined, false);
+    usePipelineRunsForCommitV2(namespace, applicationName, commitName, undefined, false);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',

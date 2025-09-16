@@ -1,44 +1,62 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsV2';
 import { pipelineWithCommits } from '../__data__/pipeline-with-commits';
 import { useCommitStatus } from '../commit-status';
 
-jest.mock('../../../hooks/usePipelineRuns', () => ({
-  usePipelineRunsForCommit: jest.fn(),
+jest.mock('~/hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsForCommitV2: jest.fn(),
 }));
 
-const usePipelineRunsForCommitMock = usePipelineRunsForCommit as jest.Mock;
+const usePipelineRunsForCommitV2Mock = usePipelineRunsForCommitV2 as jest.Mock;
 
 describe('useCommitStatus', () => {
   it('returns Pending status if pipelineruns are not loaded', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([null, false]);
+    usePipelineRunsForCommitV2Mock.mockReturnValue([
+      null,
+      false,
+      undefined,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
     const { result } = renderHook(() => useCommitStatus('app', 'commit'));
     expect(result.current).toEqual(['Pending', false, undefined]);
   });
 
   it('returns Pending status if pipelineruns for given commit are not found', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([[], true]);
+    usePipelineRunsForCommitV2Mock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
     const { result } = renderHook(() => useCommitStatus('app', 'commit123'));
     expect(result.current).toEqual(['Pending', true, undefined]);
   });
 
   it('returns correct status if pipelineruns are loaded', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([
+    usePipelineRunsForCommitV2Mock.mockReturnValue([
       pipelineWithCommits.filter(
         (p) => p.metadata.labels['pipelinesascode.tekton.dev/sha'] === 'commit14rt',
       ),
       true,
+      undefined,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
     ]);
     const { result } = renderHook(() => useCommitStatus('purple-mermaid-app', 'commit14rt'));
     expect(result.current).toEqual(['Pending', true, undefined]);
   });
 
   it('returns status from the latest started pipelinerun', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([
+    usePipelineRunsForCommitV2Mock.mockReturnValue([
       pipelineWithCommits.filter(
         (p) => p.metadata.labels['pipelinesascode.tekton.dev/sha'] === 'commit123',
       ),
       true,
+      undefined,
+      undefined,
+      { hasNextPage: false, isFetchingNextPage: false },
     ]);
     const { result } = renderHook(() => useCommitStatus('purple-mermaid-app', 'commit123'));
     expect(result.current).toEqual(['Failed', true, undefined]);

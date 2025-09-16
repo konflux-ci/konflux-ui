@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { APPLICATION_ACTIVITY_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
@@ -56,11 +55,7 @@ export const ActivityTab: React.FC = () => {
       >
         <Tab
           data-test={`activity__tabItem latest-commits`}
-          title={
-            <TabTitleText>
-              Latest commits <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
-            </TabTitleText>
-          }
+          title={<TabTitleText>Latest commits</TabTitleText>}
           key="latest-commits"
           eventKey="latest-commits"
           className="activity-tab"

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Outlet, resolvePath, useLocation, useNavigate, useResolvedPath } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { HttpError } from '../../k8s/error';
@@ -68,17 +67,13 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
     return <ErrorEmptyState httpError={HttpError.fromCode(404)} />;
   }
 
-  const tabComponents = tabs?.map(({ key, label, unstableFeature, ...rest }) => {
+  const tabComponents = tabs?.map(({ key, label, ...rest }) => {
     return (
       <Tab
         data-test={`${id}__tabItem ${label.toLocaleLowerCase().replace(/\s/g, '')}`}
         key={key}
         eventKey={key}
-        title={
-          <TabTitleText>
-            {label} <FeatureFlagIndicator flags={[unstableFeature]} />
-          </TabTitleText>
-        }
+        title={<TabTitleText>{label}</TabTitleText>}
         {...rest}
       >
         <Outlet />
