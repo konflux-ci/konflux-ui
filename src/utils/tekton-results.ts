@@ -229,6 +229,7 @@ const remainingTaskrunFields = [
   'records.data.value.status.taskSpec.description',
   'records.data.value.spec.taskRef.params',
   'records.data.value.spec.taskRef.name',
+  'records.data.value.spec.params',
   'records.data.value.spec.containers',
   'records.data.value.spec.status',
   'records.data.value.status.taskResults',

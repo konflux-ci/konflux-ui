@@ -8,6 +8,7 @@ import {
   Stack,
   StackItem,
 } from '@patternfly/react-core';
+import StatusPageCard from '~/components/Overview/StatusPageCard';
 
 import './AboutSection.scss';
 
@@ -76,6 +77,7 @@ const AboutSection: React.FC<React.PropsWithChildren<unknown>> = () => (
             </CardBody>
           </Card>
         </StackItem>
+        <StatusPageCard />
       </Stack>
     </GridItem>
   </Grid>
