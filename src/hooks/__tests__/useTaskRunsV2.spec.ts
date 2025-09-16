@@ -2,16 +2,20 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import {
+  useKubearchiveGetResourceQuery,
+  useKubearchiveListResourceQuery,
+} from '~/kubearchive/hooks';
 import { WatchK8sResource } from '~/types/k8s';
 import { TaskRunKind } from '~/types/task-run';
-import { createK8sWatchResourceMock, createTestQueryClient } from '~/utils/test-utils';
+import {
+  createUseApplicationMock,
+  createK8sWatchResourceMock,
+  createTestQueryClient,
+} from '~/utils/test-utils';
+import { TaskRunGroupVersionKind, TaskRunModel } from '../../models';
 import { useTaskRunV2, useTaskRunsV2, useTaskRunsForPipelineRuns } from '../useTaskRunsV2';
 import { useTRTaskRuns } from '../useTektonResults';
-import { useKubearchiveGetResourceQuery } from '../../kubearchive/hooks';
-import { TaskRunGroupVersionKind, TaskRunModel } from '../../models';
-import { createUseApplicationMock } from '../../utils/test-utils';
-
 
 jest.mock('../useTektonResults');
 jest.mock('../../kubearchive/hooks');
@@ -745,6 +749,8 @@ describe('useTaskRunsV2', () => {
         expect.any(Object),
       );
     });
+  });
+});
 
 describe('useTaskRunV2', () => {
   const mockTaskRun = {
