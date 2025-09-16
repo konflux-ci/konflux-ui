@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Title } from '@patternfly/react-core';
+import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
   INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS,
@@ -10,7 +10,7 @@ import {
 } from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
@@ -28,7 +28,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
 
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRuns(
+    usePipelineRunsV2(
       namespace,
       React.useMemo(
         () => ({
@@ -104,19 +104,19 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
             visibleColumns={safeVisibleColumns}
           />
         )}
-        loaded={loaded}
+        loaded={isFetchingNextPage || loaded}
         getRowProps={(obj: PipelineRunKind) => ({
           id: obj.metadata.name,
         })}
-        onRowsRendered={({ stopIndex }) => {
-          if (
-            loaded &&
-            stopIndex === pipelineRuns.length - 1 &&
-            hasNextPage &&
-            !isFetchingNextPage
-          ) {
-            getNextPage?.();
-          }
+        isInfiniteLoading
+        infiniteLoaderProps={{
+          isRowLoaded: (args) => {
+            return !!pipelineRuns[args.index];
+          },
+          loadMoreRows: () => {
+            hasNextPage && !isFetchingNextPage && getNextPage?.();
+          },
+          rowCount: hasNextPage ? pipelineRuns.length + 1 : pipelineRuns.length,
         }}
         customData={{
           vulnerabilities: {},
@@ -124,6 +124,13 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
           integrationTestName,
         }}
       />
+      {isFetchingNextPage ? (
+        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+          <Bullseye>
+            <Spinner size="lg" aria-label="Loading more pipeline runs" />
+          </Bullseye>
+        </Stack>
+      ) : null}
       <ColumnManagement<PipelineRunColumnKeys>
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
