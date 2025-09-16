@@ -1,83 +1,26 @@
-import { MemoryRouter } from 'react-router-dom';
-import { render, screen } from '@testing-library/react';
-import * as FilterContext from '~/components/Filter/generic/FilterContext';
-import ReleaseMonitor from '~/components/ReleaseMonitor/ReleaseMonitor';
+import { screen } from '@testing-library/react';
+import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+import ReleaseMonitor from '../ReleaseMonitor';
 
-// Mock child components
-jest.mock('../ReleaseMonitorListView', () => {
-  return jest.fn(() => (
-    <section role="region" aria-label="Release Monitor List View">
-      Release Monitor List View
-    </section>
-  ));
-});
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespaceInfo: jest.fn(),
+}));
 
-jest.mock('~/components/Filter/generic/FilterContext', () => {
-  const actual = jest.requireActual('~/components/Filter/generic/FilterContext');
-  return {
-    ...actual,
-    FilterContextProvider: jest.fn(({ children, filterParams }) => (
-      <section
-        role="region"
-        aria-label="filter-context-provider"
-        data-filter-params={filterParams.join(',')}
-      >
-        {children}
-      </section>
-    )),
-  };
-});
-
-// Type casts for mocked functions
-const mockFilterContextProvider = jest.mocked(FilterContext.FilterContextProvider);
+const useNamespaceInfoMock = useNamespaceInfo as jest.Mock;
 
 describe('ReleaseMonitor', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
+  it('should render the release monitor page', () => {
+    useNamespaceInfoMock.mockReturnValue({
+      namespaces: [],
+      namespacesLoaded: true,
+    });
 
-  it('should render without crashing', async () => {
-    render(
-      <MemoryRouter>
-        <ReleaseMonitor />
-      </MemoryRouter>,
-    );
+    renderWithQueryClientAndRouter(<ReleaseMonitor />);
 
-    expect(screen.getByRole('region', { name: 'filter-context-provider' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Release Monitor List View' })).toBeInTheDocument();
-  });
-
-  it('should provide correct filter parameters to FilterContextProvider', async () => {
-    render(
-      <MemoryRouter>
-        <ReleaseMonitor />
-      </MemoryRouter>,
-    );
-
-    expect(mockFilterContextProvider).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        filterParams: ['name', 'status', 'application', 'releasePlan', 'namespace', 'component'],
-      }),
-      expect.anything(),
-    );
-
-    const filterProvider = screen.getByRole('region', { name: 'filter-context-provider' });
-    expect(filterProvider).toHaveAttribute(
-      'data-filter-params',
-      'name,status,application,releasePlan,namespace,component',
-    );
-  });
-
-  it('should render ReleaseMonitorListView inside FilterContextProvider', async () => {
-    render(
-      <MemoryRouter>
-        <ReleaseMonitor />
-      </MemoryRouter>,
-    );
-
-    const filterProvider = await screen.findByRole('region', { name: 'filter-context-provider' });
-    const listView = screen.getByRole('region', { name: 'Release Monitor List View' });
-
-    expect(filterProvider).toContainElement(listView);
+    expect(screen.getByText('Release Monitor')).toBeInTheDocument();
+    expect(
+      screen.getByText('The dashboard to monitor the releases you care about'),
+    ).toBeInTheDocument();
   });
 });

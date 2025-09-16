@@ -13,14 +13,13 @@ import getReleasesListHeader, {
   SortableHeaders,
 } from '~/components/ReleaseMonitor/ReleaseListHeader';
 import ReleaseListRow from '~/components/ReleaseMonitor/ReleaseListRow';
+import { getErrorState } from '~/shared/utils/error-utils';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { useSortedResources } from '~/hooks/useSortedResources';
-import { HttpError } from '~/k8s/error';
 import { Table, useDeepCompareMemoize } from '~/shared';
-import ErrorEmptyState from '~/shared/components/empty-state/ErrorEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { MonitoredReleaseKind } from '~/types';
@@ -33,14 +32,21 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const filters: MonitoredReleasesFilterState = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-    application: unparsedFilters.application ? (unparsedFilters.application as string[]) : [],
-    releasePlan: unparsedFilters.releasePlan ? (unparsedFilters.releasePlan as string[]) : [],
-    namespace: unparsedFilters.namespace ? (unparsedFilters.namespace as string[]) : [],
-    component: unparsedFilters.component ? (unparsedFilters.component as string[]) : [],
-  });
+  const parseMonitoredFilters = (filters: any): MonitoredReleasesFilterState => {
+    return {
+      name: filters?.name || '',
+      status: filters?.status || [],
+      application: filters?.application || [],
+      releasePlan: filters?.releasePlan || [],
+      namespace: filters?.namespace || [],
+      component: filters?.component || [],
+    } as MonitoredReleasesFilterState;
+  };
+
+  // Usage
+  const filters: MonitoredReleasesFilterState = useDeepCompareMemoize(
+    parseMonitoredFilters(unparsedFilters)
+  );
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
     SortableHeaders.completionTime,
@@ -126,14 +132,12 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       applicationOptions: createFilterObj(
         releases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
-        [...apps],
       ),
-      releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan, [...plans]),
+      releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
       namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
       componentOptions: createFilterObj(
         releases,
         (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
-        [...comps],
       ),
     };
   }, [releases, namespaces]);
@@ -149,7 +153,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   );
 
   if (error) {
-    return <ErrorEmptyState httpError={error as HttpError} />;
+    return getErrorState(error, loaded, 'applications');
   }
 
   const isFiltered =
