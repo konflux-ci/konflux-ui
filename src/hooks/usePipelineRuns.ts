@@ -54,7 +54,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
   } = useK8sWatchResource<Kind[]>(watchOptions, model, { retry: false });
   // if a pipeline run was removed from etcd, we want to still include it in the return value without re-querying tekton-results
   const etcdRuns = React.useMemo(() => {
-    if (isLoading || error || !resources) {
+    if (isLoading || error) {
       return [];
     }
     const resourcesArray = (isList ? resources : [resources]) as Kind[];
