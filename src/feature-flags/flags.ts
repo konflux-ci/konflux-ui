@@ -78,6 +78,17 @@ const InternalFLAGS = {
     defaultEnabled: false,
     status: 'wip',
   },
+  'taskruns-kubearchive': {
+    key: 'taskruns-kubearchive',
+    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive not installed',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
 };
 
 export type FlagKey = keyof typeof InternalFLAGS;

@@ -1,4 +1,3 @@
-import { TaskRunLabel } from '../../../../../../consts/pipelinerun';
 import { TaskRunKind, PipelineRunKind, PipelineKind } from '../../../../../../types';
 import { runStatus } from '../../../../../../utils/pipeline-utils';
 import { appendStatus } from '../pipelinerun-graph-utils';
@@ -17,6 +16,33 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
         {
           name: 'build-task',
           taskRef: { name: 'buildah', kind: 'Task' },
+        },
+        {
+          name: 'test-task',
+          taskRef: { name: 'test-runner', kind: 'Task' },
+          runAfter: ['build-task'],
+        },
+      ],
+    },
+  };
+
+  const mockPipelineWithMatrix: PipelineKind = {
+    apiVersion: 'tekton.dev/v1',
+    kind: 'Pipeline',
+    metadata: { name: 'test-pipeline-matrix', namespace: 'test-ns' },
+    spec: {
+      tasks: [
+        {
+          name: 'build-task',
+          taskRef: { name: 'buildah', kind: 'Task' },
+          matrix: {
+            params: [
+              {
+                name: 'platform',
+                value: ['linux/x86_64', 'linux/arm64'],
+              },
+            ],
+          },
         },
         {
           name: 'test-task',
@@ -58,10 +84,19 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
       namespace: 'test-ns',
       labels: {
         [TektonResourceLabel.pipelineTask]: taskName,
-        ...(platform && { [TaskRunLabel.TARGET_PLATFORM]: platform }),
       },
     },
-    spec: { taskRef: { name: taskName } },
+    spec: {
+      taskRef: { name: taskName },
+      ...(platform && {
+        params: [
+          {
+            name: 'platform',
+            value: platform,
+          },
+        ],
+      }),
+    },
     status: {
       conditions: [
         {
@@ -87,14 +122,14 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
   });
 
   describe('Matrix Task Detection', () => {
-    it('should detect matrix tasks when multiple TaskRuns have platform labels', () => {
+    it('should detect matrix tasks when pipeline spec has matrix definition and multiple TaskRuns exist', () => {
       const taskRuns = [
-        createMockTaskRun('build-task', 'linux-x86_64'),
-        createMockTaskRun('build-task', 'linux-arm64'),
+        createMockTaskRun('build-task', 'linux/x86_64'),
+        createMockTaskRun('build-task', 'linux/arm64'),
         createMockTaskRun('test-task'),
       ];
 
-      const result = appendStatus(mockPipeline, mockPipelineRun, taskRuns);
+      const result = appendStatus(mockPipelineWithMatrix, mockPipelineRun, taskRuns);
 
       expect(result).toHaveLength(3);
 
@@ -115,9 +150,9 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
       expect(result[2].name).toBe('test-task');
     });
 
-    it('should handle single TaskRun with platform label as regular task', () => {
+    it('should handle single TaskRun with platform parameter as regular task when no matrix in spec', () => {
       const taskRuns = [
-        createMockTaskRun('build-task', 'linux-x86_64'),
+        createMockTaskRun('build-task', 'linux/x86_64'),
         createMockTaskRun('test-task'),
       ];
 
@@ -130,11 +165,11 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
 
     it('should preserve TaskRun status for matrix tasks', () => {
       const taskRuns = [
-        createMockTaskRun('build-task', 'linux-x86_64', runStatus.Succeeded),
-        createMockTaskRun('build-task', 'linux-arm64', runStatus.Failed),
+        createMockTaskRun('build-task', 'linux/x86_64', runStatus.Succeeded),
+        createMockTaskRun('build-task', 'linux/arm64', runStatus.Failed),
       ];
 
-      const result = appendStatus(mockPipeline, mockPipelineRun, taskRuns);
+      const result = appendStatus(mockPipelineWithMatrix, mockPipelineRun, taskRuns);
 
       expect(result).toHaveLength(3); // 2 matrix tasks + 1 regular test-task
 
@@ -171,13 +206,40 @@ describe('Matrix Pipeline TaskRun-First Approach', () => {
       expect(result[1].status.reason).toBe(runStatus.Pending);
     });
 
-    it('should handle platform labels with special characters', () => {
+    it('should handle platform parameters with special characters in matrix tasks', () => {
+      const mockPipelineWithSpecialMatrix: PipelineKind = {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'Pipeline',
+        metadata: { name: 'test-pipeline-special-matrix', namespace: 'test-ns' },
+        spec: {
+          tasks: [
+            {
+              name: 'build-task',
+              taskRef: { name: 'buildah', kind: 'Task' },
+              matrix: {
+                params: [
+                  {
+                    name: 'platform',
+                    value: ['linux/x86_64', 'linux/arm64/v8a'],
+                  },
+                ],
+              },
+            },
+            {
+              name: 'test-task',
+              taskRef: { name: 'test-runner', kind: 'Task' },
+              runAfter: ['build-task'],
+            },
+          ],
+        },
+      };
+
       const taskRuns = [
-        createMockTaskRun('build-task', 'linux-x86_64'),
-        createMockTaskRun('build-task', 'linux-arm64-v8a'),
+        createMockTaskRun('build-task', 'linux/x86_64'),
+        createMockTaskRun('build-task', 'linux/arm64/v8a'),
       ];
 
-      const result = appendStatus(mockPipeline, mockPipelineRun, taskRuns);
+      const result = appendStatus(mockPipelineWithSpecialMatrix, mockPipelineRun, taskRuns);
 
       expect(result).toHaveLength(3); // 2 matrix tasks + 1 regular test-task
 
