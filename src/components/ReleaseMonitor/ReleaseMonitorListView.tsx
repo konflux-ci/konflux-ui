@@ -13,7 +13,6 @@ import getReleasesListHeader, {
   SortableHeaders,
 } from '~/components/ReleaseMonitor/ReleaseListHeader';
 import ReleaseListRow from '~/components/ReleaseMonitor/ReleaseListRow';
-import { getErrorState } from '~/shared/utils/error-utils';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
@@ -22,6 +21,7 @@ import { useSortedResources } from '~/hooks/useSortedResources';
 import { Table, useDeepCompareMemoize } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { MonitoredReleaseKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
 
@@ -45,7 +45,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   // Usage
   const filters: MonitoredReleasesFilterState = useDeepCompareMemoize(
-    parseMonitoredFilters(unparsedFilters)
+    parseMonitoredFilters(unparsedFilters),
   );
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(

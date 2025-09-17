@@ -202,7 +202,11 @@ describe('ReleaseMonitorListView', () => {
   });
 
   it('renders empty state when no releases are found', async () => {
-    mockUseNamespaceInfo.mockReturnValue({ namespaces: [], namespacesLoaded: true, lastUsedNamespace: '' });
+    mockUseNamespaceInfo.mockReturnValue({
+      namespaces: [],
+      namespacesLoaded: true,
+      lastUsedNamespace: '',
+    });
     renderWithProviders(<ReleaseMonitorListView />);
     await waitFor(() => expect(screen.getByText('No releases found')).toBeInTheDocument());
   });
