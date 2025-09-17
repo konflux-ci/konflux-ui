@@ -2,7 +2,7 @@ import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { createFilterObj, FilterType } from '~/components/Filter/utils/filter-utils';
 import {
   filterMonitoredReleases,
   MonitoredReleasesFilterState,
@@ -32,7 +32,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const parseMonitoredFilters = (filters: any): MonitoredReleasesFilterState => {
+  const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
     return {
       name: filters?.name || '',
       status: filters?.status || [],
@@ -43,7 +43,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     } as MonitoredReleasesFilterState;
   };
 
-  // Usage
   const filters: MonitoredReleasesFilterState = useDeepCompareMemoize(
     parseMonitoredFilters(unparsedFilters),
   );
@@ -113,19 +112,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   );
 
   const filterOptions = React.useMemo(() => {
-    const apps = new Set<string>();
-    const plans = new Set<string>();
-    const comps = new Set<string>();
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
-
-    releases.forEach((r) => {
-      const app = r.metadata.labels?.[PipelineRunLabel.APPLICATION];
-      if (app) apps.add(app);
-      const plan = r.spec.releasePlan;
-      if (plan) plans.add(plan);
-      const comp = r.metadata.labels?.[PipelineRunLabel.COMPONENT];
-      if (comp) comps.add(comp);
-    });
 
     return {
       statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
