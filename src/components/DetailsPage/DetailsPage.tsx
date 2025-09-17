@@ -1,7 +1,10 @@
 import * as React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
+  Button,
   Flex,
   FlexItem,
+  Icon,
   PageGroup,
   PageSection,
   PageSectionVariants,
@@ -15,12 +18,12 @@ import {
   DropdownSeparator,
   DropdownToggle,
 } from '@patternfly/react-core/deprecated';
+import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
 import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
 import { css } from '@patternfly/react-styles';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
-
 import './DetailsPage.scss';
 
 type DetailsPageProps = {
@@ -49,6 +52,9 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   baseURL,
   onTabSelect,
 }) => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const showBackLink = state?.showBackButton || false;
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -117,7 +123,19 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   return (
     <PageGroup data-test="details" className="app-details">
       <PageSection type="breadcrumb">
-        {breadcrumbs && <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />}
+        {!showBackLink && breadcrumbs && (
+          <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
+        )}
+        {showBackLink ? (
+          <Button onClick={() => navigate(-1)} variant="link" isInline>
+            <Icon>
+              <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
+            </Icon>
+            {'Back to release details'}
+          </Button>
+        ) : (
+          ''
+        )}
         <Flex style={{ paddingTop: 'var(--pf-v5-global--spacer--lg)' }}>
           <FlexItem>
             <TextContent>

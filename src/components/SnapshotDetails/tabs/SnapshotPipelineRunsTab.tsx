@@ -1,20 +1,20 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { RouterParams } from '~/routes/utils';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
-import { RouterParams } from '../../../routes/utils';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 
 const SnapshotPipelineRunTab: React.FC = () => {
   const { snapshotName, applicationName } = useParams<RouterParams>();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {
@@ -65,13 +65,15 @@ const SnapshotPipelineRunTab: React.FC = () => {
   }
 
   return (
-    <SnapshotPipelineRunsList
-      snapshotPipelineRuns={SnapshotPipelineRuns}
-      loaded={loaded}
-      applicationName={applicationName}
-      getNextPage={getNextPage}
-      nextPageProps={nextPageProps}
-    />
+    <FilterContextProvider filterParams={['name', 'status', 'type']}>
+      <SnapshotPipelineRunsList
+        snapshotPipelineRuns={SnapshotPipelineRuns}
+        loaded={loaded}
+        applicationName={applicationName}
+        getNextPage={getNextPage}
+        nextPageProps={nextPageProps}
+      />
+    </FilterContextProvider>
   );
 };
 

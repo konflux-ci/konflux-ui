@@ -50,7 +50,9 @@ describe('SingleSelectComponentDropdown', () => {
     const menu = screen.getByRole('menu');
     const disabledItem = menu.querySelectorAll('.pf-m-disabled');
     expect(disabledItem).toHaveLength(1);
-    expect(disabledItem[0].querySelector('.pf-v5-c-menu__item-text').innerHTML).toEqual('b');
+    expect(disabledItem[0].querySelector('.pf-v5-c-menu__item-text').innerHTML).toEqual(
+      '<div style="display: contents;"><span class="pf-v5-c-truncate">b</span></div>',
+    );
   });
 
   it('should render items in sorted order', () => {
@@ -82,7 +84,10 @@ describe('SingleSelectComponentDropdown', () => {
 describe('MultiSelectComponentDropdown', () => {
   it('should render component dropdown', () => {
     formikRenderer(
-      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      <MultiSelectComponentsDropdown
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
+        name="multiSelect"
+      />,
       { multiSelect: '' },
     );
     screen.getByText('Choose components to nudge');
@@ -90,7 +95,10 @@ describe('MultiSelectComponentDropdown', () => {
 
   it('should select all item from menu', () => {
     formikRenderer(
-      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      <MultiSelectComponentsDropdown
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
+        name="multiSelect"
+      />,
       { multiSelect: '' },
     );
     screen.getByText('Choose components to nudge');
@@ -106,7 +114,10 @@ describe('MultiSelectComponentDropdown', () => {
 
   it('should select/unselect all item from menu', () => {
     formikRenderer(
-      <MultiSelectComponentsDropdown groupedComponents={{ c: ['a', 'b'] }} name="multiSelect" />,
+      <MultiSelectComponentsDropdown
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
+        name="multiSelect"
+      />,
       { multiSelect: '' },
     );
     screen.getByText('Choose components to nudge');
@@ -125,7 +136,7 @@ describe('MultiSelectComponentDropdown', () => {
   it('should not select disabled menu item', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown
-        groupedComponents={{ c: ['a', 'b'] }}
+        sortedGroupedComponents={{ c: ['a', 'b'] }}
         name="multiSelect"
         sourceComponentName="a"
       />,
@@ -147,7 +158,7 @@ describe('MultiSelectComponentDropdown', () => {
   it('should render grouped components in sorted order', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown
-        groupedComponents={{ Group1: ['aa', 'ab', 'ac'] }}
+        sortedGroupedComponents={{ Group1: ['aa', 'ab', 'ac'] }}
         name="multiSelect"
       />,
       { multiSelect: [] },
@@ -160,7 +171,7 @@ describe('MultiSelectComponentDropdown', () => {
   it('should filter grouped components based on search input', () => {
     formikRenderer(
       <MultiSelectComponentsDropdown
-        groupedComponents={{ Group1: ['test1', 'example', 'sample'] }}
+        sortedGroupedComponents={{ Group1: ['test1', 'example', 'sample'] }}
         name="multiSelect"
       />,
       { multiSelect: [] },

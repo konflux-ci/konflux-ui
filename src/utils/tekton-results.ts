@@ -14,8 +14,7 @@ import {
 // REST API spec
 // https://github.com/tektoncd/results/blob/main/docs/api/rest-api-spec.md
 
-const _WORKSPACE_ = '<_workspace_>';
-const URL_PREFIX = `/plugins/tekton-results/workspaces/${_WORKSPACE_}/apis/results.tekton.dev/v1alpha2/parents`;
+const URL_PREFIX = `/plugins/tekton-results/apis/results.tekton.dev/v1alpha2/parents`;
 
 const MINIMUM_PAGE_SIZE = 5;
 const MAXIMUM_PAGE_SIZE = 10000;
@@ -98,7 +97,7 @@ export const labelsToFilter = (labels?: MatchLabels): string =>
     : '';
 
 export const nameFilter = (name?: string): string =>
-  name ? AND(`data.metadata.name.startsWith("${name.trim().toLowerCase()}")`) : '';
+  name ? AND(`data.metadata.name.contains("${name.trim().toLowerCase()}")`) : '';
 
 export const commitShaFilter = (commitSha: string): string =>
   OR(
@@ -207,17 +206,51 @@ export const clearCache = () => {
 };
 const InFlightStore: { [key: string]: boolean } = {};
 
-const getTRUrlPrefix = (workspace: string): string => URL_PREFIX.replace(_WORKSPACE_, workspace);
+const commonFields = [
+  'records.name',
+  'records.data.value.apiVersion',
+  'records.data.value.kind',
+  'records.data.value.metadata.annotations',
+  'records.data.value.metadata.labels',
+  'records.data.value.metadata.name',
+  'records.data.value.metadata.namespace',
+  'records.data.value.metadata.uid',
+  'records.data.value.metadata.creationTimestamp',
+  'records.data.value.metadata.ownerReferences',
+  'records.data.value.status.conditions',
+  'records.data.value.status.results',
+  'records.data.value.status.startTime',
+  'records.data.value.status.completionTime',
+  'next_page_token',
+];
+
+const remainingTaskrunFields = [
+  'records.data.value.status.podName',
+  'records.data.value.status.taskSpec.description',
+  'records.data.value.spec.taskRef.params',
+  'records.data.value.spec.taskRef.name',
+  'records.data.value.spec.params',
+  'records.data.value.spec.containers',
+  'records.data.value.spec.status',
+  'records.data.value.status.taskResults',
+  'records.data.value.status.containerStatuses',
+];
+
+const remainingPipelinerunFields = [
+  'records.data.value.spec.params',
+  'records.data.value.status.pipelineSpec.tasks',
+  'records.data.value.status.pipelineSpec.finally',
+  'records.data.value.status.pipelineResults',
+];
 
 export const createTektonResultsUrl = (
-  workspace: string,
   namespace: string,
   dataTypes: DataType[],
   filter?: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
 ): string =>
-  `${getTRUrlPrefix(workspace)}/${namespace}/results/-/records?${new URLSearchParams({
+  `${URL_PREFIX}/${namespace}/results/-/records?${new URLSearchParams({
     // default sort should always be by `create_time desc`
     ['order_by']: 'create_time desc',
     ['page_size']: `${Math.max(
@@ -225,6 +258,11 @@ export const createTektonResultsUrl = (
       Math.min(MAXIMUM_PAGE_SIZE, options?.limit >= 0 ? options.limit : options?.pageSize ?? 30),
     )}`,
     ...(nextPageToken ? { ['page_token']: nextPageToken } : {}),
+    // get partial response with required fields
+    ['PartialResponse']: 'true',
+    ['fields']: dataTypes.every((item) => item.includes('PipelineRun'))
+      ? [...commonFields, ...remainingPipelinerunFields].join(',')
+      : [...commonFields, ...remainingTaskrunFields].join(','),
     filter: AND(
       IN('data_type', dataTypes),
       filter,
@@ -234,7 +272,6 @@ export const createTektonResultsUrl = (
   }).toString()}`;
 
 export const getFilteredRecord = async <R extends K8sResourceCommon>(
-  workspace: string,
   namespace: string,
   dataTypes: DataType[],
   filter?: string,
@@ -242,14 +279,7 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
   nextPageToken?: string,
   cacheKey?: string,
 ): Promise<[R[], RecordsList, boolean?]> => {
-  const url = createTektonResultsUrl(
-    workspace,
-    namespace,
-    dataTypes,
-    filter,
-    options,
-    nextPageToken,
-  );
+  const url = createTektonResultsUrl(namespace, dataTypes, filter, options, nextPageToken);
 
   if (cacheKey) {
     const result = CACHE[cacheKey];
@@ -274,10 +304,10 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
       if (options?.limit >= 0) {
         list = {
           nextPageToken: null,
-          records: list.records.slice(0, options.limit),
+          records: (list?.records ?? []).slice(0, options.limit),
         };
       }
-      return [list?.records.map((result) => decodeValueJson(result.data.value)), list];
+      return [(list?.records ?? []).map((result) => decodeValueJson(result.data.value)), list];
     } catch (e) {
       // return an empty response if we get a 404 error
       if (e?.code === 404) {
@@ -301,7 +331,6 @@ export const getFilteredRecord = async <R extends K8sResourceCommon>(
 };
 
 const getFilteredPipelineRuns = async (
-  workspace: string,
   namespace: string,
   filter: string,
   options?: TektonResultsOptions,
@@ -309,7 +338,6 @@ const getFilteredPipelineRuns = async (
   cacheKey?: string,
 ): Promise<[PipelineRunKindV1Beta1[], RecordsList]> => {
   const [originalPipelineRuns, list] = await getFilteredRecord<PipelineRunKindV1Beta1>(
-    workspace,
     namespace,
     [DataType.PipelineRun, DataType.PipelineRun_v1beta1],
     filter,
@@ -342,7 +370,6 @@ const getFilteredPipelineRuns = async (
 };
 
 const getFilteredTaskRuns = (
-  workspace: string,
   namespace: string,
   filter: string,
   options?: TektonResultsOptions,
@@ -350,7 +377,6 @@ const getFilteredTaskRuns = (
   cacheKey?: string,
 ) =>
   getFilteredRecord<TaskRunKindV1Beta1>(
-    workspace,
     namespace,
     [DataType.TaskRun, DataType.TaskRun_v1beta1],
     filter,
@@ -360,46 +386,37 @@ const getFilteredTaskRuns = (
   );
 
 export const getPipelineRuns = (
-  workspace: string,
   namespace: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   // supply a cacheKey only if the PipelineRun is complete and response will never change in the future
   cacheKey?: string,
-) => getFilteredPipelineRuns(workspace, namespace, '', options, nextPageToken, cacheKey);
+) => getFilteredPipelineRuns(namespace, '', options, nextPageToken, cacheKey);
 
 export const getTaskRuns = (
-  workspace: string,
   namespace: string,
   options?: TektonResultsOptions,
   nextPageToken?: string,
   // supply a cacheKey only if the TaskRun is complete and response will never change in the future
   cacheKey?: string,
-) => getFilteredTaskRuns(workspace, namespace, '', options, nextPageToken, cacheKey);
+) => getFilteredTaskRuns(namespace, '', options, nextPageToken, cacheKey);
 
 // const getLog = (workspace: string, taskRunPath: string) =>
 //   commonFetchText(`${getTRUrlPrefix(workspace)}/${taskRunPath.replace('/records/', '/logs/')}`);
 
-export const getTaskRunLog = (
-  workspace: string,
-  namespace: string,
-  taskRunID: string,
-  pid: string,
-): Promise<string> =>
-  commonFetchText(
-    `${getTRUrlPrefix(workspace)}/${namespace}/results/${pid}/logs/${taskRunID}`,
-  ).catch(() => throw404());
+export const getTaskRunLog = (namespace: string, taskRunID: string, pid: string): Promise<string> =>
+  commonFetchText(`${URL_PREFIX}/${namespace}/results/${pid}/logs/${taskRunID}`).catch(() =>
+    throw404(),
+  );
 
 export const createTektonResultsQueryKeys = (
   model: K8sModelCommon,
-  workspace: string,
   selector: Selector,
   filter: string,
 ) => {
   const selectorFilter = selectorToFilter(selector);
   return [
     'tekton-results',
-    workspace,
     { group: model.apiGroup, version: model.apiVersion, kind: model.kind },
     ...(selectorFilter ? [selectorFilter] : []),
     ...(filter ? [filter] : []),
@@ -407,18 +424,12 @@ export const createTektonResultsQueryKeys = (
 };
 
 export const createTektonResultQueryOptions = curry(
-  (
-    fetchFn,
-    model: K8sModelCommon,
-    namespace: string,
-    workspace: string,
-    options: TektonResultsOptions,
-  ) => {
+  (fetchFn, model: K8sModelCommon, namespace: string, options: TektonResultsOptions) => {
     return {
-      queryKey: createTektonResultsQueryKeys(model, workspace, options?.selector, options?.filter),
+      queryKey: createTektonResultsQueryKeys(model, options?.selector, options?.filter),
       queryFn: async ({ pageParam }) => {
-        const trData = await fetchFn(workspace, namespace, options, pageParam as string);
-        return { data: trData[0], nextPage: trData[1].nextPageToken };
+        const trData = await fetchFn(namespace, options, pageParam as string);
+        return { data: trData[0], nextPage: trData[1].nextPageToken || trData[1].next_page_token };
       },
       enabled: !!namespace,
       initialPageParam: null,

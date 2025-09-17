@@ -42,14 +42,8 @@ const getQueryString = (queryParams: QueryParams) =>
     .map(([key, value = '']) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join('&');
 
-const getK8sAPIPath = (
-  { apiGroup = 'core', apiVersion }: K8sModelCommon,
-  activeWorkspace?: string,
-) => {
+const getK8sAPIPath = ({ apiGroup = 'core', apiVersion }: K8sModelCommon) => {
   let path = '';
-  if (activeWorkspace) {
-    path += `/workspaces/${activeWorkspace}`;
-  }
   const isLegacy = apiGroup === 'core' && apiVersion === 'v1';
   path += isLegacy ? `/api/${apiVersion}` : `/apis/${apiGroup}/${apiVersion}`;
   return path;
@@ -91,7 +85,7 @@ const requirementToString = (requirement: MatchExpression): string => {
   return '';
 };
 
-const createEquals = (key: string, value: string): MatchExpression => ({
+export const createEquals = (key: string, value: string): MatchExpression => ({
   key,
   operator: 'Equals',
   values: [value],
@@ -142,7 +136,7 @@ export const getK8sResourceURL = (
   isCreate = false,
 ) => {
   const { ns, name, path, queryParams } = queryOptions;
-  let resourcePath = getK8sAPIPath(model, queryOptions.ws);
+  let resourcePath = getK8sAPIPath(model);
 
   if (resource?.metadata?.namespace) {
     resourcePath += `/namespaces/${resource.metadata.namespace}`;
@@ -207,7 +201,6 @@ export const k8sWatch = (
     resourceVersion?: string;
     ns?: string;
     fieldSelector?: string;
-    ws?: string;
   } = {},
   options: Partial<
     WebSocketOptions & RequestInit & { wsPrefix?: string; pathPrefix?: string }
@@ -217,7 +210,6 @@ export const k8sWatch = (
   const opts: {
     queryParams: QueryParams<Selector>;
     ns?: string;
-    ws?: string;
   } = { queryParams };
   const wsOptionsUpdated: WebSocketOptions = {
     path: '',
@@ -240,10 +232,6 @@ export const k8sWatch = (
 
   if (query.ns) {
     opts.ns = query.ns;
-  }
-
-  if (query.ws) {
-    opts.ws = query.ws;
   }
 
   if (query.resourceVersion) {
@@ -310,7 +298,6 @@ export const convertToK8sQueryParams = (
   return {
     ns: resourceInit.namespace,
     name: resourceInit.name,
-    ws: resourceInit.workspace,
     queryParams,
   };
 };

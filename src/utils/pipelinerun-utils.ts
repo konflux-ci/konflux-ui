@@ -1,5 +1,5 @@
 import { curry } from 'lodash-es';
-import { PipelineRunLabel } from '../consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { k8sQueryGetResource } from '../k8s';
 import { getQueryClient } from '../k8s/query/core';
 import { PipelineRunModel, TaskRunModel } from '../models';
@@ -32,19 +32,18 @@ const QueryRun = curry(
     fetchFn,
     model: K8sModelCommon,
     namespace: string,
-    workspace: string,
     name: string,
   ): Promise<PipelineRunKind> => {
     try {
       return await k8sQueryGetResource(
-        { model, queryOptions: { ns: namespace, ws: workspace, name } },
+        { model, queryOptions: { ns: namespace, name } },
         { retry: false },
       );
     } catch (e) {
       if (e.code === 404) {
         return await getQueryClient()
           .ensureInfiniteQueryData({
-            ...createTektonResultQueryOptions(fetchFn, model, namespace, workspace, {
+            ...createTektonResultQueryOptions(fetchFn, model, namespace, {
               filter: EQ('data.metadata.name', name),
             }),
             retry: false,
@@ -60,3 +59,5 @@ const QueryRun = curry(
 
 export const QueryPipelineRun = QueryRun(getPipelineRuns, PipelineRunModel);
 export const QueryTaskRun = QueryRun(getTaskRuns, TaskRunModel);
+
+export const pipelineRunTypes = Object.values(PipelineRunType).map((type) => type as string);

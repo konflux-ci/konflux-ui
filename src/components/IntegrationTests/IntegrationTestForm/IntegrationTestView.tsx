@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Formik } from 'formik';
-import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
+import { INTEGRATION_TEST_DETAILS_PATH, INTEGRATION_TEST_LIST_PATH } from '../../../routes/paths';
+import { useNamespace } from '../../../shared/providers/Namespace';
+import { IntegrationTestScenarioKind, ResourceKind } from '../../../types/coreBuildService';
 import { useTrackEvent, TrackEvents } from '../../../utils/analytics';
-import { useWorkspaceInfo } from '../../Workspace/useWorkspaceInfo';
 import { defaultSelectedContextOption } from '../utils/creation-utils';
 import IntegrationTestForm from './IntegrationTestForm';
 import { IntegrationTestFormValues, IntegrationTestLabels } from './types';
@@ -47,7 +48,7 @@ const IntegrationTestView: React.FunctionComponent<
 > = ({ applicationName, integrationTest }) => {
   const track = useTrackEvent();
   const navigate = useNavigate();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
 
   const url = integrationTest?.spec.resolverRef?.params?.find(
     (param) => param.name === ResolverRefParams.URL,
@@ -84,8 +85,8 @@ const IntegrationTestView: React.FunctionComponent<
       path: path?.value ?? '',
       params: getFormParamValues(integrationTest?.spec?.params),
       contexts: getFormContextValues(integrationTest),
-      optional:
-        integrationTest?.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true' ?? false,
+      optional: integrationTest?.metadata.labels?.[IntegrationTestLabels.OPTIONAL] === 'true',
+      resourceKind: integrationTest?.spec?.resolverRef.resourceKind ?? ResourceKind.pipeline,
     },
     isDetected: true,
   };
@@ -96,13 +97,11 @@ const IntegrationTestView: React.FunctionComponent<
         link_name: 'edit-integration-test-submit',
         app_name: integrationTest.spec.application,
         integration_test_name: integrationTest.metadata.name,
-        workspace,
       });
     } else {
       track(TrackEvents.ButtonClicked, {
         link_name: 'add-integration-test-submit',
         app_name: applicationName,
-        workspace,
       });
     }
     return (
@@ -120,7 +119,6 @@ const IntegrationTestView: React.FunctionComponent<
           integration_test_name: newIntegrationTest.metadata.name,
           bundle: newIntegrationTest.spec.bundle,
           pipeline: newIntegrationTest.spec.pipeline,
-          workspace,
         });
         if (integrationTest) {
           if (window.history.state && window.history.state.idx > 0) {
@@ -128,11 +126,17 @@ const IntegrationTestView: React.FunctionComponent<
             navigate(-1);
           } else {
             navigate(
-              `/workspaces/${workspace}/applications/${applicationName}/integrationtests/${integrationTest.metadata.name}`,
+              INTEGRATION_TEST_DETAILS_PATH.createPath({
+                applicationName,
+                integrationTestName: integrationTest.metadata?.name,
+                workspaceName: namespace,
+              }),
             );
           }
         } else {
-          navigate(`/workspaces/${workspace}/applications/${applicationName}/integrationtests`);
+          navigate(
+            INTEGRATION_TEST_LIST_PATH.createPath({ applicationName, workspaceName: namespace }),
+          );
         }
       })
       .catch((error) => {
@@ -152,13 +156,11 @@ const IntegrationTestView: React.FunctionComponent<
             link_name: 'edit-integration-test-leave',
             app_name: integrationTest.spec.application,
             integration_test_name: integrationTest.metadata.name,
-            workspace,
           });
         } else {
           track(TrackEvents.ButtonClicked, {
             link_name: 'add-integration-test-leave',
             app_name: applicationName,
-            workspace,
           });
         }
         navigate(-1);

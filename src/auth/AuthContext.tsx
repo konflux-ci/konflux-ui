@@ -1,23 +1,22 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-
-export type AuthContextType = {
-  user: { email: string | null };
-  isAuthenticated: boolean;
-  signOut?: () => void;
-};
+import { AuthContextType } from './type';
+import { setUserDataToLocalStorage } from './utils';
 
 const redirectToLogin = () => {
   window.location.replace(`/oauth2/sign_in?rd=${window.location.pathname}`);
 };
 
 export const AuthContext = React.createContext<AuthContextType>({
-  user: { email: null },
+  user: { email: null, preferredUsername: null },
   isAuthenticated: false,
 });
 
-export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [user, setUser] = React.useState<AuthContextType['user']>({ email: null });
+export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ children }) => {
+  const [user, setUser] = React.useState<AuthContextType['user']>({
+    email: null,
+    preferredUsername: null,
+  });
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
 
   React.useEffect(() => {
@@ -27,7 +26,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         if (userData?.status === 401) {
           redirectToLogin();
         } else {
-          setUser((await userData.json()) as AuthContextType['user']);
+          const data = (await userData.json()) as AuthContextType['user'];
+          setUser(data);
+          setUserDataToLocalStorage({
+            email: data.email,
+            preferredUsername: data.preferredUsername,
+          });
           setIsAuthenticated(true);
         }
       } catch (err) {
@@ -60,4 +64,4 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       )}
     </AuthContext.Provider>
   );
-};
+});

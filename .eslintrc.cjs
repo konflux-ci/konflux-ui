@@ -25,12 +25,12 @@ module.exports = {
   },
   plugins: ['prettier', 'react-refresh'],
   rules: {
-    "@typescript-eslint/no-misused-promises": "off",
-    "@typescript-eslint/no-unsafe-call": "off",
-    "@typescript-eslint/no-unsafe-return": "off",
-    "@typescript-eslint/no-unsafe-member-access": "off",
-    "@typescript-eslint/no-redundant-type-constituents": "off",
-    "@typescript-eslint/no-unsafe-enum-comparison": 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-redundant-type-constituents': 'off',
+    '@typescript-eslint/no-unsafe-enum-comparison': 'off',
     'react-refresh/only-export-components': ['off', { allowConstantExport: true }],
     camelcase: [
       'error',
@@ -39,6 +39,8 @@ module.exports = {
           'UNSAFE_componentWillReceiveProps',
           'UNSAFE_componentWillMount',
           'link_name',
+          'snapshot_name',
+          'release_plan',
           'current_path',
           'component_name',
           'component_id',
@@ -58,6 +60,10 @@ module.exports = {
           'dev_file_url',
           'dockerfile_url',
           'environment_id',
+          'image_controller',
+          'application_url',
+          'sbom_server',
+          'release_name',
         ],
       },
     ],
@@ -68,6 +74,8 @@ module.exports = {
     eqeqeq: [2, 'allow-null'],
     'guard-for-in': 2,
     'import/no-duplicates': ['error'],
+    // "import/no-unresolved": "off",
+    // "import/extensions": "off",
 
     // Sort imports into groups
     'import/order': [
@@ -118,7 +126,7 @@ module.exports = {
         message: "Don't use group imports. Use lodash/(funcName) instead.",
       },
     ],
-    "@typescript-eslint/no-unsafe-assignment": "off",
+    '@typescript-eslint/no-unsafe-assignment': 'off',
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': ['error'],
     'no-underscore-dangle': 0,
@@ -141,9 +149,22 @@ module.exports = {
     'rulesdir/forbid-pf-relative-imports': 'off', // We don't need this rule after https://github.com/patternfly/patternfly-react/pull/9298.
   },
   settings: {
-    'import/extensions': ['.js', '.jsx'],
+    'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
+    'import/parsers': {
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
+    },
     'import/resolver': {
-      node: { extensions: ['.js', '.jsx', '.ts', '.tsx'] },
+      alias: {
+        map: [
+          ['~', './src'],
+          ['@routes', './src/routes'],
+        ],
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+      node: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      },
+      typescript: {},
     },
     react: {
       version: 'detect',

@@ -1,7 +1,7 @@
 import React from 'react';
-import { LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
+import { defer, LoaderFunction, LoaderFunctionArgs } from 'react-router-dom';
 import { memoize } from 'lodash-es';
-import { getNamespaceUsingWorspaceFromQueryCache } from '../components/Workspace/utils';
+import { getUserDataWithFallback } from '~/auth/utils';
 import { k8sCreateResource } from '../k8s/k8s-fetch';
 import { SelfSubjectAccessReviewModel } from '../models/rbac';
 import { useNamespace } from '../shared/providers/Namespace';
@@ -16,12 +16,16 @@ import {
 
 export const checkAccess = memoize(
   async (group, resource, subresource, namespace, verb) => {
+    const user = await getUserDataWithFallback();
+
     return k8sCreateResource<SelfSubjectAccessReviewKind>({
       model: SelfSubjectAccessReviewModel,
       resource: {
         apiVersion: 'authorization.k8s.io/v1',
         kind: 'SelfSubjectAccessReview',
         spec: {
+          user: user.preferredUsername,
+          group: ['system:authenticated'],
           resourceAttributes: {
             group,
             resource,
@@ -72,7 +76,7 @@ export function checkReviewAccesses(
     .catch((e) => {
       // eslint-disable-next-line no-console
       console.warn(`SelfSubjectAccessReview failed: ${e}`);
-      return true;
+      return false; // secure default deny
     });
 }
 
@@ -99,7 +103,7 @@ export const useAccessReview = (
         .catch((e) => {
           // eslint-disable-next-line no-console
           console.warn(`SelfSubjectAccessReview failed: ${e}`);
-          setIsAllowed(true);
+          setIsAllowed(false); // secure default deny
           setLoaded(true);
         });
     }
@@ -147,15 +151,13 @@ export const useAccessReviews = (
               allowed: result.status.allowed,
             });
           });
-          if (resourceAccess.every((access) => access.allowed)) {
-            setIsAllowed(true);
-          }
+          setIsAllowed(resourceAccess.every((access) => access.allowed));
           setLoaded(true);
         })
         .catch((e) => {
           // eslint-disable-next-line no-console
           console.warn(`SelfSubjectAccessReview failed: ${e}`);
-          setIsAllowed(true);
+          setIsAllowed(false); // secure default deny
           setLoaded(true);
         });
     }
@@ -183,7 +185,7 @@ export const useAccessReviewForModels = (
 export const createLoaderWithAccessCheck =
   (loader: LoaderFunction, res: AccessReviewResource | AccessReviewResource[]): LoaderFunction =>
   async (args: LoaderFunctionArgs) => {
-    const ns = await getNamespaceUsingWorspaceFromQueryCache(args.params.workspaceName);
+    const ns = args.params.workspaceName;
     let allowed: boolean;
     if (ns) {
       allowed = await checkReviewAccesses(res, ns);
@@ -191,5 +193,5 @@ export const createLoaderWithAccessCheck =
         throw new Response('Access check Denied', { status: 403 });
       }
     }
-    return { accessCheck: allowed, data: await loader(args) };
+    return defer({ accessCheck: allowed, data: loader(args) });
   };

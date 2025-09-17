@@ -1,8 +1,11 @@
-import * as React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { componentCRMocks } from '../../../Components/__data__/mock-data';
 import SnapshotComponentsList from '../SnapshotComponentsList';
+
+jest.useFakeTimers();
 
 const mockComponents = componentCRMocks.reduce((acc, mock) => {
   acc.push({ ...mock, spec: { ...mock.spec, application: 'test-app' } });
@@ -13,21 +16,10 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    useSearchParams: () => {
-      const [params, setParams] = React.useState(() => new URLSearchParams());
-      const setParamsCb = React.useCallback((newParams: URLSearchParams) => {
-        setParams(newParams);
-        window.location.search = `?${newParams.toString()}`;
-      }, []);
-      return [params, setParamsCb];
-    },
-    Link: (props) => <a href={props.to}>{props.children}</a>,
-  };
-});
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  Link: (props) => <a href={props.to}>{props.children}</a>,
+}));
 
 jest.mock('../../../../utils/component-utils', () => {
   const actual = jest.requireActual('../../../utils/component-utils');
@@ -41,9 +33,17 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
+const SnapshotComponents = (
+  <MemoryRouter>
+    <FilterContextProvider filterParams={['name']}>
+      <SnapshotComponentsList applicationName="test-app" components={mockComponents} />
+    </FilterContextProvider>
+  </MemoryRouter>
+);
+
 describe('SnapshotComponentsList', () => {
   it('should render correct columns and titles', () => {
-    render(<SnapshotComponentsList applicationName="test-app" components={mockComponents} />);
+    render(SnapshotComponents);
     screen.getByText('Components');
     screen.getByText('Component builds that are included in this snapshot');
     screen.getByText('Name');
@@ -53,14 +53,14 @@ describe('SnapshotComponentsList', () => {
   });
 
   it('should render component row', () => {
-    render(<SnapshotComponentsList applicationName="test-app" components={mockComponents} />);
+    render(SnapshotComponents);
     screen.queryByText('nodejs');
     screen.queryByText('main');
     screen.queryByText('https://github.com/nodeshift-starters/devfile-sample.git');
   });
 
   it('should render multiple components', () => {
-    render(<SnapshotComponentsList applicationName="test-app" components={mockComponents} />);
+    render(SnapshotComponents);
     screen.queryByText('nodejs');
     screen.queryByText('basic-node-js');
     screen.queryByText('https://github.com/nodeshift-starters/devfile-sample');
@@ -69,27 +69,31 @@ describe('SnapshotComponentsList', () => {
   });
 
   it('should render filter toolbar ', () => {
-    render(<SnapshotComponentsList applicationName="test-app" components={mockComponents} />);
+    render(SnapshotComponents);
     expect(screen.getByTestId('component-list-toolbar')).toBeInTheDocument();
     expect(screen.getByTestId('name-input-filter')).toBeInTheDocument();
   });
 
   it('should filter components based on name', () => {
-    render(<SnapshotComponentsList applicationName="test-app" components={mockComponents} />);
-    const nameSearchInput = screen.getByTestId('name-input-filter');
-    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
-    fireEvent.change(searchInput, { target: { value: 'node-' } });
+    render(SnapshotComponents);
+    const nameSearchInput = screen.getByPlaceholderText('Filter by name...');
+    act(() => {
+      fireEvent.change(nameSearchInput, { target: { value: 'basic-node-js' } });
+      jest.advanceTimersByTime(700);
+    });
+
     screen.queryByText('basic-node-js');
-    screen.debug();
     expect(screen.queryByText('nodejs')).not.toBeInTheDocument();
   });
 
   it('should render emptystate', () => {
-    render(<SnapshotComponentsList applicationName="test-app" components={mockComponents} />);
+    render(SnapshotComponents);
     expect(screen.getByTestId('component-list-toolbar')).toBeInTheDocument();
-    const nameSearchInput = screen.getByTestId('name-input-filter');
-    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
-    fireEvent.change(searchInput, { target: { value: 'not-found' } });
+    const nameSearchInput = screen.getByPlaceholderText('Filter by name...');
+    act(() => {
+      fireEvent.change(nameSearchInput, { target: { value: 'no-match' } });
+      jest.advanceTimersByTime(700);
+    });
     expect(screen.queryByText('nodejs')).not.toBeInTheDocument();
     expect(screen.queryByText('basic-node-js')).not.toBeInTheDocument();
     screen.queryByText('No components found attached to this snapshot');

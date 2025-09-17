@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:4ae9da9fa205acc4e889e077415155119db6f2eecb6dfba63cdbc2c4f802a7b6 as builder
+FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:8d8ab723e421f7303b51de36317a5632e7b161a016cd76a214f993124c5b1a95 as builder
 
 WORKDIR  /opt/app-root/src
 RUN npm install yarn --global
@@ -12,11 +12,12 @@ COPY webpack.config.js webpack.config.js
 COPY webpack.prod.config.js webpack.prod.config.js 
 COPY yarn.lock yarn.lock
 COPY .swcrc .swcrc
+COPY aliases.config.js aliases.config.js
 
 RUN yarn install
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:31e5b607c2f7e80477c909530cec406707429a6e24f08a9925df94ec5be4df0b
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:704d319a4b97e441f7286910fc12bb8a3ecb644e99ed38beff4adaa8ede04fec
 
 COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
 

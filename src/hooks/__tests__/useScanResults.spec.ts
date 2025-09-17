@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind } from '../../types';
 import { usePLRScanResults, usePLRVulnerabilities, useScanResults } from '../useScanResults';
@@ -6,10 +7,6 @@ import { useTRTaskRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults', () => ({
   useTRTaskRuns: jest.fn(() => [[], true]),
-}));
-
-jest.mock('../../components/Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
 const useTRTaskRunsMock = useTRTaskRuns as jest.Mock;
@@ -24,7 +21,8 @@ const taskRunData = [
       results: [
         {
           name: 'CVE_SCAN_RESULT',
-          value: '{ "vulnerabilities": { "critical": 1, "high": 2, "medium": 3, "low": 4 } }',
+          value:
+            '{ "vulnerabilities": { "critical": 1, "high": 2, "medium": 3, "low": 4, "unknown": 5 } }',
         },
       ],
     },
@@ -38,7 +36,8 @@ const taskRunData = [
       results: [
         {
           name: 'CLAIR_SCAN_RESULT',
-          value: '{ "vulnerabilities": { "critical": 5, "high": 2, "medium": 0, "low": 4 } }',
+          value:
+            '{ "vulnerabilities": { "critical": 5, "high": 2, "medium": 0, "low": 4, "unknown": 1 } }',
         },
       ],
     },
@@ -46,6 +45,8 @@ const taskRunData = [
 ];
 
 describe('useScanResults', () => {
+  mockUseNamespaceHook('test-ns');
+
   it('returns null if results are not fetched', () => {
     useTRTaskRunsMock.mockReturnValue([null, false]);
     const { result } = renderHook(() => useScanResults('test'));
@@ -62,7 +63,7 @@ describe('useScanResults', () => {
     useTRTaskRunsMock.mockReturnValue([[taskRunData[0]], true]);
     const { result } = renderHook(() => useScanResults('test'));
     expect(result.current).toEqual([
-      { vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4 } },
+      { vulnerabilities: { critical: 1, high: 2, medium: 3, low: 4, unknown: 5 } },
       true,
     ]);
   });
@@ -101,6 +102,7 @@ describe('usePLRScanResults', () => {
       high: 2,
       low: 4,
       medium: 3,
+      unknown: 5,
     });
     const [map2] = vulnerabilities[1] as { vulnerabilities: Record<string, unknown> }[];
     expect(map2.vulnerabilities).toEqual({
@@ -108,6 +110,7 @@ describe('usePLRScanResults', () => {
       high: 2,
       low: 4,
       medium: 0,
+      unknown: 1,
     });
     expect(loaded).toBe(true);
   });
@@ -131,7 +134,7 @@ describe('usePLRVulnerabilities', () => {
     expect(result.current.vulnerabilities).toEqual(
       expect.objectContaining({
         test: expect.arrayContaining([
-          { vulnerabilities: { critical: 1, high: 2, low: 4, medium: 3 } },
+          { vulnerabilities: { critical: 1, high: 2, low: 4, medium: 3, unknown: 5 } },
         ]),
       }),
     );

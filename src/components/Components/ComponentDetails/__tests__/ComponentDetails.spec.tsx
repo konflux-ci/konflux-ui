@@ -6,7 +6,7 @@ import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace
 import {
   createK8sWatchResourceMock,
   renderWithQueryClientAndRouter,
-  WithTestWorkspaceContext,
+  WithTestNamespaceContext,
 } from '../../../../utils/test-utils';
 import { useModalLauncher } from '../../../modal/ModalProvider';
 import { mockApplication } from '../../__data__/mock-data';
@@ -57,7 +57,7 @@ const useComponentMock = useComponent as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 
-const ComponentDetailsViewWrapper = WithTestWorkspaceContext(<ComponentDetailsView />);
+const ComponentDetailsViewWrapper = WithTestNamespaceContext(<ComponentDetailsView />);
 
 describe('ComponentDetailsView', () => {
   let navigateMock: jest.Mock;
@@ -96,7 +96,7 @@ describe('ComponentDetailsView', () => {
   });
 
   it('should show an error state when component cannot be loaded', () => {
-    useComponentMock.mockReturnValue([{}, false, { code: 404, message: 'Not found' }]);
+    useComponentMock.mockReturnValue([undefined, true, { code: 404, message: 'Not found' }]);
     renderWithQueryClientAndRouter(<ComponentDetailsViewWrapper />);
     screen.getByText('404: Page not found');
   });
@@ -108,7 +108,7 @@ describe('ComponentDetailsView', () => {
 
     await act(() => fireEvent.click(activityTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ns/applications/test-application/components/human-resources/activity',
+      '/ns/test-ns/applications/test-application/components/human-resources/activity',
     );
   });
 });

@@ -27,7 +27,6 @@ export const useApplications = (namespace: string): [ApplicationKind[], boolean,
 
 export const useApplication = (
   namespace: string,
-  workspace: string,
   applicationName: string,
 ): [ApplicationKind, boolean, unknown] => {
   const {
@@ -39,7 +38,6 @@ export const useApplication = (
       groupVersionKind: ApplicationGroupVersionKind,
       name: applicationName,
       namespace,
-      workspace,
     },
     ApplicationModel,
   );
@@ -48,7 +46,7 @@ export const useApplication = (
     if (
       !isLoading &&
       !error &&
-      (application as unknown as ApplicationKind).metadata?.deletionTimestamp
+      (application as unknown as ApplicationKind)?.metadata?.deletionTimestamp
     ) {
       return [null, !isLoading, { code: 404 }];
     }

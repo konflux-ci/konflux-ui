@@ -1,9 +1,10 @@
 import { ApplicationKind, ImportSecret } from '../../types';
+import { SBOMEventNotification } from '../../types/konflux-public-info';
 import {
   createApplication,
   createComponent,
   createImageRepository,
-  createSecret,
+  createSecretWithLinkingComponents,
 } from '../../utils/create-utils';
 import {
   EC_INTEGRATION_TEST_PATH,
@@ -16,23 +17,34 @@ import { ImportFormValues } from './type';
 
 const BUILD_PIPELINE_ANNOTATION = 'build.appstudio.openshift.io/pipeline';
 
-export const createSecrets = async (
+export const createSecretsWithLinkingComponents = async (
   secrets: ImportSecret[],
+  component: string,
   namespace: string,
   dryRun: boolean,
 ) => {
+  // We cannot enjoy the below parallel functions:
+  //  await Promise.all(
+  //   secrets.map((secret) => createSecretWithLinkingComponents(secret, namespace, dryRun)),
+  // );
+  // The reason is that createSecretWithLinkingComponents would linking secrets to multiple
+  // service account.
+  // Assuming we have several secrets those linking to similar service accounts,
+  // then failures easily occurred due to resource contention.
+  // We need jobs run in order.
+
   const results = [];
   for (const secret of secrets) {
-    const sec = await createSecret(secret, namespace, dryRun);
-    results.push(sec);
+    const result = await createSecretWithLinkingComponents(secret, component, namespace, dryRun);
+    results.push(result);
   }
   return results;
 };
 
-export const createResources = async (
+export const createResourcesWithLinkingComponents = async (
   formValues: ImportFormValues,
   namespace: string,
-  bombinoUrl: string,
+  notifications: SBOMEventNotification[],
 ) => {
   const {
     source,
@@ -58,10 +70,13 @@ export const createResources = async (
     revision: EC_INTEGRATION_TEST_REVISION,
     path: EC_INTEGRATION_TEST_PATH,
     optional: false,
+    resourceKind: 'pipeline',
   };
 
+  let applicationData: ApplicationKind;
   if (shouldCreateApplication) {
     await createApplication(application, namespace, true);
+    applicationData = await createApplication(application, namespace);
     await createIntegrationTest(integrationTestValues, applicationName, namespace, true);
   }
   if (showComponent) {
@@ -82,15 +97,13 @@ export const createResources = async (
         component: componentName,
         namespace,
         isPrivate: isPrivateRepo,
-        bombinoUrl,
+        notifications,
       },
       true,
     );
   }
 
-  let applicationData: ApplicationKind;
   if (shouldCreateApplication) {
-    applicationData = await createApplication(application, namespace);
     applicationName = applicationData.metadata.name;
     await createIntegrationTest(integrationTestValues, applicationName, namespace);
   }
@@ -100,7 +113,8 @@ export const createResources = async (
     const secretsToCreate = importSecrets.filter((secret) =>
       secret.existingSecrets.find((existing) => secret.secretName === existing.name) ? false : true,
     );
-    await createSecrets(secretsToCreate, namespace, true);
+
+    await createSecretsWithLinkingComponents(secretsToCreate, componentName, namespace, true);
 
     createdComponent = await createComponent(
       { componentName, application, gitProviderAnnotation, source, gitURLAnnotation },
@@ -113,14 +127,16 @@ export const createResources = async (
       undefined,
       componentAnnotations,
     );
+
     await createImageRepository({
       application,
       component: componentName,
       namespace,
       isPrivate: isPrivateRepo,
-      bombinoUrl,
+      notifications,
     });
-    await createSecrets(secretsToCreate, namespace, false);
+
+    await createSecretsWithLinkingComponents(secretsToCreate, componentName, namespace, false);
   }
 
   return {

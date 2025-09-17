@@ -22,6 +22,7 @@ import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-ci
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useFormikContext } from 'formik';
 import { isEmpty } from 'lodash-es';
+import { LEARN_MORE_ABOUT_NUDGING } from '~/consts/documentation';
 import { FormFooter } from '../../shared';
 import ExternalLink from '../../shared/components/links/ExternalLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
@@ -31,7 +32,7 @@ import { DUPLICATE_RELATONSHIP } from './utils';
 
 type DefineComponentRelationModalProps = Omit<Pick<RawComponentProps, 'modalProps'>, 'onClose'> & {
   componentNames: string[];
-  groupedComponents: { [application: string]: string[] };
+  sortedGroupedComponents: { [application: string]: string[] };
   onCancel: () => void;
 };
 
@@ -39,7 +40,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
   onCancel,
   modalProps,
   componentNames,
-  groupedComponents,
+  sortedGroupedComponents,
 }) => {
   const { values, handleSubmit, isSubmitting, dirty, errors, status } =
     useFormikContext<ComponentRelationFormikValue>();
@@ -53,9 +54,7 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
       description={
         <>
           Nudging references another component by digest.{' '}
-          <ExternalLink href="https://konflux-ci.dev/docs/how-tos/configuring/component-nudges/">
-            Learn more about nudging.
-          </ExternalLink>
+          <ExternalLink href={LEARN_MORE_ABOUT_NUDGING}>Learn more about nudging.</ExternalLink>
         </>
       }
       variant={ModalVariant.medium}
@@ -82,11 +81,21 @@ export const DefineComponentRelationModal: React.FC<DefineComponentRelationModal
                       <ComponentRelation
                         key={index}
                         componentNames={componentNames}
-                        groupedComponents={groupedComponents}
+                        sortedGroupedComponents={sortedGroupedComponents}
                         index={index}
                         removeProps={{
-                          disableRemove: values.relations.length <= 1,
-                          onRemove: () => arrayHelpers.remove(index),
+                          disableRemove:
+                            values.relations.length === 1 &&
+                            values.relations[0].source === '' &&
+                            values.relations[0].target.length === 0,
+                          onRemove: () =>
+                            values.relations.length <= 1
+                              ? arrayHelpers.replace(0, {
+                                  source: '',
+                                  nudgeType: ComponentRelationNudgeType.NUDGES,
+                                  target: [],
+                                })
+                              : arrayHelpers.remove(index),
                         }}
                       />
                       {index !== values.relations.length - 1 ? <Divider /> : null}

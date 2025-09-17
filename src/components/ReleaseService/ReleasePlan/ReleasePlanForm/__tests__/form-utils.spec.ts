@@ -211,11 +211,11 @@ describe('getReleasePlanFormBreadcrumbs', () => {
   it('should return the correct breadcrumbs for creating a release plan', () => {
     const edit = false;
 
-    const breadcrumbs = getReleasePlanFormBreadcrumbs([], namespace, edit);
+    const breadcrumbs = getReleasePlanFormBreadcrumbs(namespace, edit);
 
     expect(breadcrumbs).toEqual([
       {
-        path: `/workspaces/${namespace}/release`,
+        path: `/ns/${namespace}/release`,
         name: 'Releases',
       },
       {
@@ -228,11 +228,11 @@ describe('getReleasePlanFormBreadcrumbs', () => {
   it('should return the correct breadcrumbs for editing a release plan', () => {
     const edit = true;
 
-    const breadcrumbs = getReleasePlanFormBreadcrumbs([], namespace, edit);
+    const breadcrumbs = getReleasePlanFormBreadcrumbs(namespace, edit);
 
     expect(breadcrumbs).toEqual([
       {
-        path: `/workspaces/${namespace}/release`,
+        path: `/ns/${namespace}/release`,
         name: 'Releases',
       },
       {

@@ -1,3 +1,4 @@
+import { USER_ACCESS_EDIT_PAGE } from '@routes/paths';
 import { RoleBindingModel } from '../../models';
 import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -28,16 +29,19 @@ export const useRBActions = (binding: RoleBinding): Action[] => {
   return [
     {
       label: 'Edit access',
-      id: `edit-access-${userSubject?.name}`,
+      id: `edit-access-${binding.metadata?.name}`,
       disabled: !canUpdate,
       disabledTooltip: "You don't have permission to edit access",
       cta: {
-        href: `/workspaces/${namespace}/access/edit/${userSubject?.name}`,
+        href: USER_ACCESS_EDIT_PAGE.createPath({
+          workspaceName: namespace,
+          bindingName: binding.metadata.name,
+        }),
       },
     },
     {
       cta: () => showModal(revokeAccessModalLauncher(userSubject?.name, binding)),
-      id: `revoke-access-${userSubject?.name}`,
+      id: `revoke-access-${binding.metadata?.name}`,
       label: 'Revoke access',
       disabled: !canDelete,
       disabledTooltip: "You don't have permission to revoke access",

@@ -16,6 +16,15 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   getActiveWorkspace: jest.fn(() => 'test-ws'),
 }));
 
+jest.mock('~/auth/utils', () => ({
+  getUserDataWithFallback: jest.fn(() =>
+    Promise.resolve({
+      email: 'test@demo',
+      preferredUsername: 'testuser',
+    }),
+  ),
+}));
+
 const createResourceMock = k8sCreateResource as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
@@ -35,6 +44,8 @@ describe('checkAccess', () => {
         model: expect.objectContaining({ kind: 'SelfSubjectAccessReview' }),
         resource: expect.objectContaining({
           spec: {
+            user: 'testuser',
+            group: ['system:authenticated'],
             resourceAttributes: expect.objectContaining({
               group: 'tekton.dev',
               resource: 'pipelineruns',
@@ -94,7 +105,7 @@ describe('useAccessReview', () => {
     expect(result.current).toEqual([false, true]);
   });
 
-  it('should return true when there API failure due to some reason', async () => {
+  it('should return false when there API failure due to some reason (secure default deny)', async () => {
     createResourceMock.mockImplementation(() => Promise.reject(new Error('404 not found')));
 
     const { result, waitForNextUpdate } = renderHook(() =>
@@ -106,7 +117,7 @@ describe('useAccessReview', () => {
       }),
     );
     await waitForNextUpdate();
-    expect(result.current).toEqual([true, true]);
+    expect(result.current).toEqual([false, true]);
   });
 });
 
@@ -186,7 +197,7 @@ describe('useAccessReviews', () => {
     expect(result.current).toEqual([false, true]);
   });
 
-  it('should return true when there API failure due to some reason', async () => {
+  it('should return false when there API failure due to some reason (secure default deny)', async () => {
     createResourceMock.mockImplementation(() => Promise.reject(new Error('404 not found')));
 
     const { result, waitForNextUpdate } = renderHook(() =>
@@ -200,7 +211,7 @@ describe('useAccessReviews', () => {
       ]),
     );
     await waitForNextUpdate();
-    expect(result.current).toEqual([true, true]);
+    expect(result.current).toEqual([false, true]);
   });
 });
 

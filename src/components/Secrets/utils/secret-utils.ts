@@ -1,6 +1,8 @@
 import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
-import { K8sQueryCreateResource } from '../../../k8s';
+import { SECRET_LIST_PATH } from '@routes/paths';
+import { IMAGE_PULL_SECRET_TYPES } from '~/consts/secrets';
+import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../../k8s';
 import { SecretModel } from '../../../models';
 import {
   AddSecretFormValues,
@@ -18,6 +20,16 @@ import {
   SourceSecretType,
   BuildTimeSecret,
 } from '../../../types';
+
+export const isImagePullSecret = (secret: SecretKind): boolean => {
+  return IMAGE_PULL_SECRET_TYPES.includes(secret.type as (typeof IMAGE_PULL_SECRET_TYPES)[number]);
+};
+
+export enum SecretForComponentOption {
+  none = 'none',
+  all = 'all',
+  partial = 'partial',
+}
 
 export type PartnerTask = {
   type: SecretType;
@@ -177,7 +189,13 @@ export const getTargetLabelsForRemoteSecret = (
 };
 
 export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
-  if (!values.source?.host && (!values.labels || values.labels.length === 0)) {
+  const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
+
+  if (
+    !values.source?.host &&
+    (!values.labels || values.labels.length === 0) &&
+    !addCommonSecretLabel
+  ) {
     // if no labels quit early
     return null;
   }
@@ -196,6 +214,10 @@ export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]
     // get scm labels for host
     labels[SecretLabels.CREDENTIAL_LABEL] = SecretLabels.CREDENTIAL_VALUE;
     labels[SecretLabels.HOST_LABEL] = values.source.host;
+  }
+
+  if (addCommonSecretLabel) {
+    labels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
   }
   return labels;
 };
@@ -248,22 +270,47 @@ export const getSecretTypetoLabel = (obj: SecretKind) => {
 export const createSecretResource = async (
   secretResource: SecretKind,
   namespace: string,
-  workspace: string,
   dryRun: boolean,
 ): Promise<SecretKind> =>
   K8sQueryCreateResource({
     model: SecretModel,
     queryOptions: {
       ns: namespace,
-      ws: workspace,
       ...(dryRun && { queryParams: { dryRun: 'All' } }),
     },
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (workspace) => {
+export const getAddSecretBreadcrumbs = (namespace) => {
   return [
-    { path: `/workspaces/${workspace}/secrets`, name: 'Secrets' },
+    { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
     { path: '#', name: 'Add secret' },
   ];
+};
+
+export const patchCommonSecretLabel = async (secret: SecretKind, add: boolean) => {
+  if (!secret || !secret.metadata?.name || !secret.metadata?.namespace) {
+    return;
+  }
+  const currentLabels = secret.metadata.labels || {};
+  const updatedLabels = { ...currentLabels };
+  if (add) {
+    updatedLabels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
+  } else {
+    delete updatedLabels[SecretLabels.COMMON_SECRET_LABEL];
+  }
+  return K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: secret.metadata.name,
+      ns: secret.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'replace',
+        path: '/metadata/labels',
+        value: updatedLabels,
+      },
+    ],
+  });
 };

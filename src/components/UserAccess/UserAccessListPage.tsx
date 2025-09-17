@@ -1,16 +1,16 @@
 import React from 'react';
 import { Divider, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import { FULL_APPLICATION_TITLE } from '../../consts/labels';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 import { RoleBindingModel } from '../../models';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useWorkspaceBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
+import { FilterContextProvider } from '../Filter/generic/FilterContext';
 import PageLayout from '../PageLayout/PageLayout';
 import { UserAccessListView } from './UserAccessListView';
 
 const UserAccessPage: React.FunctionComponent = () => {
-  const breadcrumbs = useWorkspaceBreadcrumbs();
   const namespace = useNamespace();
 
   const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
@@ -21,13 +21,6 @@ const UserAccessPage: React.FunctionComponent = () => {
     <PageLayout
       title="User access"
       description="Invite users to collaborate with you by granting them access to your namespace."
-      breadcrumbs={[
-        ...breadcrumbs,
-        {
-          path: '#',
-          name: 'User access',
-        },
-      ]}
       actions={[
         {
           id: 'grant-access',
@@ -35,14 +28,16 @@ const UserAccessPage: React.FunctionComponent = () => {
           disabled: !canCreateRB,
           disabledTooltip: 'You cannot grant access in this namespace',
           cta: {
-            href: `/workspaces/${namespace}/access/grant`,
+            href: USER_ACCESS_GRANT_PAGE.createPath({ workspaceName: namespace }),
           },
         },
       ]}
     >
-      <Divider style={{ background: 'white', paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
+      <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       <PageSection variant={PageSectionVariants.light} isFilled>
-        <UserAccessListView />
+        <FilterContextProvider filterParams={['username']}>
+          <UserAccessListView />
+        </FilterContextProvider>
       </PageSection>
     </PageLayout>
   );

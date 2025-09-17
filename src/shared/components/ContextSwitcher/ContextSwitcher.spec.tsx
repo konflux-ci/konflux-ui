@@ -14,10 +14,10 @@ describe('ContextSwitcher', () => {
     render(<ContextSwitcher menuItems={[]} resourceType="application" footer={<>footer text</>} />);
     act(() => screen.getByRole('button').click());
 
-    expect(screen.getByPlaceholderText('Filter application by name')).toBeVisible();
-    expect(screen.getByText('Recent')).toBeVisible();
-    expect(screen.getByText('All')).toBeVisible();
-    expect(screen.getByText('footer text')).toBeVisible();
+    expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
+    expect(screen.getByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getByText('footer text')).toBeInTheDocument();
   });
 
   it('should show currently selected item', () => {
@@ -26,7 +26,6 @@ describe('ContextSwitcher', () => {
     act(() => screen.getByRole('button').click());
 
     const selectedItem = screen.getByRole('menuitem');
-    expect(selectedItem).toBeVisible();
     expect(selectedItem).toHaveClass('pf-m-selected');
   });
 

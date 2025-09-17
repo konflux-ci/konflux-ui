@@ -2,21 +2,17 @@ import * as React from 'react';
 import {
   EmptyState,
   EmptyStateBody,
-  SearchInput,
   TextContent,
   TextVariants,
-  Toolbar,
-  ToolbarContent,
-  ToolbarGroup,
-  ToolbarItem,
   Text,
   EmptyStateVariant,
   Truncate,
 } from '@patternfly/react-core';
 import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
 import { FieldArray, useField } from 'formik';
-import { debounce } from 'lodash-es';
-import { useSearchParam } from '../../../../../hooks/useSearchParam';
+import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useDeepCompareMemoize } from '~/shared';
 import ActionMenu from '../../../../../shared/components/action-menu/ActionMenu';
 import FilteredEmptyState from '../../../../../shared/components/empty-state/FilteredEmptyState';
 import { AddIssueModal, IssueType } from './AddIssueModal';
@@ -28,14 +24,24 @@ interface AddIssueSectionProps {
   issueType: IssueType;
 }
 
-export interface IssueObject {
-  id: string;
-  summary: string;
+interface IssueCommonData {
+  summary?: string;
   source?: string;
-  components?: { name: string; packages: string[] }[];
   uploadDate?: string;
   status?: string;
 }
+
+type BugObject = IssueCommonData & {
+  id: string;
+  source: string;
+};
+
+type CVEObject = IssueCommonData & {
+  key?: string;
+  components?: { name: string; packages: string[] }[];
+};
+
+export type IssueObject = BugObject | CVEObject;
 
 export const issueTableColumnClass = {
   issueKey: 'pf-m-width-15 wrap-column ',
@@ -52,42 +58,29 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
   field,
   issueType,
 }) => {
-  const [nameFilter, setNameFilter] = useSearchParam(field, '');
+  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const filters = useDeepCompareMemoize({
+    name: unparsedFilters[field] ? (unparsedFilters[field] as string) : '',
+  });
+  const { name: nameFilter } = filters;
   const [{ value: issues }, ,] = useField<IssueObject[]>(field);
 
   const isBug = issueType === IssueType.BUG;
 
-  const [onLoadName, setOnLoadName] = React.useState(nameFilter);
-  React.useEffect(() => {
-    if (nameFilter) {
-      setOnLoadName(nameFilter);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const filteredIssues = React.useMemo(
     () =>
       issues && Array.isArray(issues)
-        ? issues?.filter(
-            (bug) => !nameFilter || bug.id.toLowerCase().indexOf(nameFilter.toLowerCase()) >= 0,
-          )
+        ? issues?.filter((bug) => {
+            const key = isBug ? (bug as BugObject).id : (bug as CVEObject).key;
+            return !nameFilter || key?.toLowerCase().indexOf(nameFilter.toLowerCase()) >= 0;
+          })
         : [],
-    [issues, nameFilter],
+    [issues, nameFilter, isBug],
   );
-
-  const onClearFilters = () => {
-    onLoadName.length && setOnLoadName('');
-    setNameFilter('');
-  };
-  const onNameInput = debounce((n: string) => {
-    n.length === 0 && onLoadName.length && setOnLoadName('');
-
-    setNameFilter(n);
-  }, 600);
 
   const EmptyMsg = (type) =>
     nameFilter ? (
-      <FilteredEmptyState onClearFilters={onClearFilters} variant={EmptyStateVariant.xs} />
+      <FilteredEmptyState onClearFilters={() => onClearFilters()} variant={EmptyStateVariant.xs} />
     ) : (
       <EmptyState className="pf-v5-u-m-0 pf-v5-u-p-0" variant={EmptyStateVariant.xs}>
         <EmptyStateBody className="pf-v5-u-m-0 pf-v5-u-p-0">
@@ -113,30 +106,15 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
                   : 'Are there any CVEs you would like to add to this release?'}
               </Text>
             </TextContent>
-            <Toolbar
-              data-test="pipelinerun-list-toolbar"
-              clearAllFilters={onClearFilters}
-              className="pf-v5-u-mb-0 pf-v5-u-pb-0 pf-v5-u-pl-0"
+            <BaseTextFilterToolbar
+              text={nameFilter}
+              label="name"
+              setText={(name) => setFilters({ [field]: name })}
+              onClearFilters={onClearFilters}
+              dataTest={`add-${field}-section-toolbar`}
             >
-              <ToolbarContent>
-                <ToolbarGroup align={{ default: 'alignLeft' }}>
-                  <ToolbarItem className="pf-v5-u-ml-0">
-                    <SearchInput
-                      name="nameInput"
-                      data-test={`${field}-input-filter`}
-                      type="search"
-                      aria-label="name filter"
-                      placeholder="Filter by name..."
-                      onChange={(_, n) => onNameInput(n)}
-                      value={nameFilter}
-                    />
-                  </ToolbarItem>
-                  <ToolbarItem>
-                    <AddIssueModal bugArrayHelper={addNewBug} issueType={issueType} />
-                  </ToolbarItem>
-                </ToolbarGroup>
-              </ToolbarContent>
-            </Toolbar>
+              <AddIssueModal bugArrayHelper={addNewBug} issueType={issueType} />
+            </BaseTextFilterToolbar>
             <div className="pf-v5-u-mb-md">
               <Table
                 aria-label="Simple table"
@@ -158,7 +136,6 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
                   <Thead>
                     <Tr>
                       <Th className={issueTableColumnClass.issueKey}>CVE key</Th>
-                      <Th className={issueTableColumnClass.cveUrl}>URL</Th>
                       <Th className={issueTableColumnClass.components}>Components</Th>
                       <Th className={issueTableColumnClass.summary}>Summary</Th>
                       <Th className={issueTableColumnClass.uploadDate}>Last updated</Th>
@@ -169,57 +146,58 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
 
                 {Array.isArray(filteredIssues) && filteredIssues.length > 0 && (
                   <Tbody data-test="issue-table-body">
-                    {filteredIssues.map((issue, i) => (
-                      <Tr key={issue.id}>
-                        <Td className={issueTableColumnClass.issueKey} data-test="issue-key">
-                          {issue.id ?? '-'}
-                        </Td>
-                        <Td
-                          className={
-                            isBug ? issueTableColumnClass.bugUrl : issueTableColumnClass.bugUrl
-                          }
-                          data-test="issue-url"
-                        >
-                          <Truncate content={issue.source} />
-                        </Td>
-                        {!isBug && (
-                          <Td className={issueTableColumnClass.components}>
-                            {issue.components &&
-                            Array.isArray(issue.components) &&
-                            issue.components.length > 0
-                              ? issue.components?.map((component) => (
-                                  <span key={component.name} className="pf-v5-u-mr-sm">
-                                    {component.name}
-                                  </span>
-                                ))
-                              : '-'}
+                    {filteredIssues.map((issue, i) => {
+                      const bugObject = issue as BugObject;
+                      const cveObject = issue as CVEObject;
+                      return (
+                        <Tr key={isBug ? bugObject.id : cveObject.key}>
+                          <Td className={issueTableColumnClass.issueKey} data-test="issue-key">
+                            {isBug ? bugObject.id ?? '-' : cveObject.key ?? '-'}
                           </Td>
-                        )}
-                        <Td className={issueTableColumnClass.summary} data-test="issue-summary">
-                          {issue.summary ? <Truncate content={issue.summary} /> : '-'}
-                        </Td>
-                        <Td
-                          className={issueTableColumnClass.uploadDate}
-                          data-test="issue-uploadDate"
-                        >
-                          {issue.uploadDate ?? '-'}
-                        </Td>
-                        <Td className={issueTableColumnClass.status} data-test="issue-status">
-                          {issue.status ?? '-'}
-                        </Td>
-                        <Td className={issueTableColumnClass.kebab}>
-                          <ActionMenu
-                            actions={[
-                              {
-                                cta: () => arrayHelper.remove(i),
-                                id: 'delete-bug',
-                                label: isBug ? 'Delete bug' : 'Delete CVE',
-                              },
-                            ]}
-                          />
-                        </Td>
-                      </Tr>
-                    ))}
+                          {isBug && (
+                            <Td className={issueTableColumnClass.bugUrl} data-test="issue-url">
+                              <Truncate content={issue.source} />
+                            </Td>
+                          )}
+                          {!isBug && (
+                            <Td className={issueTableColumnClass.components}>
+                              {cveObject.components &&
+                              Array.isArray(cveObject.components) &&
+                              cveObject.components.length > 0
+                                ? cveObject.components?.map((component) => (
+                                    <span key={component.name} className="pf-v5-u-mr-sm">
+                                      {component.name}
+                                    </span>
+                                  ))
+                                : '-'}
+                            </Td>
+                          )}
+                          <Td className={issueTableColumnClass.summary} data-test="issue-summary">
+                            {issue.summary ? <Truncate content={issue.summary} /> : '-'}
+                          </Td>
+                          <Td
+                            className={issueTableColumnClass.uploadDate}
+                            data-test="issue-uploadDate"
+                          >
+                            {issue.uploadDate ?? '-'}
+                          </Td>
+                          <Td className={issueTableColumnClass.status} data-test="issue-status">
+                            {issue.status ?? '-'}
+                          </Td>
+                          <Td className={issueTableColumnClass.kebab}>
+                            <ActionMenu
+                              actions={[
+                                {
+                                  cta: () => arrayHelper.remove(i),
+                                  id: 'delete-bug',
+                                  label: isBug ? 'Delete bug' : 'Delete CVE',
+                                },
+                              ]}
+                            />
+                          </Td>
+                        </Tr>
+                      );
+                    })}
                   </Tbody>
                 )}
               </Table>

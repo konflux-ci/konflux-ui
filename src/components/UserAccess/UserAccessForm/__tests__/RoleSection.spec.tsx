@@ -23,7 +23,13 @@ describe('RoleSection', () => {
     formikRenderer(<RoleSection />, { role: '' });
     expect(screen.getByText('Loading...')).toBeVisible();
     const dropdownButton = screen.getByTestId('dropdown-toggle');
-    expect(dropdownButton).toBeDisabled();
+    expect(dropdownButton).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should show error if role map fails to load', () => {
+    mockUseRoleMap.mockReturnValue([undefined, true, { code: 451 }]);
+    formikRenderer(<RoleSection />, { role: '' });
+    expect(screen.getByText('Unable to load roles')).toBeVisible();
   });
 
   it('should not render permissions if role is not selected', () => {

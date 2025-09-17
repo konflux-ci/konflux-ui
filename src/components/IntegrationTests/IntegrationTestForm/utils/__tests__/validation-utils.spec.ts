@@ -9,6 +9,7 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          resourceKind: 'pipeline',
           contexts: [
             {
               name: 'test',
@@ -46,6 +47,7 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          resourceKind: 'pipelinerun',
           contexts: [
             {
               name: 'test',
@@ -67,6 +69,7 @@ describe('validation-utils', () => {
           url: 'test-url',
           path: 'test-path',
           revision: 'revision',
+          resourceKind: 'pipelinerun',
           contexts: [
             {
               name: 'test',

@@ -18,18 +18,28 @@ describe('ApplicationDropdown', () => {
     expect(screen.getByText('Loading applications...')).toBeVisible();
   });
 
-  it('should show dropdown if applications are loaded', () => {
+  it('should show error message if applications arent loaded', async () => {
+    useApplicationsMock.mockReturnValue([undefined, true, Error()]);
+    formikRenderer(<ApplicationDropdown name="app" />);
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+    await waitFor(() => {
+      const errorMenuItem = screen.getByRole('menuitem', { name: 'Unable to load applications' });
+      expect(errorMenuItem).toBeVisible();
+      expect(errorMenuItem).toHaveClass('pf-m-disabled');
+    });
+  });
+
+  it('should show dropdown if applications are loaded', async () => {
     useApplicationsMock.mockReturnValue([
       [{ metadata: { name: 'app1' } }, { metadata: { name: 'app2' } }],
       true,
     ]);
     formikRenderer(<ApplicationDropdown name="app" />);
-    act(() => {
-      fireEvent.click(screen.getByRole('button'));
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'app1' })).toBeVisible();
+      expect(screen.getByRole('menuitem', { name: 'app2' })).toBeVisible();
     });
-
-    expect(screen.getByRole('menuitem', { name: 'app1' })).toBeVisible();
-    expect(screen.getByRole('menuitem', { name: 'app2' })).toBeVisible();
   });
 
   it('should change the application dropdown value', async () => {
@@ -41,12 +51,16 @@ describe('ApplicationDropdown', () => {
     formikRenderer(<ApplicationDropdown name="targets.application" />, {
       targets: { application: 'app' },
     });
-    expect(screen.queryByRole('button')).toBeInTheDocument();
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
 
-    await act(() => fireEvent.click(screen.getByRole('button')));
-    expect(screen.getByRole('menu')).toBeInTheDocument();
-    screen.getByText('app2');
+    await waitFor(() => {
+      const menuItems = screen.getAllByRole('menuitem');
+      expect(menuItems.length).toEqual(2);
+      screen.getByText('app2');
+    });
     await act(() => fireEvent.click(screen.getByText('app2')));
-    await waitFor(() => expect(screen.getByText('app2')));
+    await waitFor(() => {
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('app2');
+    });
   });
 });

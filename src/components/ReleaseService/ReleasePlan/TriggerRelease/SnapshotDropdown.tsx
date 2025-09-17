@@ -1,9 +1,10 @@
 import React from 'react';
 import { useField, useFormikContext } from 'formik';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
+import { useSnapshotsForApplication } from '../../../../hooks/useSnapshots';
 import DropdownField from '../../../../shared/components/formik-fields/DropdownField';
 import FieldHelperText from '../../../../shared/components/formik-fields/FieldHelperText';
 import { useNamespace } from '../../../../shared/providers/Namespace';
+import { TriggerReleaseFormValues } from './form-utils';
 
 type SnapshotDropdownProps = Omit<
   React.ComponentProps<typeof DropdownField>,
@@ -13,40 +14,52 @@ type SnapshotDropdownProps = Omit<
 export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdownProps>> = (
   props,
 ) => {
-  const { setErrors } = useFormikContext();
   const namespace = useNamespace();
-  const [snapshots, loaded, error] = useSnapshots(namespace);
+  const {
+    data: snapshots,
+    isLoading,
+    hasError,
+    archiveError,
+    clusterError,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useSnapshotsForApplication(namespace, props.applicationName);
+  const error = archiveError ?? clusterError;
   const [, , { setValue }] = useField<string>(props.name);
-
-  const filteredSnapshots = React.useMemo(
-    () =>
-      loaded && props.applicationName && !error
-        ? snapshots?.filter((sn) => sn.spec?.application === props.applicationName)
-        : snapshots,
-    [error, loaded, props.applicationName, snapshots],
-  );
+  const { values } = useFormikContext<TriggerReleaseFormValues>();
 
   const dropdownItems = React.useMemo(
-    () => filteredSnapshots?.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) ?? [],
-    [filteredSnapshots],
+    () =>
+      !isLoading ? snapshots?.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
+    [isLoading, snapshots],
   );
 
   React.useEffect(() => {
-    // Reset snapshot dropdown value when applicationName changes
-    void setValue('');
-  }, [error, loaded, props.applicationName, setErrors, setValue]);
+    if (
+      !isLoading &&
+      !hasError &&
+      snapshots.findIndex((s) => s.metadata.name === values.snapshot) === -1
+    ) {
+      void setValue('');
+    }
+  }, [values.snapshot, setValue, snapshots, isLoading, hasError]);
+
+  React.useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && fetchNextPage) fetchNextPage();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return (
     <>
       <DropdownField
         {...props}
         label="Snapshot"
-        placeholder={!loaded || !!error ? 'Loading snapshots...' : 'Select snapshot'}
-        isDisabled={props.isDisabled || !loaded || !!error}
+        placeholder={isLoading || isFetchingNextPage ? 'Loading snapshots...' : 'Select snapshot'}
+        isDisabled={props.isDisabled || isLoading}
         items={dropdownItems}
         onChange={(app: string) => setValue(app)}
       />
-      {error ? (
+      {!snapshots?.length && hasError ? (
         <FieldHelperText isValid={false} errorMessage={(error as { message: string }).message} />
       ) : null}
     </>

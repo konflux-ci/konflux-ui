@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
-import { useWorkspaceInfo } from '../components/Workspace/useWorkspaceInfo';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import {
@@ -23,7 +22,6 @@ const useRuns = <Kind extends K8sResourceCommon>(
   groupVersionKind: K8sGroupVersionKind,
   model: K8sModelCommon,
   namespace: string,
-  workspace: string,
   options?: {
     selector?: Selector;
     limit?: number;
@@ -42,14 +40,13 @@ const useRuns = <Kind extends K8sResourceCommon>(
       ? {
           groupVersionKind,
           namespace,
-          workspace,
           isList,
           selector: optionsMemo?.selector,
           name: optionsMemo?.name,
           watch: true,
         }
       : null;
-  }, [namespace, groupVersionKind, workspace, isList, optionsMemo?.selector, optionsMemo?.name]);
+  }, [namespace, groupVersionKind, isList, optionsMemo?.selector, optionsMemo?.name]);
   const {
     data: resources,
     isLoading,
@@ -97,8 +94,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
 
   // Query tekton results if there's no limit or we received less items from etcd than the current limit
   const queryTr =
-    !limit ||
-    (workspace && namespace && ((runs && !isLoading && optionsMemo.limit > runs.length) || error));
+    !limit || (namespace && ((runs && !isLoading && optionsMemo.limit > runs.length) || error));
 
   const trOptions: typeof optionsMemo = React.useMemo(() => {
     if (optionsMemo?.name) {
@@ -115,7 +111,7 @@ const useRuns = <Kind extends K8sResourceCommon>(
   // these duplicates will later be de-duped
   const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = (
     groupVersionKind === PipelineRunGroupVersionKind ? useTRPipelineRuns : useTRTaskRuns
-  )(queryTr ? namespace : null, workspace, trOptions) as [
+  )(queryTr ? namespace : null, trOptions) as [
     Kind[],
     boolean,
     unknown,
@@ -171,38 +167,28 @@ const useRuns = <Kind extends K8sResourceCommon>(
 
 export const usePipelineRuns = (
   namespace: string,
-  workspace: string,
   options?: {
     selector?: Selector;
     limit?: number;
   },
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
-  useRuns<PipelineRunKind>(
-    PipelineRunGroupVersionKind,
-    PipelineRunModel,
-    namespace,
-    workspace,
-    options,
-  );
+  useRuns<PipelineRunKind>(PipelineRunGroupVersionKind, PipelineRunModel, namespace, options);
 
 export const useTaskRuns = (
   namespace: string,
-  workspace: string,
   options?: {
     selector?: Selector;
     limit?: number;
   },
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] =>
-  useRuns<TaskRunKind>(TaskRunGroupVersionKind, TaskRunModel, namespace, workspace, options);
+  useRuns<TaskRunKind>(TaskRunGroupVersionKind, TaskRunModel, namespace, options);
 
 export const useLatestBuildPipelineRunForComponent = (
   namespace: string,
   componentName: string,
 ): [PipelineRunKind, boolean, unknown] => {
-  const { workspace } = useWorkspaceInfo();
   const result = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {
@@ -224,10 +210,8 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
   namespace: string,
   componentName: string,
 ): [PipelineRunKind, boolean, unknown] => {
-  const { workspace } = useWorkspaceInfo();
   const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {
@@ -260,13 +244,13 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
 
 export const usePipelineRunsForCommit = (
   namespace: string,
-  workspace: string,
   applicationName: string,
   commit: string,
   limit?: number,
+  filterByComponents = true,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
-  const [application, applicationLoaded] = useApplication(namespace, workspace, applicationName);
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
 
   const componentNames = React.useMemo(
     () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
@@ -277,7 +261,6 @@ export const usePipelineRunsForCommit = (
     namespace && applicationName && commit && componentsLoaded && applicationLoaded
       ? namespace
       : null,
-    workspace,
     React.useMemo(
       () => ({
         selector: {
@@ -304,7 +287,9 @@ export const usePipelineRunsForCommit = (
     return [
       pipelineRuns
         .filter((plr) =>
-          componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]),
+          filterByComponents
+            ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
+            : true,
         )
         .filter((plr) => plr.kind === PipelineRunGroupVersionKind.kind)
         .slice(0, limit ? limit : undefined),
@@ -313,17 +298,24 @@ export const usePipelineRunsForCommit = (
       getNextPage,
       nextPageProps,
     ];
-  }, [componentNames, getNextPage, limit, loaded, nextPageProps, pipelineRuns, plrError]);
+  }, [
+    componentNames,
+    filterByComponents,
+    getNextPage,
+    limit,
+    loaded,
+    nextPageProps,
+    pipelineRuns,
+    plrError,
+  ]);
 };
 
 export const usePipelineRun = (
   namespace: string,
-  workspace: string,
   pipelineRunName: string,
 ): [PipelineRunKind, boolean, unknown] => {
   const result = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         name: pipelineRunName,
@@ -341,12 +333,10 @@ export const usePipelineRun = (
 
 export const useTaskRun = (
   namespace: string,
-  workspace: string,
   taskRunName: string,
 ): [TaskRunKind, boolean, unknown] => {
   const result = useTaskRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         name: taskRunName,
@@ -366,10 +356,8 @@ export const useLatestPushBuildPipelineRunForComponent = (
   namespace: string,
   componentName: string,
 ): [PipelineRunKind, boolean, unknown] => {
-  const { workspace } = useWorkspaceInfo();
   const result = usePipelineRuns(
     namespace,
-    workspace,
     React.useMemo(
       () => ({
         selector: {

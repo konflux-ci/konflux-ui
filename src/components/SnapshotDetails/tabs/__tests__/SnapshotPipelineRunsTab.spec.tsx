@@ -1,16 +1,22 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen } from '@testing-library/react';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
-import { useSearchParam } from '../../../../hooks/useSearchParam';
-import { useSnapshots } from '../../../../hooks/useSnapshots';
-import { createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
+import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsTab from '../SnapshotPipelineRunsTab';
+
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
+
+jest.mock('~/hooks/useSnapshots', () => ({
+  useSnapshot: jest.fn(() => [{ metadata: { name: 'snap' } }, false, null]),
+}));
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -30,11 +36,7 @@ jest.mock('../../../../hooks/useScanResults', () => ({
 }));
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
-  useSearchParam: jest.fn(),
-}));
-
-jest.mock('../../../../hooks/useSnapshots', () => ({
-  useSnapshots: jest.fn(),
+  useSearchParamBatch: jest.fn(),
 }));
 
 jest.mock('react-router-dom', () => {
@@ -44,6 +46,7 @@ jest.mock('react-router-dom', () => {
     Link: (props) => <a href={props.to}>{props.children}</a>,
     useNavigate: jest.fn(),
     useParams: jest.fn(),
+    useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
   };
 });
 
@@ -76,23 +79,10 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-const useSearchParamMock = useSearchParam as jest.Mock;
+const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
-const mockUseSnapshots = useSnapshots as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
-
-const params = {};
-
-const mockUseSearchParam = (name: string) => {
-  const setter = (value) => {
-    params[name] = value;
-  };
-  const unset = () => {
-    params[name] = '';
-  };
-  return [params[name], setter, unset];
-};
 
 const appName = 'my-test-app';
 
@@ -140,9 +130,8 @@ const snapShotPLRs = [
     },
   },
 ];
-
 describe('SnapshotPipelinerunsTab', () => {
-  createUseWorkspaceInfoMock({ namespace: 'test', workspace: 'test-ws' });
+  mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
     useParamsMock.mockReturnValue({
@@ -150,9 +139,9 @@ describe('SnapshotPipelinerunsTab', () => {
 
       snapshotName: 'test-snapshot',
     });
-    useSearchParamMock.mockImplementation(mockUseSearchParam);
+    useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
-    mockUseSnapshots.mockReturnValue([[{ metadata: { name: 'snp1' } }], true]);
+    useNamespaceMock.mockReturnValue('test-ns');
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
@@ -168,7 +157,7 @@ describe('SnapshotPipelinerunsTab', () => {
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
-      `http://localhost/workspaces/test-ws/import?application=my-test-app`,
+      `http://localhost/ns/test-ns/import?application=my-test-app`,
     );
   });
 

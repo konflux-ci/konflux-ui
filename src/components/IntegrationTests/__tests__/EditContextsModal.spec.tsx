@@ -19,9 +19,6 @@ jest.mock('../../../k8s/k8s-fetch', () => ({
 jest.mock('../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
 
 const useComponentsMock = useComponents as jest.Mock;
 const patchResourceMock = k8sPatchResource as jest.Mock;
@@ -33,6 +30,7 @@ const initialValues: IntegrationTestFormValues = {
   url: 'test-url',
   optional: true,
   contexts: contextOptions,
+  resourceKind: 'pipelinerun',
 };
 
 const setup = () =>
@@ -111,7 +109,7 @@ describe('EditContextsModal', () => {
       expect.objectContaining({
         model: {
           apiGroup: 'appstudio.redhat.com',
-          apiVersion: 'v1beta1',
+          apiVersion: 'v1beta2',
           kind: 'IntegrationTestScenario',
           namespaced: true,
           plural: 'integrationtestscenarios',

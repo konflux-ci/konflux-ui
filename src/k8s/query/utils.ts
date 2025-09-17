@@ -13,16 +13,19 @@ import { TQueryOptions } from './type';
 export const createQueryKeys = ({
   model,
   queryOptions,
+  prefix,
 }: {
   model: K8sModelCommon;
   queryOptions?: Partial<QueryOptionsWithSelector>;
+  prefix?: string;
 }) => {
   const idKey = queryOptions?.name ? [{ metadata: { name: queryOptions.name } }] : [];
   const selector = queryOptions?.queryParams?.labelSelector
     ? [queryOptions?.queryParams?.labelSelector]
     : [];
   return [
-    queryOptions?.ws,
+    ...(prefix ? [prefix] : []),
+    queryOptions?.ns,
     {
       group: model?.apiGroup ?? 'core',
       version: model?.apiVersion,
@@ -38,7 +41,7 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
   options: Omit<ReactQueryOptions<TResource>, 'queryKey' | 'queryFn'> = {},
 ): UseQueryOptions<TResource> => {
   return {
-    queryKey: createQueryKeys(args),
+    queryKey: createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
     queryFn: () => {
       return K8sGetResource(args);
     },
@@ -48,7 +51,7 @@ export const createGetQueryOptions = <TResource extends K8sResourceCommon>(
         ? queryClient
             .getQueryData<
               TResource[]
-            >(createQueryKeys({ model: args.model, queryOptions: { ws: args.queryOptions?.ws, queryParams: args.queryOptions?.queryParams } }))
+            >(createQueryKeys({ model: args.model, queryOptions: { queryParams: args.queryOptions?.queryParams } }))
             ?.find((res) => res.metadata.name === name)
         : null;
     },
@@ -61,7 +64,7 @@ export const createListqueryOptions = <TResource extends K8sResourceCommon[]>(
   { filterData = (a: TResource) => a, ...options }: TQueryOptions<TResource> = {},
 ): UseQueryOptions<TResource> => {
   return {
-    queryKey: createQueryKeys(args),
+    queryKey: createQueryKeys({ ...args, prefix: args.fetchOptions?.requestInit?.pathPrefix }),
     queryFn: () => {
       return K8sListResourceItems(args).then(filterData);
     },

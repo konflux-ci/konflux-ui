@@ -4,8 +4,6 @@ import { mockNamespaceHooks } from '../../../../unit-test-utils/mock-namespace';
 import { routerRenderer } from '../../../../utils/test-utils';
 import ComponentNudgesDependencies from '../ComponentNudgesDependencies';
 
-mockNamespaceHooks('useNamespace', 'test-ns');
-
 const mockComponent = {
   metadata: { name: 'component' },
   spec: { application: 'application' },
@@ -22,6 +20,8 @@ const mockAllComponents = [
 jest.mock('../../../../hooks/useComponents', () => ({
   useAllComponents: jest.fn(() => [mockAllComponents, true, undefined]),
 }));
+
+mockNamespaceHooks('useNamespace', 'test-ns');
 
 describe('ComponentNudgesDependencies', () => {
   it('should render empty state when no dependencies', () => {
@@ -68,9 +68,7 @@ describe('ComponentNudgesDependencies', () => {
 
     const links = screen.queryAllByTestId('nudges-cmp-link');
     expect(links.length).toBe(3);
-    expect(links[0].getAttribute('href')).toBe(
-      '/workspaces/test-ns/applications/app1/components/cmp1',
-    );
+    expect(links[0].getAttribute('href')).toBe('/ns/test-ns/applications/app1/components/cmp1');
   });
 });
 
@@ -119,8 +117,6 @@ describe('ComponentNudgesDependencies nudged by', () => {
 
     const links = screen.queryAllByTestId('nudged-by-cmp-link');
     expect(links.length).toBe(2);
-    expect(links[1].getAttribute('href')).toBe(
-      '/workspaces/test-ns/applications/app2/components/cmp2',
-    );
+    expect(links[1].getAttribute('href')).toBe('/ns/test-ns/applications/app2/components/cmp2');
   });
 });

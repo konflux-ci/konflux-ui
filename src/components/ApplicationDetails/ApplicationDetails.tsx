@@ -1,10 +1,16 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useApplication } from '../../hooks/useApplications';
-import { HttpError } from '../../k8s/error';
 import { ApplicationModel, ComponentModel, IntegrationTestScenarioModel } from '../../models';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
+import {
+  APPLICATION_DETAILS_PATH,
+  APPLICATION_LIST_PATH,
+  INTEGRATION_TEST_ADD_PATH,
+  IMPORT_PATH,
+} from '../../routes/paths';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
@@ -13,7 +19,6 @@ import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/
 import DetailsPage from '../DetailsPage/DetailsPage';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { applicationDeleteModal } from '../modal/resource-modals';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import { ApplicationHeader } from './ApplicationHeader';
 
 import './ApplicationDetails.scss';
@@ -21,7 +26,7 @@ import './ApplicationDetails.scss';
 export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   const { applicationName } = useParams();
   // const track = useTrackEvent();
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const [canCreateComponent] = useAccessReviewForModel(ComponentModel, 'create');
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canCreateIntegrationTest] = useAccessReviewForModel(
@@ -36,23 +41,11 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
 
   const [application, applicationLoaded, applicationError] = useApplication(
     namespace,
-    workspace,
     applicationName,
   );
   const track = useTrackEvent();
   const appDisplayName = application?.spec?.displayName || application?.metadata?.name || '';
   const applicationBreadcrumbs = useApplicationBreadcrumbs(appDisplayName, false);
-
-  if (applicationError) {
-    const appError = HttpError.fromCode((applicationError as { code: number }).code);
-    return (
-      <ErrorEmptyState
-        httpError={appError}
-        title={`Unable to load application ${appDisplayName}`}
-        body={appError.message}
-      />
-    );
-  }
 
   if (!applicationLoaded) {
     return (
@@ -62,6 +55,10 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
     );
   }
 
+  if (applicationError) {
+    return getErrorState(applicationError, applicationLoaded, 'application');
+  }
+
   return (
     <React.Fragment>
       <DetailsPage
@@ -69,7 +66,7 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
         headTitle={appDisplayName}
         breadcrumbs={applicationBreadcrumbs}
         title={<ApplicationHeader application={application} />}
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}`}
+        baseURL={APPLICATION_DETAILS_PATH.createPath({ workspaceName: namespace, applicationName })}
         actions={[
           {
             onClick: () => {
@@ -77,7 +74,6 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
                 link_name: 'manage-build-pipelines',
                 link_location: 'application-actions',
                 app_name: applicationName,
-                workspace,
               });
               showModal(createCustomizeAllPipelinesModalLauncher(applicationName, namespace));
             },
@@ -91,13 +87,12 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             label: 'Add component',
             component: (
               <Link
-                to={`/workspaces/${workspace}/import?application=${applicationName}`}
+                to={`${IMPORT_PATH.createPath({ workspaceName: namespace })}?application=${applicationName}`}
                 onClick={() => {
                   track(TrackEvents.ButtonClicked, {
                     link_name: 'add-component',
                     link_location: 'application-details-actions',
                     app_name: applicationName,
-                    workspace,
                   });
                 }}
               >
@@ -112,13 +107,15 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             label: 'Add integration test',
             component: (
               <Link
-                to={`/workspaces/${workspace}/applications/${applicationName}/integrationtests/add`}
+                to={INTEGRATION_TEST_ADD_PATH.createPath({
+                  workspaceName: namespace,
+                  applicationName,
+                })}
                 onClick={() => {
                   track(TrackEvents.ButtonClicked, {
                     link_name: 'add-integration-test',
                     link_location: 'application-details-actions',
                     app_name: applicationName,
-                    workspace,
                   });
                 }}
               >
@@ -141,7 +138,8 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
               showModal<{ submitClicked: boolean }>(
                 applicationDeleteModal(application),
               ).closed.then(({ submitClicked }) => {
-                if (submitClicked) navigate(`/workspaces/${workspace}/applications`);
+                if (submitClicked)
+                  navigate(APPLICATION_LIST_PATH.createPath({ workspaceName: namespace }));
               }),
             isDisabled: !canDeleteApplication,
             disabledTooltip: "You don't have access to delete this application",
@@ -168,6 +166,11 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
           {
             key: 'integrationtests',
             label: 'Integration tests',
+          },
+          {
+            key: 'snapshots',
+            label: 'Snapshots',
+            isFilled: true,
           },
           {
             key: 'releases',

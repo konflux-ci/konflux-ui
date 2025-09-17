@@ -14,9 +14,13 @@ const navigateMock = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useLocation: jest.fn(() => ({})),
+  useSearchParams: jest.fn(() => [
+    new URLSearchParams({ releasePlan: 'rp1', application: 'app1' }),
+    jest.fn(),
+  ]),
   Link: (props) => <a href={props.to}>{props.children}</a>,
   useNavigate: jest.fn(() => navigateMock),
-  useParams: jest.fn(() => ({ releasePlanName: 'rp1' })),
+  useParams: jest.fn(() => ({})),
 }));
 
 jest.mock('../form-utils', () => ({
@@ -57,7 +61,7 @@ describe('TriggerReleaseFormPage', () => {
       expect.objectContaining({
         description: '',
         labels: [{ key: '', value: '' }],
-        references: '',
+        references: [],
         releasePlan: 'rp1',
         snapshot: '',
         synopsis: '',
@@ -65,9 +69,7 @@ describe('TriggerReleaseFormPage', () => {
       }),
       'test-ns',
     );
-    expect(navigateMock).toHaveBeenCalledWith(
-      '/workspaces/test-ns/applications/app1/releases/newRelease',
-    );
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/applications/app1/releases/newRelease');
   });
 
   it('should navigate to release list on reset', async () => {
@@ -75,6 +77,6 @@ describe('TriggerReleaseFormPage', () => {
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Reset' })));
 
-    expect(navigateMock).toHaveBeenCalledWith('/workspaces/test-ns/release');
+    expect(navigateMock).toHaveBeenCalledWith('/ns/test-ns/release');
   });
 });

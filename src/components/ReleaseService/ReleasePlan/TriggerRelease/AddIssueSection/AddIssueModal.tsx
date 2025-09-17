@@ -20,7 +20,11 @@ type AddIssueModalProps = ComponentProps & {
 
 const IssueFormSchema = yup.object({
   id: yup.string().required('Required'),
-  source: yup.string().matches(URL_REGEX, URL_ERROR_MSG),
+  source: yup.string().matches(URL_REGEX, URL_ERROR_MSG).required('Required'),
+});
+
+const CVEFormSchema = yup.object({
+  key: yup.string().required('Required'),
 });
 
 export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>> = ({
@@ -62,11 +66,11 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
             isBug
               ? { id: '', source: '', uploadDate: dateFormat(new Date()) }
               : {
-                  id: '',
+                  key: '',
                   components: [],
                 }
           }
-          validationSchema={IssueFormSchema}
+          validationSchema={isBug ? IssueFormSchema : CVEFormSchema}
         >
           {isBug ? (
             <BugFormContent modalToggle={handleModalToggle} />

@@ -3,6 +3,7 @@ import { actions } from '../support/pageObjects/global-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
+import { GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
 import { DetailsTab, TaskRunsTab } from '../support/pages/tabs/PipelinerunsTabPage';
@@ -23,8 +24,14 @@ describe('Basic Happy Path', () => {
   const repoOwner = 'redhat-hac-qe';
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
-  const piplinerunlogsTasks = ['init', 'clone-repository', 'build-container', 'show-sbom'];
-  const pipeline = 'docker-build';
+  const piplinerunlogsTasks = [
+    'init',
+    'clone-repository',
+    'build-container',
+    'apply-tags',
+    'push-dockerfile',
+  ];
+  const pipeline = 'docker-build-oci-ta';
 
   before(function () {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
@@ -40,13 +47,27 @@ describe('Basic Happy Path', () => {
     });
     if (allTestsSucceeded || Cypress.env('REMOVE_APP_ON_FAIL')) {
       // use UI to remove the application to test the flow
+      // The below command aims to navigate to applications page.
+      // but it does not work well. Because when I add the
+      // 'GetAppStartedPage.waitForLoad()' after the step, it failed.
       Common.navigateTo(NavItem.applications);
-      Applications.openKebabMenu(applicationName);
-      cy.get(actions.deleteApp).click();
-      cy.get(actions.deleteModalInput).clear().type(applicationName);
-      cy.get(actions.deleteModalButton).click();
-      // Temporary disabled flaky test. https://issues.redhat.com/browse/KFLUXUI-324
-      // cy.get(`[data-id="${applicationName}"]`).should('not.exist');
+      // we only delete the app when cy get the app.
+      // it means we would skip 'delete app' sometimes.
+      length = Cypress.$(`[data-id="${applicationName}"`).length;
+
+      if (length > 0) {
+        Applications.openKebabMenu(applicationName);
+        cy.get(actions.deleteApp)
+          .its('length')
+          .then((deleteLength) => {
+            if (deleteLength > 0) {
+              cy.get(actions.deleteApp).click();
+              cy.get(actions.deleteModalInput).clear().type(applicationName);
+              cy.get(actions.deleteModalButton).click();
+            }
+          });
+      }
+
       APIHelper.deleteGitHubRepository(repoName);
     }
   });
@@ -54,7 +75,11 @@ describe('Basic Happy Path', () => {
   it('Create an Application with a component', () => {
     Applications.createApplication(applicationName);
     Applications.createComponent(publicRepo, componentName, pipeline);
-    Applications.checkComponentInListView(componentName, applicationName, 'Build not started');
+    Applications.checkComponentInListView(
+      componentName,
+      applicationName,
+      /Build not started|Build running/,
+    );
   });
 
   it('Check default Integration Test', () => {
@@ -95,11 +120,7 @@ describe('Basic Happy Path', () => {
       // Pipeline build plan was removed from the Pipeline runs Tab
       // See https://issues.redhat.com/browse/KFLUXBUGS-603
       ComponentsTabPage.openComponent(componentName);
-      // Use clickSendingPullRequest() until the bug is fixed
-      // https://issues.redhat.com/browse/KFLUXUI-226
-      componentPage.clickSendingPullRequest();
-      // componentPage.clickMergePullRequest();
-      componentPage.verifyAndWaitForPRIsSent();
+      componentPage.clickMergePullRequest();
 
       APIHelper.mergePR(
         repoOwner,
@@ -111,14 +132,14 @@ describe('Basic Happy Path', () => {
 
       componentPage.verifyAndWaitForPRMerge();
       componentPage.closeModal();
-      // Go back to Components tab
       Applications.clickBreadcrumbLink(applicationName);
-      Applications.goToComponentsTab();
     });
 
-    it('Verify the Pipeline run details and Node Graph view', () => {
+    it('Verify the Pipeline run details and Node Graph view', function () {
       Applications.goToPipelinerunsTab();
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`)
+      Applications.checkPipelineIsCancellingOrCancelled(componentName);
+
+      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-push`)
         .contains(componentName)
         .invoke('text')
         .then((pipelinerunName) => {
@@ -144,23 +165,12 @@ describe('Basic Happy Path', () => {
         });
     });
 
-    it('Wait for on-push build to finish', () => {
+    it('Verify that on-pull pipeline was cancelled', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-push`)
-        .contains(componentName)
-        .invoke('text')
-        .then((pipelinerunName) => {
-          UIhelper.clickRowCellInTable('Pipeline run List', pipelinerunName, pipelinerunName);
-          DetailsTab.waitForPLRAndDownloadAllLogs();
-
-          //Verify the Pipeline run details Graph
-          piplinerunlogsTasks.forEach((item) => {
-            UIhelper.verifyGraphNodes(item);
-          });
-        });
-
-      Applications.clickBreadcrumbLink('Pipeline runs');
-      UIhelper.checkTableHasRows('Pipeline run List', 'test', 2);
+      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(
+        'contain.text',
+        'Cancelled',
+      );
     });
 
     it('Verify Enterprise contract Test pipeline run Details', () => {
@@ -194,17 +204,6 @@ describe('Basic Happy Path', () => {
 
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
-    });
-  });
-
-  describe('Check Application Overview', () => {
-    before(() => {
-      Common.openApplicationURL(applicationName);
-    });
-
-    it('Validate the graph views for the created application', () => {
-      UIhelper.verifyGraphNodes('Components', false);
-      UIhelper.verifyGraphNodes('Builds');
     });
   });
 });

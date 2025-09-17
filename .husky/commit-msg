@@ -1,1 +1,92 @@
+#!/bin/bash
+# Git commit-msg hook: validates commit messages with commitlint and automatically
+# adds "Assisted-by" trailers for AI tool usage (Claude/Cursor) based on running
+# processes and commit message content for authorized users.
+set -euo pipefail
+
 npx --no -- commitlint --edit $1
+
+COMMIT_MSG_FILE="$1" 
+
+# If the commit message is fixup! or squash! or Merge, exit without changing it.
+grep -qE '^(fixup!|squash!|Merge)' "$COMMIT_MSG_FILE" && exit 0
+
+# Define array of authorized emails which are loaded from AI_authorized_emails.txt
+AUTHORIZED_EMAILS=()
+while IFS= read -r line; do
+    AUTHORIZED_EMAILS+=("$line")
+done < AI_authorized_emails.txt
+
+# Get current user's email
+CURRENT_EMAIL=$(git config user.email)
+
+# Throw error if the email is not set
+if [ -z "$CURRENT_EMAIL" ]; then
+    echo "Error: Current email is not set"
+    exit 1
+fi
+
+# Check if the email is in the authorized list
+is_authorized=0
+for email in "${AUTHORIZED_EMAILS[@]}"; do
+    if [ "$CURRENT_EMAIL" = "$email" ]; then
+        is_authorized=1
+        break
+    fi
+done
+
+echo "is_authorized: $is_authorized"
+
+if [ "$is_authorized" -eq 1 ]; then
+  REPO_ROOT=$(git rev-parse --show-toplevel)
+
+  check_ai_process_in_repo() {
+    local ai_pattern="$1"
+    for pid in $(pgrep -f "$ai_pattern" || true); do
+      # Only proceed if /proc exists (Linux)
+      if [ -d "/proc/$pid" ]; then
+        cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null || echo "")
+        if [[ "$cwd" == "$REPO_ROOT"* ]]; then
+          echo "true"
+          return
+        fi
+      fi
+    done
+    echo "false"
+  }
+
+  claude_active=$(check_ai_process_in_repo "claude")
+  cursor_active=$(check_ai_process_in_repo "cursor")
+
+  echo "[commit-msg] claude active in repo? $claude_active"
+  echo "[commit-msg] cursor active in repo? $cursor_active"
+
+  # Fallback: check commit message content for AI markers
+  COMMIT_MSG_CONTENT=$(cat "$COMMIT_MSG_FILE" || echo "")
+
+  if [ "$claude_active" != "true" ]; then
+    if echo "$COMMIT_MSG_CONTENT" | grep -qiE "(claude|anthropic|Generated with.*Claude Code|Co-Authored-By: Claude)"; then
+      claude_active="true"
+    fi
+  fi
+
+  if [ "$cursor_active" != "true" ]; then
+    if echo "$COMMIT_MSG_CONTENT" | grep -qiE "(cursor|Co-Authored-By: cursor)"; then
+      cursor_active="true"
+    fi
+  fi
+
+  TRAILER=""
+
+  if [ "$claude_active" = "true" ] && [ "$cursor_active" = "true" ]; then
+    TRAILER="Assisted-by: Cursor, Claude"
+  elif [ "$claude_active" = "true" ]; then
+    TRAILER="Assisted-by: Claude"
+  elif [ "$cursor_active" = "true" ]; then
+    TRAILERS="Assisted-by: Cursor"
+  fi
+
+  if ! grep -qiE "^$TRAILER" "$COMMIT_MSG_FILE"; then
+    git interpret-trailers --in-place --trailer "$TRAILER" "$COMMIT_MSG_FILE"
+  fi
+fi

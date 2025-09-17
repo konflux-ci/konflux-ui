@@ -1,4 +1,4 @@
-import { SecretTypeDropdownLabel, SourceSecretType } from '../../types';
+import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../types';
 import { SecretFromSchema } from '../validation-utils';
 
 describe('validation-utils', () => {
@@ -31,7 +31,12 @@ describe('validation-utils', () => {
       SecretFromSchema.validate({
         secretName: 'secret1',
         type: SecretTypeDropdownLabel.image,
-        image: { keyValues: [{ key: 'key-a', value: 'val-a', readOnlyKey: false }] },
+        image: {
+          authType: ImagePullSecretType.ImageRegistryCreds,
+          registryCreds: [
+            { registry: 'test-registry', username: 'testusername', password: 'password' },
+          ],
+        },
         existingSecrets: [],
       }),
     ).not.toThrow();

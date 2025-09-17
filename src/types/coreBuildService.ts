@@ -5,6 +5,14 @@ export enum ResolverType {
   GIT = 'git',
   BUNDLES = 'bundles',
 }
+
+export const ResourceKind = {
+  pipeline: 'pipeline',
+  pipelineRun: 'pipelinerun',
+};
+
+export type ResourceKindValue = (typeof ResourceKind)[keyof typeof ResourceKind];
+
 export type IntegrationTestScenarioKind = K8sResourceCommon & {
   spec: IntegrationTestScenarioSpec;
 };
@@ -20,6 +28,7 @@ export type IntegrationTestScenarioSpec = {
   environment?: Environment;
   params?: Param[];
   resolverRef?: {
+    resourceKind: ResourceKindValue;
     resolver: ResolverType;
     params: ResolverParam[];
   };
@@ -98,12 +107,14 @@ export type ReleaseSpec = {
   data?: {
     releaseNotes?: {
       topic?: string;
-      description: string;
-      synopsis: string;
-      fixed: { id: string; source: string }[];
-      cves: CVE[];
+      description?: string;
+      synopsis?: string;
+      issues?: {
+        fixed: { id: string; source: string }[];
+      };
+      cves?: CVE[];
       solution?: string;
-      references?: string;
+      references?: string[];
     };
   };
 };

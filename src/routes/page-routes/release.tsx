@@ -1,14 +1,39 @@
-import { releaseListViewTabLoader } from '../../components/Releases';
-import ReleasesListView from '../../components/Releases/ReleasesListView';
-import { APPLICATION_RELEASE_LIST_PATH } from '../paths';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import {
+  ReleaseDetailsLayout,
+  releaseListViewTabLoader,
+  ReleaseOverviewTab,
+  ReleasePipelineRunTab,
+} from '../../components/Releases';
+import ReleaseArtifactsTab from '../../components/Releases/ReleaseArtifactsTab';
+import { APPLICATION_RELEASE_DETAILS_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 const releaseRoutes = [
+  // details page
   {
-    path: APPLICATION_RELEASE_LIST_PATH.path,
+    path: APPLICATION_RELEASE_DETAILS_PATH.path,
     loader: releaseListViewTabLoader,
     errorElement: <RouteErrorBoundry />,
-    element: <ReleasesListView />,
+    element: <ReleaseDetailsLayout />,
+    children: [
+      {
+        index: true,
+        element: <ReleaseOverviewTab />,
+      },
+      {
+        path: 'pipelineruns',
+        element: (
+          <FilterContextProvider filterParams={['name']}>
+            <ReleasePipelineRunTab />
+          </FilterContextProvider>
+        ),
+      },
+      {
+        path: 'artifacts',
+        element: <ReleaseArtifactsTab />,
+      },
+    ],
   },
 ];
 

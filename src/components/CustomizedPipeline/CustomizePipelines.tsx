@@ -14,85 +14,27 @@ import {
   TextVariants,
   Truncate,
 } from '@patternfly/react-core';
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownPosition,
-  KebabToggle,
-} from '@patternfly/react-core/deprecated';
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
-import sendIconUrl from '../../assets/send.svg';
-import successIconUrl from '../../assets/success.svg';
-import { useApplicationPipelineGitHubApp } from '../../hooks/useApplicationPipelineGitHubApp';
+import SendIconUrl from '../../assets/send.svg';
+import SuccessIconUrl from '../../assets/success.svg';
+import { LEARN_MORE_GITLAB_URL } from '../../consts/documentation';
+import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { PACState } from '../../hooks/usePACState';
 import { ComponentModel } from '../../models';
 import ExternalLink from '../../shared/components/links/ExternalLink';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { ComponentKind } from '../../types';
 import { useTrackEvent, TrackEvents } from '../../utils/analytics';
-import {
-  enablePAC,
-  disablePAC,
-  useComponentBuildStatus,
-  getLastestImage,
-} from '../../utils/component-utils';
+import { enablePAC, useComponentBuildStatus, getLastestImage } from '../../utils/component-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import AnalyticsButton from '../AnalyticsButton/AnalyticsButton';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import GitRepoLink from '../GitLink/GitRepoLink';
 import { RawComponentProps } from '../modal/createModalLauncher';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 import ComponentPACStateLabel from './ComponentPACStateLabel';
 
 type Props = RawComponentProps & {
   components: ComponentKind[];
-  singleComponent?: boolean;
-};
-
-const ComponentKebab: React.FC<
-  React.PropsWithChildren<{
-    state: PACState;
-    component: ComponentKind;
-    canPatchComponent?: boolean;
-  }>
-> = ({ component, state, canPatchComponent }) => {
-  const { workspace } = useWorkspaceInfo();
-  const track = useTrackEvent();
-  const [isOpen, setOpen] = React.useState(false);
-  return (
-    <Dropdown
-      onSelect={() => setOpen(false)}
-      toggle={<KebabToggle onToggle={() => setOpen((v) => !v)} id="toggle-id-6" />}
-      isOpen={isOpen}
-      isPlain
-      position={DropdownPosition.right}
-      dropdownItems={[
-        <DropdownItem
-          key="roll-back"
-          isDisabled={![PACState.error, PACState.pending, PACState.ready].includes(state)}
-          onClick={() => {
-            track(TrackEvents.ButtonClicked, {
-              link_name: 'disable-pac',
-              link_location: 'manage-builds-pipelines-action',
-              component_name: component.metadata.name,
-              app_name: component.spec.application,
-              workspace,
-            });
-            void disablePAC(component).then(() => {
-              track('Disable PAC', {
-                component_name: component.metadata.name,
-                app_name: component.spec.application,
-                workspace,
-              });
-            });
-          }}
-          tooltip={canPatchComponent ? undefined : "You don't have access to roll back"}
-          isAriaDisabled={!canPatchComponent}
-        >
-          Roll back to default pipeline
-        </DropdownItem>,
-      ]}
-    />
-  );
 };
 
 const Row: React.FC<
@@ -101,9 +43,10 @@ const Row: React.FC<
     onStateChange: (state: PACState) => void;
   }>
 > = ({ component, onStateChange }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const track = useTrackEvent();
-  const { url: githubAppURL } = useApplicationPipelineGitHubApp();
+  const [konfluxInfo] = useKonfluxPublicInfo();
+  const applicationUrl = konfluxInfo?.integrations?.github?.application_url || '';
   const [pacState, setPacState] = React.useState<PACState>(PACState.loading);
   const onComponentStateChange = React.useCallback(
     (state: PACState) => {
@@ -172,7 +115,7 @@ const Row: React.FC<
                         track('Enable PAC', {
                           component_name: component.metadata.name,
                           app_name: component.spec.application,
-                          workspace,
+                          namespace,
                         });
                       });
                     }}
@@ -183,7 +126,7 @@ const Row: React.FC<
                       link_location: 'manage-builds-pipelines',
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Send pull request
@@ -210,10 +153,10 @@ const Row: React.FC<
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
                       url: prURL,
-                      workspace,
+                      namespace,
                     }}
                   >
-                    Merge in GitHub
+                    Merge in Git
                   </ExternalLink>
                 );
               case PACState.ready:
@@ -227,10 +170,10 @@ const Row: React.FC<
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
-                      workspace,
+                      namespace,
                     }}
                   >
-                    Edit pipeline in GitHub
+                    Edit pipeline in Git
                   </ExternalLink>
                 );
               case PACState.sample:
@@ -244,7 +187,7 @@ const Row: React.FC<
                       component_name: component.metadata.name,
                       app_name: component.spec.application,
                       git_url: component.spec.source?.git?.url,
-                      workspace,
+                      namespace,
                     }}
                   >
                     Fork sample
@@ -254,13 +197,6 @@ const Row: React.FC<
                 return null;
             }
           })()}
-        </Td>
-        <Td className="pf-v5-u-text-align-right">
-          <ComponentKebab
-            component={component}
-            state={pacState}
-            canPatchComponent={canPatchComponent}
-          />
         </Td>
       </Tr>
       {pacState === PACState.sample ? (
@@ -283,41 +219,20 @@ const Row: React.FC<
               title="Pull request failed to reach its destination"
               actionLinks={
                 <>
-                  <ExternalLink
-                    href={githubAppURL}
-                    analytics={{
-                      link_name: 'install-github-app',
-                      link_location: 'manage-builds-pipelines',
-                      component_name: component.metadata.name,
-                      app_name: component.spec.application,
-                      workspace,
-                    }}
-                  >
-                    Install GitHub Application
-                  </ExternalLink>
-                  <ButtonWithAccessTooltip
-                    variant={ButtonVariant.link}
-                    onClick={() =>
-                      disablePAC(component).then(() => {
-                        track('Disable PAC', {
-                          component_name: component.metadata.name,
-                          app_name: component.spec.application,
-                          workspace,
-                        });
-                      })
-                    }
-                    isAriaDisabled={!canPatchComponent}
-                    tooltip="You don't have access to roll back"
-                    analytics={{
-                      link_name: 'disable-pac',
-                      link_location: 'manage-builds-pipelines-alert',
-                      component_name: component.metadata.name,
-                      app_name: component.spec.application,
-                      workspace,
-                    }}
-                  >
-                    Roll back to default pipeline
-                  </ButtonWithAccessTooltip>
+                  {applicationUrl ? (
+                    <ExternalLink
+                      href={applicationUrl}
+                      analytics={{
+                        link_name: 'install-github-app',
+                        link_location: 'manage-builds-pipelines',
+                        component_name: component.metadata.name,
+                        app_name: component.spec.application,
+                        namespace,
+                      }}
+                    >
+                      Install GitHub Application
+                    </ExternalLink>
+                  ) : null}
                 </>
               }
             >
@@ -333,12 +248,12 @@ const Row: React.FC<
 const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
   components,
   onClose,
-  singleComponent,
   modalProps,
 }) => {
   const track = useTrackEvent();
-  const { workspace } = useWorkspaceInfo();
-  const { url: githubAppURL } = useApplicationPipelineGitHubApp();
+  const namespace = useNamespace();
+  const [konfluxInfo] = useKonfluxPublicInfo();
+  const applicationUrl = konfluxInfo?.integrations?.github?.application_url || '';
   const sortedComponents = React.useMemo(
     () => [...components].sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)),
     [components],
@@ -375,10 +290,10 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
     track(TrackEvents.ButtonClicked, {
       link_name: 'manage-build-pipelines-close',
       app_name: applicationName,
-      workspace,
+      namespace,
     });
     onClose();
-  }, [onClose, applicationName, workspace, track]);
+  }, [onClose, applicationName, namespace, track]);
 
   return (
     <Modal {...modalProps} onClose={trackedOnClose}>
@@ -386,35 +301,48 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
       <ModalBoxBody>
         <>
           <TextContent
-            className="pf-v5-u-text-align-center pf-v5-u-pt-lg"
-            style={{ visibility: allLoading ? 'hidden' : undefined }}
+            className="pf-v5-u-pt-lg"
+            style={{ visibility: allLoading ? 'hidden' : undefined, textAlign: 'center' }}
           >
             <Text component={TextVariants.p}>
-              <img style={{ width: 100 }} src={completed ? successIconUrl : sendIconUrl} />
+              {completed ? (
+                <SuccessIconUrl style={{ width: 100 }} />
+              ) : (
+                <SendIconUrl style={{ width: 100 }} />
+              )}
             </Text>
-            <Text component={TextVariants.h2}>
-              {singleComponent ? 'Edit build pipeline plan' : 'Manage build pipelines'}
+            <Text component={TextVariants.h2}>{'Manage build pipeline'}</Text>
+            <Text component={TextVariants.p}>
+              Konflux build pipelines are Pipelines as Code that are committed to your
+              component&apos;s repository. To automatically build on future changes, merge the
+              initial pull request sent to your connected repository. You must provide permission to
+              your repository in the Konflux Git application. If you&apos;re using GitLab, you must
+              grant permission by uploading a repository access token.
             </Text>
             <Text component={TextVariants.p}>
-              Add some automation by upgrading your default build pipelines to custom build
-              pipelines. Custom build pipelines are pipelines as code, set on your component&apos;s
-              repository. With custom build pipelines, commits to your main branch and pull requests
-              will automatically rebuild. You can always roll back to default.
-            </Text>
-            <Text component={TextVariants.p}>
-              Ready to use custom build pipelines? Make sure you have the GitHub application
-              installed and grant permissions to your repositories.
-            </Text>
-            <Text component={TextVariants.p}>
+              {applicationUrl ? (
+                <ExternalLink
+                  style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                  href={applicationUrl}
+                  analytics={{
+                    link_name: 'install-github-app',
+                    link_location: 'manage-builds-pipelines',
+                    namespace,
+                  }}
+                >
+                  Learn more about the Git application
+                </ExternalLink>
+              ) : null}
               <ExternalLink
-                href={githubAppURL}
+                style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
+                href={LEARN_MORE_GITLAB_URL}
                 analytics={{
-                  link_name: 'install-github-app',
-                  link_location: 'manage-builds-pipelines',
-                  workspace,
+                  link_name: 'learn-more-gitlab-token',
+                  link_location: 'gitlab-repository-access-token',
+                  namespace,
                 }}
               >
-                Install GitHub application
+                Learn more about GitLab repository access token
               </ExternalLink>
             </Text>
           </TextContent>

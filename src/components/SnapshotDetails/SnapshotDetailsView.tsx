@@ -1,35 +1,35 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
-import { SnapshotLabels } from '../../consts/pipelinerun';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { SnapshotLabels } from '../../consts/snapshots';
 import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
-import { HttpError } from '../../k8s/error';
+import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
-import ErrorEmptyState from '../../shared/components/empty-state/ErrorEmptyState';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
+import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
-import { useWorkspaceInfo } from '../Workspace/useWorkspaceInfo';
 
 const SnapshotDetailsView: React.FC = () => {
-  const { namespace, workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const { snapshotName, applicationName } = useParams<RouterParams>();
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [snapshot, loaded, loadErr] = useSnapshot(namespace, snapshotName);
+  const [snapshot, loaded, snapshotError] = useSnapshot(namespace, snapshotName);
 
   const buildPipelineName = React.useMemo(
-    () => loaded && !loadErr && snapshot?.metadata?.labels[SnapshotLabels.BUILD_PIPELINE_LABEL],
-    [snapshot, loaded, loadErr],
+    () =>
+      loaded && !snapshotError && snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
+    [snapshot, loaded, snapshotError],
   );
 
   const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
     snapshot?.metadata?.namespace,
-    workspace,
     buildPipelineName,
   );
 
@@ -38,22 +38,16 @@ const SnapshotDetailsView: React.FC = () => {
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
 
-  if (loadErr || (loaded && !snapshot)) {
-    return (
-      <ErrorEmptyState
-        httpError={HttpError.fromCode(loadErr ? (loadErr as { code: number }).code : 404)}
-        title="Snapshot not found"
-        body="No such snapshot"
-      />
-    );
-  }
-
-  if (!plrLoadError && !plrLoaded) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
     );
+  }
+
+  if (snapshotError) {
+    return getErrorState(snapshotError, loaded, 'snapshot');
   }
 
   if (snapshot?.metadata) {
@@ -63,11 +57,18 @@ const SnapshotDetailsView: React.FC = () => {
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
-            path: `#`,
+            path: SNAPSHOT_LIST_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+            }),
             name: 'Snapshots',
           },
           {
-            path: `/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshotName}`,
+            path: SNAPSHOT_DETAILS_PATH.createPath({
+              workspaceName: namespace,
+              applicationName,
+              snapshotName,
+            }),
             name: snapshot.metadata.name,
           },
         ]}
@@ -76,7 +77,7 @@ const SnapshotDetailsView: React.FC = () => {
             <Text component={TextVariants.h2} data-test="snapshot-name">
               {snapshotName}
             </Text>
-            {commit?.sha && (
+            {plrLoaded && !plrLoadError && commit?.sha && (
               <>
                 <Text component={TextVariants.p} data-test="snapshot-header-details">
                   Triggered by {commit.shaTitle}{' '}
@@ -95,7 +96,11 @@ const SnapshotDetailsView: React.FC = () => {
             )}
           </>
         }
-        baseURL={`/workspaces/${workspace}/applications/${applicationName}/snapshots/${snapshotName}`}
+        baseURL={SNAPSHOT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+          snapshotName,
+        })}
         tabs={[
           {
             key: 'index',

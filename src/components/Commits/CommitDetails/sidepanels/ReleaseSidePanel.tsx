@@ -11,10 +11,11 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
+import { useNamespace } from '~/shared/providers/Namespace';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
+import { PIPELINE_RUNS_LIST_PATH } from '../../../../routes/paths';
 import { RELEASE_DESC } from '../../../../utils/pipeline-utils';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
 
 export interface ReleaseSidePanelBodyProps {
@@ -26,7 +27,7 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
   workflowNode,
   onClose,
 }) => {
-  const { workspace } = useWorkspaceInfo();
+  const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const release = workflowData.resource;
 
@@ -39,7 +40,7 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
             {release ? <StatusIconWithTextLabel status={workflowNode.getData().status} /> : null}
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <img src={PipelineIcon} alt="pipeline run" /> Release
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Release
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
@@ -59,7 +60,10 @@ const ReleaseSidePanel: React.FC<React.PropsWithChildren<ReleaseSidePanelBodyPro
             <DescriptionListGroup>
               <DescriptionListDescription>
                 <Link
-                  to={`/workspaces/${workspace}/applications/${workflowData.application}/activity/pipelineruns`}
+                  to={PIPELINE_RUNS_LIST_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: workflowData.application,
+                  })}
                 >
                   View pipeline runs
                 </Link>

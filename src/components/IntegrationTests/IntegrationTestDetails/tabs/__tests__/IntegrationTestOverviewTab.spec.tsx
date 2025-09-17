@@ -4,7 +4,6 @@ import { IntegrationTestScenarioModel } from '../../../../../models';
 import {
   createK8sWatchResourceMock,
   createUseParamsMock,
-  createUseWorkspaceInfoMock,
   routerRenderer,
 } from '../../../../../utils/test-utils';
 import { useModalLauncher } from '../../../../modal/ModalProvider';
@@ -18,8 +17,6 @@ import IntegrationTestOverviewTab from '../IntegrationTestOverviewTab';
 jest.mock('../../../../modal/ModalProvider', () => ({
   useModalLauncher: jest.fn(),
 }));
-
-createUseWorkspaceInfoMock({ namespace: 'test-namepsace', workspace: 'test-ws' });
 
 const watchResourceMock = createK8sWatchResourceMock();
 
@@ -59,8 +56,8 @@ describe('IntegrationTestOverviewTab', () => {
     routerRenderer(<IntegrationTestOverviewTab />);
     screen.getByText('test-app-test-1'); // name
     screen.getByText('test-namespace'); // namespace
-    screen.getByText('Git URL'); // url
-    screen.getByText('Path in repository'); // Path in Repo
+    screen.getByText('Git Repository URL'); // url
+    screen.getByText('Path in the repository'); // Path in Repo
     screen.getByText('Revision'); // revision
     screen.getByText('Optional'); // optional for release
     expect(screen.getAllByRole('link')[0].getAttribute('href')).toBe('https://test-url'); // git url

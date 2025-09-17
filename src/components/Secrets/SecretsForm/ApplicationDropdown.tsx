@@ -1,5 +1,6 @@
 import React from 'react';
 import { useField } from 'formik';
+import { getApplicationDisplayName } from '~/utils/common-utils';
 import { useApplications } from '../../../hooks/useApplications';
 import DropdownField from '../../../shared/components/formik-fields/DropdownField';
 import { useNamespace } from '../../../shared/providers/Namespace';
@@ -13,13 +14,26 @@ export const ApplicationDropdown: React.FC<React.PropsWithChildren<ApplicationDr
   props,
 ) => {
   const namespace = useNamespace();
-  const [applications, loaded] = useApplications(namespace);
+  const [applications, loaded, error] = useApplications(namespace);
   const [, , { setValue }] = useField<string>(props.name);
 
   const dropdownItems = React.useMemo(
     () =>
-      loaded ? applications.map((a) => ({ key: a.metadata.name, value: a.metadata.name })) : [],
-    [applications, loaded],
+      loaded
+        ? error
+          ? [
+              {
+                key: 'error',
+                value: 'Unable to load applications',
+                isDisabled: true,
+              },
+            ]
+          : applications.map((a) => ({
+              key: a.metadata.name,
+              value: getApplicationDisplayName(a),
+            }))
+        : [],
+    [applications, loaded, error],
   );
 
   return (

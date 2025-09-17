@@ -11,10 +11,6 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
-}));
-
 const application: ApplicationKind = {
   kind: 'Application',
   apiVersion: 'appstudio.redhat.com/v1alpha1',
@@ -88,6 +84,12 @@ describe('Application List Row', () => {
     watchResourceMock.mockReturnValue([[], false]);
     const { getByText } = render(<ApplicationListRow columns={null} obj={application} />);
     expect(getByText('Loading component count')).toBeInTheDocument();
+  });
+
+  it('renders error message in the component column if the components are not loaded', () => {
+    watchResourceMock.mockReturnValue([undefined, true, Error()]);
+    const { getByText } = render(<ApplicationListRow columns={null} obj={application} />);
+    expect(getByText('Failed to load components')).toBeInTheDocument();
   });
 
   it('should render metadata name if there is no display name', () => {

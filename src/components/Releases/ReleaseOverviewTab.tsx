@@ -11,49 +11,41 @@ import {
   Spinner,
   Title,
 } from '@patternfly/react-core';
-import { useReleasePlan } from '../../hooks/useReleasePlans';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { useRelease } from '../../hooks/useReleases';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
+import { SNAPSHOT_DETAILS_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { ReleaseKind } from '../../types/release';
 import { calculateDuration } from '../../utils/pipeline-utils';
 import MetadataList from '../MetadataList';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 
-const getPipelineRunFromRelease = (release: ReleaseKind): string => {
-  // backward compatibility until https://issues.redhat.com/browse/RELEASE-1109 is released.
-  return release.status?.processing?.pipelineRun ?? release.status?.managedProcessing?.pipelineRun;
-};
-
-const getNamespaceAndPRName = (
-  pipelineRunObj: string,
-): [namespace?: string, pipelineRun?: string] => {
-  return pipelineRunObj
-    ? (pipelineRunObj.split('/').slice(0, 2) as [string?, string?])
-    : [undefined, undefined];
-};
-
 const ReleaseOverviewTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [release] = useRelease(namespace, releaseName);
-  const [prNamespace, pipelineRun] = getNamespaceAndPRName(getPipelineRunFromRelease(release));
-  const [releasePlan, releasePlanLoaded] = useReleasePlan(namespace, release.spec.releasePlan);
-  const duration = calculateDuration(
-    typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
-    typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
-  );
+  const [release, loaded, error] = useRelease(namespace, releaseName);
   const status = useReleaseStatus(release);
 
-  if (!releasePlanLoaded) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
     );
   }
+
+  if (error) {
+    return getErrorState(error, loaded, 'release');
+  }
+
+  const applicationName = release.metadata.labels[PipelineRunLabel.APPLICATION];
+  const duration = calculateDuration(
+    typeof release.status?.startTime === 'string' ? release.status?.startTime : '',
+    typeof release.status?.completionTime === 'string' ? release.status?.completionTime : '',
+  );
 
   return (
     <>
@@ -69,18 +61,6 @@ const ReleaseOverviewTab: React.FC = () => {
             }}
           >
             <DescriptionListGroup>
-              <DescriptionListTerm>Labels</DescriptionListTerm>
-              <DescriptionListDescription>
-                <MetadataList metadata={release.metadata?.labels} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
-              <DescriptionListTerm>Annotations</DescriptionListTerm>
-              <DescriptionListDescription>
-                <MetadataList metadata={release.metadata?.annotations} />
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-            <DescriptionListGroup>
               <DescriptionListTerm>Created at</DescriptionListTerm>
               <DescriptionListDescription>
                 <Timestamp timestamp={release.metadata.creationTimestamp ?? '-'} />
@@ -91,9 +71,27 @@ const ReleaseOverviewTab: React.FC = () => {
               <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
             </DescriptionListGroup>
             <DescriptionListGroup>
-              <DescriptionListTerm>Release Process</DescriptionListTerm>
+              <DescriptionListTerm>Release Plan</DescriptionListTerm>
+              <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>
+                Release Target {namespace !== release.status?.target ? '(Managed Namespace)' : ''}
+              </DescriptionListTerm>
               <DescriptionListDescription>
-                {release.status?.automated ? 'Automatic' : 'Manual'}
+                <>{release.status?.target ?? '-'}</>
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Labels</DescriptionListTerm>
+              <DescriptionListDescription>
+                <MetadataList metadata={release.metadata?.labels} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+            <DescriptionListGroup>
+              <DescriptionListTerm>Annotations</DescriptionListTerm>
+              <DescriptionListDescription>
+                <MetadataList metadata={release.metadata?.annotations} />
               </DescriptionListDescription>
             </DescriptionListGroup>
           </DescriptionList>
@@ -116,41 +114,28 @@ const ReleaseOverviewTab: React.FC = () => {
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
-                <DescriptionListTerm>Release Plan</DescriptionListTerm>
-                <DescriptionListDescription>{release.spec.releasePlan}</DescriptionListDescription>
+                <DescriptionListTerm>Release Trigger</DescriptionListTerm>
+                <DescriptionListDescription>
+                  {release.status?.automated ? 'Automatic' : 'Manual'}
+                </DescriptionListDescription>
               </DescriptionListGroup>
-              {release.spec.snapshot && releasePlanLoaded && (
+              {release.spec.snapshot && (
                 <DescriptionListGroup>
                   <DescriptionListTerm>Snapshot</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Link
-                      to={`/workspaces/${namespace}/applications/${releasePlan.spec.application}/snapshots/${release.spec.snapshot}`}
+                      to={SNAPSHOT_DETAILS_PATH.createPath({
+                        workspaceName: namespace,
+                        applicationName,
+                        snapshotName: release.spec.snapshot,
+                      })}
+                      state={{ type: 'snapshot' }}
                     >
                       {release.spec.snapshot}
                     </Link>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               )}
-              <DescriptionListGroup>
-                <DescriptionListTerm>Release Target</DescriptionListTerm>
-                <DescriptionListDescription>
-                  <>{release.status?.target ?? '-'}</>
-                </DescriptionListDescription>
-              </DescriptionListGroup>
-              <DescriptionListGroup>
-                <DescriptionListTerm>Pipeline Run</DescriptionListTerm>
-                <DescriptionListDescription>
-                  {pipelineRun && prNamespace && releasePlanLoaded ? (
-                    <Link
-                      to={`/workspaces/${prNamespace}/applications/${releasePlan.spec.application}/pipelineruns/${pipelineRun}`}
-                    >
-                      {pipelineRun}
-                    </Link>
-                  ) : (
-                    '-'
-                  )}
-                </DescriptionListDescription>
-              </DescriptionListGroup>
             </DescriptionList>
           </FlexItem>
         </Flex>

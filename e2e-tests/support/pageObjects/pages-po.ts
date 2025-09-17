@@ -38,7 +38,7 @@ export const pipelinerunsTabPO = {
   relatedPipelineCloseBtn: 'button[aria-label="Close"]',
 
   node: (nodeId) => `g[data-id="${nodeId}"]`,
-  logText: '[class="logs__content"]',
+  logText: '.pf-v5-c-log-viewer__text',
   drawerPanel: 'div[class*="drawer__panel-main"]',
   drawerClose: 'div[class="pf-v5-c-drawer__close"]',
   listGroup: 'div[class$="list__group"]',
@@ -85,9 +85,17 @@ export const environmentsPagePO = {
   envCardConnectionLabel: 'div[class="pf-v5-c-card__title"] span[class="pf-v5-c-label__content"]',
 };
 
-export const getStartedPagePO = {
-  createAppButton: '[data-test="create-application"]',
+export const getAppStartedPagePO = {
+  createAppButton: 'a[class="pf-v5-c-button pf-m-primary"]',
 };
+
+export const getNamespacesPagePo = {
+  goToNamespacesLink: '[data-test="view-my-applications"]',
+};
+
+export const goToApplicationsPagePo = (namespace: string) => ({
+  goToApplicationsPagePo: `tr:has(td[data-test="app-row-test-id"]:contains("${namespace}")) a[title="Go to this namespace"]`,
+});
 
 export const componentDetailsPO = {
   buildImage: '[data-test="build-container-image-test"] input',

@@ -36,20 +36,23 @@ export enum PipelineRunLabel {
   BUILD_SERVICE_REPO_ANNOTATION = 'build.appstudio.openshift.io/repo',
 }
 
-export enum SnapshotLabels {
-  ITS_STATUS_ANNOTATION = `test.appstudio.openshift.io/status`,
-  BUILD_PIPELINE_LABEL = `appstudio.openshift.io/build-pipelinerun`,
-}
-
 export enum PipelineRunType {
   BUILD = 'build',
   RELEASE = 'release',
   TEST = 'test',
+  TENANT = 'tenant',
+  MANAGED = 'managed',
+  FINAL = 'final',
 }
 
 export enum PipelineRunEventType {
   PUSH = 'push',
+  GITLAB_PUSH = 'Push',
   PULL = 'pull_request',
   INCOMING = 'incoming',
   RETEST = 'retest-all-comment',
+}
+
+export enum TaskRunLabel {
+  TARGET_PLATFORM = 'build.appstudio.redhat.com/target-platform',
 }

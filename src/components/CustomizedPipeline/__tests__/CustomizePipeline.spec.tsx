@@ -12,6 +12,10 @@ import CustomizePipeline from '../CustomizePipelines';
 
 jest.mock('../../../utils/analytics');
 
+jest.mock('../../../hooks/useKonfluxPublicInfo', () => ({
+  useKonfluxPublicInfo: jest.fn(() => []),
+}));
+
 jest.mock('../../../hooks/usePipelineRuns', () => ({
   usePipelineRuns: jest.fn(() => [[], true]),
 }));
@@ -25,10 +29,6 @@ jest.mock('../../../hooks/useApplicationPipelineGitHubApp', () => ({
 
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
-}));
-
-jest.mock('../../Workspace/useWorkspaceInfo', () => ({
-  useWorkspaceInfo: jest.fn(() => ({ namespace: 'test-ns', workspace: 'test-ws' })),
 }));
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
@@ -114,7 +114,7 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const button = result.queryByRole('link', { name: 'Merge in GitHub' });
+    const button = result.queryByRole('link', { name: 'Merge in Git' });
     expect(button).toBeInTheDocument();
   });
 
@@ -127,7 +127,7 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const button = result.queryByRole('link', { name: 'Edit pipeline in GitHub' });
+    const button = result.queryByRole('link', { name: 'Edit pipeline in Git' });
     expect(button).toBeInTheDocument();
   });
 
@@ -157,19 +157,20 @@ describe('CustomizePipeline', () => {
     expect(message).toBeInTheDocument();
   });
 
-  it('should render install GitHub app alert', () => {
-    usePipelineRunsMock.mockReturnValue([[{}], true]);
-    const result = render(
+  it('should render install Git app alert when there is an error', () => {
+    usePipelineRunsMock.mockReturnValue([
+      [{ pac: { 'error-message': 'Git Application is not installed in user repository' } }],
+      true,
+    ]);
+    render(
       <CustomizePipeline
         components={[createComponent('error')]}
         onClose={() => {}}
         modalProps={{ isOpen: true }}
       />,
     );
-    const link = result.getByRole('link', { name: /Install GitHub Application/ });
-    expect(link).toBeInTheDocument();
-    const button = result.getByRole('button', { name: 'Roll back to default pipeline' });
-    expect(button).toBeInTheDocument();
+    const errorMessage = screen.getByText('Pull request failed to reach its destination');
+    expect(errorMessage).toBeInTheDocument();
   });
 
   it('should display upgrade status message', () => {

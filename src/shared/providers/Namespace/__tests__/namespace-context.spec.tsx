@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { screen, waitFor, render } from '@testing-library/react';
-import { createReactRouterMock, createUseWorkspaceInfoMock } from '../../../../utils/test-utils';
+import { screen, waitFor, render, fireEvent } from '@testing-library/react';
+import { createReactRouterMock } from '../../../../utils/test-utils';
 import { NamespaceProvider, NamespaceContext } from '../namespace-context';
 
 jest.mock('react-router-dom', () => ({
@@ -15,12 +15,10 @@ jest.mock('@tanstack/react-query', () => ({
 }));
 
 jest.mock('../utils', () => ({
-  getLastUsedNamespace: jest.fn(),
+  getLastUsedNamespace: jest.fn().mockReturnValue('test-ns'),
   setLastUsedNamespace: jest.fn(),
   createNamespaceQueryOptions: jest.fn(),
 }));
-
-const useWorkspaceInfoMock = createUseWorkspaceInfoMock({ namespace: 'test-ns' });
 
 const TestConsumer = () => {
   const context = React.useContext(NamespaceContext);
@@ -41,6 +39,7 @@ describe('NamespaceProvider', () => {
   const mockSetLastUsedNamespace = jest.requireMock('../utils').setLastUsedNamespace;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     useNavigateMock.mockReturnValue(mockNavigate);
     useParamsMock.mockReturnValue({});
   });
@@ -60,8 +59,7 @@ describe('NamespaceProvider', () => {
   });
 
   it('should provide namespace context when loaded', async () => {
-    useWorkspaceInfoMock.mockReturnValue({ namespace: 'default-ns' });
-    const mockNamespaces = [{ metadata: { name: 'default-ns' } }];
+    const mockNamespaces = [{ metadata: { name: 'test-ns' } }];
     (useQuery as jest.Mock)
       .mockReturnValueOnce({ data: mockNamespaces, isLoading: false })
       .mockReturnValueOnce({ data: mockNamespaces[0], isLoading: false });
@@ -73,7 +71,7 @@ describe('NamespaceProvider', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('namespace')).toHaveTextContent('default-ns');
+      expect(screen.getByTestId('namespace')).toHaveTextContent('test-ns');
       expect(screen.getByTestId('loaded')).toHaveTextContent('true');
     });
   });
@@ -91,7 +89,7 @@ describe('NamespaceProvider', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Unable to access namespace')).toBeInTheDocument();
+      expect(screen.getByText('Unable to access namespace test-ns')).toBeInTheDocument();
       expect(screen.getByText('Namespace error')).toBeInTheDocument();
     });
   });
@@ -110,9 +108,9 @@ describe('NamespaceProvider', () => {
     );
 
     await waitFor(() => {
-      screen.getByRole('button', { name: /Go to test-ns namespace/i }).click();
+      fireEvent.click(screen.getByRole('button', { name: /Go to test-ns namespace/i }));
       expect(mockSetLastUsedNamespace).toHaveBeenCalledWith('test-ns');
-      expect(mockNavigate).toHaveBeenCalledWith('/workspaces/test-ns/applications');
+      expect(mockNavigate).toHaveBeenCalledWith('/ns/test-ns/applications');
     });
   });
 });

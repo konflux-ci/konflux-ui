@@ -1,7 +1,8 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useTaskRuns } from '../../../hooks/useTaskRuns';
+import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { getTaskRunLog } from '../../../utils/tekton-results';
-import { createK8sUtilMock, createUseWorkspaceInfoMock } from '../../../utils/test-utils';
+import { createK8sUtilMock } from '../../../utils/test-utils';
 import {
   mockEnterpriseContractJSON,
   mockEnterpriseContractUIData,
@@ -24,12 +25,11 @@ jest.mock('../../../utils/tekton-results', () => ({
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
 const mockUseTaskRuns = useTaskRuns as jest.Mock;
-const mockWorkspaceInfo = createUseWorkspaceInfoMock();
 
 describe('useEnterpriseContractResultFromLogs', () => {
   beforeEach(() => {
-    mockWorkspaceInfo.mockReturnValue({ namespace: 'test-ns', workspace: 'test-ws' });
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
+    mockUseNamespaceHook('test-ns');
     mockUseTaskRuns.mockReturnValue([
       [
         {
@@ -56,9 +56,16 @@ describe('useEnterpriseContractResultFromLogs', () => {
 
   it('should call tknResults when taskRun is empty array', () => {
     mockUseTaskRuns.mockReturnValueOnce([[], true, undefined]);
-    mockGetTaskRunLogs.mockReturnValue(`asdfcdfadsf
-      [report-json] { "components": [] }
-      `);
+    mockGetTaskRunLogs.mockReturnValue(`
+      step-vulnerabilities :-
+      Lorem Ipsum some logs
+      
+      step-report-json :-
+      {"success":true,"components":[]}
+      
+      step-something-else :-
+      Some other logs
+    `);
     const { result } = renderHook(() => useEnterpriseContractResultFromLogs('dummy-abcd'));
     const [, loaded] = result.current;
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
@@ -109,8 +116,15 @@ describe('useEnterpriseContractResultFromLogs', () => {
       undefined,
     ]);
     mockCommmonFetchJSON.mockRejectedValue({ code: 404 });
-    mockGetTaskRunLogs.mockReturnValue(`asdfcdfadsf
-    [report-json] { "components": [] }
+    mockGetTaskRunLogs.mockReturnValue(`
+      step-vulnerabilities :-
+      Lorem Ipsum some logs
+      
+      step-report-json :-
+      {"success":true,"components":[]}
+      
+      step-something-else :-
+      Some other logs
     `);
 
     const { result, waitForNextUpdate } = renderHook(() =>

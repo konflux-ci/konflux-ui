@@ -8,10 +8,11 @@ import {
   DescriptionListTerm,
   Popover,
 } from '@patternfly/react-core';
+import { TASKRUN_LOGS_PATH } from '@routes/paths';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { getScanResults } from '../../../../hooks/useScanResults';
 import { TaskRunKind, TektonResourceLabel } from '../../../../types';
-import { useWorkspaceInfo } from '../../../Workspace/useWorkspaceInfo';
 import { ScanDetailStatus } from '../../ScanDetailStatus';
 
 import './ScanDescriptionListGroup.scss';
@@ -21,6 +22,7 @@ type Props = {
   showLogsLink?: boolean;
   hideIfNotFound?: boolean;
   popoverAppendTo?: boolean;
+  errorState?: React.ReactNode | null;
 };
 
 const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
@@ -28,9 +30,10 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
   hideIfNotFound,
   showLogsLink,
   popoverAppendTo = true,
+  errorState,
 }) => {
-  const { workspace } = useWorkspaceInfo();
-  const [scanResults, scanTaskRuns] = getScanResults(taskRuns);
+  const namespace = useNamespace();
+  const [scanResults, scanTaskRuns] = taskRuns ? getScanResults(taskRuns) : [null, []];
 
   if (!scanTaskRuns?.length && hideIfNotFound) {
     return null;
@@ -40,12 +43,16 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
     if (!showLogsLink) {
       return null;
     }
+    const applicationName = scanTaskRuns[0].metadata.labels[PipelineRunLabel.APPLICATION];
+    const taskRunName = scanTaskRuns[0].metadata.name;
     if (scanTaskRuns.length === 1) {
       return (
         <Link
-          to={`/workspaces/${workspace}/applications/${
-            scanTaskRuns[0].metadata.labels[PipelineRunLabel.APPLICATION]
-          }/taskruns/${scanTaskRuns[0].metadata.name}/logs`}
+          to={TASKRUN_LOGS_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+            taskRunName,
+          })}
           className="pf-v5-u-font-weight-normal"
         >
           View logs
@@ -71,9 +78,11 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
                 {scanTaskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] ||
                   scanTaskRun.metadata.name}
                 <Link
-                  to={`/workspaces/${workspace}/applications/${
-                    scanTaskRun.metadata.labels[PipelineRunLabel.APPLICATION]
-                  }/taskruns/${scanTaskRun.metadata.name}/logs`}
+                  to={TASKRUN_LOGS_PATH.createPath({
+                    workspaceName: namespace,
+                    applicationName: scanTaskRun.metadata.labels[PipelineRunLabel.APPLICATION],
+                    taskRunName: scanTaskRun.metadata.name,
+                  })}
                   className="pf-v5-u-font-weight-normal scan-description-list__tooltip-link"
                 >
                   <span
@@ -105,8 +114,14 @@ const ScanDescriptionListGroup: React.FC<React.PropsWithChildren<Props>> = ({
     <DescriptionListGroup>
       <DescriptionListTerm>Fixable vulnerabilities scan</DescriptionListTerm>
       <DescriptionListDescription>
-        {scanResults?.vulnerabilities ? <ScanDetailStatus scanResults={scanResults} /> : '-'}
-        {scanResults?.vulnerabilities ? renderLogsLink() : null}
+        {errorState ? (
+          errorState
+        ) : (
+          <>
+            {scanResults?.vulnerabilities ? <ScanDetailStatus scanResults={scanResults} /> : '-'}
+            {scanResults?.vulnerabilities ? renderLogsLink() : null}
+          </>
+        )}
       </DescriptionListDescription>
     </DescriptionListGroup>
   );

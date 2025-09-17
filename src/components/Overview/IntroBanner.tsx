@@ -4,36 +4,28 @@ import {
   Card,
   CardTitle,
   CardBody,
-  Grid,
-  GridItem,
+  Flex,
+  FlexItem,
+  Bullseye,
   Title,
   Text,
   Button,
 } from '@patternfly/react-core';
-import { useApplications } from '../../hooks/useApplications';
-import { ApplicationModel, ComponentModel } from '../../models';
-import { APPLICATION_LIST_PATH, IMPORT_PATH } from '../../routes/paths';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { AccessReviewResources } from '../../types';
-import { useAccessReviewForModels } from '../../utils/rbac';
-import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import OverviewBannerSvg from '../../assets/overview/overview-banner.svg';
+import { IfFeature } from '../../feature-flags/hooks';
+import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '../../routes/paths';
 
 import './IntroBanner.scss';
 
-const accessReviewResources: AccessReviewResources = [
-  { model: ApplicationModel, verb: 'create' },
-  { model: ComponentModel, verb: 'create' },
-];
-
 const IntroBanner: React.FC = () => {
-  const namespace = useNamespace();
-  const [canCreate] = useAccessReviewForModels(accessReviewResources);
-
-  const [applications, applicationsLoaded] = useApplications(namespace ? namespace : null);
   return (
-    <Grid className="intro-banner">
-      <GridItem span={8}>
-        <Card className="intro-banner__content" isLarge>
+    <Flex
+      className="intro-banner"
+      direction={{ default: 'row' }}
+      alignItems={{ default: 'alignItemsStretch' }}
+    >
+      <FlexItem flex={{ default: 'flex_2' }}>
+        <Card className="intro-banner__content" isLarge isFullHeight>
           <CardTitle>
             <Title headingLevel="h1" size="2xl">
               Get started with Konflux
@@ -46,43 +38,38 @@ const IntroBanner: React.FC = () => {
             </Text>
           </CardBody>
           <CardBody>
-            <ButtonWithAccessTooltip
+            <Button
               className="intro-banner__cta"
               component={(props) => (
-                <Link {...props} to={IMPORT_PATH.createPath({ workspaceName: namespace })} />
+                <Link {...props} to={NAMESPACE_LIST_PATH.createPath({} as never)} />
               )}
-              variant="primary"
-              data-test="create-application"
-              isDisabled={!canCreate}
-              tooltip="You don't have access to create an application"
+              variant="secondary"
+              data-test="view-my-applications"
               size="lg"
-              analytics={{
-                link_name: 'create-application',
-              }}
             >
-              Create application
-            </ButtonWithAccessTooltip>
-            {applicationsLoaded && applications?.length > 0 ? (
+              View my namespaces
+            </Button>
+            <IfFeature flag="release-monitor">
               <Button
                 className="intro-banner__cta"
                 component={(props) => (
-                  <Link
-                    {...props}
-                    to={APPLICATION_LIST_PATH.createPath({ workspaceName: namespace })}
-                  />
+                  <Link {...props} to={RELEASE_MONITOR_PATH.createPath({} as never)} />
                 )}
                 variant="secondary"
-                data-test="view-my-applications"
                 size="lg"
               >
-                View my applications
+                Release Monitor Board
               </Button>
-            ) : undefined}
+            </IfFeature>
           </CardBody>
         </Card>
-      </GridItem>
-      <GridItem className="intro-banner__image" span={4} />
-    </Grid>
+      </FlexItem>
+      <FlexItem flex={{ default: 'flex_1' }}>
+        <Bullseye className="intro-banner__image">
+          <OverviewBannerSvg />
+        </Bullseye>
+      </FlexItem>
+    </Flex>
   );
 };
 
