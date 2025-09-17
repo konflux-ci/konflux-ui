@@ -79,17 +79,16 @@ jobs:
         with:
           repository: ${{ github.repository }}
           ref: "${{ github.event.pull_request.head.sha }}"
-          path: base
-          
+
       - name: Deploy konflux-ci
         id: pr-check-action
-        uses: ./base/.github/actions/konflux-ui-deploy-test
+        uses: ./.github/actions/konflux-ui-deploy-test
         with:
           job-type: 'on-pr'
   
       - name: Konflux-ui e2e test
-        uses: ./base/.github/actions/konflux-ui-e2e-test
+        uses: ./.github/actions/konflux-ui-e2e-test
   
       - name: Generate error logs
         if: ${{ always() }}
-        uses: ./base/.github/actions/generate-error-logs
+        uses: ./.github/actions/generate-error-logs
