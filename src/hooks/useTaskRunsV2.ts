@@ -3,14 +3,17 @@ import { uniqBy } from 'lodash-es';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { WatchK8sResource } from '~/types/k8s';
 import { useK8sWatchResource } from '../k8s';
-import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
+import {
+  useKubearchiveGetResourceQuery,
+  useKubearchiveListResourceQuery,
+} from '../kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
 import { TaskRunKind, TektonResourceLabel } from '../types';
 import { createKubearchiveWatchResource } from '../utils/task-run-filter-transforms';
 import { sortTaskRunsByTime } from './useTaskRuns';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 // eslint-disable-next-line import/order
-import { TektonResultsOptions } from '~/utils/tekton-results';
+import { EQ, TektonResultsOptions } from '~/utils/tekton-results';
 
 /**
  * Hook for fetching TaskRuns with feature flag controlled data source switching.
@@ -201,4 +204,89 @@ export const useTaskRunsForPipelineRuns = (
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
   return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
+};
+
+export const useTaskRunV2 = (
+  namespace: string,
+  taskRunName: string,
+): [TaskRunKind | null | undefined, boolean, unknown] => {
+  const isKubeArchiveOn = useIsOnFeatureFlag('taskruns-kubearchive');
+  const enabled = !!namespace && !!taskRunName;
+
+  // k8s query
+  const k8sQuery = useK8sWatchResource<TaskRunKind>(
+    enabled
+      ? {
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace,
+          name: taskRunName,
+          watch: true,
+        }
+      : null,
+    TaskRunModel,
+    { retry: false },
+  );
+
+  // kubearachive query
+  const kubearchiveQuery = useKubearchiveGetResourceQuery(
+    {
+      groupVersionKind: TaskRunGroupVersionKind,
+      namespace,
+      name: taskRunName,
+    },
+    TaskRunModel,
+    {
+      enabled: isKubeArchiveOn && enabled,
+    },
+  );
+
+  // tekton-results query
+  const tektonResultsQuery = useTRTaskRuns(
+    !isKubeArchiveOn && enabled ? namespace : null,
+    React.useMemo(
+      () => ({
+        name: taskRunName,
+        limit: 1,
+        filter: EQ('data.metadata.name', taskRunName),
+      }),
+      [taskRunName],
+    ),
+  ) as unknown as [TaskRunKind[], boolean, unknown];
+
+  return React.useMemo(() => {
+    if (k8sQuery.data) {
+      return [k8sQuery.data, !k8sQuery.isLoading, k8sQuery.error];
+    }
+
+    if (isKubeArchiveOn) {
+      if (kubearchiveQuery.data) {
+        return [
+          kubearchiveQuery.data as TaskRunKind,
+          !kubearchiveQuery.isLoading,
+          kubearchiveQuery.error,
+        ];
+      }
+
+      const isLoading = k8sQuery.isLoading || kubearchiveQuery.isLoading;
+      return [kubearchiveQuery.data as TaskRunKind, !isLoading, kubearchiveQuery.error];
+    }
+
+    const [trData, trLoaded, trError] = tektonResultsQuery;
+    if (trData?.[0]) {
+      return [trData[0], trLoaded, trError];
+    }
+
+    const isLoading = k8sQuery.isLoading || !trLoaded;
+    const error = trError || k8sQuery.error;
+    return [undefined, !isLoading, error];
+  }, [
+    k8sQuery.data,
+    k8sQuery.isLoading,
+    k8sQuery.error,
+    isKubeArchiveOn,
+    tektonResultsQuery,
+    kubearchiveQuery.data,
+    kubearchiveQuery.isLoading,
+    kubearchiveQuery.error,
+  ]);
 };
