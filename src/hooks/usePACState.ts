@@ -8,7 +8,7 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   useComponentBuildStatus,
-  MIGRATION_REQUEST_ANNOTATION,
+  LAST_CONFIGURATION_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { usePipelineRuns } from './usePipelineRuns';
@@ -26,7 +26,8 @@ export enum PACState {
 
 const usePACState = (component: ComponentKind) => {
   const isSample = component.metadata?.annotations?.[SAMPLE_ANNOTATION] === 'true';
-  const isMigrationRequested = !!component.metadata?.annotations?.[MIGRATION_REQUEST_ANNOTATION];
+  const isMigrationRequested =
+    component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
   const pacProvision = getPACProvision(component);
   const isConfigureRequested =
     component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
@@ -37,6 +38,13 @@ const usePACState = (component: ComponentKind) => {
 
   const buildStatus = useComponentBuildStatus(component);
   const configurationTime = buildStatus?.pac?.['configuration-time'];
+  const configurationState = buildStatus?.pac?.state;
+  const lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
+    ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+    : undefined;
+  const lastPACStateIsMigration =
+    lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
+    BuildRequest.migratePac;
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRuns(
     !isSample && pacProvision ? component.metadata.namespace : null,
@@ -67,10 +75,18 @@ const usePACState = (component: ComponentKind) => {
         ? []
         : pipelineBuildRuns?.filter((p) =>
             configurationTime
-              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
+              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime) ||
+                (configurationState === ComponentBuildState.enabled && lastPACStateIsMigration)
               : true,
           ),
-    [configurationTime, pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError],
+    [
+      configurationTime,
+      pipelineBuildRuns,
+      pipelineBuildRunsLoaded,
+      pipelineBuildRunsError,
+      configurationState,
+      lastPACStateIsMigration,
+    ],
   );
 
   const prMerged = runsForComponent.find(
@@ -79,14 +95,14 @@ const usePACState = (component: ComponentKind) => {
 
   return isSample
     ? PACState.sample
-    : isConfigureRequested
+    : isConfigureRequested || isMigrationRequested
       ? PACState.configureRequested
       : isUnconfigureRequested
         ? PACState.unconfigureRequested
         : pacProvision === ComponentBuildState.enabled
           ? !pipelineBuildRunsLoaded
             ? PACState.loading
-            : prMerged || isMigrationRequested
+            : prMerged
               ? PACState.ready
               : PACState.pending
           : !pacProvision || pacProvision === ComponentBuildState.disabled

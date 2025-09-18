@@ -13,7 +13,7 @@ export const BUILD_REQUEST_ANNOTATION = 'build.appstudio.openshift.io/request';
 
 export const BUILD_STATUS_ANNOTATION = 'build.appstudio.openshift.io/status';
 
-export const MIGRATION_REQUEST_ANNOTATION = 'kubectl.kubernetes.io/last-applied-configuration';
+export const LAST_CONFIGURATION_ANNOTATION = 'kubectl.kubernetes.io/last-applied-configuration';
 
 export const GIT_PROVIDER_ANNOTATION = 'git-provider';
 export const GIT_PROVIDER_ANNOTATION_VALUE = {
@@ -100,6 +100,10 @@ export enum BuildRequest {
    * requests Pipelines-as-Code clean up for the Component
    */
   unconfigurePac = 'unconfigure-pac',
+  /**
+   * requests Pipelines-as-Code provision for the Component migration
+   */
+  migratePac = 'configure-pac-no-mr',
 }
 
 export const enablePAC = (component: ComponentKind) =>

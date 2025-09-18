@@ -7,7 +7,7 @@ import {
   ComponentBuildState,
   getComponentBuildStatus,
   getPACProvision,
-  MIGRATION_REQUEST_ANNOTATION,
+  LAST_CONFIGURATION_ANNOTATION,
   SAMPLE_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
@@ -22,10 +22,11 @@ export type PacStatesForComponents = {
 const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponents =>
   components.reduce((acc, component) => {
     const isSample = component.metadata?.annotations?.[SAMPLE_ANNOTATION] === 'true';
-    const isMigrationRequested = !!component.metadata?.annotations?.[MIGRATION_REQUEST_ANNOTATION];
     const pacProvision = getPACProvision(component);
     const isConfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
+    const isMigrationRequested =
+      component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
     const isUnconfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.unconfigurePac;
 
@@ -33,7 +34,7 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
       acc[component.metadata.name] = PACState.sample;
       return acc;
     }
-    if (isConfigureRequested) {
+    if (isConfigureRequested || isMigrationRequested) {
       acc[component.metadata.name] = PACState.configureRequested;
       return acc;
     }
@@ -47,10 +48,6 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
       } else {
         acc[component.metadata.name] = PACState.error;
       }
-      return acc;
-    }
-    if (isMigrationRequested) {
-      acc[component.metadata.name] = PACState.ready;
       return acc;
     }
     acc[component.metadata.name] = PACState.loading;
@@ -111,16 +108,23 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
       let allLoaded = true;
 
       neededNames.forEach((componentName) => {
-        const buildStatus = getComponentBuildStatus(
-          components.find((c) => c.metadata.name === componentName),
-        );
+        const component = components.find((c) => c.metadata.name === componentName);
+        const buildStatus = getComponentBuildStatus(component);
         const configurationTime = buildStatus?.pac?.['configuration-time'];
+        const configurationState = buildStatus?.pac?.state;
+        const lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
+          ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+          : undefined;
+        const lastPACStateIsMigration =
+          lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
+          BuildRequest.migratePac;
 
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>
             p.metadata.labels?.[PipelineRunLabel.COMPONENT] === componentName &&
             (configurationTime
-              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
+              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime) ||
+                (configurationState === ComponentBuildState.enabled && lastPACStateIsMigration)
               : true),
         );
         const prMerged = runsForComponent.find(
