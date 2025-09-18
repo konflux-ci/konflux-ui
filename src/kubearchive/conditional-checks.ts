@@ -15,3 +15,14 @@ export const checkIfKubeArchiveIsEnabled = async () => {
 export const useIsKubeArchiveEnabled = createConditionsHook(['isKubearchiveEnabled']);
 
 export const isKubeArchiveEnabled = ensureConditionIsOn(['isKubearchiveEnabled']);
+
+export const checkIfKiteServiceIsEnabled = async () => {
+  try {
+    await commonFetch('/health/', { pathPrefix: 'api/v1' });
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const isKiteServiceEnabled = ensureConditionIsOn(['isKiteServiceEnabled']);

@@ -77,6 +77,11 @@ const InternalFLAGS = {
       description: 'Shows Summary of issues in your Konflux content',
       defaultEnabled: false,
       status: 'wip',
+      guard: {
+        allOf: ['isKiteServiceEnabled'],
+        failureReason: 'Kite Service is not enabled',
+        visibleInFeatureFlagPanel: true,
+      }, 
     },
 } satisfies Record<string, FeatureMeta>;
 

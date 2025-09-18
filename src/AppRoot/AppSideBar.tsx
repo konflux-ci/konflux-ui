@@ -12,16 +12,16 @@ import {
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
-import { IfFeature } from '~/feature-flags/hooks';
+import { IfFeature, useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useActiveRouteChecker } from '../../src/hooks/useActiveRouteChecker';
 import { useNamespace } from '../shared/providers/Namespace';
-import isKiteServiceAvailable from '~/components/Issues/kite-service-check';
 import './AppSideBar.scss';
 
 export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
   const isActive = useActiveRouteChecker();
   const namespace = useNamespace();
   const disabled = !namespace;
+  const isFeatureFlagOn=useIsOnFeatureFlag('issues-dashboard')
   return (
     <PageSidebar data-test="sidebar" isSidebarOpen={isOpen}>
       <PageSidebarBody>
@@ -51,7 +51,7 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </NavItem>
             </IfFeature>
 
-            {isKiteServiceAvailable && <NavItem
+            {isFeatureFlagOn && <NavItem
               className={css({ 'app-side-bar__nav-item--disabled': disabled })}
               isActive={isActive(ISSUES_PATH.path)}
             >
