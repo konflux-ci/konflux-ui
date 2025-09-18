@@ -1,13 +1,13 @@
 import { createTableHeaders } from '~/shared/components/table/utils';
 
 export const releaseTableColumnClasses = {
-  name: 'pf-m-width-10 pf-m-width-15-on-xl',
-  status: 'pf-m-width-10 pf-m-width-5-on-xl',
-  completionTime: 'pf-m-width-20 pf-m-width-10-on-xl',
-  component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  application: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  releasePlan: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
-  namespace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  name: 'pf-m-width-20  pf-m-width-10-on-xl wrap-column',
+  status: 'pf-m-width-20  pf-m-width-10-on-xl',
+  completionTime: 'pf-m-width-20  pf-m-width-10-on-xl',
+  component: 'pf-m-width-20  pf-m-width-10-on-xl',
+  application: 'pf-m-width-20  pf-m-width-10-on-xl',
+  releasePlan: 'pf-m-width-20  pf-m-width-10-on-xl',
+  namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
 } as const;
 
 export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
