@@ -17,7 +17,9 @@ export const APPLICATION_LIST_PATH = WORKSPACE_PATH.extend(`applications`);
 
 export const ISSUES_PATH = WORKSPACE_PATH.extend(`issues`);
 
-export const ISSUES_LIST_PATH = WORKSPACE_PATH.extend(`issues-list`);
+export const ISSUES_OVERVIEW_PATH = ISSUES_PATH.extend(`issues-overview`);
+
+export const ISSUES_LIST_PATH = ISSUES_PATH.extend(`issues-list`);
 
 export const SECRET_LIST_PATH = WORKSPACE_PATH.extend(`secrets`);
 
