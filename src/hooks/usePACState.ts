@@ -9,6 +9,7 @@ import {
   BuildRequest,
   useComponentBuildStatus,
   LAST_CONFIGURATION_ANNOTATION,
+  BUILD_STATUS_ANNOTATION,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { usePipelineRuns } from './usePipelineRuns';
@@ -37,15 +38,21 @@ const usePACState = (component: ComponentKind) => {
   const { name: prBotName } = useApplicationPipelineGitHubApp();
 
   const buildStatus = useComponentBuildStatus(component);
-  const lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
-    ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
-    : undefined;
+  let lastConfiguration = null;
+  try {
+    lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
+      ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+      : undefined;
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Error parsing last-applied-configuration annotation:', e);
+  }
   const lastPACStateIsMigration =
     lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
     BuildRequest.migratePac;
 
   const configurationTime: string = lastPACStateIsMigration
-    ? lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION].pac?.[
+    ? lastConfiguration?.metadata?.annotations?.[BUILD_STATUS_ANNOTATION].pac?.[
         'configuration-time'
       ]
     : buildStatus?.pac?.['configuration-time'];
