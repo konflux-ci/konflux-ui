@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ToolbarFilter } from '@patternfly/react-core';
+import { Divider, ToolbarFilter } from '@patternfly/react-core';
 import {
   Select,
   SelectGroup,
@@ -62,16 +62,20 @@ export const MultiSelect = ({
       >
         {[
           <SelectGroup label={label} key={filterKey}>
-            {Object.keys(options).map((filter) => (
-              <SelectOption
-                key={filter}
-                value={filter}
-                isChecked={values.includes(filter)}
-                itemCount={options[filter] ?? 0}
-              >
-                {filter}
-              </SelectOption>
-            ))}
+            {Object.keys(options).map((filter) =>
+              filter.startsWith('--divider--') ? (
+                <Divider key={filter} />
+              ) : (
+                <SelectOption
+                  key={filter}
+                  value={filter}
+                  isChecked={values.includes(filter)}
+                  itemCount={options[filter] ?? 0}
+                >
+                  {filter}
+                </SelectOption>
+              ),
+            )}
           </SelectGroup>,
         ]}
       </Select>
