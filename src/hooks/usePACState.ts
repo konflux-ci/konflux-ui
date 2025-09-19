@@ -37,14 +37,18 @@ const usePACState = (component: ComponentKind) => {
   const { name: prBotName } = useApplicationPipelineGitHubApp();
 
   const buildStatus = useComponentBuildStatus(component);
-  const configurationTime = buildStatus?.pac?.['configuration-time'];
-  const configurationState = buildStatus?.pac?.state;
   const lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
     ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
     : undefined;
   const lastPACStateIsMigration =
     lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
     BuildRequest.migratePac;
+
+  const configurationTime: string = lastPACStateIsMigration
+    ? lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION].pac?.[
+        'configuration-time'
+      ]
+    : buildStatus?.pac?.['configuration-time'];
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRuns(
     !isSample && pacProvision ? component.metadata.namespace : null,
@@ -75,18 +79,10 @@ const usePACState = (component: ComponentKind) => {
         ? []
         : pipelineBuildRuns?.filter((p) =>
             configurationTime
-              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime) ||
-                (configurationState === ComponentBuildState.enabled && lastPACStateIsMigration)
+              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
               : true,
           ),
-    [
-      configurationTime,
-      pipelineBuildRuns,
-      pipelineBuildRunsLoaded,
-      pipelineBuildRunsError,
-      configurationState,
-      lastPACStateIsMigration,
-    ],
+    [configurationTime, pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError],
   );
 
   const prMerged = runsForComponent.find(

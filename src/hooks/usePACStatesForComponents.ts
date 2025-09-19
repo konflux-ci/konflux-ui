@@ -110,8 +110,6 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
       neededNames.forEach((componentName) => {
         const component = components.find((c) => c.metadata.name === componentName);
         const buildStatus = getComponentBuildStatus(component);
-        const configurationTime = buildStatus?.pac?.['configuration-time'];
-        const configurationState = buildStatus?.pac?.state;
         const lastConfiguration = component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION]
           ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
           : undefined;
@@ -119,12 +117,17 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
           lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
           BuildRequest.migratePac;
 
+        const configurationTime: string = lastPACStateIsMigration
+          ? lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION].pac?.[
+              'configuration-time'
+            ]
+          : buildStatus?.pac?.['configuration-time'];
+
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>
             p.metadata.labels?.[PipelineRunLabel.COMPONENT] === componentName &&
             (configurationTime
-              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime) ||
-                (configurationState === ComponentBuildState.enabled && lastPACStateIsMigration)
+              ? new Date(p.metadata.creationTimestamp) > new Date(configurationTime)
               : true),
         );
         const prMerged = runsForComponent.find(
