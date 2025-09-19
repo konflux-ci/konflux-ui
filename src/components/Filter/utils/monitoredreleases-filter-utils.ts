@@ -23,17 +23,23 @@ export const filterMonitoredReleases = (
     const namespaceName = mr?.metadata?.namespace;
     const componentName = mr?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
 
-    // Convert undefined to string 'undefined' for consistent filtering
-    const appNameForFilter = applicationName === undefined ? 'undefined' : applicationName;
-    const comNameForFilter = componentName === undefined ? 'undefined' : componentName;
+    const applicationFilter =
+      !application.length ||
+      application.includes(applicationName) ||
+      (application.includes('No application') && applicationName === undefined);
+
+    const componentFilter =
+      !component.length ||
+      component.includes(componentName) ||
+      (component.includes('No component') && componentName === undefined);
 
     return (
       (!name || mr?.metadata?.name?.indexOf(name) >= 0) &&
       (!status.length || status.includes(getReleaseStatus(mr))) &&
-      (!application.length || application.includes(appNameForFilter)) &&
+      applicationFilter &&
       (!releasePlan.length || releasePlan.includes(releasePlanName)) &&
       (!namespace.length || namespace.includes(namespaceName)) &&
-      (!component.length || component.includes(comNameForFilter))
+      componentFilter
     );
   });
 };

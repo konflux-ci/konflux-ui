@@ -113,19 +113,42 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   const filterOptions = React.useMemo(() => {
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
+    const applicationOptions = createFilterObj(
+      releases,
+      (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
+    );
+    const noApplication = applicationOptions.undefined;
+    delete applicationOptions.undefined;
+
+    const applicationFilterOptions = noApplication
+      ? {
+          'No application': noApplication,
+          '--divider--': 1,
+          ...applicationOptions,
+        }
+      : applicationOptions;
+
+    const componentOptions = createFilterObj(
+      releases,
+      (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
+    );
+    const noComponent = componentOptions.undefined;
+    delete componentOptions.undefined;
+
+    const componentFilterOptions = noComponent
+      ? {
+          'No component': noComponent,
+          '--divider--': 1,
+          ...componentOptions,
+        }
+      : componentOptions;
 
     return {
       statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
-      applicationOptions: createFilterObj(
-        releases,
-        (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
-      ),
+      applicationOptions: applicationFilterOptions,
       releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
       namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
-      componentOptions: createFilterObj(
-        releases,
-        (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
-      ),
+      componentOptions: componentFilterOptions,
     };
   }, [releases, namespaces]);
 
