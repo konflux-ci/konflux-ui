@@ -25,3 +25,4 @@ export * from './role-binding';
 export * from './config-map';
 export * from './image-repository';
 export * from './namespace';
+export * from './issue';
