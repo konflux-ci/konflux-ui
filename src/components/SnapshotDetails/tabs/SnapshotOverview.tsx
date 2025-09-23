@@ -12,7 +12,7 @@ import {
 } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { SnapshotLabels } from '../../../consts/snapshots';
-import { usePipelineRun } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { useScanResults } from '../../../hooks/useScanResults';
 import { useScrollToHash } from '../../../hooks/useScrollToHash';
 import { useSnapshot } from '../../../hooks/useSnapshots';
@@ -36,10 +36,11 @@ const SnapshotOverviewTab: React.FC = () => {
     [snapshot, loaded, loadErr],
   );
 
-  const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
+  const [buildPipelineRunArray, plrLoaded, plrLoadError] = usePipelineRunsV2(
     snapshot?.metadata?.namespace,
-    buildPipelineName,
-  );
+    { name: buildPipelineName, limit: 1 },
+  ); // TBD
+  const buildPipelineRun = buildPipelineRunArray?.[0];
 
   const commit = React.useMemo(
     () => plrLoaded && !plrLoadError && createCommitObjectFromPLR(buildPipelineRun),
