@@ -13,23 +13,17 @@ type Props = {
 
 const CVETableRow: React.FC<Props> = ({ arrayHelper, cve, index }) => {
   return (
-    <Tr key={cve.key}>
+    <Tr>
       <Td className={cveTableColumnClass.issueKey} data-test="issue-key">
         {cve.key ?? '-'}
       </Td>
 
       <>
         <Td className={cveTableColumnClass.component}>
-          {cve.component ? (
-            <span key={cve.component} className="pf-v5-u-mr-sm">
-              {cve.component}
-            </span>
-          ) : (
-            '-'
-          )}
+          {cve.component ? <span className="pf-v5-u-mr-sm">{cve.component}</span> : '-'}
         </Td>
         <Td className={cveTableColumnClass.packages}>
-          {cve.packages && cve.packages.length > 0 ? cve.packages.join(', ') : '-'}
+          {cve.packages?.length > 0 ? cve.packages.join(', ') : '-'}
         </Td>
       </>
 

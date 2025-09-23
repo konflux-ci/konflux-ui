@@ -14,7 +14,7 @@ type Props = {
 
 const BugTableRow: React.FC<Props> = ({ arrayHelper, bug, index }) => {
   return (
-    <Tr key={bug.id}>
+    <Tr>
       <Td className={issueTableColumnClass.issueKey} data-test="issue-key">
         {bug.id ?? '-'}
       </Td>

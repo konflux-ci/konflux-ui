@@ -42,11 +42,7 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
           <InputField data-test="cve-issue-id" label="CVE ID" name="key" required />
         </StackItem>
         <StackItem>
-          <InputGroup
-            className="pf-v5-u-mb-sm"
-            label="Which component affect this CVE?"
-            data-test="component-field"
-          >
+          <InputGroup className="pf-v5-u-mb-sm" data-test="component-field">
             <CVEComponentDropDown name="component" />
           </InputGroup>
         </StackItem>
@@ -60,8 +56,12 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
                     packages.length > 0 &&
                     packages.map((__, j) => (
                       <StackItem key={`package-${j}`}>
-                        <InputGroup className="pf-v5-u-mb-sm pf-v5-u-ml-md" label="Package">
-                          <InputField data-test={`pac-${j}`} name={`packages[${j}]`} />
+                        <InputGroup className="pf-v5-u-mb-sm pf-v5-u-ml-md">
+                          <InputField
+                            label="Package"
+                            data-test={`pac-${j}`}
+                            name={`packages[${j}]`}
+                          />
                           <Button
                             variant={ButtonVariant.plain}
                             onClick={() => packageArrayHelper.remove(j)}

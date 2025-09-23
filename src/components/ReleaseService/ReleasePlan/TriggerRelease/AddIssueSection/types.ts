@@ -1,3 +1,5 @@
+import { CVE } from '../../../../../types/coreBuildService';
+
 export interface IssueCommonData {
   summary?: string;
   source?: string;
@@ -10,10 +12,6 @@ export type BugObject = IssueCommonData & {
   source: string;
 };
 
-export type CVEObject = {
-  key?: string;
-  component?: string;
-  packages: string[];
-};
+export type CVEObject = CVE;
 
 export type IssueObject = BugObject | CVEObject;

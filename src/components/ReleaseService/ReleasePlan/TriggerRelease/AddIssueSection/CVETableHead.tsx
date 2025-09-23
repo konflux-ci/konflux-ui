@@ -1,3 +1,4 @@
+import React from 'react';
 import { Th, Thead, Tr } from '@patternfly/react-table';
 import { cveTableColumnClass } from './header';
 
