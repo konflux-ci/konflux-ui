@@ -12,9 +12,11 @@ import {
   FlexItem,
   Title,
   Divider,
+  Bullseye,
+  Spinner,
 } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { useTaskRun } from '../../../hooks/usePipelineRuns';
+import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import {
   APPLICATION_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
@@ -41,17 +43,31 @@ import { StatusIconWithText } from '../../topology/StatusIcon';
 const TaskRunDetailsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [taskRun, , error] = useTaskRun(namespace, taskRunName);
-  const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
-  const results = isTaskV1Beta1(taskRun) ? taskRun.status?.taskResults : taskRun.status?.results;
-  const duration = calculateDuration(
-    typeof taskRun.status?.startTime === 'string' ? taskRun.status?.startTime : '',
-    typeof taskRun.status?.completionTime === 'string' ? taskRun.status?.completionTime : '',
-  );
+  const [taskRun, loaded, error] = useTaskRunV2(namespace, taskRunName);
 
-  const applicationName = taskRun.metadata?.labels[PipelineRunLabel.APPLICATION];
+  if (!loaded) {
+    return (
+      <Bullseye>
+        <Spinner data-test="lg" />
+      </Bullseye>
+    );
+  }
+
+  const taskRunFailed = (getTRLogSnippet(taskRun) || {}) as ErrorDetailsWithStaticLog;
+  const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
+  const hasStart = typeof taskRun?.status?.startTime === 'string' && !!taskRun.status.startTime;
+  const hasEnd =
+    typeof taskRun?.status?.completionTime === 'string' && !!taskRun.status.completionTime;
+  const duration = hasStart
+    ? calculateDuration(
+        taskRun.status.startTime,
+        hasEnd ? taskRun.status.completionTime : undefined,
+      )
+    : undefined;
+
+  const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const status = !error ? taskRunStatus(taskRun) : null;
-  const plrName = taskRun.metadata?.labels[TektonResourceLabel.pipelinerun];
+  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
 
   return (
     <>
@@ -114,7 +130,7 @@ const TaskRunDetailsTab: React.FC = () => {
                   default: '1Col',
                 }}
               >
-                {taskName(taskRun) && (
+                {taskRun && taskName(taskRun) && (
                   <DescriptionListGroup>
                     <DescriptionListTerm>Task</DescriptionListTerm>
                     <DescriptionListDescription>{taskName(taskRun)}</DescriptionListDescription>
@@ -124,7 +140,7 @@ const TaskRunDetailsTab: React.FC = () => {
                   <DescriptionListTerm>Description</DescriptionListTerm>
                   <DescriptionListDescription>
                     <SyncMarkdownView
-                      content={taskRun?.status?.taskSpec?.description || '-'}
+                      content={taskRun.status?.taskSpec?.description || '-'}
                       inline
                     />
                   </DescriptionListDescription>
@@ -203,7 +219,7 @@ const TaskRunDetailsTab: React.FC = () => {
                           workspaceName: namespace,
                         })}
                       >
-                        {taskRun.metadata?.labels[PipelineRunLabel.APPLICATION]}
+                        {taskRun.metadata?.labels?.[PipelineRunLabel.APPLICATION]}
                       </Link>
                     ) : (
                       '-'
@@ -219,13 +235,13 @@ const TaskRunDetailsTab: React.FC = () => {
                           to={COMPONENT_DETAILS_PATH.createPath({
                             workspaceName: namespace,
                             applicationName,
-                            componentName: taskRun.metadata.labels[PipelineRunLabel.COMPONENT],
+                            componentName: taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT],
                           })}
                         >
-                          {taskRun.metadata.labels[PipelineRunLabel.COMPONENT]}
+                          {taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]}
                         </Link>
                       ) : (
-                        taskRun.metadata.labels[PipelineRunLabel.COMPONENT]
+                        taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]
                       )
                     ) : (
                       '-'

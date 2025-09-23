@@ -23,6 +23,8 @@ import { useTRPipelineRuns, useTRTaskRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('../useComponents');
+jest.mock('../../kubearchive/hooks');
+jest.mock('../../feature-flags/hooks');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
@@ -621,7 +623,7 @@ describe('usePipelineRuns', () => {
       });
 
       it('should return not loaded if we have no result', () => {
-        useK8sWatchResourceMock.mockReturnValue([null, false, undefined]);
+        useK8sWatchResourceMock.mockReturnValue([null, false]);
         useTRRunsMock.mockReturnValue([[], true, undefined]);
         const { result } = renderHook(() => useTestHook('test-ns', 'sample-name'));
         expect(result.current).toEqual([undefined, false, undefined]);

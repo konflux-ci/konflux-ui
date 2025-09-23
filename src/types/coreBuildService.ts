@@ -80,12 +80,9 @@ export type Env = {
 };
 
 export type CVE = {
-  issueKey: string;
-  url: string;
-  status?: string;
-  summary?: string;
-  uploadDate?: string;
-  components?: string[];
+  key: string;
+  component?: string;
+  packages?: string[];
 };
 
 export type Issue = {
