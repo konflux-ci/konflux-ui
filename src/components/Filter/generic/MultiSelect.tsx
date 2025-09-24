@@ -8,6 +8,8 @@ import {
 } from '@patternfly/react-core/deprecated';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
+export const MENU_DIVIDER = "--divider--";
+
 type MultiSelectProps = {
   label: string;
   filterKey: string;
@@ -63,7 +65,7 @@ export const MultiSelect = ({
         {[
           <SelectGroup label={label} key={filterKey}>
             {Object.keys(options).map((filter) =>
-              filter.startsWith('--divider--') ? (
+              filter.startsWith(MENU_DIVIDER) ? (
                 <Divider key={filter} />
               ) : (
                 <SelectOption

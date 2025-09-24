@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
+import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
 import { createFilterObj, FilterType } from '~/components/Filter/utils/filter-utils';
 import {
@@ -8,12 +9,6 @@ import {
   MonitoredReleasesFilterState,
 } from '~/components/Filter/utils/monitoredreleases-filter-utils';
 import PageLayout from '~/components/PageLayout/PageLayout';
-import MonitoredReleaseEmptyState from '~/components/ReleaseMonitor/ReleaseEmptyState';
-import getReleasesListHeader, {
-  SortableHeaders,
-} from '~/components/ReleaseMonitor/ReleaseListHeader';
-import ReleaseListRow from '~/components/ReleaseMonitor/ReleaseListRow';
-import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
@@ -24,6 +19,10 @@ import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { MonitoredReleaseKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
+import MonitoredReleaseEmptyState from './ReleaseEmptyState';
+import getReleasesListHeader, { SortableHeaders } from './ReleaseListHeader';
+import ReleaseListRow from './ReleaseListRow';
+import ReleasesInNamespace from './ReleasesInNamespace';
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'metadata.name',
@@ -123,7 +122,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const applicationFilterOptions = noApplication
       ? {
           'No application': noApplication,
-          '--divider--': 1,
+          [MENU_DIVIDER]: 1,
           ...applicationOptions,
         }
       : applicationOptions;
@@ -138,7 +137,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const componentFilterOptions = noComponent
       ? {
           'No component': noComponent,
-          '--divider--': 1,
+          [MENU_DIVIDER]: 1,
           ...componentOptions,
         }
       : componentOptions;
