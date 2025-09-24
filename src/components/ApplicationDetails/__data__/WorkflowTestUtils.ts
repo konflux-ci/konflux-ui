@@ -54,10 +54,22 @@ export const getMockWorkflows = () => {
       mockIntegrationTestScenariosData,
       true,
     ]);
-    mockFns.useLatestBuildPipelinesMock.mockReturnValue([mockBuildPipelinesData, true]);
+    mockFns.useLatestBuildPipelinesMock.mockReturnValue([
+      mockBuildPipelinesData,
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     mockFns.useReleasePlansMock.mockReturnValue([mockReleasePlansData, true]);
     mockFns.useReleasesMock.mockReturnValue([mockReleasesData, true]);
-    mockFns.useLatestIntegrationTestPipelinesMock.mockReturnValue([mockTestPipelinesData, true]);
+    mockFns.useLatestIntegrationTestPipelinesMock.mockReturnValue([
+      mockTestPipelinesData,
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
   };
   return { workflowMocks, applyWorkflowMocks };
 };

@@ -2,13 +2,14 @@ import * as React from 'react';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
+import { GetNextPage, NextPageProps } from './useTektonResults';
 
 export const useLatestBuildPipelines = (
   namespace: string,
   applicationName: string,
   componentNames: string[] | undefined,
-): [PipelineRunKind[], boolean, unknown] => {
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestBuilds, setLatestBuilds] = React.useState<PipelineRunKind[]>([]);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
@@ -22,21 +23,22 @@ export const useLatestBuildPipelines = (
     [componentNames, foundNames],
   );
 
-  const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
-    applicationLoaded ? namespace : null,
-    React.useMemo(
-      () => ({
-        selector: {
-          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
-          matchLabels: {
-            [PipelineRunLabel.APPLICATION]: applicationName,
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+  const [pipelines, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
+    usePipelineRunsV2(
+      applicationLoaded ? namespace : '',
+      React.useMemo(
+        () => ({
+          selector: {
+            filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+              [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+            },
           },
-        },
-      }),
-      [applicationName, application],
-    ),
-  );
+        }),
+        [applicationName, application],
+      ),
+    );
 
   React.useEffect(() => {
     let canceled = false;
@@ -75,5 +77,11 @@ export const useLatestBuildPipelines = (
     };
   }, [componentNames, error, getNextPage, loaded, neededNames, pipelines]);
 
-  return [latestBuilds, neededNames.length === 0 || (loaded && !getNextPage), error];
+  return [
+    latestBuilds,
+    neededNames.length === 0 || (loaded && !getNextPage),
+    error,
+    getNextPage,
+    { isFetchingNextPage, hasNextPage },
+  ];
 };

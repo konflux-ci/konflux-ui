@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
-import { useTRPipelineRuns } from '../../hooks/useTektonResults';
+import { usePipelineRunsV2 } from '../../hooks/usePipelineRunsV2';
 import { ComponentKind } from '../../types';
 import {
   BUILD_REQUEST_ANNOTATION,
@@ -12,7 +12,7 @@ import { createK8sWatchResourceMock, createUseApplicationMock } from '../../util
 import { PACState } from '../usePACState';
 import usePACStatesForComponents from '../usePACStatesForComponents';
 
-jest.mock('../../hooks/useTektonResults');
+jest.mock('../../hooks/usePipelineRunsV2');
 
 jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
   useApplicationPipelineGitHubApp: jest.fn(() => ({
@@ -24,7 +24,7 @@ jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const createComponent = (
   componentName: string,
@@ -56,6 +56,17 @@ const createComponent = (
   }) as unknown as ComponentKind;
 
 describe('usePACStatesForComponents', () => {
+  beforeEach(() => {
+    // Default mock for usePipelineRunsV2
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+  });
+
   it('should identify different simple states', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
     const components = [
@@ -74,7 +85,8 @@ describe('usePACStatesForComponents', () => {
   });
 
   it('should identify ready and pending states', () => {
-    useK8sWatchResourceMock.mockReturnValue([
+    useK8sWatchResourceMock.mockReturnValue([[], true]);
+    usePipelineRunsV2Mock.mockReturnValueOnce([
       [
         {
           metadata: {
@@ -85,6 +97,9 @@ describe('usePACStatesForComponents', () => {
         },
       ],
       true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
     ]);
     const components = [
       createComponent('my-pending-component', ComponentBuildState.enabled),
@@ -98,8 +113,14 @@ describe('usePACStatesForComponents', () => {
 
   it('should look for additional Tekton results via getNextPage', () => {
     const getNextPageMock = jest.fn();
-    useTRPipelineRunsMock.mockReturnValueOnce([[], true, undefined, getNextPageMock]);
     useK8sWatchResourceMock.mockReturnValue([[], true]);
+    usePipelineRunsV2Mock.mockReturnValueOnce([
+      [],
+      true,
+      undefined,
+      getNextPageMock,
+      { isFetchingNextPage: false, hasNextPage: true },
+    ]);
 
     const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;

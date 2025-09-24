@@ -10,7 +10,7 @@ import {
   useComponentBuildStatus,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export enum PACState {
   sample,
@@ -36,8 +36,8 @@ const usePACState = (component: ComponentKind) => {
   const buildStatus = useComponentBuildStatus(component);
   const configurationTime = buildStatus?.pac?.['configuration-time'];
 
-  const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRuns(
-    !isSample && pacProvision ? component.metadata.namespace : null,
+  const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRunsV2(
+    !isSample && pacProvision ? component.metadata.namespace : '',
     React.useMemo(
       () => ({
         selector: {

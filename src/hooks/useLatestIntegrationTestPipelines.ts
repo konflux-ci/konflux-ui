@@ -2,13 +2,14 @@ import * as React from 'react';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useComponents } from './useComponents';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
+import { GetNextPage, NextPageProps } from './useTektonResults';
 
 export const useLatestIntegrationTestPipelines = (
   namespace: string,
   applicationName: string,
   integrationTestNames: string[],
-): [PipelineRunKind[], boolean, unknown] => {
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestTestPipelines, setLatestTestPipelines] = React.useState<PipelineRunKind[]>([]);
 
@@ -28,8 +29,14 @@ export const useLatestIntegrationTestPipelines = (
     [integrationTestNames, foundNames],
   );
 
-  const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRuns(
-    !componentsLoaded || !neededNames.length ? null : namespace,
+  const [
+    pipelineRuns,
+    pipelineRunsLoaded,
+    plrError,
+    getNextPage,
+    { isFetchingNextPage, hasNextPage },
+  ] = usePipelineRunsV2(
+    !componentsLoaded || !neededNames.length ? '' : namespace,
     React.useMemo(
       () => ({
         selector: {
@@ -102,5 +109,7 @@ export const useLatestIntegrationTestPipelines = (
     latestTestPipelines,
     componentsLoaded && (neededNames.length === 0 || (pipelineRunsLoaded && !getNextPage)),
     plrError,
+    getNextPage,
+    { isFetchingNextPage, hasNextPage },
   ];
 };

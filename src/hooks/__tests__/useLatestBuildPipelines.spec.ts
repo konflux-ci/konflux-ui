@@ -2,14 +2,14 @@ import { renderHook } from '@testing-library/react-hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useLatestBuildPipelines } from '../useLatestBuildPipelines';
-import { useTRPipelineRuns } from '../useTektonResults';
+import { usePipelineRunsV2 } from '../usePipelineRunsV2';
 
-jest.mock('../useTektonResults');
+jest.mock('../usePipelineRunsV2');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const componentNames = ['devfile-sample-node'];
 const componentNames2 = ['devfile-sample-node', 'devfile-sample-node-2'];
@@ -17,11 +17,24 @@ const componentNames2 = ['devfile-sample-node', 'devfile-sample-node-2'];
 describe('useLatestBuildPipelines', () => {
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     const { result } = renderHook(() =>
       useLatestBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
     );
 
-    expect(result.current).toEqual([[], false, undefined]);
+    expect(result.current).toEqual([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
   });
 
   it('should return build pipelines', () => {
@@ -30,7 +43,13 @@ describe('useLatestBuildPipelines', () => {
       true,
       undefined,
     ]);
-    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
+    usePipelineRunsV2Mock.mockReturnValue([
+      [testPipelineRuns[DataState.RUNNING]],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     const { result } = renderHook(() =>
       useLatestBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
     );
@@ -47,7 +66,13 @@ describe('useLatestBuildPipelines', () => {
       true,
       undefined,
     ]);
-    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
+    usePipelineRunsV2Mock.mockReturnValue([
+      [testPipelineRuns[DataState.RUNNING]],
+      true,
+      undefined,
+      getNextPageMock,
+      { isFetchingNextPage: false, hasNextPage: true },
+    ]);
     const { result } = renderHook(() =>
       useLatestBuildPipelines('test-ns', 'test-pipelinerun', componentNames2),
     );

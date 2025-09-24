@@ -3,11 +3,11 @@ import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunLabel, PipelineRunType } from '../../consts/pipelinerun';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import { useLatestIntegrationTestPipelines } from '../useLatestIntegrationTestPipelines';
-import { useTRPipelineRuns } from '../useTektonResults';
+import { usePipelineRunsV2 } from '../usePipelineRunsV2';
 
-jest.mock('../useTektonResults');
+jest.mock('../usePipelineRunsV2');
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const testNames = ['test-caseqfvdj'];
 const testNames2 = ['test-caseqfvdj', 'test'];
@@ -15,11 +15,24 @@ const testNames2 = ['test-caseqfvdj', 'test'];
 describe('useLatestIntegrationTestPipelines', () => {
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     const { result } = renderHook(() =>
       useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
     );
 
-    expect(result.current).toEqual([[], false, undefined]);
+    expect(result.current).toEqual([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
   });
 
   it('should return test pipelines', () => {
@@ -31,8 +44,19 @@ describe('useLatestIntegrationTestPipelines', () => {
       if (watchOptions.groupVersionKind.kind === 'Component') {
         return [[], true];
       }
-      pipelineType = watchOptions.selector.matchLabels[PipelineRunLabel.PIPELINE_TYPE];
-      return [[testPipelineRuns[DataState.RUNNING]], true, undefined];
+      return [[], true, undefined];
+    });
+    usePipelineRunsV2Mock.mockImplementation((_namespace, options) => {
+      if (options?.selector?.matchLabels) {
+        pipelineType = options.selector.matchLabels[PipelineRunLabel.PIPELINE_TYPE];
+      }
+      return [
+        [testPipelineRuns[DataState.RUNNING]],
+        true,
+        undefined,
+        undefined,
+        { isFetchingNextPage: false, hasNextPage: false },
+      ];
     });
     const { result } = renderHook(() =>
       useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
@@ -51,7 +75,13 @@ describe('useLatestIntegrationTestPipelines', () => {
       true,
       undefined,
     ]);
-    useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
+    usePipelineRunsV2Mock.mockReturnValue([
+      [testPipelineRuns[DataState.RUNNING]],
+      true,
+      undefined,
+      getNextPageMock,
+      { isFetchingNextPage: false, hasNextPage: true },
+    ]);
 
     renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2));
     expect(getNextPageMock).toHaveBeenCalled();

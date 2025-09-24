@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { useTRPipelineRuns } from '../../hooks/useTektonResults';
+import { usePipelineRunsV2 } from '../../hooks/usePipelineRunsV2';
 import { ComponentKind } from '../../types';
 import {
   BUILD_REQUEST_ANNOTATION,
@@ -10,7 +10,7 @@ import {
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import usePACState, { PACState } from '../usePACState';
 
-jest.mock('../../hooks/useTektonResults');
+jest.mock('../../hooks/usePipelineRunsV2');
 
 jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
   useApplicationPipelineGitHubApp: jest.fn(() => ({
@@ -20,7 +20,7 @@ jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
 }));
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const createComponent = (buildState?: ComponentBuildState): ComponentKind =>
   ({
@@ -45,6 +45,17 @@ const createComponent = (buildState?: ComponentBuildState): ComponentKind =>
   }) as unknown as ComponentKind;
 
 describe('usePACState', () => {
+  beforeEach(() => {
+    // Default mock for usePipelineRunsV2
+    usePipelineRunsV2Mock.mockReturnValue([
+      [],
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+  });
+
   it('should identify sample state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(undefined);
@@ -83,18 +94,26 @@ describe('usePACState', () => {
   });
 
   it('should identify ready state', () => {
-    useK8sWatchResourceMock.mockReturnValueOnce([
+    useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
+    usePipelineRunsV2Mock.mockReturnValueOnce([
       [{ metadata: { name: 'test', creationTimestamp: '2023-07-25T00:00:00Z' } }],
       true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
     ]);
     const component = createComponent(ComponentBuildState.enabled);
     expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.ready);
   });
 
   it('should identify pending state through correct bulid pipeline runs', () => {
-    useK8sWatchResourceMock.mockReturnValueOnce([
+    useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
+    usePipelineRunsV2Mock.mockReturnValueOnce([
       [{ metadata: { name: 'test', creationTimestamp: '2023-01-20T00:00:00Z' } }],
       true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
     ]);
     const component = createComponent(ComponentBuildState.enabled);
     expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.pending);
@@ -108,7 +127,13 @@ describe('usePACState', () => {
 
   it('should identify loading state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], false]);
-    useTRPipelineRunsMock.mockReturnValueOnce([[], false]);
+    usePipelineRunsV2Mock.mockReturnValueOnce([
+      [],
+      false,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     const component = createComponent(ComponentBuildState.enabled);
     expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.loading);
   });

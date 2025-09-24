@@ -6,6 +6,28 @@ import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 
+// Mock KubeArchive functionality
+jest.mock('~/kubearchive/hooks', () => ({
+  useKubearchiveListResourceQuery: jest.fn(() => ({
+    data: { pages: [] },
+    isLoading: false,
+    error: undefined,
+    hasNextPage: false,
+    fetchNextPage: undefined,
+    isFetchingNextPage: false,
+  })),
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  useIsOnFeatureFlag: jest.fn(() => false), // Disable kubearchive feature flag
+  createConditionsHook: jest.fn(() => jest.fn(() => ({ isKubearchiveEnabled: false }))),
+}));
+
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: false })),
+  isKubeArchiveEnabled: jest.fn(() => false),
+}));
+
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
@@ -25,7 +47,7 @@ describe('useBuildPipelines', () => {
 
     expect(result.current).toEqual([
       [],
-      false,
+      true, // usePipelineRunsV2 returns trLoaded which is true
       undefined,
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
@@ -38,8 +60,9 @@ describe('useBuildPipelines', () => {
       true,
       undefined,
     ]);
+    // Since kubearchive is disabled, usePipelineRunsV2 returns trResources
     useTRPipelineRunsMock.mockReturnValue([
-      [],
+      [testPipelineRuns[DataState.RUNNING]],
       true,
       undefined,
       undefined,
