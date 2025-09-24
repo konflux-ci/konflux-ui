@@ -119,13 +119,14 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const noApplication = applicationOptions.undefined;
     delete applicationOptions.undefined;
 
-    const applicationFilterOptions = noApplication
-      ? {
+    const applicationFilterOptions =
+      noApplication > 0
+        ? {
           'No application': noApplication,
           [MENU_DIVIDER]: 1,
           ...applicationOptions,
         }
-      : applicationOptions;
+        : applicationOptions;
 
     const componentOptions = createFilterObj(
       releases,
@@ -134,13 +135,14 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const noComponent = componentOptions.undefined;
     delete componentOptions.undefined;
 
-    const componentFilterOptions = noComponent
-      ? {
+    const componentFilterOptions =
+      noComponent > 0
+        ? {
           'No component': noComponent,
           [MENU_DIVIDER]: 1,
           ...componentOptions,
         }
-      : componentOptions;
+        : componentOptions;
 
     return {
       statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
