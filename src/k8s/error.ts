@@ -109,3 +109,20 @@ export class K8sStatusError extends CustomError {
     super(status.message);
   }
 }
+
+/**
+ * Utility function to check if an error is an authorization error (401 or 403)
+ * that should stop polling/retry behavior
+ */
+export const isAuthorizationError = (error: unknown): boolean => {
+  if (error instanceof HttpError) {
+    return error.code === 401 || error.code === 403;
+  }
+  if (error instanceof FetchError) {
+    return error.status === 401 || error.status === 403;
+  }
+  if (error instanceof K8sStatusError) {
+    return error.status.code === 401 || error.status.code === 403;
+  }
+  return false;
+};
