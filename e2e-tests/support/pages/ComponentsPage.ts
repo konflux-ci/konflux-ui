@@ -35,16 +35,16 @@ export class ComponentPage extends AbstractWizardPage {
     cy.get(ComponentsPagePO.create).should('be.enabled').click();
   }
 
-  clickManageBuildPipelinesLink() {
-    cy.contains('button', 'Manage build pipelines').should('be.visible').click();
-  }
-
   clickMergePullRequest() {
     cy.contains('button', 'Merge pull request').should('be.visible').click();
   }
 
   clickSendingPullRequest() {
     cy.contains('button', 'Sending pull request').should('be.visible').click();
+  }
+
+  clickCustomButton() {
+    cy.contains('button', 'Custom').should('be.visible').click();
   }
 
   setPipeline(pipeline: string) {

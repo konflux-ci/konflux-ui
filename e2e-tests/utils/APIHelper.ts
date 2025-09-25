@@ -123,4 +123,21 @@ export class APIHelper {
       expect(result.body.merged).to.be.true;
     });
   }
+  /**
+   * Returns the number of merged pull requests in the given repository.
+   * @param owner - The owner of the repository.
+   * @param repoName - The name of the repository.
+   * @returns Cypress.Chainable<number> - The number of merged PRs.
+   */
+  static getMergedPRCount(owner: string, repoName: string): Cypress.Chainable<number> {
+    // GitHub API: List pull requests, state=closed, per_page=100
+    // We'll count those with merged_at !== null
+    return APIHelper.githubRequest(
+      'GET',
+      githubAPIEndpoints.pullRequests(owner, repoName) + '?state=closed&per_page=100',
+    ).then((result) => {
+      const mergedPRs = (result.body || []).filter((pr: any) => pr.merged_at !== null);
+      return mergedPRs.length;
+    });
+  }
 }
