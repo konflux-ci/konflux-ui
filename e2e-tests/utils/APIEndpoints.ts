@@ -34,4 +34,6 @@ export const githubAPIEndpoints = {
     `https://api.github.com/repos/${owner}/${repoName}/contents/${filePath}`,
   commits: (owner: string, repoName: string) =>
     `https://api.github.com/repos/${owner}/${repoName}/commits`,
+  pullRequests: (owner: string, repoName: string) =>
+    `https://api.github.com/repos/${owner}/${repoName}/pulls`,
 };

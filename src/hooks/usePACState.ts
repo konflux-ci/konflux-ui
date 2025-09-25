@@ -52,7 +52,7 @@ const usePACState = (component: ComponentKind) => {
           ],
         },
         // this limit is based on the assumption that user merges the PR after the component is created
-        limit: 10,
+        // limit: 10,
       }),
       [component.metadata.name, component.spec.application],
     ),
