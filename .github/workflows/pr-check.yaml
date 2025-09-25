@@ -2,10 +2,13 @@ name: PR Check Test
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened, labeled, unlabeled]  
+  merge_group:
+    types: [checks_requested]
 
 jobs:
   check-org-membership:
+    if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checking rights to run a PR checks
