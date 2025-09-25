@@ -32,7 +32,7 @@ export const useLatestBuildPipelines = (
             [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
           },
-          ...(componentNames && {
+          ...((componentNames?.length ?? 0) > 0 && {
             matchExpressions: [
               { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
             ],
@@ -51,15 +51,17 @@ export const useLatestBuildPipelines = (
     }
 
     const builds = neededNames.reduce((acc, componentName) => {
-      const build = pipelines
-        .sort(
-          (a, b) =>
-            new Date(b.status.completionTime).getTime() -
-            new Date(a.status.completionTime).getTime(),
-        )
-        .find(
-          (pipeline) => pipeline.metadata?.labels?.[PipelineRunLabel.COMPONENT] === componentName,
-        );
+      const getTimeFromPipelines = (run: PipelineRunKind) => {
+        const ts =
+          run.status?.completionTime ?? run.status?.startTime ?? run.metadata?.creationTimestamp;
+        return ts ? new Date(ts).getTime() : 0;
+      };
+      const sortedPipelines = [...pipelines].sort(
+        (a, b) => getTimeFromPipelines(b) - getTimeFromPipelines(a),
+      );
+      const build = sortedPipelines.find(
+        (pipeline) => pipeline.metadata?.labels?.[PipelineRunLabel.COMPONENT] === componentName,
+      );
       if (build) {
         acc.push(build);
       }
