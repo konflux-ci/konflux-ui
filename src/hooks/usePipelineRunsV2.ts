@@ -2,23 +2,14 @@ import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
-import { createKubearchiveWatchResource } from '~/utils/task-run-filter-transforms';
+import { createKubearchiveWatchResource, PipelineRunSelector } from '~/utils/pipeline-run-filter-transform';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
-import { WatchK8sResource, Selector } from '../types/k8s';
+import { WatchK8sResource } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
-
-/**
- * Extended selector interface for PipelineRuns with additional filter options
- */
-interface PipelineRunSelector extends Selector {
-  filterByName?: string;
-  filterByCreationTimestampAfter?: string;
-  filterByCommit?: string;
-}
 
 /**
  * Options for usePipelineRunsV2 hook, extending WatchK8sResource options
@@ -81,6 +72,7 @@ export const usePipelineRunsV2 = (
     error,
   } = useK8sWatchResource<PipelineRunKind[]>(watchOptions, PipelineRunModel, { retry: false });
   // if a pipeline run was removed from etcd, we want to still include it in the return value without re-querying tekton-results
+  // Client-side commit filtering using getCommitSha() for comprehensive coverage
   const etcdRuns = React.useMemo((): PipelineRunKind[] => {
     if (isLoading || error || !resources) {
       return [];
@@ -166,10 +158,28 @@ export const usePipelineRunsV2 = (
 
   // tekton-results includes items in etcd, therefore options must use the same limit
   // these duplicates will later be de-duped
-  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
+  const [trResourcesRaw, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
     queryTr ? namespace : null,
     optionsMemo,
   );
+
+  // Client-side commit filtering for Tekton Results data using getCommitSha() for comprehensive coverage
+  const trResources = React.useMemo((): PipelineRunKind[] => {
+    if (!trResourcesRaw || trResourcesRaw.length === 0) {
+      return [];
+    }
+
+    // Apply commit filtering if specified - same logic as etcd and KubeArchive filtering
+    if (optionsMemo?.selector?.filterByCommit) {
+      // Use getCommitSha() to check all possible commit SHA locations:
+      // - Labels: 'pipelinesascode.tekton.dev/sha', 'pac.test.appstudio.openshift.io/sha'
+      // - Annotations: 'build.appstudio.redhat.com/commit_sha', 'pac.test.appstudio.openshift.io/sha'
+      // This ensures consistent filtering across etcd, KubeArchive, and Tekton Results data sources
+      return trResourcesRaw.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
+    }
+
+    return trResourcesRaw;
+  }, [trResourcesRaw, optionsMemo?.selector?.filterByCommit]);
 
   //kubearchive results
   const resourceInit = React.useMemo(
@@ -188,19 +198,30 @@ export const usePipelineRunsV2 = (
 
   const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
 
-  const kubearchiveData = React.useMemo(() => {
+  // Client-side commit filtering for KubeArchive data using getCommitSha() for comprehensive coverage
+  const kubearchiveData = React.useMemo((): PipelineRunKind[] => {
     if (!kubearchiveEnabled) return [];
+
     const pages = kubearchiveResult.data?.pages;
     const archiveData = pages?.flatMap((page) => page) ?? [];
-    // Apply sorting and limit to KubeArchive data
-    const data = archiveData as PipelineRunKind[];
+    let data = archiveData as PipelineRunKind[];
+
+    // Apply commit filtering if specified - same logic as etcd filtering
+    if (optionsMemo?.selector?.filterByCommit) {
+      // Use getCommitSha() to check all possible commit SHA locations:
+      // - Labels: 'pipelinesascode.tekton.dev/sha', 'pac.test.appstudio.openshift.io/sha'
+      // - Annotations: 'build.appstudio.redhat.com/commit_sha', 'pac.test.appstudio.openshift.io/sha'
+      // This ensures consistent filtering between etcd and KubeArchive data sources
+      data = data.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
+    }
+
     const creationTimestamp = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
     // Sort by creationTimestamp (newest first); stable for equal keys
     const sorted = data.sort((a, b) => creationTimestamp(b).localeCompare(creationTimestamp(a)));
 
     // Apply limit if specified
-    return options?.limit && options.limit > 0 ? sorted.slice(0, options.limit) : sorted;
-  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, options?.limit]);
+    return optionsMemo?.limit && optionsMemo.limit > 0 ? sorted.slice(0, optionsMemo.limit) : sorted;
+  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, optionsMemo?.limit, optionsMemo?.selector?.filterByCommit]);
 
   // Combine cluster data with external data source results based on feature flag
   const combinedData = React.useMemo((): PipelineRunKind[] => {

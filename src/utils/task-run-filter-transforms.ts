@@ -48,14 +48,7 @@ export const convertFilterToKubearchiveSelectors = (
   const matchExpressions: MatchExpression[] = [
     ...(filterBy.matchExpressions ?? []),
     ...(filterBy.filterByCommit
-      ? [
-          createEquals(
-            PipelineRunLabel.COMMIT_LABEL ||
-              PipelineRunLabel.TEST_SERVICE_COMMIT ||
-              PipelineRunLabel.COMMIT_ANNOTATION,
-            filterBy.filterByCommit,
-          ),
-        ]
+      ? [createEquals(PipelineRunLabel.COMMIT_LABEL, filterBy.filterByCommit)]
       : []),
   ];
 
