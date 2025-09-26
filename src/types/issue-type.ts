@@ -36,8 +36,8 @@ export type IssueKind = K8sResourceCommon & {
   id: string;
   title: string;
   description: string;
-  severity: IssueType;
-  issueType: string;
+  severity: IssueSeverity;
+  issueType: IssueType;
   state: IssueState;
   detectedAt: string;
   namespace: string;
