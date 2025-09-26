@@ -1,12 +1,42 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { useIssues } from '~/kite/kite-hooks';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import IssuesListPage from '../IssuesListPage';
 
-describe('IssuesListPage Component', () => {
-  it('should render the list page content', () => {
-    render(<IssuesListPage />);
+jest.mock('~/kite/kite-hooks', () => ({
+  useIssues: jest.fn(),
+}));
 
-    expect(screen.getByText('Issues List Page')).toBeInTheDocument();
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    Link: (props) => <a href={props.to}>{props.children}</a>,
+    useNavigate: () => jest.fn(),
+    useSearchParams: () => [new URLSearchParams(), jest.fn()],
+  };
+});
+
+const mockUseIssues = useIssues as jest.Mock;
+
+describe('IssuesListPage Component', () => {
+  beforeEach(() => {
+    mockUseNamespaceHook('test-namespace');
+    jest.clearAllMocks();
+  });
+
+  it('should render the list page content', () => {
+    mockUseIssues.mockReturnValue({
+      data: { data: [], total: 0, limit: 10, offset: 0 },
+      isLoading: false,
+      error: null,
+    });
+
+    renderWithQueryClient(<IssuesListPage />);
+
+    expect(screen.getByText('This list shows current Konflux issues.')).toBeInTheDocument();
   });
 
   it('should render as a React functional component', () => {
@@ -16,12 +46,14 @@ describe('IssuesListPage Component', () => {
   });
 
   it('should not crash when rendered', () => {
-    expect(() => render(<IssuesListPage />)).not.toThrow();
+    renderWithQueryClient(<IssuesListPage />);
+
+    expect(screen.getByText('Issues')).toBeInTheDocument();
   });
 
   it('should render the expected text content', () => {
-    const { container } = render(<IssuesListPage />);
+    renderWithQueryClient(<IssuesListPage />);
 
-    expect(container.textContent).toBe('Issues List Page');
+    expect(screen.getByText('This list shows current Konflux issues.')).toBeInTheDocument();
   });
 });

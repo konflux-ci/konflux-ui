@@ -8,7 +8,7 @@ import { useDeepCompareMemoize } from '../../hooks';
 import { WithScrollContainer } from '../../utils';
 import { ComponentProps, Filter, HeaderFunc, TableProps } from './Table';
 import { TableRow } from './TableRow';
-import { VirtualBody } from './VirtualBody';
+import { VirtualBody, CustomExpand } from './VirtualBody';
 
 import './Table.scss';
 
@@ -72,11 +72,11 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
-  //const [, setWindowWidth] = React.useState(window.innerWidth);
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
     const expandColumn = [];
-    if (expand) {
+    const cData = customData as CustomExpand;
+    if (expand && !cData?.disableRegularExpand) {
       expandColumn.push({
         title: '',
         props: {
@@ -85,7 +85,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
       });
     }
     return [[...expandColumn, ...getActiveColumns(Header, cProps)], cProps];
-  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header]);
+  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header, customData]);
 
   const ariaRowCount = data && data.length;
   const renderVirtualizedTable = (scrollContainer) => (

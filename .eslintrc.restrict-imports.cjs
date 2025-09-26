@@ -38,8 +38,8 @@ module.exports = {
           // Zone 5: Files in `./src/shared` may only import from `./src/shared` or `./src/k8s`.
           {
             target: './src/shared/**/*',
-            from: ['./src/!(shared|k8s)/**/*'],
-            message: 'Files in `./src/shared` may only import from `./src/shared` or `./src/k8s`.',
+            from: ['./src/!(shared|k8s|types/k8s)/**/*'],
+            message: 'Files in `./src/shared` may only import from `./src/shared`, `./src/k8s` or `./src/types/k8s`.',
           },
           // Zone 6: 'Files in `./src/feature-flags` may only import from `./src/feature-flags`'.
           {
