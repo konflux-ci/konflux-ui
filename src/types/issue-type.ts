@@ -20,6 +20,18 @@ export enum IssueState {
   RESOLVED = 'RESOLVED',
 }
 
+export type IssueQuery = {
+  namespace: string;
+  severity?: IssueSeverity;
+  issueType?: IssueType;
+  state?: IssueState;
+  resourceType?: string;
+  resourceName?: string;
+  search?: string;
+  limit?: number;
+  offset?: number;
+};
+
 export type IssueKind = K8sResourceCommon & {
   id: string;
   title: string;

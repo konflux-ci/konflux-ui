@@ -23,6 +23,7 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
+import { useIssues } from '../IssuesDashboard/useIssues';
 import PageLayout from '../PageLayout/PageLayout';
 import getApplicationListHeader, { SortableHeaders } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
@@ -71,6 +72,11 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
     activeSortDirection,
     sortPaths,
   );
+
+  // Testing calls - remove when issue page done
+  const [dat, loa, er] = useIssues();
+  // eslint-disable-next-line no-console
+  console.log(dat, loa, er);
 
   if (!loaded) {
     return (
