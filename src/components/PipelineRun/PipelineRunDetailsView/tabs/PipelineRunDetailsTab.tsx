@@ -16,11 +16,11 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
@@ -57,7 +57,10 @@ const PipelineRunDetailsTab: React.FC = () => {
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
   const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
-  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
+  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+  );
 
   const snapshotStatusAnnotation =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
