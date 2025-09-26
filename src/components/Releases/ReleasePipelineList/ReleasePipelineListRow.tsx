@@ -1,6 +1,10 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
-import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '@routes/paths';
+import { Link, useParams } from 'react-router-dom';
+import {
+  APPLICATION_RELEASE_LIST_PATH,
+  PIPELINE_RUNS_DETAILS_PATH,
+  SNAPSHOT_DETAILS_PATH,
+} from '@routes/paths';
 import { TableData, Timestamp } from '~/shared';
 import { ReleasePlanKind } from '~/types/coreBuildService';
 import { calculateDuration } from '~/utils/pipeline-utils';
@@ -34,6 +38,9 @@ type PipelineRunListRowProps = {
   visibleColumns: Set<ReleasePipelineRunColumnKeys>;
 };
 
+const RELEASE_DETAILS_LINK_TEXT = 'Back to release details';
+
+
 const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
   obj: run,
   releasePlan,
@@ -41,7 +48,18 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
   namespace,
   visibleColumns,
 }) => {
+  const { applicationName } = useParams();
   const showBackButton = namespace !== run?.prNamespace;
+
+  const backButtonState = showBackButton
+    ? {
+        backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+        }),
+        backButtonText: RELEASE_DETAILS_LINK_TEXT,
+      }
+    : {};
 
   // Use dynamic classes based on visible columns
   const columnClasses = getDynamicReleasePipelineColumnClasses(visibleColumns);
@@ -55,7 +73,7 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
             applicationName: releasePlan.spec.application,
             pipelineRunName: run.pipelineRun,
           })}${releaseName ? `?releaseName=${releaseName}` : ''}`}
-          state={{ showBackButton }}
+          state={backButtonState}
         >
           {run.pipelineRun}
         </Link>
@@ -84,7 +102,7 @@ const PipelineRunListRow: React.FC<PipelineRunListRowProps> = ({
             applicationName: releasePlan.spec.application,
             snapshotName: run.snapshot,
           })}
-          state={{ showBackButton }}
+          state={backButtonState}
         >
           {run.snapshot}
         </Link>

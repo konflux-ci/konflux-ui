@@ -4,6 +4,7 @@ import { ReleaseColumnKeys, RELEASE_COLUMN_ORDER } from '../../consts/release';
 import { useReleaseStatus } from '../../hooks/useReleaseStatus';
 import {
   APPLICATION_RELEASE_DETAILS_PATH,
+  APPLICATION_RELEASE_LIST_PATH,
   PIPELINERUN_DETAILS_PATH,
   SNAPSHOT_DETAILS_PATH,
 } from '../../routes/paths';
@@ -28,12 +29,15 @@ interface ReleasesListRowProps extends RowFunctionArgs<ReleaseKind, { applicatio
   visibleColumns?: Set<ReleaseColumnKeys>;
 }
 
+const RELEASE_LIST_LINK_TEXT = 'Back to release list';
+
 const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> = ({
   obj,
   customData: { applicationName },
   visibleColumns,
 }) => {
   const namespace = useNamespace();
+
   const status = useReleaseStatus(obj);
   const [managedPrNamespace, managedPipelineRun] = getNamespaceAndPRName(
     getManagedPipelineRunFromRelease(obj),
@@ -48,6 +52,17 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
     getFinalPipelineRunFromRelease(obj),
   );
   const actions = useReleaseActions(obj);
+
+  const backButtonState =
+    namespace !== managedPrNamespace
+      ? {
+          backButtonLink: APPLICATION_RELEASE_LIST_PATH.createPath({
+            workspaceName: namespace,
+            applicationName,
+          }),
+          backButtonText: RELEASE_LIST_LINK_TEXT,
+        }
+      : {};
 
   const columnOrder: ReleaseColumnKeys[] = RELEASE_COLUMN_ORDER as ReleaseColumnKeys[];
 
@@ -103,6 +118,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
             applicationName,
             snapshotName: obj.spec.snapshot,
           })}
+          state={backButtonState}
         >
           {obj.spec.snapshot}
         </Link>
@@ -154,7 +170,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
               applicationName,
               pipelineRunName: managedPipelineRun,
             })}
-            state={{ showBackButton: Boolean(namespace !== managedPrNamespace) }}
+            state={backButtonState}
           >
             {managedPipelineRun}
           </Link>
@@ -172,6 +188,7 @@ const ReleasesListRow: React.FC<React.PropsWithChildren<ReleasesListRowProps>> =
               applicationName,
               pipelineRunName: finalPipelineRun,
             })}
+            state={backButtonState}
           >
             {finalPipelineRun}
           </Link>
