@@ -23,7 +23,7 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
-import { useIssues } from '../IssuesDashboard/useIssues';
+import { useIssues } from '../Issues/useIssues';
 import PageLayout from '../PageLayout/PageLayout';
 import getApplicationListHeader, { SortableHeaders } from './ApplicationListHeader';
 import ApplicationListRow from './ApplicationListRow';
