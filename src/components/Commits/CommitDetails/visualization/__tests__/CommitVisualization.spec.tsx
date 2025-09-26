@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsV2';
 import { useComponents } from '../../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../../hooks/useIntegrationTestScenarios';
-import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../hooks/useReleases';
 import { CustomError } from '../../../../../k8s/error';
@@ -19,8 +19,8 @@ import CommitVisualization from '../CommitVisualization';
 
 jest.mock('../../../../../hooks/useTektonResults');
 
-jest.mock('../../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRunsForCommit: jest.fn(),
+jest.mock('../../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsForCommitV2: jest.fn(),
 }));
 jest.mock('../../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
@@ -39,7 +39,7 @@ jest.mock('../../../../../hooks/useSnapshots', () => ({
   useSnapshots: jest.fn(),
 }));
 
-const mockUsePipelineRunsForCommit = usePipelineRunsForCommit as jest.Mock;
+const mockUsePipelineRunsForCommitV2 = usePipelineRunsForCommitV2 as jest.Mock;
 const mockUseComponents = useComponents as jest.Mock;
 const mockUseIntegrationTestScenarios = useIntegrationTestScenarios as jest.Mock;
 const mockUseReleasePlans = useReleasePlans as jest.Mock;
@@ -51,7 +51,7 @@ describe('CommitVisualization', () => {
   /* eslint-disable @typescript-eslint/no-explicit-any */
 
   beforeEach(() => {
-    mockUsePipelineRunsForCommit.mockReturnValue([
+    mockUsePipelineRunsForCommitV2.mockReturnValue([
       [...MockBuildPipelines, ...MockTestPipelines],
       true,
     ]);
@@ -74,7 +74,7 @@ describe('CommitVisualization', () => {
   });
 
   it('should not render the commit visualization graph', () => {
-    mockUsePipelineRunsForCommit.mockReturnValue([[], false]);
+    mockUsePipelineRunsForCommitV2.mockReturnValue([[], false]);
     mockUseComponents.mockReturnValue([[], false]);
     mockUseIntegrationTestScenarios.mockReturnValue([[], false]);
     mockUseReleasePlans.mockReturnValue([[], false]);
@@ -89,7 +89,7 @@ describe('CommitVisualization', () => {
   });
 
   it('should render the commit visualization graph', () => {
-    mockUsePipelineRunsForCommit.mockReturnValue([
+    mockUsePipelineRunsForCommitV2.mockReturnValue([
       [],
       true,
       new CustomError('Model does not exist'),
