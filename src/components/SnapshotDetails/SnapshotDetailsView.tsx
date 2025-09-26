@@ -1,9 +1,9 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../consts/snapshots';
-import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
@@ -28,10 +28,11 @@ const SnapshotDetailsView: React.FC = () => {
     [snapshot, loaded, snapshotError],
   );
 
-  const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
+  const [buildPipelineRunArray, plrLoaded, plrLoadError] = usePipelineRunsV2(
     snapshot?.metadata?.namespace,
-    buildPipelineName,
+    { name: buildPipelineName, limit: 1 },
   );
+  const buildPipelineRun = buildPipelineRunArray?.[0];
 
   const commit = React.useMemo(
     () => plrLoaded && !plrLoadError && createCommitObjectFromPLR(buildPipelineRun),
