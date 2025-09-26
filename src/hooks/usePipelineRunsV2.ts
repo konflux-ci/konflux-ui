@@ -3,7 +3,10 @@ import { differenceBy, uniqBy } from 'lodash-es';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
-import { createKubearchiveWatchResource, PipelineRunSelector } from '~/utils/pipeline-run-filter-transform';
+import {
+  createKubearchiveWatchResource,
+  PipelineRunSelector,
+} from '~/utils/pipeline-run-filter-transform';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
@@ -178,7 +181,9 @@ export const usePipelineRunsV2 = (
       // - Labels: 'pipelinesascode.tekton.dev/sha', 'pac.test.appstudio.openshift.io/sha'
       // - Annotations: 'build.appstudio.redhat.com/commit_sha', 'pac.test.appstudio.openshift.io/sha'
       // This ensures consistent filtering across etcd, KubeArchive, and Tekton Results data sources
-      return trResourcesRaw.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
+      return trResourcesRaw.filter(
+        (plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit,
+      );
     }
 
     return trResourcesRaw;
@@ -223,8 +228,15 @@ export const usePipelineRunsV2 = (
     const sorted = data.sort((a, b) => creationTimestamp(b).localeCompare(creationTimestamp(a)));
 
     // Apply limit if specified
-    return optionsMemo?.limit && optionsMemo.limit > 0 ? sorted.slice(0, optionsMemo.limit) : sorted;
-  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, optionsMemo?.limit, optionsMemo?.selector?.filterByCommit]);
+    return optionsMemo?.limit && optionsMemo.limit > 0
+      ? sorted.slice(0, optionsMemo.limit)
+      : sorted;
+  }, [
+    kubearchiveResult.data?.pages,
+    kubearchiveEnabled,
+    optionsMemo?.limit,
+    optionsMemo?.selector?.filterByCommit,
+  ]);
 
   // Combine cluster data with external data source results based on feature flag
   const combinedData = React.useMemo((): PipelineRunKind[] => {
@@ -323,7 +335,7 @@ export const usePipelineRunsForCommitV2 = (
   limit?: number,
   filterByComponents = true,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
-  const isKubearchiveEnabled = useIsOnFeatureFlag['pipelineruns-kubearchive'];
+  // const isKubearchiveEnabled = useIsOnFeatureFlag['pipelineruns-kubearchive'];
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application] = useApplication(namespace, applicationName);
 
@@ -341,14 +353,15 @@ export const usePipelineRunsForCommitV2 = (
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
           },
-          matchExpressions:
-            filterByComponents && componentNames.length > 0
-              ? [{ key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames }]
-              : [],
+          ...(filterByComponents && {
+            matchExpressions: [
+              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
+            ],
+          }),
           filterByCommit: commit,
         },
-        enabled: isKubearchiveEnabled,
-        limit: filterByComponents ? limit : undefined,
+        // enabled: isKubearchiveEnabled,
+        ...(filterByComponents && limit && { limit }),
       }),
       [
         applicationName,
@@ -357,7 +370,7 @@ export const usePipelineRunsForCommitV2 = (
         componentNames,
         filterByComponents,
         limit,
-        isKubearchiveEnabled,
+        // isKubearchiveEnabled,
       ],
     ),
   );
@@ -366,8 +379,15 @@ export const usePipelineRunsForCommitV2 = (
     if (!plrsLoaded || plrError) {
       return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
     }
-    return [pipelineRuns as PipelineRunKind[], plrsLoaded, plrError, getNextPage, nextPageProps];
+    return [
+      pipelineRuns.slice(0, limit ? limit : undefined),
+      plrsLoaded,
+      plrError,
+      getNextPage,
+      nextPageProps,
+    ];
   }, [
+    limit,
     // usePipelineRunV2 variables
     pipelineRuns,
     plrsLoaded,
