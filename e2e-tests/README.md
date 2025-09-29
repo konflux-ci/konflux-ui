@@ -1,7 +1,9 @@
 # Konflux UI Tests
+
 Functional tests using [Cypress](https://docs.cypress.io/guides/overview/why-cypress)
 
 ## What can be found here
+
 The important bits are as follows:
 
 | Path | Description |
@@ -13,46 +15,84 @@ The important bits are as follows:
 | `cypress` | test results, including screenshots, video recordings, HTML reports, xunit files, etc. |
 
 ## Running the tests locally
+
 Prerequisites:
+
 * Nodejs (20+ version)
-* Access (credentials) to Konflux staging instance
+* Access (credentials) to Konflux staging instance(you can use your own tenant)
+* Github access token
+
+
+### Generating github access token:
+
+To generate a GitHub access token with all permissions (for testing purposes):
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens](https://github.com/settings/tokens).
+2. Click **"Generate new token"** (or **"Fine-grained token"** for more control).
+3. Give your token a descriptive name (e.g., "Konflux E2E Tests").
+4. **Expiration:** Choose an appropriate expiration date (shorter is safer for testing).
+5. **Select scopes/permissions:**  
+   - For full access, check **all** scopes (or at least: `repo`, `workflow`, `admin:repo_hook`, `read:org`, `user`, etc.).
+   - For fine-grained tokens, select **all repositories** and grant **all available permissions**.
+6. Click **"Generate token"** at the bottom.
+7. **Copy the token** and store it securely.  
+   - You will not be able to see it again!
+   - Use this token as the value for the `GH_TOKEN` environment variable (e.g., `export CYPRESS_GH_TOKEN=YOUR_TOKEN`).
+
+> **Note:**  
+> Granting all permissions is only recommended for local testing or ephemeral environments. For production or CI, restrict the token to the minimum required scopes for security.
+
 
 Certain environment variables will need to be set up. The most convenient way is to export them from the CLI, in which case they need to be prefixed with `CYPRESS_`, e.g. `USERNAME` is set as `export CYPRESS_USERNAME=username`. Alternatively, they can be passed to cypress via `-e` flag, e.g `npx cypress run -e USERNAME=username`.
 
 Find the supported variables in the table below:
+
 | Variable name | Description | Required | Default Value |
 | -- | -- | -- | -- |
-| `KONFLUX_BASE_URL` | The URL to the main page of RHTAP UI | Yes | 'https://prod.foo.redhat.com:1337/beta/hac/application-pipeline' |
+| `KONFLUX_BASE_URL` | The URL to the main page of RHTAP UI | Yes | `https://prod.foo.redhat.com:1337/beta/hac/application-pipeline` |
 | `USERNAME` | Username for SSO login | Yes | '' |
-| `PASSWORD` | Password for SSO login | Yes | '' |
+| `PASSWORD` | Password for SSO login | No | '' |
 | `PR_CHECK` | Assume the test is a PR check, enable report portal, assume keycloak is used instead of RH-SSO | For PR checks | false |
 | `PERIODIC_RUN` | Assume the test is a nightly run, keycloak is used instead of RH-SSO | For runs using ephemeral RHTAP environment | false |
 | `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail | No | false |
 | `GH_TOKEN` | Github token for network requests | Yes | '' |
-| |
-| `RP_TOKEN` | Report portal token for PR checks | No | '' |
-| `GH_PR_TITLE` | Report portal setup | No | '' |
-| `GH_PR_LINK` | Report portal setup | No | '' |
+
+
+
 
 ### Running from source
+
 This is the recommended way when either developing tests, or a headed test runner is preferred. After running `yarn install` and setting the appropriate environment variables, use one of the following commands to run cypress.
 
+Initialise required env variables:
+
+```bash
+export CYPRESS_USERNAME=YOUR_RH_USERNAME
+export export CYPRESS_GH_TOKEN=YOUR_TOKEN
+```
+
 For the headed test runner:
+
+```bash
+$ yarn cy:open
 ```
-$ npx cypress open
-```
+
 Select E2E testing and the browser of your choice (chrome is recommended though), then launch any spec by clicking it in the list, and watch as it runs.
 
 For headless execution:
+
+```bash
+yarn cy:run
 ```
-$ npx cypress run
-```
+
 Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the basic happy path spec in chrome:
-```
-$ npx cypress run -b chrome -s 'tests/basic-happy-path*'
+
+```bash
+yarn cy:run -b chrome -s 'tests/basic-happy-path*'
 ```
 
 ### Running using docker image
+
 TBD - currently we don't have a docker image
 <!-- This folder contains a Dockerfile that specifies an image with all the dependencies and test code included. It should be available on quay.io and should be updated no more than 30 minutes after a change is pushed to this folder.
 
@@ -114,6 +154,7 @@ $ podman push quay.io/hacdev/hac-tests:next
 ``` -->
 
 ## Tests on CI
+
 TBD - CI setup is currently prepared.
 <!-- For CI we are using a dual cluster setup. The frontend is deployed per run on an ephemeral cluster using `bonfire`, and generally only lives as long as the CI run is active. The backend RHTAP runs on an [OSD cluster](https://console-openshift-console.apps.hac-devsandbox.5unc.p1.openshiftapps.com/dashboards) that we maintain and keep up to date with the latest RHTAP. For access to our CI cluster, contact `kfoniok`. The backend configuration can be found in our [fork of infra-deployments](https://github.com/redhat-hac-qe/infra-deployments).
 
@@ -144,6 +185,7 @@ Job history is available [here](https://prow.ci.openshift.org/job-history/gs/ori
 -->
 
 ## Reporting issues
+
 If you find a problem with the tests, feel free to open an issue at the [Konflux-UI Jira project](https://issues.redhat.com/projects/KFLUXUI). You can set the label as `qe` to indicate it is a quality problem.
 
 <!-- If you discover a production bug thanks to a test failure, please label any issue created for that bug as `ci-fail`. That way we can see all this automation has actually generated some value. -->
