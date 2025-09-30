@@ -14,9 +14,9 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import {
   COMPONENT_DETAILS_PATH,
   INTEGRATION_TEST_DETAILS_PATH,
@@ -43,7 +43,7 @@ const IntegrationTestSidePanel: React.FC<
   const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const integrationTestPipeline = workflowData.resource as PipelineRunKind;
-  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     namespace,
     integrationTestPipeline?.metadata.name,
   );

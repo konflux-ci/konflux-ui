@@ -2,9 +2,10 @@ import { curry } from 'lodash-es';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { k8sQueryGetResource } from '../k8s';
 import { getQueryClient } from '../k8s/query/core';
+import { fetchResourceWithK8sAndKubeArchive } from '../kubearchive/resource-utils';
 import { PipelineRunModel, TaskRunModel } from '../models';
 import { PipelineRunKind } from '../types';
-import { K8sModelCommon } from '../types/k8s';
+import { K8sModelCommon, K8sResourceCommon } from '../types/k8s';
 import { getPipelineRuns, getTaskRuns, createTektonResultQueryOptions, EQ } from './tekton-results';
 
 export const stripQueryStringParams = (url: string) => {
@@ -33,7 +34,7 @@ const QueryRun = curry(
     model: K8sModelCommon,
     namespace: string,
     name: string,
-  ): Promise<PipelineRunKind> => {
+  ): Promise<K8sResourceCommon> => {
     try {
       return await k8sQueryGetResource(
         { model, queryOptions: { ns: namespace, name } },
@@ -59,5 +60,22 @@ const QueryRun = curry(
 
 export const QueryPipelineRun = QueryRun(getPipelineRuns, PipelineRunModel);
 export const QueryTaskRun = QueryRun(getTaskRuns, TaskRunModel);
+
+const QueryRunWithKubearchive = curry(
+  async <TResource extends K8sResourceCommon>(
+    model: K8sModelCommon,
+    namespace: string,
+    name: string,
+  ): Promise<TResource> => {
+    const result = await fetchResourceWithK8sAndKubeArchive<TResource>(
+      { model, queryOptions: { ns: namespace, name } },
+      { retry: false },
+    );
+    return result.resource;
+  },
+);
+
+export const QueryPipelineRunWithKubearchive = QueryRunWithKubearchive(PipelineRunModel);
+export const QueryTaskRunWithKubearchive = QueryRunWithKubearchive(TaskRunModel);
 
 export const pipelineRunTypes = Object.values(PipelineRunType).map((type) => type as string);

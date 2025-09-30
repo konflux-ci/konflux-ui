@@ -91,14 +91,12 @@ describe('triggerReleasePlan', () => {
         references: ['reference1', 'reference2'],
         cves: [
           {
-            issueKey: 'cve1',
-            components: ['a', 'b'],
-            url: 'test-url',
+            key: 'cve1',
+            component: 'a',
           },
           {
-            issueKey: 'cve2',
-            components: ['c', 'd'],
-            url: 'test-url2',
+            key: 'cve2',
+            component: 'c',
           },
         ],
         labels: [],
@@ -110,9 +108,8 @@ describe('triggerReleasePlan', () => {
     expect(advisoryCVE.length).toEqual(2);
     expect(advisoryCVE[0]).toEqual(
       expect.objectContaining({
-        issueKey: 'cve1',
-        url: 'test-url',
-        components: ['a', 'b'],
+        key: 'cve1',
+        component: 'a',
       }),
     );
   });
@@ -197,7 +194,7 @@ describe('createReleaseNotes', () => {
       topic: 'top',
       description: 'desc',
       issues: [{ id: '1', source: 'src' }],
-      cves: [{ issueKey: 'cve', components: ['a'], url: 'u' }],
+      cves: [{ key: 'cve', component: 'a' }],
       references: ['ref'],
       solution: 'sol',
     });
@@ -206,7 +203,7 @@ describe('createReleaseNotes', () => {
       topic: 'top',
       description: 'desc',
       issues: { fixed: [{ id: '1', source: 'src' }] },
-      cves: [{ issueKey: 'cve', components: ['a'], url: 'u' }],
+      cves: [{ key: 'cve', component: 'a' }],
       references: ['ref'],
       solution: 'sol',
     });

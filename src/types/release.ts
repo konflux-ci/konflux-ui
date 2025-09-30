@@ -1,4 +1,4 @@
-import { K8sResourceCommon } from './k8s';
+import { K8sResourceCommon } from '~/types/k8s';
 
 export enum ReleaseCondition {
   Processed = 'Processed',
@@ -90,9 +90,9 @@ export type ReleaseKind = K8sResourceCommon & {
       releaseStrategy?: string;
     };
     conditions?: {
-      type?: ReleaseCondition;
+      type: ReleaseCondition;
       reason?: string;
-      status?: string;
+      status: string;
       message?: string;
     }[];
   };

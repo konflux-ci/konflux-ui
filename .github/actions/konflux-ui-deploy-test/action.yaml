@@ -68,13 +68,6 @@ runs:
         ./konflux-ci/wait-for-all.sh
       shell: bash
 
-    - name: WORKAROUND - Reduce CPU/Memory requirements in build pipeline
-      run: |
-        : WORKAROUND - Reduce CPU/Memory requirements in build pipeline
-        sed -i "s|pipelinesascode.tekton.dev/original-prname:.*|pipelinesascode.tekton.dev/original-prname: \"java-quarkus-*\"|g" ./konflux-ci/dependencies/kyverno/policy/e2e-reduce-resources.yaml
-        kubectl create -f  ./konflux-ci/dependencies/kyverno/policy/e2e-reduce-resources.yaml
-      shell: bash
-
     - name: Build konflux-ui image
       env:
         CYPRESS_GH_TOKEN: ${{ env.HAC_TEST_GH_TOKEN }}
