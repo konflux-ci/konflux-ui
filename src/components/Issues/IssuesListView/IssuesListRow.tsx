@@ -1,8 +1,16 @@
 import * as React from 'react';
 import { Button, Flex, FlexItem } from '@patternfly/react-core';
-import { RowFunctionArgs, TableData } from '~/shared';
+import {
+  CriticalIcon,
+  HighIcon,
+  LowIcon,
+  MediumIcon,
+  UnknownIcon,
+} from '~/components/PipelineRun/ScanDetailStatus';
+import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
+import { IssueStatus } from '../IssueStatus';
 import { issuesTableColumnClasses } from './IssuesListHeader';
 
 export type IssueRow = {
@@ -17,6 +25,20 @@ export type IssueRow = {
 };
 
 const IssuesListRow: React.FC<RowFunctionArgs<IssueRow>> = ({ obj: issue }) => {
+  const severityIcon = (severity) => {
+    switch (severity) {
+      case 'Critical':
+        return <CriticalIcon />;
+      case 'High':
+        return <HighIcon />;
+      case 'Medium':
+        return <MediumIcon />;
+      case 'Low':
+        return <LowIcon />;
+      default:
+        return <UnknownIcon />;
+    }
+  };
   return (
     <>
       <TableData className={issuesTableColumnClasses.issue} data-test="issues-list-item">
@@ -29,11 +51,17 @@ const IssuesListRow: React.FC<RowFunctionArgs<IssueRow>> = ({ obj: issue }) => {
 
       <TableData className={issuesTableColumnClasses.component}>{issue.componentName}</TableData>
 
-      <TableData className={issuesTableColumnClasses.severity}>{issue.severity}</TableData>
+      <TableData className={issuesTableColumnClasses.severity}>
+        {severityIcon(issue.severity)} {issue.severity}
+      </TableData>
 
-      <TableData className={issuesTableColumnClasses.status}>{issue.status}</TableData>
+      <TableData className={issuesTableColumnClasses.status}>
+        <IssueStatus locked={issue.status === 'Closed'} />
+      </TableData>
 
-      <TableData className={issuesTableColumnClasses.createdAt}>{issue.createdAt}</TableData>
+      <TableData className={issuesTableColumnClasses.createdAt}>
+        <Timestamp timestamp={issue.createdAt} />
+      </TableData>
 
       <TableData className={issuesTableColumnClasses.reason}>{issue.reason ?? '-'}</TableData>
 
