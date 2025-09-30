@@ -50,3 +50,7 @@ export type IssueKind = K8sResourceCommon & {
   createdAt: string;
   updatedAt: string;
 };
+
+export type IssuesByStatusCardProps = {
+  issues: IssueKind[];
+};
