@@ -72,6 +72,12 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'pipelineruns-kubearchive': {
+    key: 'pipelineruns-kubearchive',
+    description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+  },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
     description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
