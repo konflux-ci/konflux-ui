@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
@@ -85,7 +86,11 @@ export const ComponentActivityTab: React.FC = () => {
         >
           <Tab
             data-test={`comp__activity__tabItem commits`}
-            title={<TabTitleText>Commits</TabTitleText>}
+            title={
+              <TabTitleText>
+                Commits <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
+              </TabTitleText>
+            }
             key="commits"
             eventKey="latest-commits"
             className="activity-tab"
