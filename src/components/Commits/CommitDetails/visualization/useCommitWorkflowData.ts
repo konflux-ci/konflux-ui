@@ -3,7 +3,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTestScenarios';
-import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsForCommitV2 } from '../../../../hooks/usePipelineRunsV2';
 import { Commit, ComponentKind, PipelineRunKind } from '../../../../types';
 import { pipelineRunStatus, runStatus } from '../../../../utils/pipeline-utils';
 import { DEFAULT_NODE_HEIGHT } from '../../../topology/const';
@@ -36,7 +36,7 @@ export const useCommitWorkflowData = (
     namespace,
     applicationName,
   );
-  const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommit(
+  const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommitV2(
     namespace,
     applicationName,
     commit.sha,
