@@ -57,8 +57,8 @@ export const useIssues = (issueQuery: IssueQuery) => {
 };
 
 export const useInfiniteIssues = (issueQuery: IssueQuery) => {
-  const { data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
     useInfiniteQuery(createInfiniteIssueQueryOptions(issueQuery));
 
-  return [data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage];
+  return [data, isLoading, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage];
 };
