@@ -56,7 +56,7 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
     ) : (
       <EmptyState className="pf-v5-u-m-0 pf-v5-u-p-0" variant={EmptyStateVariant.xs}>
         <EmptyStateBody className="pf-v5-u-m-0 pf-v5-u-p-0">
-          {type === IssueType.BUG ? 'No Bugs found' : 'No CVEs found'}
+          {type === IssueType.BUG ? 'No Jira issues found' : 'No CVEs found'}
         </EmptyStateBody>
       </EmptyState>
     );
@@ -74,7 +74,7 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
             <TextContent className="pf-v5-u-mt-xs">
               <Text component={TextVariants.h4} className="pf-v5-u-mt-0 pf-v5-u-pt-0">
                 {isBug
-                  ? 'Are there any bug fixes you would like to add to this release?'
+                  ? 'Are there any Jira issues you would like to add to this release?'
                   : 'Are there any CVEs you would like to add to this release?'}
               </Text>
             </TextContent>
