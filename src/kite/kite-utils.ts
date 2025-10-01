@@ -28,14 +28,29 @@ export const useIssues = (issueQuery: IssueQuery) => {
   return [data, isLoading, error];
 };
 
-// Big WIP
 export const useInfiniteIssues = (issueQuery: IssueQuery) => {
+  const defaultPageSize = 20;
+  // const { isKiteServiceEnabled } = useIsKiteServiceEnabled();
   return useInfiniteQuery({
     queryKey: ['kite', issueQuery],
-    queryFn: () => fetchIssues(issueQuery),
-    // enabled: isKiteServiceEnabled,
-    initialPageParam: null,
-    getNextPageParam: (lastPage) => lastPage || undefined, // Not sure what to put here (dont know how the data looks like)
+    queryFn: ({ pageParam = 0 }) => {
+      const paginatedQuery = {
+        ...issueQuery,
+        offset: pageParam,
+        limit: issueQuery.limit || defaultPageSize, // Default page size
+      };
+      return fetchIssues(paginatedQuery);
+    },
+    // enabled: isKiteServiceEnabled, // Uncomment when service check is ready
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const limit = issueQuery.limit || defaultPageSize;
+      if (!lastPage || lastPage.length < limit) {
+        return undefined;
+      }
+      // Return the next offset
+      return allPages.length * limit;
+    },
     staleTime: 1000 * 60 * 5,
   });
 };
