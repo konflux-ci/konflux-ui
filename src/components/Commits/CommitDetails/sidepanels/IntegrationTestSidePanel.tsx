@@ -14,6 +14,7 @@ import {
   DrawerPanelBody,
 } from '@patternfly/react-core';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
@@ -81,9 +82,10 @@ const IntegrationTestSidePanel: React.FC<
               workflowNode.getLabel()
             )}
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
+            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
