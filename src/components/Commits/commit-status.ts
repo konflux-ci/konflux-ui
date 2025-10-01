@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePipelineRunsForCommit } from '../../hooks/usePipelineRuns';
+import { usePipelineRunsForCommitV2 } from '../../hooks/usePipelineRunsV2';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { statuses } from '../../utils/commits-utils';
 import { pipelineRunStatus } from '../../utils/pipeline-utils';
@@ -10,7 +10,7 @@ export const useCommitStatus = (
 ): [string, boolean, unknown] => {
   const namespace = useNamespace();
 
-  const [pipelineRuns, loaded, error] = usePipelineRunsForCommit(namespace, application, commit);
+  const [pipelineRuns, loaded, error] = usePipelineRunsForCommitV2(namespace, application, commit);
 
   const plrsForCommit = React.useMemo(
     () =>
