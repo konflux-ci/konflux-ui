@@ -206,6 +206,20 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     [activeSortDirection, activeSortIndex, filteredMRs.length],
   );
 
+  const ReleasesListHeader = React.useMemo(
+    () =>
+      getReleasesListHeader(
+        activeSortIndex,
+        activeSortDirection,
+        (_event: React.MouseEvent, index: number, direction: SortByDirection) => {
+          setActiveSortIndex(index);
+          setActiveSortDirection(direction);
+        },
+        filteredMRs.length,
+      ),
+    [activeSortDirection, activeSortIndex, filteredMRs.length],
+  );
+
   const EmptyMsg = React.useCallback(
     () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />,
     [onClearFilters],
@@ -256,6 +270,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       )}
 
       <Table
+        virtualize
         data={filteredMRs}
         unfilteredData={sortedMonitoredReleases}
         EmptyMsg={EmptyMsg}
