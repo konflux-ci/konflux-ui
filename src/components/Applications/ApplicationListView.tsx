@@ -8,6 +8,7 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { useInfiniteIssues } from '~/kite/kite-utils';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptyStateImgUrl from '../../assets/Application.svg';
 import { useApplications } from '../../hooks/useApplications';
@@ -71,6 +72,12 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
     activeSortDirection,
     sortPaths,
   );
+
+  // Testing calls - remove when issue page done
+  // const result = useIssues({ namespace });
+  const result = useInfiniteIssues({ namespace });
+  // eslint-disable-next-line no-console
+  console.log(result);
 
   if (!loaded) {
     return (
