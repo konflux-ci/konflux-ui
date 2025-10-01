@@ -16,28 +16,23 @@ export const fetchIssues = (issueQuery: IssueQuery) => {
 export const createGetIssueQueryOptions = (issueQuery: IssueQuery) => {
   // const { isKiteServiceEnabled } = useIsKiteServiceEnabled();
   return {
-    queryKey: ['kite'],
+    queryKey: ['kite', 'issues', issueQuery],
     queryFn: () => fetchIssues(issueQuery),
     // enabled: isKiteServiceEnabled,
+    staleTime: 1000 * 60 * 5,
   };
 };
 
-export const useIssues = (issueQuery: IssueQuery) => {
-  const { data, isLoading, error } = useQuery(createGetIssueQueryOptions(issueQuery));
-
-  return [data, isLoading, error];
-};
-
-export const useInfiniteIssues = (issueQuery: IssueQuery) => {
+export const createInfiniteIssueQueryOptions = (issueQuery: IssueQuery) => {
   const defaultPageSize = 20;
   // const { isKiteServiceEnabled } = useIsKiteServiceEnabled();
-  return useInfiniteQuery({
-    queryKey: ['kite', issueQuery],
+  return {
+    queryKey: ['kite', 'issues', issueQuery],
     queryFn: ({ pageParam = 0 }) => {
       const paginatedQuery = {
         ...issueQuery,
         offset: pageParam,
-        limit: issueQuery.limit || defaultPageSize, // Default page size
+        limit: issueQuery.limit || defaultPageSize,
       };
       return fetchIssues(paginatedQuery);
     },
@@ -52,5 +47,18 @@ export const useInfiniteIssues = (issueQuery: IssueQuery) => {
       return allPages.length * limit;
     },
     staleTime: 1000 * 60 * 5,
-  });
+  };
+};
+
+export const useIssues = (issueQuery: IssueQuery) => {
+  const { data, isLoading, error } = useQuery(createGetIssueQueryOptions(issueQuery));
+
+  return [data, isLoading, error];
+};
+
+export const useInfiniteIssues = (issueQuery: IssueQuery) => {
+  const { data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage } =
+    useInfiniteQuery(createInfiniteIssueQueryOptions(issueQuery));
+
+  return [data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage];
 };
