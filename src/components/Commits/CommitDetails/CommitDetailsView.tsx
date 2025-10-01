@@ -5,7 +5,7 @@ import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
-import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsForCommitV2 } from '../../../hooks/usePipelineRunsV2';
 import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -27,7 +27,7 @@ const CommitDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
+  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommitV2(
     namespace,
     applicationName,
     commitName,
@@ -119,6 +119,7 @@ const CommitDetailsView: React.FC = () => {
             key: 'index',
             label: 'Details',
             isFilled: true,
+            unstableFeature: 'pipelineruns-kubearchive',
           },
           {
             key: 'pipelineruns',

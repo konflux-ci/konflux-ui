@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import {
   useKubearchiveGetResourceQuery,
@@ -16,6 +17,8 @@ import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
 import { WatchK8sResource } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
+import { useApplication } from './useApplications';
+import { useComponents } from './useComponents';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
 interface UsePipelineRunsV2Options
@@ -357,4 +360,49 @@ export const usePipelineRunV2 = (
     kubearchiveResult.error,
     tektonResult,
   ]);
+};
+
+export const usePipelineRunsForCommitV2 = (
+  namespace: string,
+  applicationName: string,
+  commit: string,
+  limit?: number,
+  filterByComponents = true,
+): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
+  const [components, componentsLoaded] = useComponents(namespace, applicationName);
+  const [application] = useApplication(namespace, applicationName);
+
+  const componentNames = React.useMemo(
+    () => (componentsLoaded ? components.map((c) => c.metadata?.name) : []),
+    [components, componentsLoaded],
+  );
+
+  const [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps] = usePipelineRunsV2(
+    namespace,
+    React.useMemo(
+      () => ({
+        selector: {
+          filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+          matchLabels: {
+            [PipelineRunLabel.APPLICATION]: applicationName,
+          },
+          ...(filterByComponents && {
+            matchExpressions: [
+              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
+            ],
+          }),
+          filterByCommit: commit,
+        },
+        ...(limit && { limit }),
+      }),
+      [applicationName, commit, application, componentNames, filterByComponents, limit],
+    ),
+  );
+
+  return React.useMemo(() => {
+    if (!plrsLoaded || plrError) {
+      return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
+    }
+    return [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps];
+  }, [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps]);
 };
