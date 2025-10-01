@@ -83,14 +83,14 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
-  'kubearchive-pipeline-runs': {
-    key: 'kubearchive-pipeline-runs',
-    description: 'Use Kubearchive as data source for PipelineRuns instead of Tekton Results',
+  'pipelineruns-kubearchive': {
+    key: 'pipelineruns-kubearchive',
+    description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not installed on this cluster',
+      failureReason: 'Kubearchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
