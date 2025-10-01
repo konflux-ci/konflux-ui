@@ -1,4 +1,4 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { mockedValidBannerConfig } from '~/components/KonfluxBanner/__data__/banner-data';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useActiveRouteChecker } from '../../hooks/useActiveRouteChecker';
@@ -22,6 +22,22 @@ jest.mock('~/feature-flags/hooks', () => {
 });
 jest.mock('../../shared/providers/Namespace/NamespaceSwitcher', () => ({
   NamespaceSwitcher: jest.fn(() => <div data-test="namespace-switcher" />),
+}));
+
+// Mock shared hooks since KonfluxBanner now uses them
+jest.mock('../../shared/hooks', () => ({
+  useResizeObserver: jest.fn((callback, element) => {
+    // Call the callback immediately if element exists to simulate resize observer
+    if (element && callback) {
+      setTimeout(() => callback(), 0);
+    }
+  }),
+  useForceRender: jest.fn(() => jest.fn()),
+  useQueryParams: jest.fn(),
+  useScrollContainer: jest.fn(),
+  useScrollShadows: jest.fn(),
+  useDeepCompareMemoize: jest.fn(),
+  useMutationObserver: jest.fn(),
 }));
 
 const k8sWatchMock = createK8sUtilMock('useK8sWatchResource');
@@ -58,6 +74,35 @@ describe('AppRoot', () => {
     k8sWatchMock.mockReturnValue({ data: mockedValidBannerConfig, isLoading: false, error: null });
     routerRenderer(<AppRoot />);
     expect(screen.getByRole('banner')).toBeInTheDocument();
+  });
+
+  it('should set CSS custom property when banner is present', async () => {
+    (useActiveRouteChecker as jest.Mock).mockReturnValue(() => false);
+    k8sWatchMock.mockReturnValue({ data: mockedValidBannerConfig, isLoading: false, error: null });
+
+    // Mock document.documentElement.style.setProperty
+    const mockSetProperty = jest.spyOn(document.documentElement.style, 'setProperty');
+
+    // Create a mock element with offsetHeight before rendering
+    const mockElement = document.createElement('div');
+    mockElement.id = 'konflux-banner';
+    Object.defineProperty(mockElement, 'offsetHeight', {
+      configurable: true,
+      value: 60,
+    });
+
+    // Mock getElementById to return our mock element
+    const mockGetElementById = jest.spyOn(document, 'getElementById').mockReturnValue(mockElement);
+
+    routerRenderer(<AppRoot />);
+
+    // Wait for the CSS custom property to be set
+    await waitFor(() => {
+      expect(mockSetProperty).toHaveBeenCalledWith('--konflux-banner-height', '60px');
+    });
+
+    mockSetProperty.mockRestore();
+    mockGetElementById.mockRestore();
   });
 
   it('should render AppRoot with header and sidebar', () => {

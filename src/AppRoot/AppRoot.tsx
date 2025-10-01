@@ -2,16 +2,18 @@ import * as React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
-import { KonfluxBanner } from '~/components/KonfluxBanner/KonfluxBanner';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
+import { KonfluxBanner } from '../components/KonfluxBanner/KonfluxBanner';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
 import { NamespaceSwitcher } from '../shared/providers/Namespace/NamespaceSwitcher';
 import ActivePageAlert from './ActivePageAlert';
 import { AppHeader } from './AppHeader';
 import { AppSideBar } from './AppSideBar';
+
+import './AppRoot.scss';
 
 const namespaceSwitcherNotAllowedRoutes = [
   RELEASE_MONITOR_PATH.path,
