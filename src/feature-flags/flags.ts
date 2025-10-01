@@ -68,18 +68,18 @@ const InternalFLAGS = {
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not installed on this cluster',
+      failureReason: 'Kubearchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
-    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
+    description: 'Use Kubearchive as data source for TaskRuns instead of Tekton results',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive not installed',
+      failureReason: 'Kubearchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
@@ -90,7 +90,7 @@ const InternalFLAGS = {
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not installed on this cluster',
+      failureReason: 'Kubearchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },

@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -61,6 +62,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
       <div className="pf-v5-c-modal-box__title build-log-viewer__title">
         <span className="pf-v5-c-modal-box__title-text">{`Build pipeline run log for ${component.metadata.name}`}</span>
         <StatusIconWithTextLabel status={plrStatus} />
+        <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
       </div>
       <div>
         <DescriptionList
