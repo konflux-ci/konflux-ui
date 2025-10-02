@@ -391,17 +391,11 @@ export const usePipelineRunsForCommitV2 = (
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
           },
-          ...(filterByComponents &&
-            componentNames.length > 0 && {
-              matchExpressions: [
-                { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
-              ],
-            }),
           filterByCommit: commit,
         },
         ...(limit && { limit }),
       }),
-      [applicationName, commit, application, componentNames, filterByComponents, limit],
+      [applicationName, commit, application, limit],
     ),
   );
 
@@ -409,6 +403,24 @@ export const usePipelineRunsForCommitV2 = (
     if (!plrsLoaded || plrError) {
       return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
     }
-    return [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps];
-  }, [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps]);
+    return [
+      pipelineRuns.filter((plr) =>
+        filterByComponents
+          ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
+          : true,
+      ),
+      plrsLoaded,
+      plrError,
+      getNextPage,
+      nextPageProps,
+    ];
+  }, [
+    pipelineRuns,
+    plrsLoaded,
+    plrError,
+    getNextPage,
+    nextPageProps,
+    filterByComponents,
+    componentNames,
+  ]);
 };
