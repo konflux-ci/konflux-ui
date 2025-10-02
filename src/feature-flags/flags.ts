@@ -94,6 +94,17 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'watson-chatbot': {
+    key: 'watson-chatbot',
+    description: 'Enable Watson AI chatbot for user assistance',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      anyOf: ['isStagingCluster'],
+      failureReason: 'Only available in staging',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
