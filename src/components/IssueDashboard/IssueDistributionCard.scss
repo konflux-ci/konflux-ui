@@ -1,0 +1,116 @@
+.issue-distribution-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-v5-global--spacer--lg);
+
+  &__section-title {
+    font-size: var(--pf-v5-global--FontSize--lg);
+    font-weight: var(--pf-v5-global--FontWeight--bold);
+  }
+
+  &__severity-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pf-v5-global--spacer--md);
+  }
+
+  &__severity-stats {
+    display: flex;
+    justify-content: space-around;
+  }
+
+  &__severity-item {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__severity-count {
+    margin-bottom: var(--pf-v5-global--spacer--xs);
+  }
+
+  &__severity-label {
+    font-size: var(--pf-v5-global--FontSize--md);
+    color: var(--pf-v5-global--Color--200);
+  }
+
+  &__chart-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pf-v5-global--spacer--md);
+  }
+
+  &__chart-container {
+    display: flex;
+    align-items: center;
+    gap: var(--pf-v5-global--spacer--lg);
+  }
+
+  &__chart-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    @media (max-width: 768px) {
+      svg {
+        max-width: 250px;
+        max-height: 250px;
+      }
+    }
+  }
+
+  &__chart-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 300px;
+    height: 300px;
+    border: 1px dashed var(--pf-v5-global--BorderColor--200);
+    border-radius: var(--pf-v5-global--BorderRadius--sm);
+    color: var(--pf-v5-global--Color--200);
+  }
+
+  &__legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--pf-v5-global--spacer--sm);
+    margin-left: var(--pf-v5-global--spacer--lg);
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--pf-v5-global--spacer--xs);
+  }
+
+  &__legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  &__legend-text {
+    font-size: var(--pf-v5-global--FontSize--sm);
+    color: var(--pf-v5-global--Color--200);
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: var(--pf-v5-global--spacer--sm);
+  }
+
+  &__view-more-button {
+    padding: 0;
+    text-decoration: underline;
+    font-size: var(--pf-v5-global--FontSize--sm);
+  }
+}
