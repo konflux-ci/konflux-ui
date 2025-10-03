@@ -25,6 +25,8 @@
     font-family: Menlo, Monaco, 'Courier New', monospace;
     max-height: 100% !important;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
   }
 
   &__resume-stream-button-wrapper {
