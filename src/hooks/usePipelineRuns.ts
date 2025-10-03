@@ -242,6 +242,10 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
   return [latestSuccess, loaded, error];
 };
 
+/**
+ *
+ * @deprecated
+ */
 export const usePipelineRunsForCommit = (
   namespace: string,
   applicationName: string,

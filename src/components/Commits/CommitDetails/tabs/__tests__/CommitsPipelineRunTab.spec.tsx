@@ -5,7 +5,7 @@ import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
 import { useK8sAndKarchResource } from '../../../../../hooks/useK8sAndKarchResources';
-import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
+import { usePipelineRunsForCommitV2 } from '../../../../../hooks/usePipelineRunsV2';
 import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
 import { createK8sWatchResourceMock } from '../../../../../utils/test-utils';
 import { PipelineRunListRow } from '../../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -37,8 +37,8 @@ jest.mock('react-router-dom', () => ({
   useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
 jest.mock('../../../../../hooks/useTektonResults');
-jest.mock('../../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRunsForCommit: jest.fn(),
+jest.mock('../../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsForCommitV2: jest.fn(),
 }));
 
 jest.mock('../../../../../utils/rbac', () => ({
@@ -61,7 +61,7 @@ jest.mock('../../../../../hooks/useK8sAndKarchResources', () => ({
 const appName = 'my-test-app';
 
 const watchResourceMock = createK8sWatchResourceMock();
-const usePipelineRunsForCommitMock = usePipelineRunsForCommit as jest.Mock;
+const usePipelineRunsForCommitMock = usePipelineRunsForCommitV2 as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useSnapshotMock = useK8sAndKarchResource as jest.Mock;
