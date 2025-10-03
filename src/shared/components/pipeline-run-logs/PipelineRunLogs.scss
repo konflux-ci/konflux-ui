@@ -43,6 +43,7 @@
   }
   &__container {
     flex: 1;
+    display: flex;
   }
   &__container .pane-body {
     padding: 0;
