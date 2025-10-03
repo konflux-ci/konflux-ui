@@ -44,6 +44,8 @@
   &__container {
     flex: 1;
     display: flex;
+    //ensure log viewer can be seen on narrow screens
+    flex-direction: column;
   }
   &__container .pane-body {
     padding: 0;
