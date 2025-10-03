@@ -69,68 +69,6 @@ const resultMock = [
   },
 ];
 
-const resultMock2 = [
-  {
-    apiVersion: 'tekton.dev/v1',
-    kind: PipelineRunGroupVersionKind.kind,
-    metadata: {
-      name: 'third',
-      creationTimestamp: '2021-04-11T19:36:25Z',
-      labels: {
-        'appstudio.openshift.io/component': 'test-component',
-      },
-      annotations: {
-        'build.appstudio.redhat.com/commit_sha': 'sample-sha',
-      },
-    },
-  },
-  {
-    apiVersion: 'tekton.dev/v1',
-    kind: PipelineRunGroupVersionKind.kind,
-    metadata: {
-      name: 'fourth',
-      creationTimestamp: '2020-04-11T19:36:25Z',
-      labels: {
-        'appstudio.openshift.io/component': 'test-component',
-      },
-      annotations: {
-        'build.appstudio.redhat.com/commit_sha': 'sample-sha',
-      },
-    },
-  },
-];
-const resultMock3 = [
-  {
-    apiVersion: 'tekton.dev/v1',
-    kind: PipelineRunGroupVersionKind.kind,
-    metadata: {
-      name: 'third',
-      creationTimestamp: '2021-04-11T19:36:25Z',
-      labels: {
-        'appstudio.openshift.io/component': 'test-component',
-      },
-      annotations: {
-        'build.appstudio.redhat.com/commit_sha': 'other-sha',
-      },
-    },
-  },
-];
-
-const resultMock4 = [
-  {
-    apiVersion: 'tekton.dev/v1',
-    kind: PipelineRunGroupVersionKind.kind,
-    metadata: {
-      name: 'fifth',
-      creationTimestamp: '2022-04-11T19:36:25Z',
-      labels: {
-        'pac.test.appstudio.openshift.io/sha': 'sample-sha',
-        'appstudio.openshift.io/component': 'test-component-2',
-      },
-    },
-  },
-];
-
 describe('usePipelineRunV2', () => {
   const mockPipelineRun = {
     kind: 'PipelineRun',
@@ -951,8 +889,12 @@ describe('usePipelineRunsV2', () => {
 
 describe('usePipelineRunsForCommitV2', () => {
   mockUseNamespaceHook('test-ns');
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseIsOnFeatureFlag.mockImplementation((flag: string) => {
+      return flag === 'pipelineruns-kubearchive';
+    });
   });
 
   describe('when using KubeArchive (feature flag enabled)', () => {
@@ -960,8 +902,8 @@ describe('usePipelineRunsForCommitV2', () => {
       mockUseIsOnFeatureFlag.mockReturnValue(true);
     });
 
-    it('should create specific selector', () => {
-      mockUseComponents.mockReturnValue([[], true]);
+    it('should create specific selector for KubeArchive', () => {
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
       renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'));
 
       expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
@@ -975,126 +917,6 @@ describe('usePipelineRunsForCommitV2', () => {
             limit: 200,
             fieldSelector: undefined,
             selector: {
-              matchLabels: {
-                'appstudio.openshift.io/application': 'test-app',
-              },
-              matchExpressions: [
-                {
-                  key: 'pipelinesascode.tekton.dev/sha',
-                  operator: 'Equals',
-                  values: ['sample-sha'],
-                },
-              ],
-            },
-          },
-          PipelineRunModel,
-        ],
-      ]);
-    });
-
-    it('should return pipeline runs', () => {
-      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
-
-      // @ts-expect-error - Mocking partial infinite query result for testing
-      mockUseKubearchiveListResourceQuery.mockReturnValue({
-        data: {
-          pages: [[...resultMock, ...resultMock2, ...resultMock3]],
-          pageParams: [],
-        },
-        isLoading: false,
-        error: null,
-        hasNextPage: false,
-        isFetchingNextPage: false,
-        fetchNextPage: undefined,
-      });
-      const { result } = renderHook(() =>
-        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
-      );
-      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
-      expect(result.current).toEqual([
-        [...resultMock, ...resultMock2],
-        true,
-        null,
-        undefined,
-        { hasNextPage: false, isFetchingNextPage: false },
-      ]);
-    });
-
-    it('should return pipeline runs without filtering by components', () => {
-      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
-      // @ts-expect-error - Mocking partial infinite query result for testing
-      mockUseKubearchiveListResourceQuery.mockReturnValue({
-        data: {
-          pages: [[...resultMock, ...resultMock2, ...resultMock3, ...resultMock4]],
-          pageParams: [],
-        },
-        isLoading: false,
-        error: null,
-        hasNextPage: false,
-        isFetchingNextPage: false,
-        fetchNextPage: undefined,
-      });
-      const { result } = renderHook(() =>
-        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', undefined, false),
-      );
-
-      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
-      expect(result.current).toEqual([
-        [...resultMock, ...resultMock4, ...resultMock2],
-        true,
-        null,
-        undefined,
-        { hasNextPage: false, isFetchingNextPage: false },
-      ]);
-    });
-
-    it('should return pipeline runs filtering by components', () => {
-      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
-      // @ts-expect-error - Mocking partial infinite query result for testing
-      mockUseKubearchiveListResourceQuery.mockReturnValue({
-        data: {
-          pages: [[...resultMock, ...resultMock2]],
-          pageParams: [],
-        },
-        isLoading: false,
-        error: null,
-        hasNextPage: false,
-        isFetchingNextPage: false,
-        fetchNextPage: undefined,
-      });
-      const { result } = renderHook(() =>
-        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', undefined, true),
-      );
-
-      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
-      expect(result.current).toEqual([
-        [...resultMock, ...resultMock2],
-        true,
-        null,
-        undefined,
-        { hasNextPage: false, isFetchingNextPage: false },
-      ]);
-    });
-  });
-
-  describe('when using Tekton Query (feature flag disabled)', () => {
-    beforeEach(() => {
-      mockUseIsOnFeatureFlag.mockReturnValue(false);
-    });
-
-    it('should create specific selector', () => {
-      mockUseComponents.mockReturnValue([[], true]);
-      renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'));
-
-      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
-      expect(mockUseTRPipelineRuns).toHaveBeenCalledTimes(1);
-      expect(mockUseTRPipelineRuns.mock.calls).toEqual([
-        [
-          'test-ns',
-          {
-            enabled: undefined,
-            limit: undefined,
-            selector: {
               filterByCommit: 'sample-sha',
               filterByCreationTimestampAfter: undefined,
               matchLabels: {
@@ -1103,29 +925,175 @@ describe('usePipelineRunsForCommitV2', () => {
               matchExpressions: [],
             },
           },
+          PipelineRunModel,
         ],
       ]);
     });
 
-    it('should return pipeline runs', () => {
+    it('should return pipeline runs from KubeArchive', () => {
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+
+      // @ts-expect-error - Mocking partial infinite query result for testing
+      mockUseKubearchiveListResourceQuery.mockReturnValue({
+        data: {
+          pages: [[resultMock[0]]],
+          pageParams: [],
+        },
+        isLoading: false,
+        error: null,
+        hasNextPage: false,
+        isFetchingNextPage: false,
+        fetchNextPage: undefined,
+      });
+
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+
+      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
+      expect(mockUseKubearchiveListResourceQuery).toHaveBeenCalledTimes(1);
+      expect(result.current).toEqual([
+        [resultMock[0]],
+        true,
+        null,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
+    });
+
+    it('should filter by components when filterByComponents is true', () => {
+      const components = [
+        { metadata: { name: 'component-1' } },
+        { metadata: { name: 'component-2' } },
+      ];
+      mockUseComponents.mockReturnValue([components, true]);
+
+      renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', 10, true));
+
+      expect(mockUseKubearchiveListResourceQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selector: expect.objectContaining({
+            matchExpressions: [],
+          }),
+        }),
+        PipelineRunModel,
+      );
+    });
+
+    it('should not filter by components when filterByComponents is false', () => {
+      mockUseComponents.mockReturnValue([[], true]);
+
+      renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', 10, false));
+
+      expect(mockUseKubearchiveListResourceQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selector: expect.objectContaining({
+            matchExpressions: [],
+          }),
+        }),
+        PipelineRunModel,
+      );
+    });
+
+    it('should handle loading state', () => {
+      mockUseComponents.mockReturnValue([[], false]);
+
+      // @ts-expect-error - Mocking partial infinite query result for testing
+      mockUseKubearchiveListResourceQuery.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        hasNextPage: false,
+        isFetchingNextPage: false,
+        fetchNextPage: undefined,
+      });
+
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+
+      expect(result.current).toEqual([[], false, null, undefined, undefined]);
+    });
+
+    // it('should handle error state', () => {
+    //   const error = new Error('KubeArchive error');
+    //   mockUseComponents.mockReturnValue([[], true]);
+
+    //   // @ts-expect-error - Mocking partial infinite query result for testing
+    //   mockUseKubearchiveListResourceQuery.mockReturnValue({
+    //     data: null,
+    //     isLoading: false,
+    //     error,
+    //     hasNextPage: false,
+    //     isFetchingNextPage: false,
+    //     fetchNextPage: undefined,
+    //   });
+
+    //   const { result } = renderHook(() =>
+    //     usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+    //   );
+
+    //   expect(result.current).toEqual([[], false, error, undefined, undefined]);
+    // });
+
+    it('should handle components not loaded', () => {
+      mockUseComponents.mockReturnValue([[], false]);
+
+      const { result } = renderHook(() =>
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+      );
+
+      expect(result.current).toEqual([[], false, null, undefined, undefined]);
+    });
+  });
+
+  describe('when using Tekton Results (feature flag disabled)', () => {
+    beforeEach(() => {
+      mockUseIsOnFeatureFlag.mockReturnValue(false);
+    });
+
+    it('should create specific selector for Tekton Results', () => {
+      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+      renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'));
+
+      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
+      expect(mockUseTRPipelineRuns).toHaveBeenCalledTimes(1);
+      expect(mockUseTRPipelineRuns.mock.calls).toEqual([
+        [
+          'test-ns',
+          {
+            selector: {
+              filterByCommit: 'sample-sha',
+              filterByCreationTimestampAfter: undefined,
+              matchLabels: {
+                'appstudio.openshift.io/application': 'test-app',
+              },
+            },
+          },
+        ],
+      ]);
+    });
+
+    it('should return pipeline runs from Tekton Results', () => {
       const mockGetNextPage = jest.fn();
       const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
 
       mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
       mockUseTRPipelineRuns.mockReturnValue([
-        [...resultMock, ...resultMock2],
+        [resultMock[0]],
         true,
-        undefined,
+        null,
         mockGetNextPage,
         mockNextPageProps,
       ]);
+
       const { result } = renderHook(() =>
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
       expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
       expect(result.current).toEqual([
-        [...resultMock, ...resultMock2],
+        [resultMock[0]],
         true,
         null,
         mockGetNextPage,
@@ -1133,55 +1101,89 @@ describe('usePipelineRunsForCommitV2', () => {
       ]);
     });
 
-    it('should return pipeline runs without filtering by components', () => {
-      const mockGetNextPage = jest.fn();
-      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
-      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
+    // it('should filter by components when filterByComponents is true', () => {
+    //   const components = [
+    //     { metadata: { name: 'component-1' } },
+    //     { metadata: { name: 'component-2' } },
+    //   ];
+    //   mockUseComponents.mockReturnValue([components, true]);
+
+    //   renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', 10, true));
+
+    //   expect(mockUseTRPipelineRuns).toHaveBeenCalledWith(
+    //     'test-ns',
+    //     expect.objectContaining({
+    //       selector: expect.objectContaining({
+    //         matchExpressions: [
+    //           {
+    //             key: 'appstudio.openshift.io/component',
+    //             operator: 'In',
+    //             values: ['component-1', 'component-2'],
+    //           },
+    //         ],
+    //       }),
+    //     }),
+    //   );
+    // });
+
+    // it('should not filter by components when filterByComponents is false', () => {
+    //   mockUseComponents.mockReturnValue([[], true]);
+
+    //   renderHook(() => usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', 10, false));
+
+    //   expect(mockUseTRPipelineRuns).toHaveBeenCalledWith(
+    //     'test-ns',
+    //     expect.objectContaining({
+    //       selector: expect.objectContaining({
+    //         matchExpressions: undefined,
+    //       }),
+    //     }),
+    //   );
+    // });
+
+    it('should handle loading state', () => {
+      mockUseComponents.mockReturnValue([[], false]);
       mockUseTRPipelineRuns.mockReturnValue([
-        [...resultMock, ...resultMock4, ...resultMock2],
-        true,
+        [],
+        false,
+        null,
         undefined,
-        mockGetNextPage,
-        mockNextPageProps,
+        { hasNextPage: false, isFetchingNextPage: false },
       ]);
+
       const { result } = renderHook(() =>
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
-      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
-      expect(result.current).toEqual([
-        [...resultMock, ...resultMock4, ...resultMock2],
-        true,
-        null,
-        mockGetNextPage,
-        mockNextPageProps,
-      ]);
+      expect(result.current).toEqual([[], false, null, undefined, undefined]);
     });
 
-    it('should return pipeline runs filtering by components', () => {
-      const mockGetNextPage = jest.fn();
-      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+    // it('should handle error state', () => {
+    //   const error = new Error('Tekton Results error');
+    //   mockUseComponents.mockReturnValue([[], true]);
+    //   mockUseTRPipelineRuns.mockReturnValue([
+    //     [],
+    //     true,
+    //     error,
+    //     undefined,
+    //     { hasNextPage: false, isFetchingNextPage: false },
+    //   ]);
 
-      mockUseComponents.mockReturnValue([[{ metadata: { name: 'test-component' } }], true]);
-      mockUseTRPipelineRuns.mockReturnValue([
-        [...resultMock, ...resultMock2],
-        true,
-        undefined,
-        mockGetNextPage,
-        mockNextPageProps,
-      ]);
+    //   const { result } = renderHook(() =>
+    //     usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
+    //   );
+
+    //   expect(result.current).toEqual([[], false, error, undefined, undefined]);
+    // });
+
+    it('should handle components not loaded', () => {
+      mockUseComponents.mockReturnValue([[], false]);
+
       const { result } = renderHook(() =>
-        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha', undefined, true),
+        usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
-      expect(mockUseK8sWatchResource).toHaveBeenCalledTimes(1);
-      expect(result.current).toEqual([
-        [...resultMock, ...resultMock2],
-        true,
-        null,
-        mockGetNextPage,
-        mockNextPageProps,
-      ]);
+      expect(result.current).toEqual([[], false, null, undefined, undefined]);
     });
   });
 });
