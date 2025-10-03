@@ -401,7 +401,7 @@ export const usePipelineRunsForCommitV2 = (
 
   return React.useMemo(() => {
     if (!plrsLoaded || plrError) {
-      return [[], plrsLoaded, plrError ?? 'Error', undefined, undefined];
+      return [[], plrsLoaded, plrError, undefined, undefined];
     }
     return [
       pipelineRuns.filter((plr) =>
