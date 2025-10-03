@@ -39,11 +39,13 @@
 }
 
 .pf-v5-c-log-viewer {
+  
   &__main {
     margin-bottom: var(--pf-v5-global--spacer--md);
+    height: 100% !important;
   }
 
-  .pf-v5-c-log-viewer__scroll-container {
+  &__scroll-container {
     overflow-y: visible !important;
   }
 }
