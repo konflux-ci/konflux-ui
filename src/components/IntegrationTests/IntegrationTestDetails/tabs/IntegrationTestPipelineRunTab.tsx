@@ -10,7 +10,7 @@ import {
 } from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
@@ -28,7 +28,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
 
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRuns(
+    usePipelineRunsV2(
       namespace,
       React.useMemo(
         () => ({
