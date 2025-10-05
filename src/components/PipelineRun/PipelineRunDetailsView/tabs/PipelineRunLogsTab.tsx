@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { useSearchParam } from '../../../../hooks/useSearchParam';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { RouterParams } from '../../../../routes/utils';
 import { PipelineRunLogs } from '../../../../shared';
 
@@ -13,11 +13,14 @@ const PipelineRunLogsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const [pipelineRunArray, loaded, error] = usePipelineRunsV2(namespace, {
-    name: pipelineRunName,
+    fieldSelector: `metadata.name=${pipelineRunName}`,
     limit: 1,
   });
   const pipelineRun = pipelineRunArray?.[0];
-  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
+  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+  );
   const [activeTask, setActiveTask, unSetActiveTask] = useSearchParam('task', undefined);
 
   const handleActiveTaskChange = React.useCallback(

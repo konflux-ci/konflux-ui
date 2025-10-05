@@ -16,11 +16,12 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
@@ -57,11 +58,14 @@ const PipelineRunDetailsTab: React.FC = () => {
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
   const [pipelineRunArray, loaded, error] = usePipelineRunsV2(namespace, {
-    name: pipelineRunName,
+    fieldSelector: `metadata.name=${pipelineRunName}`,
     limit: 1,
   });
   const pipelineRun = pipelineRunArray?.[0];
-  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
+  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+  );
 
   const snapshotStatusAnnotation =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
@@ -121,7 +125,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   return (
     <>
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
-        Pipeline run details
+        Pipeline run details <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
       </Title>
       {taskRunError ? (
         <div className="pf-v5-u-pb-lg">

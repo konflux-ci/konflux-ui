@@ -25,8 +25,8 @@ import {
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
 import { v4 as uuidv4 } from 'uuid';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
-import { TaskRunKind } from '~/types';
+import { FeatureFlagIndicator } from '../../../../feature-flags/FeatureFlagIndicator';
+import { TaskRunKind } from '../../../../types';
 import { useFullscreen } from '../../../hooks/fullscreen';
 import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
@@ -147,7 +147,7 @@ const LogViewer: React.FC<Props> = ({
             >
               <ToolbarGroup>
                 <ToolbarItem>
-                  <FeatureFlagIndicator flags={['kubearchive-logs']} />
+                  <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
                 </ToolbarItem>
               </ToolbarGroup>
               {showSearch && (
