@@ -377,11 +377,7 @@ export const usePipelineRunsForCommitV2 = (
     [components, componentsLoaded],
   );
 
-  const enabled =
-    !!namespace &&
-    !!applicationName &&
-    !!commit &&
-    (!filterByComponents || (componentsLoaded && componentNames.length > 0));
+  const enabled = !!namespace && !!applicationName && !!commit;
   const [pipelineRuns, plrsLoaded, plrError, getNextPage, nextPageProps] = usePipelineRunsV2(
     enabled ? namespace : null,
     React.useMemo(
