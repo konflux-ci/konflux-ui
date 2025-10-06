@@ -16,11 +16,8 @@ import {
   createTestQueryClient,
 } from '../../utils/test-utils';
 import { useComponents } from '../useComponents';
-import {
-  usePipelineRunsV2,
-  usePipelineRunV2,
-  usePipelineRunsForCommitV2,
-} from '../usePipelineRunsV2';
+import { usePipelineRunsForCommitV2 } from '../usePipelineRunsForCommitV2';
+import { usePipelineRunsV2, usePipelineRunV2 } from '../usePipelineRunsV2';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useComponents');
