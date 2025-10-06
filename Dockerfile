@@ -17,7 +17,7 @@ COPY aliases.config.js aliases.config.js
 RUN yarn install
 RUN yarn build
 
-FROM registry.access.redhat.com/ubi9/nginx-120@sha256:704d319a4b97e441f7286910fc12bb8a3ecb644e99ed38beff4adaa8ede04fec
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:a7981e1174f88cf756352abc8020d99643ee467bd4205730844ad8c2ef7391c6
 
 COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
 
