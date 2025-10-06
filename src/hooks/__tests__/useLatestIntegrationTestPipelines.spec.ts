@@ -1,3 +1,5 @@
+import * as React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react-hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunLabel, PipelineRunType } from '../../consts/pipelinerun';
@@ -12,14 +14,29 @@ const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const testNames = ['test-caseqfvdj'];
 const testNames2 = ['test-caseqfvdj', 'test'];
 
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+const queryClientWrapper = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = createTestQueryClient();
+  return React.createElement(QueryClientProvider, { client: queryClient }, children);
+};
+
 describe('useLatestIntegrationTestPipelines', () => {
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
-    const { result } = renderHook(() =>
-      useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
+    const { result } = renderHook(
+      () => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
+      { wrapper: queryClientWrapper },
     );
 
-    expect(result.current).toEqual([[], false, undefined]);
+    expect(result.current).toEqual([[], false, null]);
   });
 
   it('should return test pipelines', () => {
@@ -34,8 +51,9 @@ describe('useLatestIntegrationTestPipelines', () => {
       pipelineType = watchOptions.selector.matchLabels[PipelineRunLabel.PIPELINE_TYPE];
       return [[testPipelineRuns[DataState.RUNNING]], true, undefined];
     });
-    const { result } = renderHook(() =>
-      useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
+    const { result } = renderHook(
+      () => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
+      { wrapper: queryClientWrapper },
     );
 
     const [pipelineRuns, loaded] = result.current;
@@ -53,7 +71,9 @@ describe('useLatestIntegrationTestPipelines', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
 
-    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2));
+    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2), {
+      wrapper: queryClientWrapper,
+    });
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });
