@@ -18,11 +18,7 @@ export const CVEComponentDropDown: React.FC<React.PropsWithChildren<CVEComponent
   const [components, componentsLoaded, componentsError] = useAllComponents(namespace);
 
   const dropdownItems = React.useMemo(
-    () => [
-      { key: 'all-components', value: TargetDropdownDefaults.ALL_COMPONENTS },
-      { key: 'separator', value: 'separator', separator: true },
-      ...components.map((a) => ({ key: a.metadata.name, value: a.metadata.name })),
-    ],
+    () => components.map((a) => ({ key: a.metadata.name, value: a.metadata.name })),
     [components],
   );
 

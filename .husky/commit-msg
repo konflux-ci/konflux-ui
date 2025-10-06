@@ -83,7 +83,7 @@ if [ "$is_authorized" -eq 1 ]; then
   elif [ "$claude_active" = "true" ]; then
     TRAILER="Assisted-by: Claude"
   elif [ "$cursor_active" = "true" ]; then
-    TRAILERS="Assisted-by: Cursor"
+    TRAILER="Assisted-by: Cursor"
   fi
 
   if ! grep -qiE "^$TRAILER" "$COMMIT_MSG_FILE"; then

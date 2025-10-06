@@ -27,47 +27,41 @@ describe('CVEFormContent', () => {
   it('should show correct values', () => {
     formikRenderer(<CVEFormContent modalToggle={null} />, {
       key: 'CVE-120',
-      components: [
-        { name: 'a', packages: ['p1', 'p2', 'p3'] },
-        { name: 'b', packages: ['p1', 'p2', 'p3'] },
-      ],
+      component: 'a',
+      packages: ['p1', 'p2', 'p3'],
     });
     expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'CVE ID' }).value).toBe('CVE-120');
   });
 
-  it('should render component fields ', async () => {
+  it('should render package fields ', async () => {
     formikRenderer(<CVEFormContent modalToggle={null} />, {
       key: 'CVE-120',
-      components: [
-        { name: 'a', packages: ['p1', 'p2', 'p3'] },
-        { name: 'b', packages: ['p1', 'p2', 'p3'] },
-      ],
+      component: 'a',
+      packages: ['p1', 'p2', 'p3'],
     });
     screen.getByTestId('component-field');
     await waitFor(() => {
-      expect(screen.getByTestId('component-0')).toBeInTheDocument();
-      expect(screen.getByTestId('component-1')).toBeInTheDocument();
+      expect(screen.getAllByTestId('pac-0')).toHaveLength(2);
+      expect(screen.getAllByTestId('pac-1')).toHaveLength(2);
+      expect(screen.getAllByTestId('pac-2')).toHaveLength(2);
     });
   });
 
-  it('should remove component fields ', () => {
+  it('should remove package fields ', () => {
     formikRenderer(<CVEFormContent modalToggle={null} />, {
       key: 'CVE-120',
-      components: [
-        { name: 'a', packages: ['p1', 'p2', 'p3'] },
-        { name: 'b', packages: ['p1', 'p2', 'p3'] },
-      ],
+      component: 'a',
+      packages: ['p1', 'p2'],
     });
     screen.getByTestId('component-field');
-    expect(screen.queryByTestId('component-0')).toBeInTheDocument();
-    expect(screen.queryByTestId('component-1')).toBeInTheDocument();
+    expect(screen.getAllByTestId('pac-0')).toHaveLength(2);
+    expect(screen.getAllByTestId('pac-1')).toHaveLength(2);
 
     act(() => {
-      fireEvent.click(screen.queryByTestId('remove-component-0'));
+      fireEvent.click(screen.getAllByTestId('pac-0')[1]);
     });
-    expect(screen.queryByTestId('component-0')).toBeInTheDocument();
-    expect(screen.queryByTestId('component-1')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('component-0').firstChild.lastChild.textContent).toBe('b');
+    expect(screen.getAllByTestId('pac-0')).toHaveLength(2);
+    expect(screen.queryAllByTestId('pac-1')).toHaveLength(0);
   });
 
   it('should have disabled Submit button when ID not there', () => {
@@ -78,13 +72,12 @@ describe('CVEFormContent', () => {
   it('should render multiple packages ', () => {
     formikRenderer(<CVEFormContent modalToggle={null} />, {
       key: 'CVE-120',
-      components: [
-        { name: 'a', packages: ['p1', 'p2', 'p3'] },
-        { name: 'b', packages: ['p3', 'p4', 'p3'] },
-      ],
+      component: 'a',
+      packages: ['p1', 'p2', 'p3'],
     });
     screen.getByTestId('component-field');
-    expect(screen.getByTestId<HTMLInputElement>('cmp-0-pac-0').value).toBe('p1');
-    expect(screen.getByTestId<HTMLInputElement>('cmp-1-pac-0').value).toBe('p3');
+    expect(screen.getAllByTestId('pac-0')[0] as HTMLInputElement).toHaveValue('p1');
+    expect(screen.getAllByTestId('pac-1')[0] as HTMLInputElement).toHaveValue('p2');
+    expect(screen.getAllByTestId('pac-2')[0] as HTMLInputElement).toHaveValue('p3');
   });
 });

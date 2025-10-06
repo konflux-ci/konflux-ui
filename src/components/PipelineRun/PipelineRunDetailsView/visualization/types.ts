@@ -41,6 +41,7 @@ export type PipelineTaskStatus = TaskRunStatus & {
 export type PipelineTaskWithStatus = PipelineTask & {
   status: PipelineTaskStatus;
   steps?: StepStatus[];
+  taskRun?: TaskRunKind;
 };
 
 export type PipelineRunNodeModel<D extends PipelineRunNodeData, T> = Omit<

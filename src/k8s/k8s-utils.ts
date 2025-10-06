@@ -85,7 +85,7 @@ const requirementToString = (requirement: MatchExpression): string => {
   return '';
 };
 
-const createEquals = (key: string, value: string): MatchExpression => ({
+export const createEquals = (key: string, value: string): MatchExpression => ({
   key,
   operator: 'Equals',
   values: [value],

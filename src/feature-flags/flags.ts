@@ -42,12 +42,6 @@ export interface FeatureMeta {
 }
 
 const InternalFLAGS = {
-  'dark-theme': {
-    key: 'dark-theme',
-    description: 'Enable the theme switcher in the header to toggle between light and dark modes.',
-    defaultEnabled: false,
-    status: 'wip',
-  },
   'release-monitor': {
     key: 'release-monitor',
     description:
@@ -74,7 +68,29 @@ const InternalFLAGS = {
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not installed on this cluster',
+      failureReason: 'Kubearchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
+  'taskruns-kubearchive': {
+    key: 'taskruns-kubearchive',
+    description: 'Use Kubearchive as data source for TaskRuns instead of Tekton results',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
+  'pipelineruns-kubearchive': {
+    key: 'pipelineruns-kubearchive',
+    description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
