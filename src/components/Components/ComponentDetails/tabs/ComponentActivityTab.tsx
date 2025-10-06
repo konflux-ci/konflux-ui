@@ -70,6 +70,7 @@ export const ComponentActivityTab: React.FC = () => {
     <div>
       <DetailsSection
         title="Activity"
+        featureFlag={<FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />}
         description="Monitor CI/CD activity for this component. Each item in the list represents a process that was started by a user, generated a snapshot, and released."
       >
         <Tabs
@@ -86,11 +87,7 @@ export const ComponentActivityTab: React.FC = () => {
         >
           <Tab
             data-test={`comp__activity__tabItem commits`}
-            title={
-              <TabTitleText>
-                Commits <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
-              </TabTitleText>
-            }
+            title={<TabTitleText>Commits</TabTitleText>}
             key="commits"
             eventKey="latest-commits"
             className="activity-tab"

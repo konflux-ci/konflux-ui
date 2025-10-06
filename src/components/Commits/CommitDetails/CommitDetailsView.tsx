@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -100,6 +101,7 @@ const CommitDetailsView: React.FC = () => {
               <b>{commit.shaTitle}</b>
             </span>
             <StatusIconWithTextLabel status={commitStatus as runStatus} />
+            <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
           </Text>
         }
         actions={[
@@ -119,7 +121,6 @@ const CommitDetailsView: React.FC = () => {
             key: 'index',
             label: 'Details',
             isFilled: true,
-            featureFlag: ['pipelineruns-kubearchive'],
           },
           {
             key: 'pipelineruns',

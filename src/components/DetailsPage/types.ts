@@ -1,5 +1,4 @@
 import { DropdownItemProps } from '@patternfly/react-core/deprecated';
-import { FlagKey } from '~/feature-flags/flags';
 
 export type Action = {
   type?: string;
@@ -16,5 +15,4 @@ export type DetailsPageTabProps = {
   partial?: boolean;
   className?: string;
   isFilled?: boolean;
-  featureFlag?: FlagKey[];
 };

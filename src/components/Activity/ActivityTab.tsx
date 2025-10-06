@@ -36,7 +36,7 @@ export const ActivityTab: React.FC = () => {
   return (
     <>
       <Title size="xl" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Activity by
+        Activity by <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       <Text className="pf-v5-u-mb-sm">
         Monitor your commits and their pipeline progression across all components.
@@ -56,11 +56,7 @@ export const ActivityTab: React.FC = () => {
       >
         <Tab
           data-test={`activity__tabItem latest-commits`}
-          title={
-            <TabTitleText>
-              Latest commits <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
-            </TabTitleText>
-          }
+          title={<TabTitleText>Latest commits</TabTitleText>}
           key="latest-commits"
           eventKey="latest-commits"
           className="activity-tab"
