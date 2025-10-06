@@ -59,3 +59,36 @@ export type IssueResponse = {
 export type IssuesByStatusCardProps = {
   issues: Issue[];
 };
+
+export type HealthResponse = {
+  status: string;
+  message: string;
+  timestamp: string;
+  components: {
+    api: {
+      status: string;
+      message: string;
+      details: {
+        version: string;
+      };
+    };
+    database: {
+      status: string;
+      message: string;
+      details: {
+        connection_status: string;
+        response_time_seconds: number;
+        open_connections: number;
+        idle_connections: number;
+        max_open_connections: number;
+      };
+    };
+    response_time: {
+      status: string;
+      message: string;
+      details: {
+        duration_seconds: number;
+      };
+    };
+  };
+};

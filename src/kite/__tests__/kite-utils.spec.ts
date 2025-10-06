@@ -1,21 +1,25 @@
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { commonFetchJSON, getQueryString } from '~/k8s';
 import { PLUGIN_KITE, STALE_TIME } from '../const';
-import { Issue, IssueQuery, IssueSeverity, IssueType, IssueState } from '../issue-type';
+import {
+  Issue,
+  IssueQuery,
+  IssueSeverity,
+  IssueType,
+  IssueState,
+  IssueResponse,
+} from '../issue-type';
 import { fetchIssues } from '../kite-fetch';
 import { useIssues, useInfiniteIssues } from '../kite-hooks';
 import { createGetIssueQueryOptions, createInfiniteIssueQueryOptions } from '../kite-query';
 
-// Mock the k8s utilities
-jest.mock('~/k8s', () => ({
-  commonFetchJSON: jest.fn(),
-  getQueryString: jest.fn(),
+// Mock the kite-fetch module
+jest.mock('../kite-fetch', () => ({
+  fetchIssues: jest.fn(),
 }));
 
-const mockCommonFetchJSON = commonFetchJSON as jest.MockedFunction<typeof commonFetchJSON>;
-const mockGetQueryString = getQueryString as jest.MockedFunction<typeof getQueryString>;
+const mockFetchIssues = fetchIssues as jest.MockedFunction<typeof fetchIssues>;
 
 // Mock data
 const mockIssue: Issue = {
@@ -39,6 +43,13 @@ const mockIssue: Issue = {
 
 const mockIssues: Issue[] = [mockIssue];
 
+const mockIssueResponse: IssueResponse = {
+  data: mockIssues,
+  total: 1,
+  limit: 20,
+  offset: 0,
+};
+
 const mockIssueQuery: IssueQuery = {
   namespace: 'test-namespace',
   severity: IssueSeverity.MINOR,
@@ -54,42 +65,35 @@ describe('kite-utils', () => {
   });
 
   describe('fetchIssues', () => {
-    it('should call commonFetchJSON with correct parameters', async () => {
-      const expectedApi = '/api/v1/issues/?';
-      const expectedQueryString = 'namespace=test-namespace&severity=minor';
-      const expectedResourcePath = expectedApi + expectedQueryString;
-
-      mockGetQueryString.mockReturnValue(expectedQueryString);
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+    it('should return data when called with valid query', async () => {
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       const result = await fetchIssues(mockIssueQuery);
 
-      expect(mockGetQueryString).toHaveBeenCalledWith(mockIssueQuery);
-      expect(mockCommonFetchJSON).toHaveBeenCalledWith(expectedResourcePath, {
-        pathPrefix: PLUGIN_KITE,
-      });
-      expect(result).toEqual(mockIssues);
+      expect(mockFetchIssues).toHaveBeenCalledWith(mockIssueQuery);
+      expect(result).toEqual(mockIssueResponse);
     });
 
     it('should handle empty query parameters', async () => {
       const emptyQuery: IssueQuery = { namespace: 'test-namespace' };
-      const expectedQueryString = 'namespace=test-namespace';
+      const emptyResponse: IssueResponse = {
+        data: [],
+        total: 0,
+        limit: 20,
+        offset: 0,
+      };
 
-      mockGetQueryString.mockReturnValue(expectedQueryString);
-      mockCommonFetchJSON.mockResolvedValue([]);
+      mockFetchIssues.mockResolvedValue(emptyResponse);
 
-      await fetchIssues(emptyQuery);
+      const result = await fetchIssues(emptyQuery);
 
-      expect(mockGetQueryString).toHaveBeenCalledWith(emptyQuery);
-      expect(mockCommonFetchJSON).toHaveBeenCalledWith('/api/v1/issues/?namespace=test-namespace', {
-        pathPrefix: PLUGIN_KITE,
-      });
+      expect(mockFetchIssues).toHaveBeenCalledWith(emptyQuery);
+      expect(result).toEqual(emptyResponse);
     });
 
     it('should handle API errors', async () => {
       const error = new Error('API Error');
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockRejectedValue(error);
+      mockFetchIssues.mockRejectedValue(error);
 
       await expect(fetchIssues(mockIssueQuery)).rejects.toThrow('API Error');
     });
@@ -108,12 +112,12 @@ describe('kite-utils', () => {
 
     it('should create query function that calls fetchIssues', async () => {
       const options = createGetIssueQueryOptions(mockIssueQuery);
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       const result = await options.queryFn();
 
-      expect(result).toEqual(mockIssues);
+      expect(mockFetchIssues).toHaveBeenCalledWith(mockIssueQuery);
+      expect(result).toEqual(mockIssueResponse);
     });
 
     it('should handle different query parameters', () => {
@@ -144,28 +148,26 @@ describe('kite-utils', () => {
 
     it('should create query function with pagination', async () => {
       const options = createInfiniteIssueQueryOptions(mockIssueQuery);
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       const result = await options.queryFn({ pageParam: 20 });
 
-      expect(mockCommonFetchJSON).toHaveBeenCalledWith(
-        expect.stringContaining('/api/v1/issues/?'),
-        { pathPrefix: PLUGIN_KITE },
-      );
-      expect(result).toEqual(mockIssues);
+      expect(mockFetchIssues).toHaveBeenCalledWith({
+        ...mockIssueQuery,
+        offset: 20,
+        limit: mockIssueQuery.limit || 20,
+      });
+      expect(result).toEqual(mockIssueResponse);
     });
 
     it('should use default page size when limit is not provided', async () => {
       const queryWithoutLimit: IssueQuery = { namespace: 'test-namespace' };
       const options = createInfiniteIssueQueryOptions(queryWithoutLimit);
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       await options.queryFn({ pageParam: 0 });
 
-      // Should use default page size of 20
-      expect(mockGetQueryString).toHaveBeenCalledWith({
+      expect(mockFetchIssues).toHaveBeenCalledWith({
         namespace: 'test-namespace',
         offset: 0,
         limit: 20,
@@ -175,15 +177,14 @@ describe('kite-utils', () => {
     it('should use provided limit when available', async () => {
       const queryWithLimit: IssueQuery = { namespace: 'test-namespace', limit: 50 };
       const options = createInfiniteIssueQueryOptions(queryWithLimit);
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       await options.queryFn({ pageParam: 0 });
 
-      expect(mockGetQueryString).toHaveBeenCalledWith({
+      expect(mockFetchIssues).toHaveBeenCalledWith({
         namespace: 'test-namespace',
-        offset: 0,
         limit: 50,
+        offset: 0,
       });
     });
 
@@ -267,8 +268,7 @@ describe('kite-utils', () => {
     });
 
     it('should return loading state initially', () => {
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockFetchIssues.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
@@ -278,13 +278,12 @@ describe('kite-utils', () => {
     });
 
     it('should return data when query succeeds', async () => {
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
       await waitFor(() => {
-        expect(result.current.data).toEqual(mockIssues);
+        expect(result.current.data).toEqual(mockIssueResponse);
         expect(result.current.isLoading).toBe(false);
         expect(result.current.error).toBeNull();
       });
@@ -292,8 +291,7 @@ describe('kite-utils', () => {
 
     it('should return error when query fails', async () => {
       const error = new Error('Query failed');
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockRejectedValue(error);
+      mockFetchIssues.mockRejectedValue(error);
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
@@ -326,8 +324,7 @@ describe('kite-utils', () => {
     });
 
     it('should return loading state initially', () => {
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockImplementation(() => new Promise(() => {})); // Never resolves
+      mockFetchIssues.mockImplementation(() => new Promise(() => {})); // Never resolves
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
@@ -340,8 +337,7 @@ describe('kite-utils', () => {
     });
 
     it('should return data when query succeeds', async () => {
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
@@ -357,8 +353,7 @@ describe('kite-utils', () => {
 
     it('should return error when query fails', async () => {
       const error = new Error('Query failed');
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockRejectedValue(error);
+      mockFetchIssues.mockRejectedValue(error);
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
@@ -373,8 +368,7 @@ describe('kite-utils', () => {
     });
 
     it('should handle fetchNextPage function', async () => {
-      mockGetQueryString.mockReturnValue('namespace=test-namespace');
-      mockCommonFetchJSON.mockResolvedValue(mockIssues);
+      mockFetchIssues.mockResolvedValue(mockIssueResponse);
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
