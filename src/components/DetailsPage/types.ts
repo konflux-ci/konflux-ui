@@ -16,5 +16,5 @@ export type DetailsPageTabProps = {
   partial?: boolean;
   className?: string;
   isFilled?: boolean;
-  unstableFeature?: FlagKey;
+  featureFlag?: FlagKey[];
 };

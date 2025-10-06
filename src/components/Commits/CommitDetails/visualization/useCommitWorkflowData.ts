@@ -1,9 +1,9 @@
 import * as React from 'react';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../hooks/useIntegrationTestScenarios';
-import { usePipelineRunsForCommitV2 } from '../../../../hooks/usePipelineRunsV2';
 import { Commit, ComponentKind, PipelineRunKind } from '../../../../types';
 import { pipelineRunStatus, runStatus } from '../../../../utils/pipeline-utils';
 import { DEFAULT_NODE_HEIGHT } from '../../../topology/const';

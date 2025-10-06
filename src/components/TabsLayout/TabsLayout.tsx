@@ -68,7 +68,7 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
     return <ErrorEmptyState httpError={HttpError.fromCode(404)} />;
   }
 
-  const tabComponents = tabs?.map(({ key, label, unstableFeature, ...rest }) => {
+  const tabComponents = tabs?.map(({ key, label, featureFlag, ...rest }) => {
     return (
       <Tab
         data-test={`${id}__tabItem ${label.toLocaleLowerCase().replace(/\s/g, '')}`}
@@ -76,7 +76,7 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
         eventKey={key}
         title={
           <TabTitleText>
-            {label} {unstableFeature && <FeatureFlagIndicator flags={[unstableFeature]} />}
+            {label} {featureFlag && <FeatureFlagIndicator flags={featureFlag} />}
           </TabTitleText>
         }
         {...rest}

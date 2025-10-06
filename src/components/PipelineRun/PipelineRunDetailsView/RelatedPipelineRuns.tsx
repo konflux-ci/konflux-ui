@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popover, Skeleton } from '@patternfly/react-core';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { PIPELINE_RUNS_DETAILS_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRunsForCommitV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunGroupVersionKind } from '../../../models';
 import { PipelineRunKind } from '../../../types';
 import { getCommitSha } from '../../../utils/commits-utils';

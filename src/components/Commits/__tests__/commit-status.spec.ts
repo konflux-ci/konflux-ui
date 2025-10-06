@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { usePipelineRunsForCommitV2 } from '../../../hooks/usePipelineRunsV2';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { pipelineWithCommits } from '../__data__/pipeline-with-commits';
 import { useCommitStatus } from '../commit-status';
 
-jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+jest.mock('../../../hooks/usePipelineRunsForCommitV2', () => ({
   usePipelineRunsForCommitV2: jest.fn(),
 }));
 

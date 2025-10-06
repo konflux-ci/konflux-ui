@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { BrowserRouter, useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { usePipelineRunsForCommitV2 } from '../../../../hooks/usePipelineRunsV2';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getCommitShortName } from '../../../../utils/commits-utils';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
@@ -27,7 +27,7 @@ jest.mock('../../../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+jest.mock('../../../../hooks/usePipelineRunsForCommitV2', () => ({
   usePipelineRunsForCommitV2: jest.fn(),
 }));
 

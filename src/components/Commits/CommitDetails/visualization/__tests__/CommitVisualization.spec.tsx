@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useComponents } from '../../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../../hooks/useIntegrationTestScenarios';
-import { usePipelineRunsForCommitV2 } from '../../../../../hooks/usePipelineRunsV2';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../hooks/useReleases';
 import { CustomError } from '../../../../../k8s/error';
@@ -19,7 +19,7 @@ import CommitVisualization from '../CommitVisualization';
 
 jest.mock('../../../../../hooks/useTektonResults');
 
-jest.mock('../../../../../hooks/usePipelineRunsV2', () => ({
+jest.mock('../../../../../hooks/usePipelineRunsForCommitV2', () => ({
   usePipelineRunsForCommitV2: jest.fn(),
 }));
 jest.mock('../../../../../hooks/useComponents', () => ({

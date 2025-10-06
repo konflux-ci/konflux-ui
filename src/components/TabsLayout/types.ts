@@ -8,5 +8,5 @@ export type TabProps = {
   partial?: boolean;
   className?: string;
   isFilled?: boolean;
-  unstableFeature?: FlagKey;
+  featureFlag?: FlagKey[];
 };

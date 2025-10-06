@@ -11,9 +11,9 @@ import {
   Spinner,
   Text,
 } from '@patternfly/react-core';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
-import { usePipelineRunsForCommitV2 } from '../../../../hooks/usePipelineRunsV2';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';

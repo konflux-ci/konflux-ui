@@ -1,5 +1,5 @@
 import React from 'react';
-import { usePipelineRunsForCommitV2 } from '../../hooks/usePipelineRunsV2';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { statuses } from '../../utils/commits-utils';
 import { pipelineRunStatus } from '../../utils/pipeline-utils';
