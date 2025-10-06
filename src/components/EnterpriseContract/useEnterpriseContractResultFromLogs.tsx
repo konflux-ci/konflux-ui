@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useTaskRuns } from '../../hooks/useTaskRuns';
+import { useTaskRunsForPipelineRuns } from '../../hooks/useTaskRunsV2';
 import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -17,7 +17,7 @@ export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,
 ): [ComponentEnterpriseContractResult[], boolean] => {
   const namespace = useNamespace();
-  const [taskRun, loaded, error] = useTaskRuns(namespace, pipelineRunName, 'verify');
+  const [taskRun, loaded, error] = useTaskRunsForPipelineRuns(namespace, pipelineRunName, 'verify');
   const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
   const [ecJson, setEcJson] = React.useState<EnterpriseContractResult>();
   const [ecLoaded, setEcLoaded] = React.useState<boolean>(false);
