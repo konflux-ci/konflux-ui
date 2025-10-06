@@ -13,13 +13,13 @@ import { CheckCircleIcon } from '@patternfly/react-icons/dist/esm/icons/check-ci
 import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
 import { global_palette_green_400 as greenColor } from '@patternfly/react-tokens/dist/js/global_palette_green_400';
 import dayjs from 'dayjs';
-import { IssueKind, IssuesByStatusCardProps, IssueState } from '~/types';
+import { Issue, IssuesByStatusCardProps, IssueState } from '../../kite/issue-type';
 
-const getOpenIssueCount = (issues: IssueKind[]) => {
+const getOpenIssueCount = (issues: Issue[]) => {
   return issues.filter((issue) => issue.state === IssueState.ACTIVE).length;
 };
 
-const getResolvedIssuesInLast24Hours = (issues: IssueKind[]) => {
+const getResolvedIssuesInLast24Hours = (issues: Issue[]) => {
   // Filters RESOLVED
   const resolved = issues.filter((issue) => issue.state === IssueState.RESOLVED);
 

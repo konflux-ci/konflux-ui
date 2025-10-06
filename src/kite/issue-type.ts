@@ -1,5 +1,3 @@
-import { K8sResourceCommon } from './k8s';
-
 export enum IssueSeverity {
   INFO = 'info',
   MINOR = 'minor',
@@ -32,7 +30,7 @@ export type IssueQuery = {
   offset?: number;
 };
 
-export type IssueKind = K8sResourceCommon & {
+export type Issue = {
   id: string;
   title: string;
   description: string;
@@ -51,6 +49,13 @@ export type IssueKind = K8sResourceCommon & {
   updatedAt: string;
 };
 
+export type IssueResponse = {
+  data: Issue[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
 export type IssuesByStatusCardProps = {
-  issues: IssueKind[];
+  issues: Issue[];
 };

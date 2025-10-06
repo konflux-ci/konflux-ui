@@ -21,4 +21,3 @@ export * from './workspace';
 export * from './image-repository';
 export * from './enterprise-contract';
 export * from './namespace';
-export * from './issue-type';

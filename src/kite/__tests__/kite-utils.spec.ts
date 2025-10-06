@@ -2,14 +2,11 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { commonFetchJSON, getQueryString } from '~/k8s';
-import { IssueKind, IssueQuery, IssueSeverity, IssueType, IssueState } from '~/types';
-import {
-  fetchIssues,
-  createGetIssueQueryOptions,
-  createInfiniteIssueQueryOptions,
-  useIssues,
-  useInfiniteIssues,
-} from '../kite-utils';
+import { PLUGIN_KITE, STALE_TIME } from '../const';
+import { Issue, IssueQuery, IssueSeverity, IssueType, IssueState } from '../issue-type';
+import { fetchIssues } from '../kite-fetch';
+import { useIssues, useInfiniteIssues } from '../kite-hooks';
+import { createGetIssueQueryOptions, createInfiniteIssueQueryOptions } from '../kite-query';
 
 // Mock the k8s utilities
 jest.mock('~/k8s', () => ({
@@ -21,15 +18,7 @@ const mockCommonFetchJSON = commonFetchJSON as jest.MockedFunction<typeof common
 const mockGetQueryString = getQueryString as jest.MockedFunction<typeof getQueryString>;
 
 // Mock data
-const mockIssue: IssueKind = {
-  apiVersion: 'v1',
-  kind: 'Issue',
-  metadata: {
-    name: 'test-issue',
-    namespace: 'test-namespace',
-    uid: 'test-uid',
-    creationTimestamp: '2023-01-01T00:00:00Z',
-  },
+const mockIssue: Issue = {
   id: 'test-issue-id',
   title: 'Test Issue',
   description: 'This is a test issue',
@@ -48,7 +37,7 @@ const mockIssue: IssueKind = {
   updatedAt: '2023-01-01T00:00:00Z',
 };
 
-const mockIssues: IssueKind[] = [mockIssue];
+const mockIssues: Issue[] = [mockIssue];
 
 const mockIssueQuery: IssueQuery = {
   namespace: 'test-namespace',
@@ -77,7 +66,7 @@ describe('kite-utils', () => {
 
       expect(mockGetQueryString).toHaveBeenCalledWith(mockIssueQuery);
       expect(mockCommonFetchJSON).toHaveBeenCalledWith(expectedResourcePath, {
-        pathPrefix: 'plugins/kite',
+        pathPrefix: PLUGIN_KITE,
       });
       expect(result).toEqual(mockIssues);
     });
@@ -93,7 +82,7 @@ describe('kite-utils', () => {
 
       expect(mockGetQueryString).toHaveBeenCalledWith(emptyQuery);
       expect(mockCommonFetchJSON).toHaveBeenCalledWith('/api/v1/issues/?namespace=test-namespace', {
-        pathPrefix: 'plugins/kite',
+        pathPrefix: PLUGIN_KITE,
       });
     });
 
@@ -111,9 +100,9 @@ describe('kite-utils', () => {
       const options = createGetIssueQueryOptions(mockIssueQuery);
 
       expect(options).toEqual({
-        queryKey: ['kite', 'issues', mockIssueQuery],
+        queryKey: [PLUGIN_KITE, mockIssueQuery],
         queryFn: expect.any(Function),
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: STALE_TIME,
       });
     });
 
@@ -136,7 +125,7 @@ describe('kite-utils', () => {
 
       const options = createGetIssueQueryOptions(differentQuery);
 
-      expect(options.queryKey).toEqual(['kite', 'issues', differentQuery]);
+      expect(options.queryKey).toEqual([PLUGIN_KITE, differentQuery]);
     });
   });
 
@@ -145,11 +134,11 @@ describe('kite-utils', () => {
       const options = createInfiniteIssueQueryOptions(mockIssueQuery);
 
       expect(options).toEqual({
-        queryKey: ['kite', 'issues', mockIssueQuery],
+        queryKey: [PLUGIN_KITE, mockIssueQuery],
         queryFn: expect.any(Function),
-        initialPageParam: 0,
+        initialPageParam: undefined,
         getNextPageParam: expect.any(Function),
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: STALE_TIME,
       });
     });
 
@@ -162,7 +151,7 @@ describe('kite-utils', () => {
 
       expect(mockCommonFetchJSON).toHaveBeenCalledWith(
         expect.stringContaining('/api/v1/issues/?'),
-        { pathPrefix: 'plugins/kite' },
+        { pathPrefix: PLUGIN_KITE },
       );
       expect(result).toEqual(mockIssues);
     });
@@ -201,40 +190,58 @@ describe('kite-utils', () => {
     describe('getNextPageParam', () => {
       it('should return undefined when last page is empty', () => {
         const options = createInfiniteIssueQueryOptions(mockIssueQuery);
-        const result = options.getNextPageParam([], []);
+        const lastPage = {
+          data: [],
+          total: 0,
+          limit: 20,
+          offset: 0,
+        };
+        const result = options.getNextPageParam(lastPage);
 
         expect(result).toBeUndefined();
       });
 
       it('should return undefined when last page has fewer items than limit', () => {
         const options = createInfiniteIssueQueryOptions(mockIssueQuery);
-        const lastPage = [mockIssue]; // Only 1 item, limit is 20
-        const allPages = [[mockIssue], [mockIssue]];
+        const lastPage = {
+          data: [mockIssue], // Only 1 item, limit is 20
+          total: 1,
+          limit: 20,
+          offset: 0,
+        };
 
-        const result = options.getNextPageParam(lastPage, allPages);
+        const result = options.getNextPageParam(lastPage);
 
         expect(result).toBeUndefined();
       });
 
       it('should return next offset when last page is full', () => {
         const options = createInfiniteIssueQueryOptions(mockIssueQuery);
-        const lastPage = Array(20).fill(mockIssue); // Full page
-        const allPages = [Array(20).fill(mockIssue), Array(20).fill(mockIssue)];
+        const lastPage = {
+          data: Array(20).fill(mockIssue), // Full page
+          total: 40,
+          limit: 20,
+          offset: 20,
+        };
 
-        const result = options.getNextPageParam(lastPage, allPages);
+        const result = options.getNextPageParam(lastPage);
 
-        expect(result).toBe(40); // 2 pages * 20 items per page
+        expect(result).toBe(20); // offset from the last page
       });
 
       it('should use custom limit in getNextPageParam', () => {
         const queryWithCustomLimit: IssueQuery = { namespace: 'test-namespace', limit: 10 };
         const options = createInfiniteIssueQueryOptions(queryWithCustomLimit);
-        const lastPage = Array(10).fill(mockIssue); // Full page with custom limit
-        const allPages = [Array(10).fill(mockIssue), Array(10).fill(mockIssue)];
+        const lastPage = {
+          data: Array(10).fill(mockIssue), // Full page with custom limit
+          total: 20,
+          limit: 10,
+          offset: 10,
+        };
 
-        const result = options.getNextPageParam(lastPage, allPages);
+        const result = options.getNextPageParam(lastPage);
 
-        expect(result).toBe(20); // 2 pages * 10 items per page
+        expect(result).toBe(10); // offset from the last page
       });
     });
   });
@@ -265,7 +272,9 @@ describe('kite-utils', () => {
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
-      expect(result.current).toEqual([undefined, true, null]);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.error).toBeNull();
     });
 
     it('should return data when query succeeds', async () => {
@@ -275,9 +284,9 @@ describe('kite-utils', () => {
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
       await waitFor(() => {
-        expect(result.current[0]).toEqual(mockIssues);
-        expect(result.current[1]).toBe(false);
-        expect(result.current[2]).toBeNull();
+        expect(result.current.data).toEqual(mockIssues);
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.error).toBeNull();
       });
     });
 
@@ -289,9 +298,9 @@ describe('kite-utils', () => {
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
       await waitFor(() => {
-        expect(result.current[0]).toBeUndefined();
-        expect(result.current[1]).toBe(false);
-        expect(result.current[2]).toEqual(error);
+        expect(result.current.data).toBeUndefined();
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.error).toEqual(error);
       });
     });
   });
@@ -322,15 +331,12 @@ describe('kite-utils', () => {
 
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
-      expect(result.current).toEqual([
-        undefined,
-        true,
-        null,
-        expect.any(Function),
-        false,
-        true,
-        false,
-      ]);
+      expect(result.current.data).toBeUndefined();
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.error).toBeNull();
+      expect(typeof result.current.fetchNextPage).toBe('function');
+      expect(result.current.hasNextPage).toBe(false);
+      expect(result.current.isFetchingNextPage).toBe(false);
     });
 
     it('should return data when query succeeds', async () => {
@@ -340,13 +346,12 @@ describe('kite-utils', () => {
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
       await waitFor(() => {
-        expect(result.current[0]).toBeDefined();
-        expect(result.current[1]).toBe(false); // isLoading
-        expect(result.current[2]).toBeNull(); // error
-        expect(typeof result.current[3]).toBe('function'); // fetchNextPage
-        expect(result.current[4]).toBe(false); // hasNextPage
-        expect(result.current[5]).toBe(false); // isFetching
-        expect(result.current[6]).toBe(false); // isFetchingNextPage
+        expect(result.current.data).toBeDefined();
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.error).toBeNull();
+        expect(typeof result.current.fetchNextPage).toBe('function');
+        expect(result.current.hasNextPage).toBe(false);
+        expect(result.current.isFetchingNextPage).toBe(false);
       });
     });
 
@@ -358,13 +363,12 @@ describe('kite-utils', () => {
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
       await waitFor(() => {
-        expect(result.current[0]).toBeUndefined();
-        expect(result.current[1]).toBe(false); // isLoading
-        expect(result.current[2]).toEqual(error); // error
-        expect(typeof result.current[3]).toBe('function'); // fetchNextPage
-        expect(result.current[4]).toBe(false); // hasNextPage
-        expect(result.current[5]).toBe(false); // isFetching
-        expect(result.current[6]).toBe(false); // isFetchingNextPage
+        expect(result.current.data).toBeUndefined();
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.error).toEqual(error);
+        expect(typeof result.current.fetchNextPage).toBe('function');
+        expect(result.current.hasNextPage).toBe(false);
+        expect(result.current.isFetchingNextPage).toBe(false);
       });
     });
 
@@ -375,11 +379,11 @@ describe('kite-utils', () => {
       const { result } = renderHookWithQueryClient(mockIssueQuery);
 
       await waitFor(() => {
-        expect(result.current[3]).toBeDefined(); // fetchNextPage function exists
+        expect(result.current.fetchNextPage).toBeDefined(); // fetchNextPage function exists
       });
 
       // Test that fetchNextPage is callable
-      expect(() => (result.current[3] as () => void)()).not.toThrow();
+      expect(() => result.current.fetchNextPage()).not.toThrow();
     });
   });
 });
