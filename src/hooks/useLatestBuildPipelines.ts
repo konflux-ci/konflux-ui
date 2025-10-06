@@ -2,7 +2,7 @@ import * as React from 'react';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export const useLatestBuildPipelines = (
   namespace: string,
@@ -22,7 +22,7 @@ export const useLatestBuildPipelines = (
     [componentNames, foundNames],
   );
 
-  const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
+  const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
     applicationLoaded ? namespace : null,
     React.useMemo(
       () => ({

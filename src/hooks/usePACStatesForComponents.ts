@@ -12,7 +12,7 @@ import {
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { useApplication } from './useApplications';
 import { PACState } from './usePACState';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export type PacStatesForComponents = {
   [componentName: string]: PACState;
@@ -74,7 +74,7 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
     [componentPacStates, components],
   );
 
-  const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRuns(
+  const [pipelineBuildRuns, pipelineBuildRunsLoaded, , getNextPage] = usePipelineRunsV2(
     applicationLoaded ? namespace : null,
     React.useMemo(
       () => ({

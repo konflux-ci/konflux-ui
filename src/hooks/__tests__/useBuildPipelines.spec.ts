@@ -1,17 +1,39 @@
+import * as React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useBuildPipelines } from '../useBuildPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
+jest.mock('~/kubearchive/hooks');
+jest.mock('~/feature-flags/hooks', () => ({
+  useIsOnFeatureFlag: jest.fn(),
+}));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
 describe('useBuildPipelines', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: undefined,
+      isFetchingNextPage: false,
+    });
+  });
+
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     useTRPipelineRunsMock.mockReturnValue([
