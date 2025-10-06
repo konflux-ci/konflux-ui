@@ -1,8 +1,10 @@
+import * as React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react-hooks';
-import { useTaskRuns } from '../../../hooks/useTaskRuns';
+import { useTaskRunsForPipelineRuns } from '../../../hooks/useTaskRunsV2';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { getTaskRunLog } from '../../../utils/tekton-results';
-import { createK8sUtilMock } from '../../../utils/test-utils';
+import { createK8sUtilMock, createTestQueryClient } from '../../../utils/test-utils';
 import {
   mockEnterpriseContractJSON,
   mockEnterpriseContractUIData,
@@ -14,8 +16,8 @@ import {
   useEnterpriseContractResults,
 } from '../useEnterpriseContractResultFromLogs';
 
-jest.mock('../../../hooks/useTaskRuns', () => ({
-  useTaskRuns: jest.fn(),
+jest.mock('../../../hooks/useTaskRunsV2', () => ({
+  useTaskRunsForPipelineRuns: jest.fn(),
 }));
 
 jest.mock('../../../utils/tekton-results', () => ({
@@ -24,13 +26,17 @@ jest.mock('../../../utils/tekton-results', () => ({
 
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
-const mockUseTaskRuns = useTaskRuns as jest.Mock;
+const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 
 describe('useEnterpriseContractResultFromLogs', () => {
+  let queryClient: QueryClient;
+
   beforeEach(() => {
+    queryClient = createTestQueryClient();
+    jest.clearAllMocks();
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
     mockUseNamespaceHook('test-ns');
-    mockUseTaskRuns.mockReturnValue([
+    mockUseTaskRunsForPipelineRuns.mockReturnValue([
       [
         {
           status: {
@@ -43,10 +49,15 @@ describe('useEnterpriseContractResultFromLogs', () => {
     ]);
   });
 
+  const renderHookWithQueryClient = (pipelineRunName: string) => {
+    return renderHook(() => useEnterpriseContractResultFromLogs(pipelineRunName), {
+      wrapper: ({ children }: { children: React.ReactNode }) =>
+        React.createElement(QueryClientProvider, { client: queryClient }, children),
+    });
+  };
+
   it('should parse valid rules to json', async () => {
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useEnterpriseContractResultFromLogs('dummy-abcd'),
-    );
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
     expect(result.current[0][0].successes.length).toEqual(1);
@@ -55,7 +66,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
   });
 
   it('should call tknResults when taskRun is empty array', () => {
-    mockUseTaskRuns.mockReturnValueOnce([[], true, undefined]);
+    mockUseTaskRunsForPipelineRuns.mockReturnValueOnce([[], true, undefined]);
     mockGetTaskRunLogs.mockReturnValue(`
       step-vulnerabilities :-
       Lorem Ipsum some logs
@@ -66,7 +77,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
       step-something-else :-
       Some other logs
     `);
-    const { result } = renderHook(() => useEnterpriseContractResultFromLogs('dummy-abcd'));
+    const { result } = renderHookWithQueryClient('dummy-abcd');
     const [, loaded] = result.current;
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
     expect(loaded).toBe(true);
@@ -76,9 +87,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
   });
 
   it('should filter out all 404 image url components from EC results', async () => {
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useEnterpriseContractResultFromLogs('dummy-abcd'),
-    );
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
@@ -89,9 +98,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
   it('should return handle api errors', async () => {
     mockCommmonFetchJSON.mockRejectedValue(new Error('Api error'));
 
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useEnterpriseContractResultFromLogs('dummy-abcd'),
-    );
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     await waitForNextUpdate();
     const [ecResult, loaded] = result.current;
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
@@ -100,7 +107,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
   });
 
   it('should return handle 404 error', async () => {
-    mockUseTaskRuns.mockReturnValue([
+    mockUseTaskRunsForPipelineRuns.mockReturnValue([
       [
         {
           metadata: {
@@ -127,9 +134,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
       Some other logs
     `);
 
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useEnterpriseContractResultFromLogs('dummy-abcd'),
-    );
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     const [, loaded] = result.current;
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
     expect(loaded).toBe(false);
@@ -164,9 +169,13 @@ describe('mapEnterpriseContractResultData', () => {
 });
 
 describe('useEnterpriseContractResults', () => {
+  let queryClient: QueryClient;
+
   beforeEach(() => {
+    queryClient = createTestQueryClient();
+    jest.clearAllMocks();
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
-    mockUseTaskRuns.mockReturnValue([
+    mockUseTaskRunsForPipelineRuns.mockReturnValue([
       [
         {
           status: {
@@ -179,10 +188,15 @@ describe('useEnterpriseContractResults', () => {
     ]);
   });
 
+  const renderHookWithQueryClient = (pipelineRunName: string) => {
+    return renderHook(() => useEnterpriseContractResults(pipelineRunName), {
+      wrapper: ({ children }: { children: React.ReactNode }) =>
+        React.createElement(QueryClientProvider, { client: queryClient }, children),
+    });
+  };
+
   it('should return enterprise contract results', async () => {
-    const { result, waitForNextUpdate } = renderHook(() =>
-      useEnterpriseContractResults('dummy-abcd'),
-    );
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     expect(result.current[0]).toEqual(undefined);
     expect(result.current[1]).toEqual(false);
     await waitForNextUpdate();

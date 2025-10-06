@@ -12,9 +12,9 @@ import {
   Spinner,
   Button,
 } from '@patternfly/react-core';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useLatestSuccessfulBuildPipelineRunForComponent } from '../../../../hooks/usePipelineRuns';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
@@ -38,7 +38,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
     () => ((pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1)) || [])[0],
     [pipelineRunLoaded, pipelineRun],
   );
-  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRun?.metadata?.name,
   );
