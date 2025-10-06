@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { useTRPipelineRuns } from '../../hooks/useTektonResults';
@@ -11,11 +10,15 @@ import {
   ComponentBuildState,
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
-import { createK8sWatchResourceMock, createTestQueryClient } from '../../utils/test-utils';
+import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import usePACState, { PACState } from '../usePACState';
 
 jest.mock('../../hooks/useTektonResults');
 jest.mock('~/kubearchive/hooks');
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  createConditionsHook: jest.fn(() => jest.fn()),
+  ensureConditionIsOn: jest.fn(() => jest.fn()),
+}));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));
@@ -31,10 +34,6 @@ const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
-
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={createTestQueryClient()}>{children}</QueryClientProvider>
-);
 
 const createComponent = (buildState?: ComponentBuildState): ComponentKind =>
   ({
@@ -76,20 +75,20 @@ describe('usePACState', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(undefined);
     component.metadata.annotations[SAMPLE_ANNOTATION] = 'true';
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.sample);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.sample);
   });
 
   it('should identify disabled state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(undefined);
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.disabled);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.disabled);
   });
 
   it('should identify confiure requested state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(undefined);
     component.metadata.annotations[BUILD_REQUEST_ANNOTATION] = 'configure-pac';
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(
+    expect(renderHook(() => usePACState(component)).result.current).toBe(
       PACState.configureRequested,
     );
   });
@@ -98,7 +97,7 @@ describe('usePACState', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(undefined);
     component.metadata.annotations[BUILD_REQUEST_ANNOTATION] = 'unconfigure-pac';
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(
+    expect(renderHook(() => usePACState(component)).result.current).toBe(
       PACState.unconfigureRequested,
     );
   });
@@ -106,7 +105,7 @@ describe('usePACState', () => {
   it('should identify pending state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(ComponentBuildState.enabled);
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.pending);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.pending);
   });
 
   it('should identify ready state', () => {
@@ -115,7 +114,7 @@ describe('usePACState', () => {
       true,
     ]);
     const component = createComponent(ComponentBuildState.enabled);
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.ready);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.ready);
   });
 
   it('should identify pending state through correct bulid pipeline runs', () => {
@@ -124,19 +123,19 @@ describe('usePACState', () => {
       true,
     ]);
     const component = createComponent(ComponentBuildState.enabled);
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.pending);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.pending);
   });
 
   it('should identify error state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], false]);
     const component = createComponent(ComponentBuildState.error);
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.error);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.error);
   });
 
   it('should identify loading state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], false]);
     useTRPipelineRunsMock.mockReturnValueOnce([[], false]);
     const component = createComponent(ComponentBuildState.enabled);
-    expect(renderHook(() => usePACState(component), { wrapper }).result.current).toBe(PACState.loading);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.loading);
   });
 });

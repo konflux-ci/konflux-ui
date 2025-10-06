@@ -9,6 +9,10 @@ import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('~/kubearchive/hooks');
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  createConditionsHook: jest.fn(() => jest.fn()),
+  ensureConditionIsOn: jest.fn(() => jest.fn()),
+}));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));

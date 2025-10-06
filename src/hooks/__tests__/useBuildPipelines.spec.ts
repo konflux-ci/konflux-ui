@@ -9,6 +9,10 @@ import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('~/kubearchive/hooks');
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  createConditionsHook: jest.fn(() => jest.fn()),
+  ensureConditionIsOn: jest.fn(() => jest.fn()),
+}));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));
@@ -75,9 +79,7 @@ describe('useBuildPipelines', () => {
   });
 
   it('should filter build pipelines by component name when includeComponents is true', () => {
-    useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
-
-    useTRPipelineRunsMock.mockReturnValue([
+    useK8sWatchResourceMock.mockReturnValue([
       [
         {
           kind: 'PipelineRun',
@@ -102,6 +104,12 @@ describe('useBuildPipelines', () => {
           },
         },
       ],
+      true,
+      undefined,
+    ]);
+
+    useTRPipelineRunsMock.mockReturnValue([
+      [],
       true,
       undefined,
       undefined,

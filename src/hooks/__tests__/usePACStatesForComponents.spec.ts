@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
@@ -12,12 +11,16 @@ import {
   ComponentBuildState,
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
-import { createK8sWatchResourceMock, createUseApplicationMock, createTestQueryClient } from '../../utils/test-utils';
+import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { PACState } from '../usePACState';
 import usePACStatesForComponents from '../usePACStatesForComponents';
 
 jest.mock('../../hooks/useTektonResults');
 jest.mock('~/kubearchive/hooks');
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  createConditionsHook: jest.fn(() => jest.fn()),
+  ensureConditionIsOn: jest.fn(() => jest.fn()),
+}));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));
@@ -35,10 +38,6 @@ const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
-
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={createTestQueryClient()}>{children}</QueryClientProvider>
-);
 
 const createComponent = (
   componentName: string,
@@ -92,7 +91,7 @@ describe('usePACStatesForComponents', () => {
       createComponent('my-unconfigure-component', undefined, undefined, 'unconfigure-pac'),
       createComponent('my-error-component', ComponentBuildState.error),
     ];
-    const results = renderHook(() => usePACStatesForComponents(components), { wrapper }).result.current;
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
     expect(results['my-component']).toBe(PACState.sample);
     expect(results['my-disabled-component']).toBe(PACState.disabled);
     expect(results['my-config-component']).toBe(PACState.configureRequested);
@@ -117,7 +116,7 @@ describe('usePACStatesForComponents', () => {
       createComponent('my-pending-component', ComponentBuildState.enabled),
       createComponent('my-ready-component', ComponentBuildState.enabled),
     ];
-    const results = renderHook(() => usePACStatesForComponents(components), { wrapper }).result.current;
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
 
     expect(results['my-ready-component']).toBe(PACState.ready);
     expect(results['my-pending-component']).toBe(PACState.pending);
@@ -129,7 +128,7 @@ describe('usePACStatesForComponents', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true]);
 
     const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
-    const results = renderHook(() => usePACStatesForComponents(components), { wrapper }).result.current;
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
     expect(results['my-pending-component']).toBe(PACState.pending);
     expect(getNextPageMock).toHaveBeenCalled();
   });

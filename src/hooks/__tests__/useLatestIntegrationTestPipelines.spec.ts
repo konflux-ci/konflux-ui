@@ -1,16 +1,19 @@
 import * as React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunLabel, PipelineRunType } from '../../consts/pipelinerun';
-import { createK8sWatchResourceMock, createTestQueryClient } from '../../utils/test-utils';
+import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import { useLatestIntegrationTestPipelines } from '../useLatestIntegrationTestPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
 jest.mock('~/kubearchive/hooks');
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  createConditionsHook: jest.fn(() => jest.fn()),
+  ensureConditionIsOn: jest.fn(() => jest.fn()),
+}));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));
@@ -18,10 +21,6 @@ const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
-
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <QueryClientProvider client={createTestQueryClient()}>{children}</QueryClientProvider>
-);
 
 const testNames = ['test-caseqfvdj'];
 const testNames2 = ['test-caseqfvdj', 'test'];
@@ -44,10 +43,9 @@ describe('useLatestIntegrationTestPipelines', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     const { result } = renderHook(() =>
       useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
-      { wrapper }
     );
 
-    expect(result.current).toEqual([[], false, undefined]);
+    expect(result.current).toEqual([[], false, null]);
   });
 
   it('should return test pipelines', () => {
@@ -64,7 +62,6 @@ describe('useLatestIntegrationTestPipelines', () => {
     });
     const { result } = renderHook(() =>
       useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
-      { wrapper }
     );
 
     const [pipelineRuns, loaded] = result.current;
@@ -82,7 +79,7 @@ describe('useLatestIntegrationTestPipelines', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
 
-    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2), { wrapper });
+    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2));
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });
