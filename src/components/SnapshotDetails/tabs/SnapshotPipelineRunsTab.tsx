@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -66,6 +67,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
 
   return (
     <FilterContextProvider filterParams={['name', 'status', 'type']}>
+      <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       <SnapshotPipelineRunsList
         snapshotPipelineRuns={SnapshotPipelineRuns}
         loaded={loaded}
