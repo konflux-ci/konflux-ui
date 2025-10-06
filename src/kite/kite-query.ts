@@ -26,7 +26,7 @@ export const createInfiniteIssueQueryOptions = (
   const defaultPageSize = 20;
   return {
     queryKey: [PLUGIN_KITE, issueQuery],
-    queryFn: ({ pageParam = 0 }) => {
+    queryFn: ({ pageParam = undefined }) => {
       const paginatedQuery = {
         ...issueQuery,
         offset: pageParam,
@@ -44,7 +44,7 @@ export const createInfiniteIssueQueryOptions = (
       ) {
         return undefined;
       }
-      return lastPage.offset;
+      return (lastPage.offset || 0) + lastPage.data.length;
     },
     staleTime: STALE_TIME,
     ...options,

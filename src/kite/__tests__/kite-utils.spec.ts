@@ -227,7 +227,7 @@ describe('kite-utils', () => {
 
         const result = options.getNextPageParam(lastPage);
 
-        expect(result).toBe(20); // offset from the last page
+        expect(result).toBe(40); // offset + data.length = 20 + 20 = 40
       });
 
       it('should use custom limit in getNextPageParam', () => {
@@ -242,7 +242,7 @@ describe('kite-utils', () => {
 
         const result = options.getNextPageParam(lastPage);
 
-        expect(result).toBe(10); // offset from the last page
+        expect(result).toBe(20); // offset + data.length = 10 + 10 = 20
       });
     });
   });
