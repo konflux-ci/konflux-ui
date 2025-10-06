@@ -2,12 +2,31 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
-import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import {
+  useKubearchiveGetResourceQuery,
+  useKubearchiveListResourceQuery,
+} from '~/kubearchive/hooks';
 import { WatchK8sResource } from '~/types/k8s';
 import { TaskRunKind } from '~/types/task-run';
-import { createK8sWatchResourceMock, createTestQueryClient } from '~/utils/test-utils';
-import { useTaskRunsV2, useTaskRunsForPipelineRuns } from '../useTaskRunsV2';
+import {
+  createUseApplicationMock,
+  createK8sWatchResourceMock,
+  createTestQueryClient,
+} from '~/utils/test-utils';
+import { TaskRunGroupVersionKind, TaskRunModel } from '../../models';
+import { useTaskRunV2, useTaskRunsV2, useTaskRunsForPipelineRuns } from '../useTaskRunsV2';
 import { useTRTaskRuns } from '../useTektonResults';
+
+jest.mock('../useTektonResults');
+jest.mock('../../kubearchive/hooks');
+jest.mock('../../feature-flags/hooks');
+
+createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
+
+const useTRTaskRunsMock = useTRTaskRuns as jest.Mock;
+const useKubearchiveGetResourceQueryMock = useKubearchiveGetResourceQuery as jest.Mock;
+const useIsOnFeatureFlagMock = useIsOnFeatureFlag as jest.Mock;
+const useK8sWatchResourceMock = createK8sWatchResourceMock();
 
 // Mock dependencies
 jest.mock('../useTektonResults');
@@ -21,7 +40,6 @@ jest.mock(
 );
 
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
-const mockUseK8sWatchResource = createK8sWatchResourceMock();
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.MockedFunction<
   typeof useKubearchiveListResourceQuery
 >;
@@ -100,7 +118,7 @@ describe('useTaskRunsV2', () => {
     });
 
     // Default mock for useK8sWatchResource hook
-    mockUseK8sWatchResource.mockReturnValue({
+    useK8sWatchResourceMock.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
@@ -140,7 +158,7 @@ describe('useTaskRunsV2', () => {
       const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
 
       // Mock cluster data (live) - not enough to satisfy limit
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1], // Live cluster data - only 1 item
         isLoading: false,
         error: null,
@@ -178,7 +196,7 @@ describe('useTaskRunsV2', () => {
       expect(nextPageProps).toBe(mockNextPageProps);
 
       // Both cluster and Tekton Results should be called
-      expect(mockUseK8sWatchResource).toHaveBeenCalled();
+      expect(useK8sWatchResourceMock).toHaveBeenCalled();
       expect(mockUseTRTaskRuns).toHaveBeenCalledWith('default', {
         selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
         limit: 5,
@@ -196,7 +214,7 @@ describe('useTaskRunsV2', () => {
       };
 
       // Mock cluster data with one duplicate
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1, duplicateTaskRun], // Cluster version of task-run-2
         isLoading: false,
         error: null,
@@ -235,7 +253,7 @@ describe('useTaskRunsV2', () => {
 
     it('should only query Tekton Results when needed (smart querying)', async () => {
       // Mock cluster data with enough items
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1, mockTaskRun2, mockTaskRun3], // 3 items, limit is 2
         isLoading: false,
         error: null,
@@ -258,7 +276,7 @@ describe('useTaskRunsV2', () => {
       const mockError = new Error('Tekton Results error');
 
       // Mock cluster data with insufficient results to trigger needsMoreData
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1], // Only 1 item
         isLoading: false,
         error: null,
@@ -291,7 +309,7 @@ describe('useTaskRunsV2', () => {
       const clusterError = new Error('Cluster error');
 
       // Mock cluster error (should trigger Tekton Results query)
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: undefined,
         isLoading: false,
         error: clusterError,
@@ -350,7 +368,7 @@ describe('useTaskRunsV2', () => {
 
     it('should combine cluster and archive data from KubeArchive', async () => {
       // Mock cluster data (live)
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1], // Live cluster data
         isLoading: false,
         error: null,
@@ -397,7 +415,7 @@ describe('useTaskRunsV2', () => {
       expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object));
 
       // Both cluster and archive sources should be called
-      expect(mockUseK8sWatchResource).toHaveBeenCalled();
+      expect(useK8sWatchResourceMock).toHaveBeenCalled();
       expect(mockUseKubearchiveListResourceQuery).toHaveBeenCalled();
     });
 
@@ -412,7 +430,7 @@ describe('useTaskRunsV2', () => {
       };
 
       // Mock cluster data containing one of the duplicates
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1, duplicateTaskRun], // Cluster has updated version
         isLoading: false,
         error: null,
@@ -458,7 +476,7 @@ describe('useTaskRunsV2', () => {
       const clusterError = new Error('Cluster error');
 
       // Mock cluster error
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: undefined,
         isLoading: false,
         error: clusterError,
@@ -494,7 +512,7 @@ describe('useTaskRunsV2', () => {
       const archiveError = new Error('Archive error');
 
       // Mock successful cluster data
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1],
         isLoading: false,
         error: null,
@@ -526,7 +544,7 @@ describe('useTaskRunsV2', () => {
     it('should support infinite loading with KubeArchive', async () => {
       const mockFetchNextPage = jest.fn();
 
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1], // Some cluster data
         isLoading: false,
         error: null,
@@ -559,7 +577,7 @@ describe('useTaskRunsV2', () => {
     });
 
     it('should apply limit correctly to combined data', async () => {
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1], // 1 from cluster
         isLoading: false,
         error: null,
@@ -593,7 +611,7 @@ describe('useTaskRunsV2', () => {
 
     it('should handle loading states for both cluster and archive', () => {
       // Mock cluster loading
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: undefined,
         isLoading: true,
         error: null,
@@ -644,7 +662,7 @@ describe('useTaskRunsV2', () => {
       // Mock the underlying useTaskRunsV2 to return sorted data
       const mockTaskRuns = [mockTaskRun1, mockTaskRun2];
 
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: mockTaskRuns,
         isLoading: false,
         error: null,
@@ -676,7 +694,7 @@ describe('useTaskRunsV2', () => {
       expect(error).toBeNull();
 
       // Verify that useK8sWatchResource was called with the correct selector
-      expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
         expect.objectContaining({
           selector: {
             matchLabels: {
@@ -691,7 +709,7 @@ describe('useTaskRunsV2', () => {
     });
 
     it('should call useTaskRunsV2 with selector without taskName when not provided', async () => {
-      mockUseK8sWatchResource.mockReturnValue({
+      useK8sWatchResourceMock.mockReturnValue({
         data: [mockTaskRun1],
         isLoading: false,
         error: null,
@@ -718,7 +736,7 @@ describe('useTaskRunsV2', () => {
       });
 
       // Verify that useK8sWatchResource was called with the correct selector (no taskName)
-      expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
         expect.objectContaining({
           selector: {
             matchLabels: {
@@ -730,5 +748,283 @@ describe('useTaskRunsV2', () => {
         expect.any(Object),
       );
     });
+  });
+});
+
+describe('useTaskRunV2', () => {
+  const mockTaskRun = {
+    kind: TaskRunGroupVersionKind.kind,
+    metadata: {
+      name: 'test-taskrun',
+      namespace: 'test-ns',
+      uid: 'test-uid',
+    },
+    spec: {},
+    status: {},
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when kubearchive feature flag is enabled', () => {
+    beforeEach(() => {
+      useIsOnFeatureFlagMock.mockImplementation((flag: string) => flag === 'taskruns-kubearchive');
+    });
+
+    it('should call hooks with correct parameters', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], false, undefined]);
+
+      renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+        {
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace: 'test-ns',
+          name: 'test-taskrun',
+          watch: true,
+        },
+        TaskRunModel,
+        { retry: false },
+      );
+      expect(useKubearchiveGetResourceQueryMock).toHaveBeenCalledWith(
+        {
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace: 'test-ns',
+          name: 'test-taskrun',
+        },
+        TaskRunModel,
+        {
+          enabled: true,
+        },
+      );
+      expect(useTRTaskRunsMock).toHaveBeenCalledWith(null, {
+        name: 'test-taskrun',
+        limit: 1,
+        filter: 'data.metadata.name == "test-taskrun"',
+      });
+    });
+
+    it('should return data from k8s when available', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: mockTaskRun, isLoading: false, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([mockTaskRun, true, null]);
+    });
+
+    it('should return loading state when k8s is loading', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([undefined, false, null]);
+    });
+
+    it('should return data from kubearchive when k8s has no data', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: mockTaskRun,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([mockTaskRun, true, null]);
+    });
+
+    it('should return loading state when kubearchive is loading', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([undefined, false, null]);
+    });
+
+    it('should return error when both k8s and kubearchive fail', () => {
+      const error = { code: 404, message: 'Not found' };
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: false, error });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([undefined, true, error]);
+    });
+  });
+
+  describe('when kubearchive feature flag is disabled', () => {
+    beforeEach(() => {
+      useIsOnFeatureFlagMock.mockImplementation(() => false);
+    });
+
+    it('should call hooks with correct parameters when kubearchive is disabled', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: true, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], false, undefined]);
+
+      renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+        {
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace: 'test-ns',
+          name: 'test-taskrun',
+          watch: true,
+        },
+        TaskRunModel,
+        { retry: false },
+      );
+      expect(useKubearchiveGetResourceQueryMock).toHaveBeenCalledWith(
+        {
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace: 'test-ns',
+          name: 'test-taskrun',
+        },
+        TaskRunModel,
+        {
+          enabled: false,
+        },
+      );
+      expect(useTRTaskRunsMock).toHaveBeenCalledWith('test-ns', {
+        name: 'test-taskrun',
+        limit: 1,
+        filter: 'data.metadata.name == "test-taskrun"',
+      });
+    });
+
+    it('should return data from k8s when available and kubearchive disabled', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: mockTaskRun, isLoading: false, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([mockTaskRun, true, null]);
+    });
+
+    it('should return data from tekton results when k8s has no data and kubearchive disabled', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[mockTaskRun], true, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([mockTaskRun, true, undefined]);
+    });
+
+    it('should return loading state when tekton results is loading', () => {
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], false, undefined]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([undefined, false, null]);
+    });
+
+    it('should return error when k8s and tekton results both fail', () => {
+      const error = { code: 500, message: 'Server error' };
+      useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: false, error });
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+      useTRTaskRunsMock.mockReturnValue([[], true, error]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      expect(result.current).toEqual([undefined, true, error]);
+    });
+  });
+
+  it('should handle parameter changes correctly', () => {
+    useIsOnFeatureFlagMock.mockImplementation((flag: string) => flag === 'taskruns-kubearchive');
+    useK8sWatchResourceMock.mockReturnValue({ data: undefined, isLoading: true, error: null });
+    useKubearchiveGetResourceQueryMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    useTRTaskRunsMock.mockReturnValue([[], false, undefined]);
+
+    const { rerender } = renderHook(
+      ({ namespace, taskRunName }) => useTaskRunV2(namespace, taskRunName),
+      {
+        initialProps: { namespace: 'test-ns', taskRunName: 'test-taskrun' },
+      },
+    );
+
+    rerender({ namespace: 'new-ns', taskRunName: 'new-taskrun' });
+
+    expect(useK8sWatchResourceMock).toHaveBeenLastCalledWith(
+      {
+        groupVersionKind: TaskRunGroupVersionKind,
+        namespace: 'new-ns',
+        name: 'new-taskrun',
+        watch: true,
+      },
+      TaskRunModel,
+      { retry: false },
+    );
   });
 });
