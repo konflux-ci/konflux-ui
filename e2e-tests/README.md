@@ -140,7 +140,7 @@ Test automation allows us to test early in the process and discover bugs before 
 ### PR checks
 Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). To be able to run the PR check job, you have to be a public member of `konflux-ci` organization. 
 
-The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. Retriggering the job is currently possible just by pushing a commit to the branch.
+The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. Retriggering the job is possible either by pushing a commit to the branch or trigger it directly in the GitHub Action Summary page by `Re-run jobs` button.
 
 > [!IMPORTANT]
 > The direct changes in the GitHub Action file `pr-check.yaml` won't be executed in a PR - that's intended due to security reasons. If you do change in this file, you should test it in your fork. 
@@ -152,10 +152,14 @@ The job installs Konflux from a main branch and Konflux UI from a PR. It runs te
 >     types: [opened, synchronize, reopened, labeled]
 > ```
 
-The job test step executes `pr_check.sh` file which does the setup and runs tests. Changes made in this bash file are already propagated to the PR check run. The script runs Konflux UI in the background. If the Containerfile is changed, the image is rebuilt (not pushed). Environment variables are set and tests are run with the test code mounted from the PR to ensure it contains a fresh code. 
+The workflow is separated into the actions files within `.github/actions` directory. Each action is a composite action, which makes it reusable across multiple workflows. This way it's also visible as separated steps and is easier for debugging.
+
+The job installs Konflux from the konflux-ci main branch. Konflux UI with all the changes introduced in a PR is build into an image which is deployed on local a kind cluster (image is not pushed anywhere). 
+
+The test step executes `pr_check.sh` file which does the tests setup and runs tests. Changes made in this bash file are already propagated to the PR check run, so they can be tested directly by the PR check job. If the Containerfile is changed, the image is rebuilt (not pushed). Environment variables are set and tests are run with the test code mounted from the PR to ensure it contains a fresh code. 
 
 ### Periodic tests
 Periodic tests are not in place yet. 
 
 ## Reporting issues
-If you find a problem with the tests, feel free to open an issue at the [Konflux-UI Jira project](https://issues.redhat.com/projects/KFLUXUI). You can set the label as `qe` to indicate it is a quality problem.
+If you find a problem with the tests, feel free to open an issue at the [Konflux-UI Jira project](https://issues.redhat.com/projects/KFLUXUI). You can set the label as `qa` to indicate it is a quality problem.
