@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { testTaskRuns } from '~/components/TaskRunListView/__data__/mock-TaskRun-data';
-import { useTaskRuns } from '~/hooks/useTaskRuns';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useTRPipelineRuns } from '../../../hooks/useTektonResults';
 import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
@@ -16,13 +16,13 @@ jest.mock('react-router-dom', () => {
   };
 });
 jest.mock('../../../hooks/useTektonResults');
-jest.mock('~/hooks/useTaskRuns', () => ({
-  useTaskRuns: jest.fn(),
+jest.mock('~/hooks/useTaskRunsV2', () => ({
+  useTaskRunsForPipelineRuns: jest.fn(),
 }));
 
 const watchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
-const useTaskRunsMock = useTaskRuns as jest.Mock;
+const useTaskRunsMock = useTaskRunsForPipelineRuns as jest.Mock;
 
 describe('BuildLogViewer', () => {
   beforeEach(() => {
