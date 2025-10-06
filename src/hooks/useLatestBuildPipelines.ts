@@ -32,14 +32,9 @@ export const useLatestBuildPipelines = (
             [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
           },
-          ...((componentNames?.length ?? 0) > 0 && {
-            matchExpressions: [
-              { key: PipelineRunLabel.COMPONENT, operator: 'In', values: componentNames },
-            ],
-          }),
         },
       }),
-      [applicationName, application, componentNames],
+      [applicationName, application],
     ),
   );
 
