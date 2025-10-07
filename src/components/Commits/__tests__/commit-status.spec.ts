@@ -1,13 +1,13 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
+import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { pipelineWithCommits } from '../__data__/pipeline-with-commits';
 import { useCommitStatus } from '../commit-status';
 
-jest.mock('../../../hooks/usePipelineRunsForCommitV2', () => ({
-  usePipelineRunsForCommitV2: jest.fn(),
+jest.mock('../../../hooks/usePipelineRuns', () => ({
+  usePipelineRunsForCommit: jest.fn(),
 }));
 
-const usePipelineRunsForCommitMock = usePipelineRunsForCommitV2 as jest.Mock;
+const usePipelineRunsForCommitMock = usePipelineRunsForCommit as jest.Mock;
 
 describe('useCommitStatus', () => {
   it('returns Pending status if pipelineruns are not loaded', () => {

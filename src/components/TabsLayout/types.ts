@@ -1,5 +1,3 @@
-import { type FlagKey } from '~/feature-flags/flags';
-
 export type TabProps = {
   key: string;
   label: string;
@@ -8,5 +6,4 @@ export type TabProps = {
   partial?: boolean;
   className?: string;
   isFilled?: boolean;
-  featureFlag?: FlagKey[];
 };

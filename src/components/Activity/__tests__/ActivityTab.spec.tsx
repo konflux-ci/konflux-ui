@@ -31,8 +31,6 @@ jest.mock('../../../hooks/usePipelineRunsV2', () => ({
 jest.mock('~/kubearchive/hooks');
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(() => false),
-  // Provide flags map for FeatureFlagIndicator which uses useFeatureFlags()
-  useFeatureFlags: jest.fn(() => [{ 'pipelineruns-kubearchive': false }, jest.fn()]),
 }));
 jest.mock(
   '~/kubearchive/conditional-checks',
