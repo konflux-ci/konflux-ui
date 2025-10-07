@@ -20,12 +20,15 @@ describe('useLatestIntegrationTestPipelines', () => {
   const renderHookWithQueryClient = (
     namespace: string,
     pipelinerun: string,
-    testNames: string[],
+    testNamesList: string[],
   ) => {
-    return renderHook(() => useLatestIntegrationTestPipelines(namespace, pipelinerun, testNames), {
-      wrapper: ({ children }) =>
-        React.createElement(QueryClientProvider, { client: queryClient }, children),
-    });
+    return renderHook(
+      () => useLatestIntegrationTestPipelines(namespace, pipelinerun, testNamesList),
+      {
+        wrapper: ({ children }: { children: React.ReactNode }) =>
+          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      },
+    );
   };
 
   beforeEach(() => {
