@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
+import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
 import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import CustomizeAllPipelines from '../CustomizeAllPipelines';
 
@@ -68,7 +69,7 @@ describe('CustomizeAllPipelines', () => {
       ],
       true,
     ]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizeAllPipelines applicationName="test" namespace="" modalProps={{ isOpen: true }} />,
     );
     expect(result.getByTestId('component-row', { exact: false })).toBeInTheDocument();
