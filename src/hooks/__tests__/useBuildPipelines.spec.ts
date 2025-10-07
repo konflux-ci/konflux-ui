@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { renderHook } from '@testing-library/react-hooks';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
