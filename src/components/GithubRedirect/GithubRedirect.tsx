@@ -1,16 +1,15 @@
 import { Navigate, useLocation, useParams } from 'react-router-dom';
 import { Bullseye, Flex, HelperText, HelperTextItem, Spinner } from '@patternfly/react-core';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
-import { usePipelineRunsV2 } from '../../hooks/usePipelineRunsV2';
 import { GithubRedirectRouteParams } from '../../routes/utils';
 
 const GithubRedirect: React.FC = () => {
   const { pathname } = useLocation();
   const { ns, pipelineRunName, taskName } = useParams<GithubRedirectRouteParams>();
   const isLogsTabSelected = pathname.includes('/logs');
-  const [prArray, loaded, error] = usePipelineRunsV2(ns, { name: pipelineRunName, limit: 1 });
-  const pr = prArray?.[0];
+  const [pr, loaded, error] = usePipelineRunV2(ns, pipelineRunName);
 
   if (error) {
     return getErrorState(error, loaded, 'pipeline run');

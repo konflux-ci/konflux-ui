@@ -17,11 +17,11 @@ import {
   Spinner,
 } from '@patternfly/react-core';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
@@ -57,11 +57,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
-  const [pipelineRunArray, loaded, error] = usePipelineRunsV2(namespace, {
-    fieldSelector: `metadata.name=${pipelineRunName}`,
-    limit: 1,
-  });
-  const pipelineRun = pipelineRunArray?.[0];
+  const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,

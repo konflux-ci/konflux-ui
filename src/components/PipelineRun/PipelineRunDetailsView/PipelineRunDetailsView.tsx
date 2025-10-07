@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
+import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunModel } from '../../../models';
 import {
   INTEGRATION_TEST_PIPELINE_LIST_PATH,
@@ -30,11 +30,7 @@ export const PipelineRunDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineRunArray, loaded, error] = usePipelineRunsV2(namespace, {
-    name: pipelineRunName,
-    limit: 1,
-  });
-  const pipelineRun = pipelineRunArray?.[0];
+  const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
   const { cta, isDisabled, disabledTooltip, key, label } = usePipelinererunAction(pipelineRun);
 
   const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');

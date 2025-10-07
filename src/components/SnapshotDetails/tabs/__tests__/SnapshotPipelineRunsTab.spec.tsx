@@ -145,13 +145,25 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
-    usePipelineRunsMock.mockReturnValue([[], false]);
+    usePipelineRunsMock.mockReturnValue([
+      [],
+      false,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<SnapshotPipelineRunsTab />);
     screen.getByRole('progressbar');
   });
 
   it('should render empty state if no pipelinerun is present', () => {
-    usePipelineRunsMock.mockReturnValue([[], true, false]);
+    usePipelineRunsMock.mockReturnValue([
+      [],
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Not found/);
     const button = screen.queryByText('Add component');
@@ -162,7 +174,13 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render pipelineRuns list when pipelineRuns are present', () => {
-    usePipelineRunsMock.mockReturnValue([[snapShotPLRs], true, false]);
+    usePipelineRunsMock.mockReturnValue([
+      snapShotPLRs,
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Pipeline runs/);
     screen.queryByText('Name');
@@ -174,11 +192,17 @@ describe('SnapshotPipelinerunsTab', () => {
   });
 
   it('should render both Build and Test pipelineruns in the pipelinerun list', () => {
-    usePipelineRunsMock.mockReturnValue([[snapShotPLRs], true, false]);
+    usePipelineRunsMock.mockReturnValue([
+      snapShotPLRs,
+      true,
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     render(<SnapshotPipelineRunsTab />);
 
     screen.queryByText('Build');
-    screen.queryByText('Test');
+    expect(screen.queryAllByText('Test')).toHaveLength(2);
     screen.queryByText('python-sample-942fq');
     screen.queryByText('go-sample-s2f4f');
   });
@@ -202,9 +226,9 @@ describe('SnapshotPipelinerunsTab', () => {
         },
       ],
       true,
-      false,
-      () => {},
-      { hasNextPage: false },
+      null,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<SnapshotPipelineRunsTab />);
 
