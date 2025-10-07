@@ -39,7 +39,10 @@
 }
 
 .pf-v5-c-log-viewer {
-  
+  .pf-v5-c-log-viewer__list {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
   &__main {
     margin-bottom: var(--pf-v5-global--spacer--md);
     height: 100% !important;
