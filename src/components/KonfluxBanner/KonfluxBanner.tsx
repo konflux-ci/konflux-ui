@@ -2,6 +2,7 @@ import React from 'react';
 import { Banner } from '@patternfly/react-core';
 import { useBanner } from '~/components/KonfluxBanner/useBanner';
 import { useResizeObserver } from '~/shared/hooks';
+import { useDebounceCallback } from '../../shared/hooks/useDebounceCallback';
 import { BannerContent, bannerTypeToVariant } from './BannerContent';
 
 export const KonfluxBanner: React.FC = () => {
@@ -25,7 +26,8 @@ export const KonfluxBanner: React.FC = () => {
     }
   }, [bannerElement]);
 
-  useResizeObserver(updateBannerHeight, bannerElement);
+  const debouncedUpdateBannerHeight = useDebounceCallback(updateBannerHeight, 100);
+  useResizeObserver(debouncedUpdateBannerHeight as ResizeObserverCallback, bannerElement);
 
   if (!banner) return null;
 
