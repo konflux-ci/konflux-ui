@@ -19,7 +19,7 @@ import { getCommitSha } from '../utils/commits-utils';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
 interface UsePipelineRunsV2Options
-  extends Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'fieldSelector'>> {
+  extends Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'fieldSelector' | 'name'>> {
   selector?: PipelineRunSelector;
 }
 
