@@ -27,25 +27,8 @@ jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
-jest.mock('~/kubearchive/hooks', () => ({
-  useKubearchiveListResourceQuery: jest.fn(() => ({
-    data: { pages: [] },
-    isLoading: false,
-    error: null,
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-    isFetchingNextPage: false,
-  })),
-}));
-
 jest.mock('~/feature-flags/hooks', () => ({
-  useIsOnFeatureFlag: jest.fn(() => false),
-  useFeatureFlags: jest.fn(() => [{}, jest.fn()]),
-  createConditionsHook: jest.fn(() => jest.fn(() => false)),
-}));
-
-jest.mock('~/feature-flags/utils', () => ({
-  ensureConditionIsOn: jest.fn(() => jest.fn(() => false)),
+  useFeatureFlags: jest.fn(() => [{ 'pipelineruns-kubearchive': false }, jest.fn()]),
 }));
 
 jest.mock('../../../../hooks/useTektonResults', () => ({
