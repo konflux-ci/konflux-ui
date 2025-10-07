@@ -4,9 +4,9 @@ import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useBuildPipelines } from '../useBuildPipelines';
-import { useTRPipelineRuns } from '../useTektonResults';
+import { usePipelineRunsV2 } from '../usePipelineRunsV2';
 
-jest.mock('../useTektonResults');
+jest.mock('../usePipelineRunsV2');
 jest.mock('~/kubearchive/hooks');
 jest.mock('~/kubearchive/conditional-checks', () => ({
   createConditionsHook: jest.fn(() => jest.fn()),
@@ -19,7 +19,7 @@ jest.mock('~/feature-flags/hooks', () => ({
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
@@ -39,7 +39,7 @@ describe('useBuildPipelines', () => {
 
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
-    useTRPipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       true,
       undefined,
@@ -50,7 +50,7 @@ describe('useBuildPipelines', () => {
 
     expect(result.current).toEqual([
       [],
-      false,
+      true,
       undefined,
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
@@ -63,8 +63,8 @@ describe('useBuildPipelines', () => {
       true,
       undefined,
     ]);
-    useTRPipelineRunsMock.mockReturnValue([
-      [],
+    usePipelineRunsV2Mock.mockReturnValue([
+      [testPipelineRuns[DataState.RUNNING]],
       true,
       undefined,
       undefined,
@@ -78,51 +78,60 @@ describe('useBuildPipelines', () => {
   });
 
   it('should filter build pipelines by component name when includeComponents is true', () => {
-    // Mock the feature flag to enable kubearchive
-    mockUseIsOnFeatureFlag.mockReturnValue(true);
-
-    // Mock kubearchive to return the pipeline runs
-    mockUseKubearchiveListResourceQuery.mockReturnValue({
-      data: {
-        pages: [
-          [
-            {
-              kind: 'PipelineRun',
-              metadata: {
-                name: 'pipeline-a',
-                labels: {
-                  'appstudio.openshift.io/component': 'component-a',
-                  'appstudio.openshift.io/application': 'test',
-                  'pipelinesascode.tekton.dev/event-type': 'push',
-                },
-              },
+    useK8sWatchResourceMock.mockReturnValue([
+      [
+        {
+          kind: 'PipelineRun',
+          metadata: {
+            name: 'pipeline-a',
+            labels: {
+              'appstudio.openshift.io/component': 'component-a',
+              'appstudio.openshift.io/application': 'test',
+              'pipelinesascode.tekton.dev/event-type': 'push',
             },
-            {
-              kind: 'PipelineRun',
-              metadata: {
-                name: 'pipeline-b',
-                labels: {
-                  'appstudio.openshift.io/component': 'component-b',
-                  'appstudio.openshift.io/application': 'test',
-                  'pipelinesascode.tekton.dev/event-type': 'push',
-                },
-              },
+          },
+        },
+        {
+          kind: 'PipelineRun',
+          metadata: {
+            name: 'pipeline-b',
+            labels: {
+              'appstudio.openshift.io/component': 'component-b',
+              'appstudio.openshift.io/application': 'test',
+              'pipelinesascode.tekton.dev/event-type': 'push',
             },
-          ],
-        ],
-      },
-      isLoading: false,
-      error: null,
-      hasNextPage: false,
-      fetchNextPage: undefined,
-      isFetchingNextPage: false,
-    });
+          },
+        },
+      ],
+      true,
+      undefined,
+    ]);
 
-    // Mock useK8sWatchResource to return empty array (cluster data)
-    useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
-
-    useTRPipelineRunsMock.mockReturnValue([
-      [],
+    usePipelineRunsV2Mock.mockReturnValue([
+      [
+        {
+          kind: 'PipelineRun',
+          metadata: {
+            name: 'pipeline-a',
+            labels: {
+              'appstudio.openshift.io/component': 'component-a',
+              'appstudio.openshift.io/application': 'test',
+              'pipelinesascode.tekton.dev/event-type': 'push',
+            },
+          },
+        },
+        {
+          kind: 'PipelineRun',
+          metadata: {
+            name: 'pipeline-b',
+            labels: {
+              'appstudio.openshift.io/component': 'component-b',
+              'appstudio.openshift.io/application': 'test',
+              'pipelinesascode.tekton.dev/event-type': 'push',
+            },
+          },
+        },
+      ],
       true,
       undefined,
       undefined,
@@ -142,6 +151,7 @@ describe('useBuildPipelines', () => {
     const [pipelineRuns, loaded] = result.current;
 
     expect(loaded).toBe(true);
-    expect(pipelineRuns[0]?.metadata?.name).toBe('pipeline-b');
+    expect(pipelineRuns).toHaveLength(1);
+    expect(pipelineRuns[0].metadata?.name).toBe('pipeline-b');
   });
 });
