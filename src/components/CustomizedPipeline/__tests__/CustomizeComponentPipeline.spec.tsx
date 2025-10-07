@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
-import { render } from '@testing-library/react';
 import { ComponentKind } from '../../../types';
+import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
 import { createK8sWatchResourceMock } from '../../../utils/test-utils';
 import CustomizeComponentPipeline from '../CustomizeComponentPipeline';
 
@@ -38,7 +38,7 @@ const mockComponent = {
 describe('CustomizeAllPipelines', () => {
   it('should render nothing while loading', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([{}, false]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizeComponentPipeline
         name="my-component"
         namespace="test"
@@ -50,7 +50,7 @@ describe('CustomizeAllPipelines', () => {
 
   it('should render modal with components table', () => {
     useK8sWatchResourceMock.mockReturnValue([mockComponent, true]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizeComponentPipeline
         name="my-component"
         namespace="test"

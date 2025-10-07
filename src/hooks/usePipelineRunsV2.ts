@@ -109,7 +109,7 @@ export const usePipelineRunsV2 = (
   etcdRunsRef.current = runs;
 
   const processedClusterData = React.useMemo((): PipelineRunKind[] => {
-    if (isLoading || error || !resources) {
+    if (isLoading || error || !resources || !Array.isArray(resources)) {
       return [];
     }
 

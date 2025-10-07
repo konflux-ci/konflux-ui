@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { ComponentKind } from '../../../types';
+import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
 import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
@@ -82,7 +83,7 @@ describe('CustomizePipeline', () => {
   });
 
   it('should render sending pull request', () => {
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('request-configure')]}
         onClose={() => {}}
@@ -94,7 +95,7 @@ describe('CustomizePipeline', () => {
   });
 
   it('should render rolling back', () => {
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('request-unconfigure')]}
         onClose={() => {}}
@@ -107,7 +108,7 @@ describe('CustomizePipeline', () => {
 
   it('should render pull request sent', () => {
     usePipelineRunsMock.mockReturnValue([[], true]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('done')]}
         onClose={() => {}}
@@ -120,7 +121,7 @@ describe('CustomizePipeline', () => {
 
   it('should render pull request merged', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('done')]}
         onClose={() => {}}
@@ -133,7 +134,7 @@ describe('CustomizePipeline', () => {
 
   it('should render resend pull request', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    const result = render(
+    const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('error')]}
         onClose={() => {}}
@@ -146,7 +147,7 @@ describe('CustomizePipeline', () => {
 
   it('should render PAC error message', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    render(
+    renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('error')]}
         onClose={() => {}}
@@ -162,7 +163,7 @@ describe('CustomizePipeline', () => {
       [{ pac: { 'error-message': 'Git Application is not installed in user repository' } }],
       true,
     ]);
-    render(
+    renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('error')]}
         onClose={() => {}}
@@ -175,7 +176,7 @@ describe('CustomizePipeline', () => {
 
   it('should display upgrade status message', () => {
     expect(
-      render(
+      renderWithQueryClient(
         <CustomizePipeline
           components={[createComponent('request-configure')]}
           onClose={() => {}}
@@ -187,7 +188,7 @@ describe('CustomizePipeline', () => {
 
   it('should display upgrade status message for a single component', () => {
     expect(
-      render(
+      renderWithQueryClient(
         <CustomizePipeline
           components={[createComponent('request-configure')]}
           onClose={() => {}}
@@ -199,7 +200,7 @@ describe('CustomizePipeline', () => {
 
   it('should display upgrade status message for multiple components', () => {
     expect(
-      render(
+      renderWithQueryClient(
         <CustomizePipeline
           components={[createComponent(), createComponent(), createComponent(null, true)]}
           onClose={() => {}}
@@ -212,7 +213,7 @@ describe('CustomizePipeline', () => {
   it('should display completed upgrade message', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
     expect(
-      render(
+      renderWithQueryClient(
         <CustomizePipeline
           components={[createComponent('done')]}
           onClose={() => {}}
@@ -224,7 +225,7 @@ describe('CustomizePipeline', () => {
 
   it('should show git url when available in component', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    render(
+    renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('done')]}
         onClose={() => {}}
@@ -236,7 +237,7 @@ describe('CustomizePipeline', () => {
 
   it('should show container image url when available in component', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    render(
+    renderWithQueryClient(
       <CustomizePipeline
         components={[
           {
