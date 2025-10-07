@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useComponents } from '../../../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../../../hooks/useIntegrationTestScenarios';
+import { usePipelineRunsForCommit } from '../../../../../hooks/usePipelineRuns';
 import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../hooks/useReleases';
 import { CustomError } from '../../../../../k8s/error';
@@ -19,8 +19,8 @@ import CommitVisualization from '../CommitVisualization';
 
 jest.mock('../../../../../hooks/useTektonResults');
 
-jest.mock('../../../../../hooks/usePipelineRunsForCommitV2', () => ({
-  usePipelineRunsForCommitV2: jest.fn(),
+jest.mock('../../../../../hooks/usePipelineRuns', () => ({
+  usePipelineRunsForCommit: jest.fn(),
 }));
 jest.mock('../../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
@@ -39,7 +39,7 @@ jest.mock('../../../../../hooks/useSnapshots', () => ({
   useSnapshots: jest.fn(),
 }));
 
-const mockUsePipelineRunsForCommit = usePipelineRunsForCommitV2 as jest.Mock;
+const mockUsePipelineRunsForCommit = usePipelineRunsForCommit as jest.Mock;
 const mockUseComponents = useComponents as jest.Mock;
 const mockUseIntegrationTestScenarios = useIntegrationTestScenarios as jest.Mock;
 const mockUseReleasePlans = useReleasePlans as jest.Mock;
