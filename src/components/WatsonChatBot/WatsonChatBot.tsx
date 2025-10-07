@@ -35,7 +35,6 @@ const chatSettings = {
 
 const WatsonChatBot: React.FC = () => {
   const [watSonSessionID, setWatsonSessionID] = React.useState<string>('');
-  const [watSonError, setWatsonError] = React.useState<Error>(null);
 
   React.useEffect(() => {
     const encodedAPIkey = btoa(`apikey:${API_KEY}`);
@@ -58,7 +57,11 @@ const WatsonChatBot: React.FC = () => {
 
     getWatSonSessionID()
       .then((result) => setWatsonSessionID(result.session_id))
-      .catch((err) => setWatsonError(err as Error));
+      .catch((err) => {
+        // Session creation error will be handled by getWatSonresponse when sessionId is empty
+        // eslint-disable-next-line no-console
+        console.error('Failed to create Watson session:', err);
+      });
   }, []);
 
   const id = 'my-chatbot-id'; // if not specified, will auto-generate uuidv4
@@ -67,7 +70,7 @@ const WatsonChatBot: React.FC = () => {
   } = useAuth();
 
   const fetchData = (data: { userInput: string }) => {
-    return getWatSonresponse(data.userInput, watSonSessionID, watSonError, email);
+    return getWatSonresponse(data.userInput, watSonSessionID, email);
   };
 
   const flow = {

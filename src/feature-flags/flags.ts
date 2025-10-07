@@ -102,7 +102,7 @@ const InternalFLAGS = {
     guard: {
       anyOf: ['isStagingCluster'],
       failureReason: 'Only available in staging',
-      visibleInFeatureFlagPanel: true,
+      visibleInFeatureFlagPanel: false,
     },
   },
 } satisfies Record<string, FeatureMeta>;

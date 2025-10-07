@@ -47,13 +47,8 @@ export const ASSISTANT_ID = process.env.ASSISTANT_ID;
 export const ENVIRONMENT_ID = process.env.ENVIRONMENT_ID;
 export const VERSION = process.env.VERSION;
 
-export const getWatSonresponse = async (
-  userInput: string,
-  sessionId: string,
-  watsonError: Error,
-  email: string,
-) => {
-  if (!sessionId || watsonError) {
+export const getWatSonresponse = async (userInput: string, sessionId: string, email: string) => {
+  if (!sessionId) {
     return 'Missing Watson session';
   }
   const url = `https://api.us-east.assistant.watson.cloud.ibm.com/v2/assistants/${ASSISTANT_ID}/environments/${ENVIRONMENT_ID}/sessions/${sessionId}/message?version=${VERSION}`;
