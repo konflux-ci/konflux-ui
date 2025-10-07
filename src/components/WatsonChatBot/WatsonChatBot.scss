@@ -106,27 +106,8 @@
     padding: 0 !important;
 
     
-    svg {
-       background-color: red;
-       align-self: center ;
-       margin: 0 auto;
-    }
-    //  display: block !important;
-    //  margin: 0 auto !important;
-    //  position: relative;
-    //  //top: 45%;
-    //  //left: 50%;
-    //  transform: translate(-50%, -50%);
-    //}
-    
-    &:hover {
-      background-color: var(--konflux-primary-hover-color);
-      border-color: var(--konflux-primary-hover-color);
-      background-image: none;
-    }
-    
-    &:focus {
-      box-shadow: 0 0 0 2px var(--konflux-primary-color);
+    & .rcb-send-icon {
+      transform: none !important;
     }
   }
 

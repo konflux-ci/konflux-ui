@@ -1,5 +1,6 @@
 import * as React from 'react';
 import ChatBot from 'react-chatbotify';
+import { useAuth } from '~/auth/useAuth';
 import { API_KEY, ASSISTANT_ID, ENVIRONMENT_ID, getWatSonresponse, VERSION } from './watson-utils';
 
 import './WatsonChatBot.scss';
@@ -61,9 +62,12 @@ const WatsonChatBot: React.FC = () => {
   }, []);
 
   const id = 'my-chatbot-id'; // if not specified, will auto-generate uuidv4
+  const {
+    user: { email },
+  } = useAuth();
 
   const fetchData = (data: { userInput: string }) => {
-    return getWatSonresponse(data.userInput, watSonSessionID, watSonError);
+    return getWatSonresponse(data.userInput, watSonSessionID, watSonError, email);
   };
 
   const flow = {
