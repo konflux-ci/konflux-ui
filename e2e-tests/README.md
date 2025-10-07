@@ -20,18 +20,20 @@ Prerequisites:
 > [!NOTE]
 > Currently, the tests run without any other tweaks just against the local installation of Konflux.
 
-Certain environment variables will need to be set up. The most convenient way is to export them from the CLI, in which case they need to be prefixed with `CYPRESS_`, e.g. `USERNAME` is set as `export CYPRESS_USERNAME=username`. Alternatively, they can be passed to cypress via `-e` flag, e.g `npx cypress run -e USERNAME=username`.
+Certain environment variables will need to be set up. The most convenient way is to export them from the CLI, in which case they need to be prefixed with `CYPRESS_`, e.g. `USERNAME` is set as `export CYPRESS_USERNAME=username`. Alternatively, they can be passed to cypress via `-e` flag, e.g `yarn run cy:run -e USERNAME=username`.
 
 Find the supported variables in the table below:
 | Variable name | Description | Required | Default Value |
 | -- | -- | -- | -- |
 | `KONFLUX_BASE_URL` | The URL to the main page of Konflux | Yes | 'https://localhost:8080' |
-| `USERNAME` | Username for local Konflux | Yes | 'user2@konflux.dev' |
-| `PASSWORD` | Password for local Konflux | Yes | 'password' |
+| `USERNAME` | Username for local Konflux | Only with PR_CHECK=true | 'user2@konflux.dev' |
+| `PASSWORD` | Password for local Konflux | Only with PR_CHECK=true | 'password' |
 | `PR_CHECK` | Assume the test is a PR check, using flow for local login | For PR checks | '' |
 | `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail | No | false |
 | `GH_TOKEN` | GitHub token for network requests | Yes | '' |
 | `GH_REPO_OWNER` | GitHub username where testing repo will be pushed. GH_TOKEN must have rights there. | Yes | `redhat-hac-qe` |
+
+Please note, that `USERNAME` and `PASSWORD` are used only when the login process s automated. Currently, the login is automated just for the Konflux backend running locally. When running against a stage backend, the 2FA is required and is not supported by tests. 
 
 ### Running test from source against local Konflux UI and staging Konflux backend
 This is the recommended way when either developing tests or a headed test runner is preferred. 
@@ -42,7 +44,7 @@ Once Konflux UI is running locally, head to the e2e-tests folder. After running 
 
 For the headed test runner:
 ```
-$ npx cypress open
+$ yarn run cy:open
 ```
 Select E2E testing and the browser of your choice (Chrome is recommended though), then launch any spec by clicking it in the list and watch as it runs.
 
@@ -51,11 +53,11 @@ Select E2E testing and the browser of your choice (Chrome is recommended though)
 
 For headless execution:
 ```
-$ npx cypress run
+$ yarn run cy:run
 ```
 Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the basic happy path spec in Chrome:
 ```
-$ npx cypress run -b chrome -s 'tests/basic-happy-path*'
+$ yarn run cy:run -b chrome -s 'tests/basic-happy-path*'
 ```
 
 ### Running test from source against local Konflux UI and local Konflux backend
@@ -66,7 +68,7 @@ For this setup, set also `PR_CHECK` variable to `true` to enable automated login
 export CYPRESS_PR_CHECK=true
 ```
 
-Run tests by using the command `$ npx cypress open` or pick some other way described in a previous chapter. Once tests are run, no manual interaction is needed.
+Run tests by using the command `$ yarn run cy:open` or pick some other way described in a previous chapter. Once tests are run, no manual interaction is needed.
 
 ### Running tests using the container image
 The `e2e-tests` folder contains two Containerfiles used mainly for the test automation. 
