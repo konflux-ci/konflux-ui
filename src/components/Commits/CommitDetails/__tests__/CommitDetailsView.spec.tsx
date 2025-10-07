@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { BrowserRouter, useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
+import { usePipelineRunsForCommit } from '../../../../hooks/usePipelineRuns';
 import { getCommitShortName } from '../../../../utils/commits-utils';
 import { createK8sWatchResourceMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
@@ -27,13 +27,13 @@ jest.mock('../../../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/usePipelineRunsForCommitV2', () => ({
-  usePipelineRunsForCommitV2: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRuns', () => ({
+  usePipelineRunsForCommit: jest.fn(),
 }));
 
 jest.mock('../visualization/CommitVisualization', () => () => <div />);
 
-const watchCommitPrsMock = usePipelineRunsForCommitV2 as jest.Mock;
+const watchCommitPrsMock = usePipelineRunsForCommit as jest.Mock;
 const watchResourceMock = createK8sWatchResourceMock();
 const watchParams = useParams as jest.Mock;
 

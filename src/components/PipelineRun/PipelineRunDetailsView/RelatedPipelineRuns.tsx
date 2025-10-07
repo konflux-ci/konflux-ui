@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popover, Skeleton } from '@patternfly/react-core';
-import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { PIPELINE_RUNS_DETAILS_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { PipelineRunGroupVersionKind } from '../../../models';
 import { PipelineRunKind } from '../../../types';
 import { getCommitSha } from '../../../utils/commits-utils';
@@ -15,7 +15,7 @@ const RelatedPipelineRuns: React.FC<{ pipelineRun: PipelineRunKind }> = ({ pipel
   const sha = getCommitSha(pipelineRun);
   const applicationName: string = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
 
-  const [pipelineRuns, relatedPipelineRunsLoaded] = usePipelineRunsForCommitV2(
+  const [pipelineRuns, relatedPipelineRunsLoaded] = usePipelineRunsForCommit(
     namespace,
     applicationName,
     sha,

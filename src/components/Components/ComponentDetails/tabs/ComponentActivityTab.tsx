@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
@@ -70,7 +69,6 @@ export const ComponentActivityTab: React.FC = () => {
     <div>
       <DetailsSection
         title="Activity"
-        featureFlag={<FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />}
         description="Monitor CI/CD activity for this component. Each item in the list represents a process that was started by a user, generated a snapshot, and released."
       >
         <Tabs
