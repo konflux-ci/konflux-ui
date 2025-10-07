@@ -41,6 +41,7 @@ jest.mock('~/kubearchive/hooks', () => ({
 
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(() => false),
+  useFeatureFlags: jest.fn(() => [{}, jest.fn()]),
   createConditionsHook: jest.fn(() => jest.fn(() => false)),
 }));
 
