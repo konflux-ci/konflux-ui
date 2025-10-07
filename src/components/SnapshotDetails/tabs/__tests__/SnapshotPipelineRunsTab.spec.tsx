@@ -1,9 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import { renderWithQueryClient } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { createTestQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
@@ -133,15 +132,6 @@ const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 
-const TestComponent = () => {
-  const queryClient = createTestQueryClient();
-  return (
-    <QueryClientProvider client={queryClient}>
-      <SnapshotPipelineRunsTab />
-    </QueryClientProvider>
-  );
-};
-
 const appName = 'my-test-app';
 
 const snapShotPLRs = [
@@ -210,7 +200,7 @@ describe('SnapshotPipelinerunsTab', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestComponent />);
+    renderWithQueryClient(<SnapshotPipelineRunsTab />);
     screen.getByRole('progressbar');
   });
 
@@ -222,7 +212,7 @@ describe('SnapshotPipelinerunsTab', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestComponent />);
+    renderWithQueryClient(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Not found/);
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
@@ -239,7 +229,7 @@ describe('SnapshotPipelinerunsTab', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestComponent />);
+    renderWithQueryClient(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Pipeline runs/);
     screen.queryByText('Name');
     screen.queryByText('Started');
@@ -257,7 +247,7 @@ describe('SnapshotPipelinerunsTab', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestComponent />);
+    renderWithQueryClient(<SnapshotPipelineRunsTab />);
 
     screen.queryByText('Build');
     expect(screen.queryAllByText('Test').length).toBeGreaterThan(0);
@@ -288,7 +278,7 @@ describe('SnapshotPipelinerunsTab', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestComponent />);
+    renderWithQueryClient(<SnapshotPipelineRunsTab />);
 
     expect(screen.queryAllByText('Test').length).toBeGreaterThan(0);
     screen.queryByText('go-sample-s2f4f');
