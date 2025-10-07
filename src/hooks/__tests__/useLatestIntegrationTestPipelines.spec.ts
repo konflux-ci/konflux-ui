@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react-hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunLabel, PipelineRunType } from '../../consts/pipelinerun';
-import { createK8sWatchResourceMock } from '../../utils/test-utils';
+import { createK8sWatchResourceMock, createTestQueryClient } from '../../utils/test-utils';
 import { useLatestIntegrationTestPipelines } from '../useLatestIntegrationTestPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
@@ -14,27 +14,27 @@ const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const testNames = ['test-caseqfvdj'];
 const testNames2 = ['test-caseqfvdj', 'test'];
 
-const createTestQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-
-const queryClientWrapper = ({ children }: { children: React.ReactNode }) => {
-  const queryClient = createTestQueryClient();
-  return React.createElement(QueryClientProvider, { client: queryClient }, children);
-};
-
 describe('useLatestIntegrationTestPipelines', () => {
+  let queryClient: QueryClient;
+
+  const renderHookWithQueryClient = (
+    namespace: string,
+    pipelinerun: string,
+    testNames: string[],
+  ) => {
+    return renderHook(() => useLatestIntegrationTestPipelines(namespace, pipelinerun, testNames), {
+      wrapper: ({ children }) =>
+        React.createElement(QueryClientProvider, { client: queryClient }, children),
+    });
+  };
+
+  beforeEach(() => {
+    queryClient = createTestQueryClient();
+    jest.clearAllMocks();
+  });
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
-    const { result } = renderHook(
-      () => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
-      { wrapper: queryClientWrapper },
-    );
+    const { result } = renderHookWithQueryClient('test-ns', 'test-pipelinerun', testNames);
 
     expect(result.current).toEqual([[], false, null]);
   });
@@ -51,10 +51,7 @@ describe('useLatestIntegrationTestPipelines', () => {
       pipelineType = watchOptions.selector.matchLabels[PipelineRunLabel.PIPELINE_TYPE];
       return [[testPipelineRuns[DataState.RUNNING]], true, undefined];
     });
-    const { result } = renderHook(
-      () => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
-      { wrapper: queryClientWrapper },
-    );
+    const { result } = renderHookWithQueryClient('test-ns', 'test-pipelinerun', testNames);
 
     const [pipelineRuns, loaded] = result.current;
     expect(loaded).toBe(true);
@@ -71,9 +68,7 @@ describe('useLatestIntegrationTestPipelines', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
 
-    renderHook(() => useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames2), {
-      wrapper: queryClientWrapper,
-    });
+    renderHookWithQueryClient('test-ns', 'test-pipelinerun', testNames2);
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });
