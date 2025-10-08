@@ -6,6 +6,7 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BUILD_STATUS_ANNOTATION,
   ComponentBuildState,
+  getConfigurationTime,
   LAST_CONFIGURATION_ANNOTATION,
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
@@ -137,6 +138,11 @@ describe('usePACStatesForComponents', () => {
 
     expect(results['my-ready-component']).toBe(PACState.ready);
     expect(results['my-pending-component']).toBe(PACState.pending);
+
+    // Add validation that configuration-time from migration path is used
+    const migratedComponent = components[1];
+    const configTime = getConfigurationTime(migratedComponent);
+    expect(configTime).toBe('Wed, 21 Jan 2023 19:36:25 UTC');
   });
 
   it('should look for additional Tekton results via getNextPage', () => {

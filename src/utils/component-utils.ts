@@ -156,3 +156,33 @@ export const startNewBuild = (component: ComponentKind) =>
 
 export const useComponentBuildStatus = (component: ComponentKind): ComponentBuildStatus =>
   React.useMemo(() => getComponentBuildStatus(component), [component]);
+
+export const getConfigurationTime = (component: ComponentKind): string => {
+  const buildStatus = getComponentBuildStatus(component);
+  try {
+    const lastConfiguration: ComponentKind | undefined = component.metadata?.annotations?.[
+      LAST_CONFIGURATION_ANNOTATION
+    ]
+      ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+      : undefined;
+
+    const lastPACStateIsMigration =
+      lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
+      BuildRequest.migratePac;
+
+    const lastPACConfiguration = lastConfiguration?.metadata?.annotations?.[BUILD_STATUS_ANNOTATION]
+      ? JSON.parse(lastConfiguration.metadata.annotations[BUILD_STATUS_ANNOTATION])
+      : undefined;
+
+    return lastPACStateIsMigration && lastPACConfiguration
+      ? lastPACConfiguration.pac?.['configuration-time']
+      : buildStatus?.pac?.['configuration-time'];
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Error parsing last-applied-configuration annotation:', e);
+    return buildStatus?.pac?.['configuration-time'];
+  }
+};
+
+export const useConfigurationTime = (component: ComponentKind) =>
+  React.useMemo(() => getConfigurationTime(component), [component]);
