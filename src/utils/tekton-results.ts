@@ -108,7 +108,9 @@ export const commitShaFilter = (commitSha: string): string =>
 
 export const creationTimestampFilterAfter = (creationTimestamp: string): string => {
   return Date.parse(creationTimestamp)
-    ? EXP(`data.metadata.creationTimestamp`, `"${creationTimestamp}"`, '>')
+    ? // The creation timestamp uses second precision, so using >= is less likely to cause edge cases
+      // due to sub-second delays between child creation
+      EXP(`data.metadata.creationTimestamp`, `"${creationTimestamp}"`, '>=')
     : '';
 };
 
