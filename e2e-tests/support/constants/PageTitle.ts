@@ -1,7 +1,6 @@
 export const pageTitles = {
   namespaces: 'Namespaces',
   applications: 'Applications',
-  issues:'Issues',
   createApp: 'Create an Application',
   sampleStart: 'Start with a sample',
   reviewComponent: 'Review your new components',
@@ -12,7 +11,6 @@ export const pageTitles = {
 export enum NavItem {
   overview = 'Overview',
   namespaces = 'Namespaces',
-  issues='Issues',
   applications = 'Applications',
   secrets = 'Secrets',
   releases = 'Releases',
