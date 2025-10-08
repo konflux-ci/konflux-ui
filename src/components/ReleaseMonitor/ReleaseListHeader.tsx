@@ -1,3 +1,4 @@
+import { pluralize } from '@patternfly/react-core';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
 import { ComponentProps } from '~/shared/components/table/Table';
 import { createTableHeaders } from '~/shared/components/table/utils';
@@ -71,7 +72,7 @@ export const getReleasesListHeader = (
       const countColumn = {
         title: (
           <span style={{ fontWeight: 'bold', fontSize: '0.875rem' }}>
-            {totalCount} {totalCount === 1 ? 'release' : 'releases'}
+            {pluralize(totalCount, 'release')}
           </span>
         ),
         props: {
