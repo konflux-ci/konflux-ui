@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { SortByDirection, ThProps } from '@patternfly/react-table';
 import { screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
@@ -33,22 +34,66 @@ jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => {
 });
 
 jest.mock('~/shared/components/table/TableComponent', () => {
-  return ({ data }) => (
-    <table role="table" aria-label="mock-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((d, i) => (
-          <tr key={i}>
-            <td>{d.metadata.name}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+  type MockColumn = { title: React.ReactNode; props: ThProps };
+  type RowData = { metadata: { name: string } };
+
+  return ({ data, Header }: { data: RowData[]; Header?: () => MockColumn[] }) => {
+    const columns: MockColumn[] = Header ? Header() : [];
+
+    const handleSortClick = (
+      idx: number,
+      currentDirection: ThProps['sort']['sortBy']['direction'],
+    ) => {
+      const nextDirection: SortByDirection =
+        String(currentDirection) === 'asc' ? SortByDirection.desc : SortByDirection.asc;
+      const sort: ThProps['sort'] | undefined = columns[idx]?.props?.sort;
+      if (sort?.onSort) {
+        const onSort = sort.onSort as (
+          e: React.SyntheticEvent,
+          index: number,
+          direction: SortByDirection,
+          extra: unknown,
+        ) => void;
+        onSort({} as React.SyntheticEvent, idx, nextDirection, {});
+      }
+    };
+
+    return (
+      <div>
+        <div>
+          {columns.map((col, idx) => {
+            const sort = col?.props?.sort;
+            if (sort) {
+              return (
+                <button
+                  key={idx}
+                  aria-label={`Column ${idx} sort`}
+                  onClick={() => handleSortClick(idx, sort.sortBy.direction)}
+                >
+                  {col.title}
+                </button>
+              );
+            }
+            return <span key={idx}>{col.title}</span>;
+          })}
+        </div>
+        <table role="table" aria-label="mock-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((d, i) => (
+              <tr key={i}>
+                <td>{d.metadata.name}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 });
 
 jest.mock('react-i18next', () => ({
@@ -226,5 +271,78 @@ describe('ReleaseMonitorListView', () => {
 
     fireEvent.change(filter, { target: { value: '' } });
     expect(filter.value).toBe('');
+  });
+
+  it('defaults to sorting by completion time (desc) among completed items', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+
+    // Ensure any persisted filters are cleared
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    if (filter.value) {
+      fireEvent.change(filter, { target: { value: '' } });
+      act(() => {
+        jest.advanceTimersByTime(700);
+      });
+    }
+    const clear = screen.queryByText('Clear all filters');
+    if (clear) fireEvent.click(clear);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+    });
+
+    const rows = screen.getAllByRole('row');
+    const names = rows
+      .slice(1) // skip header row in our simple table mock
+      .map((r) => r.querySelector('td')?.textContent);
+
+    // Among completed, newest first: test-release-3 before test-release-2
+    expect(names.indexOf('test-release-3')).toBeLessThan(names.indexOf('test-release-2'));
+  });
+
+  it('toggles sorting on completion time header', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+
+    // Wait for data to load to ensure toolbar is rendered
+    await waitFor(() => {
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+    });
+
+    // Ensure any persisted filters are cleared
+    const filterEl = screen.getByPlaceholderText('Filter by name...');
+    if (filterEl instanceof HTMLInputElement && filterEl.value) {
+      fireEvent.change(filterEl, { target: { value: '' } });
+      act(() => {
+        jest.advanceTimersByTime(700);
+      });
+    }
+    const clear = screen.queryByText('Clear all filters');
+    if (clear) fireEvent.click(clear);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+    });
+
+    // Toggle to ascending (Completion Time column index is 2)
+    const completionSortButton = screen.getByRole('button', { name: /Column 2 sort/i });
+    fireEvent.click(completionSortButton);
+
+    let rows = screen.getAllByRole('row');
+    let names = rows.slice(1).map((r) => r.querySelector('td')?.textContent);
+
+    // Among completed, oldest first in asc: test-release-2 before test-release-3
+    expect(names.indexOf('test-release-2')).toBeLessThan(names.indexOf('test-release-3'));
+
+    // Toggle back to descending
+    fireEvent.click(completionSortButton);
+
+    rows = screen.getAllByRole('row');
+    names = rows.slice(1).map((r) => r.querySelector('td')?.textContent);
+
+    expect(names.indexOf('test-release-3')).toBeLessThan(names.indexOf('test-release-2'));
   });
 });
