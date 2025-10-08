@@ -37,6 +37,9 @@ const CommitOverviewTab: React.FC = () => {
     namespace,
     applicationName,
     commitName,
+    undefined,
+    true,
+    200, // increase page size to avoid test-only page saturation
   );
 
   const commit = React.useMemo(

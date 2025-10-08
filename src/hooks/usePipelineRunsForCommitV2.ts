@@ -12,6 +12,7 @@ export const usePipelineRunsForCommitV2 = (
   commit: string,
   limit?: number,
   filterByComponents = true,
+  pageSize?: number,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application] = useApplication(namespace, applicationName);
@@ -34,26 +35,26 @@ export const usePipelineRunsForCommitV2 = (
           filterByCommit: commit,
         },
         ...(limit && { limit }),
+        ...(pageSize && { pageSize }),
       }),
-      [applicationName, commit, application, limit],
+      [applicationName, commit, application, limit, pageSize],
     ),
   );
 
   return React.useMemo(() => {
-    if (!plrsLoaded || plrError) {
+    if (plrError) {
       return [[], plrsLoaded, plrError, undefined, undefined];
     }
-    return [
-      pipelineRuns.filter((plr) =>
-        filterByComponents
-          ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
-          : true,
-      ),
-      plrsLoaded,
-      plrError,
-      getNextPage,
-      nextPageProps,
-    ];
+    // If filtering by components but component names are not loaded yet, avoid premature empty result
+    if (filterByComponents && !componentNames.length && plrsLoaded) {
+      return [[], false, undefined, undefined, undefined];
+    }
+    const filtered = pipelineRuns.filter((plr) =>
+      filterByComponents
+        ? componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT])
+        : true,
+    );
+    return [filtered, plrsLoaded, undefined, getNextPage, nextPageProps];
   }, [
     pipelineRuns,
     plrsLoaded,

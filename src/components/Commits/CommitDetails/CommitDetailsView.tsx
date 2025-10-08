@@ -32,6 +32,9 @@ const CommitDetailsView: React.FC = () => {
     namespace,
     applicationName,
     commitName,
+    undefined,
+    true,
+    200, // fetch a larger page so builds are not starved by tests
   );
 
   const commit = React.useMemo(
