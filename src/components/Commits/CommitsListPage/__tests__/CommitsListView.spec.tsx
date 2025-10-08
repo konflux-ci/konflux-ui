@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
@@ -64,14 +64,14 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(),
 }));
 
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
-const usePipelineRunsMock = usePipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
@@ -83,7 +83,7 @@ const CommitsList = () => (
 
 describe('CommitsListView', () => {
   beforeEach(() => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       pipelineWithCommits.slice(0, 4),
       true,
       undefined,
@@ -95,7 +95,7 @@ describe('CommitsListView', () => {
   });
 
   it('should render error state when there is an API error', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       true,
       new Error('500: Internal server error'),
@@ -107,7 +107,7 @@ describe('CommitsListView', () => {
   });
 
   it('should render empty state if no commits are present', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       true,
       undefined,
@@ -237,7 +237,7 @@ describe('CommitsListView', () => {
   });
 
   it('should render skeleton while data is not loaded', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       false,
       undefined,
@@ -257,7 +257,7 @@ describe('CommitsListView', () => {
       </FilterContextProvider>,
     );
 
-    expect(usePipelineRunsMock).toHaveBeenCalledWith(
+    expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns', // namespace
       {
         selector: {
@@ -272,7 +272,7 @@ describe('CommitsListView', () => {
   });
 
   it('should show loader if next page is loading', () => {
-    usePipelineRunsMock.mockReturnValue([
+    usePipelineRunsV2Mock.mockReturnValue([
       [],
       false,
       undefined,

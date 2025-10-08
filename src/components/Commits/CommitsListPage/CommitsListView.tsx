@@ -10,7 +10,7 @@ import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useComponents } from '../../../hooks/useComponents';
-import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -54,7 +54,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRuns(
+    usePipelineRunsV2(
       applicationLoaded ? namespace : null,
       React.useMemo(
         () => ({
