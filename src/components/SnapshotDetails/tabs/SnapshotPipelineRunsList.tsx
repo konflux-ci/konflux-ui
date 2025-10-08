@@ -120,7 +120,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg"
         data-test="snapshot-plr-title"
       >
-        Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} fullLabel />
+        Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       {(isFiltered || snapshotPipelineRuns.length > 0) && (
         <PipelineRunsFilterToolbar
