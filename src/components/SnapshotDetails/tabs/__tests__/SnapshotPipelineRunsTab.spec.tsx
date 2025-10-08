@@ -27,15 +27,6 @@ jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
-jest.mock('~/feature-flags/hooks', () => ({
-  useFeatureFlags: jest.fn(() => [{ 'pipelineruns-kubearchive': false }, jest.fn()]),
-}));
-
-jest.mock('~/kubearchive/conditional-checks', () => ({
-  createConditionsHook: jest.fn(() => jest.fn()),
-  useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: false })),
-}));
-
 jest.mock('../../../../hooks/useTektonResults', () => ({
   useTRPipelineRuns: jest.fn(() => [
     [],
