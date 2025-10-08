@@ -11,6 +11,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { SnapshotLabels } from '../../../consts/snapshots';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { useScanResults } from '../../../hooks/useScanResults';
@@ -67,7 +68,7 @@ const SnapshotOverviewTab: React.FC = () => {
   return (
     <>
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
-        Snapshot details
+        Snapshot details <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       <Flex>
         <Flex flex={{ default: 'flex_3' }}>

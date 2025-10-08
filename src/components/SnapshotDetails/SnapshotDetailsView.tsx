@@ -1,6 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../consts/snapshots';
@@ -109,7 +110,11 @@ const SnapshotDetailsView: React.FC = () => {
           },
           {
             key: 'pipelineruns',
-            label: 'Pipeline runs',
+            label: (
+              <>
+                Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
+              </>
+            ),
           },
         ]}
       />

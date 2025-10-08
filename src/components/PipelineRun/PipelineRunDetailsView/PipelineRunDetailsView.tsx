@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
@@ -103,6 +104,7 @@ export const PipelineRunDetailsView: React.FC = () => {
         <>
           <span className="pf-v5-u-mr-sm">{pipelineRunName}</span>
           <StatusIconWithTextLabel status={plrStatus} />
+          <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
         </>
       }
       actions={[
