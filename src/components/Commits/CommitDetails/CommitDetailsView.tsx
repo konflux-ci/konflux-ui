@@ -1,11 +1,12 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
-import { usePipelineRunsForCommit } from '../../../hooks/usePipelineRuns';
 import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -27,7 +28,7 @@ const CommitDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommit(
+  const [pipelineruns, loaded, loadErr] = usePipelineRunsForCommitV2(
     namespace,
     applicationName,
     commitName,
@@ -100,6 +101,7 @@ const CommitDetailsView: React.FC = () => {
               <b>{commit.shaTitle}</b>
             </span>
             <StatusIconWithTextLabel status={commitStatus as runStatus} />
+            <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
           </Text>
         }
         actions={[

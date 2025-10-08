@@ -6,12 +6,14 @@ import './DetailsSection.scss';
 type DetailsSectionProps = {
   title?: React.ReactNode;
   description?: React.ReactNode;
+  featureFlag?: React.ReactNode;
   children: React.ReactNode;
 };
 
 export const DetailsSection: React.FC<React.PropsWithChildren<DetailsSectionProps>> = ({
   title,
   description,
+  featureFlag,
   children,
 }) => {
   return (
@@ -19,6 +21,7 @@ export const DetailsSection: React.FC<React.PropsWithChildren<DetailsSectionProp
       {title ? (
         <Title headingLevel="h4" className="details-section__title" size="lg">
           {title}
+          {featureFlag}
         </Title>
       ) : null}
       {description ? (
