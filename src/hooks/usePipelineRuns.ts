@@ -255,6 +255,7 @@ export const usePipelineRunsForCommit = (
   commit: string,
   limit?: number,
   filterByComponents = true,
+  plrType?: PipelineRunType,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
@@ -274,13 +275,14 @@ export const usePipelineRunsForCommit = (
           filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
+            ...(plrType && { [PipelineRunLabel.PIPELINE_TYPE]: plrType }),
           },
           filterByCommit: commit,
         },
         // TODO: Add limit when filtering by component name AND only PLRs are returned
         // limit,
       }),
-      [applicationName, commit, application],
+      [applicationName, commit, application, plrType],
     ),
   );
 
