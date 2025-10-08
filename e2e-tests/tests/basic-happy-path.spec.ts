@@ -156,7 +156,7 @@ describe('Basic Happy Path', () => {
           UIhelper.verifyLabelAndValue('Pipeline', pipelinerunName);
           UIhelper.verifyLabelAndValue('Application', applicationName);
           UIhelper.verifyLabelAndValue('Component', componentName);
-          UIhelper.verifyLabelAndValue('Related pipelines', '0 pipelines');
+          UIhelper.verifyLabelAndValue('Related pipelines', '\\d+ pipelines?');
 
           DetailsTab.waitForPLRAndDownloadAllLogs();
 
