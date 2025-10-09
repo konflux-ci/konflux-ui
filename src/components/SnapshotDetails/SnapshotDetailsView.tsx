@@ -1,9 +1,9 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../consts/snapshots';
-import { usePipelineRun } from '../../hooks/usePipelineRuns';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
@@ -28,7 +28,7 @@ const SnapshotDetailsView: React.FC = () => {
     [snapshot, loaded, snapshotError],
   );
 
-  const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRun(
+  const [buildPipelineRun, plrLoaded, plrLoadError] = usePipelineRunV2(
     snapshot?.metadata?.namespace,
     buildPipelineName,
   );
@@ -54,6 +54,7 @@ const SnapshotDetailsView: React.FC = () => {
     return (
       <DetailsPage
         headTitle={snapshot.metadata.name}
+        featureFlags={['pipelineruns-kubearchive', 'taskruns-kubearchive']}
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
