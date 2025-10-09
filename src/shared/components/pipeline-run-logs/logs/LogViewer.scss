@@ -33,3 +33,14 @@
     z-index: 1000;
   }
 }
+
+.pf-v5-c-log-viewer {
+  .pf-v5-c-log-viewer__list {
+    overflow-x: hidden !important;
+    width: 100% !important;
+  }
+
+  .pf-v5-c-log-viewer__scroll-container {
+    overflow-y: visible !important;
+  }
+}

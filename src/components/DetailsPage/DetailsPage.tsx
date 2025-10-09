@@ -54,7 +54,8 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
 }) => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const showBackLink = state?.showBackButton || false;
+  const { backButtonText, backButtonLink } = state ?? {};
+
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -123,15 +124,15 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   return (
     <PageGroup data-test="details" className="app-details">
       <PageSection type="breadcrumb">
-        {!showBackLink && breadcrumbs && (
+        {!backButtonLink && breadcrumbs && (
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
-        {showBackLink ? (
-          <Button onClick={() => navigate(-1)} variant="link" isInline>
+        {backButtonLink && backButtonText ? (
+          <Button onClick={() => navigate(backButtonLink as string)} variant="link" isInline>
             <Icon>
               <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
             </Icon>
-            {'Back to release details'}
+            {backButtonText}
           </Button>
         ) : (
           ''

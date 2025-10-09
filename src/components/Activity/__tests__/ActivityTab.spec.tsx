@@ -1,6 +1,12 @@
+import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, screen } from '@testing-library/react';
-import { createK8sWatchResourceMock, routerRenderer } from '../../../utils/test-utils';
+import {
+  createK8sWatchResourceMock,
+  routerRenderer,
+  createTestQueryClient,
+} from '../../../utils/test-utils';
 import { ActivityTab } from '../ActivityTab';
 
 jest.mock('react-router-dom', () => {
@@ -13,14 +19,39 @@ jest.mock('react-router-dom', () => {
 });
 
 jest.mock('../../../hooks/useTektonResults');
-jest.mock('../../../hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(() => [
+jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(() => [
     [],
     true,
     undefined,
     () => {},
     { isFetchingNextPage: false, hasNextPage: false },
   ]),
+}));
+jest.mock('~/kubearchive/hooks');
+jest.mock('~/feature-flags/hooks', () => ({
+  useIsOnFeatureFlag: jest.fn(() => false),
+  // Provide flags map for FeatureFlagIndicator which uses useFeatureFlags()
+  useFeatureFlags: jest.fn(() => [{ 'pipelineruns-kubearchive': false }, jest.fn()]),
+}));
+jest.mock(
+  '~/kubearchive/conditional-checks',
+  () => ({
+    createConditionsHook: jest.fn(),
+  }),
+  { virtual: true },
+);
+jest.mock('../../../hooks/useBuildPipelines', () => ({
+  useBuildPipelines: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+}));
+jest.mock('../../../hooks/useComponents', () => ({
+  useComponents: jest.fn(() => [[], true, undefined]),
 }));
 
 const resourceMock = createK8sWatchResourceMock();
@@ -30,8 +61,16 @@ const useParamsMock = useParams as jest.Mock;
 
 describe('Activity Tab', () => {
   let navigateMock: jest.Mock;
+  let queryClient: QueryClient;
+
+  const renderWithProviders = (element: React.ReactElement) => {
+    return routerRenderer(
+      React.createElement(QueryClientProvider, { client: queryClient }, element),
+    );
+  };
 
   beforeEach(() => {
+    queryClient = createTestQueryClient();
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
     useParamsMock.mockReturnValue({ applicationName: 'test-app', workspaceName: 'test-ws' });
@@ -43,12 +82,12 @@ describe('Activity Tab', () => {
   });
 
   it('should render Activity Tab', () => {
-    routerRenderer(<ActivityTab />);
+    renderWithProviders(<ActivityTab />);
     screen.getByText('Activity by');
   });
 
   it('should render two tabs under activity', () => {
-    routerRenderer(<ActivityTab />);
+    renderWithProviders(<ActivityTab />);
     screen.getByText('Latest commits');
     screen.getByText('Pipeline runs');
 
@@ -67,7 +106,7 @@ describe('Activity Tab', () => {
       workspaceName: 'test-ws',
       activityTab: 'pipelineruns',
     });
-    let activitiesPage = routerRenderer(<ActivityTab />);
+    let activitiesPage = renderWithProviders(<ActivityTab />);
     let tabs = activitiesPage.getByTestId('activities-tabs-id');
     let activeTab = tabs.querySelector('.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text');
     expect(activeTab).toHaveTextContent('Pipeline runs');
@@ -78,7 +117,7 @@ describe('Activity Tab', () => {
       workspaceName: 'test-ws',
       activityTab: 'latest-commits',
     });
-    activitiesPage = routerRenderer(<ActivityTab />);
+    activitiesPage = renderWithProviders(<ActivityTab />);
     tabs = activitiesPage.getByTestId('activities-tabs-id');
     activeTab = tabs.querySelector('.pf-v5-c-tabs__item.pf-m-current .pf-v5-c-tabs__item-text');
     expect(activeTab).toHaveTextContent('Latest commits');
@@ -86,7 +125,7 @@ describe('Activity Tab', () => {
   });
 
   it('should navigate to the correct tab when clicked', () => {
-    routerRenderer(<ActivityTab />);
+    renderWithProviders(<ActivityTab />);
     const latestCommitsTab = screen.getByTestId('activity__tabItem latest-commits');
     const pipelineRunsTab = screen.getByTestId('activity__tabItem pipelineruns');
 

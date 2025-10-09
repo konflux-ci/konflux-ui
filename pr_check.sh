@@ -55,6 +55,14 @@ build_ui_image() {
 
     podman image save -o konflux-ui.tar ${KONFLUX_UI_IMAGE_REF}
     kind load image-archive konflux-ui.tar -n konflux
+
+    # increase memory on device to avoid OOM killed pods during EC check
+    echo "Pruning images"
+    set -x
+    rm konflux-ui.tar
+    podman system prune --all --force
+    set +x
+
 }
 
 

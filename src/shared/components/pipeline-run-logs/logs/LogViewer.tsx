@@ -147,7 +147,7 @@ const LogViewer: React.FC<Props> = ({
             >
               <ToolbarGroup>
                 <ToolbarItem>
-                  <FeatureFlagIndicator flags={['kubearchive-logs']} />
+                  <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
                 </ToolbarItem>
               </ToolbarGroup>
               {showSearch && (

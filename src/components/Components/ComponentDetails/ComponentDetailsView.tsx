@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, ButtonVariant, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getErrorState } from '~/shared/utils/error-utils';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { useComponent } from '../../../hooks/useComponents';
@@ -124,6 +125,7 @@ const ComponentDetailsView: React.FC = () => {
             <span className="pf-u-mr-sm">
               <b>{component.spec.componentName}</b>
             </span>
+            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </Text>
         }
         actions={actions}

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useComponents } from './useComponents';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export const useLatestIntegrationTestPipelines = (
   namespace: string,
@@ -28,7 +28,7 @@ export const useLatestIntegrationTestPipelines = (
     [integrationTestNames, foundNames],
   );
 
-  const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRuns(
+  const [pipelineRuns, pipelineRunsLoaded, plrError, getNextPage] = usePipelineRunsV2(
     !componentsLoaded || !neededNames.length ? null : namespace,
     React.useMemo(
       () => ({

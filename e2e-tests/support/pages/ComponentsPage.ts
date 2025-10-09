@@ -171,8 +171,8 @@ export class ComponentPage extends AbstractWizardPage {
   }
 
   closeModal() {
-    // force click as there is sometimes a tooltip blocking the button
-    cy.get(ComponentsPagePO.customBuildPipelineModalCloseBtn).click({ force: true });
+    cy.get('button[aria-label="Close"].pf-m-plain').click();
+    cy.get('[data-test="close-button custom-pipeline-modal"]').should('not.exist');
   }
 
   verifyComponentGHReferenceAndLink(linkText: string, link: string) {

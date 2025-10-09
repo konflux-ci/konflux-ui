@@ -54,6 +54,9 @@ We welcome contributions of all kinds! Follow these steps to get started:
 8. Once your PR is ready:
 
    - ✅ Ensure tests pass and all required checks are green.
+
+   > Tip: You or someone with the write permissions to the repository can re-run failing GitHub Action "PR Check Test" in the job's web page. Others have to update their branch to trigger the job.
+
    - ✅ Get at least **2 approvals** from reviewers.
    - ✅ Make sure there are no pending **requested changes**.
 

@@ -9,10 +9,11 @@ import {
 } from '@patternfly/react-core';
 import dayjs from 'dayjs';
 import { PIPELINERUN_DETAILS_PATH } from '@routes/paths';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useLatestBuildPipelineRunForComponent } from '../../hooks/usePipelineRuns';
-import { useTaskRuns } from '../../hooks/useTaskRuns';
 import PipelineRunLogs from '../../shared/components/pipeline-run-logs/PipelineRunLogs';
 import { EmptyBox, LoadingBox } from '../../shared/components/status-box/StatusBox';
 import { ComponentKind } from '../../types';
@@ -35,7 +36,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
     component.metadata.namespace,
     component.metadata.name,
   );
-  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRuns(
+  const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     pipelineRun?.metadata?.namespace,
     pipelineRun?.metadata?.name,
   );
@@ -61,6 +62,7 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
       <div className="pf-v5-c-modal-box__title build-log-viewer__title">
         <span className="pf-v5-c-modal-box__title-text">{`Build pipeline run log for ${component.metadata.name}`}</span>
         <StatusIconWithTextLabel status={plrStatus} />
+        <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
       </div>
       <div>
         <DescriptionList

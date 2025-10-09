@@ -67,7 +67,8 @@ export const AddIssueModal: React.FC<React.PropsWithChildren<AddIssueModalProps>
               ? { id: '', source: '', uploadDate: dateFormat(new Date()) }
               : {
                   key: '',
-                  components: [],
+                  component: '',
+                  packages: [],
                 }
           }
           validationSchema={isBug ? IssueFormSchema : CVEFormSchema}

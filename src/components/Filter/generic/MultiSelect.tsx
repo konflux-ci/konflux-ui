@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ToolbarFilter } from '@patternfly/react-core';
+import { Divider, ToolbarFilter } from '@patternfly/react-core';
 import {
   Select,
   SelectGroup,
@@ -7,6 +7,8 @@ import {
   SelectVariant,
 } from '@patternfly/react-core/deprecated';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
+
+export const MENU_DIVIDER = "--divider--";
 
 type MultiSelectProps = {
   label: string;
@@ -62,16 +64,20 @@ export const MultiSelect = ({
       >
         {[
           <SelectGroup label={label} key={filterKey}>
-            {Object.keys(options).map((filter) => (
-              <SelectOption
-                key={filter}
-                value={filter}
-                isChecked={values.includes(filter)}
-                itemCount={options[filter] ?? 0}
-              >
-                {filter}
-              </SelectOption>
-            ))}
+            {Object.keys(options).map((filter) =>
+              filter.startsWith(MENU_DIVIDER) ? (
+                <Divider key={filter} />
+              ) : (
+                <SelectOption
+                  key={filter}
+                  value={filter}
+                  isChecked={values.includes(filter)}
+                  itemCount={options[filter] ?? 0}
+                >
+                  {filter}
+                </SelectOption>
+              ),
+            )}
           </SelectGroup>,
         ]}
       </Select>

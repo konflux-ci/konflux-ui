@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { useK8sWatchResource } from '~/k8s';
 import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
-import { useK8sWatchResource } from '../k8s';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
@@ -242,6 +242,13 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
   return [latestSuccess, loaded, error];
 };
 
+/**
+ * @deprecated
+ * Replaced by usePipelineRunsForCommitV2 function in
+ * ~/src/hooks/usePipelineRunsForCommitV2.ts
+ * usePipelineRunsForCommitV2 uses KubeArchive and
+ * assures backward compatibility.
+ */
 export const usePipelineRunsForCommit = (
   namespace: string,
   applicationName: string,
