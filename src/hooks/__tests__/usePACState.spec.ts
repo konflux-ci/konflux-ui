@@ -1,4 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { useTRPipelineRuns } from '../../hooks/useTektonResults';
 import { ComponentKind } from '../../types';
 import {
@@ -12,6 +14,11 @@ import { createK8sWatchResourceMock } from '../../utils/test-utils';
 import usePACState, { PACState } from '../usePACState';
 
 jest.mock('../../hooks/useTektonResults');
+jest.mock('~/kubearchive/hooks');
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(),
+}));
 
 jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
   useApplicationPipelineGitHubApp: jest.fn(() => ({
@@ -22,6 +29,8 @@ jest.mock('../../hooks/useApplicationPipelineGitHubApp', () => ({
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
 const createComponent = (buildState?: ComponentBuildState, migration = false): ComponentKind =>
   ({
@@ -58,6 +67,19 @@ const createComponent = (buildState?: ComponentBuildState, migration = false): C
   }) as unknown as ComponentKind;
 
 describe('usePACState', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: undefined,
+      isFetchingNextPage: false,
+    });
+  });
+
   it('should identify sample state', () => {
     useK8sWatchResourceMock.mockReturnValueOnce([[], true]);
     const component = createComponent(undefined);

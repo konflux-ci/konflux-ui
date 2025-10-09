@@ -1,17 +1,42 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useBuildPipelines } from '../useBuildPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
+jest.mock('~/kubearchive/hooks', () => ({
+  ...jest.requireActual('~/kubearchive/hooks'),
+  useKubearchiveListResourceQuery: jest.fn(),
+}));
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(),
+}));
 jest.mock('../useTektonResults');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
 describe('useBuildPipelines', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: undefined,
+      isFetchingNextPage: false,
+    });
+  });
+
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     useTRPipelineRunsMock.mockReturnValue([
@@ -60,6 +85,7 @@ describe('useBuildPipelines', () => {
         {
           kind: 'PipelineRun',
           metadata: {
+            uid: 'pipeline-a',
             name: 'pipeline-a',
             labels: {
               'appstudio.openshift.io/component': 'component-a',
@@ -71,6 +97,7 @@ describe('useBuildPipelines', () => {
         {
           kind: 'PipelineRun',
           metadata: {
+            uid: 'pipeline-b',
             name: 'pipeline-b',
             labels: {
               'appstudio.openshift.io/component': 'component-b',

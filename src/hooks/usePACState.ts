@@ -10,7 +10,7 @@ import {
   useConfigurationTime,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export enum PACState {
   sample,
@@ -36,7 +36,7 @@ const usePACState = (component: ComponentKind) => {
   const { name: prBotName } = useApplicationPipelineGitHubApp();
   const configurationTime = useConfigurationTime(component);
 
-  const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRuns(
+  const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRunsV2(
     !isSample && pacProvision ? component.metadata.namespace : null,
     React.useMemo(
       () => ({

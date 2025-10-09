@@ -15,8 +15,8 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../../hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(() => [[], true]),
+jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(() => [[], true]),
 }));
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
