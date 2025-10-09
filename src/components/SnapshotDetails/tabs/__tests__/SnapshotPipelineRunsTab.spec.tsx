@@ -27,32 +27,6 @@ jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useTektonResults', () => ({
-  useTRPipelineRuns: jest.fn(() => [
-    [],
-    true,
-    null,
-    jest.fn(),
-    { isFetchingNextPage: false, hasNextPage: false },
-  ]),
-  useTRTaskRuns: jest.fn(() => [
-    [],
-    true,
-    null,
-    jest.fn(),
-    { isFetchingNextPage: false, hasNextPage: false },
-  ]),
-}));
-
-jest.mock('~/k8s', () => ({
-  useK8sWatchResource: jest.fn(() => ({
-    data: [],
-    isLoading: false,
-    error: null,
-  })),
-  commonFetch: jest.fn(() => Promise.resolve({})),
-}));
-
 jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
   useComponent: jest.fn().mockReturnValue([{ metadata: { name: { test } } }, true]),
