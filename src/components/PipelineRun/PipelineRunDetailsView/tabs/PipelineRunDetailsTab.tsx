@@ -16,12 +16,11 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
@@ -57,7 +56,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
+  const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
@@ -121,7 +120,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   return (
     <>
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
-        Pipeline run details <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+        Pipeline run details
       </Title>
       {taskRunError ? (
         <div className="pf-v5-u-pb-lg">

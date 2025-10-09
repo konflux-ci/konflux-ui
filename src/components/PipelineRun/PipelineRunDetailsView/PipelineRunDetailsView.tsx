@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRun } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunModel } from '../../../models';
 import {
   INTEGRATION_TEST_PIPELINE_LIST_PATH,
@@ -30,7 +30,7 @@ export const PipelineRunDetailsView: React.FC = () => {
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
+  const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
   const { cta, isDisabled, disabledTooltip, key, label } = usePipelinererunAction(pipelineRun);
 
   const [canPatchPipeline] = useAccessReviewForModel(PipelineRunModel, 'patch');
@@ -87,6 +87,7 @@ export const PipelineRunDetailsView: React.FC = () => {
     <DetailsPage
       data-test="pipelinerun-details-test-id"
       headTitle={pipelineRunName}
+      featureFlags={['pipelineruns-kubearchive', 'taskruns-kubearchive']}
       breadcrumbs={[
         ...applicationBreadcrumbs,
         getDynamicPipelineRunsBreadcrumb(),
