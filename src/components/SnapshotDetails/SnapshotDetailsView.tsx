@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../consts/snapshots';
@@ -55,6 +54,7 @@ const SnapshotDetailsView: React.FC = () => {
     return (
       <DetailsPage
         headTitle={snapshot.metadata.name}
+        featureFlags={['pipelineruns-kubearchive', 'taskruns-kubearchive']}
         breadcrumbs={[
           ...applicationBreadcrumbs,
           {
@@ -95,7 +95,6 @@ const SnapshotDetailsView: React.FC = () => {
                 </Text>
               </>
             )}
-            <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'taskruns-kubearchive']} />
           </>
         }
         baseURL={SNAPSHOT_DETAILS_PATH.createPath({
