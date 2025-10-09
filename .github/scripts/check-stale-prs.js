@@ -1,42 +1,44 @@
-const { Octokit } = require('@octokit/rest');
-const dayjs = require('dayjs');
+import { Octokit } from '@octokit/rest';
+import dayjs from 'dayjs';
 
+// ----- Configuration -----
 const REPO_OWNER = 'konflux-ci';
 const REPO_NAME = 'konflux-ui';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+
+if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
+if (!SLACK_WEBHOOK_URL) throw new Error('SLACK_WEBHOOK_URL is not set');
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-const getPRs = async () => {
-  const { data } = await octokit.pulls.list({
+// ----- GitHub API helpers -----
+const getPRs = (params = {}) =>
+  octokit.paginate(octokit.pulls.list, {
     owner: REPO_OWNER,
     repo: REPO_NAME,
     state: 'open',
     per_page: 100,
+    ...params,
   });
-  return data;
-};
 
-const getComments = async (prNumber) => {
-  const { data } = await octokit.issues.listComments({
+const getComments = (prNumber) =>
+  octokit.paginate(octokit.issues.listComments, {
     owner: REPO_OWNER,
     repo: REPO_NAME,
     issue_number: prNumber,
     per_page: 100,
   });
-  return data;
-};
 
-const getReviews = async (prNumber) => {
-  const { data } = await octokit.pulls.listReviews({
+const getReviews = (prNumber) =>
+  octokit.paginate(octokit.pulls.listReviews, {
     owner: REPO_OWNER,
     repo: REPO_NAME,
     pull_number: prNumber,
     per_page: 100,
   });
-  return data;
-};
 
+// ----- Main logic -----
 const checkStalePRs = async () => {
   const prs = await getPRs();
 
@@ -45,13 +47,11 @@ const checkStalePRs = async () => {
   const openOver2Weeks = [];
   const openOver1Month = [];
 
-  for (const pr of prs) {
-    const comments = await getComments(pr.number);
-    const reviews = await getReviews(pr.number);
+  const now = dayjs();
 
-    const approvals = reviews.filter((r) => r.state === 'APPROVED');
-    const latestComment = comments.length > 0 ? comments[comments.length - 1].updated_at : null;
-    const daysOpen = dayjs().diff(dayjs(pr.created_at), 'day');
+  for (const pr of prs) {
+    const [comments, reviews] = await Promise.all([getComments(pr.number), getReviews(pr.number)]);
+    const daysOpen = now.diff(dayjs(pr.created_at), 'day');
 
     const prInfo = {
       number: pr.number,
@@ -61,71 +61,74 @@ const checkStalePRs = async () => {
       daysOpen,
     };
 
-    // PRs with 2+ approvals but still open
-    if (approvals.length >= 2 && !pr.merged_at) {
-      approvedButOpen.push(prInfo);
-    }
+    // Track latest activity
+    let latestActivity = null;
+    const latestReviewByUser = new Map();
 
-    // PRs under review with no comments OR no new comments within 2 days
-    if (comments.length === 0 && dayjs().diff(dayjs(pr.created_at), 'day') >= 2) {
-      noCommentsIn2Days.push(prInfo);
-    } else if (comments.length > 0 && dayjs().diff(dayjs(latestComment), 'day') >= 2) {
-      noCommentsIn2Days.push(prInfo);
-    }
-
-    // PRs open for more than 2 weeks (14 days)
-    if (daysOpen >= 14 && daysOpen < 30) {
-      openOver2Weeks.push(prInfo);
-    }
-
-    // PRs open for more than 1 month (30 days)
-    if (daysOpen >= 30) {
-      openOver1Month.push(prInfo);
-    }
-  }
-
-  // Build Slack message
-  const today = dayjs().format('dddd, MMM D, YYYY');
-  let message = `📊 *Konflux-UI PR Report — ${today}*\n\n`;
-  message += `*Total Open PRs:* ${prs.length}\n\n`;
-
-  // PRs Under Review (no comments in last 2 days)
-  if (noCommentsIn2Days.length > 0) {
-    message += `📝 *PRs Under Review (no comments in last 2 days)*\n`;
-    noCommentsIn2Days.forEach((pr) => {
-      message += `• <${pr.url}|#${pr.number} ${pr.title}> (opened by @${pr.author})\n`;
+    // Comments
+    comments.forEach((c) => {
+      const ts = dayjs(c.updated_at);
+      if (!latestActivity || ts.isAfter(latestActivity)) latestActivity = ts;
     });
-    message += `\n`;
-  }
 
-  // PRs with 2 Approvals but Still Open
-  if (approvedButOpen.length > 0) {
-    message += `✅ *PRs with 2 Approvals but Still Open*\n`;
-    approvedButOpen.forEach((pr) => {
-      message += `• <${pr.url}|#${pr.number} ${pr.title}> (opened by @${pr.author})\n`;
+    // Reviews
+    reviews.forEach((r) => {
+      if (!r.submitted_at) return;
+      const ts = dayjs(r.submitted_at);
+      if (!latestActivity || ts.isAfter(latestActivity)) latestActivity = ts;
+
+      const login = r.user?.login;
+      if (!login) return;
+
+      const prior = latestReviewByUser.get(login);
+      if (!prior || ts.isAfter(prior.submitted_at)) {
+        latestReviewByUser.set(login, { state: r.state, submitted_at: ts });
+      }
     });
-    message += `\n`;
+
+    const activeApprovals = Array.from(latestReviewByUser.values()).filter(
+      (rev) => rev.state === 'APPROVED',
+    );
+
+    if (activeApprovals.length >= 2 && !pr.merged_at) approvedButOpen.push(prInfo);
+
+    const inactiveForTwoDays = latestActivity
+      ? now.diff(latestActivity, 'day') >= 2
+      : daysOpen >= 2;
+
+    if (inactiveForTwoDays) noCommentsIn2Days.push(prInfo);
+    if (daysOpen >= 14 && daysOpen < 30) openOver2Weeks.push(prInfo);
+    if (daysOpen >= 30) openOver1Month.push(prInfo);
   }
 
-  // PRs Open > 2 Weeks
-  if (openOver2Weeks.length > 0) {
-    message += `⏳ *PRs Open > 2 Weeks*\n`;
-    openOver2Weeks.forEach((pr) => {
-      message += `• <${pr.url}|#${pr.number} ${pr.title}> (opened by @${pr.author}, opened ${pr.daysOpen} days ago)\n`;
-    });
-    message += `\n`;
+  // ----- Build Slack message -----
+  const today = now.format('dddd, MMM D, YYYY');
+  let message = `📊 *Konflux-UI PR Report — ${today}*\n\n*Total Open PRs:* ${prs.length}\n\n`;
+
+  const formatPRList = (prArray) =>
+    prArray
+      .map(
+        (pr) =>
+          `• <${pr.url}|#${pr.number} ${pr.title}> (opened by @${pr.author}${pr.daysOpen ? `, ${pr.daysOpen} days ago` : ''})`,
+      )
+      .join('\n');
+
+  if (noCommentsIn2Days.length) {
+    message += `📝 *PRs Under Review (no comments in last 2 days)*\n${formatPRList(noCommentsIn2Days)}\n\n`;
   }
 
-  // PRs Open > 1 Month
-  if (openOver1Month.length > 0) {
-    message += `⏰ *PRs Open > 1 Month*\n`;
-    openOver1Month.forEach((pr) => {
-      message += `• <${pr.url}|#${pr.number} ${pr.title}> (opened by @${pr.author}, opened ${pr.daysOpen} days ago)\n`;
-    });
-    message += `\n`;
+  if (approvedButOpen.length) {
+    message += `✅ *PRs with 2 Approvals but Still Open*\n${formatPRList(approvedButOpen)}\n\n`;
   }
 
-  // If no stale PRs, send a positive message
+  if (openOver2Weeks.length) {
+    message += `⏳ *PRs Open > 2 Weeks*\n${formatPRList(openOver2Weeks)}\n\n`;
+  }
+
+  if (openOver1Month.length) {
+    message += `⏰ *PRs Open > 1 Month*\n${formatPRList(openOver1Month)}\n\n`;
+  }
+
   if (
     noCommentsIn2Days.length === 0 &&
     approvedButOpen.length === 0 &&
@@ -135,17 +138,23 @@ const checkStalePRs = async () => {
     message += `✨ All PRs are in good shape! No stale PRs found.\n`;
   }
 
-  // Send to Slack
-  await fetch(process.env.SLACK_WEBHOOK_URL, {
+  // ----- Send to Slack -----
+  const response = await fetch(SLACK_WEBHOOK_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: message }),
   });
 
-  console.log('PR report sent to Slack successfully!');
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Slack webhook responded with ${response.status}: ${text}`);
+  }
+
+  console.log('✅ PR report sent to Slack successfully!');
 };
 
+// ----- Execute -----
 checkStalePRs().catch((err) => {
-  console.error('Error checking stale PRs:', err);
+  console.error('❌ Error checking stale PRs:', err);
   process.exit(1);
 });
