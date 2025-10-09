@@ -29,8 +29,6 @@ describe('NotificationItem', () => {
 
   it('renders timestamp using Timestamp component', () => {
     render(<NotificationItem {...validDangerNotification} />);
-    // The timestamp will be formatted according to the user's locale and timezone
-    // We'll check for the presence of the timestamp element instead of exact text
     expect(screen.getByText(/Aug 10, 2025/)).toBeInTheDocument();
   });
 

@@ -4,28 +4,22 @@ import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
 import { useBuildPipelines } from '../useBuildPipelines';
-import { usePipelineRunsV2 } from '../usePipelineRunsV2';
+import { useTRPipelineRuns } from '../useTektonResults';
 
-jest.mock('../usePipelineRunsV2', () => ({
-  ...jest.requireActual('../usePipelineRunsV2'),
-  usePipelineRunsV2: jest.fn(),
-}));
 jest.mock('~/kubearchive/hooks', () => ({
   ...jest.requireActual('~/kubearchive/hooks'),
   useKubearchiveListResourceQuery: jest.fn(),
 }));
-jest.mock('~/kubearchive/conditional-checks', () => ({
-  createConditionsHook: jest.fn(() => jest.fn(() => ({ isKubearchiveEnabled: false }))),
-  ensureConditionIsOn: jest.fn(() => jest.fn()),
-}));
 jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
   useIsOnFeatureFlag: jest.fn(),
 }));
+jest.mock('../useTektonResults');
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
+const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
@@ -45,7 +39,7 @@ describe('useBuildPipelines', () => {
 
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
-    usePipelineRunsV2Mock.mockReturnValue([
+    useTRPipelineRunsMock.mockReturnValue([
       [],
       true,
       undefined,
@@ -56,7 +50,7 @@ describe('useBuildPipelines', () => {
 
     expect(result.current).toEqual([
       [],
-      true,
+      false,
       undefined,
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
@@ -69,8 +63,8 @@ describe('useBuildPipelines', () => {
       true,
       undefined,
     ]);
-    usePipelineRunsV2Mock.mockReturnValue([
-      [testPipelineRuns[DataState.RUNNING]],
+    useTRPipelineRunsMock.mockReturnValue([
+      [],
       true,
       undefined,
       undefined,
@@ -84,40 +78,14 @@ describe('useBuildPipelines', () => {
   });
 
   it('should filter build pipelines by component name when includeComponents is true', () => {
-    useK8sWatchResourceMock.mockReturnValue([
-      [
-        {
-          kind: 'PipelineRun',
-          metadata: {
-            name: 'pipeline-a',
-            labels: {
-              'appstudio.openshift.io/component': 'component-a',
-              'appstudio.openshift.io/application': 'test',
-              'pipelinesascode.tekton.dev/event-type': 'push',
-            },
-          },
-        },
-        {
-          kind: 'PipelineRun',
-          metadata: {
-            name: 'pipeline-b',
-            labels: {
-              'appstudio.openshift.io/component': 'component-b',
-              'appstudio.openshift.io/application': 'test',
-              'pipelinesascode.tekton.dev/event-type': 'push',
-            },
-          },
-        },
-      ],
-      true,
-      undefined,
-    ]);
+    useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
 
-    usePipelineRunsV2Mock.mockReturnValue([
+    useTRPipelineRunsMock.mockReturnValue([
       [
         {
           kind: 'PipelineRun',
           metadata: {
+            uid: 'pipeline-a',
             name: 'pipeline-a',
             labels: {
               'appstudio.openshift.io/component': 'component-a',
@@ -129,6 +97,7 @@ describe('useBuildPipelines', () => {
         {
           kind: 'PipelineRun',
           metadata: {
+            uid: 'pipeline-b',
             name: 'pipeline-b',
             labels: {
               'appstudio.openshift.io/component': 'component-b',
