@@ -14,6 +14,10 @@ jest.mock('~/kubearchive/hooks', () => ({
   ...jest.requireActual('~/kubearchive/hooks'),
   useKubearchiveListResourceQuery: jest.fn(),
 }));
+jest.mock('~/kubearchive/conditional-checks', () => ({
+  createConditionsHook: jest.fn(() => jest.fn(() => ({ isKubearchiveEnabled: false }))),
+  ensureConditionIsOn: jest.fn(() => jest.fn()),
+}));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
 }));
