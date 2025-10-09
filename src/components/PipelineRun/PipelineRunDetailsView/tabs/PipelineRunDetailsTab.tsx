@@ -16,7 +16,6 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
@@ -121,7 +120,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   return (
     <>
       <Title headingLevel="h4" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg" size="lg">
-        Pipeline run details <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+        Pipeline run details
       </Title>
       {taskRunError ? (
         <div className="pf-v5-u-pb-lg">

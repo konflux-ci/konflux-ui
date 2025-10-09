@@ -149,12 +149,7 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
             </TextContent>
           </FlexItem>
           <Flex align={{ default: 'alignRight' }}>
-            {featureFlags && (
-              <FlexItem>
-                {' '}
-                <FeatureFlagIndicator flags={featureFlags} />{' '}
-              </FlexItem>
-            )}
+            {featureFlags && <FeatureFlagIndicator flags={featureFlags} />}
             {actions?.length ? (
               <FlexItem>
                 <Dropdown
