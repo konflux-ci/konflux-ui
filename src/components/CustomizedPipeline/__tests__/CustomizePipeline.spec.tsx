@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import usePACState from '~/hooks/usePACState';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
 import { ComponentKind } from '../../../types';
 import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
@@ -50,8 +51,7 @@ jest.mock('../../../hooks/usePACState', () => ({
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 
-// Get the mocked usePACState function
-const mockUsePACState = jest.requireMock('../../../hooks/usePACState').default;
+const mockUsePACState = usePACState as jest.Mock;
 
 let componentCount = 1;
 const createComponent = (
