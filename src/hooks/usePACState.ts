@@ -7,7 +7,7 @@ import {
   ComponentBuildState,
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
-  useComponentBuildStatus,
+  useConfigurationTime,
 } from '../utils/component-utils';
 import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 import { usePipelineRuns } from './usePipelineRuns';
@@ -25,6 +25,8 @@ export enum PACState {
 
 const usePACState = (component: ComponentKind) => {
   const isSample = component.metadata?.annotations?.[SAMPLE_ANNOTATION] === 'true';
+  const isMigrationRequested =
+    component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
   const pacProvision = getPACProvision(component);
   const isConfigureRequested =
     component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
@@ -32,9 +34,7 @@ const usePACState = (component: ComponentKind) => {
     component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.unconfigurePac;
 
   const { name: prBotName } = useApplicationPipelineGitHubApp();
-
-  const buildStatus = useComponentBuildStatus(component);
-  const configurationTime = buildStatus?.pac?.['configuration-time'];
+  const configurationTime = useConfigurationTime(component);
 
   const [pipelineBuildRuns, pipelineBuildRunsLoaded, pipelineBuildRunsError] = usePipelineRuns(
     !isSample && pacProvision ? component.metadata.namespace : null,
@@ -77,7 +77,7 @@ const usePACState = (component: ComponentKind) => {
 
   return isSample
     ? PACState.sample
-    : isConfigureRequested
+    : isConfigureRequested || isMigrationRequested
       ? PACState.configureRequested
       : isUnconfigureRequested
         ? PACState.unconfigureRequested

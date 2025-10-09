@@ -6,6 +6,8 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BUILD_STATUS_ANNOTATION,
   ComponentBuildState,
+  getConfigurationTime,
+  LAST_CONFIGURATION_ANNOTATION,
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
@@ -31,6 +33,7 @@ const createComponent = (
   buildState?: ComponentBuildState,
   sampleAnnotation?: string,
   buildAnnotation?: string,
+  migration = false,
 ): ComponentKind =>
   ({
     metadata: {
@@ -43,6 +46,18 @@ const createComponent = (
           buildState &&
           JSON.stringify({
             pac: { state: buildState, 'configuration-time': 'Wed, 21 Jul 2023 19:36:25 UTC' },
+          }),
+        [LAST_CONFIGURATION_ANNOTATION]:
+          migration &&
+          JSON.stringify({
+            metadata: {
+              annotations: {
+                [BUILD_STATUS_ANNOTATION]: JSON.stringify({
+                  pac: { state: buildState, 'configuration-time': 'Wed, 21 Jan 2023 19:36:25 UTC' },
+                }),
+                [BUILD_REQUEST_ANNOTATION]: 'configure-pac-no-mr',
+              },
+            },
           }),
       },
     },
@@ -94,6 +109,40 @@ describe('usePACStatesForComponents', () => {
 
     expect(results['my-ready-component']).toBe(PACState.ready);
     expect(results['my-pending-component']).toBe(PACState.pending);
+  });
+
+  it('should identify ready for migrated component and pending states', () => {
+    useK8sWatchResourceMock.mockReturnValue([
+      [
+        {
+          metadata: {
+            name: 'test',
+            creationTimestamp: '2023-03-25T00:00:00Z',
+            labels: { [PipelineRunLabel.COMPONENT]: 'my-ready-component' },
+          },
+        },
+      ],
+      true,
+    ]);
+    const components = [
+      createComponent('my-pending-component', ComponentBuildState.enabled),
+      createComponent(
+        'my-ready-component',
+        ComponentBuildState.enabled,
+        undefined,
+        undefined,
+        true,
+      ),
+    ];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-ready-component']).toBe(PACState.ready);
+    expect(results['my-pending-component']).toBe(PACState.pending);
+
+    // Add validation that configuration-time from migration path is used
+    const migratedComponent = components[1];
+    const configTime = getConfigurationTime(migratedComponent);
+    expect(configTime).toBe('Wed, 21 Jan 2023 19:36:25 UTC');
   });
 
   it('should look for additional Tekton results via getNextPage', () => {

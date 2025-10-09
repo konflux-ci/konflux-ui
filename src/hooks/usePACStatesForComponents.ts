@@ -5,7 +5,7 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   ComponentBuildState,
-  getComponentBuildStatus,
+  getConfigurationTime,
   getPACProvision,
   SAMPLE_ANNOTATION,
 } from '../utils/component-utils';
@@ -24,6 +24,8 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
     const pacProvision = getPACProvision(component);
     const isConfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.configurePac;
+    const isMigrationRequested =
+      component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.migratePac;
     const isUnconfigureRequested =
       component.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] === BuildRequest.unconfigurePac;
 
@@ -31,7 +33,7 @@ const getInitialPacStates = (components: ComponentKind[]): PacStatesForComponent
       acc[component.metadata.name] = PACState.sample;
       return acc;
     }
-    if (isConfigureRequested) {
+    if (isConfigureRequested || isMigrationRequested) {
       acc[component.metadata.name] = PACState.configureRequested;
       return acc;
     }
@@ -105,10 +107,8 @@ const usePACStatesForComponents = (components: ComponentKind[]): PacStatesForCom
       let allLoaded = true;
 
       neededNames.forEach((componentName) => {
-        const buildStatus = getComponentBuildStatus(
-          components.find((c) => c.metadata.name === componentName),
-        );
-        const configurationTime = buildStatus?.pac?.['configuration-time'];
+        const component = components.find((c) => c.metadata.name === componentName);
+        const configurationTime: string = getConfigurationTime(component);
 
         const runsForComponent = pipelineBuildRuns?.filter(
           (p) =>
