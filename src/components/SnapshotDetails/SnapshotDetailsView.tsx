@@ -95,6 +95,7 @@ const SnapshotDetailsView: React.FC = () => {
                 </Text>
               </>
             )}
+            <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'taskruns-kubearchive']} />
           </>
         }
         baseURL={SNAPSHOT_DETAILS_PATH.createPath({
@@ -110,11 +111,7 @@ const SnapshotDetailsView: React.FC = () => {
           },
           {
             key: 'pipelineruns',
-            label: (
-              <>
-                Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
-              </>
-            ),
+            label: 'Pipeline runs',
           },
         ]}
       />

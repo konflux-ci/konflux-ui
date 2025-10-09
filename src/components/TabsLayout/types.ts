@@ -2,7 +2,7 @@ import { type FlagKey } from '~/feature-flags/flags';
 
 export type TabProps = {
   key: string;
-  label: React.ReactNode;
+  label: string;
   component?: React.ReactNode;
   isDisabled?: true;
   partial?: boolean;

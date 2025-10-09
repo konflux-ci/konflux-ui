@@ -1,13 +1,12 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { screen } from '@testing-library/react';
-import { renderWithQueryClient } from '~/unit-test-utils';
+import { render, screen } from '@testing-library/react';
+import { usePipelineRuns } from '~/hooks/usePipelineRuns';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -23,8 +22,8 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
-  usePipelineRunsV2: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRuns', () => ({
+  usePipelineRuns: jest.fn(),
 }));
 
 jest.mock('../../../../hooks/useComponents', () => ({
@@ -82,7 +81,7 @@ jest.mock('../../../../utils/rbac', () => ({
 
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
-const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRuns as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 
 const appName = 'my-test-app';
@@ -147,26 +146,24 @@ describe('SnapshotPipelinerunsTab', () => {
 
   it('should render spinner if pipeline data is not loaded', () => {
     usePipelineRunsV2Mock.mockReturnValue([[], false]);
-    renderWithQueryClient(<SnapshotPipelineRunsTab />);
+    render(<SnapshotPipelineRunsTab />);
     screen.getByRole('progressbar');
   });
 
   it('should render empty state if no pipelinerun is present', () => {
     usePipelineRunsV2Mock.mockReturnValue([[], true, false]);
-    renderWithQueryClient(<SnapshotPipelineRunsTab />);
+    render(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Not found/);
     const button = screen.queryByText('Add component');
-    if (button) {
-      expect(button).toBeInTheDocument();
-      expect(button.closest('a').href).toContain(
-        `http://localhost/ns/test-ns/import?application=my-test-app`,
-      );
-    }
+    expect(button).toBeInTheDocument();
+    expect(button.closest('a').href).toContain(
+      `http://localhost/ns/test-ns/import?application=my-test-app`,
+    );
   });
 
   it('should render pipelineRuns list when pipelineRuns are present', () => {
     usePipelineRunsV2Mock.mockReturnValue([[snapShotPLRs], true, false]);
-    renderWithQueryClient(<SnapshotPipelineRunsTab />);
+    render(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Pipeline runs/);
     screen.queryByText('Name');
     screen.queryByText('Started');
@@ -178,7 +175,7 @@ describe('SnapshotPipelinerunsTab', () => {
 
   it('should render both Build and Test pipelineruns in the pipelinerun list', () => {
     usePipelineRunsV2Mock.mockReturnValue([[snapShotPLRs], true, false]);
-    renderWithQueryClient(<SnapshotPipelineRunsTab />);
+    render(<SnapshotPipelineRunsTab />);
 
     screen.queryByText('Build');
     screen.queryByText('Test');
@@ -209,7 +206,7 @@ describe('SnapshotPipelinerunsTab', () => {
       () => {},
       { hasNextPage: false },
     ]);
-    renderWithQueryClient(<SnapshotPipelineRunsTab />);
+    render(<SnapshotPipelineRunsTab />);
 
     screen.queryByText('Test');
     screen.queryByText('go-sample-s2f4f');

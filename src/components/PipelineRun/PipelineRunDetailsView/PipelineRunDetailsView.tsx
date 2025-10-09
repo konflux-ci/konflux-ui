@@ -104,7 +104,7 @@ export const PipelineRunDetailsView: React.FC = () => {
         <>
           <span className="pf-v5-u-mr-sm">{pipelineRunName}</span>
           <StatusIconWithTextLabel status={plrStatus} />
-          <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
+          <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'taskruns-kubearchive']} />
         </>
       }
       actions={[
