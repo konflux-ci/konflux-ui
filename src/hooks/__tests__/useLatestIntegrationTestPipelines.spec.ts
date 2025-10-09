@@ -1,5 +1,4 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunLabel, PipelineRunType } from '../../consts/pipelinerun';
@@ -8,17 +7,14 @@ import { useLatestIntegrationTestPipelines } from '../useLatestIntegrationTestPi
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
-jest.mock('~/kubearchive/hooks');
-jest.mock('~/kubearchive/conditional-checks', () => ({
-  createConditionsHook: jest.fn(() => jest.fn()),
-  ensureConditionIsOn: jest.fn(() => jest.fn()),
+
+jest.mock('~/kubearchive/hooks', () => ({
+  ...jest.requireActual('~/kubearchive/hooks'),
+  useKubearchiveListResourceQuery: jest.fn(),
 }));
-jest.mock('~/feature-flags/hooks', () => ({
-  useIsOnFeatureFlag: jest.fn(),
-}));
+
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
-const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
 const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
 const testNames = ['test-caseqfvdj'];
@@ -27,7 +23,6 @@ const testNames2 = ['test-caseqfvdj', 'test'];
 describe('useLatestIntegrationTestPipelines', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseIsOnFeatureFlag.mockReturnValue(false);
     mockUseKubearchiveListResourceQuery.mockReturnValue({
       data: [],
       isLoading: false,

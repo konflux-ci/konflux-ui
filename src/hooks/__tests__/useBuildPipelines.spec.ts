@@ -6,11 +6,13 @@ import { createK8sWatchResourceMock, createUseApplicationMock } from '../../util
 import { useBuildPipelines } from '../useBuildPipelines';
 import { usePipelineRunsV2 } from '../usePipelineRunsV2';
 
-jest.mock('../usePipelineRunsV2');
-jest.mock('~/kubearchive/hooks');
-jest.mock('~/kubearchive/conditional-checks', () => ({
-  createConditionsHook: jest.fn(() => jest.fn()),
-  ensureConditionIsOn: jest.fn(() => jest.fn()),
+jest.mock('../usePipelineRunsV2', () => ({
+  ...jest.requireActual('../usePipelineRunsV2'),
+  usePipelineRunsV2: jest.fn(),
+}));
+jest.mock('~/kubearchive/hooks', () => ({
+  ...jest.requireActual('~/kubearchive/hooks'),
+  useKubearchiveListResourceQuery: jest.fn(),
 }));
 jest.mock('~/feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),

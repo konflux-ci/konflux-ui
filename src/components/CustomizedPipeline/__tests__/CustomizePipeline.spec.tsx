@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
-import usePACState from '~/hooks/usePACState';
 import { usePipelineRuns } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { ComponentKind } from '../../../types';
 import { renderWithQueryClient } from '../../../unit-test-utils/mock-react-query';
 import {
@@ -33,25 +33,13 @@ jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
 }));
 
-jest.mock('../../../hooks/usePACState', () => ({
-  PACState: {
-    sample: 'sample',
-    disabled: 'disabled',
-    configureRequested: 'configureRequested',
-    unconfigureRequested: 'unconfigureRequested',
-    error: 'error',
-    pending: 'pending',
-    ready: 'ready',
-    loading: 'loading',
-  },
-  __esModule: true,
-  default: jest.fn(),
+jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(),
 }));
 
 const usePipelineRunsMock = usePipelineRuns as jest.Mock;
+const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
-
-const mockUsePACState = usePACState as jest.Mock;
 
 let componentCount = 1;
 const createComponent = (
@@ -98,11 +86,11 @@ describe('CustomizePipeline', () => {
   afterEach(() => {
     k8sPatchResourceMock.mockClear();
     usePipelineRunsMock.mockClear();
-    mockUsePACState.mockClear();
+    usePipelineRunsV2Mock.mockClear();
   });
 
   it('should render sending pull request', () => {
-    mockUsePACState.mockReturnValue('configureRequested');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('request-configure')]}
@@ -115,7 +103,7 @@ describe('CustomizePipeline', () => {
   });
 
   it('should render rolling back', () => {
-    mockUsePACState.mockReturnValue('unconfigureRequested');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('request-unconfigure')]}
@@ -129,7 +117,7 @@ describe('CustomizePipeline', () => {
 
   it('should render pull request sent', () => {
     usePipelineRunsMock.mockReturnValue([[], true]);
-    mockUsePACState.mockReturnValue('pending');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('done')]}
@@ -143,7 +131,18 @@ describe('CustomizePipeline', () => {
 
   it('should render pull request merged', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    mockUsePACState.mockReturnValue('ready');
+    usePipelineRunsV2Mock.mockReturnValue([
+      [
+        {
+          metadata: {
+            creationTimestamp: new Date().toISOString(),
+            annotations: {},
+          },
+        },
+      ],
+      true,
+      null,
+    ]);
     const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('done')]}
@@ -157,7 +156,7 @@ describe('CustomizePipeline', () => {
 
   it('should render resend pull request', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    mockUsePACState.mockReturnValue('error');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     const result = renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('error')]}
@@ -171,7 +170,7 @@ describe('CustomizePipeline', () => {
 
   it('should render PAC error message', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    mockUsePACState.mockReturnValue('error');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('error')]}
@@ -188,7 +187,7 @@ describe('CustomizePipeline', () => {
       [{ pac: { 'error-message': 'Git Application is not installed in user repository' } }],
       true,
     ]);
-    mockUsePACState.mockReturnValue('error');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('error')]}
@@ -201,7 +200,7 @@ describe('CustomizePipeline', () => {
   });
 
   it('should display upgrade status message', () => {
-    mockUsePACState.mockReturnValue('configureRequested');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     expect(
       renderWithQueryClient(
         <CustomizePipeline
@@ -214,7 +213,7 @@ describe('CustomizePipeline', () => {
   });
 
   it('should display upgrade status message for a single component', () => {
-    mockUsePACState.mockReturnValue('configureRequested');
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     expect(
       renderWithQueryClient(
         <CustomizePipeline
@@ -227,13 +226,7 @@ describe('CustomizePipeline', () => {
   });
 
   it('should display upgrade status message for multiple components', () => {
-    // Mock to return different states for different components
-    mockUsePACState.mockImplementation((component) => {
-      if (component.metadata.annotations?.[SAMPLE_ANNOTATION] === 'true') {
-        return 'sample';
-      }
-      return 'disabled';
-    });
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     expect(
       renderWithQueryClient(
         <CustomizePipeline
@@ -247,7 +240,18 @@ describe('CustomizePipeline', () => {
 
   it('should display completed upgrade message', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
-    mockUsePACState.mockReturnValue('ready');
+    usePipelineRunsV2Mock.mockReturnValue([
+      [
+        {
+          metadata: {
+            creationTimestamp: new Date().toISOString(),
+            annotations: {},
+          },
+        },
+      ],
+      true,
+      null,
+    ]);
     expect(
       renderWithQueryClient(
         <CustomizePipeline
@@ -261,6 +265,7 @@ describe('CustomizePipeline', () => {
 
   it('should show git url when available in component', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     renderWithQueryClient(
       <CustomizePipeline
         components={[createComponent('done')]}
@@ -273,6 +278,7 @@ describe('CustomizePipeline', () => {
 
   it('should show container image url when available in component', () => {
     usePipelineRunsMock.mockReturnValue([[{}], true]);
+    usePipelineRunsV2Mock.mockReturnValue([[], true, null]);
     renderWithQueryClient(
       <CustomizePipeline
         components={[
