@@ -55,7 +55,9 @@ describe('TabsLayout', () => {
     renderWithRouter(<TabsLayout {...defaultProps} />);
 
     mockTabs.forEach((tab) => {
-      expect(screen.getByText(tab.label)).toBeInTheDocument();
+      // Handle React.ReactNode labels by converting to string or using text content
+      const labelText = typeof tab.label === 'string' ? tab.label : String(tab.label);
+      expect(screen.getByText(labelText)).toBeInTheDocument();
     });
   });
 

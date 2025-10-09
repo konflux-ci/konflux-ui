@@ -1,6 +1,6 @@
 export type TabProps = {
   key: string;
-  label: string;
+  label: React.ReactNode;
   component?: React.ReactNode;
   isDisabled?: true;
   partial?: boolean;

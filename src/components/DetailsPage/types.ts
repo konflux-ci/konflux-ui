@@ -10,7 +10,7 @@ export type Action = {
 
 export type DetailsPageTabProps = {
   key: string;
-  label: string;
+  label: React.ReactNode;
   isDisabled?: true;
   partial?: boolean;
   className?: string;

@@ -20,6 +20,35 @@ type TabsLayoutProps = {
 const INDEX = 'index';
 const getRouteFromKey = (key: string): string => (key === INDEX ? '' : key);
 
+// Helper function to extract string content from React.ReactNode for string operations
+const getStringFromLabel = (label: React.ReactNode): string => {
+  if (typeof label === 'string') {
+    return label;
+  }
+  if (typeof label === 'number') {
+    return label.toString();
+  }
+  if (React.isValidElement(label)) {
+    if (typeof label.props.children === 'string') {
+      return label.props.children;
+    }
+    if (Array.isArray(label.props.children)) {
+      return label.props.children
+        .map((child: React.ReactNode) => getStringFromLabel(child))
+        .filter(Boolean)
+        .join(' ');
+    }
+    return getStringFromLabel(label.props.children as React.ReactNode);
+  }
+  if (Array.isArray(label)) {
+    return label
+      .map((item: React.ReactNode) => getStringFromLabel(item))
+      .filter(Boolean)
+      .join(' ');
+  }
+  return '';
+};
+
 export const TabsLayout: React.FC<TabsLayoutProps> = ({
   id,
   tabs,
@@ -61,16 +90,19 @@ export const TabsLayout: React.FC<TabsLayoutProps> = ({
     [activeTabKey, tabs],
   );
 
-  useDocumentTitle(`${headTitle} - ${activeTab.label} | ${FULL_APPLICATION_TITLE}`);
+  useDocumentTitle(
+    `${headTitle} - ${getStringFromLabel(activeTab.label)} | ${FULL_APPLICATION_TITLE}`,
+  );
 
   if (!activeTab) {
     return <ErrorEmptyState httpError={HttpError.fromCode(404)} />;
   }
 
   const tabComponents = tabs?.map(({ key, label, ...rest }) => {
+    const labelString = getStringFromLabel(label);
     return (
       <Tab
-        data-test={`${id}__tabItem ${label.toLocaleLowerCase().replace(/\s/g, '')}`}
+        data-test={`${id}__tabItem ${labelString.toLocaleLowerCase().replace(/\s/g, '')}`}
         key={key}
         eventKey={key}
         title={<TabTitleText>{label}</TabTitleText>}
