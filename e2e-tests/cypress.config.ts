@@ -1,18 +1,6 @@
 import { defineConfig } from 'cypress';
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
 const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
-function deleteLaunchFiles() {
-  const getLaunchTempFiles = () => {
-    return glob.sync('rplaunch*.tmp');
-  };
-  const deleteTempFile = (filename) => {
-    fs.unlinkSync(filename);
-  };
-  const files = getLaunchTempFiles();
-  files.forEach(deleteTempFile);
-}
-
 export default defineConfig({
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
@@ -98,6 +86,7 @@ export default defineConfig({
         USERNAME: 'user2@konflux.dev',
         PASSWORD: 'password',
         GH_USERNAME: 'hac-test',
+        GH_REPO_OWNER: 'redhat-hac-qe',
         GH_PASSWORD: '',
         GH_TOKEN: '',
         GH_SETUP_KEY: '',
