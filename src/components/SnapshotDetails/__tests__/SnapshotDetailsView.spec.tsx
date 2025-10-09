@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { useK8sAndKarchResource } from '../../../hooks/useK8sAndKarchResources';
-import { usePipelineRun } from '../../../hooks/usePipelineRuns';
+import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunGroupVersionKind, SnapshotGroupVersionKind } from '../../../models';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
 import { WatchK8sResource } from '../../../types/k8s';
@@ -37,12 +37,12 @@ jest.mock('../../../hooks/useK8sAndKarchResources', () => ({
   useK8sAndKarchResource: jest.fn(),
 }));
 
-jest.mock('../../../hooks/usePipelineRuns', () => ({
-  usePipelineRun: jest.fn(),
+jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunV2: jest.fn(),
 }));
 
 const useSnapshotMock = useK8sAndKarchResource as jest.Mock;
-const usePipelineRunMock = usePipelineRun as jest.Mock;
+const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
 
 const mockSnapshots: IntegrationTestScenarioKind[] = [...MockSnapshots];
 
@@ -63,7 +63,7 @@ describe('SnapshotDetailsView', () => {
       applicationName: 'my-test-output',
     });
     (useCommitStatus as jest.Mock).mockReturnValueOnce(['-', true]);
-    usePipelineRunMock.mockReturnValue([pipelineWithCommits[0], true, false]);
+    usePipelineRunV2Mock.mockReturnValue([pipelineWithCommits[0], true, false]);
   });
 
   it('should render loading indicator', () => {

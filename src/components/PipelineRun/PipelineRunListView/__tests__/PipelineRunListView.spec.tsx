@@ -26,7 +26,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
-  usePipelineRuns: jest.fn(),
+  usePipelineRunsV2: jest.fn(),
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
