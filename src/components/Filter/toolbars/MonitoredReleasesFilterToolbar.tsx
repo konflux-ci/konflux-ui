@@ -72,4 +72,4 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   );
 };
 
-export default MonitoredReleasesFilterToolbar;
+export default React.memo(MonitoredReleasesFilterToolbar);
