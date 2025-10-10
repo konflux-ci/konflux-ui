@@ -26,7 +26,7 @@ Find the supported variables in the table below:
 | Variable name | Description | Required | Default Value |
 | -- | -- | -- | -- |
 | `KONFLUX_BASE_URL` | The URL to the main page of Konflux | Yes | 'https://localhost:8080' |
-| `USERNAME` | Username for local Konflux | Only with PR_CHECK=true | 'user2@konflux.dev' |
+| `USERNAME` | Username for local Konflux | Yes | 'user2@konflux.dev' |
 | `PASSWORD` | Password for local Konflux | Only with PR_CHECK=true | 'password' |
 | `PR_CHECK` | Assume the test is a PR check, using flow for local login | For PR checks | '' |
 | `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail | No | false |

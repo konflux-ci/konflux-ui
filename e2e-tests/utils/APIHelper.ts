@@ -71,21 +71,8 @@ export class APIHelper {
     });
   }
 
-  static createGitHubRepository(repoName: string) {
-    const body = { name: repoName };
-    this.githubRequest('POST', githubAPIEndpoints.orgRepos, body);
-    this.checkResponseBodyAndStatusCode(
-      githubAPIEndpoints.qeRepos(repoName),
-      `"name":"${repoName}"`,
-      2000,
-      0,
-      3,
-      this.githubHeaders,
-    );
-  }
-
-  static deleteGitHubRepository(repoName: string) {
-    this.githubRequest('DELETE', githubAPIEndpoints.qeRepos(repoName));
+  static deleteGitHubRepository(owner: string, repoName: string) {
+    this.githubRequest('DELETE', githubAPIEndpoints.testRepo(owner, repoName));
   }
 
   static createRepositoryFromTemplate(
