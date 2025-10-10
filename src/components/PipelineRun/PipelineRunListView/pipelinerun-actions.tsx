@@ -102,8 +102,8 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
           return {
             ...defaultEmptyAction,
             disabledTooltip: isPR
-              ? 'Comment `/retest` on pull request to rerun'
-              : 'Cannot re-run pipeline run for this type of build',
+              ? 'To rerun the build pipeline for the latest commit in this PR, comment `/retest` on the pull request'
+              : 'Rerun of a specific build pipeline is not supported.',
           };
         }
 
