@@ -3,6 +3,16 @@ version: 1
 # Add this new section at the top level
 tone_instructions: 'Provide concise, professional summaries without poems, creative elements, or ASCII art. Focus on technical details and actionable insights.'
 
+# Disable GitHub write operations (no PR creation, no pushing commits)
+reviews:
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+  auto_review:
+    enabled: true
+
 # Files to include and exclude
 include:
   - '**/*.ts'
