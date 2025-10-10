@@ -6,13 +6,14 @@ const REPO_OWNER = 'konflux-ci';
 const REPO_NAME = 'konflux-ui';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
+const TEST_MODE = process.env.TEST_MODE === 'true';
 
 if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN is not set');
-if (!SLACK_WEBHOOK_URL) throw new Error('SLACK_WEBHOOK_URL is not set');
+if (!TEST_MODE && !SLACK_WEBHOOK_URL) throw new Error('SLACK_WEBHOOK_URL is not set');
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
-// ----- GitHub API helpers -----
+// ----- Helpers -----
 const getPRs = (params = {}) =>
   octokit.paginate(octokit.pulls.list, {
     owner: REPO_OWNER,
@@ -41,7 +42,7 @@ const getReviews = (prNumber) =>
 // ----- Main logic -----
 const checkStalePRs = async () => {
   const prs = await getPRs();
-
+  const draftPRs = [];
   const noCommentsIn2Days = [];
   const approvedButOpen = [];
   const openOver2Weeks = [];
@@ -52,26 +53,22 @@ const checkStalePRs = async () => {
   for (const pr of prs) {
     const [comments, reviews] = await Promise.all([getComments(pr.number), getReviews(pr.number)]);
     const daysOpen = now.diff(dayjs(pr.created_at), 'day');
+    const prInfo = { number: pr.number };
 
-    const prInfo = {
-      number: pr.number,
-      title: pr.title,
-      url: pr.html_url,
-      author: pr.user.login,
-      daysOpen,
-    };
+    if (pr.draft) {
+      draftPRs.push(prInfo);
+      continue;
+    }
 
     // Track latest activity
     let latestActivity = null;
     const latestReviewByUser = new Map();
 
-    // Comments
     comments.forEach((c) => {
       const ts = dayjs(c.updated_at);
       if (!latestActivity || ts.isAfter(latestActivity)) latestActivity = ts;
     });
 
-    // Reviews
     reviews.forEach((r) => {
       if (!r.submitted_at) return;
       const ts = dayjs(r.submitted_at);
@@ -101,56 +98,85 @@ const checkStalePRs = async () => {
     if (daysOpen >= 30) openOver1Month.push(prInfo);
   }
 
-  // ----- Build Slack message -----
-  const today = now.format('dddd, MMM D, YYYY');
-  let message = `📊 *Konflux-UI PR Report — ${today}*\n\n*Total Open PRs:* ${prs.length}\n\n`;
+  // ----- Build compact Slack message -----
+  const today = now.format('MMM D, YYYY');
+  let message = `:bar_chart: *Konflux-UI PR Report — ${today}*\n\n*Open PRs:* ${prs.length}\n`;
 
-  const formatPRList = (prArray) =>
-    prArray
-      .map(
-        (pr) =>
-          `• <${pr.url}|#${pr.number} ${pr.title}> (opened by @${pr.author}${pr.daysOpen ? `, ${pr.daysOpen} days ago` : ''})`,
-      )
-      .join('\n');
+  const oneMonthAgo = now.subtract(30, 'day').format('YYYY-MM-DD');
+  const twoWeeksAgo = now.subtract(14, 'day').format('YYYY-MM-DD');
 
-  if (noCommentsIn2Days.length) {
-    message += `📝 *PRs Under Review (no comments in last 2 days)*\n${formatPRList(noCommentsIn2Days)}\n\n`;
-  }
+  const prCategories = [
+    {
+      emoji: ':memo:',
+      name: 'Stale Reviews(no comments in last 2 days)',
+      prs: noCommentsIn2Days,
+      filterLink: null,
+    },
+    {
+      emoji: ':white_check_mark:',
+      name: '2 Approvals/Waiting Merge',
+      prs: approvedButOpen,
+      filterLink: null,
+    },
+    {
+      emoji: ':hourglass_flowing_sand:',
+      name: 'Created > 2 Weeks',
+      prs: openOver2Weeks,
+      filterLink: `https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls?q=is:open+draft:false+created:${oneMonthAgo}..${twoWeeksAgo}`,
+    },
+    {
+      emoji: ':alarm_clock:',
+      name: 'Created > 1 Month',
+      prs: openOver1Month,
+      filterLink: `https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls?q=is:open+draft:false+created:%3C${oneMonthAgo}`,
+    },
+    {
+      emoji: ':pencil2:',
+      name: 'Drafts',
+      prs: draftPRs,
+      filterLink: `https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls?q=is:open+is:draft`,
+    },
+  ];
 
-  if (approvedButOpen.length) {
-    message += `✅ *PRs with 2 Approvals but Still Open*\n${formatPRList(approvedButOpen)}\n\n`;
-  }
+  prCategories.forEach((cat) => {
+    if (!cat.prs.length) return;
 
-  if (openOver2Weeks.length) {
-    message += `⏳ *PRs Open > 2 Weeks*\n${formatPRList(openOver2Weeks)}\n\n`;
-  }
-
-  if (openOver1Month.length) {
-    message += `⏰ *PRs Open > 1 Month*\n${formatPRList(openOver1Month)}\n\n`;
-  }
-
-  if (
-    noCommentsIn2Days.length === 0 &&
-    approvedButOpen.length === 0 &&
-    openOver2Weeks.length === 0 &&
-    openOver1Month.length === 0
-  ) {
-    message += `✨ All PRs are in good shape! No stale PRs found.\n`;
-  }
-
-  // ----- Send to Slack -----
-  const response = await fetch(SLACK_WEBHOOK_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: message }),
+    if (cat.filterLink) {
+      message += `${cat.emoji} *${cat.name}:* <${cat.filterLink}|${cat.prs.length} PRs>\n`;
+    } else {
+      message += `${cat.emoji} *${cat.name}:* ${cat.prs.length} PRs (${cat.prs
+        .map((p) => `#${p.number}`)
+        .join(', ')})\n`;
+    }
   });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Slack webhook responded with ${response.status}: ${text}`);
+  if (!prs.length) {
+    message += `✨ All PRs are in good shape!\n`;
+  } else {
+    message += `\n⚡ Please accelerate reviews or merge PRs to keep the repo clean!\n`;
   }
 
-  console.log('✅ PR report sent to Slack successfully!');
+  // ----- Send to Slack or log -----
+  if (TEST_MODE) {
+    console.log('--- TEST_MODE: Slack message ---');
+    console.log(message);
+  } else {
+    const response = await fetch(SLACK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: message,
+        unfurl_links: false,
+        unfurl_media: false,
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Slack webhook responded with ${response.status}: ${text}`);
+    }
+    console.log('✅ PR report sent to Slack successfully!');
+  }
 };
 
 // ----- Execute -----
