@@ -84,6 +84,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
 
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
 
+  const isPR =
+    pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ===
+    PipelineRunEventType.PULL;
+
   return React.useMemo<RerunActionReturnType>(() => {
     if (!canPatchComponent || !canPatchSnapshot) {
       return {
@@ -97,7 +101,9 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
         if (!isPushBuildType || !componentLoaded || componentError) {
           return {
             ...defaultEmptyAction,
-            disabledTooltip: 'Comment `/retest` on pull request to rerun',
+            disabledTooltip: isPR
+              ? 'To rerun the build pipeline for the latest commit in this PR, comment `/retest` on the pull request'
+              : 'Rerun of a specific build pipeline is not supported.',
           };
         }
 
@@ -173,6 +179,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     snapshotError,
     isIntegrationTestsPage,
     isSnapshotsPage,
+    isPR,
   ]);
 };
 
