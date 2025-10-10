@@ -31,6 +31,14 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const memoSetFilters = React.useCallback(
+    (newFilters: MonitoredReleasesFilterState) => setFilters(newFilters),
+    [setFilters],
+  );
+
+  const memoOnClearFilters = React.useCallback(() => {
+    onClearFilters();
+  }, [onClearFilters]);
   const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
     return {
       name: filters?.name || '',
@@ -111,6 +119,15 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   );
 
   const filterOptions = React.useMemo(() => {
+    if (releases.length === 0 && namespaces.length === 0) {
+      return {
+        statusOptions: {},
+        applicationOptions: {},
+        releasePlanOptions: {},
+        namespaceOptions: {},
+        componentOptions: {},
+      };
+    }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
     const applicationOptions = createFilterObj(
       releases,
@@ -122,10 +139,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const applicationFilterOptions =
       noApplication > 0
         ? {
-          'No application': noApplication,
-          [MENU_DIVIDER]: 1,
-          ...applicationOptions,
-        }
+            'No application': noApplication,
+            [MENU_DIVIDER]: 1,
+            ...applicationOptions,
+          }
         : applicationOptions;
 
     const componentOptions = createFilterObj(
@@ -138,10 +155,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const componentFilterOptions =
       noComponent > 0
         ? {
-          'No component': noComponent,
-          [MENU_DIVIDER]: 1,
-          ...componentOptions,
-        }
+            'No component': noComponent,
+            [MENU_DIVIDER]: 1,
+            ...componentOptions,
+          }
         : componentOptions;
 
     return {
@@ -196,8 +213,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       {(isFiltered || sortedMonitoredReleases.length > 0) && (
         <MonitoredReleasesFilterToolbar
           filters={filters}
-          setFilters={setFilters}
-          onClearFilters={onClearFilters}
+          setFilters={memoSetFilters}
+          onClearFilters={memoOnClearFilters}
           statusOptions={filterOptions.statusOptions}
           applicationOptions={filterOptions.applicationOptions}
           releasePlanOptions={filterOptions.releasePlanOptions}
