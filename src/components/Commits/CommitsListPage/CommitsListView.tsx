@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -6,7 +7,10 @@ import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
-import { useBuildPipelines } from '../../../hooks/useBuildPipelines';
+import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
+import { useApplication } from '../../../hooks/useApplications';
+import { useComponents } from '../../../hooks/useComponents';
+import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -48,18 +52,57 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
 
   const { name: nameFilter, status: statusFilter } = filters;
 
+  const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    useBuildPipelines(
-      namespace,
-      applicationName,
-      undefined,
-      !!componentName,
-      componentName ? [componentName] : undefined,
+    usePipelineRunsV2(
+      applicationLoaded ? namespace : null,
+      React.useMemo(
+        () => ({
+          selector: {
+            filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+              ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
+            },
+          },
+        }),
+        [application?.metadata?.creationTimestamp, applicationName, componentName],
+      ),
     );
 
+  // filter to only BUILD type PLRs for the list display
+  const buildPipelineRuns = React.useMemo(() => {
+    return (
+      pipelineRuns
+        ?.filter((plr) =>
+          componentName
+            ? componentName === plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]
+            : true,
+        )
+        ?.filter(
+          (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+        ) || []
+    );
+  }, [componentName, pipelineRuns]);
+
+  const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
+  const componentNames = React.useMemo(
+    () => (componentsLoaded && !componentsError ? components.map((c) => c.metadata?.name) : []),
+    [components, componentsLoaded, componentsError],
+  );
+
+  // used in CommitListRow to calculate the correct latest PLR status
+  const allPipelineRunsFilteredByComponents = React.useMemo(
+    () =>
+      pipelineRuns?.filter((plr) =>
+        componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]),
+      ),
+    [componentNames, pipelineRuns],
+  );
+
   const commits = React.useMemo(
-    () => (loaded && pipelineRuns && getCommitsFromPLRs(pipelineRuns)) || [],
-    [loaded, pipelineRuns],
+    () => (loaded && buildPipelineRuns && getCommitsFromPLRs(buildPipelineRuns)) || [],
+    [loaded, buildPipelineRuns],
   );
 
   const statusFilterObj = React.useMemo(
@@ -109,9 +152,28 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     </BaseTextFilterToolbar>
   );
 
+  // automatically fetch the next page of pipeline runs when:
+  // - Initial data is loaded
+  // - Current page is empt
+  // - More pages are available
+  // - Not currently fetching the next page
+  // This prevents showing the empty state message while more data is being loaded
+  React.useEffect(() => {
+    if (
+      loaded &&
+      buildPipelineRuns?.length === 0 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      getNextPage
+    ) {
+      getNextPage();
+    }
+  }, [getNextPage, hasNextPage, isFetchingNextPage, loaded, buildPipelineRuns]);
+
   if (error) {
     return getErrorState(error, loaded, 'commits');
   }
+
   return (
     <>
       <Table
@@ -124,9 +186,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         aria-label="Commit List"
         Header={getCommitsListHeaderWithColumns(visibleColumns)}
         Row={(props) => (
-          <CommitsListRow obj={props.obj as Commit} visibleColumns={visibleColumns} />
+          <CommitsListRow
+            obj={props.obj as Commit}
+            visibleColumns={visibleColumns}
+            pipelineRuns={allPipelineRunsFilteredByComponents}
+          />
         )}
-        loaded={loaded}
+        loaded={loaded && !(hasNextPage && buildPipelineRuns?.length === 0)}
         getRowProps={(obj: Commit) => ({
           id: obj.sha,
         })}
@@ -152,6 +218,22 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         title="Manage commit columns"
         description="Selected columns will be displayed in the commits table."
       />
+      {isFetchingNextPage ? (
+        <div
+          style={{
+            marginTop: 'var(--pf-v5-global--spacer--2xl)',
+            marginBottom: 'var(--pf-v5-global--spacer--2xl)',
+          }}
+        >
+          <Bullseye>
+            <Spinner
+              size="lg"
+              aria-label="Loading more commits"
+              data-test="commits-list-next-page-loading-spinner"
+            />
+          </Bullseye>
+        </div>
+      ) : null}
     </>
   );
 };
