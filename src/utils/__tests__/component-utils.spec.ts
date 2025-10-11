@@ -9,6 +9,8 @@ import {
   BUILD_REQUEST_ANNOTATION,
   BuildRequest,
   getLastestImage,
+  getConfigurationTime,
+  LAST_CONFIGURATION_ANNOTATION,
 } from '../component-utils';
 import { createK8sUtilMock } from '../test-utils';
 
@@ -140,5 +142,39 @@ describe('component-utils', () => {
     } as unknown as ComponentKind;
 
     expect(getLastestImage(mockComponent)).toEqual('test-url-promoted');
+  });
+
+  it('should return configuration time from regular component', () => {
+    const mockComponent = {
+      metadata: {
+        annotations: {
+          [BUILD_STATUS_ANNOTATION]:
+            '{"pac":{"state":"enabled","merge-url":"example.com", "configuration-time": "2025-09-11T19:36:25Z"},"message":"done"}',
+        },
+      },
+    } as unknown as ComponentKind;
+    expect(getConfigurationTime(mockComponent)).toEqual('2025-09-11T19:36:25Z');
+  });
+
+  it('should return configuration time from migration component', () => {
+    const mockComponent = {
+      metadata: {
+        annotations: {
+          [BUILD_STATUS_ANNOTATION]:
+            '{"pac":{"state":"enabled","merge-url":"example.com", "configuration-time": "2025-09-11T19:36:25Z"},"message":"done"}',
+          [LAST_CONFIGURATION_ANNOTATION]: JSON.stringify({
+            metadata: {
+              annotations: {
+                [BUILD_STATUS_ANNOTATION]: JSON.stringify({
+                  pac: { state: 'enabled', 'configuration-time': '2025-02-11T19:36:25Z' },
+                }),
+                [BUILD_REQUEST_ANNOTATION]: BuildRequest.migratePac,
+              },
+            },
+          }),
+        },
+      },
+    } as unknown as ComponentKind;
+    expect(getConfigurationTime(mockComponent)).toEqual('2025-02-11T19:36:25Z');
   });
 });

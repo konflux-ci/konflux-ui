@@ -1,5 +1,6 @@
-import { render, screen, fireEvent, within, act } from '@testing-library/react';
+import { screen, fireEvent, within, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PACState } from '../../../../hooks/usePACState';
 import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
@@ -98,18 +99,18 @@ describe('ComponentListViewPage', () => {
 
   it('should render skeleton if data is not loaded', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false]);
-    render(<ComponentList />);
+    renderWithQueryClient(<ComponentList />);
     screen.getByTestId('data-table-skeleton');
   });
 
   it('should render error message if data is not loaded', () => {
     useK8sWatchResourceMock.mockReturnValue([[], true, { code: 400 }]);
-    render(<ComponentList />);
+    renderWithQueryClient(<ComponentList />);
     screen.getByText('Unable to load components');
   });
 
   it('should render button to add components', () => {
-    render(<ComponentList />);
+    renderWithQueryClient(<ComponentList />);
     const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toBe(
@@ -118,7 +119,7 @@ describe('ComponentListViewPage', () => {
   });
 
   it('should render filter toolbar and filter components based on name', () => {
-    render(<ComponentList />);
+    renderWithQueryClient(<ComponentList />);
     expect(screen.getByTestId('component-list-toolbar')).toBeInTheDocument();
     const nameSearchInput = screen.getByTestId('name-input-filter');
     const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
@@ -129,11 +130,11 @@ describe('ComponentListViewPage', () => {
   });
 
   it('should show a warning when showMergeStatus is set', () => {
-    render(<ComponentList />);
+    renderWithQueryClient(<ComponentList />);
     screen.getByTestId('components-unmerged-build-pr');
   });
   it('should filter components by status', () => {
-    const view = render(<ComponentList />);
+    const view = renderWithQueryClient(<ComponentList />);
 
     expect(view.getAllByTestId('component-list-item')).toHaveLength(2);
 
@@ -170,7 +171,7 @@ describe('ComponentListViewPage', () => {
     expect(view.queryAllByTestId('component-list-item')).toHaveLength(2);
   });
   it('should clear filters from empty state', () => {
-    const view = render(<ComponentList />);
+    const view = renderWithQueryClient(<ComponentList />);
     expect(screen.getAllByTestId('component-list-item')).toHaveLength(2);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
@@ -195,7 +196,7 @@ describe('ComponentListViewPage', () => {
   it('should get more data if there is another page', () => {
     const getNextPageMock = jest.fn();
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
-    render(<ComponentList />);
+    renderWithQueryClient(<ComponentList />);
     expect(getNextPageMock).toHaveBeenCalled();
   });
 });

@@ -68,7 +68,7 @@ describe('Basic Happy Path', () => {
           });
       }
 
-      APIHelper.deleteGitHubRepository(repoName);
+      APIHelper.deleteGitHubRepository(repoOwner, repoName);
     }
   });
 

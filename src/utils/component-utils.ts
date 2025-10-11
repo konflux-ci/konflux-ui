@@ -13,6 +13,8 @@ export const BUILD_REQUEST_ANNOTATION = 'build.appstudio.openshift.io/request';
 
 export const BUILD_STATUS_ANNOTATION = 'build.appstudio.openshift.io/status';
 
+export const LAST_CONFIGURATION_ANNOTATION = 'kubectl.kubernetes.io/last-applied-configuration';
+
 export const GIT_PROVIDER_ANNOTATION = 'git-provider';
 export const GIT_PROVIDER_ANNOTATION_VALUE = {
   GITHUB: 'github',
@@ -98,6 +100,10 @@ export enum BuildRequest {
    * requests Pipelines-as-Code clean up for the Component
    */
   unconfigurePac = 'unconfigure-pac',
+  /**
+   * requests Pipelines-as-Code provision for the Component migration
+   */
+  migratePac = 'configure-pac-no-mr',
 }
 
 export const enablePAC = (component: ComponentKind) =>
@@ -150,3 +156,33 @@ export const startNewBuild = (component: ComponentKind) =>
 
 export const useComponentBuildStatus = (component: ComponentKind): ComponentBuildStatus =>
   React.useMemo(() => getComponentBuildStatus(component), [component]);
+
+export const getConfigurationTime = (component: ComponentKind): string => {
+  const buildStatus = getComponentBuildStatus(component);
+  try {
+    const lastConfiguration: ComponentKind | undefined = component.metadata?.annotations?.[
+      LAST_CONFIGURATION_ANNOTATION
+    ]
+      ? JSON.parse(component.metadata?.annotations?.[LAST_CONFIGURATION_ANNOTATION])
+      : undefined;
+
+    const lastPACStateIsMigration =
+      lastConfiguration?.metadata?.annotations?.[BUILD_REQUEST_ANNOTATION] ===
+      BuildRequest.migratePac;
+
+    const lastPACConfiguration = lastConfiguration?.metadata?.annotations?.[BUILD_STATUS_ANNOTATION]
+      ? JSON.parse(lastConfiguration.metadata.annotations[BUILD_STATUS_ANNOTATION])
+      : undefined;
+
+    return lastPACStateIsMigration && lastPACConfiguration
+      ? lastPACConfiguration.pac?.['configuration-time']
+      : buildStatus?.pac?.['configuration-time'];
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('Error parsing last-applied-configuration annotation:', e);
+    return buildStatus?.pac?.['configuration-time'];
+  }
+};
+
+export const useConfigurationTime = (component: ComponentKind) =>
+  React.useMemo(() => getConfigurationTime(component), [component]);
