@@ -109,7 +109,7 @@ export const usePipelineRunsV2 = (
   etcdRunsRef.current = runs;
 
   const processedClusterData = React.useMemo((): PipelineRunKind[] => {
-    if (isLoading || error || !resources) {
+    if (isLoading || error || !Array.isArray(resources)) {
       return [];
     }
 
@@ -345,7 +345,11 @@ export const usePipelineRunV2 = (
       ];
     }
 
-    return [tektonResult[0]?.[0], tektonResult[1], tektonResult[2]];
+    if (!kubearchiveEnabled && tektonResult[1] && (tektonResult[0]?.[0] || tektonResult[2])) {
+      return [tektonResult[0]?.[0], tektonResult[1], tektonResult[2]];
+    }
+
+    return [undefined, false, null];
   }, [
     enabled,
     clusterResult.data,

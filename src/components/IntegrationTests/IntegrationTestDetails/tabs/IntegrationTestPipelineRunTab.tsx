@@ -9,8 +9,9 @@ import {
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
+import { FeatureFlagIndicator } from '../../../../feature-flags/FeatureFlagIndicator';
 import { useLocalStorage } from '../../../../hooks/useLocalStorage';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
@@ -28,7 +29,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
 
   // Todo add errors here
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRuns(
+    usePipelineRunsV2(
       namespace,
       React.useMemo(
         () => ({
@@ -74,7 +75,7 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
   return (
     <>
       <Title headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg">
-        Pipeline runs
+        Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       {pipelineRuns && pipelineRuns.length > 0 && (
         <BaseTextFilterToolbar

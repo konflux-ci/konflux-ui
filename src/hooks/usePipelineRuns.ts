@@ -242,6 +242,13 @@ export const useLatestSuccessfulBuildPipelineRunForComponent = (
   return [latestSuccess, loaded, error];
 };
 
+/**
+ * @deprecated
+ * Replaced by usePipelineRunsForCommitV2 function in
+ * ~/src/hooks/usePipelineRunsForCommitV2.ts
+ * usePipelineRunsForCommitV2 uses KubeArchive and
+ * assures backward compatibility.
+ */
 export const usePipelineRunsForCommit = (
   namespace: string,
   applicationName: string,

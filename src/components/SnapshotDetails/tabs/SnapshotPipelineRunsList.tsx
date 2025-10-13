@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT,
@@ -119,7 +120,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
         className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-lg"
         data-test="snapshot-plr-title"
       >
-        Pipeline runs
+        Pipeline runs <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       {(isFiltered || snapshotPipelineRuns.length > 0) && (
         <PipelineRunsFilterToolbar

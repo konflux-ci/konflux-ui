@@ -13,8 +13,9 @@ export const releaseTableColumnClasses = {
 export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
 
 export enum SortableHeaders {
-  name,
-  completionTime,
+  // Column indices must match the actual table column order
+  name = 0,
+  completionTime = 2,
 }
 
 const releaseColumns = [
