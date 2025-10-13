@@ -13,64 +13,110 @@ import ExternalLink from '~/shared/components/links/ExternalLink';
 import { IssueStatus } from '../IssueStatus';
 import { issuesTableColumnClasses } from './IssuesListHeader';
 
-export type IssueRow = {
-  issueTitle: string;
-  componentName: string;
-  severity: string;
-  status: string;
-  createdAt: string; // ISO string or formatted date
-  reason?: string;
-  links?: { label: string; href: string }[];
-  actions?: { label: string; callback: () => void }[];
+export type IssueListRowCustomData = {
+  onToggle?: (issueId: string) => void;
+  expandedIssues?: Set<string>;
 };
 
-const IssuesListRow: React.FC<RowFunctionArgs<IssueRow>> = ({ obj: issue }) => {
+export type IssueRow = {
+  id?: string;
+  title?: string;
+  description?: string;
+  severity?: string;
+  issueType?: string;
+  state?: string;
+  detectedAt?: string;
+  namespace?: string;
+  scope?: {
+    resourceType: string;
+    resourceName: string;
+    resourceNamespace: string;
+  };
+  links?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  relatedTo?: {
+    id: string;
+    sourceId: string;
+    targetId: string;
+    source: string;
+    target: string;
+  }[];
+  relatedFrom?: {
+    id: string;
+    sourceId: string;
+    targetId: string;
+    source: string;
+    target: string;
+  }[];
+};
+
+const IssuesListRow: React.FC<RowFunctionArgs<IssueRow, IssueListRowCustomData>> = ({
+  obj: issue,
+  customData,
+}) => {
   const severityIcon = (severity) => {
     switch (severity) {
-      case 'Critical':
+      case 'critical':
         return <CriticalIcon />;
-      case 'High':
+      case 'major':
         return <HighIcon />;
-      case 'Medium':
+      case 'minor':
         return <MediumIcon />;
-      case 'Low':
+      case 'info':
         return <LowIcon />;
       default:
         return <UnknownIcon />;
     }
   };
+
+  const handleComponentClick = () => {
+    if (customData?.onToggle) {
+      customData.onToggle(issue.id);
+    }
+  };
+
   return (
     <>
       <TableData className={issuesTableColumnClasses.issue} data-test="issues-list-item">
         <Flex direction={{ default: 'column' }}>
           <FlexItem data-test="issues-list-item-title" style={{ minWidth: '30%' }}>
-            <b>{issue.issueTitle}</b>
+            {issue.title}
           </FlexItem>
         </Flex>
       </TableData>
 
-      <TableData className={issuesTableColumnClasses.component}>{issue.componentName}</TableData>
+      <TableData className={issuesTableColumnClasses.scope}>
+        <Button
+          variant="link"
+          isInline
+          onClick={handleComponentClick}
+          data-test="issues-component-name-button"
+        >
+          {issue.scope.resourceName}
+        </Button>
+      </TableData>
 
       <TableData className={issuesTableColumnClasses.severity}>
         {severityIcon(issue.severity)} {issue.severity}
       </TableData>
 
       <TableData className={issuesTableColumnClasses.status}>
-        <IssueStatus locked={issue.status === 'Closed'} />
+        <IssueStatus locked={issue.state === 'CLOSED'} />
       </TableData>
 
       <TableData className={issuesTableColumnClasses.createdAt}>
         <Timestamp timestamp={issue.createdAt} />
       </TableData>
 
-      <TableData className={issuesTableColumnClasses.reason}>{issue.reason ?? '-'}</TableData>
+      <TableData className={issuesTableColumnClasses.reason}>{issue.description ?? '-'}</TableData>
 
       <TableData className={issuesTableColumnClasses.usefulLinks}>
         <Flex direction={{ default: 'column' }}>
           {issue.links?.length
-            ? issue.links.map((l) => (
-                <FlexItem key={`${l.href}-${l.label}`}>
-                  <ExternalLink href={l.href} text={l.label} />
+            ? issue.links.map((link, index) => (
+                <FlexItem key={`${link}-${index}`}>
+                  <ExternalLink href={link} />
                 </FlexItem>
               ))
             : '-'}
@@ -79,17 +125,6 @@ const IssuesListRow: React.FC<RowFunctionArgs<IssueRow>> = ({ obj: issue }) => {
 
       <TableData className={issuesTableColumnClasses.kebab}>
         <div className="issues-list-view__row-actions">
-          {issue.actions?.map((a) => (
-            <Button
-              key={a.label}
-              onClick={a.callback}
-              variant="link"
-              data-test={`issues-row-action-${a.label.toLowerCase().replace(/\s+/g, '-')}`}
-              isInline
-            >
-              {a.label}
-            </Button>
-          ))}
           <ActionMenu actions={[]} />
         </div>
       </TableData>
