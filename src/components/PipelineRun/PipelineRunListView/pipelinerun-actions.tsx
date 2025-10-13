@@ -84,9 +84,14 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
 
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
 
-  const isPR =
-    pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL].toLowerCase() ===
-    PipelineRunEventType.PULL;
+  const eventType = pipelineRun?.metadata?.labels?.[
+    PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL
+  ]?.toLowerCase() as PipelineRunEventType;
+  const isPR = eventType === PipelineRunEventType.PULL;
+  if (eventType !== PipelineRunEventType.PULL && eventType !== PipelineRunEventType.RETEST) {
+    // eslint-disable-next-line no-console
+    console.warn(`Unknown event type: ${eventType}. Assuming not a PR.`);
+  }
 
   return React.useMemo<RerunActionReturnType>(() => {
     if (!canPatchComponent || !canPatchSnapshot) {
