@@ -85,7 +85,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
 
   const isPR =
-    pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ===
+    pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL].toLowerCase() ===
     PipelineRunEventType.PULL;
 
   return React.useMemo<RerunActionReturnType>(() => {
