@@ -1,6 +1,6 @@
 export const issuesTableColumnClasses = {
   issue: 'pf-m-width-20 wrap-column',
-  component: 'pf-m-width-15',
+  scope: 'pf-m-width-15',
   severity: 'pf-m-width-10',
   status: 'pf-m-width-10',
   createdAt: 'pf-m-width-15',
@@ -12,12 +12,12 @@ export const issuesTableColumnClasses = {
 const IssuesListHeader = () => {
   return [
     {
-      title: 'Issue',
+      title: 'Issue name',
       props: { className: issuesTableColumnClasses.issue },
     },
     {
-      title: 'Comp',
-      props: { className: issuesTableColumnClasses.component },
+      title: 'Scope',
+      props: { className: issuesTableColumnClasses.scope },
     },
     {
       title: 'Severity',
