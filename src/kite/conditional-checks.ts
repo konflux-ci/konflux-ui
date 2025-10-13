@@ -4,8 +4,8 @@ import { commonFetch } from '~/k8s';
 
 export const checkIfKiteServiceIsEnabled = async () => {
   try {
-    await commonFetch('/api/v1/health/', { pathPrefix: 'plugins/kite' });
-    return true;
+    const response = await commonFetch('/api/v1/health/', { pathPrefix: 'plugins/kite' });
+    return response.ok;
   } catch (error) {
     return false;
   }

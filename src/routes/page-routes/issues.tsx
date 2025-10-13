@@ -5,7 +5,6 @@ import { RouteErrorBoundry } from '../RouteErrorBoundary';
 const issuesRoutes = [
   /* Issues Page */
   {
-    key: 'index',
     path: ISSUES_PATH.path,
     lazy: async () => {
       const { default: Component } = await import('~/components/Issues/Issues');
