@@ -41,9 +41,10 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
     [],
   );
 
-  //React.useEffect(() => {
-  //  return () => onTextInput.cancel();
-  //}, [onTextInput]);
+  React.useEffect(() => {
+    // Cancel pending debounced calls when text changes or on unmount
+    return () => onTextInput.cancel();
+  }, [text, onTextInput]);
 
   return (
     <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
