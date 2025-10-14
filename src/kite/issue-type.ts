@@ -44,14 +44,12 @@ export type Issue = {
     resourceName: string;
     resourceNamespace: string;
   };
-  links: [
-    {
-      id: string;
-      title: string;
-      url: string;
-      issueId: string;
-    },
-  ];
+  links: Array<{
+    id: string;
+    title: string;
+    url: string;
+    issueId: string;
+  }>;
   relatedFrom: string[];
   relatedTo: string[];
   createdAt: string;
