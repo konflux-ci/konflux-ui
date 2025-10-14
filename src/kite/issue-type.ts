@@ -44,7 +44,16 @@ export type Issue = {
     resourceName: string;
     resourceNamespace: string;
   };
-  links: string[];
+  links: [
+    {
+      id: string;
+      title: string;
+      url: string;
+      issueId: string;
+    },
+  ];
+  relatedFrom: string[];
+  relatedTo: string[];
   createdAt: string;
   updatedAt: string;
 };

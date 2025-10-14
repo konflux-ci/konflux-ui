@@ -36,7 +36,16 @@ const mockIssue: Issue = {
     resourceName: 'test-pipeline',
     resourceNamespace: 'test-namespace',
   },
-  links: ['https://example.com/issue'],
+  links: [
+    {
+      id: 'link-1',
+      title: 'Example Issue Link',
+      url: 'https://example.com/issue',
+      issueId: 'test-issue-id',
+    },
+  ],
+  relatedFrom: [],
+  relatedTo: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
 };
