@@ -42,34 +42,46 @@ interface WatsonResponse {
   context?: WatsonContext;
 }
 
-export const API_KEY = process.env.API_KEY;
-export const ASSISTANT_ID = process.env.ASSISTANT_ID;
-export const ENVIRONMENT_ID = process.env.ENVIRONMENT_ID;
-export const VERSION = process.env.VERSION;
+// Secure Watson session creation - credentials handled server-side
+export const createWatsonSession = async (): Promise<string> => {
+  try {
+    const response = await fetch('/api/watson/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result: { session_id: string } = await response.json();
+    return result.session_id;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Failed to create Watson session:', error);
+    throw error;
+  }
+};
+
+// Secure Watson API calls - all credentials handled server-side
 export const getWatSonresponse = async (userInput: string, sessionId: string, email: string) => {
   if (!sessionId) {
     return 'Missing Watson session';
   }
-  const url = `https://api.us-east.assistant.watson.cloud.ibm.com/v2/assistants/${ASSISTANT_ID}/environments/${ENVIRONMENT_ID}/sessions/${sessionId}/message?version=${VERSION}`;
-
-  const encodedAPIkey = btoa(`apikey:${API_KEY}`);
 
   try {
-    const response = await fetch(url, {
+    // Call secure backend proxy endpoint - no credentials in client
+    const response = await fetch('/api/watson/message', {
       headers: {
-        Authorization: `Basic ${encodedAPIkey}`,
         'Content-Type': 'application/json',
       },
       method: 'POST',
       body: JSON.stringify({
-        // eslint-disable-next-line camelcase
-        user_id: email,
-        input: {
-          // eslint-disable-next-line camelcase
-          message_type: 'text',
-          text: userInput,
-        },
+        userInput,
+        sessionId,
+        email,
       }),
     });
     if (!response.ok) {

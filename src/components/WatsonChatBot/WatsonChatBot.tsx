@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ChatBot from 'react-chatbotify';
 import { useAuth } from '~/auth/useAuth';
-import { API_KEY, ASSISTANT_ID, ENVIRONMENT_ID, getWatSonresponse, VERSION } from './watson-utils';
+import { createWatsonSession, getWatSonresponse } from './watson-utils';
 
 import './WatsonChatBot.scss';
 
@@ -37,26 +37,9 @@ const WatsonChatBot: React.FC = () => {
   const [watSonSessionID, setWatsonSessionID] = React.useState<string>('');
 
   React.useEffect(() => {
-    const encodedAPIkey = btoa(`apikey:${API_KEY}`);
-    const getWatSonSessionID = async () => {
-      const response = await fetch(
-        `https://api.us-east.assistant.watson.cloud.ibm.com/v2/assistants/${ASSISTANT_ID}/environments/${ENVIRONMENT_ID}/sessions?version=${VERSION}`,
-        {
-          headers: {
-            Authorization: `Basic ${encodedAPIkey}`,
-          },
-          method: 'POST',
-        },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result: { session_id: string } = await response.json();
-      return result;
-    };
-
-    getWatSonSessionID()
-      .then((result) => setWatsonSessionID(result.session_id))
+    // Create Watson session securely via backend proxy
+    createWatsonSession()
+      .then((sessionId) => setWatsonSessionID(sessionId))
       .catch((err) => {
         // Session creation error will be handled by getWatSonresponse when sessionId is empty
         // eslint-disable-next-line no-console

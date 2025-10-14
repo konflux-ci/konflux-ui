@@ -58,12 +58,6 @@ export default {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './public/index.html', favicon: './public/favicon.ico' }),
-    new webpack.DefinePlugin({
-      'process.env.API_KEY': JSON.stringify(process.env.API_KEY),
-      'process.env.ASSISTANT_ID': JSON.stringify(process.env.ASSISTANT_ID),
-      'process.env.ENVIRONMENT_ID': JSON.stringify(process.env.ENVIRONMENT_ID),
-      'process.env.VERSION': JSON.stringify(process.env.VERSION),
-    }),
   ],
   optimization: {
     moduleIds: 'deterministic',
