@@ -1,16 +1,6 @@
 /* eslint-disable */
 import * as React from 'react';
-import {
-  Alert,
-  AlertVariant,
-  EmptyStateBody,
-  Flex,
-  FlexItem,
-  Text,
-  TextContent,
-  TextVariants,
-  Title,
-} from '@patternfly/react-core';
+import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
 import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
@@ -20,10 +10,11 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { Table, useDeepCompareMemoize } from '~/shared';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { IssueRow } from './IssuesListRow';
 import IssuesListHeader from './IssuesListHeader';
+import IssuesListExpandedHeader from './IssuesListExpandedHeader';
 import IssuesListRow from './IssuesListRow';
+import { IssuesListExpandedRow } from './IssuesListExpandedRow';
 
 import './IssueListView.scss';
 
@@ -32,76 +23,230 @@ type IssueListViewProps = {
 };
 
 // Mock data for demonstration - replace with actual data fetching
-const mockIssues: IssueRow[] = [
+const mockIssuesRaw: IssueRow[] = [
   {
-    issueTitle: 'Security vulnerability in dependency',
-    componentName: 'frontend',
-    severity: 'High',
-    status: 'Open',
-    createdAt: '2024-01-15T10:30:00Z',
-    reason: 'Outdated package version',
-    links: [
+    id: 'RT1',
+    title: 'Title Issue #1',
+    description: 'Desc #1',
+    severity: 'critical',
+    issueType: 'build',
+    state: 'ACTIVE',
+    detectedAt: '2025-10-13',
+    namespace: 'default',
+    scope: {
+      resourceType: 'componment',
+      resourceName: 'name',
+      resourceNamespace: 'default',
+    },
+    links: ['https://link1.com', 'https://link2.com'],
+    createdAt: '2025-10-13',
+    updatedAt: '2025-10-13',
+  },
+  {
+    id: '000000',
+    title: 'Title Issue #2',
+    description: 'Desc #2',
+    severity: 'critical',
+    issueType: 'build',
+    state: 'ACTIVE',
+    detectedAt: '2025-10-13',
+    namespace: 'default',
+    scope: {
+      resourceType: 'componment',
+      resourceName: 'name',
+      resourceNamespace: 'default',
+    },
+    links: ['https://link1.com', 'https://link2.com'],
+    createdAt: '2025-10-13',
+    updatedAt: '2025-10-13',
+    relatedTo: [
       {
-        label: 'CVE Details',
-        href: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-1234',
+        id: '00000r1',
+        sourceId: 'RT1',
+        targetId: undefined,
+        source: undefined,
+        target: undefined,
       },
-      { label: 'Fix PR', href: 'https://github.com/example/repo/pull/123' },
     ],
-    actions: [
-      { label: 'View Details', callback: () => console.log('View details') },
-      { label: 'Mark as Resolved', callback: () => console.log('Mark resolved') },
+    relatedFrom: [
+      {
+        id: '00000r1',
+        sourceId: 'RF1',
+        targetId: undefined,
+        source: undefined,
+        target: undefined,
+      },
     ],
-  },
-  {
-    issueTitle: 'Build failure in CI/CD pipeline',
-    componentName: 'backend',
-    severity: 'Medium',
-    status: 'In Progress',
-    createdAt: '2024-01-14T14:20:00Z',
-    reason: 'Test timeout',
-    links: [{ label: 'Build Logs', href: 'https://jenkins.example.com/build/456' }],
-    actions: [{ label: 'View Logs', callback: () => console.log('View logs') }],
-  },
-  {
-    issueTitle: 'Performance regression',
-    componentName: 'api',
-    severity: 'Low',
-    status: 'Closed',
-    createdAt: '2024-01-13T09:15:00Z',
-    reason: 'N+1 query issue',
-    links: [],
-    actions: [{ label: 'Reopen', callback: () => console.log('Reopen') }],
   },
 ];
 
-const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = ({
-  applicationName,
-}) => {
-  const namespace = useNamespace();
+// const mockIssues: IssueRow[] = [
+const mockIssues = [
+  {
+    id: 'RT1',
+    title: 'Title Issue #1',
+    description: 'Desc #1',
+    severity: 'critical',
+    createdAt: '2025-10-12',
+    // issueType: "build",
+    state: 'ACTIVE',
+    // detectedAt: "2025-10-13",
+    // namespace: "default",
+    scope: {
+      resourceType: 'compo',
+      data: [
+        {
+          name: 'a',
+          severity: 'critical',
+          status: 'x',
+          createdAt: '2025-10-13',
+          description: 'Desc #11',
+          links: ['https://link1.com'],
+        },
+        {
+          name: 'b',
+          severity: 'critical',
+          status: 'y',
+          createdAt: '2025-10-13',
+          description: 'Desc #12',
+          links: ['https://link2.com'],
+        },
+      ],
+      links: ['https://link1.com', 'https://link2.com'],
+    },
+    // createdAt: "2025-10-13",
+    // updatedAt: "2025-10-13",
+  },
+  {
+    id: 'RT2',
+    title: 'Title Issue #2',
+    description: 'Desc #2',
+    severity: 'critical',
+    createdAt: '2025-10-12',
+    // issueType: "build",
+    state: 'ACTIVE',
+    // detectedAt: "2025-10-13",
+    // namespace: "default",
+    scope: {
+      resourceType: 'compo',
+      data: [
+        {
+          name: 'a',
+          severity: 'critical',
+          status: 'x',
+          createdAt: '2025-10-13',
+          description: 'Desc #21',
+          links: ['https://link1.com'],
+        },
+        {
+          name: 'b',
+          severity: 'critical',
+          status: 'y',
+          createdAt: '2025-10-13',
+          description: 'Desc #22',
+          links: ['https://link2.com'],
+        },
+      ],
+      links: ['https://link1.com', 'https://link2.com'],
+    },
+    // createdAt: "2025-10-13",
+    // updatedAt: "2025-10-13",
+  },
+  // {
+  // id: "000000",
+  // title: "Title Issue #2",
+  // description: "Desc #2",
+  // severity: "critical",
+  // issueType: "build",
+  // state: "ACTIVE",
+  // detectedAt: "2025-10-13",
+  // namespace: "default",
+  // scope: {
+  //   resourceType: "componment",
+  //   resourceName: "name",
+  //   resourceNamespace: "default"
+  // },
+  // links: [
+  //   "https://link1.com",
+  //   "https://link2.com",
+  // ],
+  // createdAt: "2025-10-13",
+  // updatedAt: "2025-10-13",
+  // relatedTo: [
+  //   {
+  //     id: "00000r1",
+  //     sourceId: "RT1",
+  //     targetId: undefined,
+  //     source: undefined,
+  //     target: undefined
+  //   }
+  // ],
+  // relatedFrom: [
+  //   {
+  //     id: "00000r1",
+  //     sourceId: "RF1",
+  //     targetId: undefined,
+  //     source: undefined,
+  //     target: undefined
+  //   }
+  // ]
+  // }
+];
 
+const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  // const [expandIssue, setExpandIssue] = React.useState<number | null>(null)
+  const [expandIssue, setExpandIssue] = React.useState<{ index: number; isExpanded: boolean }>({
+    index: null,
+    isExpanded: false,
+  });
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     severity: unparsedFilters.severity ? (unparsedFilters.severity as string[]) : [],
   });
 
+  // State to track expanded rows
+  const [expandedIssues, setExpandedIssues] = React.useState<Set<string>>(new Set());
+
+  const handleToggle = (issueId: string) => {
+    console.log(issueId);
+    const refRow = mockIssues.findIndex((issue) => issue.id == issueId);
+    console.log(refRow);
+    // setExpandIssue(!expandIssue);
+    setExpandIssue({ index: refRow, isExpanded: !expandIssue.isExpanded });
+    // console.log(issueId);
+    // setExpandedIssues((prev) => {
+    //   const next = new Set(prev);
+    //   if (next.has(issueId)) {
+    //     next.delete(issueId);
+    //   } else {
+    //     next.add(issueId);
+    //   }
+    //   return next;
+    // });
+  };
+
   const { name: nameFilter, status: statusFilter, severity: severityFilter } = filters;
 
   // Mock loading states - replace with actual data fetching
-  const [issues, issuesLoaded, issuesError] = React.useState<[IssueRow[], boolean, any]>([
-    mockIssues,
-    true,
-    null,
-  ]);
+  const [issues] = React.useState<IssueRow[]>(mockIssues);
+  // const issues = issuesRaw.reduce((acc,iss) => {
+  //   if (acc[iss.id])
+  //   return {
+  //     expandedIssues:
+  //   }
+  // }, {});
+  const issuesLoaded = true;
+  const issuesError = null;
 
   const filteredIssues = React.useMemo(
     () =>
-      issues[0].filter((issue) => {
+      issues.filter((issue) => {
         const matchesName =
-          !nameFilter || issue.issueTitle.toLowerCase().includes(nameFilter.toLowerCase());
+          !nameFilter || issue.title.toLowerCase().includes(nameFilter.toLowerCase());
         const matchesStatus =
-          !statusFilter?.length || statusFilter.includes(capitalize(issue.status));
+          !statusFilter?.length || statusFilter.includes(capitalize(issue.state));
         const matchesSeverity =
           !severityFilter?.length || severityFilter.includes(capitalize(issue.severity));
 
@@ -111,19 +256,13 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = ({
   );
 
   const statusFilterObj = React.useMemo(
-    () =>
-      createFilterObj(issues[0], (issue) => issue.status, [
-        'Open',
-        'In Progress',
-        'Closed',
-        'Resolved',
-      ]),
+    () => createFilterObj(issues, (issue) => issue.state, ['ACTIVE', 'RESOLVED']),
     [issues],
   );
 
   const severityFilterObj = React.useMemo(
     () =>
-      createFilterObj(issues[0], (issue) => issue.severity, ['High', 'Medium', 'Low', 'Critical']),
+      createFilterObj(issues, (issue) => issue.severity, ['info', 'minor', 'major', 'Critical']),
     [issues],
   );
 
@@ -187,9 +326,9 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = ({
       </TextContent>
       <div data-test="issues-list">
         <Table
-          virtualize={false}
+          virtualize
           data={filteredIssues}
-          unfilteredData={issues[0]}
+          unfilteredData={issues}
           EmptyMsg={EmptyMessage}
           NoDataEmptyMsg={NoDataEmptyMessage}
           Toolbar={toolbar}
@@ -198,9 +337,32 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = ({
           Row={IssuesListRow}
           loaded={issuesLoaded}
           getRowProps={(obj: IssueRow) => ({
-            id: `${obj.issueTitle.replace(/\s+/g, '-').toLowerCase()}-issue-list-item`,
-            'aria-label': obj.issueTitle,
+            id: `${obj.id}-issue-list-item`,
+            'aria-label': obj.title,
           })}
+          expand
+          ExpandedContent={(props) => {
+            console.log(props);
+            const issue = props.obj;
+            return (
+              <Table
+                data={issue.scope.data}
+                Row={IssuesListExpandedRow}
+                Header={IssuesListExpandedHeader}
+                loaded={true}
+                EmptyMsg={EmptyMessage}
+                aria-label="Issues List"
+                virtualize
+              />
+            );
+            // return <IssuesListExpandedRow {...props} row={issue.scope} />;
+          }}
+          customData={{
+            onToggle: handleToggle,
+            expandedIssues,
+            customExpand: expandIssue,
+            disableRegularExpand: true,
+          }}
         />
       </div>
     </>

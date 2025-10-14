@@ -1,82 +1,98 @@
 import * as React from 'react';
+import { Flex, FlexItem } from '@patternfly/react-core';
 import {
-  DescriptionList,
-  DescriptionListDescription,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  Stack,
-  StackItem,
-  Text,
-  TextVariants,
-} from '@patternfly/react-core';
-import { ExpandableRowContent, Tr } from '@patternfly/react-table';
-import { TableData } from '~/shared';
+  CriticalIcon,
+  HighIcon,
+  LowIcon,
+  MediumIcon,
+  UnknownIcon,
+} from '~/components/PipelineRun/ScanDetailStatus';
+import { TableData, Timestamp } from '~/shared';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
-import { IssueRow } from './IssuesListRow';
+// import { IssueRow } from './IssuesListRow';
+import { IssueStatus } from '../IssueStatus';
+import { issuesExpandedTableColumnClasses } from './IssuesListExpandedHeader';
 
 type Props = {
-  obj: IssueRow;
+  row: {
+    name: string;
+    severity: string;
+    status: string;
+    createdAt: string;
+    description: string;
+    links: string[];
+  };
 };
 
 export const IssuesListExpandedRow: React.FC<Props> = ({ obj: issue }) => {
+  // console.log(issue)
+
   const hasContent = issue.links?.length || issue.description;
+  const severityIcon = (severity) => {
+    switch (severity) {
+      case 'critical':
+        return <CriticalIcon />;
+      case 'major':
+        return <HighIcon />;
+      case 'minor':
+        return <MediumIcon />;
+      case 'info':
+        return <LowIcon />;
+      default:
+        return <UnknownIcon />;
+    }
+  };
 
   if (!hasContent) return null;
 
   return (
-    <Tr className="issues-list-expanded-row" data-test="issues-list-expand-content">
-      <TableData style={{ width: '5%' }}> </TableData>
-      <ExpandableRowContent>
-        <DescriptionList>
-          {issue.description && (
-            <DescriptionListGroup>
-              <DescriptionListTerm>Details</DescriptionListTerm>
-              <DescriptionListDescription>
-                <Text component={TextVariants.p}>{issue.description}</Text>
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          )}
+    <>
+      <TableData className={issuesExpandedTableColumnClasses.issue} data-test="issues-list-item">
+        <Flex direction={{ default: 'column' }}>
+          <FlexItem data-test="issues-list-item-title" style={{ minWidth: '30%' }}>
+            {issue.name}
+          </FlexItem>
+        </Flex>
+      </TableData>
 
-          {issue.links?.length > 0 && (
-            <DescriptionListGroup>
-              <DescriptionListTerm>Related Links</DescriptionListTerm>
-              <DescriptionListDescription>
-                <Stack hasGutter>
-                  {issue.links.map((link, index) => (
-                    <StackItem key={`${link}-${index}`}>
-                      <ExternalLink href={link} />
-                    </StackItem>
-                  ))}
-                </Stack>
-              </DescriptionListDescription>
-            </DescriptionListGroup>
-          )}
+      {/* <TableData className={issuesExpandedTableColumnClasses.scope}>
+          {issue.name}
+      </TableData> */}
 
-          <DescriptionListGroup>
-            <DescriptionListTerm>Scope</DescriptionListTerm>
-            <DescriptionListDescription>
-              <Text component={TextVariants.p}>
-                <strong>{issue.scope.resourceType}</strong>: {issue.scope.resourceName} (
-                {issue.scope.resourceNamespace})
-              </Text>
-            </DescriptionListDescription>
-          </DescriptionListGroup>
+      <TableData className={issuesExpandedTableColumnClasses.severity}>
+        {severityIcon(issue.severity)} {issue.severity}
+      </TableData>
 
-          <DescriptionListGroup>
-            <DescriptionListTerm>Issue Type</DescriptionListTerm>
-            <DescriptionListDescription>
-              <Text component={TextVariants.p}>{issue.issueType}</Text>
-            </DescriptionListDescription>
-          </DescriptionListGroup>
+      <TableData className={issuesExpandedTableColumnClasses.status}>
+        <IssueStatus locked={issue.status === 'CLOSED'} />
+      </TableData>
 
-          <DescriptionListGroup>
-            <DescriptionListTerm>Detected At</DescriptionListTerm>
-            <DescriptionListDescription>
-              <Text component={TextVariants.p}>{issue.detectedAt}</Text>
-            </DescriptionListDescription>
-          </DescriptionListGroup>
-        </DescriptionList>
-      </ExpandableRowContent>
-    </Tr>
+      <TableData className={issuesExpandedTableColumnClasses.createdAt}>
+        <Timestamp timestamp={issue.createdAt} />
+      </TableData>
+
+      <TableData className={issuesExpandedTableColumnClasses.reason}>
+        {issue.description ?? '-'}
+      </TableData>
+
+      <TableData className={issuesExpandedTableColumnClasses.usefulLinks}>
+        <Flex direction={{ default: 'column' }}>
+          {issue.links?.length
+            ? issue.links.map((link, index) => (
+                <FlexItem key={`${link}-${index}`}>
+                  <ExternalLink href={link} />
+                </FlexItem>
+              ))
+            : '-'}
+        </Flex>
+      </TableData>
+
+      <TableData className={issuesExpandedTableColumnClasses.kebab}>
+        <div className="issues-list-view__row-actions">
+          <ActionMenu actions={[]} />
+        </div>
+      </TableData>
+    </>
   );
 };
