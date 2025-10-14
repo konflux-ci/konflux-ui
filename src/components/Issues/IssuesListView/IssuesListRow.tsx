@@ -93,7 +93,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<IssueRow, IssueListRowCustomData>>
           onClick={handleComponentClick}
           data-test="issues-component-name-button"
         >
-          {issue.scope.resourceName}
+          {issue.scope.resourceType}
         </Button>
       </TableData>
 
