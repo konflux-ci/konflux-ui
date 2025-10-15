@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
-import { debounce } from 'lodash-es';
+import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
 
 type BaseTextFilterToolbarProps = {
@@ -26,25 +26,9 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   totalColumns = 0,
   showSearchInput = true,
 }) => {
-  // keep the latest setText in a ref
-  const setTextRef = React.useRef(setText);
-  React.useEffect(() => {
-    setTextRef.current = setText;
-  }, [setText]);
-
-  // stable debounced function that calls the *latest* setTextRef
-  const onTextInput = React.useMemo(
-    () =>
-      debounce((newName: string) => {
-        setTextRef.current(newName);
-      }, 600),
-    [],
-  );
-
-  React.useEffect(() => {
-    // Cancel pending debounced calls when text changes or on unmount
-    return () => onTextInput.cancel();
-  }, [text, onTextInput]);
+  const onTextInput = useDebounceCallback((value: string) => {
+    setText(value);
+  }, 600);
 
   return (
     <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>

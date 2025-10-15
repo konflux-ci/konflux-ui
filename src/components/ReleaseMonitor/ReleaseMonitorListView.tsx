@@ -31,14 +31,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const memoSetFilters = React.useCallback(
-    (newFilters: MonitoredReleasesFilterState) => setFilters(newFilters),
-    [setFilters],
-  );
 
-  const memoOnClearFilters = React.useCallback(() => {
-    onClearFilters();
-  }, [onClearFilters]);
   const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
     return {
       name: filters?.name || '',
@@ -213,8 +206,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       {(isFiltered || sortedMonitoredReleases.length > 0) && (
         <MonitoredReleasesFilterToolbar
           filters={filters}
-          setFilters={memoSetFilters}
-          onClearFilters={memoOnClearFilters}
+          setFilters={setFilters}
+          onClearFilters={onClearFilters}
           statusOptions={filterOptions.statusOptions}
           applicationOptions={filterOptions.applicationOptions}
           releasePlanOptions={filterOptions.releasePlanOptions}
