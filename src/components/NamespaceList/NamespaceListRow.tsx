@@ -9,11 +9,15 @@ import { NamespaceKind } from '~/types';
 import { namespaceTableColumnClasses } from './NamespaceListHeader';
 import { useNamespaceActions } from './useNamespaceActions';
 
+const NAMESPACE_VISIBLE_LABEL = 'virtual.konflux-ci.dev/visibility';
+
 const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<NamespaceKind>>> = ({
   obj,
 }) => {
   const [actions, , onToggle] = useNamespaceActions(obj);
   const [applications, loaded, error] = useApplications(obj.metadata.name);
+
+  const namespaceVisibility = obj.metadata.labels?.[NAMESPACE_VISIBLE_LABEL];
 
   return (
     <>
@@ -24,6 +28,9 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
         >
           {obj.metadata.name}
         </Link>
+      </TableData>
+      <TableData className={namespaceTableColumnClasses.visibility}>
+        {namespaceVisibility ? (namespaceVisibility === 'public' ? 'Public' : 'Private') : 'N/A'}
       </TableData>
       <TableData className={namespaceTableColumnClasses.applications}>
         {loaded ? (
