@@ -50,10 +50,18 @@ export type Issue = {
     url: string;
     issueId: string;
   }>;
-  relatedFrom: string[];
-  relatedTo: string[];
+  relatedFrom: RelatedIssue[];
+  relatedTo: RelatedIssue[];
   createdAt: string;
   updatedAt: string;
+};
+
+type RelatedIssue = {
+  id: string;
+  sourceID: string;
+  targetID: string;
+  source: Issue;
+  target: Issue;
 };
 
 export type IssueResponse = {
