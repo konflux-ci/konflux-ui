@@ -147,27 +147,40 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   const filteredData = React.useMemo(() => {
     let filtered = filterMonitoredReleases(releases, filters);
-    if (filters.showLatest) {
-      const latestReleasesByComponent: { [key: string]: MonitoredReleaseKind } = {};
-      const releasesWithoutComponent: MonitoredReleaseKind[] = [];
 
-      filtered.forEach((release) => {
-        const componentName = release.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-        if (componentName) {
-          const existing = latestReleasesByComponent[componentName];
-          if (
-            !existing ||
-            new Date(existing.metadata.creationTimestamp) <
-              new Date(release.metadata.creationTimestamp)
-          ) {
-            latestReleasesByComponent[componentName] = release;
+    if (filters.showLatest) {
+      const { latestReleasesByComponent, releasesWithoutComponent } = filtered.reduce(
+        (acc, release) => {
+          const componentName = release.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+
+          if (componentName) {
+            const existing = acc.latestReleasesByComponent[componentName];
+            if (
+              !existing ||
+              new Date(existing.metadata.creationTimestamp) <
+                new Date(release.metadata.creationTimestamp)
+            ) {
+              acc.latestReleasesByComponent[componentName] = release;
+            }
+          } else {
+            acc.releasesWithoutComponent.push(release);
           }
-        } else {
-          releasesWithoutComponent.push(release);
-        }
-      });
-      filtered = [...Object.values(latestReleasesByComponent), ...releasesWithoutComponent];
+
+          return acc;
+        },
+        {
+          latestReleasesByComponent: {} as Record<string, MonitoredReleaseKind>,
+          releasesWithoutComponent: [] as MonitoredReleaseKind[],
+        },
+      );
+
+      // Use map to merge latest component releases and untagged ones
+      filtered = [
+        ...Object.values(latestReleasesByComponent),
+        ...releasesWithoutComponent.map((r) => r),
+      ];
     }
+
     return filtered;
   }, [releases, filters]);
 
