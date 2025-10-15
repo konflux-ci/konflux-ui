@@ -13,7 +13,9 @@ import { createFeatureFlagPanelModal } from '~/feature-flags/Panel';
 import { ThemeDropdown } from '~/shared/theme';
 import { NotificationBadgeWrapper } from '../KonfluxSystemNotifications/NotificationBadgeWrapper';
 import { useModalLauncher } from '../modal/ModalProvider';
+import { HelpDropdown } from './HelpDropdown';
 import { UserDropdown } from './UserDropdown';
+
 
 interface HeaderProps {
   isDrawerExpanded: boolean;
@@ -36,6 +38,9 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
                 <FlaskIcon />
               </Button>
             </Tooltip>
+          </ToolbarItem>
+          <ToolbarItem>
+            <HelpDropdown />
           </ToolbarItem>
           <IfFeature flag="system-notifications">
             <NotificationBadgeWrapper
