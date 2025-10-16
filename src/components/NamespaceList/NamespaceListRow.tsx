@@ -5,11 +5,10 @@ import { APPLICATION_LIST_PATH } from '@routes/paths';
 import { useApplications } from '~/hooks/useApplications';
 import { RowFunctionArgs, TableData } from '~/shared';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
+import { NAMESPACE_VISIBILITY_LABEL } from '~/shared/const';
 import { NamespaceKind } from '~/types';
 import { namespaceTableColumnClasses } from './NamespaceListHeader';
 import { useNamespaceActions } from './useNamespaceActions';
-
-const NAMESPACE_VISIBLE_LABEL = 'virtual.konflux-ci.dev/visibility';
 
 const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<NamespaceKind>>> = ({
   obj,
@@ -17,7 +16,7 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
   const [actions, , onToggle] = useNamespaceActions(obj);
   const [applications, loaded, error] = useApplications(obj.metadata.name);
 
-  const namespaceVisibility = obj.metadata.labels?.[NAMESPACE_VISIBLE_LABEL];
+  const namespaceVisibility = obj.metadata.labels?.[NAMESPACE_VISIBILITY_LABEL];
 
   return (
     <>

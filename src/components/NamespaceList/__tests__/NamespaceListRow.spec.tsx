@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import { HttpError } from '~/k8s/error';
+import { NAMESPACE_VISIBILITY_LABEL } from '~/shared/const';
 import NamespaceListRow from '.././NamespaceListRow';
 import { useApplications } from '../../../hooks/useApplications';
 import { NamespaceKind } from '../../../types';
@@ -89,7 +90,7 @@ describe('NamespaceListRow', () => {
       metadata: {
         ...mockNamespace.metadata,
         labels: {
-          'virtual.konflux-ci.dev/visibility': 'public',
+          [NAMESPACE_VISIBILITY_LABEL]: 'public',
         },
       },
     };
@@ -107,7 +108,7 @@ describe('NamespaceListRow', () => {
       metadata: {
         ...mockNamespace.metadata,
         labels: {
-          'virtual.konflux-ci.dev/visibility': 'private',
+          [NAMESPACE_VISIBILITY_LABEL]: 'private',
         },
       },
     };

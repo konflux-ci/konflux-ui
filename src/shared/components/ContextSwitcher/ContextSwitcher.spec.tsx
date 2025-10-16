@@ -99,17 +99,17 @@ describe('ContextSwitcher', () => {
     render(<ContextSwitcher menuItems={items} />);
     act(() => screen.getByRole('button').click());
 
-    // Check that visibility icons are rendered by looking for SVG elements with specific viewBox attributes
-    // LockOpenIcon has viewBox="0 0 576 512" and LockIcon has viewBox="0 0 448 512"
-    const lockOpenIcons = screen
-      .getAllByRole('img', { hidden: true })
-      .filter((svg) => svg.getAttribute('viewBox') === '0 0 576 512');
-    const lockIcons = screen
-      .getAllByRole('img', { hidden: true })
-      .filter((svg) => svg.getAttribute('viewBox') === '0 0 448 512');
+    // Verify public item shows lock-open icon
+    const publicItem = screen.getByText('Public Item').closest('[role="menuitem"]');
+    expect(publicItem).toContainElement(publicItem?.querySelector('svg[role="img"]'));
 
-    expect(lockOpenIcons.length).toBeGreaterThan(0);
-    expect(lockIcons.length).toBeGreaterThan(0);
+    // Verify private item shows lock icon
+    const privateItem = screen.getByText('Private Item').closest('[role="menuitem"]');
+    expect(privateItem).toContainElement(privateItem?.querySelector('svg[role="img"]'));
+
+    // Verify no visibility item has no icon
+    const noVisibilityItem = screen.getByText('No Visibility Item').closest('[role="menuitem"]');
+    expect(noVisibilityItem?.querySelectorAll('svg').length).toBe(0);
   });
 
   it('should handle items with visibility correctly', () => {

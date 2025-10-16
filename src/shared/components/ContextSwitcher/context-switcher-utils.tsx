@@ -33,7 +33,11 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
   return (
     <MenuItem itemId={item.key}>
       {item.visibility && (
-        <VisibilityIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm) !important' }} />
+        <VisibilityIcon
+          role="img"
+          alt="namespace visibility icon"
+          style={{ marginRight: 'var(--pf-v5-global--spacer--sm) !important' }}
+        />
       )}
       {item.name}
     </MenuItem>

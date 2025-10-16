@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuToggle } from '@patternfly/react-core';
 import { useQuery } from '@tanstack/react-query';
 import { ContextMenuItem, ContextSwitcher } from '../../components';
+import { NAMESPACE_VISIBILITY_LABEL } from '../../const';
 import { useNamespace } from './useNamespaceInfo';
 import { createNamespaceQueryOptions } from './utils';
 
@@ -19,7 +20,7 @@ export const NamespaceSwitcher: React.FC<
       namespaces?.map((app) => ({
         key: app.metadata.name,
         name: app.metadata.name,
-        visibility: app.metadata.labels?.['virtual.konflux-ci.dev/visibility'] ?? 'Unknown',
+        visibility: app.metadata.labels?.[NAMESPACE_VISIBILITY_LABEL] ?? 'private',
       })) || [],
     [namespaces],
   );
