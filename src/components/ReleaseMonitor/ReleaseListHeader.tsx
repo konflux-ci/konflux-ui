@@ -68,23 +68,23 @@ export const getReleasesListHeader = (
       onSort,
     )(componentProps);
 
-    if (totalCount !== undefined) {
-      const countColumn = {
-        title: (
-          <span style={{ fontWeight: 'bold', fontSize: '0.875rem' }}>
-            {pluralize(totalCount, 'release')}
-          </span>
-        ),
-        props: {
-          className: releaseTableColumnClasses.count,
-          style: { textAlign: 'center' as const },
-        },
-      };
-
-      return [...baseHeaders, countColumn];
-    }
-
-    return baseHeaders;
+    return [
+      ...baseHeaders,
+      ...(totalCount !== undefined
+        ? [
+            {
+              title: (
+                <span className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
+                  {pluralize(totalCount, 'release')}
+                </span>
+              ),
+              props: {
+                className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
+              },
+            },
+          ]
+        : []),
+    ];
   };
 };
 
