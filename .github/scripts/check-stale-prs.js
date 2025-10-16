@@ -49,13 +49,6 @@
 
 import { Octokit } from '@octokit/rest';
 import dayjs from 'dayjs';
-// Note: Use .js extension for Node ESM compatibility
-import isBetween from 'dayjs/plugin/isBetween.js';
-import customParseFormat from 'dayjs/plugin/customParseFormat.js';
-
-// Extend dayjs with necessary plugins
-dayjs.extend(isBetween);
-dayjs.extend(customParseFormat);
 
 // ----- Configuration -----
 
@@ -91,9 +84,8 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
  * @returns {number} Number of business days between dates
  *
  * @example
- * // Friday to Monday (2 days apart, but 0 business days)
- * getBusinessDaysDiff(dayjs('2024-01-05'), dayjs('2024-01-08')) // Returns 0
- *
+ * // Friday to Monday (2 days apart, but 1 business days)
+ * getBusinessDaysDiff(dayjs('2024-01-05'), dayjs('2024-01-08')) // Returns 1
  * @example
  * // Monday to Friday (4 business days)
  * getBusinessDaysDiff(dayjs('2024-01-08'), dayjs('2024-01-12')) // Returns 4
@@ -259,8 +251,6 @@ const checkStalePRs = async () => {
       if (!user || !user.login) return false;
       const login = user.login.toLowerCase();
       return (
-        login.includes('[bot]') ||
-        login.includes('bot') || // General catch for common bot names
         ['codecov', 'coderabbitai', 'dependabot', 'github-actions'].includes(login) ||
         user.type === 'Bot'
       );
