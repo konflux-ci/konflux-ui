@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { useLocalStorage } from '../../../hooks/useLocalStorage';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { ContextSwitcher } from './ContextSwitcher';
 
-jest.mock('../../../hooks/useLocalStorage', () => ({
+jest.mock('../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
 }));
 
@@ -88,5 +88,74 @@ describe('ContextSwitcher', () => {
         recentItems: { resource: ['test1', 'test2', 'test3'] },
       }),
     );
+  });
+
+  it('should render items with visibility icons', () => {
+    const items = [
+      { name: 'Public Item', key: 'public', visibility: 'public' },
+      { name: 'Private Item', key: 'private', visibility: 'private' },
+      { name: 'No Visibility Item', key: 'none' },
+    ];
+    render(<ContextSwitcher menuItems={items} />);
+    act(() => screen.getByRole('button').click());
+
+    // Check that visibility icons are rendered by looking for SVG elements with specific viewBox attributes
+    // LockOpenIcon has viewBox="0 0 576 512" and LockIcon has viewBox="0 0 448 512"
+    const lockOpenIcons = screen
+      .getAllByRole('img', { hidden: true })
+      .filter((svg) => svg.getAttribute('viewBox') === '0 0 576 512');
+    const lockIcons = screen
+      .getAllByRole('img', { hidden: true })
+      .filter((svg) => svg.getAttribute('viewBox') === '0 0 448 512');
+
+    expect(lockOpenIcons.length).toBeGreaterThan(0);
+    expect(lockIcons.length).toBeGreaterThan(0);
+  });
+
+  it('should handle items with visibility correctly', () => {
+    const items = [
+      { name: 'Public Item', key: 'public', visibility: 'public' },
+      { name: 'Private Item', key: 'private', visibility: 'private' },
+      { name: 'No Visibility Item', key: 'none' },
+    ];
+    render(<ContextSwitcher menuItems={items} />);
+    act(() => screen.getByRole('button').click());
+
+    // Check that all items are rendered
+    expect(screen.getByText('Public Item')).toBeInTheDocument();
+    expect(screen.getByText('Private Item')).toBeInTheDocument();
+    expect(screen.getByText('No Visibility Item')).toBeInTheDocument();
+
+    // Check that visibility icons are present
+    const lockOpenIcons = screen
+      .getAllByRole('img', { hidden: true })
+      .filter((svg) => svg.getAttribute('viewBox') === '0 0 576 512');
+    const lockIcons = screen
+      .getAllByRole('img', { hidden: true })
+      .filter((svg) => svg.getAttribute('viewBox') === '0 0 448 512');
+
+    expect(lockOpenIcons.length).toBeGreaterThan(0);
+    expect(lockIcons.length).toBeGreaterThan(0);
+  });
+
+  it('should filter items with visibility correctly', () => {
+    const items = [
+      { name: 'Public Test', key: 'public', visibility: 'public' },
+      { name: 'Private Test', key: 'private', visibility: 'private' },
+      { name: 'Other Item', key: 'other' },
+    ];
+    render(<ContextSwitcher menuItems={items} />);
+    act(() => screen.getByRole('button').click());
+
+    // Filter by 'Test' - should show both public and private items
+    act(() => {
+      fireEvent.input(screen.getByPlaceholderText('Filter resource by name'), {
+        target: { value: 'Test' },
+      });
+    });
+
+    expect(screen.getByText('Public Test')).toBeInTheDocument();
+    expect(screen.getByText('Private Test')).toBeInTheDocument();
+    expect(screen.queryByText('Other Item')).not.toBeInTheDocument();
   });
 });

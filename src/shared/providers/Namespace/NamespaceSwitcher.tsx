@@ -15,7 +15,12 @@ export const NamespaceSwitcher: React.FC<
   const namespace = useNamespace();
 
   const menuItems = React.useMemo(
-    () => namespaces?.map((app) => ({ key: app.metadata.name, name: app.metadata.name })) || [],
+    () =>
+      namespaces?.map((app) => ({
+        key: app.metadata.name,
+        name: app.metadata.name,
+        visibility: app.metadata.labels?.['virtual.konflux-ci.dev/visibility'] ?? 'Unknown',
+      })) || [],
     [namespaces],
   );
   const selectedItem =
