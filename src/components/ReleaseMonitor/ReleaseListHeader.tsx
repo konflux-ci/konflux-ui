@@ -1,4 +1,4 @@
-import { pluralize } from '@patternfly/react-core';
+import { pluralize, Text } from '@patternfly/react-core';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
 import { ComponentProps } from '~/shared/components/table/Table';
 import { createTableHeaders } from '~/shared/components/table/utils';
@@ -74,9 +74,9 @@ export const getReleasesListHeader = (
         ? [
             {
               title: (
-                <span className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
+                <Text component="small" className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
                   {pluralize(totalCount, 'release')}
-                </span>
+                </Text>
               ),
               props: {
                 className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
