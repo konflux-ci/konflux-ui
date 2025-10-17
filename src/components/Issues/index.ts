@@ -1,0 +1,1 @@
+export { LatestIssuesCard } from './LatestIssuesCard';

@@ -1,0 +1,97 @@
+.latest-issues-card {
+  &__list {
+    .pf-v5-c-list__item:not(:last-child) {
+      margin-bottom: var(--pf-v5-global--spacer--xl);
+      padding-bottom: var(--pf-v5-global--spacer--md);
+      border-bottom: 1px solid var(--pf-v5-global--BorderColor--100);
+    }
+  }
+
+  &__item {
+    padding: 0;
+  }
+
+  &__icon-container {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  &__content {
+    min-width: 0;
+  }
+
+  &__icon {
+    font-size: 1rem;
+    
+    &--critical {
+      color: var(--pf-v5-global--danger-color--100);
+    }
+
+    &--major {
+      color: var(--pf-v5-global--warning-color--100);
+    }
+
+    &--minor {
+      color: var(--pf-v5-global--warning-color--200);
+    }
+
+    &--info {
+      color: var(--pf-v5-global--info-color--100);
+    }
+  }
+
+  &__title {
+    font-weight: var(--pf-v5-global--FontWeight--semi-bold);
+    color: var(--pf-v5-global--Color--100);
+    line-height: var(--pf-v5-global--LineHeight--md);
+    font-size: var(--pf-v5-global--FontSize--md);
+  }
+
+  &__description {
+    color: var(--pf-v5-global--Color--200);
+    font-size: var(--pf-v5-global--FontSize--sm);
+    line-height: var(--pf-v5-global--LineHeight--md);
+    margin-bottom: var(--pf-v5-global--spacer--md);
+    margin-top: var(--pf-v5-global--spacer--sm);
+    margin-left: 0;
+  }
+
+  &__timestamp {
+    color: var(--pf-v5-global--Color--200);
+    font-size: var(--pf-v5-global--FontSize--sm);
+    line-height: var(--pf-v5-global--LineHeight--md);
+    margin-top: var(--pf-v5-global--spacer--sm);
+    margin-left: 0;
+    margin-bottom: var(--pf-v5-global--spacer--lg);
+  }
+
+
+  &__footer {
+    margin-top: var(--pf-v5-global--spacer--md);
+    padding-top: var(--pf-v5-global--spacer--sm);
+    
+    .pf-v5-c-button.pf-m-link {
+      padding-left: 0;
+      font-size: var(--pf-v5-global--FontSize--sm);
+      font-weight: var(--pf-v5-global--FontWeight--bold);
+      text-decoration: none;
+      
+      svg {
+        margin-left: var(--pf-v5-global--spacer--xs);
+        font-size: var(--pf-v5-global--FontSize--xs);
+      }
+      
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+
+  &__empty {
+    color: var(--pf-v5-global--Color--200);
+    font-style: italic;
+    text-align: center;
+    padding: var(--pf-v5-global--spacer--lg) 0;
+  }
+}

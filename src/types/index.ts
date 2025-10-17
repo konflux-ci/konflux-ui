@@ -20,4 +20,5 @@ export * from './role-binding';
 export * from './workspace';
 export * from './image-repository';
 export * from './enterprise-contract';
+export * from './issues';
 export * from './namespace';
