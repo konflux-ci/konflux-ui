@@ -101,11 +101,11 @@ describe('ContextSwitcher', () => {
 
     // Verify public item shows lock-open icon
     const publicItem = screen.getByText('Public Item').closest('[role="menuitem"]');
-    expect(publicItem).toContainElement(publicItem?.querySelector('svg[role="img"]'));
+    expect(publicItem?.querySelector('[data-test="visibility-icon-public"]')).toBeInTheDocument();
 
     // Verify private item shows lock icon
     const privateItem = screen.getByText('Private Item').closest('[role="menuitem"]');
-    expect(privateItem).toContainElement(privateItem?.querySelector('svg[role="img"]'));
+    expect(privateItem?.querySelector('[data-test="visibility-icon-private"]')).toBeInTheDocument();
 
     // Verify no visibility item has no icon
     const noVisibilityItem = screen.getByText('No Visibility Item').closest('[role="menuitem"]');
