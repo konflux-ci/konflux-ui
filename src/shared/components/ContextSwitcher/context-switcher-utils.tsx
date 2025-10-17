@@ -39,7 +39,7 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
           aria-label={`${item.visibility} namespace`}
           style={{
             marginRight: 'var(--pf-v5-global--spacer--sm)',
-            color: item.visibility === undefined ? 'transparent' : undefined,
+            color: item.visibility === 'Unknown' ? 'transparent' : undefined,
           }}
         />
       )}

@@ -20,7 +20,7 @@ export const NamespaceSwitcher: React.FC<
       namespaces?.map((app) => ({
         key: app.metadata.name,
         name: app.metadata.name,
-        visibility: app.metadata.labels?.[NAMESPACE_VISIBILITY_LABEL] ?? undefined,
+        visibility: app.metadata.labels?.[NAMESPACE_VISIBILITY_LABEL] ?? 'Unknown',
       })) || [],
     [namespaces],
   );
