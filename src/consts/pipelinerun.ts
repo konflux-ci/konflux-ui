@@ -26,6 +26,7 @@ export enum PipelineRunLabel {
   COMMIT_EVENT_TYPE_LABEL = 'pipelinesascode.tekton.dev/event-type',
   PULL_REQUEST_NUMBER_LABEL = 'pipelinesascode.tekton.dev/pull-request',
   CREATE_SNAPSHOT_STATUS = 'test.appstudio.openshift.io/create-snapshot-status',
+  RELEASE_NAMESPACE = 'release.appstudio.openshift.io/namespace',
 
   TEST_SERVICE_COMMIT = 'pac.test.appstudio.openshift.io/sha',
   TEST_SERVICE_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
