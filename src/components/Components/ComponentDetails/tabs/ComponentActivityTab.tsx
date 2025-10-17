@@ -5,9 +5,9 @@ import { FilterContextProvider } from '~/components/Filter/generic/FilterContext
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { COMPONENT_ACTIVITY_CHILD_TAB_PATH } from '../../../../routes/paths';
 import { RouterParams } from '../../../../routes/utils';
+import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { PipelineRunKind } from '../../../../types';
 import PipelineRunsTab from '../../../Activity/PipelineRunsTab';
