@@ -36,7 +36,7 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
         <VisibilityIcon
           data-test={`visibility-icon-${item.visibility}`}
           role="img"
-          alt="namespace visibility icon"
+          aria-label={`${item.visibility} namespace`}
           style={{ marginRight: 'var(--pf-v5-global--spacer--sm) !important' }}
         />
       )}
