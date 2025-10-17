@@ -10,6 +10,7 @@ import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
 import componentRoutes from './page-routes/components';
 import integrationTestRoutes from './page-routes/integration-test';
+import issuesRoutes from './page-routes/issues';
 import workspaceRoutes from './page-routes/namespace';
 import pipelineRoutes from './page-routes/pipeline';
 import releaseRoutes from './page-routes/release';
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       ...releaseRoutes,
       ...releaseServiceRoutes,
       ...secretRoutes,
+      ...issuesRoutes,
       ...integrationTestRoutes,
       ...snapshotRoutes,
       ...commitRoutes,
