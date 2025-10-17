@@ -25,7 +25,7 @@ export interface AboutModalProps {
 const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   const GITHUB_REPOSITORY_URL = 'https://github.com/konflux-ci/konflux-ui';
   const [parsedData] = useKonfluxPublicInfo();
-  const isInternal = parsedData.environment === 'staging';
+  const isInternal = parsedData.visibility === 'private';
   const documentationLink = isInternal
     ? INTERNAL_DOCUMENTATION_BASE_URL
     : EXTERNAL_DOCUMENTATION_BASE_URL;

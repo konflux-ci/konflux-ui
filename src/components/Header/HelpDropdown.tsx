@@ -7,17 +7,25 @@ import {
   MenuToggle,
   Tooltip,
 } from '@patternfly/react-core';
-import { ExternalLinkAltIcon,OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons';
-import { EXTERNAL_DOCUMENTATION_BASE_URL, INTERNAL_DOCUMENTATION_BASE_URL } from '~/consts/documentation';
+import {
+  ExternalLinkAltIcon,
+  OutlinedQuestionCircleIcon,
+} from '@patternfly/react-icons/dist/esm/icons';
+import {
+  EXTERNAL_DOCUMENTATION_BASE_URL,
+  INTERNAL_DOCUMENTATION_BASE_URL,
+} from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import AboutModal from './AboutModal';
 
 export const HelpDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = React.useState(false);
-  const [parsedData]=useKonfluxPublicInfo();
-  const isInternal = parsedData.environment==="staging";
-  const documentationLink=isInternal?INTERNAL_DOCUMENTATION_BASE_URL:EXTERNAL_DOCUMENTATION_BASE_URL;
+  const [parsedData] = useKonfluxPublicInfo();
+  const isInternal = parsedData.visibility === 'private';
+  const documentationLink = isInternal
+    ? INTERNAL_DOCUMENTATION_BASE_URL
+    : EXTERNAL_DOCUMENTATION_BASE_URL;
 
   const handleAboutClick = () => {
     setIsOpen(false);
@@ -51,11 +59,7 @@ export const HelpDropdown: React.FC = () => {
         >
           <DropdownGroup>
             <DropdownList>
-              <DropdownItem
-                key="about"
-                onClick={handleAboutClick}
-                data-test="help-dropdown-about"
-              >
+              <DropdownItem key="about" onClick={handleAboutClick} data-test="help-dropdown-about">
                 About Konflux
               </DropdownItem>
               <DropdownItem
@@ -71,10 +75,7 @@ export const HelpDropdown: React.FC = () => {
         </Dropdown>
       </Tooltip>
 
-      <AboutModal 
-        isOpen={isAboutModalOpen} 
-        onClose={() => setIsAboutModalOpen(false)} 
-      />
+      <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
     </>
   );
 };
