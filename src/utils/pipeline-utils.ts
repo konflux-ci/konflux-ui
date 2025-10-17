@@ -406,3 +406,43 @@ export const runStatusToRunStatus = (status: runStatus): RunStatus => {
       return RunStatus.Pending;
   }
 };
+
+export const getSbomShaFromTaskRuns = (taskruns: TaskRunKind[]): string | undefined => {
+  // Task names that may contain SBOM_BLOB_URL result, in priority order
+  const SBOM_TASK_PRIORITY = new Map([
+    ['build-image-index', 0],
+    ['buildah-remote-oci-ta', 1],
+    ['buildah-oci-ta', 2],
+  ]);
+
+  let bestMatch: { value: string; priority: number } | undefined;
+
+  for (const taskRun of taskruns) {
+    const taskLabel = taskRun?.metadata?.labels?.[TektonResourceLabel.task];
+    const priority = taskLabel ? SBOM_TASK_PRIORITY.get(taskLabel) : undefined;
+
+    if (priority !== undefined) {
+      const results = taskRun?.status?.results as TektonResultsRun[];
+      if (!results) {
+        continue;
+      }
+
+      const sbomBlobUrl = results?.find((res) => res.name === 'SBOM_BLOB_URL')?.value;
+
+      if (sbomBlobUrl && (!bestMatch || priority < bestMatch.priority)) {
+        bestMatch = { value: sbomBlobUrl, priority };
+        // If we found the highest priority task, return immediately
+        if (priority === 0) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (!bestMatch) {
+    return undefined;
+  }
+
+  const parts = bestMatch.value.split('@');
+  return parts[1] || undefined;
+};
