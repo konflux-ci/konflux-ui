@@ -1,12 +1,12 @@
-import { Children } from 'react';
+import * as React from 'react';
 import { SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
-import { debounce } from 'lodash-es';
+import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
 
 type BaseTextFilterToolbarProps = {
   text: string;
   label: string;
-  setText: (string) => void;
+  setText: (value: string) => void;
   onClearFilters: () => void;
   children?: React.ReactNode;
   dataTest?: string;
@@ -15,7 +15,7 @@ type BaseTextFilterToolbarProps = {
   showSearchInput?: boolean;
 };
 
-export const BaseTextFilterToolbar = ({
+export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   text,
   label,
   setText,
@@ -25,36 +25,34 @@ export const BaseTextFilterToolbar = ({
   openColumnManagement,
   totalColumns = 0,
   showSearchInput = true,
-}: BaseTextFilterToolbarProps) => {
-  const onTextInput = debounce((newName: string) => {
-    setText(newName);
+}) => {
+  const onTextInput = useDebounceCallback((value: string) => {
+    setText(value);
   }, 600);
 
   return (
-    <>
-      <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
-        <ToolbarContent>
-          {showSearchInput && (
-            <ToolbarItem className="pf-v5-u-ml-0">
-              <SearchInput
-                name={`${label}Input`}
-                data-test={`${label}-input-filter`}
-                type="search"
-                aria-label={`${label} filter`}
-                placeholder={`Filter by ${label}...`}
-                onChange={(_, n) => onTextInput(n)}
-                value={text}
-              />
-            </ToolbarItem>
-          )}
-          {Children.map(children, (child, index) => (
-            <ToolbarItem key={index}>{child}</ToolbarItem>
-          ))}
-          <ToolbarItem>
-            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+    <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
+      <ToolbarContent>
+        {showSearchInput && (
+          <ToolbarItem className="pf-v5-u-ml-0">
+            <SearchInput
+              name={`${label}Input`}
+              data-test={`${label}-input-filter`}
+              type="search"
+              aria-label={`${label} filter`}
+              placeholder={`Filter by ${label}...`}
+              onChange={(_, value) => onTextInput(value)}
+              value={text}
+            />
           </ToolbarItem>
-        </ToolbarContent>
-      </Toolbar>
-    </>
+        )}
+        {React.Children.map(children, (child, index) => (
+          <ToolbarItem key={index}>{child}</ToolbarItem>
+        ))}
+        <ToolbarItem>
+          <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+        </ToolbarItem>
+      </ToolbarContent>
+    </Toolbar>
   );
 };
