@@ -2,13 +2,13 @@ import React from 'react';
 import { Button } from '@patternfly/react-core';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 
-export interface TextColumnFieldHeader {
+export interface TextColumnFieldFooter {
   addLabel?: string;
   onAdd: () => void;
   disableAddRow?: boolean;
 }
 
-const TextColumnFieldFooter: React.FC<React.PropsWithChildren<TextColumnFieldHeader>> = ({
+const TextColumnFieldFooter: React.FC<React.PropsWithChildren<TextColumnFieldFooter>> = ({
   addLabel,
   onAdd,
   disableAddRow = false,
