@@ -9,6 +9,7 @@ export type MonitoredReleasesFilterState = {
   releasePlan: string[];
   namespace: string[];
   component: string[];
+  showLatest: boolean;
 };
 
 export const filterMonitoredReleases = (
