@@ -9,6 +9,7 @@ import {
 import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
+import { ReleaseKind } from '~/types';
 import { routerRenderer } from '../../../utils/test-utils';
 
 // Mock dependencies
@@ -18,20 +19,7 @@ jest.mock('~/shared/providers/Namespace', () => ({
   useNamespaceInfo: jest.fn(),
 }));
 
-jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => {
-  return jest.fn(({ namespace, onReleasesLoaded, onError }) => {
-    React.useEffect(() => {
-      const namespaceReleases = mockReleases.filter(
-        (release) => release.metadata.namespace === namespace,
-      );
-      setTimeout(() => {
-        onReleasesLoaded(namespaceReleases);
-      }, 0);
-    }, [namespace, onReleasesLoaded, onError]);
-
-    return null;
-  });
-});
+jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => jest.fn(() => null));
 
 jest.mock('~/shared/components/table/TableComponent', () => {
   type MockColumn = { title: React.ReactNode; props: ThProps };
@@ -106,19 +94,19 @@ const mockReleasesInNamespace = ReleasesInNamespace as jest.Mock;
 const renderWithProviders = (ui: React.ReactElement) =>
   routerRenderer(
     <FilterContextProvider
-      filterParams={['name', 'status', 'application', 'releasePlan', 'namespace', 'component']}
+      filterParams={[
+        'name',
+        'status',
+        'application',
+        'releasePlan',
+        'namespace',
+        'component',
+        'showLatest',
+      ]}
     >
       {ui}
     </FilterContextProvider>,
   );
-
-const waitForReleasesLoaded = async () => {
-  await waitFor(() => {
-    mockReleases.forEach((release) => {
-      expect(screen.getByText(release.metadata.name)).toBeInTheDocument();
-    });
-  });
-};
 
 const toggleFilter = async (buttonName: RegExp, optionLabel: RegExp) => {
   const filterButton = screen.getByRole('button', { name: buttonName });
@@ -134,6 +122,8 @@ const toggleFilter = async (buttonName: RegExp, optionLabel: RegExp) => {
 };
 
 describe('ReleaseMonitorListView', () => {
+  let releases: ReleaseKind[];
+
   const mockNamespacesInfo = {
     namespaces: mockNamespaces,
     namespacesLoaded: true,
@@ -143,11 +133,50 @@ describe('ReleaseMonitorListView', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseNamespaceInfo.mockReturnValue(mockNamespacesInfo);
+
+    releases = JSON.parse(JSON.stringify(mockReleases));
+    const release4 = releases.find((r) => r.metadata.name === 'test-release-4');
+    if (release4) {
+      release4.metadata.creationTimestamp = '2023-01-02T10:30:00Z';
+    }
+
+    const triggerReleasesLoaded = (
+      namespace: string,
+      onReleasesLoaded: (releases: ReleaseKind[]) => void,
+    ) => {
+      const namespaceReleases = releases.filter(
+        (release) => release.metadata.namespace === namespace,
+      );
+      setTimeout(() => onReleasesLoaded(namespaceReleases), 0);
+    };
+
+    mockReleasesInNamespace.mockImplementation(
+      ({
+        namespace,
+        onReleasesLoaded,
+      }: {
+        namespace: string;
+        onReleasesLoaded: (releases: ReleaseKind[]) => void;
+      }) => {
+        React.useEffect(() => {
+          triggerReleasesLoaded(namespace, onReleasesLoaded);
+        }, [namespace, onReleasesLoaded]);
+        return null;
+      },
+    );
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
+  const waitForReleasesLoaded = async (expectedReleases: ReleaseKind[] = releases) => {
+    await waitFor(() => {
+      expectedReleases.forEach((release) => {
+        expect(screen.getByText(release.metadata.name)).toBeInTheDocument();
+      });
+    });
+  };
 
   it('renders ReleasesInNamespace for each namespace', () => {
     renderWithProviders(<ReleaseMonitorListView />);
@@ -194,10 +223,13 @@ describe('ReleaseMonitorListView', () => {
     renderWithProviders(<ReleaseMonitorListView />);
     await waitForReleasesLoaded();
 
-    const option = await toggleFilter(/application filter menu/i, /test/i);
+    const option = await toggleFilter(/application filter menu/i, /foo/i);
 
     await waitFor(() => {
-      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
     });
 
     fireEvent.click(option);
@@ -211,7 +243,13 @@ describe('ReleaseMonitorListView', () => {
     const option = await toggleFilter(/component filter menu/i, /bar-01-component/i);
 
     await waitFor(() => {
+      // Both should be visible since they share the component
       expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+
+      // Other components should be gone
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
     });
 
     fireEvent.click(option);
@@ -225,7 +263,13 @@ describe('ReleaseMonitorListView', () => {
     const option = await toggleFilter(/Release Plan filter menu/i, /test-plan-3/i);
 
     await waitFor(() => {
+      // Both releases with this plan should be visible
       expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+
+      // Others should not be visible
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
     });
 
     fireEvent.click(option);
@@ -344,5 +388,35 @@ describe('ReleaseMonitorListView', () => {
     names = rows.slice(1).map((r) => r.querySelector('td')?.textContent);
 
     expect(names.indexOf('test-release-3')).toBeLessThan(names.indexOf('test-release-2'));
+  });
+
+  it('filters to show only the latest release for each component', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    // Initially, all releases are shown
+    expect(screen.getByText('test-release-3')).toBeInTheDocument();
+    expect(screen.getByText('test-release-4')).toBeInTheDocument();
+
+    // Find and click the switch
+    const showLatestSwitch = screen.getByLabelText('Show latest release for each component');
+    fireEvent.click(showLatestSwitch);
+
+    // After switching, only the latest release for the component should be visible
+    await waitFor(() => {
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+      expect(screen.queryByText('test-release-3')).not.toBeInTheDocument();
+    });
+
+    // Toggle back
+    fireEvent.click(showLatestSwitch);
+
+    // All releases should be visible again
+    await waitFor(() => {
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+    });
   });
 });
