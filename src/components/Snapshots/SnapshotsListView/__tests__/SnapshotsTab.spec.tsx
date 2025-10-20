@@ -16,8 +16,7 @@ jest.mock('~/components/Filter/generic/FilterContext', () => ({
 // Mock the child list view component to assert prop passthrough
 jest.mock('../SnapshotsListView', () => ({
   __esModule: true,
-  // eslint-disable-next-line react/display-name, @typescript-eslint/no-explicit-any
-  default: ({ applicationName }: any) => (
+  default: ({ applicationName }: { applicationName: string }) => (
     <div data-test="snapshots-list-view">App: {applicationName}</div>
   ),
 }));
