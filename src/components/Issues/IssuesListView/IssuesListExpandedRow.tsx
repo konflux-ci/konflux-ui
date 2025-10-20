@@ -68,7 +68,7 @@ export const IssuesListExpandedRow: React.FC<Props> = ({ obj: issue }) => {
         <IssueStatus locked={issue.status === 'CLOSED'} />
       </TableData>
 
-      <TableData className={issuesExpandedTableColumnClasses.createdAt}>
+      <TableData className={issuesExpandedTableColumnClasses.createdOn}>
         <Timestamp timestamp={issue.createdAt} />
       </TableData>
 

@@ -1,7 +1,7 @@
 /* eslint-disable */
 import * as React from 'react';
 import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
-import { capitalize } from 'lodash-es';
+// import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -15,6 +15,7 @@ import IssuesListHeader from './IssuesListHeader';
 import IssuesListExpandedHeader from './IssuesListExpandedHeader';
 import IssuesListRow from './IssuesListRow';
 import { IssuesListExpandedRow } from './IssuesListExpandedRow';
+import { ExpandableRowContent } from '@patternfly/react-table';
 
 import './IssueListView.scss';
 
@@ -86,10 +87,10 @@ const mockIssues = [
     id: 'RT1',
     title: 'Title Issue #1',
     description: 'Desc #1',
-    severity: 'critical',
+    severity: 'minor',
     createdAt: '2025-10-12',
     // issueType: "build",
-    state: 'ACTIVE',
+    state: 'RESOLVED',
     // detectedAt: "2025-10-13",
     // namespace: "default",
     scope: {
@@ -114,8 +115,6 @@ const mockIssues = [
       ],
       links: ['https://link1.com', 'https://link2.com'],
     },
-    // createdAt: "2025-10-13",
-    // updatedAt: "2025-10-13",
   },
   {
     id: 'RT2',
@@ -125,8 +124,6 @@ const mockIssues = [
     createdAt: '2025-10-12',
     // issueType: "build",
     state: 'ACTIVE',
-    // detectedAt: "2025-10-13",
-    // namespace: "default",
     scope: {
       resourceType: 'compo',
       data: [
@@ -149,57 +146,44 @@ const mockIssues = [
       ],
       links: ['https://link1.com', 'https://link2.com'],
     },
-    // createdAt: "2025-10-13",
-    // updatedAt: "2025-10-13",
   },
-  // {
-  // id: "000000",
-  // title: "Title Issue #2",
-  // description: "Desc #2",
-  // severity: "critical",
-  // issueType: "build",
-  // state: "ACTIVE",
-  // detectedAt: "2025-10-13",
-  // namespace: "default",
-  // scope: {
-  //   resourceType: "componment",
-  //   resourceName: "name",
-  //   resourceNamespace: "default"
-  // },
-  // links: [
-  //   "https://link1.com",
-  //   "https://link2.com",
-  // ],
-  // createdAt: "2025-10-13",
-  // updatedAt: "2025-10-13",
-  // relatedTo: [
-  //   {
-  //     id: "00000r1",
-  //     sourceId: "RT1",
-  //     targetId: undefined,
-  //     source: undefined,
-  //     target: undefined
-  //   }
-  // ],
-  // relatedFrom: [
-  //   {
-  //     id: "00000r1",
-  //     sourceId: "RF1",
-  //     targetId: undefined,
-  //     source: undefined,
-  //     target: undefined
-  //   }
-  // ]
-  // }
+  {
+    id: 'RT3',
+    title: 'Title Issue #3',
+    description: 'Desc #3',
+    severity: 'info',
+    createdAt: '2025-10-12',
+    // issueType: "build",
+    state: 'ACTIVE',
+    // detectedAt: "2025-10-13",
+    // namespace: "default",
+    scope: {
+      resourceType: 'namespace',
+      data: [
+        {
+          name: 'a',
+          severity: 'critical',
+          status: 'x',
+          createdAt: '2025-10-13',
+          description: 'Desc #31',
+          links: ['https://link1.com'],
+        },
+        {
+          name: 'b',
+          severity: 'critical',
+          status: 'y',
+          createdAt: '2025-10-13',
+          description: 'Desc #32',
+          links: ['https://link2.com'],
+        },
+      ],
+      links: ['https://link1.com', 'https://link2.com'],
+    },
+  },
 ];
 
 const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  // const [expandIssue, setExpandIssue] = React.useState<number | null>(null)
-  const [expandIssue, setExpandIssue] = React.useState<{ index: number; isExpanded: boolean }>({
-    index: null,
-    isExpanded: false,
-  });
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
@@ -207,36 +191,25 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
   });
 
   // State to track expanded rows
-  const [expandedIssues, setExpandedIssues] = React.useState<Set<string>>(new Set());
+  const [expandedIssues, setExpandedIssues] = React.useState<Set<number>>(new Set());
 
   const handleToggle = (issueId: string) => {
-    console.log(issueId);
     const refRow = mockIssues.findIndex((issue) => issue.id == issueId);
-    console.log(refRow);
-    // setExpandIssue(!expandIssue);
-    setExpandIssue({ index: refRow, isExpanded: !expandIssue.isExpanded });
-    // console.log(issueId);
-    // setExpandedIssues((prev) => {
-    //   const next = new Set(prev);
-    //   if (next.has(issueId)) {
-    //     next.delete(issueId);
-    //   } else {
-    //     next.add(issueId);
-    //   }
-    //   return next;
-    // });
+    setExpandedIssues((prev) => {
+      const next = new Set(prev);
+      if (next.has(refRow)) {
+        next.delete(refRow);
+      } else {
+        next.add(refRow);
+      }
+      return next;
+    });
   };
 
   const { name: nameFilter, status: statusFilter, severity: severityFilter } = filters;
 
   // Mock loading states - replace with actual data fetching
-  const [issues] = React.useState<IssueRow[]>(mockIssues);
-  // const issues = issuesRaw.reduce((acc,iss) => {
-  //   if (acc[iss.id])
-  //   return {
-  //     expandedIssues:
-  //   }
-  // }, {});
+  const [issues] = React.useState<typeof mockIssues>(mockIssues);
   const issuesLoaded = true;
   const issuesError = null;
 
@@ -245,10 +218,8 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
       issues.filter((issue) => {
         const matchesName =
           !nameFilter || issue.title.toLowerCase().includes(nameFilter.toLowerCase());
-        const matchesStatus =
-          !statusFilter?.length || statusFilter.includes(capitalize(issue.state));
-        const matchesSeverity =
-          !severityFilter?.length || severityFilter.includes(capitalize(issue.severity));
+        const matchesStatus = !statusFilter?.length || statusFilter.includes(issue.state);
+        const matchesSeverity = !severityFilter?.length || severityFilter.includes(issue.severity);
 
         return matchesName && matchesStatus && matchesSeverity;
       }),
@@ -262,7 +233,7 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
 
   const severityFilterObj = React.useMemo(
     () =>
-      createFilterObj(issues, (issue) => issue.severity, ['info', 'minor', 'major', 'Critical']),
+      createFilterObj(issues, (issue) => issue.severity, ['info', 'minor', 'major', 'critical']),
     [issues],
   );
 
@@ -286,7 +257,7 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
   const toolbar = (
     <BaseTextFilterToolbar
       text={nameFilter}
-      label="name"
+      label="issue name"
       setText={(name) => setFilters({ ...filters, name })}
       onClearFilters={onClearFilters}
       dataTest="issues-list-toolbar"
@@ -319,9 +290,7 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
       </Title>
       <TextContent>
         <Text component={TextVariants.p}>
-          Issues represent problems, vulnerabilities, or concerns that need attention in your
-          application. These can include security vulnerabilities, build failures, performance
-          issues, and more.
+          Summary of issues in your Konflux content at any point in time.
         </Text>
       </TextContent>
       <div data-test="issues-list">
@@ -336,31 +305,30 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
           Header={IssuesListHeader}
           Row={IssuesListRow}
           loaded={issuesLoaded}
-          getRowProps={(obj: IssueRow) => ({
+          getRowProps={(obj: (typeof mockIssues)[0]) => ({
             id: `${obj.id}-issue-list-item`,
             'aria-label': obj.title,
           })}
           expand
           ExpandedContent={(props) => {
-            console.log(props);
             const issue = props.obj;
             return (
-              <Table
-                data={issue.scope.data}
-                Row={IssuesListExpandedRow}
-                Header={IssuesListExpandedHeader}
-                loaded={true}
-                EmptyMsg={EmptyMessage}
-                aria-label="Issues List"
-                virtualize
-              />
+              <div className="issues-list-view__expanded-row">
+                <Table
+                  data={issue.scope.data}
+                  Row={IssuesListExpandedRow}
+                  Header={IssuesListExpandedHeader}
+                  loaded={true}
+                  EmptyMsg={EmptyMessage}
+                  aria-label="Expanded Issues List"
+                  virtualize
+                />
+              </div>
             );
-            // return <IssuesListExpandedRow {...props} row={issue.scope} />;
           }}
           customData={{
             onToggle: handleToggle,
-            expandedIssues,
-            customExpand: expandIssue,
+            customExpand: expandedIssues,
             disableRegularExpand: true,
           }}
         />
