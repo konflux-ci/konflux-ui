@@ -5,9 +5,17 @@ import { FilterType } from '../utils/filter-utils';
 
 const safeJSONParse = (value: string) => {
   if (!value) return null;
+
   try {
-    // first try to parse the value
-    return JSON.parse(value);
+    const parsed = JSON.parse(value);
+
+    // If parsing turns it into a number, keep it as a string
+    // This prevents issues with .trim(), .toLowerCase() etc on filter values
+    if (typeof parsed === 'number') {
+      return value;
+    }
+
+    return parsed;
   } catch (e) {
     // if JSON.parse(..) fails, then return the value as it is
     // eslint-disable-next-line no-console
