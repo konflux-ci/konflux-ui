@@ -2,7 +2,7 @@ export const issuesExpandedTableColumnClasses = {
   issue: 'pf-m-width-20 wrap-column',
   severity: 'pf-m-width-10',
   status: 'pf-m-width-10',
-  createdAt: 'pf-m-width-15',
+  createdOn: 'pf-m-width-15',
   reason: 'pf-m-width-20',
   usefulLinks: 'pf-m-width-10',
   kebab: 'pf-m-width-10 issues-list-view__actions',
@@ -23,8 +23,8 @@ const IssuesListExpandedHeader = () => {
       props: { className: issuesExpandedTableColumnClasses.status },
     },
     {
-      title: 'Created at',
-      props: { className: issuesExpandedTableColumnClasses.createdAt },
+      title: 'Created on',
+      props: { className: issuesExpandedTableColumnClasses.createdOn },
     },
     {
       title: 'Reason',

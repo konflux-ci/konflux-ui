@@ -15,7 +15,6 @@ import { issuesTableColumnClasses } from './IssuesListHeader';
 
 export type IssueListRowCustomData = {
   onToggle?: (issueId: string) => void;
-  expandedIssues?: Set<string>;
 };
 
 export type IssueRow = {
@@ -102,10 +101,10 @@ const IssuesListRow: React.FC<RowFunctionArgs<IssueRow, IssueListRowCustomData>>
       </TableData>
 
       <TableData className={issuesTableColumnClasses.status}>
-        <IssueStatus locked={issue.state === 'CLOSED'} />
+        <IssueStatus locked={issue.state === 'RESOLVED'} />
       </TableData>
 
-      <TableData className={issuesTableColumnClasses.createdAt}>
+      <TableData className={issuesTableColumnClasses.createdOn}>
         <Timestamp timestamp={issue.createdAt} />
       </TableData>
 

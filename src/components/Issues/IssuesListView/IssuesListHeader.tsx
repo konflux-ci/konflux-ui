@@ -3,7 +3,7 @@ export const issuesTableColumnClasses = {
   scope: 'pf-m-width-15',
   severity: 'pf-m-width-10',
   status: 'pf-m-width-10',
-  createdAt: 'pf-m-width-15',
+  createdOn: 'pf-m-width-15',
   reason: 'pf-m-width-20',
   usefulLinks: 'pf-m-width-10',
   kebab: 'pf-m-width-10 issues-list-view__actions',
@@ -28,8 +28,8 @@ const IssuesListHeader = () => {
       props: { className: issuesTableColumnClasses.status },
     },
     {
-      title: 'Created at',
-      props: { className: issuesTableColumnClasses.createdAt },
+      title: 'Created on',
+      props: { className: issuesTableColumnClasses.createdOn },
     },
     {
       title: 'Reason',

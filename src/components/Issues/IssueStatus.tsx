@@ -19,7 +19,7 @@ export const IssueStatus: React.FC<React.PropsWithChildren<IssueStatusProps>> = 
   <span className="issue-status">
     <span className="issue-status__state">
       {locked ? <LockedIcon /> : <UnlockedIcon />}
-      {!condensed ? <> {locked ? 'Restricted' : 'Open'}</> : null}
+      {!condensed ? <> {locked ? 'Resolved' : 'Active'}</> : null}
     </span>
   </span>
 );

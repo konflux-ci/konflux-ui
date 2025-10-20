@@ -32,10 +32,13 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
   }) => void;
 };
 
-export type RowFunctionArgs<T = unknown, C = unknown> = {
+export type RowFunctionArgs<T = unknown> = {
   obj: T;
   columns: unknown[];
-  customData?: C;
+  customData?: {
+    disableRegularExpand?: boolean;
+    customExpand?: Set<number>;
+  };
   index?: number;
 };
 
@@ -92,18 +95,9 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
 
   const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
 
-  // console.log(customData?.customExpand)
   React.useMemo(() => {
-    setExpandedRowIndexes((prev) => {
-      const next = new Set(prev);
-      if (next.has(customData?.customExpand.index && !customData?.customExpand.isExpanded)) {
-        next.delete(customData?.customExpand.index);
-      } else {
-        next.add(customData?.customExpand.index);
-      }
-      return next;
-    });
-  }, [customData?.customExpand.index, customData?.customExpand.isExpanded]);
+    setExpandedRowIndexes(customData?.customExpand);
+  }, [customData?.customExpand]);
 
   const toggleRow = (index: number) => {
     setExpandedRowIndexes((prev) => {
