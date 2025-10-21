@@ -67,6 +67,9 @@ build_ui_image() {
 
 
 run_test() {
+    # DEBUG
+    echo "DEBUG: kubectl get pods -n konflux-ui -o yaml"
+    kubectl get pods -n konflux-ui -o yaml
     # default image used if test code is not changed in a PR
     TEST_IMAGE="quay.io/konflux_ui_qe/konflux-ui-tests:latest"
 
