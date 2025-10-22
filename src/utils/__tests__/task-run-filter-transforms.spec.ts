@@ -13,7 +13,7 @@ describe('task-run-filter-transforms', () => {
         filterByName: 'my-task-run',
       });
 
-      expect(result.fieldSelector).toEqual('metadata.name=my-task-run');
+      expect(result.fieldSelector).toEqual('name=*my-task-run*');
     });
 
     it('should not create field selectors for filterByCreationTimestampAfter', () => {
@@ -31,7 +31,7 @@ describe('task-run-filter-transforms', () => {
         filterByCreationTimestampAfter: '2024-01-01T00:00:00Z',
       });
 
-      expect(result.fieldSelector).toEqual('metadata.name=my-task-run');
+      expect(result.fieldSelector).toEqual('name=*my-task-run*');
     });
 
     it('should preserve matchLabels', () => {
@@ -117,7 +117,7 @@ describe('task-run-filter-transforms', () => {
       const result = createKubearchiveWatchResource('default', selector);
 
       expect(result.namespace).toBe('default');
-      expect(result.fieldSelector).toBe('metadata.name=my-task-run');
+      expect(result.fieldSelector).toBe('name=*my-task-run*');
       expect(result.selector).toEqual({
         matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
         matchExpressions: [],

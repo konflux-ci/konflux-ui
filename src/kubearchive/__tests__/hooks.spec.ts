@@ -6,9 +6,10 @@ import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types
 import { useKubearchiveListResourceQuery } from '../hooks';
 
 // Mock the kubearchive utilities
-jest.mock('../fetch-utils', () => ({
-  withKubearchivePathPrefix: jest.fn((options) => options),
-}));
+jest.mock('../fetch-utils', () => {
+  const actual = jest.requireActual('../fetch-utils');
+  return { ...actual, withKubearchivePathPrefix: jest.fn((options) => options) };
+});
 
 jest.mock('../conditional-checks', () => ({
   useIsKubeArchiveEnabled: jest.fn(() => ({ isKubearchiveEnabled: true })),
@@ -159,7 +160,7 @@ describe('useKubearchiveListResourceQuery', () => {
   it('should pass through query parameters correctly', async () => {
     const resourceInitWithParams: WatchK8sResource = {
       ...mockResourceInit,
-      fieldSelector: 'status.phase=Running',
+      fieldSelector: 'name=*example*',
       selector: { app: 'test' },
     };
 
@@ -174,7 +175,7 @@ describe('useKubearchiveListResourceQuery', () => {
         expect.objectContaining({
           queryOptions: expect.objectContaining({
             queryParams: expect.objectContaining({
-              fieldSelector: 'status.phase=Running',
+              name: '*example*',
               labelSelector: { app: 'test' },
             }),
           }),

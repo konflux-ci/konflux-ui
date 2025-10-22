@@ -14,22 +14,20 @@ export const convertFilterToKubearchiveSelectors = (
 
   // Apply name filtering via field selector
   if (filterBy.filterByName) {
-    fieldSelectors['metadata.name'] = filterBy.filterByName;
+    // e.g. name=*e2e*
+    // Matches resources whose names contain "e2e" anywhere
+    fieldSelectors.name = `*${filterBy.filterByName}*`;
   }
 
   // Apply creation timestamp filtering via field selector
   if (filterBy.filterByCreationTimestampAfter) {
-    fieldSelectors['metadata.creationTimestamp'] = `>${filterBy.filterByCreationTimestampAfter}`;
+    // e.g. creationTimestampAfter=2023-01-01T12:00:00Z
+    fieldSelectors.creationTimestampAfter = filterBy.filterByCreationTimestampAfter;
   }
 
   const fieldSelector = Object.keys(fieldSelectors).length
     ? Object.entries(fieldSelectors)
-        .map(([k, v]) => {
-          // Handle comparison operators (already included in value) vs equality
-          return v.startsWith('>') || v.startsWith('<') || v.startsWith('!')
-            ? `${k}${v}` // e.g., "metadata.creationTimestamp>2023-01-01T00:00:00Z"
-            : `${k}=${v}`; // e.g., "metadata.name=my-pipeline-run"
-        })
+        .map(([k, v]) => `${k}=${v}`)
         .join(',')
     : undefined;
 
