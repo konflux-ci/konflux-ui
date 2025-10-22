@@ -10,7 +10,6 @@ export const createGetIssueQueryOptions = (
   return {
     queryKey: [PLUGIN_KITE, issueQuery],
     queryFn: () => fetchIssues(issueQuery),
-    // enabled: options.enabled,
     staleTime: STALE_TIME,
     ...options,
   };
@@ -34,7 +33,6 @@ export const createInfiniteIssueQueryOptions = (
       };
       return fetchIssues(paginatedQuery);
     },
-    // enabled: options.enabled, // Uncomment when service check is ready
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => {
       if (
