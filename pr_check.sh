@@ -10,8 +10,14 @@ build_ui_image() {
 
     export IMAGE_NAME=localhost/test/test
     export IMAGE_TAG=konflux-ui
-    export KONFLUX_UI_IMAGE_REF=${IMAGE_NAME}:${IMAGE_TAG}
+    export KONFLUX_UI_IMAGE_REF=${IMAGE_NAME}:${IMAGE_TAG}   
+    # if TARGET_BRANCH is not set (usually for periodic jobs), use REF_BRANCH
+    if [ -z ${TARGET_BRANCH} ]; then
+        TARGET_BRANCH=${REF_BRANCH}
+    fi
     export TARGET_BRANCH=${TARGET_BRANCH##*/}
+
+ 
 
     # Update konflux-ui image name and tag in konflux-ci kustomize files
     local ui_kustomize_yaml_path="${script_path}/konflux-ci/konflux-ci/ui/core/kustomization.yaml"
