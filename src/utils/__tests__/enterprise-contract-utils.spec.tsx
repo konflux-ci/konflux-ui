@@ -4,8 +4,8 @@ import {
   ENTERPRISE_CONTRACT_STATUS,
   EnterpriseContractResult,
   EnterpriseContractRule,
-} from '../../types';
-import { K8sResourceCommon } from '../../types/k8s';
+} from '~/types';
+import { K8sResourceCommon } from '~/types/k8s';
 import {
   isResourceEnterpriseContract,
   getRuleStatus,
