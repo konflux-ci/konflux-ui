@@ -5,7 +5,7 @@ import { useSnapshotLastSuccessfulRelease } from '../useSnapshotLastSuccessfulRe
 
 jest.mock('~/hooks/useApplicationReleases');
 
-const mockedUseApplicationReleases = useApplicationReleases as unknown as jest.Mock;
+const mockedUseApplicationReleases = useApplicationReleases as jest.Mock;
 
 type ReleasedCond = {
   type: ReleaseCondition;

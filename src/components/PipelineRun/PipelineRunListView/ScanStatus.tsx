@@ -14,5 +14,5 @@ export const ScanStatus: React.FC<React.PropsWithChildren<{ scanResults?: ScanRe
     return <>-</>;
   }
 
-  return <ScanDetailStatus scanResults={scanResults} condensed />;
+  return <ScanDetailStatus data-test="scan-status" scanResults={scanResults} condensed />;
 };

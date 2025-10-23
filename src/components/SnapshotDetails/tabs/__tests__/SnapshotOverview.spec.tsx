@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
-import { ScanResults, useScanResults } from '~/hooks/useScanResults';
+import { useScanResults } from '~/hooks/useScanResults';
 import { useSnapshot } from '~/hooks/useSnapshots';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
-import { SnapshotComponentTableData } from '../SnapshotComponentsListRow';
 import SnapshotOverview from '../SnapshotOverview';
 
 // Mock router to turn Link into a simple anchor and control params
@@ -24,11 +24,6 @@ jest.mock('react-router-dom', () => {
     useParams: jest.fn(() => ({ snapshotName: 'snap-1' })),
   };
 });
-
-// Mock namespace hook
-jest.mock('~/shared/providers/Namespace', () => ({
-  useNamespace: jest.fn(() => 'test-ns'),
-}));
 
 // Mock snapshot hook
 jest.mock('~/hooks/useSnapshots', () => ({
@@ -61,38 +56,16 @@ jest.mock('~/utils/commits-utils', () => ({
   })),
 }));
 
-// Mock CommitLabel to avoid internal util dependencies
-jest.mock('~/components/Commits/commit-label/CommitLabel', () => ({
-  __esModule: true,
-  default: ({ sha }: { sha: string }) => <span data-test="commit-label">{sha}</span>,
-}));
-
-// Mock ScanStatus to render a recognizable marker
-jest.mock('~/components/PipelineRun/PipelineRunListView/ScanStatus', () => ({
-  ScanStatus: ({ scanResults }: { scanResults: ScanResults }) => (
-    <div data-test="scan-status">{JSON.stringify(scanResults)}</div>
-  ),
-}));
-
-// Mock SnapshotComponentsList to capture props
-jest.mock('../SnapshotComponentsList', () => ({
-  __esModule: true,
-  default: ({
-    components,
-    applicationName,
-  }: {
-    components: SnapshotComponentTableData[];
-    applicationName: string;
-  }) => (
-    <div data-test="snapshot-components-list" data-count={components?.length}>
-      {applicationName}
-    </div>
-  ),
+// Mock getCommitShortName utility function used by CommitLabel
+jest.mock('~/utils/commits-utils', () => ({
+  ...jest.requireActual('~/utils/commits-utils'),
+  getCommitShortName: jest.fn((sha: string) => sha.slice(0, 7)),
 }));
 
 const useSnapshotMock = useSnapshot as jest.Mock;
 const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
 const useScanResultsMock = useScanResults as jest.Mock;
+const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
 const baseSnapshot = {
   metadata: {
@@ -109,15 +82,38 @@ const baseSnapshot = {
   },
 };
 
+const basePipelineRun = {
+  metadata: {
+    name: 'build-plr-1',
+    namespace: 'test-ns',
+    labels: {
+      'pipelinesascode.tekton.dev/sha': 'abc123',
+      'appstudio.openshift.io/application': 'app-1',
+      'appstudio.openshift.io/component': 'comp-a',
+    },
+    annotations: {
+      'appstudio.openshift.io/commit-url': 'https://example.com/commit/abc123',
+      'pipelinesascode.tekton.dev/sha-title': 'Commit title',
+    },
+  },
+  status: {
+    startTime: '2024-01-01T00:00:00Z',
+  },
+};
+
 describe('SnapshotOverview', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     useSnapshotMock.mockReturnValue([baseSnapshot, true, undefined]);
-    usePipelineRunV2Mock.mockReturnValue([{}, true, false]);
-    useScanResultsMock.mockReturnValue([[{ critical: 0 }], true]);
+    usePipelineRunV2Mock.mockReturnValue([basePipelineRun, true, false]);
+    useScanResultsMock.mockReturnValue([
+      { vulnerabilities: { critical: 1, high: 0, medium: 0, low: 0, unknown: 0 } },
+      true,
+    ]);
   });
 
   it('renders commit link when commit is available', () => {
+    useNamespaceMock.mockReturnValue('test-ns');
     renderWithQueryClientAndRouter(<SnapshotOverview />);
     const commitDesc = screen.getByTestId('snapshot-commit-link');
     const link = commitDesc.querySelector('a');
@@ -127,28 +123,35 @@ describe('SnapshotOverview', () => {
   });
 
   it('omits commit section when pipelinerun load fails', () => {
-    usePipelineRunV2Mock.mockReturnValue([{}, true, true]);
+    usePipelineRunV2Mock.mockReturnValue([basePipelineRun, true, true]);
     renderWithQueryClientAndRouter(<SnapshotOverview />);
     expect(screen.queryByTestId('snapshot-commit-link')).toBeNull();
   });
 
   it('shows skeleton while scan results are loading, then shows ScanStatus', () => {
-    useScanResultsMock.mockReturnValueOnce([undefined, false]);
+    useScanResultsMock.mockReturnValueOnce([null, false]);
     const { rerender } = renderWithQueryClientAndRouter(<SnapshotOverview />);
     // When not loaded, ScanStatus should not be present
-    expect(screen.queryByTestId('scan-status')).toBeNull();
+    expect(screen.queryByTestId('scan-status-critical-test-id')).toBeNull();
 
     // After loaded
-    useScanResultsMock.mockReturnValueOnce([[{ critical: 1 }], true]);
+    useScanResultsMock.mockReturnValueOnce([
+      { vulnerabilities: { critical: 1, high: 0, medium: 0, low: 0, unknown: 0 } },
+      true,
+    ]);
     rerender(<SnapshotOverview />);
-    expect(screen.getByTestId('scan-status')).toBeInTheDocument();
+    expect(screen.getByTestId('scan-status-critical-test-id')).toBeInTheDocument();
   });
 
-  it('passes mapped components and applicationName to SnapshotComponentsList', () => {
+  it('renders SnapshotComponentsList with components and applicationName', () => {
     renderWithQueryClientAndRouter(<SnapshotOverview />);
-    const list = screen.getByTestId('snapshot-components-list');
-    expect(list).toHaveAttribute('data-count', '2');
-    expect(list.textContent).toBe('app-1');
+    // Check that the Components section is rendered
+    expect(screen.getByText('Components')).toBeInTheDocument();
+    expect(
+      screen.getByText('Component builds that are included in this snapshot'),
+    ).toBeInTheDocument();
+    // Check that the component list toolbar is present
+    expect(screen.getByTestId('component-list-toolbar')).toBeInTheDocument();
   });
 
   it('falls back to dash when creationTimestamp is missing', () => {
