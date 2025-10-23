@@ -1,6 +1,5 @@
 #!/bin/bash
 
-export NODEJS_AGENT_IMAGE=quay.io/konflux-ci/tekton-integration-catalog/sealights-nodejs:latest
 script_path="$(dirname -- "${BASH_SOURCE[0]}")"
 
 build_ui_image() {
@@ -17,8 +16,6 @@ build_ui_image() {
     fi
     export TARGET_BRANCH=${TARGET_BRANCH##*/}
 
- 
-
     # Update konflux-ui image name and tag in konflux-ci kustomize files
     local ui_kustomize_yaml_path="${script_path}/konflux-ci/konflux-ci/ui/core/kustomization.yaml"
     yq eval --inplace "del(.images[] | select(.name == \"*konflux-ui*\") | .digest)" "${ui_kustomize_yaml_path}"
@@ -27,37 +24,9 @@ build_ui_image() {
 
     export COMPONENT=konflux-ui
     export AGENT_VERSION
-    export BSID
 
-    AGENT_VERSION=$(podman run $NODEJS_AGENT_IMAGE /bin/sh -c 'echo ${AGENT_VERSION}')
-
-    # Setting up Sealight builds for PRs and branches require a slighly different approaches
-    # The main difference is between the config commands
-    # - slnodejs config - used for reporting branch builds
-    # - slnodejs prConfig - used for reporting PR builds
-    # See the docs for more details https://sealights.atlassian.net/wiki/spaces/SUP/pages/1376262/SeaLights+Node.js+agent+-+Command+Reference
-    if [ "${JOB_TYPE}" == "on-pr" ]; then
-        podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-            $NODEJS_AGENT_IMAGE \
-            /bin/bash -cx "slnodejs prConfig --appName ${COMPONENT} --targetBranch ${TARGET_BRANCH} --repositoryUrl ${FORKED_REPO_URL} --latestCommit ${HEAD_SHA} --pullRequestNumber ${PR_NUMBER} --token ${SEALIGHTS_TOKEN}"
-    elif [ "${JOB_TYPE}" == "periodic" ]; then
-        BUILD_NAME="${HEAD_SHA}_$(date +'%y%m%d.%H%M')"
-        podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-            $NODEJS_AGENT_IMAGE \
-            /bin/bash -cx "slnodejs config --appName ${COMPONENT} --branch ${TARGET_BRANCH} --build ${BUILD_NAME} --token ${SEALIGHTS_TOKEN}"
-    else
-        echo "ERROR: invalid job type '${JOB_TYPE}' specified"
-    fi
-
-    echo "$SEALIGHTS_TOKEN" > /tmp/sl-token
-
-    BSID=$(< buildSessionId)
-
-    podman build --build-arg BSID="${BSID}" \
-        --build-arg AGENT_VERSION="${AGENT_VERSION}" \
-        --secret id=sealights-credentials/token,src=/tmp/sl-token \
-        -t ${KONFLUX_UI_IMAGE_REF} \
-        -f Dockerfile.sealights .
+    podman build -t ${KONFLUX_UI_IMAGE_REF} \
+        -f Dockerfile .
 
     podman image save -o konflux-ui.tar ${KONFLUX_UI_IMAGE_REF}
     kind load image-archive konflux-ui.tar -n konflux
@@ -108,11 +77,6 @@ run_test() {
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
         -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN}"
 
-    TEST_STAGE_NAME=konflux-ui-e2e
-    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-        $NODEJS_AGENT_IMAGE \
-        /bin/bash -cx "slnodejs start --teststage ${TEST_STAGE_NAME} --buildsessionidfile buildSessionId --token ${SEALIGHTS_TOKEN}"
-
     TEST_RUN=0
     set +e
     podman run --network host ${COMMON_SETUP} ${TEST_IMAGE}
@@ -131,14 +95,6 @@ run_test() {
         esac
         TEST_RUN=1
     fi
-
-    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-        $NODEJS_AGENT_IMAGE \
-        /bin/bash -cx "slnodejs uploadReports --teststage ${TEST_STAGE_NAME} --buildsessionidfile buildSessionId --reportfile \$(ls ./artifacts/*.xml) --token ${SEALIGHTS_TOKEN}"
-
-    podman run --network host --userns=keep-id --group-add keep-groups -v "$PWD:/konflux-ui" --workdir /konflux-ui -e NODE_DEBUG=sl \
-        $NODEJS_AGENT_IMAGE \
-        /bin/bash -cx "slnodejs end --buildsessionidfile buildSessionId --token ${SEALIGHTS_TOKEN}"
 
     kubectl logs "$(kubectl get pods -n konflux-ui -o name | grep proxy)" --all-containers=true -n konflux-ui > "$PWD/artifacts/konflux-ui.log"
 
