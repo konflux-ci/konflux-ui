@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Switch } from '@patternfly/react-core';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { MonitoredReleasesFilterState } from '~/components/Filter/utils/monitoredreleases-filter-utils';
@@ -24,7 +25,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   namespaceOptions,
   componentOptions,
 }: MonitoredReleasesFilterToolbarProps) => {
-  const { name, status, application, releasePlan, namespace, component } = filters;
+  const { name, status, application, releasePlan, namespace, component, showLatest } = filters;
 
   return (
     <BaseTextFilterToolbar
@@ -68,8 +69,14 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         setValues={(newValues) => setFilters({ ...filters, namespace: newValues })}
         options={namespaceOptions}
       />
+      <Switch
+        id="show-latest-switch"
+        label="Show latest release for each component"
+        isChecked={showLatest}
+        onChange={(_event, checked) => setFilters({ ...filters, showLatest: checked })}
+      />
     </BaseTextFilterToolbar>
   );
 };
 
-export default MonitoredReleasesFilterToolbar;
+export default React.memo(MonitoredReleasesFilterToolbar);

@@ -1,7 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import PipelineRunsFilterToolbar from '../PipelineRunsFilterToolbar';
-
-jest.mock('lodash-es', () => ({ debounce: jest.fn((fn) => fn) }));
 
 describe('PipelineRunsFilterToolbar', () => {
   it('it should render filter tooblar accurately', () => {
@@ -26,6 +25,7 @@ describe('PipelineRunsFilterToolbar', () => {
 
   it('it should update name filter', async () => {
     const setFilters = jest.fn();
+    const user = userEvent.setup();
 
     render(
       <PipelineRunsFilterToolbar
@@ -42,18 +42,15 @@ describe('PipelineRunsFilterToolbar', () => {
     );
 
     const name = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-    await act(() =>
-      fireEvent.change(name, {
-        target: { value: 'test' },
-      }),
-    );
+    await user.type(name, 'test');
     expect(name.value).toBe('test');
-    expect(setFilters.mock.calls).toHaveLength(1);
-    expect(setFilters.mock.calls[0][0]).toStrictEqual({ name: 'test', status: [], type: [] });
+    await waitFor(() => expect(setFilters).toHaveBeenCalledTimes(1));
+    expect(setFilters).toHaveBeenCalledWith({ name: 'test', status: [], type: [] });
   });
 
-  it('it should update status filter', () => {
+  it('it should update status filter', async () => {
     const setFilters = jest.fn();
+    const user = userEvent.setup();
 
     render(
       <PipelineRunsFilterToolbar
@@ -72,25 +69,26 @@ describe('PipelineRunsFilterToolbar', () => {
     const statusFilter = screen.getByRole('button', {
       name: /status filter menu/i,
     });
-    fireEvent.click(statusFilter);
+    await user.click(statusFilter);
     expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
 
     const succeededOption = screen.getByLabelText(/succeeded/i, {
       selector: 'input',
     });
 
-    fireEvent.click(succeededOption);
+    await user.click(succeededOption);
 
-    expect(setFilters.mock.calls).toHaveLength(1);
-    expect(setFilters.mock.calls[0][0]).toStrictEqual({
+    expect(setFilters).toHaveBeenCalledTimes(1);
+    expect(setFilters).toHaveBeenCalledWith({
       name: '',
       status: ['Succeeded'],
       type: [],
     });
   });
 
-  it('it should update type filter', () => {
+  it('it should update type filter', async () => {
     const setFilters = jest.fn();
+    const user = userEvent.setup();
 
     render(
       <PipelineRunsFilterToolbar
@@ -109,17 +107,17 @@ describe('PipelineRunsFilterToolbar', () => {
     const typeFilter = screen.getByRole('button', {
       name: /type filter menu/i,
     });
-    fireEvent.click(typeFilter);
+    await user.click(typeFilter);
     expect(typeFilter).toHaveAttribute('aria-expanded', 'true');
 
     const buildOption = screen.getByLabelText(/build/i, {
       selector: 'input',
     });
 
-    fireEvent.click(buildOption);
+    await user.click(buildOption);
 
-    expect(setFilters.mock.calls).toHaveLength(1);
-    expect(setFilters.mock.calls[0][0]).toStrictEqual({
+    expect(setFilters).toHaveBeenCalledTimes(1);
+    expect(setFilters).toHaveBeenCalledWith({
       name: '',
       status: [],
       type: ['build'],

@@ -2,7 +2,7 @@ import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { PipelineRunKind } from '../../../types';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 
-export type FilterType = Record<string, string | string[]>;
+export type FilterType = Record<string, string | string[] | boolean>;
 
 export const filterPipelineRuns = (
   pipelineRuns: PipelineRunKind[],
