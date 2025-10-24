@@ -35,15 +35,15 @@ const BugFormContent: React.FC<BugFormContentProps> = ({ modalToggle }) => {
         <StackItem>
           <TextContent>
             <Text component={TextVariants.p}>
-              Provide information about a Bug that has already been resolved.
+              Provide information about a bug that has already been resolved.
             </Text>
           </TextContent>
         </StackItem>
         <StackItem>
-          <InputField data-test="bug-issue-id" label="Bug issue id" name="id" isRequired />
+          <InputField data-test="bug-issue-id" label="Bug issue key" name="id" isRequired />
         </StackItem>
         <StackItem>
-          <InputField data-test="bug-source" label="Source" name="source" isRequired />
+          <InputField data-test="bug-source" label="URL for the bug" name="source" isRequired />
         </StackItem>
         <StackItem>
           <UploadDate name="uploadDate" label="Last updated" />
