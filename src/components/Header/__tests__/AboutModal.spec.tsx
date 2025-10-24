@@ -134,7 +134,7 @@ describe('AboutModal Component', () => {
     it('should display GitHub repository link', () => {
       render(<AboutModal {...defaultProps} isOpen={true} />);
 
-      const githubLink = screen.getByRole('link', { name: /Github Repository/i });
+      const githubLink = screen.getByRole('link', { name: /GitHub Repository/i });
       expect(githubLink).toBeInTheDocument();
       expect(githubLink).toHaveAttribute('href', 'https://github.com/example/konflux');
     });

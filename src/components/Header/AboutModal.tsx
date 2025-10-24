@@ -39,7 +39,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   ];
   const RESOURCES_LIST_ITEMS = [
     { url: documentationURL, text: 'Documentation' },
-    { url: GITHUB_REPOSITORY_URL, text: 'Github Repository' },
+    { url: GITHUB_REPOSITORY_URL, text: 'GitHub Repository' },
     { url: OFFICIAL_WEBSITE_URL, text: 'Official Website' },
   ];
 
