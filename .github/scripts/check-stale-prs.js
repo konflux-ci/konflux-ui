@@ -268,7 +268,7 @@ const checkStalePRs = async () => {
         ]);
 
         const daysOpen = now.diff(dayjs(pr.created_at), 'day');
-        const prInfo = { number: pr.number };
+        const prInfo = { number: pr.number, author: pr.user.login };
 
         // Skip draft PRs from staleness analysis (they're tracked separately)
         if (pr.draft) {
@@ -468,15 +468,21 @@ const checkStalePRs = async () => {
       if (!cat.prs.length) return; // Skip empty categories
 
       if (cat.filterLink) {
-        // Age-based categories: show count with link to GitHub filter
-        message += `${cat.emoji} *${cat.name}:* <${cat.filterLink}|${cat.prs.length} PRs>\n`;
+        // Age-based categories: show count with link to GitHub filter + unique owners
+        // Extract unique owners for this category and sort alphabetically (case-insensitive)
+        const uniqueOwners = [...new Set(cat.prs.map((p) => p.author))].sort((a, b) =>
+          a.toLowerCase().localeCompare(b.toLowerCase()),
+        );
+        const ownersList = uniqueOwners.join(', ');
+        message += `${cat.emoji} *${cat.name}:* <${cat.filterLink}|${cat.prs.length} PRs (${ownersList})>\n`;
       } else {
         // Action-based categories: show individual PR numbers as clickable links
         // Sort PR numbers from smallest to biggest for consistent, readable output
         const sortedPRs = cat.prs.sort((a, b) => a.number - b.number);
         message += `${cat.emoji} *${cat.name}:* ${sortedPRs.length} PRs (${sortedPRs
           .map(
-            (p) => `<https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${p.number}|#${p.number}>`,
+            (p) =>
+              `<https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${p.number}|#${p.number} - ${p.author}>`,
           )
           .join(', ')})\n`;
       }
