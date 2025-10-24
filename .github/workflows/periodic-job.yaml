@@ -1,4 +1,4 @@
-name: Periodic job - test Konflux UI with Sealights
+name: Periodic job - test Konflux UI against local Konflux deployment
 
 on:
   workflow_dispatch:
@@ -20,7 +20,6 @@ jobs:
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-      SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
       GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
