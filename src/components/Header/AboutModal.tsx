@@ -16,7 +16,7 @@ import {
 } from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
-import { GITHUB_REPOSITORY_URL, OFFICIAL_WEBSITE_URL } from './const';
+import { GITHUB_REPOSITORY_URL, KEY_FEATURES_LIST_ITEMS, OFFICIAL_WEBSITE_URL } from './const';
 
 export interface AboutModalProps {
   isOpen: boolean;
@@ -29,17 +29,10 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   const documentationURL = isInternal
     ? INTERNAL_DOCUMENTATION_BASE_URL
     : EXTERNAL_DOCUMENTATION_BASE_URL;
-  const KEY_FEATURES_LIST_ITEMS: string[] = [
-    'Application lifecycle management',
-    'Pipeline Automation and CI/CD',
-    'Component-based development',
-    'Release Management',
-    'Security scanning and compliance',
-    'Integration with modern development tools',
-  ];
+
   const RESOURCES_LIST_ITEMS = [
     { url: documentationURL, text: 'Documentation' },
-    { url: GITHUB_REPOSITORY_URL, text: 'Github Repository' },
+    { url: GITHUB_REPOSITORY_URL, text: 'GitHub Repository' },
     { url: OFFICIAL_WEBSITE_URL, text: 'Official Website' },
   ];
 
@@ -84,9 +77,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
         <StackItem>
           <TextContent>
-            <Text component={TextVariants.small}>
-              Konflux UI v1.0.0 - Built with React and Patternfly
-            </Text>
+            <Text component={TextVariants.small}>Konflux UI - Built with React and Patternfly</Text>
           </TextContent>
         </StackItem>
       </Stack>

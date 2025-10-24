@@ -7,15 +7,13 @@ import {
   MenuToggle,
   Tooltip,
 } from '@patternfly/react-core';
-import {
-  ExternalLinkAltIcon,
-  OutlinedQuestionCircleIcon,
-} from '@patternfly/react-icons/dist/esm/icons';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons';
 import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { ExternalLink } from '~/shared';
 import AboutModal from './AboutModal';
 
 export const HelpDropdown: React.FC = () => {
@@ -30,11 +28,6 @@ export const HelpDropdown: React.FC = () => {
   const handleAboutClick = () => {
     setIsOpen(false);
     setIsAboutModalOpen(true);
-  };
-
-  const handleDocumentationClick = () => {
-    setIsOpen(false);
-    window.open(documentationLink, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -62,13 +55,8 @@ export const HelpDropdown: React.FC = () => {
               <DropdownItem key="about" onClick={handleAboutClick} data-test="help-dropdown-about">
                 About Konflux
               </DropdownItem>
-              <DropdownItem
-                key="documentation"
-                onClick={handleDocumentationClick}
-                data-test="help-dropdown-documentation"
-                icon={<ExternalLinkAltIcon />}
-              >
-                Documentation
+              <DropdownItem key="documentation" data-test="help-dropdown-documentation">
+                <ExternalLink href={documentationLink} text={'Documentation'} />
               </DropdownItem>
             </DropdownList>
           </DropdownGroup>
