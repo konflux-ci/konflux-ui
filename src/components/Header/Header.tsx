@@ -16,7 +16,6 @@ import { useModalLauncher } from '../modal/ModalProvider';
 import { HelpDropdown } from './HelpDropdown';
 import { UserDropdown } from './UserDropdown';
 
-
 interface HeaderProps {
   isDrawerExpanded: boolean;
   toggleDrawer: () => void;
@@ -39,9 +38,6 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
               </Button>
             </Tooltip>
           </ToolbarItem>
-          <ToolbarItem>
-            <HelpDropdown />
-          </ToolbarItem>
           <IfFeature flag="system-notifications">
             <NotificationBadgeWrapper
               isDrawerExpanded={isDrawerExpanded}
@@ -50,6 +46,9 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
           </IfFeature>
           <ToolbarItem>
             <ThemeDropdown />
+          </ToolbarItem>
+          <ToolbarItem>
+            <HelpDropdown />
           </ToolbarItem>
           <ToolbarItem>
             <UserDropdown />
