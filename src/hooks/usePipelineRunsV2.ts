@@ -109,14 +109,14 @@ export const usePipelineRunsV2 = (
   etcdRunsRef.current = runs;
 
   const processedClusterData = React.useMemo((): PipelineRunKind[] => {
-    if (isLoading || error || !Array.isArray(resources)) {
+    if (isLoading || error || !Array.isArray(runs)) {
       return [];
     }
 
-    return resources.sort((a, b) =>
+    return runs.sort((a, b) =>
       (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
     );
-  }, [resources, isLoading, error]);
+  }, [runs, isLoading, error]);
 
   // Decide when to query external sources (TR or KubeArchive)
   const shouldQueryExternalSources = React.useMemo(() => {
