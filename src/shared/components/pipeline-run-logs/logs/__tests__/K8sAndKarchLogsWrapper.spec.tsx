@@ -267,7 +267,7 @@ describe('K8sAndKarchLogWrapper', () => {
             ns: 'test-namespace',
           },
         }),
-        { retry: false },
+        { retry: false, refetchInterval: false, refetchOnWindowFocus: false },
         true,
       );
     });
@@ -299,7 +299,7 @@ describe('K8sAndKarchLogWrapper', () => {
             ns: 'new-namespace',
           },
         }),
-        { retry: false },
+        { retry: false, refetchInterval: false, refetchOnWindowFocus: false },
         true,
       );
     })

@@ -332,7 +332,7 @@ describe('K8sAndTektonLogsWrapper', () => {
         expect.objectContaining({
           kind: 'Pod',
         }),
-        { retry: false },
+        { retry: false, refetchInterval: false, refetchOnWindowFocus: false },
       );
     });
 
@@ -370,7 +370,7 @@ describe('K8sAndTektonLogsWrapper', () => {
       expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
-        { retry: false },
+        { retry: false, refetchInterval: false, refetchOnWindowFocus: false },
       );
     });
   });

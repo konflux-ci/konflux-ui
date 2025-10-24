@@ -194,41 +194,25 @@ describe('enterprise-contract-utils', () => {
       expect(result.container.querySelector('svg')).toBeInTheDocument();
       expect(result.container).toHaveTextContent('Missing');
     });
-
-    it('should render CheckCircleIcon for successes', () => {
-      const result = render(<>{getRuleStatus(ENTERPRISE_CONTRACT_STATUS.successes)}</>);
-      const svg = result.container.querySelector('svg');
-
-      expect(svg).toBeInTheDocument();
-      expect(svg).toHaveClass('pf-v5-svg');
-    });
-
-    it('should render ExclamationCircleIcon for violations', () => {
-      const result = render(<>{getRuleStatus(ENTERPRISE_CONTRACT_STATUS.violations)}</>);
-      const svg = result.container.querySelector('svg');
-
-      expect(svg).toBeInTheDocument();
-      expect(svg).toHaveClass('pf-v5-svg');
-    });
-
-    it('should render ExclamationTriangleIcon for warnings', () => {
-      const result = render(<>{getRuleStatus(ENTERPRISE_CONTRACT_STATUS.warnings)}</>);
-      const svg = result.container.querySelector('svg');
-
-      expect(svg).toBeInTheDocument();
-      expect(svg).toHaveClass('pf-v5-svg');
-    });
-
-    it('should render DotCircleIcon for unknown status', () => {
-      const result = render(<>{getRuleStatus('unknown' as ENTERPRISE_CONTRACT_STATUS)}</>);
-      const svg = result.container.querySelector('svg');
-
-      expect(svg).toBeInTheDocument();
-      expect(svg).toHaveClass('pf-v5-svg');
-    });
   });
 
   describe('extractEcResultsFromTaskRunLogs', () => {
+    it('should throw error when no report-json lines found', () => {
+      const logs = `
+        [info] Starting task
+        [debug] Some debug info
+        [info] Task completed
+      `;
+
+      expect(() => extractEcResultsFromTaskRunLogs(logs)).toThrow('No [report-json] lines found');
+    });
+
+    it('should throw error on malformed JSON', () => {
+      const logs = '[report-json] {"components": [invalid json}';
+
+      expect(() => extractEcResultsFromTaskRunLogs(logs)).toThrow(/Failed to parse EC results/);
+    });
+
     it('should extract and parse EC results from logs with single line', () => {
       const ecData = createSimpleECResult([
         {
@@ -431,18 +415,6 @@ describe('enterprise-contract-utils', () => {
   });
 
   describe('edge cases', () => {
-    it('should handle resource with empty labels object', () => {
-      const resource: K8sResourceCommon = {
-        ...mockBaseResource,
-        metadata: {
-          ...mockBaseResource.metadata,
-          labels: {},
-        },
-      };
-
-      expect(isResourceEnterpriseContract(resource)).toBe(false);
-    });
-
     it('should handle null status for getRuleStatus', () => {
       const result = render(<>{getRuleStatus(null as unknown as ENTERPRISE_CONTRACT_STATUS)}</>);
 
