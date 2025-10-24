@@ -40,6 +40,7 @@ import {
   calculateDuration,
   getPipelineRunStatusResultForName,
   getPipelineRunStatusResults,
+  getSbomShaFromTaskRuns,
   pipelineRunStatus,
   SBOMResultKeys,
 } from '../../../../utils/pipeline-utils';
@@ -77,7 +78,9 @@ const PipelineRunDetailsTab: React.FC = () => {
     SBOMResultKeys.IMAGE_DIGEST,
     pipelineRun,
   )?.value;
-  const sbomSha = getPipelineRunStatusResultForName(SBOMResultKeys.SBOM_SHA, pipelineRun)?.value;
+  const sbomSha =
+    getPipelineRunStatusResultForName(SBOMResultKeys.SBOM_SHA, pipelineRun)?.value ||
+    getSbomShaFromTaskRuns(taskRuns);
 
   const sbomURL = React.useMemo(() => {
     if (!imageDigest) return null;
