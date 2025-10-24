@@ -190,12 +190,14 @@ export const useTaskRunsV2 = (
  * @param namespace - Kubernetes namespace
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
+ * @param watch - Whether to watch for real-time updates (default: true). Set to false for completed pipeline runs.
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
 export const useTaskRunsForPipelineRuns = (
   namespace: string,
   pipelineRunName: string,
   taskName?: string,
+  watch: boolean = true,
 ): [TaskRunKind[], boolean, unknown] => {
   const selector = React.useMemo(
     () => ({
@@ -207,7 +209,15 @@ export const useTaskRunsForPipelineRuns = (
     [pipelineRunName, taskName],
   );
 
-  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, { selector }, { staleTime: Infinity });
+  const enabled = namespace && pipelineRunName;
+  const [taskRuns, loaded, error] = useTaskRunsV2(
+    enabled ? namespace : undefined,
+    {
+      selector,
+      watch,
+    },
+    { staleTime: Infinity },
+  );
 
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
