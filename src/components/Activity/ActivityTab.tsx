@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tab, Tabs, TabTitleText, Text, Title } from '@patternfly/react-core';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { APPLICATION_ACTIVITY_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import CommitsListView from '../Commits/CommitsListPage/CommitsListView';
@@ -35,7 +36,7 @@ export const ActivityTab: React.FC = () => {
   return (
     <>
       <Title size="xl" headingLevel="h3" className="pf-v5-c-title pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Activity by
+        Activity by <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
       </Title>
       <Text className="pf-v5-u-mb-sm">
         Monitor your commits and their pipeline progression across all components.

@@ -3,7 +3,7 @@ import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunGroupVersionKind } from '../models';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 import { GetNextPage, NextPageProps } from './useTektonResults';
 
 export const useBuildPipelines = (
@@ -16,7 +16,7 @@ export const useBuildPipelines = (
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
   const [pipelineRuns, loaded, plrError, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRuns(
+    usePipelineRunsV2(
       !applicationLoaded && includeComponents && !componentNames?.length ? null : namespace,
       React.useMemo(
         () => ({

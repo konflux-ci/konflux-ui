@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunLabel, PipelineRunType } from '../../consts/pipelinerun';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
@@ -6,20 +7,39 @@ import { useLatestIntegrationTestPipelines } from '../useLatestIntegrationTestPi
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
+
+jest.mock('~/kubearchive/hooks', () => ({
+  ...jest.requireActual('~/kubearchive/hooks'),
+  useKubearchiveListResourceQuery: jest.fn(),
+}));
+
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
 const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
+const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as jest.Mock;
 
 const testNames = ['test-caseqfvdj'];
 const testNames2 = ['test-caseqfvdj', 'test'];
 
 describe('useLatestIntegrationTestPipelines', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: undefined,
+      isFetchingNextPage: false,
+    });
+  });
+
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     const { result } = renderHook(() =>
       useLatestIntegrationTestPipelines('test-ns', 'test-pipelinerun', testNames),
     );
 
-    expect(result.current).toEqual([[], false, undefined]);
+    expect(result.current).toEqual([[], false, null]);
   });
 
   it('should return test pipelines', () => {

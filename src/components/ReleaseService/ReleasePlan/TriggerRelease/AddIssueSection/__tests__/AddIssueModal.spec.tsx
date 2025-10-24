@@ -1,7 +1,17 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { screen, fireEvent, act, render } from '@testing-library/react';
+import { createK8sWatchResourceMock } from '../../../../../../utils/test-utils';
 import { AddIssueModal, IssueType } from '../AddIssueModal';
 
+const watchMockResource = createK8sWatchResourceMock();
+
 describe('AddIssueModal', () => {
+  beforeEach(() => {
+    watchMockResource.mockReturnValue([
+      [{ metadata: { name: 'component-1' } }, { metadata: { name: 'component-2' } }],
+      true,
+    ]);
+  });
+
   it('should not show modal till Modal launcher button is clicked', () => {
     render(<AddIssueModal issueType={IssueType.BUG} bugArrayHelper={null} />);
     expect(screen.queryByTestId('add-issue-modal')).not.toBeInTheDocument();

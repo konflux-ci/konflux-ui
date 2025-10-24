@@ -68,22 +68,44 @@ const InternalFLAGS = {
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive is not installed on this cluster',
+      failureReason: 'Kubearchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
+  'issues-dashboard': {
+    key: 'issues-dashboard',
+    description: 'Show Summary of Issues in your Konflux content',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKiteServiceEnabled'],
+      failureReason: 'Kite Service is not enabled',
       visibleInFeatureFlagPanel: true,
     },
   },
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
-    description: 'Use KubeArchive as data source for TaskRuns instead of Tekton Results',
+    description: 'Use Kubearchive as data source for TaskRuns instead of Tekton results',
     defaultEnabled: false,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
-      failureReason: 'Kubearchive not installed',
+      failureReason: 'Kubearchive is not available on this cluster',
       visibleInFeatureFlagPanel: true,
     },
   },
-};
+  'pipelineruns-kubearchive': {
+    key: 'pipelineruns-kubearchive',
+    description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isKubearchiveEnabled'],
+      failureReason: 'Kubearchive is not available on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
+} satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
 

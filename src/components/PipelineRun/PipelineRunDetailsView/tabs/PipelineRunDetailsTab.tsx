@@ -16,11 +16,11 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { usePipelineRun } from '../../../../hooks/usePipelineRuns';
-import { useTaskRuns } from '../../../../hooks/useTaskRuns';
 import { useSbomUrl } from '../../../../hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
@@ -56,8 +56,11 @@ const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
-  const [pipelineRun, loaded, error] = usePipelineRun(namespace, pipelineRunName);
-  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRuns(namespace, pipelineRunName);
+  const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
+  const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+  );
 
   const snapshotStatusAnnotation =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
@@ -113,6 +116,11 @@ const PipelineRunDetailsTab: React.FC = () => {
   const snapshot =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.SNAPSHOT] ||
     pipelineRun.metadata?.labels?.[PipelineRunLabel.SNAPSHOT];
+
+  const plrNamespace =
+    pipelineRun.metadata?.annotations?.[PipelineRunLabel.RELEASE_NAMESPACE] ||
+    pipelineRun.metadata?.labels?.[PipelineRunLabel.RELEASE_NAMESPACE] ||
+    namespace;
 
   return (
     <>
@@ -219,7 +227,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                             <Link
                               {...props}
                               to={PIPELINE_RUNS_LOG_PATH.createPath({
-                                workspaceName: namespace,
+                                workspaceName: plrNamespace,
                                 applicationName,
                                 pipelineRunName: pipelineRun.metadata?.name,
                               })}
@@ -244,7 +252,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListDescription>
                       <Link
                         to={SNAPSHOT_DETAILS_PATH.createPath({
-                          workspaceName: namespace,
+                          workspaceName: plrNamespace,
                           applicationName,
                           snapshotName: snapshot,
                         })}
@@ -281,7 +289,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                     {pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                       <Link
                         to={APPLICATION_DETAILS_PATH.createPath({
-                          workspaceName: namespace,
+                          workspaceName: plrNamespace,
                           applicationName:
                             pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION],
                         })}
@@ -301,7 +309,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                       pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                         <Link
                           to={COMPONENT_DETAILS_PATH.createPath({
-                            workspaceName: namespace,
+                            workspaceName: plrNamespace,
                             applicationName:
                               pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
                             componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
@@ -323,7 +331,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListDescription>
                       <Link
                         to={COMMIT_DETAILS_PATH.createPath({
-                          workspaceName: namespace,
+                          workspaceName: plrNamespace,
                           applicationName:
                             pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
                           commitName: sha,
@@ -348,7 +356,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListDescription>
                       <Link
                         to={INTEGRATION_TEST_DETAILS_PATH.createPath({
-                          workspaceName: namespace,
+                          workspaceName: plrNamespace,
                           applicationName:
                             pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
                           integrationTestName,

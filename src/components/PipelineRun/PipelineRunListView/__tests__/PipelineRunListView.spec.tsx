@@ -7,7 +7,7 @@ import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRuns } from '../../../../hooks/usePipelineRuns';
+import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
@@ -25,8 +25,8 @@ jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
 
-jest.mock('../../../../hooks/usePipelineRuns', () => ({
-  usePipelineRuns: jest.fn(),
+jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(),
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
@@ -192,7 +192,11 @@ const pipelineRuns: PipelineRunKind[] = [
   },
 ];
 
-const usePipelineRunsMock = usePipelineRuns as jest.Mock;
+const usePipelineRunsMock = usePipelineRunsV2 as jest.Mock;
+
+jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunsV2: jest.fn(),
+}));
 
 const TestedComponent = ({ name }) => (
   <FilterContextProvider filterParams={['name', 'status', 'type']}>

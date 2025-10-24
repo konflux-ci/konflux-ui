@@ -2,7 +2,7 @@ import * as React from 'react';
 import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
-import { usePipelineRuns } from './usePipelineRuns';
+import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
 export const useLatestBuildPipelines = (
   namespace: string,
@@ -22,7 +22,7 @@ export const useLatestBuildPipelines = (
     [componentNames, foundNames],
   );
 
-  const [pipelines, loaded, error, getNextPage] = usePipelineRuns(
+  const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
     applicationLoaded ? namespace : null,
     React.useMemo(
       () => ({
@@ -45,8 +45,17 @@ export const useLatestBuildPipelines = (
       return;
     }
 
-    const builds = neededNames.reduce((acc, componentName) => {
-      const build = pipelines.find(
+    const getTimeFromPipelines = (run: PipelineRunKind) => {
+      const ts =
+        run.status?.completionTime ?? run.status?.startTime ?? run.metadata?.creationTimestamp;
+      return ts ? new Date(ts).getTime() : 0;
+    };
+    const sortedPipelines = [...pipelines].sort(
+      (a, b) => getTimeFromPipelines(b) - getTimeFromPipelines(a),
+    );
+
+    const builds = neededNames.reduce<PipelineRunKind[]>((acc, componentName) => {
+      const build = sortedPipelines.find(
         (pipeline) => pipeline.metadata?.labels?.[PipelineRunLabel.COMPONENT] === componentName,
       );
       if (build) {

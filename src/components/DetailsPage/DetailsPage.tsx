@@ -21,6 +21,8 @@ import {
 import { ArrowLeftIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-left-icon';
 import { CaretDownIcon } from '@patternfly/react-icons/dist/esm/icons/caret-down-icon';
 import { css } from '@patternfly/react-styles';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { FlagKey } from '~/feature-flags/flags';
 import BreadCrumbs from '../../shared/components/breadcrumbs/BreadCrumbs';
 import { TabsLayout } from '../TabsLayout/TabsLayout';
 import { Action, DetailsPageTabProps } from './types';
@@ -38,6 +40,7 @@ type DetailsPageProps = {
   tabs: DetailsPageTabProps[];
   baseURL?: string;
   onTabSelect?: (selectedTabKey: string) => void;
+  featureFlags?: FlagKey[];
 };
 
 const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
@@ -51,10 +54,12 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   tabs = [],
   baseURL,
   onTabSelect,
+  featureFlags,
 }) => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const showBackLink = state?.showBackButton || false;
+  const { backButtonText, backButtonLink } = state ?? {};
+
   const [isOpen, setIsOpen] = React.useState(false);
 
   const dropdownItems = React.useMemo(
@@ -123,15 +128,15 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
   return (
     <PageGroup data-test="details" className="app-details">
       <PageSection type="breadcrumb">
-        {!showBackLink && breadcrumbs && (
+        {!backButtonLink && breadcrumbs && (
           <BreadCrumbs data-test="details__breadcrumbs" breadcrumbs={breadcrumbs} />
         )}
-        {showBackLink ? (
-          <Button onClick={() => navigate(-1)} variant="link" isInline>
+        {backButtonLink && backButtonText ? (
+          <Button onClick={() => navigate(backButtonLink as string)} variant="link" isInline>
             <Icon>
               <ArrowLeftIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
             </Icon>
-            {'Back to release details'}
+            {backButtonText}
           </Button>
         ) : (
           ''
@@ -143,26 +148,29 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
               {description && <Text component="p">{description}</Text>}
             </TextContent>
           </FlexItem>
-          {actions?.length ? (
-            <FlexItem align={{ default: 'alignRight' }}>
-              <Dropdown
-                data-test="details__actions"
-                position="right"
-                toggle={
-                  <DropdownToggle
-                    onToggle={() => setIsOpen(!isOpen)}
-                    toggleIndicator={CaretDownIcon}
-                    toggleVariant="primary"
-                  >
-                    Actions
-                  </DropdownToggle>
-                }
-                onSelect={() => setIsOpen(!isOpen)}
-                isOpen={isOpen}
-                dropdownItems={dropdownItems}
-              />
-            </FlexItem>
-          ) : null}
+          <Flex align={{ default: 'alignRight' }}>
+            {featureFlags && <FeatureFlagIndicator flags={featureFlags} />}
+            {actions?.length ? (
+              <FlexItem>
+                <Dropdown
+                  data-test="details__actions"
+                  position="right"
+                  toggle={
+                    <DropdownToggle
+                      onToggle={() => setIsOpen(!isOpen)}
+                      toggleIndicator={CaretDownIcon}
+                      toggleVariant="primary"
+                    >
+                      Actions
+                    </DropdownToggle>
+                  }
+                  onSelect={() => setIsOpen(!isOpen)}
+                  isOpen={isOpen}
+                  dropdownItems={dropdownItems}
+                />
+              </FlexItem>
+            ) : null}
+          </Flex>
         </Flex>
       </PageSection>
       {preComponent}

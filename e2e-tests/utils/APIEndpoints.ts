@@ -25,7 +25,8 @@ export const hacAPIEndpoints = {
 
 export const githubAPIEndpoints = {
   orgRepos: `https://api.github.com/orgs/redhat-hac-qe/repos`,
-  qeRepos: (repoName: string) => `https://api.github.com/repos/redhat-hac-qe/${repoName}`,
+  testRepo: (owner: string, repoName: string) =>
+    `https://api.github.com/repos/${owner}/${repoName}`,
   templateRepo: (owner: string, templateName: string) =>
     `https://api.github.com/repos/${owner}/${templateName}/generate`,
   merge: (owner: string, repoName: string, pullNumber: number) =>
