@@ -1,8 +1,10 @@
 import { createK8sUtilMock, createKubearchiveUtilMock } from '~/utils/test-utils';
 import { HttpError } from '../../k8s/error';
 import { TQueryOptions } from '../../k8s/query/type';
-import { K8sResourceCommon, ResourceSource } from '../../types/k8s';
+import { ReleaseGroupVersionKind } from '../../models';
+import { K8sResourceCommon, ResourceSource, WatchK8sResource } from '../../types/k8s';
 import { isKubeArchiveEnabled } from '../conditional-checks';
+import { convertToKubearchiveQueryParams } from '../fetch-utils';
 import { fetchResourceWithK8sAndKubeArchive } from '../resource-utils';
 
 const mockK8sQueryGetResource = createK8sUtilMock('k8sQueryGetResource');
@@ -164,5 +166,65 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
     expect(result).toEqual(mockResult);
     expect(mockK8sQueryGetResource).toHaveBeenCalledWith(mockResourceInit, mockOptions);
     expect(mockKubearchiveQueryGetResource).not.toHaveBeenCalled();
+  });
+});
+
+describe('convertToKubearchiveQueryParams', () => {
+  const mockResourceInit: WatchK8sResource = {
+    name: 'test',
+    namespace: 'ns-test',
+    groupVersionKind: ReleaseGroupVersionKind,
+  };
+
+  it('should return undefined when resourceInit is null/undefined', () => {
+    const result = convertToKubearchiveQueryParams(undefined);
+    expect(result).toBe(undefined);
+  });
+
+  it('should return labelSelector in query params if resourceInit.selector is valid', () => {
+    const result = convertToKubearchiveQueryParams({
+      ...mockResourceInit,
+      selector: {
+        matchLabels: { 'appstudio.openshift.io/application': 'testing-123' },
+      },
+    });
+    expect(result).toMatchObject({
+      ns: mockResourceInit.namespace,
+      name: mockResourceInit.name,
+      queryParams: {
+        labelSelector: {
+          matchLabels: { 'appstudio.openshift.io/application': 'testing-123' },
+        },
+      },
+    });
+  });
+
+  it('should return query params when resourceInit.fieldSelector has value', () => {
+    const result = convertToKubearchiveQueryParams({
+      ...mockResourceInit,
+      fieldSelector: 'name=*e2e*,creationTimestampAfter=2023-01-01T12:00:00Z',
+    });
+    expect(result).toMatchObject({
+      ns: mockResourceInit.namespace,
+      name: mockResourceInit.name,
+      queryParams: {
+        name: '*e2e*',
+        creationTimestampAfter: '2023-01-01T12:00:00Z',
+      },
+    });
+  });
+
+  it('should return limit in query params if resourceInit.limit is valid', () => {
+    const result = convertToKubearchiveQueryParams({
+      ...mockResourceInit,
+      limit: 10,
+    });
+    expect(result).toMatchObject({
+      ns: mockResourceInit.namespace,
+      name: mockResourceInit.name,
+      queryParams: {
+        limit: 10,
+      },
+    });
   });
 });

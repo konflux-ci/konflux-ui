@@ -36,7 +36,11 @@ export const convertFilterToKubearchiveSelectors = (
   filterBy: TaskRunSelector,
 ): Pick<WatchK8sResource, 'fieldSelector' | 'selector'> => {
   const fieldSelectors: Record<string, string> = {};
-  if (filterBy.filterByName) fieldSelectors['metadata.name'] = filterBy.filterByName;
+  if (filterBy.filterByName) {
+    // e.g. name=*e2e*
+    // Matches resources whose names contain "e2e" anywhere
+    fieldSelectors.name = `*${filterBy.filterByName}*`;
+  }
 
   const fieldSelector = Object.keys(fieldSelectors).length
     ? Object.entries(fieldSelectors)
