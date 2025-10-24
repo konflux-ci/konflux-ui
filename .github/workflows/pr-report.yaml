@@ -1,0 +1,34 @@
+name: PR Report to Slack
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # Monday, Wednesday, Friday at 2:00 AM UTC
+    # Beijing: 10:00 AM | India: 7:30 AM | Brno: 3-4 AM | USA East: 9-10 PM (prev day)
+    - cron: '0 2 * * 1,3,5'
+
+jobs:
+  check-stale-prs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Ensure Yarn is available
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        run: yarn add --ignore-scripts --no-lockfile @octokit/rest dayjs
+
+      - name: Run stale PR checker
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: node .github/scripts/check-stale-prs.js

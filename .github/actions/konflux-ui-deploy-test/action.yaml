@@ -75,7 +75,6 @@ runs:
         SOURCE_BRANCH: ${{ env.SOURCE_BRANCH }}
         PR_NUMBER: ${{ env.PR_NUMBER }}
         HEAD_SHA: ${{ env.HEAD_SHA }}
-        SEALIGHTS_TOKEN: ${{ env.SEALIGHTS_TOKEN }}
         FORKED_REPO_URL: ${{ env.FORKED_REPO_URL }}
         BASE_REPO_URL: ${{ env.BASE_REPO_URL }}
         JOB_TYPE: ${{ inputs.job-type }}

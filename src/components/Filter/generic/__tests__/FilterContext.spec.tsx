@@ -119,4 +119,21 @@ describe('FilterContextProvider parsing behavior', () => {
       nullValue: null,
     });
   });
+
+  it('should handle number values as strings', () => {
+    // setup initial URL param with a number value
+    (useSearchParams as jest.Mock).mockImplementation(() => [
+      createSearchParams({ number: '123' }),
+      mockSetSearchParams,
+    ]);
+
+    const { result } = renderHook(() => useContext(FilterContext), {
+      wrapper: ({ children }) => (
+        <FilterContextProvider filterParams={['number']}>{children}</FilterContextProvider>
+      ),
+    });
+
+    // check that the number value is preserved as a string
+    expect(result.current.filters).toEqual({ number: '123' });
+  });
 });

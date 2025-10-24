@@ -247,7 +247,8 @@ describe('usePipelinerunActions', () => {
       expect.objectContaining({
         label: 'Rerun',
         disabled: true,
-        disabledTooltip: 'Comment `/retest` on pull request to rerun',
+        disabledTooltip:
+          'To rerun the build pipeline for the latest commit in this PR, comment `/retest` on the pull request',
       }),
     );
   });
