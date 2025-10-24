@@ -1,9 +1,11 @@
 import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
 import { registerCondition } from './feature-flags/conditions';
+import { checkIfKiteServiceIsEnabled } from './kite/conditional-checks';
 import { checkIfKubeArchiveIsEnabled } from './kubearchive/conditional-checks';
 
 registerCondition('isKubearchiveEnabled', checkIfKubeArchiveIsEnabled);
+registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 
 registerCondition('isStagingCluster', async () => {
   try {
