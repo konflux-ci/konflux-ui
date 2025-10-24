@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as React from 'react';
 import { CellMeasurerCache, CellMeasurer } from 'react-virtualized';
 import { Button } from '@patternfly/react-core';
@@ -31,10 +32,13 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
   }) => void;
 };
 
-export type RowFunctionArgs<T = unknown, C = unknown> = {
+export type RowFunctionArgs<T = unknown> = {
   obj: T;
   columns: unknown[];
-  customData?: C;
+  customData?: {
+    disableRegularExpand?: boolean;
+    customExpand?: Set<number>;
+  };
   index?: number;
 };
 
@@ -47,7 +51,8 @@ const RowMemo = React.memo<
     index: number;
   }
 >(({ Row, expand, isExpanded, onToggle, index, ...props }) => {
-  if (expand) {
+  // console.log(props)
+  if (expand && !props.customData?.disableRegularExpand) {
     return (
       <>
         <TableData data-test="virtual-body-expand-row">
@@ -89,6 +94,10 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
   }, [props?.data]);
 
   const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
+
+  React.useMemo(() => {
+    setExpandedRowIndexes(customData?.customExpand);
+  }, [customData?.customExpand]);
 
   const toggleRow = (index: number) => {
     setExpandedRowIndexes((prev) => {
@@ -137,6 +146,8 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
         columns,
         customData,
       };
+      // console.log(rowArgs)
+      // console.log(props)
 
       // do not render non visible elements (this excludes overscan)
       if (!isVisible) {

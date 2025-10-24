@@ -76,7 +76,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
     const expandColumn = [];
-    if (expand) {
+    if (expand && !customData?.disableRegularExpand) {
       expandColumn.push({
         title: '',
         props: {
@@ -85,7 +85,17 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
       });
     }
     return [[...expandColumn, ...getActiveColumns(Header, cProps)], cProps];
-  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header]);
+  }, [
+    data,
+    unfilteredData,
+    filters,
+    selected,
+    match,
+    kindObj,
+    expand,
+    Header,
+    customData?.disableRegularExpand,
+  ]);
 
   const ariaRowCount = data && data.length;
   const renderVirtualizedTable = (scrollContainer) => (
