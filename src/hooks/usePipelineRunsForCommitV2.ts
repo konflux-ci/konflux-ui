@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
 import { useComponents } from './useComponents';
@@ -12,6 +12,7 @@ export const usePipelineRunsForCommitV2 = (
   commit: string,
   limit?: number,
   filterByComponents = true,
+  plrType?: PipelineRunType,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application] = useApplication(namespace, applicationName);
@@ -30,12 +31,13 @@ export const usePipelineRunsForCommitV2 = (
           filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
+            ...(plrType && { [PipelineRunLabel.PIPELINE_TYPE]: plrType }),
           },
           filterByCommit: commit,
         },
         ...(limit && { limit }),
       }),
-      [applicationName, commit, application, limit],
+      [applicationName, commit, application, limit, plrType],
     ),
   );
 
