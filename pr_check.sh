@@ -23,7 +23,6 @@ build_ui_image() {
     yq eval --inplace "(.images[] | select(.name == \"*konflux-ui*\")) |=.newName=\"${IMAGE_NAME}\"" "${ui_kustomize_yaml_path}"
 
     export COMPONENT=konflux-ui
-    export AGENT_VERSION
 
     podman build -t ${KONFLUX_UI_IMAGE_REF} \
         -f Dockerfile .
