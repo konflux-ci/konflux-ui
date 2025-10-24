@@ -184,29 +184,15 @@ const mockIssues = [
 
 const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const filters = useDeepCompareMemoize({
+  const filters: { name: string; status: string[]; severity: string[] } = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     severity: unparsedFilters.severity ? (unparsedFilters.severity as string[]) : [],
   });
+  const { name: nameFilter, status: statusFilter, severity: severityFilter } = filters;
 
   // State to track expanded rows
   const [expandedIssues, setExpandedIssues] = React.useState<Set<number>>(new Set());
-
-  const handleToggle = (issueId: string) => {
-    const refRow = mockIssues.findIndex((issue) => issue.id == issueId);
-    setExpandedIssues((prev) => {
-      const next = new Set(prev);
-      if (next.has(refRow)) {
-        next.delete(refRow);
-      } else {
-        next.add(refRow);
-      }
-      return next;
-    });
-  };
-
-  const { name: nameFilter, status: statusFilter, severity: severityFilter } = filters;
 
   // Mock loading states - replace with actual data fetching
   const [issues] = React.useState<typeof mockIssues>(mockIssues);
@@ -236,6 +222,19 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
       createFilterObj(issues, (issue) => issue.severity, ['info', 'minor', 'major', 'critical']),
     [issues],
   );
+
+  const handleToggle = (issueId: string) => {
+    const refRow = filteredIssues.findIndex((issue) => issue.id == issueId);
+    setExpandedIssues((prev) => {
+      const next = new Set(prev);
+      if (next.has(refRow)) {
+        next.delete(refRow);
+      } else {
+        next.add(refRow);
+      }
+      return next;
+    });
+  };
 
   const NoDataEmptyMessage = () => (
     <AppEmptyState emptyStateImg={undefined} title="No issues found">

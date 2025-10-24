@@ -1,7 +1,12 @@
 import * as React from 'react';
+import { FilterContextProvider } from '../Filter/generic/FilterContext';
 import IssueListView from './IssuesListView/IssueListView';
 
 const IssuesListPage: React.FunctionComponent = () => {
-  return <IssueListView applicationName="wip" />;
+  return (
+    <FilterContextProvider filterParams={['name', 'status', 'severity']}>
+      <IssueListView applicationName="wip" />
+    </FilterContextProvider>
+  );
 };
 export default IssuesListPage;
