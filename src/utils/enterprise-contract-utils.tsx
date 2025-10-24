@@ -46,6 +46,15 @@ export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
 
 export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
   const extractedLogs = logs.match(/(\[report-json\] ).+/g);
-  const json = JSON.parse(extractedLogs.map((l) => l.replace('[report-json] ', '')).join(''));
-  return json;
+
+  if (!extractedLogs) {
+    throw new Error('No [report-json] lines found');
+  }
+
+  try {
+    const json = JSON.parse(extractedLogs.map((l) => l.replace('[report-json] ', '')).join(''));
+    return json;
+  } catch (error) {
+    throw new Error(`Failed to parse EC results: ${error.message}`);
+  }
 };
