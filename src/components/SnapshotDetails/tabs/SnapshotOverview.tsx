@@ -11,6 +11,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { SnapshotLabels } from '../../../consts/snapshots';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { useScanResults } from '../../../hooks/useScanResults';
@@ -45,7 +46,7 @@ const SnapshotOverviewTab: React.FC = () => {
     () => plrLoaded && !plrLoadError && createCommitObjectFromPLR(buildPipelineRun),
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
-  const [scanResults, scanLoaded] = useScanResults(buildPipelineName);
+  const [scanResults, scanLoaded, scanError] = useScanResults(buildPipelineName);
 
   const componentsTableData: SnapshotComponentTableData[] = React.useMemo(
     () =>
@@ -121,7 +122,13 @@ const SnapshotOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Vulnerabilities</DescriptionListTerm>
                 <DescriptionListDescription>
-                  {scanLoaded ? <ScanStatus scanResults={scanResults} /> : <Skeleton />}
+                  {scanError ? (
+                    getErrorState(scanError, loaded, 'vulnerability scan', true)
+                  ) : scanLoaded ? (
+                    <ScanStatus scanResults={scanResults} />
+                  ) : (
+                    <Skeleton />
+                  )}
                 </DescriptionListDescription>
               </DescriptionListGroup>
             </DescriptionList>
