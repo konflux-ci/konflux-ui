@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { createEquals, useK8sWatchResource } from '~/k8s';
 import {
   useKubearchiveGetResourceQuery,
   useKubearchiveListResourceQuery,
@@ -10,12 +12,10 @@ import {
   PipelineRunSelector,
 } from '~/utils/pipeline-run-filter-transform';
 import { EQ } from '~/utils/tekton-results';
-import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
-import { WatchK8sResource } from '../types/k8s';
-import { getCommitSha } from '../utils/commits-utils';
+import { MatchExpression, WatchK8sResource } from '../types/k8s';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
 interface UsePipelineRunsV2Options
@@ -57,11 +57,32 @@ export const usePipelineRunsV2 = (
       return null;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { filterByCommit, filterByName, filterByCreationTimestampAfter, ...cleanedSelector } =
+      optionsMemo?.selector || {};
+
+    const commitMatchExpressions: MatchExpression[] = filterByCommit
+      ? [
+          createEquals(PipelineRunLabel.COMMIT_LABEL, filterByCommit),
+          createEquals(PipelineRunLabel.TEST_SERVICE_COMMIT, filterByCommit),
+        ]
+      : [];
+
+    const matchExpressions: MatchExpression[] = [
+      ...(cleanedSelector.matchExpressions ?? []),
+      ...commitMatchExpressions,
+    ];
+
+    const selector = {
+      ...cleanedSelector,
+      matchExpressions,
+    };
+
     return {
       groupVersionKind: PipelineRunGroupVersionKind,
       namespace,
       isList: true,
-      selector: optionsMemo?.selector,
+      selector: Object.keys(selector).length > 0 ? selector : undefined,
       fieldSelector: optionsMemo?.fieldSelector,
       watch: optionsMemo?.watch !== false,
     };
@@ -71,18 +92,14 @@ export const usePipelineRunsV2 = (
     isLoading,
     error,
   } = useK8sWatchResource<PipelineRunKind[]>(watchOptions, PipelineRunModel, { retry: false });
-  // Cluster results with optional commit filtering
+
   const etcdRuns = React.useMemo((): PipelineRunKind[] => {
     if (isLoading || error || !resources) {
       return [];
     }
 
-    if (!optionsMemo?.selector?.filterByCommit) {
-      return resources;
-    }
-
-    return resources.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
-  }, [optionsMemo?.selector?.filterByCommit, resources, isLoading, error]);
+    return resources;
+  }, [resources, isLoading, error]);
 
   // Preserve removed etcd runs (cache), then sort and apply limit
   const runs = React.useMemo((): PipelineRunKind[] => {
@@ -141,25 +158,10 @@ export const usePipelineRunsV2 = (
 
   const queryTr = !kubearchiveEnabled && shouldQueryExternalSources;
 
-  // Tekton Results (raw) and mirrored commit filtering
-  const [trResourcesRaw, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
+  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
     queryTr ? namespace : null,
     optionsMemo,
   );
-
-  const trResources = React.useMemo((): PipelineRunKind[] => {
-    if (!trResourcesRaw || trResourcesRaw.length === 0) {
-      return [];
-    }
-
-    if (optionsMemo?.selector?.filterByCommit) {
-      return trResourcesRaw.filter(
-        (plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit,
-      );
-    }
-
-    return trResourcesRaw;
-  }, [trResourcesRaw, optionsMemo?.selector?.filterByCommit]);
 
   // KubeArchive query config when enabled
   const resourceInit = React.useMemo(
@@ -178,17 +180,12 @@ export const usePipelineRunsV2 = (
 
   const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
 
-  // KubeArchive results with commit filter, sorted and limited
   const kubearchiveData = React.useMemo((): PipelineRunKind[] => {
     if (!kubearchiveEnabled) return [];
 
     const pages = kubearchiveResult.data?.pages;
     const archiveData = pages?.flatMap((page) => page) ?? [];
-    let data = archiveData as PipelineRunKind[];
-
-    if (optionsMemo?.selector?.filterByCommit) {
-      data = data.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
-    }
+    const data = archiveData as PipelineRunKind[];
 
     const creationTimestamp = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
     const sorted = data.sort((a, b) => creationTimestamp(b).localeCompare(creationTimestamp(a)));
@@ -196,12 +193,7 @@ export const usePipelineRunsV2 = (
     return optionsMemo?.limit && optionsMemo.limit > 0
       ? sorted.slice(0, optionsMemo.limit)
       : sorted;
-  }, [
-    kubearchiveResult.data?.pages,
-    kubearchiveEnabled,
-    optionsMemo?.limit,
-    optionsMemo?.selector?.filterByCommit,
-  ]);
+  }, [kubearchiveResult.data?.pages, kubearchiveEnabled, optionsMemo?.limit]);
 
   // Merge cluster with external source, dedupe by UID, sort, and limit
   const combinedData = React.useMemo((): PipelineRunKind[] => {
