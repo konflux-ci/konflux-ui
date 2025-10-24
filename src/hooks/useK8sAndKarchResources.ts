@@ -7,6 +7,7 @@ import { createQueryKeys, useK8sWatchResource } from '../k8s';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
+import { useDeepCompareMemoize } from '../shared';
 import {
   K8sModelCommon,
   K8sResourceCommon,
@@ -163,8 +164,11 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [fetchError, setFetchError] = React.useState<unknown>(null);
 
+  const memoizedResourceInit = useDeepCompareMemoize(resourceInit, true);
+  const memoizedQueryOptions = useDeepCompareMemoize(queryOptions, true);
+
   React.useEffect(() => {
-    if (!enabled || !resourceInit) {
+    if (!enabled || !memoizedResourceInit) {
       setIsLoading(false);
       return;
     }
@@ -172,7 +176,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
     setIsLoading(true);
     setFetchError(null);
 
-    fetchResourceWithK8sAndKubeArchive<TResource>(resourceInit, queryOptions)
+    fetchResourceWithK8sAndKubeArchive<TResource>(memoizedResourceInit, memoizedQueryOptions)
       .then((res) => {
         setResult(res);
         setFetchError(null);
@@ -184,7 +188,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
       .finally(() => {
         setIsLoading(false);
       });
-  }, [resourceInit, enabled, queryOptions]);
+  }, [memoizedResourceInit, enabled, memoizedQueryOptions]);
 
   const shouldWatch = enabled && watch && result?.source === ResourceSource.Cluster && resourceInit;
 
