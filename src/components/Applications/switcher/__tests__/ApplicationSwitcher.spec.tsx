@@ -7,7 +7,7 @@ import { routerRenderer } from '../../../../utils/test-utils';
 import { mockApplication } from '../../__data__/mock-data';
 import { ApplicationSwitcher } from '../ApplicationSwitcher';
 
-jest.mock('../../../../hooks/useLocalStorage', () => ({
+jest.mock('../../../../shared/hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
 }));
 
