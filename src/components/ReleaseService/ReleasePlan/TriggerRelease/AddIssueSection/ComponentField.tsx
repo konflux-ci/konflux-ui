@@ -35,9 +35,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
         return (
           <FormGroup label="Components and packages" data-test="component-field">
             <TextContent>
-              <Text component={TextVariants.p}>
-                Select components affecting this CVE and its related packages
-              </Text>
+              <Text component={TextVariants.p}>Which component affects this CVE?</Text>
             </TextContent>
             <Stack>
               {Array.isArray(components) &&

@@ -15,7 +15,7 @@ export const useReleasePlanActions = (obj: ReleasePlanKind) => {
 
   return [
     {
-      label: 'Trigger release plan',
+      label: 'Trigger release',
       id: `trigger-releaseplan-${obj.metadata.name}`,
       cta: {
         href: `${RELEASEPLAN_TRIGGER_PATH.createPath({
