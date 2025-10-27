@@ -9,7 +9,6 @@ import {
 } from '~/components/PipelineRun/ScanDetailStatus';
 import { Issue } from '~/kite/issue-type';
 import { TableData, Timestamp } from '~/shared';
-import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { IssueStatus } from '../IssueStatus';
@@ -70,12 +69,6 @@ export const IssuesListExpandedRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: i
               ))
             : '-'}
         </Flex>
-      </TableData>
-
-      <TableData className={issuesExpandedTableColumnClasses.kebab}>
-        <div className="issues-list-view__row-actions">
-          <ActionMenu actions={[]} />
-        </div>
       </TableData>
     </>
   );

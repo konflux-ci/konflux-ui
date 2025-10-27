@@ -9,7 +9,6 @@ import {
 } from '~/components/PipelineRun/ScanDetailStatus';
 import { Issue } from '~/kite/issue-type';
 import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
-import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { IssueStatus } from '../IssueStatus';
 import { issuesTableColumnClasses } from './IssuesListHeader';
@@ -88,12 +87,6 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue, IssueListRowCustomData>> = 
               ))
             : '-'}
         </Flex>
-      </TableData>
-
-      <TableData className={issuesTableColumnClasses.kebab}>
-        <div className="issues-list-view__row-actions">
-          <ActionMenu actions={[]} />
-        </div>
       </TableData>
     </>
   );
