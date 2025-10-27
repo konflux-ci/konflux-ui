@@ -122,6 +122,22 @@ describe('NamespaceListView', () => {
     expect(screen.getByText('namespace-2')).toBeInTheDocument();
   });
 
+  it('should display the Visibility column header in the table', () => {
+    const mockNamespaces = [
+      { metadata: { name: 'namespace-1', creationTimestamp: '2023-12-01T00:00:00Z' } },
+    ] as NamespaceKind[];
+
+    mockUseNamespaceInfo.mockReturnValue({
+      ...mockNamespaceData,
+      namespaces: mockNamespaces,
+      namespacesLoaded: true,
+    });
+
+    renderWithQueryClientAndRouter(<NamespaceListView />);
+
+    expect(screen.getByText('Visibility')).toBeInTheDocument();
+  });
+
   it('should filter namespaces based on input text', async () => {
     const mockNamespaces = [
       { metadata: { name: 'namespace-1' } },
