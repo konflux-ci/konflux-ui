@@ -201,23 +201,9 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           setActiveSortIndex(index);
           setActiveSortDirection(direction);
         },
-        filteredMRs.length,
+        sortedFilteredData.length,
       ),
-    [activeSortDirection, activeSortIndex, filteredMRs.length],
-  );
-
-  const ReleasesListHeader = React.useMemo(
-    () =>
-      getReleasesListHeader(
-        activeSortIndex,
-        activeSortDirection,
-        (_event: React.MouseEvent, index: number, direction: SortByDirection) => {
-          setActiveSortIndex(index);
-          setActiveSortDirection(direction);
-        },
-        filteredMRs.length,
-      ),
-    [activeSortDirection, activeSortIndex, filteredMRs.length],
+    [activeSortDirection, activeSortIndex, sortedFilteredData.length],
   );
 
   const EmptyMsg = React.useCallback(
@@ -271,8 +257,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
       <Table
         virtualize
-        data={filteredMRs}
-        unfilteredData={sortedMonitoredReleases}
+        data={sortedFilteredData}
+        unfilteredData={sortedFilteredData}
         EmptyMsg={EmptyMsg}
         NoDataEmptyMsg={MonitoredReleaseEmptyState}
         aria-label="Release List"
