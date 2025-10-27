@@ -1,4 +1,3 @@
-/* eslint-disable */
 import * as React from 'react';
 import { CellMeasurerCache, CellMeasurer } from 'react-virtualized';
 import { Button } from '@patternfly/react-core';
@@ -6,13 +5,19 @@ import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down
 import { AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons/angle-right-icon';
 import { VirtualTableBody } from '@patternfly/react-virtualized-extension';
 import { Scroll } from '@patternfly/react-virtualized-extension/dist/js/components/Virtualized/types';
+// eslint-disable-next-line
 import { K8sResourceCommon } from '../../../types/k8s';
 import { TableData } from './TableData';
 import { TableRow, TableRowProps } from './TableRow';
 import './Table.scss';
 
+export type CustomExpand = {
+  disableRegularExpand?: boolean;
+  customExpand?: Set<number>;
+};
+
 export type VirtualBodyProps<D = unknown, C = unknown> = {
-  customData?: C;
+  customData?: C & CustomExpand;
   Row: React.FC<React.PropsWithChildren<RowFunctionArgs>>;
   ExpandedContent?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   height: number;
@@ -32,13 +37,10 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
   }) => void;
 };
 
-export type RowFunctionArgs<T = unknown> = {
+export type RowFunctionArgs<T = unknown, C = unknown> = {
   obj: T;
   columns: unknown[];
-  customData?: {
-    disableRegularExpand?: boolean;
-    customExpand?: Set<number>;
-  };
+  customData?: C & CustomExpand;
   index?: number;
 };
 
@@ -51,7 +53,6 @@ const RowMemo = React.memo<
     index: number;
   }
 >(({ Row, expand, isExpanded, onToggle, index, ...props }) => {
-  // console.log(props)
   if (expand && !props.customData?.disableRegularExpand) {
     return (
       <>

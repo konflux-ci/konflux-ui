@@ -1,12 +1,11 @@
 /* eslint-disable */
 import * as React from 'react';
 import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
-// import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
+import { Issue, IssueSeverity, IssueState, IssueType, RelatedIssue } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -18,178 +17,183 @@ import IssuesListHeader from './IssuesListHeader';
 import IssuesListExpandedHeader from './IssuesListExpandedHeader';
 import IssuesListRow from './IssuesListRow';
 import { IssuesListExpandedRow } from './IssuesListExpandedRow';
+import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 
 import './IssueListView.scss';
 
-const mockIssuesTestBase: Omit<Issue, 'relatedFrom' | 'relatedTo'>[] = [
-  {
-    id: 'TEST1',
-    title: 'Build Failure in Component A',
-    description:
-      'The build pipeline failed due to missing dependencies in the component configuration.',
-    severity: IssueSeverity.CRITICAL,
-    issueType: IssueType.BUILD,
-    state: IssueState.ACTIVE,
-    detectedAt: '2025-10-20T10:30:00Z',
-    namespace: 'default',
-    scope: {
-      resourceType: 'component',
-      resourceName: 'component-a',
-      resourceNamespace: 'default',
-    },
-    links: [
-      {
-        id: 'link-test1-1',
-        title: 'Build Logs',
-        url: 'https://example.com/builds/12345',
-        issueId: 'TEST1',
-      },
-      {
-        id: 'link-test1-2',
-        title: 'Documentation',
-        url: 'https://docs.example.com/build-troubleshooting',
-        issueId: 'TEST1',
-      },
-    ],
-    createdAt: '2025-10-20T10:30:00Z',
-    updatedAt: '2025-10-20T15:45:00Z',
-  },
-  {
-    id: 'TEST2',
-    title: 'Dependency Vulnerability Detected',
-    description: 'A high severity vulnerability was found in the lodash package version 4.17.15.',
-    severity: IssueSeverity.MAJOR,
-    issueType: IssueType.DEPENDENCY,
-    state: IssueState.ACTIVE,
-    detectedAt: '2025-10-21T08:15:00Z',
-    namespace: 'production',
-    scope: {
-      resourceType: 'application',
-      resourceName: 'frontend-app',
-      resourceNamespace: 'production',
-    },
-    links: [
-      {
-        id: 'link-test2-1',
-        title: 'CVE Report',
-        url: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-23337',
-        issueId: 'TEST2',
-      },
-      {
-        id: 'link-test2-2',
-        title: 'Security Advisory',
-        url: 'https://github.com/lodash/lodash/security/advisories',
-        issueId: 'TEST2',
-      },
-      {
-        id: 'link-test2-3',
-        title: 'Patch Information',
-        url: 'https://security.snyk.io/vuln/SNYK-JS-LODASH-590103',
-        issueId: 'TEST2',
-      },
-    ],
-    createdAt: '2025-10-21T08:15:00Z',
-    updatedAt: '2025-10-21T09:30:00Z',
-  },
-  {
-    id: 'TEST3',
-    title: 'Integration Test Passed with Warnings',
-    description: 'Integration tests completed successfully but with minor performance warnings.',
-    severity: IssueSeverity.MINOR,
-    issueType: IssueType.TEST,
-    state: IssueState.RESOLVED,
-    detectedAt: '2025-10-19T14:00:00Z',
-    namespace: 'staging',
-    scope: {
-      resourceType: 'pipeline',
-      resourceName: 'integration-test-pipeline',
-      resourceNamespace: 'staging',
-    },
-    links: [
-      {
-        id: 'link-test3-1',
-        title: 'Test Results',
-        url: 'https://example.com/tests/results/789',
-        issueId: 'TEST3',
-      },
-    ],
-    createdAt: '2025-10-19T14:00:00Z',
-    updatedAt: '2025-10-22T11:20:00Z',
-  },
-];
+// const mockIssuesTestBase: Omit<Issue, 'relatedFrom' | 'relatedTo'>[] = [
+//   {
+//     id: 'TEST1',
+//     title: 'Build Failure in Component A',
+//     description:
+//       'The build pipeline failed due to missing dependencies in the component configuration.',
+//     severity: IssueSeverity.CRITICAL,
+//     issueType: IssueType.BUILD,
+//     state: IssueState.ACTIVE,
+//     detectedAt: '2025-10-20T10:30:00Z',
+//     namespace: 'default',
+//     scope: {
+//       resourceType: 'component',
+//       resourceName: 'component-a',
+//       resourceNamespace: 'default',
+//     },
+//     links: [
+//       {
+//         id: 'link-test1-1',
+//         title: 'Build Logs',
+//         url: 'https://example.com/builds/12345',
+//         issueId: 'TEST1',
+//       },
+//       {
+//         id: 'link-test1-2',
+//         title: 'Documentation',
+//         url: 'https://docs.example.com/build-troubleshooting',
+//         issueId: 'TEST1',
+//       },
+//     ],
+//     createdAt: '2025-10-20T10:30:00Z',
+//     updatedAt: '2025-10-20T15:45:00Z',
+//   },
+//   {
+//     id: 'TEST2',
+//     title: 'Dependency Vulnerability Detected',
+//     description: 'A high severity vulnerability was found in the lodash package version 4.17.15.',
+//     severity: IssueSeverity.MAJOR,
+//     issueType: IssueType.DEPENDENCY,
+//     state: IssueState.ACTIVE,
+//     detectedAt: '2025-10-21T08:15:00Z',
+//     namespace: 'production',
+//     scope: {
+//       resourceType: 'application',
+//       resourceName: 'frontend-app',
+//       resourceNamespace: 'production',
+//     },
+//     links: [
+//       {
+//         id: 'link-test2-1',
+//         title: 'CVE Report',
+//         url: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-23337',
+//         issueId: 'TEST2',
+//       },
+//       {
+//         id: 'link-test2-2',
+//         title: 'Security Advisory',
+//         url: 'https://github.com/lodash/lodash/security/advisories',
+//         issueId: 'TEST2',
+//       },
+//       {
+//         id: 'link-test2-3',
+//         title: 'Patch Information',
+//         url: 'https://security.snyk.io/vuln/SNYK-JS-LODASH-590103',
+//         issueId: 'TEST2',
+//       },
+//     ],
+//     createdAt: '2025-10-21T08:15:00Z',
+//     updatedAt: '2025-10-21T09:30:00Z',
+//   },
+//   {
+//     id: 'TEST3',
+//     title: 'Integration Test Passed with Warnings',
+//     description: 'Integration tests completed successfully but with minor performance warnings.',
+//     severity: IssueSeverity.MINOR,
+//     issueType: IssueType.TEST,
+//     state: IssueState.RESOLVED,
+//     detectedAt: '2025-10-19T14:00:00Z',
+//     namespace: 'staging',
+//     scope: {
+//       resourceType: 'pipeline',
+//       resourceName: 'integration-test-pipeline',
+//       resourceNamespace: 'staging',
+//     },
+//     links: [
+//       {
+//         id: 'link-test3-1',
+//         title: 'Test Results',
+//         url: 'https://example.com/tests/results/789',
+//         issueId: 'TEST3',
+//       },
+//     ],
+//     createdAt: '2025-10-19T14:00:00Z',
+//     updatedAt: '2025-10-22T11:20:00Z',
+//   },
+// ];
 
-// Now create the full issues with relationships
-const mockIssuesTest: Issue[] = [
-  {
-    ...mockIssuesTestBase[0],
-    // TEST1 is related TO TEST2 (build failure caused by dependency issue)
-    relatedTo: [
-      {
-        id: 'rel-test1-to-test2',
-        sourceID: 'TEST1',
-        targetID: 'TEST2',
-        source: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
-        target: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
-      },
-    ],
-    // TEST1 is related FROM TEST3 (test warnings revealed build issues)
-    relatedFrom: [
-      {
-        id: 'rel-test3-to-test1',
-        sourceID: 'TEST3',
-        targetID: 'TEST1',
-        source: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
-        target: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
-      },
-    ],
-  },
-  {
-    ...mockIssuesTestBase[1],
-    // TEST2 is related TO TEST3 (dependency issue affected test results)
-    relatedTo: [
-      {
-        id: 'rel-test2-to-test3',
-        sourceID: 'TEST2',
-        targetID: 'TEST3',
-        source: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
-        target: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
-      },
-    ],
-    // TEST2 is related FROM TEST1 (build failure caused by dependency issue)
-    relatedFrom: [
-      {
-        id: 'rel-test1-to-test2',
-        sourceID: 'TEST1',
-        targetID: 'TEST2',
-        source: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
-        target: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
-      },
-    ],
-  },
-  {
-    ...mockIssuesTestBase[2],
-    // TEST3 is related TO TEST1 (test warnings revealed build issues)
-    relatedTo: [
-      {
-        id: 'rel-test3-to-test1',
-        sourceID: 'TEST3',
-        targetID: 'TEST1',
-        source: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
-        target: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
-      },
-    ],
-    // TEST3 is related FROM TEST2 (dependency issue affected test results)
-    relatedFrom: [
-      {
-        id: 'rel-test2-to-test3',
-        sourceID: 'TEST2',
-        targetID: 'TEST3',
-        source: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
-        target: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
-      },
-    ],
-  },
-];
+// // Now create the full issues with relationships
+// const mockIssuesTest: Issue[] = [
+//   {
+//     ...mockIssuesTestBase[0],
+//     // TEST1 is related TO TEST2 (build failure caused by dependency issue)
+//     relatedTo: [
+//       {
+//         id: 'rel-test1-to-test2',
+//         sourceID: 'TEST1',
+//         targetID: 'TEST2',
+//         source: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+//         target: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+//       },
+//     ],
+//     // TEST1 is related FROM TEST3 (test warnings revealed build issues)
+//     relatedFrom: [
+//       {
+//         id: 'rel-test3-to-test1',
+//         sourceID: 'TEST3',
+//         targetID: 'TEST1',
+//         source: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+//         target: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+//       },
+//     ],
+//   },
+//   {
+//     ...mockIssuesTestBase[1],
+//     // TEST2 is related TO TEST3 (dependency issue affected test results)
+//     relatedTo: [
+//       {
+//         id: 'rel-test2-to-test3',
+//         sourceID: 'TEST2',
+//         targetID: 'TEST3',
+//         source: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+//         target: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+//       },
+//     ],
+//     // TEST2 is related FROM TEST1 (build failure caused by dependency issue)
+//     relatedFrom: [
+//       {
+//         id: 'rel-test1-to-test2',
+//         sourceID: 'TEST1',
+//         targetID: 'TEST2',
+//         source: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+//         target: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+//       },
+//     ],
+//   },
+//   {
+//     ...mockIssuesTestBase[2],
+//     // TEST3 is related TO TEST1 (test warnings revealed build issues)
+//     relatedTo: [
+//       {
+//         id: 'rel-test3-to-test1',
+//         sourceID: 'TEST3',
+//         targetID: 'TEST1',
+//         source: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+//         target: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+//       },
+//     ],
+//     // TEST3 is related FROM TEST2 (dependency issue affected test results)
+//     relatedFrom: [
+//       {
+//         id: 'rel-test2-to-test3',
+//         sourceID: 'TEST2',
+//         targetID: 'TEST3',
+//         source: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+//         target: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+//       },
+//     ],
+//   },
+// ];
+
+// const mockIssues = {
+//   data: mockIssuesTest
+// }
 
 const IssueListView = () => {
   const namespace = useNamespace();
@@ -207,7 +211,7 @@ const IssueListView = () => {
   const { data: issuesData, isLoading, error } = useIssues({ namespace });
   const issues = React.useMemo(() => {
     if (isLoading || error) return [];
-    return mockIssuesTest.map((issue) => {
+    return issuesData.data.map((issue) => {
       const relatedIssues = issue.relatedFrom
         .concat(issue.relatedTo)
         .map((related) => [related.source, related.target])
@@ -237,8 +241,6 @@ const IssueListView = () => {
       };
     });
   }, [issuesData, isLoading]);
-  const issuesLoaded = true;
-  const issuesError = null;
 
   const filteredIssues = React.useMemo(
     () =>
@@ -319,8 +321,8 @@ const IssueListView = () => {
     </BaseTextFilterToolbar>
   );
 
-  if (issuesError) {
-    return getErrorState(issuesError, issuesLoaded, 'issues');
+  if (error) {
+    return getErrorState(error, isLoading, 'issues');
   }
 
   return (
@@ -344,13 +346,17 @@ const IssueListView = () => {
           aria-label="Issues List"
           Header={IssuesListHeader}
           Row={IssuesListRow}
-          loaded={issuesLoaded}
+          loaded={!isLoading}
           getRowProps={(obj: Issue) => ({
             id: `${obj.id}-issue-list-item`,
             'aria-label': obj.title,
           })}
           expand
-          ExpandedContent={(props) => {
+          ExpandedContent={(
+            props: RowFunctionArgs<
+              Issue & { scope: { resourceType: string; data: RelatedIssue[] } }
+            >,
+          ) => {
             const issue = props.obj;
             return (
               <div className="issues-list-view__expanded-row">
@@ -358,7 +364,7 @@ const IssueListView = () => {
                   data={issue.scope.data}
                   Row={IssuesListExpandedRow}
                   Header={IssuesListExpandedHeader}
-                  loaded={true}
+                  loaded={!isLoading}
                   EmptyMsg={EmptyMessage}
                   aria-label="Expanded Issues List"
                   virtualize

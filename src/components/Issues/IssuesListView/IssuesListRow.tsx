@@ -7,6 +7,7 @@ import {
   MediumIcon,
   UnknownIcon,
 } from '~/components/PipelineRun/ScanDetailStatus';
+import { Issue } from '~/kite/issue-type';
 import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -17,40 +18,7 @@ export type IssueListRowCustomData = {
   onToggle?: (issueId: string) => void;
 };
 
-export type IssueRow = {
-  id?: string;
-  title?: string;
-  description?: string;
-  severity?: string;
-  issueType?: string;
-  state?: string;
-  detectedAt?: string;
-  namespace?: string;
-  scope?: {
-    resourceType: string;
-    resourceName: string;
-    resourceNamespace: string;
-  };
-  links?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  relatedTo?: {
-    id: string;
-    sourceId: string;
-    targetId: string;
-    source: string;
-    target: string;
-  }[];
-  relatedFrom?: {
-    id: string;
-    sourceId: string;
-    targetId: string;
-    source: string;
-    target: string;
-  }[];
-};
-
-const IssuesListRow: React.FC<RowFunctionArgs<IssueRow, IssueListRowCustomData>> = ({
+const IssuesListRow: React.FC<RowFunctionArgs<Issue, IssueListRowCustomData>> = ({
   obj: issue,
   customData,
 }) => {

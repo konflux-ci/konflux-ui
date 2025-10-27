@@ -7,27 +7,15 @@ import {
   MediumIcon,
   UnknownIcon,
 } from '~/components/PipelineRun/ScanDetailStatus';
+import { Issue } from '~/kite/issue-type';
 import { TableData, Timestamp } from '~/shared';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import ExternalLink from '~/shared/components/links/ExternalLink';
-// import { IssueRow } from './IssuesListRow';
+import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { IssueStatus } from '../IssueStatus';
 import { issuesExpandedTableColumnClasses } from './IssuesListExpandedHeader';
 
-type Props = {
-  row: {
-    name: string;
-    severity: string;
-    status: string;
-    createdAt: string;
-    description: string;
-    links: string[];
-  };
-};
-
-export const IssuesListExpandedRow: React.FC<Props> = ({ obj: issue }) => {
-  // console.log(issue)
-
+export const IssuesListExpandedRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
   const hasContent = issue.links?.length || issue.description;
   const severityIcon = (severity) => {
     switch (severity) {
@@ -56,16 +44,12 @@ export const IssuesListExpandedRow: React.FC<Props> = ({ obj: issue }) => {
         </Flex>
       </TableData>
 
-      {/* <TableData className={issuesExpandedTableColumnClasses.scope}>
-          {issue.name}
-      </TableData> */}
-
       <TableData className={issuesExpandedTableColumnClasses.severity}>
         {severityIcon(issue.severity)} {issue.severity}
       </TableData>
 
       <TableData className={issuesExpandedTableColumnClasses.status}>
-        <IssueStatus locked={issue.status === 'CLOSED'} />
+        <IssueStatus locked={issue.state === 'RESOLVED'} />
       </TableData>
 
       <TableData className={issuesExpandedTableColumnClasses.createdOn}>

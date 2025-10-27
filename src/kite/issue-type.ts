@@ -56,7 +56,7 @@ export type Issue = {
   updatedAt: string;
 };
 
-type RelatedIssue = {
+export type RelatedIssue = {
   id: string;
   sourceID: string;
   targetID: string;
