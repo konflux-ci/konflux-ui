@@ -1,45 +1,30 @@
-import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { createEquals } from '~/k8s/k8s-utils';
 import { MatchExpression, Selector, WatchK8sResource } from '~/types/k8s';
+import { PipelineRunLabel } from '../consts/pipelinerun';
+import { createEquals } from '../k8s';
 
-/**
- * Extended selector type that includes typed filter fields for TaskRuns
- */
-export type TaskRunSelector = Selector &
+export type KubearchiveFilterTransformSelector = Selector &
   Partial<{
     filterByName: string;
     filterByCreationTimestampAfter: string;
     filterByCommit: string;
   }>;
 
-/**
- * Converts a TaskRunSelector (Tekton-style filter object) into a format
- * suitable for KubeArchive resource queries.
- *
- * Specifically:
- * - Converts `filterByName` into a Kubernetes field selector string (`metadata.name=...`).
- * - Converts `filterByCommit` into a label-based matchExpression.
- * - Preserves any existing `matchLabels` and `matchExpressions`.
- * - Returns an object containing:
- *   - `selector`: a Selector object with labels and expressions for KubeArchive.
- *   - `fieldSelector`: a pre-built string suitable for K8s API field selectors.
- *
- * Notes:
- * - `filterByCreationTimestampAfter` cannot be expressed as a K8s fieldSelector
- *   (Kubernetes does not support comparison operators in field selectors). This
- *   filter must be applied client-side.
- *
- * @param filterBy - TaskRunSelector object containing Tekton-style filter options.
- * @returns An object with `selector` and `fieldSelector` ready for use with KubeArchive hooks.
- */
 export const convertFilterToKubearchiveSelectors = (
-  filterBy: TaskRunSelector,
+  filterBy: KubearchiveFilterTransformSelector,
 ): Pick<WatchK8sResource, 'fieldSelector' | 'selector'> => {
   const fieldSelectors: Record<string, string> = {};
+
+  // Apply name filtering via field selector
   if (filterBy.filterByName) {
     // e.g. name=*e2e*
     // Matches resources whose names contain "e2e" anywhere
     fieldSelectors.name = `*${filterBy.filterByName}*`;
+  }
+
+  // Apply creation timestamp filtering via field selector
+  if (filterBy.filterByCreationTimestampAfter) {
+    // e.g. creationTimestampAfter=2023-01-01T12:00:00Z
+    fieldSelectors.creationTimestampAfter = filterBy.filterByCreationTimestampAfter;
   }
 
   const fieldSelector = Object.keys(fieldSelectors).length
@@ -69,7 +54,7 @@ export const convertFilterToKubearchiveSelectors = (
  */
 export const createKubearchiveWatchResource = (
   namespace: string,
-  selector?: TaskRunSelector,
+  selector?: KubearchiveFilterTransformSelector,
 ): {
   namespace: string;
   selector?: Selector;
