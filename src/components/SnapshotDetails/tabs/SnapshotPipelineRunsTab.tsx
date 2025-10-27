@@ -18,37 +18,34 @@ const SnapshotPipelineRunTab: React.FC = () => {
     React.useMemo(
       () => ({
         selector: {
-          matchLabels: { [PipelineRunLabel.APPLICATION]: applicationName },
+          matchLabels: {
+            [PipelineRunLabel.APPLICATION]: applicationName,
+            [PipelineRunLabel.SNAPSHOT]: snapshotName,
+          },
         },
       }),
-      [applicationName],
+      [applicationName, snapshotName],
     ),
   );
 
-  const SnapshotPipelineRuns = React.useMemo(() => {
-    if (loaded && !LoadError) {
-      return pipelineRuns.filter(
-        (plr) =>
-          (plr.metadata?.annotations &&
-            plr.metadata.annotations[PipelineRunLabel.SNAPSHOT] === snapshotName) ||
-          (plr.metadata?.labels && plr.metadata.labels[PipelineRunLabel.SNAPSHOT] === snapshotName),
-      );
-    }
-    return [];
-  }, [loaded, LoadError, pipelineRuns, snapshotName]);
-
   React.useEffect(() => {
-    if (loaded && SnapshotPipelineRuns.length === 0 && getNextPage) {
+    if (loaded && pipelineRuns.length === 0 && getNextPage) {
       getNextPage();
     }
-  }, [getNextPage, loaded, SnapshotPipelineRuns.length]);
+  }, [getNextPage, loaded, pipelineRuns.length]);
 
-  SnapshotPipelineRuns?.sort(
-    (app1, app2) =>
-      +new Date(app2.metadata.creationTimestamp) - +new Date(app1.metadata.creationTimestamp),
+  const sortedPipelineRuns = React.useMemo(
+    () =>
+      (pipelineRuns ?? [])
+        .slice()
+        .sort(
+          (a, b) =>
+            +new Date(b.metadata.creationTimestamp) - +new Date(a.metadata.creationTimestamp),
+        ),
+    [pipelineRuns],
   );
 
-  if (!loaded && pipelineRuns.length === 0) {
+  if (!loaded && sortedPipelineRuns.length === 0) {
     return (
       <Bullseye data-test="snapshot-plr-loading">
         <Spinner />
@@ -60,14 +57,14 @@ const SnapshotPipelineRunTab: React.FC = () => {
     <StatusBox loadError={LoadError} loaded={loaded} />;
   }
 
-  if (loaded && (!SnapshotPipelineRuns || SnapshotPipelineRuns.length === 0)) {
+  if (loaded && (!sortedPipelineRuns || sortedPipelineRuns.length === 0)) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
   return (
     <FilterContextProvider filterParams={['name', 'status', 'type']}>
       <SnapshotPipelineRunsList
-        snapshotPipelineRuns={SnapshotPipelineRuns}
+        snapshotPipelineRuns={sortedPipelineRuns}
         loaded={loaded}
         applicationName={applicationName}
         getNextPage={getNextPage}
