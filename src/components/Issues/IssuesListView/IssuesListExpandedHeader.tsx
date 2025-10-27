@@ -11,7 +11,7 @@ export const issuesExpandedTableColumnClasses = {
 const IssuesListExpandedHeader = () => {
   return [
     {
-      title: 'Resource imapacted',
+      title: 'Resource impacted',
       props: { className: issuesExpandedTableColumnClasses.issue },
     },
     {

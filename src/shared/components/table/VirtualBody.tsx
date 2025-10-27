@@ -5,7 +5,6 @@ import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down
 import { AngleRightIcon } from '@patternfly/react-icons/dist/esm/icons/angle-right-icon';
 import { VirtualTableBody } from '@patternfly/react-virtualized-extension';
 import { Scroll } from '@patternfly/react-virtualized-extension/dist/js/components/Virtualized/types';
-// eslint-disable-next-line
 import { K8sResourceCommon } from '../../../types/k8s';
 import { TableData } from './TableData';
 import { TableRow, TableRowProps } from './TableRow';
@@ -96,7 +95,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
 
   const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
 
-  React.useMemo(() => {
+  React.useEffect(() => {
     setExpandedRowIndexes(customData?.customExpand);
   }, [customData?.customExpand]);
 

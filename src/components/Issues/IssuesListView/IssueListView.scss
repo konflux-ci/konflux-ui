@@ -25,6 +25,6 @@
     justify-content: flex-end;
   }
   &__expanded-row {
-    padding: 1rem;
+    padding: var(--pf-v5-global--spacer--md);
   }
 }

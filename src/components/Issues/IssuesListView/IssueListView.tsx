@@ -4,7 +4,7 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { Issue, RelatedIssue } from '~/kite/issue-type';
+import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import { Table, useDeepCompareMemoize } from '~/shared';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
@@ -49,7 +49,7 @@ const IssueListView = () => {
         }, []);
       const groups: Record<string, number> = relatedIssues.reduce((acc, cur) => {
         if (!acc[cur.scope.resourceType]) {
-          acc[cur.scope.resourceType] = 1;
+          acc[cur.scope.resourceType] = 0;
         }
         acc[cur.scope.resourceType]++;
         return acc;
@@ -58,9 +58,11 @@ const IssueListView = () => {
         ...issue,
         scope: {
           resourceType:
-            Object.keys(groups).length > 1
-              ? `${Object.keys(groups).length} groups`
-              : `${Object.values(groups)[0]} ${Object.keys(groups)[0]}${Object.values(groups)[0] > 1 ? 's' : ''}`,
+            Object.keys(groups).length === 0
+              ? `1 ${issue.scope.resourceType}`
+              : Object.keys(groups).length > 1
+                ? `${Object.keys(groups).length} groups`
+                : `${Object.values(groups)[0]} ${Object.keys(groups)[0]}${Object.values(groups)[0] > 1 ? 's' : ''}`,
           data: relatedIssues,
         },
       };
@@ -81,27 +83,34 @@ const IssueListView = () => {
   );
 
   const statusFilterObj = React.useMemo(
-    () => createFilterObj(issues, (issue) => issue.state, ['ACTIVE', 'RESOLVED']),
+    () => createFilterObj(issues, (issue) => issue.state, [IssueState.ACTIVE, IssueState.RESOLVED]),
     [issues],
   );
 
   const severityFilterObj = React.useMemo(
     () =>
-      createFilterObj(issues, (issue) => issue.severity, ['info', 'minor', 'major', 'critical']),
+      createFilterObj(issues, (issue) => issue.severity, [
+        IssueSeverity.INFO,
+        IssueSeverity.MINOR,
+        IssueSeverity.MAJOR,
+        IssueSeverity.CRITICAL,
+      ]),
     [issues],
   );
 
   const handleToggle = (issueId: string) => {
     const refRow = filteredIssues.findIndex((issue) => issue.id === issueId);
-    setExpandedIssues((prev) => {
-      const next = new Set(prev);
-      if (next.has(refRow)) {
-        next.delete(refRow);
-      } else {
-        next.add(refRow);
-      }
-      return next;
-    });
+    if (refRow >= 0 && filteredIssues[refRow].scope.data.length > 0) {
+      setExpandedIssues((prev) => {
+        const next = new Set(prev);
+        if (next.has(refRow)) {
+          next.delete(refRow);
+        } else {
+          next.add(refRow);
+        }
+        return next;
+      });
+    }
   };
 
   const NoDataEmptyMessage = () => (
@@ -147,7 +156,7 @@ const IssueListView = () => {
   );
 
   if (error) {
-    return getErrorState(error, isLoading, 'issues');
+    return getErrorState(error, !isLoading, 'issues');
   }
 
   return (
@@ -156,9 +165,7 @@ const IssueListView = () => {
         Issues
       </Title>
       <TextContent>
-        <Text component={TextVariants.p}>
-          Summary of issues in your Konflux content at any point in time.
-        </Text>
+        <Text component={TextVariants.p}>This list shows current Konflux issues.</Text>
       </TextContent>
       <div data-test="issues-list">
         <Table
@@ -178,9 +185,7 @@ const IssueListView = () => {
           })}
           expand
           ExpandedContent={(
-            props: RowFunctionArgs<
-              Issue & { scope: { resourceType: string; data: RelatedIssue[] } }
-            >,
+            props: RowFunctionArgs<Issue & { scope: { resourceType: string; data: Issue[] } }>,
           ) => {
             const issue = props.obj;
             return (

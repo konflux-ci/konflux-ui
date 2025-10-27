@@ -5,8 +5,8 @@ export const issuesTableColumnClasses = {
   status: 'pf-m-width-10',
   createdOn: 'pf-m-width-15',
   reason: 'pf-m-width-20',
-  usefulLinks: 'pf-m-width-10',
-  kebab: 'pf-m-width-10 issues-list-view__actions',
+  usefulLinks: 'pf-m-width-5',
+  kebab: 'pf-m-width-5 issues-list-view__actions',
 };
 
 const IssuesListHeader = () => {
