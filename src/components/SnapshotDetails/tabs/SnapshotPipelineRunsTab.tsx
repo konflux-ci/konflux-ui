@@ -23,16 +23,11 @@ const SnapshotPipelineRunTab: React.FC = () => {
             [PipelineRunLabel.SNAPSHOT]: snapshotName,
           },
         },
+        limit: 30,
       }),
       [applicationName, snapshotName],
     ),
   );
-
-  React.useEffect(() => {
-    if (loaded && pipelineRuns.length === 0 && getNextPage) {
-      getNextPage();
-    }
-  }, [getNextPage, loaded, pipelineRuns.length]);
 
   const sortedPipelineRuns = React.useMemo(
     () =>
