@@ -14,10 +14,10 @@ import {
   Spinner,
   Text,
 } from '@patternfly/react-core';
-import ArrowRightIcon from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
-import ExclamationCircleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import ExclamationTriangleIcon from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import InfoCircleIcon from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
+import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
+import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
+import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
+import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
 import { useLatestIssues } from '~/hooks/useIssues';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Issue } from '~/types/issues';
