@@ -5,7 +5,7 @@ import IssueListView from './IssuesListView/IssueListView';
 const IssuesListPage: React.FunctionComponent = () => {
   return (
     <FilterContextProvider filterParams={['name', 'status', 'severity']}>
-      <IssueListView applicationName="wip" />
+      <IssueListView />
     </FilterContextProvider>
   );
 };

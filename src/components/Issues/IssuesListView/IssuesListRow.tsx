@@ -114,8 +114,8 @@ const IssuesListRow: React.FC<RowFunctionArgs<IssueRow, IssueListRowCustomData>>
         <Flex direction={{ default: 'column' }}>
           {issue.links?.length
             ? issue.links.map((link, index) => (
-                <FlexItem key={`${link}-${index}`}>
-                  <ExternalLink href={link} />
+                <FlexItem key={`${link.id}-${index}`}>
+                  <ExternalLink href={link.url} />
                 </FlexItem>
               ))
             : '-'}

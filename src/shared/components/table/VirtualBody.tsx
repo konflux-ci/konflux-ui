@@ -146,8 +146,6 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
         columns,
         customData,
       };
-      // console.log(rowArgs)
-      // console.log(props)
 
       // do not render non visible elements (this excludes overscan)
       if (!isVisible) {

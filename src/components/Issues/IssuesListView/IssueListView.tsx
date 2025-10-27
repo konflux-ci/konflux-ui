@@ -6,183 +6,193 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
+import { useIssues } from '~/kite/kite-hooks';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Table, useDeepCompareMemoize } from '~/shared';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
-import { IssueRow } from './IssuesListRow';
+import emptyStateImgUrl from '../../../shared/assets/Not-found.svg';
 import IssuesListHeader from './IssuesListHeader';
 import IssuesListExpandedHeader from './IssuesListExpandedHeader';
 import IssuesListRow from './IssuesListRow';
 import { IssuesListExpandedRow } from './IssuesListExpandedRow';
-import { ExpandableRowContent } from '@patternfly/react-table';
 
 import './IssueListView.scss';
 
-type IssueListViewProps = {
-  applicationName: string;
-};
-
-// Mock data for demonstration - replace with actual data fetching
-const mockIssuesRaw: IssueRow[] = [
+const mockIssuesTestBase: Omit<Issue, 'relatedFrom' | 'relatedTo'>[] = [
   {
-    id: 'RT1',
-    title: 'Title Issue #1',
-    description: 'Desc #1',
-    severity: 'critical',
-    issueType: 'build',
-    state: 'ACTIVE',
-    detectedAt: '2025-10-13',
+    id: 'TEST1',
+    title: 'Build Failure in Component A',
+    description:
+      'The build pipeline failed due to missing dependencies in the component configuration.',
+    severity: IssueSeverity.CRITICAL,
+    issueType: IssueType.BUILD,
+    state: IssueState.ACTIVE,
+    detectedAt: '2025-10-20T10:30:00Z',
     namespace: 'default',
     scope: {
-      resourceType: 'componment',
-      resourceName: 'name',
+      resourceType: 'component',
+      resourceName: 'component-a',
       resourceNamespace: 'default',
     },
-    links: ['https://link1.com', 'https://link2.com'],
-    createdAt: '2025-10-13',
-    updatedAt: '2025-10-13',
+    links: [
+      {
+        id: 'link-test1-1',
+        title: 'Build Logs',
+        url: 'https://example.com/builds/12345',
+        issueId: 'TEST1',
+      },
+      {
+        id: 'link-test1-2',
+        title: 'Documentation',
+        url: 'https://docs.example.com/build-troubleshooting',
+        issueId: 'TEST1',
+      },
+    ],
+    createdAt: '2025-10-20T10:30:00Z',
+    updatedAt: '2025-10-20T15:45:00Z',
   },
   {
-    id: '000000',
-    title: 'Title Issue #2',
-    description: 'Desc #2',
-    severity: 'critical',
-    issueType: 'build',
-    state: 'ACTIVE',
-    detectedAt: '2025-10-13',
-    namespace: 'default',
+    id: 'TEST2',
+    title: 'Dependency Vulnerability Detected',
+    description: 'A high severity vulnerability was found in the lodash package version 4.17.15.',
+    severity: IssueSeverity.MAJOR,
+    issueType: IssueType.DEPENDENCY,
+    state: IssueState.ACTIVE,
+    detectedAt: '2025-10-21T08:15:00Z',
+    namespace: 'production',
     scope: {
-      resourceType: 'componment',
-      resourceName: 'name',
-      resourceNamespace: 'default',
+      resourceType: 'application',
+      resourceName: 'frontend-app',
+      resourceNamespace: 'production',
     },
-    links: ['https://link1.com', 'https://link2.com'],
-    createdAt: '2025-10-13',
-    updatedAt: '2025-10-13',
+    links: [
+      {
+        id: 'link-test2-1',
+        title: 'CVE Report',
+        url: 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2021-23337',
+        issueId: 'TEST2',
+      },
+      {
+        id: 'link-test2-2',
+        title: 'Security Advisory',
+        url: 'https://github.com/lodash/lodash/security/advisories',
+        issueId: 'TEST2',
+      },
+      {
+        id: 'link-test2-3',
+        title: 'Patch Information',
+        url: 'https://security.snyk.io/vuln/SNYK-JS-LODASH-590103',
+        issueId: 'TEST2',
+      },
+    ],
+    createdAt: '2025-10-21T08:15:00Z',
+    updatedAt: '2025-10-21T09:30:00Z',
+  },
+  {
+    id: 'TEST3',
+    title: 'Integration Test Passed with Warnings',
+    description: 'Integration tests completed successfully but with minor performance warnings.',
+    severity: IssueSeverity.MINOR,
+    issueType: IssueType.TEST,
+    state: IssueState.RESOLVED,
+    detectedAt: '2025-10-19T14:00:00Z',
+    namespace: 'staging',
+    scope: {
+      resourceType: 'pipeline',
+      resourceName: 'integration-test-pipeline',
+      resourceNamespace: 'staging',
+    },
+    links: [
+      {
+        id: 'link-test3-1',
+        title: 'Test Results',
+        url: 'https://example.com/tests/results/789',
+        issueId: 'TEST3',
+      },
+    ],
+    createdAt: '2025-10-19T14:00:00Z',
+    updatedAt: '2025-10-22T11:20:00Z',
+  },
+];
+
+// Now create the full issues with relationships
+const mockIssuesTest: Issue[] = [
+  {
+    ...mockIssuesTestBase[0],
+    // TEST1 is related TO TEST2 (build failure caused by dependency issue)
     relatedTo: [
       {
-        id: '00000r1',
-        sourceId: 'RT1',
-        targetId: undefined,
-        source: undefined,
-        target: undefined,
+        id: 'rel-test1-to-test2',
+        sourceID: 'TEST1',
+        targetID: 'TEST2',
+        source: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+        target: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
       },
     ],
+    // TEST1 is related FROM TEST3 (test warnings revealed build issues)
     relatedFrom: [
       {
-        id: '00000r1',
-        sourceId: 'RF1',
-        targetId: undefined,
-        source: undefined,
-        target: undefined,
+        id: 'rel-test3-to-test1',
+        sourceID: 'TEST3',
+        targetID: 'TEST1',
+        source: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+        target: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+      },
+    ],
+  },
+  {
+    ...mockIssuesTestBase[1],
+    // TEST2 is related TO TEST3 (dependency issue affected test results)
+    relatedTo: [
+      {
+        id: 'rel-test2-to-test3',
+        sourceID: 'TEST2',
+        targetID: 'TEST3',
+        source: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+        target: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+      },
+    ],
+    // TEST2 is related FROM TEST1 (build failure caused by dependency issue)
+    relatedFrom: [
+      {
+        id: 'rel-test1-to-test2',
+        sourceID: 'TEST1',
+        targetID: 'TEST2',
+        source: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+        target: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+      },
+    ],
+  },
+  {
+    ...mockIssuesTestBase[2],
+    // TEST3 is related TO TEST1 (test warnings revealed build issues)
+    relatedTo: [
+      {
+        id: 'rel-test3-to-test1',
+        sourceID: 'TEST3',
+        targetID: 'TEST1',
+        source: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
+        target: { ...mockIssuesTestBase[0], relatedFrom: [], relatedTo: [] } as Issue,
+      },
+    ],
+    // TEST3 is related FROM TEST2 (dependency issue affected test results)
+    relatedFrom: [
+      {
+        id: 'rel-test2-to-test3',
+        sourceID: 'TEST2',
+        targetID: 'TEST3',
+        source: { ...mockIssuesTestBase[1], relatedFrom: [], relatedTo: [] } as Issue,
+        target: { ...mockIssuesTestBase[2], relatedFrom: [], relatedTo: [] } as Issue,
       },
     ],
   },
 ];
 
-// const mockIssues: IssueRow[] = [
-const mockIssues = [
-  {
-    id: 'RT1',
-    title: 'Title Issue #1',
-    description: 'Desc #1',
-    severity: 'minor',
-    createdAt: '2025-10-12',
-    // issueType: "build",
-    state: 'RESOLVED',
-    // detectedAt: "2025-10-13",
-    // namespace: "default",
-    scope: {
-      resourceType: 'compo',
-      data: [
-        {
-          name: 'a',
-          severity: 'critical',
-          status: 'x',
-          createdAt: '2025-10-13',
-          description: 'Desc #11',
-          links: ['https://link1.com'],
-        },
-        {
-          name: 'b',
-          severity: 'critical',
-          status: 'y',
-          createdAt: '2025-10-13',
-          description: 'Desc #12',
-          links: ['https://link2.com'],
-        },
-      ],
-      links: ['https://link1.com', 'https://link2.com'],
-    },
-  },
-  {
-    id: 'RT2',
-    title: 'Title Issue #2',
-    description: 'Desc #2',
-    severity: 'critical',
-    createdAt: '2025-10-12',
-    // issueType: "build",
-    state: 'ACTIVE',
-    scope: {
-      resourceType: 'compo',
-      data: [
-        {
-          name: 'a',
-          severity: 'critical',
-          status: 'x',
-          createdAt: '2025-10-13',
-          description: 'Desc #21',
-          links: ['https://link1.com'],
-        },
-        {
-          name: 'b',
-          severity: 'critical',
-          status: 'y',
-          createdAt: '2025-10-13',
-          description: 'Desc #22',
-          links: ['https://link2.com'],
-        },
-      ],
-      links: ['https://link1.com', 'https://link2.com'],
-    },
-  },
-  {
-    id: 'RT3',
-    title: 'Title Issue #3',
-    description: 'Desc #3',
-    severity: 'info',
-    createdAt: '2025-10-12',
-    // issueType: "build",
-    state: 'ACTIVE',
-    // detectedAt: "2025-10-13",
-    // namespace: "default",
-    scope: {
-      resourceType: 'namespace',
-      data: [
-        {
-          name: 'a',
-          severity: 'critical',
-          status: 'x',
-          createdAt: '2025-10-13',
-          description: 'Desc #31',
-          links: ['https://link1.com'],
-        },
-        {
-          name: 'b',
-          severity: 'critical',
-          status: 'y',
-          createdAt: '2025-10-13',
-          description: 'Desc #32',
-          links: ['https://link2.com'],
-        },
-      ],
-      links: ['https://link1.com', 'https://link2.com'],
-    },
-  },
-];
-
-const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () => {
+const IssueListView = () => {
+  const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: { name: string; status: string[]; severity: string[] } = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -194,8 +204,39 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
   // State to track expanded rows
   const [expandedIssues, setExpandedIssues] = React.useState<Set<number>>(new Set());
 
-  // Mock loading states - replace with actual data fetching
-  const [issues] = React.useState<typeof mockIssues>(mockIssues);
+  const { data: issuesData, isLoading, error } = useIssues({ namespace });
+  const issues = React.useMemo(() => {
+    if (isLoading || error) return [];
+    return mockIssuesTest.map((issue) => {
+      const relatedIssues = issue.relatedFrom
+        .concat(issue.relatedTo)
+        .map((related) => [related.source, related.target])
+        .flat()
+        .reduce((acc, cur) => {
+          if (!acc.some((item) => item.id === cur.id)) {
+            acc.push(cur);
+          }
+          return acc;
+        }, []);
+      const groups: Record<string, number> = relatedIssues.reduce((acc, cur) => {
+        if (!acc[cur.scope.resourceType]) {
+          acc[cur.scope.resourceType] = 1;
+        }
+        acc[cur.scope.resourceType]++;
+        return acc;
+      }, {});
+      return {
+        ...issue,
+        scope: {
+          resourceType:
+            Object.keys(groups).length > 1
+              ? `${Object.keys(groups).length} groups`
+              : `${Object.values(groups)[0]} ${Object.keys(groups)[0]}${Object.values(groups)[0] > 1 ? 's' : ''}`,
+          data: relatedIssues,
+        },
+      };
+    });
+  }, [issuesData, isLoading]);
   const issuesLoaded = true;
   const issuesError = null;
 
@@ -237,7 +278,7 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
   };
 
   const NoDataEmptyMessage = () => (
-    <AppEmptyState emptyStateImg={undefined} title="No issues found">
+    <AppEmptyState emptyStateImg={emptyStateImgUrl} title="No issues found">
       <EmptyStateBody>
         No issues have been detected for this application. Issues can include security
         vulnerabilities, build failures, performance problems, and other concerns that need
@@ -304,7 +345,7 @@ const IssueListView: React.FC<React.PropsWithChildren<IssueListViewProps>> = () 
           Header={IssuesListHeader}
           Row={IssuesListRow}
           loaded={issuesLoaded}
-          getRowProps={(obj: (typeof mockIssues)[0]) => ({
+          getRowProps={(obj: Issue) => ({
             id: `${obj.id}-issue-list-item`,
             'aria-label': obj.title,
           })}

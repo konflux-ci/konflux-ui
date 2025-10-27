@@ -51,7 +51,7 @@ export const IssuesListExpandedRow: React.FC<Props> = ({ obj: issue }) => {
       <TableData className={issuesExpandedTableColumnClasses.issue} data-test="issues-list-item">
         <Flex direction={{ default: 'column' }}>
           <FlexItem data-test="issues-list-item-title" style={{ minWidth: '30%' }}>
-            {issue.name}
+            {issue.title}
           </FlexItem>
         </Flex>
       </TableData>
@@ -80,8 +80,8 @@ export const IssuesListExpandedRow: React.FC<Props> = ({ obj: issue }) => {
         <Flex direction={{ default: 'column' }}>
           {issue.links?.length
             ? issue.links.map((link, index) => (
-                <FlexItem key={`${link}-${index}`}>
-                  <ExternalLink href={link} />
+                <FlexItem key={`${link.id}-${index}`}>
+                  <ExternalLink href={link.url} />
                 </FlexItem>
               ))
             : '-'}
