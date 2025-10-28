@@ -10,11 +10,11 @@ import {
 } from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { FeatureFlagIndicator } from '../../../../feature-flags/FeatureFlagIndicator';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
+import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { BaseTextFilterToolbar } from '../../../Filter/toolbars/BaseTextFIlterToolbar';

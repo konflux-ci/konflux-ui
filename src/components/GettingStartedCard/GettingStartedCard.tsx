@@ -11,7 +11,7 @@ import {
 } from '@patternfly/react-core';
 import { CloseIcon } from '@patternfly/react-icons/dist/esm/icons/close-icon';
 import classnames from 'classnames';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { useLocalStorage } from '../../shared/hooks/useLocalStorage';
 import './GettingStartedCard.scss';
 
 type GettingStartedCardProps = {

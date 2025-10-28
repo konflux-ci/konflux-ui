@@ -1,5 +1,6 @@
 import { screen } from '@testing-library/react';
 import { HttpError } from '~/k8s/error';
+import { NAMESPACE_VISIBILITY_LABEL } from '~/shared/const';
 import NamespaceListRow from '.././NamespaceListRow';
 import { useApplications } from '../../../hooks/useApplications';
 import { NamespaceKind } from '../../../types';
@@ -73,5 +74,49 @@ describe('NamespaceListRow', () => {
     ]);
     routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
     expect(screen.getByText('Failed to load applications')).toBeInTheDocument();
+  });
+
+  it('should display "N/A" for visibility when no visibility label is present', () => {
+    (useApplications as jest.Mock).mockReturnValue([[], true]);
+
+    routerRenderer(<NamespaceListRow columns={[]} obj={mockNamespace} />);
+
+    expect(screen.getByText('N/A')).toBeInTheDocument();
+  });
+
+  it('should display "Public" for visibility when namespace has public visibility label', () => {
+    const publicNamespace = {
+      ...mockNamespace,
+      metadata: {
+        ...mockNamespace.metadata,
+        labels: {
+          [NAMESPACE_VISIBILITY_LABEL]: 'public',
+        },
+      },
+    };
+
+    (useApplications as jest.Mock).mockReturnValue([[], true]);
+
+    routerRenderer(<NamespaceListRow columns={[]} obj={publicNamespace} />);
+
+    expect(screen.getByText('Public')).toBeInTheDocument();
+  });
+
+  it('should display "Private" for visibility when namespace has private visibility label', () => {
+    const privateNamespace = {
+      ...mockNamespace,
+      metadata: {
+        ...mockNamespace.metadata,
+        labels: {
+          [NAMESPACE_VISIBILITY_LABEL]: 'private',
+        },
+      },
+    };
+
+    (useApplications as jest.Mock).mockReturnValue([[], true]);
+
+    routerRenderer(<NamespaceListRow columns={[]} obj={privateNamespace} />);
+
+    expect(screen.getByText('Private')).toBeInTheDocument();
   });
 });
