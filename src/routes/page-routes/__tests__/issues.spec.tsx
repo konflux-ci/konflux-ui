@@ -2,6 +2,25 @@ import React from 'react';
 import { ISSUES_PATH } from '../../paths';
 import issuesRoutes from '../issues';
 
+// Type definitions matching the actual React Router route objects
+type BaseRoute = {
+  loader?: () => boolean;
+  lazy?: () => Promise<{ Component: React.FunctionComponent<Record<string, never>> }>;
+  errorElement?: JSX.Element;
+};
+
+type IndexRoute = BaseRoute & {
+  index: boolean;
+  path?: undefined;
+};
+
+type PathRoute = BaseRoute & {
+  path: string;
+  index?: undefined;
+};
+
+type ChildRoute = IndexRoute | PathRoute;
+
 // Mock the RouteErrorBoundary
 jest.mock('../../RouteErrorBoundary', () => ({
   RouteErrorBoundry: () => <div data-testid="error-boundary">Error Boundary</div>,
@@ -21,9 +40,9 @@ describe('Issues Routes Configuration', () => {
   describe('main issues route', () => {
     let mainRoute: {
       path: string;
-      lazy: () => Promise<{ Component: React.ComponentType }>;
-      errorElement: React.ReactNode;
-      children: unknown[];
+      lazy: () => Promise<{ Component: React.FunctionComponent<Record<string, never>> }>;
+      errorElement: JSX.Element;
+      children: ChildRoute[];
     };
 
     beforeEach(() => {
@@ -57,16 +76,13 @@ describe('Issues Routes Configuration', () => {
   });
 
   describe('overview child route', () => {
-    let overviewRoute: {
-      index: boolean;
-      loader: () => unknown;
-      lazy: () => Promise<{ Component: React.ComponentType }>;
-      errorElement: React.ReactNode;
-    };
+    let overviewRoute: IndexRoute;
 
     beforeEach(() => {
       const [mainRoute] = issuesRoutes;
-      [overviewRoute] = mainRoute.children;
+      const [firstChild] = mainRoute.children;
+      // Type assertion: we know the first child is an index route
+      overviewRoute = firstChild as IndexRoute;
     });
 
     it('should be an index route', () => {
@@ -96,16 +112,13 @@ describe('Issues Routes Configuration', () => {
   });
 
   describe('list child route', () => {
-    let listRoute: {
-      path: string;
-      loader: () => unknown;
-      lazy: () => Promise<{ Component: React.ComponentType }>;
-      errorElement: React.ReactNode;
-    };
+    let listRoute: PathRoute;
 
     beforeEach(() => {
       const [mainRoute] = issuesRoutes;
-      [, listRoute] = mainRoute.children;
+      const [, secondChild] = mainRoute.children;
+      // Type assertion: we know the second child is a path route
+      listRoute = secondChild as PathRoute;
     });
 
     it('should have correct path', () => {
@@ -137,14 +150,18 @@ describe('Issues Routes Configuration', () => {
   describe('route integration', () => {
     it('should use the same loader for both child routes', () => {
       const [mainRoute] = issuesRoutes;
-      const [overviewRoute, listRoute] = mainRoute.children;
+      const [firstChild, secondChild] = mainRoute.children;
+      const overviewRoute = firstChild as IndexRoute;
+      const listRoute = secondChild as PathRoute;
 
       expect(overviewRoute.loader).toBe(listRoute.loader);
     });
 
     it('should have error boundaries for all routes', () => {
       const [mainRoute] = issuesRoutes;
-      const [overviewRoute, listRoute] = mainRoute.children;
+      const [firstChild, secondChild] = mainRoute.children;
+      const overviewRoute = firstChild as IndexRoute;
+      const listRoute = secondChild as PathRoute;
 
       expect(mainRoute.errorElement).toBeDefined();
       expect(overviewRoute.errorElement).toBeDefined();
@@ -153,10 +170,12 @@ describe('Issues Routes Configuration', () => {
 
     it('should call loader functions without errors', () => {
       const [mainRoute] = issuesRoutes;
-      const [overviewRoute, listRoute] = mainRoute.children;
+      const [firstChild, secondChild] = mainRoute.children;
+      const overviewRoute = firstChild as IndexRoute;
+      const listRoute = secondChild as PathRoute;
 
-      expect(() => overviewRoute.loader()).not.toThrow();
-      expect(() => listRoute.loader()).not.toThrow();
+      expect(() => overviewRoute.loader?.()).not.toThrow();
+      expect(() => listRoute.loader?.()).not.toThrow();
     });
   });
 });
