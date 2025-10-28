@@ -7,12 +7,12 @@ import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import { Table, useDeepCompareMemoize } from '~/shared';
+import emptyStateImgUrl from '~/shared/assets/Not-found.svg';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import emptyStateImgUrl from '../../../shared/assets/Not-found.svg';
 import IssuesListExpandedHeader from './IssuesListExpandedHeader';
 import { IssuesListExpandedRow } from './IssuesListExpandedRow';
 import IssuesListHeader from './IssuesListHeader';
@@ -35,18 +35,22 @@ const IssueListView = () => {
 
   const { data: issuesData, isLoading, error } = useIssues({ namespace });
   const issues = React.useMemo(() => {
-    if (isLoading || error) return [];
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+      return [];
+    }
+    if (isLoading) return [];
     return issuesData.data.map((issue) => {
       const relatedIssues = issue.relatedFrom
         .concat(issue.relatedTo)
-        .map((related) => [related.source, related.target])
-        .flat()
+        .flatMap((related) => [related.source, related.target])
         .reduce((acc, cur) => {
           if (!acc.some((item) => item.id === cur.id)) {
             acc.push(cur);
           }
           return acc;
-        }, []);
+        }, [] as Issue[]);
       const groups: Record<string, number> = relatedIssues.reduce((acc, cur) => {
         if (!acc[cur.scope.resourceType]) {
           acc[cur.scope.resourceType] = 0;
