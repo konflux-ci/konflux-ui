@@ -1,5 +1,6 @@
 const CONDITIONS = {
   KUBEARCHIVE: 'isKubearchiveEnabled',
+  KITESERVICE: 'isKiteServiceEnabled',
   STAGING: 'isStagingCluster',
 } as const;
 

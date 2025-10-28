@@ -15,6 +15,10 @@ export const IMPORT_PATH = WORKSPACE_PATH.extend('import');
 
 export const APPLICATION_LIST_PATH = WORKSPACE_PATH.extend(`applications`);
 
+export const ISSUES_PATH = WORKSPACE_PATH.extend(`issues`);
+
+export const ISSUES_LIST_PATH = ISSUES_PATH.extend(`list`);
+
 export const SECRET_LIST_PATH = WORKSPACE_PATH.extend(`secrets`);
 
 export const SECRET_CREATE_PATH = SECRET_LIST_PATH.extend('create');

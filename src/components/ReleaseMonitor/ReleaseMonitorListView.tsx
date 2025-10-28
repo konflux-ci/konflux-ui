@@ -13,7 +13,7 @@ import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { useSortedResources } from '~/hooks/useSortedResources';
-import { Table, useDeepCompareMemoize } from '~/shared';
+import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -31,6 +31,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+
   const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
     return {
       name: filters?.name || '',
@@ -39,12 +40,11 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       releasePlan: filters?.releasePlan || [],
       namespace: filters?.namespace || [],
       component: filters?.component || [],
+      showLatest: filters?.showLatest || false,
     } as MonitoredReleasesFilterState;
   };
 
-  const filters: MonitoredReleasesFilterState = useDeepCompareMemoize(
-    parseMonitoredFilters(unparsedFilters),
-  );
+  const filters: MonitoredReleasesFilterState = parseMonitoredFilters(unparsedFilters);
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
     SortableHeaders.completionTime,
@@ -103,14 +103,16 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     }
   }, [loaded, namespaces]);
 
-  const sortedMonitoredReleases = useSortedResources(
-    releases,
-    activeSortIndex,
-    activeSortDirection,
-    sortPaths,
-  );
-
   const filterOptions = React.useMemo(() => {
+    if (releases.length === 0 && namespaces.length === 0) {
+      return {
+        statusOptions: {},
+        applicationOptions: {},
+        releasePlanOptions: {},
+        namespaceOptions: {},
+        componentOptions: {},
+      };
+    }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
     const applicationOptions = createFilterObj(
       releases,
@@ -122,10 +124,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const applicationFilterOptions =
       noApplication > 0
         ? {
-          'No application': noApplication,
-          [MENU_DIVIDER]: 1,
-          ...applicationOptions,
-        }
+            'No application': noApplication,
+            [MENU_DIVIDER]: 1,
+            ...applicationOptions,
+          }
         : applicationOptions;
 
     const componentOptions = createFilterObj(
@@ -138,10 +140,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const componentFilterOptions =
       noComponent > 0
         ? {
-          'No component': noComponent,
-          [MENU_DIVIDER]: 1,
-          ...componentOptions,
-        }
+            'No component': noComponent,
+            [MENU_DIVIDER]: 1,
+            ...componentOptions,
+          }
         : componentOptions;
 
     return {
@@ -153,9 +155,50 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     };
   }, [releases, namespaces]);
 
-  const filteredMRs = React.useMemo(
-    () => filterMonitoredReleases(sortedMonitoredReleases, filters),
-    [sortedMonitoredReleases, filters],
+  const filteredData = React.useMemo(() => {
+    let filtered = filterMonitoredReleases(releases, filters);
+
+    if (filters.showLatest) {
+      const { latestReleasesByComponent, releasesWithoutComponent } = filtered.reduce(
+        (acc, release) => {
+          const componentName = release.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+
+          if (componentName) {
+            const existing = acc.latestReleasesByComponent[componentName];
+            if (
+              !existing ||
+              new Date(existing.metadata.creationTimestamp) <
+                new Date(release.metadata.creationTimestamp)
+            ) {
+              acc.latestReleasesByComponent[componentName] = release;
+            }
+          } else {
+            acc.releasesWithoutComponent.push(release);
+          }
+
+          return acc;
+        },
+        {
+          latestReleasesByComponent: {} as Record<string, MonitoredReleaseKind>,
+          releasesWithoutComponent: [] as MonitoredReleaseKind[],
+        },
+      );
+
+      // Use map to merge latest component releases and untagged ones
+      filtered = [
+        ...Object.values(latestReleasesByComponent),
+        ...releasesWithoutComponent.map((r) => r),
+      ];
+    }
+
+    return filtered;
+  }, [releases, filters]);
+
+  const sortedFilteredData = useSortedResources(
+    filteredData,
+    activeSortIndex,
+    activeSortDirection,
+    sortPaths,
   );
 
   const EmptyMsg = React.useCallback(
@@ -173,7 +216,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     application.length > 0 ||
     releasePlan.length > 0 ||
     namespace.length > 0 ||
-    component.length > 0;
+    component.length > 0 ||
+    filters.showLatest;
 
   return (
     <PageLayout
@@ -193,7 +237,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
             onError={handleError}
           />
         ))}
-      {(isFiltered || sortedMonitoredReleases.length > 0) && (
+      {(isFiltered || releases.length > 0) && (
         <MonitoredReleasesFilterToolbar
           filters={filters}
           setFilters={setFilters}
@@ -207,8 +251,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       )}
 
       <Table
-        data={filteredMRs}
-        unfilteredData={sortedMonitoredReleases}
+        data={sortedFilteredData}
+        unfilteredData={releases}
         EmptyMsg={EmptyMsg}
         NoDataEmptyMsg={MonitoredReleaseEmptyState}
         aria-label="Release List"

@@ -1,5 +1,7 @@
 import React from 'react';
 import { Divider, DrilldownMenu, MenuItem } from '@patternfly/react-core';
+import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
+import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
 import { ContextMenuItem } from './ContextSwitcher';
 
 export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: ContextMenuItem }>> = ({
@@ -27,7 +29,23 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
     );
   }
 
-  return <MenuItem itemId={item.key}>{item.name}</MenuItem>;
+  const VisibilityIcon = item.visibility === 'public' ? LockOpenIcon : LockIcon;
+  return (
+    <MenuItem itemId={item.key}>
+      {item.visibility && (
+        <VisibilityIcon
+          data-test={`visibility-icon-${item.visibility}`}
+          role="img"
+          aria-label={`${item.visibility} namespace`}
+          style={{
+            marginRight: 'var(--pf-v5-global--spacer--sm)',
+            color: item.visibility === 'Unknown' ? 'transparent' : undefined,
+          }}
+        />
+      )}
+      {item.name}
+    </MenuItem>
+  );
 };
 
 export const filteredItems = (items: ContextMenuItem[], filter: string) => {

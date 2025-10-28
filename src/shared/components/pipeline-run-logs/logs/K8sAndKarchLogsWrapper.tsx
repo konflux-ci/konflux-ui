@@ -6,6 +6,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { TaskRunKind } from '~/types';
 import { WatchK8sResource } from '~/types/k8s';
 import { PodKind } from '../../types';
+import { LOGS_QUERY_OPTIONS } from './const';
 import { MultiStreamLogs } from './MultiStreamLogs';
 
 type K8sAndKarchLogWrapperProps = {
@@ -31,14 +32,13 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
     }),
     [resource.name, resource.namespace],
   );
-  const queryOptions = React.useMemo(() => ({ retry: false }), []);
 
   const {
     data: obj,
     source,
     isLoading,
     fetchError,
-  } = useK8sAndKarchResource<PodKind>(resourceInit, queryOptions, true);
+  } = useK8sAndKarchResource<PodKind>(resourceInit, LOGS_QUERY_OPTIONS, true);
 
   if (isLoading) {
     return (
