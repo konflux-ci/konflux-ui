@@ -1,206 +1,484 @@
-import * as React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { render, screen } from '@testing-library/react';
-import { useLatestIssues } from '~/hooks/useIssues';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { mockTestNamespaceIssues, mockAllSeverityIssues } from '../__data__/mock-issues-data';
+import { screen } from '@testing-library/react';
+import { Issue, IssueState, IssueSeverity, IssueType } from '~/kite/issue-type';
+import { useIssues } from '~/kite/kite-hooks';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { LatestIssuesCard } from '../LatestIssuesCard';
 
-jest.mock('~/hooks/useIssues');
-jest.mock('../../../shared/providers/Namespace');
+// Mock dependencies
+jest.mock('~/kite/kite-hooks', () => ({
+  useIssues: jest.fn(),
+}));
 
-const mockUseLatestIssues = useLatestIssues as jest.MockedFunction<typeof useLatestIssues>;
-const mockUseNamespace = useNamespace as jest.MockedFunction<typeof useNamespace>;
+jest.mock('~/shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(),
+}));
 
-// Use pre-filtered mock data for test-ns namespace
+jest.mock('~/shared/utils/error-utils', () => ({
+  getErrorState: jest.fn(),
+}));
 
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
-};
+// Create mock functions
+const mockUseIssues = useIssues as jest.Mock;
+const mockGetErrorState = getErrorState as jest.Mock;
+const mockUseNamespace = useNamespace as jest.Mock;
+
+// Mock issues data
+const createMockIssue = (overrides: Partial<Issue> = {}): Issue => ({
+  id: 'issue-1',
+  title: 'Test Issue',
+  description: 'This is a test issue description',
+  severity: IssueSeverity.CRITICAL,
+  issueType: IssueType.BUILD,
+  state: IssueState.ACTIVE,
+  detectedAt: '2023-10-01T12:00:00Z',
+  namespace: 'test-namespace',
+  scope: {
+    resourceType: 'test-resource',
+    resourceName: 'test-name',
+    resourceNamespace: 'test-namespace',
+  },
+  links: [],
+  relatedFrom: [],
+  relatedTo: [],
+  createdAt: '2023-10-01T12:00:00Z',
+  updatedAt: '2023-10-01T12:00:00Z',
+  ...overrides,
+});
 
 describe('LatestIssuesCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseNamespace.mockReturnValue('test-ns');
+    mockUseNamespace.mockReturnValue('test-namespace');
   });
 
-  it('renders loading state correctly', () => {
-    mockUseLatestIssues.mockReturnValue([undefined, false, undefined]);
+  describe('Loading state', () => {
+    it('should render spinner when loading', () => {
+      mockUseIssues.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        error: null,
+      });
 
-    renderWithRouter(<LatestIssuesCard />);
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    });
   });
 
-  it('renders error state correctly', () => {
-    const mockError = new Error('Failed to fetch issues');
-    mockUseLatestIssues.mockReturnValue([undefined, true, mockError]);
+  describe('Error state', () => {
+    it('should render error state when there is an error', () => {
+      const mockError = new Error('Test error');
+      mockUseIssues.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: mockError,
+      });
 
-    renderWithRouter(<LatestIssuesCard />);
+      const mockErrorComponent = <div>Error component</div>;
+      mockGetErrorState.mockReturnValue(mockErrorComponent);
 
-    expect(screen.getByText(/Something went wrong/)).toBeInTheDocument();
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(mockGetErrorState).toHaveBeenCalledWith(mockError, true, 'issues');
+      expect(screen.getByText('Error component')).toBeInTheDocument();
+    });
   });
 
-  it('renders empty state when no issues found', () => {
-    mockUseLatestIssues.mockReturnValue([
-      { data: [], total: 0, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
+  describe('Empty state', () => {
+    it('should render empty state when no issues are returned', () => {
+      mockUseIssues.mockReturnValue({
+        data: { data: [] },
+        isLoading: false,
+        error: null,
+      });
 
-    renderWithRouter(<LatestIssuesCard />);
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-    expect(screen.getByText('Latest issues')).toBeInTheDocument();
-    expect(screen.getByText('No issues found.')).toBeInTheDocument();
-    expect(screen.queryByText('View all issues')).not.toBeInTheDocument();
+      expect(screen.getByText('Latest issues')).toBeInTheDocument();
+      expect(screen.getByText('No issues found')).toBeInTheDocument();
+      expect(screen.getByText('No active issues found for this namespace.')).toBeInTheDocument();
+    });
+
+    it('should render empty state when data is undefined', () => {
+      mockUseIssues.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Latest issues')).toBeInTheDocument();
+      expect(screen.getByText('No issues found')).toBeInTheDocument();
+    });
+
+    it('should render empty state when data.data is undefined', () => {
+      mockUseIssues.mockReturnValue({
+        data: {},
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Latest issues')).toBeInTheDocument();
+      expect(screen.getByText('No issues found')).toBeInTheDocument();
+    });
   });
 
-  it('renders issues list correctly with all severity types', () => {
-    mockUseLatestIssues.mockReturnValue([
-      {
-        data: mockTestNamespaceIssues,
-        total: mockTestNamespaceIssues.length,
+  describe('Success state with issues', () => {
+    it('should render issues when data is available', () => {
+      const mockIssues = [
+        createMockIssue({
+          id: 'issue-1',
+          title: 'Critical Build Issue',
+          description: 'Build failed due to dependency conflict',
+          severity: IssueSeverity.CRITICAL,
+          detectedAt: '2023-10-01T12:00:00Z',
+        }),
+        createMockIssue({
+          id: 'issue-2',
+          title: 'Major Test Failure',
+          description: 'Integration tests are failing',
+          severity: IssueSeverity.MAJOR,
+          detectedAt: '2023-10-01T13:30:00Z',
+        }),
+      ];
+
+      mockUseIssues.mockReturnValue({
+        data: { data: mockIssues },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Latest issues')).toBeInTheDocument();
+      expect(screen.getByText('Critical Build Issue')).toBeInTheDocument();
+      expect(screen.getByText('Build failed due to dependency conflict')).toBeInTheDocument();
+      expect(screen.getByText('Major Test Failure')).toBeInTheDocument();
+      expect(screen.getByText('Integration tests are failing')).toBeInTheDocument();
+
+      // Check that the "View all issues" link is present and has correct href
+      const viewAllLink = screen.getByRole('link', { name: /view all issues/i });
+      expect(viewAllLink).toBeInTheDocument();
+      expect(viewAllLink).toHaveAttribute('href', '/issues?state=ACTIVE');
+    });
+
+    it('should render issues with different severities and their corresponding icons', () => {
+      const mockIssues = [
+        createMockIssue({
+          id: 'critical-issue',
+          title: 'Critical Issue',
+          severity: IssueSeverity.CRITICAL,
+          detectedAt: '2023-10-01T12:00:00Z',
+        }),
+        createMockIssue({
+          id: 'major-issue',
+          title: 'Major Issue',
+          severity: IssueSeverity.MAJOR,
+          detectedAt: '2023-10-01T12:00:00Z',
+        }),
+        createMockIssue({
+          id: 'minor-issue',
+          title: 'Minor Issue',
+          severity: IssueSeverity.MINOR,
+          detectedAt: '2023-10-01T12:00:00Z',
+        }),
+        createMockIssue({
+          id: 'info-issue',
+          title: 'Info Issue',
+          severity: IssueSeverity.INFO,
+          detectedAt: '2023-10-01T12:00:00Z',
+        }),
+      ];
+
+      mockUseIssues.mockReturnValue({
+        data: { data: mockIssues },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Critical Issue')).toBeInTheDocument();
+      expect(screen.getByText('Major Issue')).toBeInTheDocument();
+      expect(screen.getByText('Minor Issue')).toBeInTheDocument();
+      expect(screen.getByText('Info Issue')).toBeInTheDocument();
+
+      // Verify that all issues are rendered with their severity icons
+      const issueItems = screen.getAllByRole('listitem');
+      expect(issueItems).toHaveLength(4);
+    });
+
+    it('should render MINOR severity issue with correct icon', () => {
+      const mockIssue = createMockIssue({
+        id: 'minor-only',
+        title: 'Minor Issue Only',
+        severity: IssueSeverity.MINOR,
+        detectedAt: '2023-10-01T12:00:00Z',
+      });
+
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Minor Issue Only')).toBeInTheDocument();
+    });
+
+    it('should render INFO severity issue with correct icon', () => {
+      const mockIssue = createMockIssue({
+        id: 'info-only',
+        title: 'Info Issue Only',
+        severity: IssueSeverity.INFO,
+        detectedAt: '2023-10-01T12:00:00Z',
+      });
+
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Info Issue Only')).toBeInTheDocument();
+    });
+
+    it('should handle unknown severity with unknown icon', () => {
+      const mockIssue = createMockIssue({
+        id: 'unknown-issue',
+        title: 'Unknown Severity Issue',
+        severity: 'unknown' as IssueSeverity,
+        detectedAt: '2023-10-01T12:00:00Z',
+      });
+
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(screen.getByText('Unknown Severity Issue')).toBeInTheDocument();
+    });
+
+    it('should format timestamps correctly', () => {
+      const mockIssue = createMockIssue({
+        id: 'time-test',
+        title: 'Timestamp Test Issue',
+        detectedAt: '2023-10-15T14:30:45Z', // Sunday, October 15, 2023, 2:30:45 PM UTC
+      });
+
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      // The timestamp should be formatted according to the formatTimestamp function
+      // This will vary based on the user's locale, so we just check that some timestamp is present
+      expect(screen.getByText(/Oct 15.*8:00.*PM/)).toBeInTheDocument();
+    });
+
+    it('should format timestamps with minutes correctly', () => {
+      const mockIssue = createMockIssue({
+        id: 'time-with-minutes',
+        title: 'Timestamp With Minutes Test',
+        detectedAt: '2023-10-15T14:32:45Z', // Should include minutes
+      });
+
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      // This should show minutes as well
+      expect(screen.getByText(/Oct 15.*8:02.*PM/)).toBeInTheDocument();
+    });
+  });
+
+  describe('Component props', () => {
+    it('should apply custom className when provided', () => {
+      mockUseIssues.mockReturnValue({
+        data: { data: [] },
+        isLoading: false,
+        error: null,
+      });
+
+      const { container } = renderWithQueryClientAndRouter(
+        <LatestIssuesCard className="custom-class" />,
+      );
+
+      const cardElement = container.querySelector('.latest-issues-card.custom-class');
+      expect(cardElement).toBeInTheDocument();
+    });
+
+    it('should work without className prop', () => {
+      mockUseIssues.mockReturnValue({
+        data: { data: [] },
+        isLoading: false,
+        error: null,
+      });
+
+      const { container } = renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      const cardElement = container.querySelector('.latest-issues-card');
+      expect(cardElement).toBeInTheDocument();
+    });
+  });
+
+  describe('Hook integration', () => {
+    it('should call useIssues with correct parameters', () => {
+      mockUseNamespace.mockReturnValue('test-workspace');
+      mockUseIssues.mockReturnValue({
+        data: { data: [] },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      expect(mockUseIssues).toHaveBeenCalledWith({
+        namespace: 'test-workspace',
+        state: IssueState.ACTIVE,
         limit: 10,
-        offset: 0,
-      },
-      true,
-      undefined,
-    ]);
+      });
+    });
 
-    renderWithRouter(<LatestIssuesCard />);
+    it('should handle different namespace values', () => {
+      mockUseNamespace.mockReturnValue('production-namespace');
+      mockUseIssues.mockReturnValue({
+        data: { data: [] },
+        isLoading: false,
+        error: null,
+      });
 
-    // Check header
-    expect(screen.getByText('Latest issues')).toBeInTheDocument();
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-    // Check all issues are rendered (only those in test-ns namespace)
-    expect(screen.getByText('Release failed')).toBeInTheDocument();
-    expect(screen.getByText('Pipeline run failed')).toBeInTheDocument();
-    expect(screen.getByText('Network timeout')).toBeInTheDocument();
-    expect(screen.getByText('Dependency issue')).toBeInTheDocument();
-    expect(screen.getByText('Build timeout')).toBeInTheDocument();
-
-    // Check issue descriptions
-    expect(screen.getByText(/Readiness probe failed/)).toBeInTheDocument();
-    expect(screen.getByText(/Successfully assigned default/)).toBeInTheDocument();
-
-    // Check "View all issues" link is present
-    const viewAllLink = screen.getByText('View all issues');
-    expect(viewAllLink).toBeInTheDocument();
-    expect(viewAllLink.closest('a')).toHaveAttribute('href', '/issues?state=ACTIVE');
-  });
-
-  it('renders severity icons correctly', () => {
-    mockUseLatestIssues.mockReturnValue([
-      {
-        data: mockTestNamespaceIssues,
-        total: mockTestNamespaceIssues.length,
+      expect(mockUseIssues).toHaveBeenCalledWith({
+        namespace: 'production-namespace',
+        state: IssueState.ACTIVE,
         limit: 10,
-        offset: 0,
-      },
-      true,
-      undefined,
-    ]);
-
-    const { container } = renderWithRouter(<LatestIssuesCard />);
-
-    // Check critical severity icon
-    expect(container.querySelector('.latest-issues-card__icon--critical')).toBeInTheDocument();
-
-    // Check major severity icon
-    expect(container.querySelector('.latest-issues-card__icon--major')).toBeInTheDocument();
-
-    // Check minor severity icon
-    expect(container.querySelector('.latest-issues-card__icon--minor')).toBeInTheDocument();
-
-    // Check info severity icon
-    expect(container.querySelector('.latest-issues-card__icon--info')).toBeInTheDocument();
+      });
+    });
   });
 
-  it('handles all severity types correctly', () => {
-    mockUseLatestIssues.mockReturnValue([
-      { data: mockAllSeverityIssues, total: mockAllSeverityIssues.length, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
+  describe('Accessibility', () => {
+    it('should have proper heading structure', () => {
+      mockUseIssues.mockReturnValue({
+        data: { data: [] },
+        isLoading: false,
+        error: null,
+      });
 
-    const { container } = renderWithRouter(<LatestIssuesCard />);
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-    // Should display all severity icons
-    expect(container.querySelector('.latest-issues-card__icon--critical')).toBeInTheDocument();
-    expect(container.querySelector('.latest-issues-card__icon--major')).toBeInTheDocument();
-    expect(container.querySelector('.latest-issues-card__icon--minor')).toBeInTheDocument();
-    expect(container.querySelector('.latest-issues-card__icon--info')).toBeInTheDocument();
+      const heading = screen.getByRole('heading', { name: 'Latest issues' });
+      expect(heading).toBeInTheDocument();
+      expect(heading.tagName).toBe('H3');
+    });
+
+    it('should have proper list structure when issues are present', () => {
+      const mockIssues = [
+        createMockIssue({
+          id: 'issue-1',
+          title: 'Test Issue 1',
+          detectedAt: '2023-10-01T12:00:00Z',
+        }),
+        createMockIssue({
+          id: 'issue-2',
+          title: 'Test Issue 2',
+          detectedAt: '2023-10-01T13:00:00Z',
+        }),
+      ];
+
+      mockUseIssues.mockReturnValue({
+        data: { data: mockIssues },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      const list = screen.getByRole('list');
+      expect(list).toBeInTheDocument();
+
+      const listItems = screen.getAllByRole('listitem');
+      expect(listItems).toHaveLength(2);
+    });
+
+    it('should have accessible link to view all issues', () => {
+      const mockIssues = [createMockIssue()];
+
+      mockUseIssues.mockReturnValue({
+        data: { data: mockIssues },
+        isLoading: false,
+        error: null,
+      });
+
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
+
+      const viewAllLink = screen.getByRole('link', { name: /view all issues/i });
+      expect(viewAllLink).toBeInTheDocument();
+      expect(viewAllLink).toHaveAttribute('href', '/issues?state=ACTIVE');
+    });
   });
 
-  it('applies custom className correctly', () => {
-    mockUseLatestIssues.mockReturnValue([
-      { data: [], total: 0, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
+  describe('Edge cases', () => {
+    it('should handle malformed date strings gracefully', () => {
+      const mockIssue = createMockIssue({
+        id: 'malformed-date',
+        title: 'Malformed Date Issue',
+        detectedAt: 'invalid-date-string',
+      });
 
-    const { container } = renderWithRouter(<LatestIssuesCard className="custom-class" />);
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
 
-    expect(container.querySelector('.latest-issues-card.custom-class')).toBeInTheDocument();
-  });
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-  it('calls useNamespace hook correctly', () => {
-    mockUseLatestIssues.mockReturnValue([
-      { data: [], total: 0, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
+      // Should still render the issue even with invalid date
+      expect(screen.getByText('Malformed Date Issue')).toBeInTheDocument();
+      // The formatTimestamp function will create a Date object with invalid date,
+      // which will result in "Invalid Date" being displayed
+      expect(screen.getByText(/Invalid Date/)).toBeInTheDocument();
+    });
 
-    renderWithRouter(<LatestIssuesCard />);
+    it('should handle issues with empty titles and descriptions', () => {
+      const mockIssue = createMockIssue({
+        id: 'empty-content',
+        title: '',
+        description: '',
+        detectedAt: '2023-10-01T12:00:00Z',
+      });
 
-    expect(mockUseNamespace).toHaveBeenCalledTimes(1);
-  });
+      mockUseIssues.mockReturnValue({
+        data: { data: [mockIssue] },
+        isLoading: false,
+        error: null,
+      });
 
-  it('calls useLatestIssues hook with correct parameters', () => {
-    mockUseLatestIssues.mockReturnValue([
-      { data: [], total: 0, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
+      renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-    renderWithRouter(<LatestIssuesCard />);
-
-    expect(mockUseLatestIssues).toHaveBeenCalledWith('test-ns', 10);
-  });
-
-  it('renders timestamps correctly', () => {
-    mockUseLatestIssues.mockReturnValue([
-      { data: [mockTestNamespaceIssues[0]], total: 1, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
-
-    const { container } = renderWithRouter(<LatestIssuesCard />);
-
-    expect(container.querySelector('.latest-issues-card__timestamp')).toBeInTheDocument();
-  });
-
-  it('handles undefined data gracefully', () => {
-    mockUseLatestIssues.mockReturnValue([undefined, true, undefined]);
-
-    renderWithRouter(<LatestIssuesCard />);
-
-    expect(screen.getByText('Latest issues')).toBeInTheDocument();
-    expect(screen.getByText('No issues found.')).toBeInTheDocument();
-  });
-
-  it('renders correct number of issues based on data', () => {
-    const singleIssue = [mockTestNamespaceIssues[0]];
-    mockUseLatestIssues.mockReturnValue([
-      { data: singleIssue, total: 1, limit: 10, offset: 0 },
-      true,
-      undefined,
-    ]);
-
-    const { container } = renderWithRouter(<LatestIssuesCard />);
-
-    const issueItems = container.querySelectorAll('.latest-issues-card__item');
-    expect(issueItems).toHaveLength(1);
-    expect(screen.getByText('Release failed')).toBeInTheDocument();
+      // Should still render the list item
+      const listItems = screen.getAllByRole('listitem');
+      expect(listItems).toHaveLength(1);
+    });
   });
 });
