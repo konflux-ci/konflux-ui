@@ -1,6 +1,4 @@
 import { MatchExpression, Selector, WatchK8sResource } from '~/types/k8s';
-import { PipelineRunLabel } from '../consts/pipelinerun';
-import { createEquals } from '../k8s';
 
 export type KubearchiveFilterTransformSelector = Selector &
   Partial<{
@@ -33,13 +31,7 @@ export const convertFilterToKubearchiveSelectors = (
         .join(',')
     : undefined;
 
-  // Build matchExpressions (including commit filter)
-  const matchExpressions: MatchExpression[] = [
-    ...(filterBy.matchExpressions ?? []),
-    ...(filterBy.filterByCommit
-      ? [createEquals(PipelineRunLabel.COMMIT_LABEL, filterBy.filterByCommit)]
-      : []),
-  ];
+  const matchExpressions: MatchExpression[] = [...(filterBy.matchExpressions ?? [])];
 
   // Build the final selector (excluding custom filter fields)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
