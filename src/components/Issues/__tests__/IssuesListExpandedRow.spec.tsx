@@ -1,5 +1,6 @@
-import { screen } from '@testing-library/react';
-import { Issue, IssueSeverity, IssueState, IssueType } from '~/kite/issue-type';
+import { screen, fireEvent } from '@testing-library/react';
+import { IssueSeverity, IssueState } from '~/kite/issue-type';
+import { createMockIssue } from '~/unit-test-utils/mock-issues';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { IssuesListExpandedRow } from '../IssuesListView/IssuesListExpandedRow';
 
@@ -12,36 +13,10 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-const createMockIssue = (overrides: Partial<Issue> = {}): Issue => ({
-  id: 'issue-1',
-  title: 'Test Issue',
-  description: 'Test description',
-  severity: IssueSeverity.CRITICAL,
-  issueType: IssueType.BUILD,
-  state: IssueState.ACTIVE,
-  detectedAt: '2024-01-01T00:00:00Z',
-  namespace: 'test-ns',
-  scope: {
-    resourceType: 'component',
-    resourceName: 'test-component',
-    resourceNamespace: 'test-ns',
-  },
-  links: [
-    {
-      id: 'link-1',
-      title: 'Link 1',
-      url: 'https://example.com/link1',
-      issueId: 'issue-1',
-    },
-  ],
-  relatedFrom: [],
-  relatedTo: [],
-  createdAt: '2024-01-01T00:00:00Z',
-  updatedAt: '2024-01-01T00:00:00Z',
-  ...overrides,
-});
-
 describe('IssuesListExpandedRow', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
   it('should render issue title', () => {
     const issue = createMockIssue({ title: 'Expanded Row Issue' });
 
@@ -212,7 +187,7 @@ describe('IssuesListExpandedRow', () => {
     expect(cells[4]?.textContent).toBe('-');
   });
 
-  it('should render multiple links', () => {
+  it('should show "View all" when there are 3 or more links', () => {
     const issue = createMockIssue({
       links: [
         {
@@ -236,7 +211,7 @@ describe('IssuesListExpandedRow', () => {
       ],
     });
 
-    const { container } = renderWithQueryClient(
+    renderWithQueryClient(
       <table>
         <tbody>
           <tr>
@@ -246,11 +221,13 @@ describe('IssuesListExpandedRow', () => {
       </table>,
     );
 
-    const links = container.querySelectorAll('a[href^="https://example.com"]');
-    expect(links.length).toBe(3);
-    expect(links[0]).toHaveAttribute('href', 'https://example.com/link1');
-    expect(links[1]).toHaveAttribute('href', 'https://example.com/link2');
-    expect(links[2]).toHaveAttribute('href', 'https://example.com/link3');
+    // With 3+ links, should show "View all" instead of individual links
+    expect(screen.getByText('View all')).toBeInTheDocument();
+
+    // Individual link titles should not be visible until modal is opened
+    expect(screen.queryByText('Link 1')).not.toBeInTheDocument();
+    expect(screen.queryByText('Link 2')).not.toBeInTheDocument();
+    expect(screen.queryByText('Link 3')).not.toBeInTheDocument();
   });
 
   it('should render dash when no links are provided', () => {
@@ -411,6 +388,163 @@ describe('IssuesListExpandedRow', () => {
 
     const links = container.querySelectorAll('a[href^="https://example.com"]');
     expect(links.length).toBe(1);
+  });
+
+  it('should show "View all" link when more than 2 links exist', () => {
+    const issue = createMockIssue({
+      links: [
+        {
+          id: 'link-1',
+          title: 'Link 1',
+          url: 'https://example.com/link1',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-2',
+          title: 'Link 2',
+          url: 'https://example.com/link2',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-3',
+          title: 'Link 3',
+          url: 'https://example.com/link3',
+          issueId: 'issue-1',
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <table>
+        <tbody>
+          <tr>
+            <IssuesListExpandedRow obj={issue} columns={[]} />
+          </tr>
+        </tbody>
+      </table>,
+    );
+
+    // Should show "View all" link instead of individual links
+    expect(screen.getByText('View all')).toBeInTheDocument();
+  });
+
+  it('should open modal when "View all" is clicked', () => {
+    const issue = createMockIssue({
+      links: [
+        {
+          id: 'link-1',
+          title: 'Link 1',
+          url: 'https://example.com/link1',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-2',
+          title: 'Link 2',
+          url: 'https://example.com/link2',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-3',
+          title: 'Link 3',
+          url: 'https://example.com/link3',
+          issueId: 'issue-1',
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <table>
+        <tbody>
+          <tr>
+            <IssuesListExpandedRow obj={issue} columns={[]} />
+          </tr>
+        </tbody>
+      </table>,
+    );
+
+    const viewAllLink = screen.getByText('View all');
+    fireEvent.click(viewAllLink);
+
+    // Modal should be open with title
+    expect(screen.getByText('All links')).toBeInTheDocument();
+  });
+
+  it('should display all links in modal when opened', () => {
+    const issue = createMockIssue({
+      links: [
+        {
+          id: 'link-1',
+          title: 'Link 1',
+          url: 'https://example.com/link1',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-2',
+          title: 'Link 2',
+          url: 'https://example.com/link2',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-3',
+          title: 'Link 3',
+          url: 'https://example.com/link3',
+          issueId: 'issue-1',
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <table>
+        <tbody>
+          <tr>
+            <IssuesListExpandedRow obj={issue} columns={[]} />
+          </tr>
+        </tbody>
+      </table>,
+    );
+
+    const viewAllLink = screen.getByText('View all');
+    fireEvent.click(viewAllLink);
+
+    // All links should be in the modal
+    expect(screen.getByText('Link 1')).toBeInTheDocument();
+    expect(screen.getByText('Link 2')).toBeInTheDocument();
+    expect(screen.getByText('Link 3')).toBeInTheDocument();
+  });
+
+  it('should render links directly when 2 or fewer links exist', () => {
+    const issue = createMockIssue({
+      links: [
+        {
+          id: 'link-1',
+          title: 'Link 1',
+          url: 'https://example.com/link1',
+          issueId: 'issue-1',
+        },
+        {
+          id: 'link-2',
+          title: 'Link 2',
+          url: 'https://example.com/link2',
+          issueId: 'issue-1',
+        },
+      ],
+    });
+
+    renderWithQueryClient(
+      <table>
+        <tbody>
+          <tr>
+            <IssuesListExpandedRow obj={issue} columns={[]} />
+          </tr>
+        </tbody>
+      </table>,
+    );
+
+    // Links should be rendered directly, not in a modal
+    expect(screen.getByText('Link 1')).toBeInTheDocument();
+    expect(screen.getByText('Link 2')).toBeInTheDocument();
+    // "View all" should not be shown
+    expect(screen.queryByText('View all')).not.toBeInTheDocument();
   });
 
   it('should render empty string description as falsy and return null', () => {
