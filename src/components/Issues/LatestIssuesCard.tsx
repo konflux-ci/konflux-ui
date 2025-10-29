@@ -7,33 +7,42 @@ import {
   CardBody,
   CardHeader,
   CardTitle,
+  EmptyStateBody,
   Flex,
   FlexItem,
   List,
   ListItem,
   Spinner,
-  Text,
 } from '@patternfly/react-core';
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
-import { ExclamationCircleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-circle-icon';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
-import { InfoCircleIcon } from '@patternfly/react-icons/dist/esm/icons/info-circle-icon';
-import { useLatestIssues } from '~/hooks/useIssues';
+import {
+  CriticalIcon,
+  HighIcon,
+  MediumIcon,
+  LowIcon,
+  UnknownIcon,
+} from '~/components/PipelineRun/ScanDetailStatus';
+import { Issue, IssueState, IssueSeverity } from '~/kite/issue-type';
+import { useIssues } from '~/kite/kite-hooks';
+import EmptySearchImgUrl from '~/shared/assets/Not-found.svg';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { Issue } from '~/types/issues';
 import { useNamespace } from '../../shared/providers/Namespace';
 import './LatestIssuesCard.scss';
 
-const SEVERITY_ICONS = {
-  critical: ExclamationCircleIcon,
-  major: ExclamationCircleIcon,
-  minor: ExclamationTriangleIcon,
-  info: InfoCircleIcon,
-} as const;
-
 const getSeverityIcon = (severity: Issue['severity']) => {
-  const IconComponent = SEVERITY_ICONS[severity] || InfoCircleIcon;
-  return <IconComponent className={`latest-issues-card__icon--${severity}`} />;
+  switch (severity) {
+    case IssueSeverity.CRITICAL:
+      return <CriticalIcon />;
+    case IssueSeverity.MAJOR:
+      return <HighIcon />;
+    case IssueSeverity.MINOR:
+      return <MediumIcon />;
+    case IssueSeverity.INFO:
+      return <LowIcon />;
+    default:
+      return <UnknownIcon />;
+  }
 };
 
 interface LatestIssuesCardProps {
@@ -53,18 +62,22 @@ const formatTimestamp = (dateString: string) => {
 
 export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className }) => {
   const namespace = useNamespace();
-  const [data, loaded, error] = useLatestIssues(namespace, 10);
+  const { data, isLoading, error } = useIssues({
+    namespace,
+    state: IssueState.ACTIVE,
+    limit: 10,
+  });
 
-  if (!loaded) {
+  if (isLoading) {
     return (
       <Bullseye>
-        <Spinner data-test="spinner" />
+        <Spinner />
       </Bullseye>
     );
   }
 
   if (error) {
-    return getErrorState(error, loaded, 'issues');
+    return getErrorState(error, !isLoading, 'issues');
   }
 
   const issues = data?.data || [];
@@ -113,7 +126,9 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className })
             </div>
           </>
         ) : (
-          <Text className="latest-issues-card__empty">No issues found.</Text>
+          <AppEmptyState emptyStateImg={EmptySearchImgUrl} title="No issues found">
+            <EmptyStateBody>No active issues found for this namespace.</EmptyStateBody>
+          </AppEmptyState>
         )}
       </CardBody>
     </Card>

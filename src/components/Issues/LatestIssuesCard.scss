@@ -1,5 +1,5 @@
 .latest-issues-card {
-  border-radius: 20px;
+  border-radius: var(--pf-v5-global--BorderRadius--lg);
   padding-left: var(--pf-v5-global--spacer--md);
   padding-top: var(--pf-v5-global--spacer--md);
   padding-bottom: var(--pf-v5-global--spacer--md);
@@ -27,23 +27,7 @@
   }
 
   &__icon {
-    font-size: 1rem;
-    
-    &--critical {
-      color: var(--pf-v5-global--danger-color--100);
-    }
-
-    &--major {
-      color: var(--pf-v5-global--warning-color--100);
-    }
-
-    &--minor {
-      color: var(--pf-v5-global--warning-color--200);
-    }
-
-    &--info {
-      color: var(--pf-v5-global--info-color--100);
-    }
+    font-size: var(--pf-v5-global--FontSize--md);
   }
 
   &__title {
