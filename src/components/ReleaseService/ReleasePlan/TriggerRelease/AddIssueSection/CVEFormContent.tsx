@@ -34,12 +34,13 @@ const CVEFormContent: React.FC<CVEFormContentProps> = ({ modalToggle }) => {
         <StackItem>
           <TextContent>
             <Text component={TextVariants.p}>
-              Provide information about a CVE that has already been resolved.
+              Provide information about a Common Vulnerabilities and Exposures (CVE) entry that has
+              already been addressed.
             </Text>
           </TextContent>
         </StackItem>
         <StackItem>
-          <InputField data-test="cve-issue-id" label="CVE ID" name="key" required />
+          <InputField data-test="cve-issue-id" label="CVE key" name="key" required />
         </StackItem>
         <StackItem>
           <InputGroup className="pf-v5-u-mb-sm" data-test="component-field">
