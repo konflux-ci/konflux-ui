@@ -21,7 +21,6 @@
     
     // Fix for modal context - override absolute positioning
     .pipeline-run-logs {
-      position: static !important;
       top: auto !important;
       bottom: auto !important;
       height: 100%;
