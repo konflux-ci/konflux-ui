@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
+import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -37,6 +38,52 @@ type PipelineRunsListViewProps = {
   customFilter?: (plr: PipelineRunKind) => boolean;
 };
 
+const getPipelineRunSortFunction = (
+  columnKey: PipelineRunColumnKeys,
+  direction: SortByDirection,
+) => {
+  const getValue = (plr: PipelineRunKind) => {
+    switch (columnKey) {
+      case 'name':
+        return plr.metadata?.name || '';
+      case 'started':
+        return plr.status?.startTime || '';
+      case 'duration':
+        return plr.status?.completionTime && plr.status?.startTime
+          ? new Date(plr.status.completionTime).getTime() - new Date(plr.status.startTime).getTime()
+          : 0;
+      case 'status':
+        return pipelineRunStatus(plr) || '';
+      case 'type':
+        return plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] || '';
+      case 'component':
+        return plr.metadata?.labels?.[PipelineRunLabel.COMPONENT] || '';
+      case 'trigger':
+        return plr.metadata?.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] || '';
+      case 'reference':
+        return (
+          plr.metadata?.labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL] ||
+          plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION] ||
+          ''
+        );
+      default:
+        return '';
+    }
+  };
+
+  return (a: PipelineRunKind, b: PipelineRunKind) => {
+    const aValue = getValue(a);
+    const bValue = getValue(b);
+
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return direction === SortByDirection.asc ? aValue - bValue : bValue - aValue;
+    }
+
+    const comparison = String(aValue).localeCompare(String(bValue));
+    return direction === SortByDirection.asc ? comparison : -comparison;
+  };
+};
+
 const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListViewProps>> = ({
   applicationName,
   componentName,
@@ -55,6 +102,9 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
     `pipeline-runs-columns-${applicationName}${componentName ? `-${componentName}` : ''}`,
   );
+
+  const [activeSortIndex, setActiveSortIndex] = React.useState(1);
+  const [activeSortDirection, setActiveSortDirection] = React.useState(SortByDirection.desc);
 
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
     if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {
@@ -85,21 +135,14 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
       ),
     );
 
-  const sortedPipelineRuns = React.useMemo((): PipelineRunKind[] => {
-    if (!pipelineRuns) return [];
+  const sortedPipelineRuns = React.useMemo(() => {
+    if (!pipelineRuns?.length) return [];
 
-    // @ts-expect-error: toSorted might not be in TS yet
-    if (typeof pipelineRuns.toSorted === 'function') {
-      // @ts-expect-error: toSorted might not be in TS yet
-      return pipelineRuns.toSorted((a, b) =>
-        String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
-      );
-    }
+    const sortColumnKey = Array.from(safeVisibleColumns)[activeSortIndex];
+    if (!sortColumnKey) return pipelineRuns;
 
-    return pipelineRuns.sort((a, b) =>
-      String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
-    ) as PipelineRunKind[];
-  }, [pipelineRuns]);
+    return [...pipelineRuns].sort(getPipelineRunSortFunction(sortColumnKey, activeSortDirection));
+  }, [pipelineRuns, activeSortIndex, activeSortDirection, safeVisibleColumns]);
 
   const statusFilterObj = React.useMemo(
     () =>
@@ -153,7 +196,15 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         aria-label="Pipeline run List"
         customData={vulnerabilities}
-        Header={getPipelineRunListHeader(safeVisibleColumns)}
+        Header={getPipelineRunListHeader(
+          safeVisibleColumns,
+          activeSortIndex,
+          activeSortDirection,
+          (_, index, direction) => {
+            setActiveSortIndex(index);
+            setActiveSortDirection(direction);
+          },
+        )}
         Row={(props) => (
           <PipelineRunListRowWithColumns
             obj={props.obj as PipelineRunKind}
