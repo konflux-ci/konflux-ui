@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-core';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
+import { PipelineRunType } from '../../../../consts/pipelinerun';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
@@ -37,17 +37,13 @@ const CommitOverviewTab: React.FC = () => {
     namespace,
     applicationName,
     commitName,
+    1,
+    undefined,
+    PipelineRunType.BUILD,
   );
 
   const commit = React.useMemo(
-    () =>
-      loaded &&
-      pipelineRuns?.length &&
-      createCommitObjectFromPLR(
-        pipelineRuns.find(
-          (p) => p.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-        ),
-      ),
+    () => loaded && pipelineRuns?.length && createCommitObjectFromPLR(pipelineRuns[0]),
     [loaded, pipelineRuns],
   );
 

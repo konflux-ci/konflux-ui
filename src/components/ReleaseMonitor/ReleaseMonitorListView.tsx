@@ -31,6 +31,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 const ReleaseMonitorListView: React.FunctionComponent = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+
   const parseMonitoredFilters = (filters: FilterType): MonitoredReleasesFilterState => {
     return {
       name: filters?.name || '',
@@ -103,6 +104,15 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   }, [loaded, namespaces]);
 
   const filterOptions = React.useMemo(() => {
+    if (releases.length === 0 && namespaces.length === 0) {
+      return {
+        statusOptions: {},
+        applicationOptions: {},
+        releasePlanOptions: {},
+        namespaceOptions: {},
+        componentOptions: {},
+      };
+    }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
     const applicationOptions = createFilterObj(
       releases,

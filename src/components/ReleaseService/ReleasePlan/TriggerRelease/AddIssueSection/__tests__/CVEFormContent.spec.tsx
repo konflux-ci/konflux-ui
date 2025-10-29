@@ -15,13 +15,15 @@ describe('CVEFormContent', () => {
   it('should show correct heading ', () => {
     formikRenderer(<CVEFormContent modalToggle={null} />);
     expect(
-      screen.getByText('Provide information about a CVE that has already been resolved.'),
+      screen.getByText(
+        'Provide information about a Common Vulnerabilities and Exposures (CVE) entry that has already been addressed.',
+      ),
     ).toBeVisible();
   });
 
   it('should show correct input fields ', () => {
     formikRenderer(<CVEFormContent modalToggle={null} />);
-    expect(screen.getByRole('textbox', { name: 'CVE ID' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'CVE key' })).toBeVisible();
   });
 
   it('should show correct values', () => {
@@ -30,7 +32,9 @@ describe('CVEFormContent', () => {
       component: 'a',
       packages: ['p1', 'p2', 'p3'],
     });
-    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'CVE ID' }).value).toBe('CVE-120');
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'CVE key' }).value).toBe(
+      'CVE-120',
+    );
   });
 
   it('should render package fields ', async () => {

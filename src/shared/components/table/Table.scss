@@ -6,6 +6,12 @@
   overflow: visible !important;
 }
 
+/* Reserve scrollbar space to prevent width thrash while rows load */
+.table .pf-v5-c-window-scroller {
+  overflow-y: scroll;
+  scrollbar-gutter: stable both-edges;
+}
+
 .table .pf-v5-c-table .wrap-column {
   overflow-wrap: anywhere;
 }
