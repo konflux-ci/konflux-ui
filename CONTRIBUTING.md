@@ -19,6 +19,14 @@ We welcome contributions of all kinds! Follow these steps to get started:
    - Type check (`yarn tsc`)
    - Tests (`yarn test`)
 
+> Tip: By default, ESLint errors from `.eslintrc.restrict-imports.cjs` won’t show up in the VSCode UI. To see them in the editor, you can add the following to your local .vscode/settings.json:
+>
+> ```json
+> "eslint.options": {
+>   "overrideConfigFile": ".eslintrc.restrict-imports.cjs"
+> }
+> ```
+
 4. Write or update tests:
 
    - Use [Jest](https://jestjs.io/) for unit tests.
