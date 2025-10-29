@@ -75,6 +75,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [activeSortIndex, setActiveSortIndex] = React.useState(0);
   const [activeSortDirection, setActiveSortDirection] = React.useState(SortByDirection.desc);
+
+  React.useEffect(() => {
+    const visibleColumnCount = COMMIT_COLUMN_ORDER.filter((col) => visibleColumns.has(col)).length;
+    if (activeSortIndex >= visibleColumnCount && visibleColumnCount > 0) {
+      setActiveSortIndex(0);
+    }
+  }, [visibleColumns, activeSortIndex]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
@@ -147,7 +154,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   }, [commits, activeSortIndex, activeSortDirection, visibleColumns]);
 
   const statusFilterObj = React.useMemo(
-    () => createFilterObj(sortedCommits, (c) => pipelineRunStatus(c.pipelineRuns[0]), statuses),
+    () => createFilterObj(sortedCommits, (c) => pipelineRunStatus(c.pipelineRuns?.[0]), statuses),
     [sortedCommits],
   );
 
@@ -165,7 +172,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
             commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
           (!statusFilter.length ||
-            statusFilter.includes(pipelineRunStatus(commit.pipelineRuns[0]))),
+            statusFilter.includes(pipelineRunStatus(commit.pipelineRuns?.[0]))),
       ),
     [sortedCommits, nameFilter, statusFilter],
   );

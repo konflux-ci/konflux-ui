@@ -180,10 +180,25 @@ export const getPipelineRunListHeader = (
 ) => {
   const dynamicClasses = getDynamicColumnClasses(visibleColumns);
 
+  const FALLBACK_TITLES: Record<PipelineRunColumnKeys, string> = {
+    name: 'Name',
+    started: 'Started',
+    vulnerabilities: 'Fixable vulnerabilities',
+    duration: 'Duration',
+    status: 'Status',
+    type: 'Type',
+    component: 'Component',
+    snapshot: 'Snapshot',
+    namespace: 'Namespace',
+    trigger: 'Trigger',
+    reference: 'Reference',
+    testResult: 'Test result',
+  };
+
   const columnConfigs: ColumnConfig[] = Array.from(visibleColumns).map((columnKey) => {
     const columnDef = PIPELINE_RUN_COLUMNS_DEFINITIONS.find((def) => def.key === columnKey);
     return {
-      title: columnDef?.title || columnKey,
+      title: columnDef?.title ?? FALLBACK_TITLES[columnKey] ?? String(columnKey),
       className: dynamicClasses[columnKey] || '',
       sortable: columnDef?.sortable ?? false,
     };

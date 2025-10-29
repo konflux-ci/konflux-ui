@@ -113,6 +113,13 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
   }, [persistedColumns]);
 
+  React.useEffect(() => {
+    const visibleColumnCount = Array.from(safeVisibleColumns).length;
+    if (activeSortIndex >= visibleColumnCount && visibleColumnCount > 0) {
+      setActiveSortIndex(0);
+    }
+  }, [safeVisibleColumns, activeSortIndex]);
+
   const { name, status, type } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
