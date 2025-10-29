@@ -515,7 +515,7 @@ const getGraphDataModel = (
   // Remove extraneous dependencies
   nodes.forEach(
     (taskNode) =>
-      (taskNode.runAfterTasks = taskNode.runAfterTasks.filter(
+      (taskNode.runAfterTasks = taskNode.runAfterTasks?.filter(
         (dep) => !hasParentDep(dep, taskNode.runAfterTasks, nodes),
       )),
   );
