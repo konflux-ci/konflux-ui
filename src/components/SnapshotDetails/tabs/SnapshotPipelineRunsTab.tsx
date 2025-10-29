@@ -18,42 +18,50 @@ const SnapshotPipelineRunTab: React.FC = () => {
   const [snapshot, snapshotLoaded, snapshotLoadErr] = useSnapshot(namespace, snapshotName);
   const buildPipelineRunName = React.useMemo(
     () =>
-      snapshotLoaded &&
-      !snapshotLoadErr &&
-      snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
+      snapshotLoaded && !snapshotLoadErr
+        ? snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL]
+        : undefined,
     [snapshotLoaded, snapshotLoadErr, snapshot],
   );
-  const [buildPipelineRun] = usePipelineRunV2(
+  const [buildPipelineRun, buildPLRLoaded, buildPLRError] = usePipelineRunV2(
     snapshot?.metadata?.namespace,
-    buildPipelineRunName ?? undefined,
+    buildPipelineRunName,
   );
 
-  const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRunsV2(
-    snapshot?.metadata?.namespace,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: {
-            [PipelineRunLabel.APPLICATION]: applicationName,
-            [PipelineRunLabel.SNAPSHOT]: snapshotName,
+  const [testPipelineRuns, testPLRLoaded, testPLRError, getNextPage, nextPageProps] =
+    usePipelineRunsV2(
+      snapshot?.metadata?.namespace,
+      React.useMemo(
+        () => ({
+          selector: {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+              [PipelineRunLabel.SNAPSHOT]: snapshotName,
+            },
           },
-        },
-        limit: 30,
-      }),
-      [applicationName, snapshotName],
-    ),
-  );
+          limit: 30,
+        }),
+        [applicationName, snapshotName],
+      ),
+    );
 
   const sortedPipelineRuns = React.useMemo(() => {
-    const allPipelineRuns = [...(pipelineRuns ?? []), buildPipelineRun].filter(Boolean);
+    const allPipelineRuns = [...(testPipelineRuns ?? []), buildPipelineRun].filter(Boolean);
     return allPipelineRuns
       .slice()
       .sort(
         (a, b) => +new Date(b.metadata.creationTimestamp) - +new Date(a.metadata.creationTimestamp),
       );
-  }, [pipelineRuns, buildPipelineRun]);
+  }, [testPipelineRuns, buildPipelineRun]);
 
-  if (!loaded && sortedPipelineRuns.length === 0) {
+  const allLoaded = testPLRLoaded && (buildPLRLoaded || !buildPipelineRunName);
+  const combinedError = snapshotLoadErr || testPLRError || buildPLRError;
+
+  if (combinedError) {
+    return <StatusBox loadError={combinedError} loaded={allLoaded} />;
+  }
+
+  if (!allLoaded && sortedPipelineRuns.length === 0) {
     return (
       <Bullseye data-test="snapshot-plr-loading">
         <Spinner />
@@ -61,11 +69,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
     );
   }
 
-  if (LoadError) {
-    <StatusBox loadError={LoadError} loaded={loaded} />;
-  }
-
-  if (loaded && (!sortedPipelineRuns || sortedPipelineRuns.length === 0)) {
+  if (allLoaded && (!sortedPipelineRuns || sortedPipelineRuns.length === 0)) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
@@ -73,7 +77,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
     <FilterContextProvider filterParams={['name', 'status', 'type']}>
       <SnapshotPipelineRunsList
         snapshotPipelineRuns={sortedPipelineRuns}
-        loaded={loaded}
+        loaded={allLoaded}
         applicationName={applicationName}
         getNextPage={getNextPage}
         nextPageProps={nextPageProps}

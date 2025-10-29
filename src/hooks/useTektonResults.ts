@@ -18,7 +18,7 @@ export type NextPageProps = {
 };
 
 const selector = <T extends K8sResourceCommon>(data: { pages: { data: T[] }[] }) =>
-  data.pages.flatMap((page) => page.data);
+  data?.pages?.flatMap((page) => page.data) ?? [];
 
 export const useTRPipelineRuns = (
   namespace: string,
@@ -32,7 +32,7 @@ export const useTRPipelineRuns = (
       select: selector<PipelineRunKind>,
     });
   return [
-    data,
+    data ?? [],
     !isLoading,
     error,
     hasNextPage ? fetchNextPage : null,
@@ -53,7 +53,7 @@ export const useTRTaskRuns = (
       select: selector<TaskRunKind>,
     });
   return [
-    data,
+    data ?? [],
     !isLoading,
     error,
     hasNextPage ? fetchNextPage : null,
