@@ -2,10 +2,12 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { SnapshotLabels } from '~/consts/snapshots';
+import { useSnapshot } from '~/hooks/useSnapshots';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
+import { usePipelineRunsV2, usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
@@ -13,8 +15,21 @@ import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 const SnapshotPipelineRunTab: React.FC = () => {
   const { snapshotName, applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const [snapshot, snapshotLoaded, snapshotLoadErr] = useSnapshot(namespace, snapshotName);
+  const buildPipelineRunName = React.useMemo(
+    () =>
+      snapshotLoaded &&
+      !snapshotLoadErr &&
+      snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL],
+    [snapshotLoaded, snapshotLoadErr, snapshot],
+  );
+  const [buildPipelineRun] = usePipelineRunV2(
+    snapshot?.metadata?.namespace,
+    buildPipelineRunName ?? undefined,
+  );
+
   const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRunsV2(
-    namespace,
+    snapshot?.metadata?.namespace,
     React.useMemo(
       () => ({
         selector: {
@@ -29,16 +44,14 @@ const SnapshotPipelineRunTab: React.FC = () => {
     ),
   );
 
-  const sortedPipelineRuns = React.useMemo(
-    () =>
-      (pipelineRuns ?? [])
-        .slice()
-        .sort(
-          (a, b) =>
-            +new Date(b.metadata.creationTimestamp) - +new Date(a.metadata.creationTimestamp),
-        ),
-    [pipelineRuns],
-  );
+  const sortedPipelineRuns = React.useMemo(() => {
+    const allPipelineRuns = [...(pipelineRuns ?? []), buildPipelineRun].filter(Boolean);
+    return allPipelineRuns
+      .slice()
+      .sort(
+        (a, b) => +new Date(b.metadata.creationTimestamp) - +new Date(a.metadata.creationTimestamp),
+      );
+  }, [pipelineRuns, buildPipelineRun]);
 
   if (!loaded && sortedPipelineRuns.length === 0) {
     return (
