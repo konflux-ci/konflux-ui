@@ -15,7 +15,7 @@ const PipelineRunsTab: React.FC<React.PropsWithChildren<PipelineRunsTabProps>> =
   customFilter,
 }) => {
   return (
-    <FilterContextProvider filterParams={['name', 'status', 'type']}>
+    <FilterContextProvider filterParams={['name', 'commit', 'status', 'type']}>
       <PipelineRunsListView
         applicationName={applicationName}
         componentName={componentName}

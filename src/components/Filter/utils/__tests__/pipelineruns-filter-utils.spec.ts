@@ -24,6 +24,7 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+        [PipelineRunLabel.COMMIT_LABEL]: 'abc123def456',
       },
     },
     spec: {
@@ -60,6 +61,9 @@ const pipelineRuns: PipelineRunKind[] = [
         'appstudio.openshift.io/component': 'test-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
       },
+      annotations: {
+        [PipelineRunLabel.COMMIT_ANNOTATION]: 'xyz789uvw012',
+      },
     },
     spec: {
       key: 'key2',
@@ -86,6 +90,7 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+        [PipelineRunLabel.TEST_SERVICE_COMMIT]: 'mno345pqr678',
       },
     },
     spec: {
@@ -99,6 +104,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by name', () => {
       const filters = {
         name: 'basic-node-js-first',
+        commit: '',
         status: [],
         type: [],
       };
@@ -110,6 +116,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by status', () => {
       const filters = {
         name: '',
+        commit: '',
         status: ['Succeeded'],
         type: [],
       };
@@ -121,6 +128,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by type', () => {
       const filters = {
         name: '',
+        commit: '',
         status: [],
         type: ['build'],
       };
@@ -132,9 +140,69 @@ describe('pipelineruns-filter-utils', () => {
       expect(resultNames.sort()).toStrictEqual(expectedNames.sort());
     });
 
+    it('should filter pipeline runs by commit SHA from labels', () => {
+      const filters = {
+        name: '',
+        commit: 'abc123',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result.length).toBe(1);
+      expect(result[0].metadata.name).toBe('basic-node-js-first');
+    });
+
+    it('should filter pipeline runs by commit SHA from annotations', () => {
+      const filters = {
+        name: '',
+        commit: 'xyz789',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result.length).toBe(1);
+      expect(result[0].metadata.name).toBe('basic-node-js-second');
+    });
+
+    it('should filter pipeline runs by commit SHA from test service commit', () => {
+      const filters = {
+        name: '',
+        commit: 'mno345',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result.length).toBe(1);
+      expect(result[0].metadata.name).toBe('basic-node-js-third');
+    });
+
+    it('should be case insensitive when filtering by commit', () => {
+      const filters = {
+        name: '',
+        commit: 'ABC123',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result.length).toBe(1);
+      expect(result[0].metadata.name).toBe('basic-node-js-first');
+    });
+
+    it('should return all results when commit filter is empty', () => {
+      const filters = {
+        name: '',
+        commit: '',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result.length).toBe(3);
+    });
+
     it('should filter pipeline runs by custom filter', () => {
       const filters = {
         name: '',
+        commit: '',
         status: [],
         type: [],
       };
@@ -146,6 +214,18 @@ describe('pipelineruns-filter-utils', () => {
       expect(result.length).toBe(2);
       const resultNames = [result[0].metadata.name, result[1].metadata.name];
       expect(resultNames.sort()).toStrictEqual(expectedNames.sort());
+    });
+
+    it('should combine multiple filters correctly', () => {
+      const filters = {
+        name: '',
+        commit: 'abc123',
+        status: ['Succeeded'],
+        type: ['test'],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result.length).toBe(1);
+      expect(result[0].metadata.name).toBe('basic-node-js-first');
     });
   });
 });
