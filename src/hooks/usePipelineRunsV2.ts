@@ -322,10 +322,14 @@ export const usePipelineRunV2 = (
       }),
       [pipelineRunName],
     ),
+    {
+      staleTime: Infinity,
+    },
   );
 
   const kubearchiveResult = useKubearchiveGetResourceQuery(resourceInit, PipelineRunModel, {
     enabled: enabled && kubearchiveEnabled,
+    staleTime: Infinity,
   });
 
   return React.useMemo(() => {

@@ -43,7 +43,7 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
     },
   };
 
-  const mockOptions: TQueryOptions<K8sResourceCommon> = {};
+  const mockOptions: TQueryOptions<K8sResourceCommon> = { staleTime: Infinity };
 
   beforeEach(() => {
     jest.clearAllMocks();
