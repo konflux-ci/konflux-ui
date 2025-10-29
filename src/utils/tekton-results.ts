@@ -97,7 +97,7 @@ export const labelsToFilter = (labels?: MatchLabels): string =>
     : '';
 
 export const nameFilter = (name?: string): string =>
-  name ? AND(`data.metadata.name.startsWith("${String(name).trim().toLowerCase()}")`) : '';
+  name ? AND(`data.metadata.name.contains("${name.toString().trim().toLowerCase()}")`) : '';
 
 export const commitShaFilter = (commitSha: string): string =>
   OR(

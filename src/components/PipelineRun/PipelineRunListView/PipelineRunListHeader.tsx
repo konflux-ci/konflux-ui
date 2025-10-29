@@ -33,7 +33,7 @@ export const pipelineRunTableColumnClasses = {
   workspace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
-  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -154,9 +154,9 @@ export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHea
   true,
   false,
   false,
-  false,
-  false,
   true,
+  false,
+  false,
   true,
 );
 

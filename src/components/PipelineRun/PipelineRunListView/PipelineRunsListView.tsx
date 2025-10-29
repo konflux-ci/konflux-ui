@@ -1,5 +1,7 @@
 import * as React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
+<<<<<<< HEAD
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -9,24 +11,30 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../consts/pipeline';
+=======
+import {
+  PipelineRunsFilterToolbar,
+  useFilteredData,
+  FilterConfig,
+} from '~/components/Filter/generic';
+>>>>>>> 1288183 (refactor: refactoring filters)
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
+<<<<<<< HEAD
 import { Table, useDeepCompareMemoize } from '../../../shared';
+=======
+import { HttpError } from '../../../k8s/error';
+import { Table } from '../../../shared';
+import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
+>>>>>>> 1288183 (refactor: refactoring filters)
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import ColumnManagement from '../../../shared/components/table/ColumnManagement';
 import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
-import { statuses } from '../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
-import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
-import PipelineRunsFilterToolbar from '../../Filter/toolbars/PipelineRunsFilterToolbar';
-import {
-  filterPipelineRuns,
-  PipelineRunsFilterState,
-} from '../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../PipelineRunEmptyState';
 import { getPipelineRunListHeader } from './PipelineRunListHeader';
 import { PipelineRunListRowWithColumns } from './PipelineRunListRow';
@@ -44,14 +52,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 }) => {
   const namespace = useNamespace();
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
-  const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const filters: PipelineRunsFilterState = useDeepCompareMemoize({
-    name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    commit: unparsedFilters.commit ? (unparsedFilters.commit as string) : '',
-    status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-    type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
-  });
 
+<<<<<<< HEAD
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
     `pipeline-runs-columns-${applicationName}${componentName ? `-${componentName}` : ''}`,
@@ -65,6 +67,78 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   }, [persistedColumns]);
 
   const { name, status, type } = filters;
+=======
+  const filterConfigs: FilterConfig[] = React.useMemo(
+    () => [
+      {
+        type: 'search',
+        param: 'search',
+        mode: 'client',
+        searchAttributes: {
+          attributes: [
+            { key: 'name', label: 'Name' },
+            { key: 'commit', label: 'Commit' },
+          ],
+          defaultAttribute: 'name',
+          getPlaceholder: (attribute) => `Filter by ${attribute.toLowerCase()}...`,
+        },
+      },
+      {
+        type: 'multiSelect',
+        param: 'status',
+        label: 'Status',
+        mode: 'client',
+        getOptions: (data: PipelineRunKind[]) => {
+          const statusMap = new Map<string, number>();
+          data.forEach((plr) => {
+            const status = pipelineRunStatus(plr);
+            if (status) {
+              statusMap.set(status, (statusMap.get(status) || 0) + 1);
+            }
+          });
+          return Array.from(statusMap.entries()).map(([status, count]) => ({
+            value: status,
+            label: status,
+            count,
+          }));
+        },
+        filterFn: (item: PipelineRunKind, value: string[]) => {
+          if (!Array.isArray(value) || value.length === 0) return true;
+          return value.includes(pipelineRunStatus(item));
+        },
+      },
+      {
+        type: 'multiSelect',
+        param: 'type',
+        label: 'Type',
+        mode: 'client',
+        getOptions: (data: PipelineRunKind[]) => {
+          const typeMap = new Map<string, number>();
+          data.forEach((plr) => {
+            const type = plr?.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE];
+            if (type) {
+              typeMap.set(type, (typeMap.get(type) || 0) + 1);
+            }
+          });
+          return Array.from(typeMap.entries()).map(([type, count]) => ({
+            value: type,
+            label: type.charAt(0).toUpperCase() + type.slice(1), // Capitalize for display
+            count,
+          }));
+        },
+        filterFn: (item: PipelineRunKind, value: string[]) => {
+          if (!Array.isArray(value) || value.length === 0) return true;
+          const runType = item?.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE];
+          return value.includes(runType);
+        },
+      },
+    ],
+    [],
+  );
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const name = searchParams.get('name') || '';
+>>>>>>> 1288183 (refactor: refactoring filters)
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsV2(
@@ -102,73 +176,33 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     ) as PipelineRunKind[];
   }, [pipelineRuns]);
 
-  // Create filtered datasets for calculating available options
-  // Each excludes its own filter type but includes all others
-  const filtersForStatusOptions = React.useMemo(
-    () =>
-      filterPipelineRuns(
-        sortedPipelineRuns,
-        {
-          name: filters.name,
-          commit: filters.commit,
-          status: [], // Exclude status to show available status options
-          type: filters.type,
-        },
-        customFilter,
-      ),
-    [sortedPipelineRuns, filters.name, filters.commit, filters.type, customFilter],
-  );
+  const baseFilteredRuns = React.useMemo(() => {
+    return customFilter ? sortedPipelineRuns.filter(customFilter) : sortedPipelineRuns;
+  }, [sortedPipelineRuns, customFilter]);
 
-  const filtersForTypeOptions = React.useMemo(
-    () =>
-      filterPipelineRuns(
-        sortedPipelineRuns,
-        {
-          name: filters.name,
-          commit: filters.commit,
-          status: filters.status,
-          type: [], // Exclude type to show available type options
-        },
-        customFilter,
-      ),
-    [sortedPipelineRuns, filters.name, filters.commit, filters.status, customFilter],
-  );
+  const { filteredData: filteredPLRs, isFiltered: isStatusTypeFiltered } =
+    useFilteredData<PipelineRunKind>(baseFilteredRuns, filterConfigs);
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(filtersForStatusOptions, (plr) => pipelineRunStatus(plr), statuses),
-    [filtersForStatusOptions],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        filtersForTypeOptions,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-      ),
-    [filtersForTypeOptions],
-  );
-
-  const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(sortedPipelineRuns, filters, customFilter, componentName),
-    [sortedPipelineRuns, filters, customFilter, componentName],
-  );
+  const isFiltered = isStatusTypeFiltered;
 
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : sortedPipelineRuns);
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
+  const handleClearFilters = React.useCallback(() => {
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={handleClearFilters} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   if (error) {
     return getErrorState(error, loaded, 'pipeline runs');
   }
 
-  const isFiltered = String(name).length > 0 || type.length > 0 || status.length > 0;
-
   return (
     <>
       {(isFiltered || sortedPipelineRuns.length > 0) && (
         <PipelineRunsFilterToolbar
+<<<<<<< HEAD
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}
@@ -176,6 +210,11 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           statusOptions={statusFilterObj}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
+=======
+          filterConfigs={filterConfigs}
+          data={baseFilteredRuns}
+          dataTestId="pipeline-runs-filter"
+>>>>>>> 1288183 (refactor: refactoring filters)
         />
       )}
       <Table

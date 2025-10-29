@@ -278,7 +278,7 @@ describe('tekton-results', () => {
     });
 
     describe('nameFilter', () => {
-      it('should return the name filter', () => {
+      it('should return the name filter using contains for substring matching', () => {
         expect(nameFilter('test-resource-name')).toStrictEqual(
           'data.metadata.name.contains("test-resource-name")',
         );

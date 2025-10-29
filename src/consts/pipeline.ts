@@ -29,6 +29,7 @@ export const COMMON_SECRETS_LABEL = 'build.appstudio.openshift.io/common-secret'
 
 export const PIPELINE_NAMESPACE = 'openshift-pipelines';
 
+<<<<<<< HEAD
 // Pipeline Run Column Configurations
 export type PipelineRunColumnKeys =
   | 'name'
@@ -147,3 +148,8 @@ export const DEFAULT_VISIBLE_ACTIVITY_PIPELINE_RUN_COLUMNS: Set<ActivityPipeline
     'trigger',
     'reference',
   ]);
+=======
+export const COMMIT_LABEL_KEYS = ['pipelinesascode.tekton.dev/sha', 'test-service.io/commit'];
+
+export const COMMIT_ANNOTATION_KEYS = ['pipelinesascode.tekton.dev/sha'];
+>>>>>>> 1288183 (refactor: refactoring filters)

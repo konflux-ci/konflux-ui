@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
+<<<<<<< HEAD
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
@@ -12,6 +13,13 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
+=======
+import {
+  PipelineRunsFilterToolbar,
+  useFilteredData,
+  FilterConfig,
+} from '~/components/Filter/generic';
+>>>>>>> 1288183 (refactor: refactoring filters)
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { RouterParams } from '../../../../routes/utils';
@@ -21,14 +29,7 @@ import ColumnManagement from '../../../../shared/components/table/ColumnManageme
 import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
-import { statuses } from '../../../../utils/commits-utils';
 import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
-import { pipelineRunTypes } from '../../../../utils/pipelinerun-utils';
-import PipelineRunsFilterToolbar from '../../../Filter/toolbars/PipelineRunsFilterToolbar';
-import {
-  filterPipelineRuns,
-  PipelineRunsFilterState,
-} from '../../../Filter/utils/pipelineruns-filter-utils';
 import PipelineRunEmptyState from '../../../PipelineRun/PipelineRunEmptyState';
 import { getPipelineRunListHeader } from '../../../PipelineRun/PipelineRunListView/PipelineRunListHeader';
 import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -36,7 +37,9 @@ import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunL
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const namespace = useNamespace();
+  const [, setSearchParams] = useSearchParams();
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
+<<<<<<< HEAD
     usePipelineRunsForCommitV2(namespace, applicationName, commitName, undefined, false);
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
@@ -69,40 +72,86 @@ const CommitsPipelineRunTab: React.FC = () => {
         type: filters.type,
       }),
     [pipelineRuns, filters.name, filters.commit, filters.type],
+=======
+    usePipelineRunsForCommit(namespace, applicationName, commitName, undefined, false);
+
+  // Define filter configurations using the new generic system
+  const filterConfigs: FilterConfig[] = React.useMemo(
+    () => [
+      {
+        type: 'search',
+        param: 'search',
+        mode: 'client',
+        searchAttributes: {
+          attributes: [
+            { key: 'name', label: 'Name' },
+            { key: 'commit', label: 'Commit' },
+          ],
+          defaultAttribute: 'name',
+          getPlaceholder: (attribute) => `Filter by ${attribute.toLowerCase()}...`,
+        },
+      },
+      {
+        type: 'multiSelect',
+        param: 'status',
+        label: 'Status',
+        mode: 'client',
+        getOptions: (data: PipelineRunKind[]) => {
+          const statusMap = new Map<string, number>();
+          data.forEach((plr) => {
+            const status = pipelineRunStatus(plr);
+            if (status) {
+              statusMap.set(status, (statusMap.get(status) || 0) + 1);
+            }
+          });
+          return Array.from(statusMap.entries()).map(([status, count]) => ({
+            value: status,
+            label: status,
+            count,
+          }));
+        },
+        filterFn: (item: PipelineRunKind, value: string[]) => {
+          if (!Array.isArray(value) || value.length === 0) return true;
+          return value.includes(pipelineRunStatus(item));
+        },
+      },
+      {
+        type: 'multiSelect',
+        param: 'type',
+        label: 'Type',
+        mode: 'client',
+        getOptions: (data: PipelineRunKind[]) => {
+          const typeMap = new Map<string, number>();
+          data.forEach((plr) => {
+            const type = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+            if (type) {
+              typeMap.set(type, (typeMap.get(type) || 0) + 1);
+            }
+          });
+          return Array.from(typeMap.entries()).map(([type, count]) => ({
+            value: type,
+            label: type.charAt(0).toUpperCase() + type.slice(1),
+            count,
+          }));
+        },
+        filterFn: (item: PipelineRunKind, value: string[]) => {
+          if (!Array.isArray(value) || value.length === 0) return true;
+          const runType = item?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
+          return value.includes(runType);
+        },
+      },
+    ],
+    [],
+>>>>>>> 1288183 (refactor: refactoring filters)
   );
 
-  const filtersForTypeOptions = React.useMemo(
-    () =>
-      filterPipelineRuns(pipelineRuns, {
-        name: filters.name,
-        commit: filters.commit,
-        status: filters.status,
-        type: [],
-      }),
-    [pipelineRuns, filters.name, filters.commit, filters.status],
+  // Use the new generic filter system with type safety
+  const { filteredData: filteredPLRs, isFiltered } = useFilteredData<PipelineRunKind>(
+    pipelineRuns || [],
+    filterConfigs,
   );
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(filtersForStatusOptions, (plr) => pipelineRunStatus(plr), statuses),
-    [filtersForStatusOptions],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        filtersForTypeOptions,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-      ),
-    [filtersForTypeOptions],
-  );
-
-  const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(pipelineRuns, filters),
-    [pipelineRuns, filters],
-  );
-
-  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(isFiltered ? filteredPLRs : pipelineRuns);
 
   if (error) {
     return getErrorState(error, loaded, 'pipeline runs');
@@ -112,10 +161,8 @@ const CommitsPipelineRunTab: React.FC = () => {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
+  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => setSearchParams({})} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
-
-  const isFiltered = String(name).length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>
@@ -123,8 +170,9 @@ const CommitsPipelineRunTab: React.FC = () => {
         Pipeline runs
       </Title>
       <div>
-        {(isFiltered || pipelineRuns.length > 0) && (
+        {(isFiltered || (pipelineRuns && pipelineRuns.length > 0)) && (
           <PipelineRunsFilterToolbar
+<<<<<<< HEAD
             filters={filters}
             setFilters={setFilters}
             onClearFilters={onClearFilters}
@@ -132,11 +180,16 @@ const CommitsPipelineRunTab: React.FC = () => {
             statusOptions={statusFilterObj}
             openColumnManagement={() => setIsColumnManagementOpen(true)}
             totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
+=======
+            filterConfigs={filterConfigs}
+            data={pipelineRuns || []}
+            dataTestId="commits-pipeline-runs-filter"
+>>>>>>> 1288183 (refactor: refactoring filters)
           />
         )}
         <Table
-          key={`${pipelineRuns.length}-${vulnerabilities.fetchedPipelineRuns.length}`}
-          unfilteredData={pipelineRuns}
+          key={`${pipelineRuns?.length || 0}-${vulnerabilities.fetchedPipelineRuns.length}`}
+          unfilteredData={pipelineRuns || []}
           data={filteredPLRs}
           aria-label="Pipelinerun List"
           Header={getPipelineRunListHeader(safeVisibleColumns)}

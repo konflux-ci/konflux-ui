@@ -50,7 +50,12 @@ export const FilterContextProvider = ({ filterParams, children }: FilterContextP
     Object.fromEntries(
       Object.entries(getValues()).map(([key, value]) => {
         const parsedValue = value ? safeJSONParse(value) : null;
-        return [key, typeof parsedValue === 'number' ? parsedValue.toString() : parsedValue];
+        return [
+          key,
+          typeof parsedValue === 'number' && !isNaN(parsedValue)
+            ? parsedValue.toString()
+            : parsedValue,
+        ];
       }),
     ),
   );

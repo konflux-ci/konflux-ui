@@ -34,7 +34,6 @@ FilterConfig => FilterToolbar => FilterWrapper => DumbComponent(SingleSelect/Mul
 
 ```typescript
 export type FilterType = 'search' | 'singleSelect' | 'multiSelect' | 'dateRange' | 'boolean';
-
 export type FilterMode = 'api' | 'client';
 
 export interface FilterOption {
@@ -66,6 +65,13 @@ export interface FilterConfig {
   
   // 3. Static predefined options
   options?: FilterOption[];
+
+  // 4. Attribute search configuration (for dropown filter selectio)
+  attributeSearch?: {
+    attributes: AttributeOption[];
+    defaultAttribute?: AttributeFilterType;
+    getPlaceholder?: (attribute: AttributeFilterType) => string;
+  };
   
   // Additional configuration
   isSearchable?: boolean; // For select types
