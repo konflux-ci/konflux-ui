@@ -13,6 +13,7 @@ import {
   isPipelineV1Beta1,
   isTaskV1Beta1,
   taskTestResultStatus,
+  getSbomShaFromTaskRuns,
 } from '../pipeline-utils';
 
 const samplePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
@@ -291,5 +292,191 @@ describe('taskTestResultStatus', () => {
     expect(
       taskTestResultStatus(resultsWithInvalidTestOutputJsonValue as TektonResultsRun[]),
     ).toBeUndefined();
+  });
+});
+
+describe('getSbomShaFromTaskRuns', () => {
+  const createTaskRun = (name: string, sbomBlobUrl?: string, hasResults = true): TaskRunKind => ({
+    apiVersion: 'tekton.dev/v1',
+    kind: 'TaskRun',
+    metadata: {
+      name: `${name}-task-run`,
+      labels: {
+        'tekton.dev/task': name,
+      },
+    },
+    spec: {},
+    status: hasResults
+      ? {
+          results: sbomBlobUrl
+            ? [
+                {
+                  name: 'SBOM_BLOB_URL',
+                  value: sbomBlobUrl,
+                  type: 'string',
+                },
+              ]
+            : [],
+        }
+      : undefined,
+  });
+
+  it('should return SBOM SHA from highest priority task (build-image-index)', () => {
+    const taskRuns = [
+      createTaskRun('some-other-task'),
+      createTaskRun('build-image-index', 'quay.io/repo/image@sha256:abc123def456'),
+      createTaskRun('another-task'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBe('sha256:abc123def456');
+  });
+
+  it('should return SBOM SHA from buildah-remote-oci-ta when build-image-index not available', () => {
+    const taskRuns = [
+      createTaskRun('some-task'),
+      createTaskRun('buildah-remote-oci-ta', 'quay.io/repo/image@sha256:remote123'),
+      createTaskRun('another-task'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBe('sha256:remote123');
+  });
+
+  it('should return SBOM SHA from buildah-oci-ta when higher priority tasks not available', () => {
+    const taskRuns = [
+      createTaskRun('some-task'),
+      createTaskRun('buildah-oci-ta', 'quay.io/repo/image@sha256:oci789'),
+      createTaskRun('another-task'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBe('sha256:oci789');
+  });
+
+  it('should return higher priority task when lower priority appears first', () => {
+    const taskRuns = [
+      createTaskRun('buildah-oci-ta', 'quay.io/repo/image@sha256:lower'),
+      createTaskRun('buildah-remote-oci-ta', 'quay.io/repo/image@sha256:higher'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBe('sha256:higher');
+  });
+
+  it('should return undefined when no matching tasks are found', () => {
+    const taskRuns = [
+      createTaskRun('unrelated-task', 'quay.io/repo/image@sha256:xyz'),
+      createTaskRun('another-task', 'quay.io/repo/image@sha256:abc'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined when taskruns array is empty', () => {
+    const result = getSbomShaFromTaskRuns([]);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined when matching task has no results', () => {
+    const taskRuns = [createTaskRun('build-image-index', undefined, false)];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBeUndefined();
+  });
+
+  it('should return undefined when matching task has results but no SBOM_BLOB_URL', () => {
+    const taskRun: TaskRunKind = {
+      apiVersion: 'tekton.dev/v1',
+      kind: 'TaskRun',
+      metadata: {
+        name: 'build-image-index-run',
+        labels: {
+          'tekton.dev/task': 'build-image-index',
+        },
+      },
+      spec: {},
+      status: {
+        results: [
+          {
+            name: 'IMAGE_URL',
+            value: 'quay.io/repo/image',
+            type: 'string',
+          },
+        ],
+      },
+    };
+
+    const result = getSbomShaFromTaskRuns([taskRun]);
+    expect(result).toBeUndefined();
+  });
+
+  it('should handle SBOM_BLOB_URL without @ separator', () => {
+    const taskRuns = [createTaskRun('build-image-index', 'no-at-separator')];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBeUndefined();
+  });
+
+  it('should handle SBOM_BLOB_URL with empty string after @', () => {
+    const taskRuns = [createTaskRun('build-image-index', 'quay.io/repo/image@')];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBeUndefined();
+  });
+
+  it('should skip tasks with undefined or null metadata', () => {
+    const taskRunWithoutMetadata: TaskRunKind = {
+      apiVersion: 'tekton.dev/v1',
+      kind: 'TaskRun',
+      metadata: undefined,
+      spec: {},
+    };
+
+    const taskRuns = [
+      taskRunWithoutMetadata,
+      createTaskRun('build-image-index', 'quay.io/repo/image@sha256:valid'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBe('sha256:valid');
+  });
+
+  it('should stop iterating after finding highest priority task', () => {
+    const mockResults = jest.fn(() => [
+      {
+        name: 'SBOM_BLOB_URL',
+        value: 'quay.io/repo/image@sha256:found',
+        type: 'string',
+      },
+    ]);
+
+    const taskRunWithMock: TaskRunKind = {
+      apiVersion: 'tekton.dev/v1',
+      kind: 'TaskRun',
+      metadata: {
+        name: 'build-image-index-run',
+        labels: {
+          'tekton.dev/task': 'build-image-index',
+        },
+      },
+      spec: {},
+      status: {
+        get results() {
+          return mockResults();
+        },
+      },
+    };
+
+    const taskRuns = [
+      createTaskRun('some-task'),
+      taskRunWithMock,
+      createTaskRun('buildah-oci-ta', 'quay.io/repo/image@sha256:should-not-check'),
+    ];
+
+    const result = getSbomShaFromTaskRuns(taskRuns);
+    expect(result).toBe('sha256:found');
+    expect(mockResults).toHaveBeenCalledTimes(1);
   });
 });
