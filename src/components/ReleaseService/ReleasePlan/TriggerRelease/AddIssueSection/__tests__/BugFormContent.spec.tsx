@@ -8,15 +8,15 @@ describe('BugFormContent', () => {
   it('should show correct heading ', () => {
     formikRenderer(<BugFormContent modalToggle={null} />);
     expect(
-      screen.getByText('Provide information about a Bug that has already been resolved.'),
+      screen.getByText('Provide information about a bug that has already been resolved.'),
     ).toBeVisible();
   });
 
   it('should show correct input fields ', () => {
     formikRenderer(<BugFormContent modalToggle={null} />);
 
-    expect(screen.getByRole('textbox', { name: 'Bug issue id' })).toBeVisible();
-    expect(screen.getByRole('textbox', { name: 'Source' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Bug issue key' })).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'URL for the bug' })).toBeVisible();
   });
 
   it('should show correct values', () => {
@@ -24,10 +24,12 @@ describe('BugFormContent', () => {
       id: 'RHTAP-120',
       source: 'url1',
     });
-    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Bug issue id' }).value).toBe(
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Bug issue key' }).value).toBe(
       'RHTAP-120',
     );
-    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Source' }).value).toBe('url1');
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'URL for the bug' }).value).toBe(
+      'url1',
+    );
   });
 
   it('should have disabled Submit button when url and key not there', () => {

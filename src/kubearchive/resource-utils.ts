@@ -34,7 +34,10 @@ export async function fetchResourceWithK8sAndKubeArchive<TResource extends K8sRe
     if (error instanceof HttpError && error.code === 404 && isEnabled) {
       try {
         return {
-          resource: await kubearchiveQueryGetResource<TResource>(resourceInit, options),
+          resource: await kubearchiveQueryGetResource<TResource>(resourceInit, {
+            ...options,
+            staleTime: Infinity,
+          }),
           source: ResourceSource.Archive,
         };
       } catch (archiveError) {

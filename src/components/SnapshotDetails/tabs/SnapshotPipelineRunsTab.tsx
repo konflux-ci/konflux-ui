@@ -2,10 +2,12 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { SnapshotLabels } from '~/consts/snapshots';
+import { useSnapshot } from '~/hooks/useSnapshots';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
+import { usePipelineRunsV2, usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { StatusBox } from '../../../shared/components/status-box/StatusBox';
 import PipelineRunEmptyState from '../../PipelineRun/PipelineRunEmptyState';
 import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
@@ -13,42 +15,53 @@ import SnapshotPipelineRunsList from './SnapshotPipelineRunsList';
 const SnapshotPipelineRunTab: React.FC = () => {
   const { snapshotName, applicationName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [pipelineRuns, loaded, LoadError, getNextPage, nextPageProps] = usePipelineRunsV2(
-    namespace,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: { [PipelineRunLabel.APPLICATION]: applicationName },
-        },
-      }),
-      [applicationName],
-    ),
+  const [snapshot, snapshotLoaded, snapshotLoadErr] = useSnapshot(namespace, snapshotName);
+  const buildPipelineRunName = React.useMemo(
+    () =>
+      snapshotLoaded && !snapshotLoadErr
+        ? snapshot?.metadata?.labels?.[SnapshotLabels.BUILD_PIPELINE_LABEL]
+        : undefined,
+    [snapshotLoaded, snapshotLoadErr, snapshot],
+  );
+  const [buildPipelineRun, buildPLRLoaded, buildPLRError] = usePipelineRunV2(
+    snapshot?.metadata?.namespace,
+    buildPipelineRunName,
   );
 
-  const SnapshotPipelineRuns = React.useMemo(() => {
-    if (loaded && !LoadError) {
-      return pipelineRuns.filter(
-        (plr) =>
-          (plr.metadata?.annotations &&
-            plr.metadata.annotations[PipelineRunLabel.SNAPSHOT] === snapshotName) ||
-          (plr.metadata?.labels && plr.metadata.labels[PipelineRunLabel.SNAPSHOT] === snapshotName),
+  const [testPipelineRuns, testPLRLoaded, testPLRError, getNextPage, nextPageProps] =
+    usePipelineRunsV2(
+      snapshot?.metadata?.namespace,
+      React.useMemo(
+        () => ({
+          selector: {
+            matchLabels: {
+              [PipelineRunLabel.APPLICATION]: applicationName,
+              [PipelineRunLabel.SNAPSHOT]: snapshotName,
+            },
+          },
+          limit: 30,
+        }),
+        [applicationName, snapshotName],
+      ),
+    );
+
+  const sortedPipelineRuns = React.useMemo(() => {
+    const allPipelineRuns = [...(testPipelineRuns ?? []), buildPipelineRun].filter(Boolean);
+    return allPipelineRuns
+      .slice()
+      .sort(
+        (a, b) => +new Date(b.metadata.creationTimestamp) - +new Date(a.metadata.creationTimestamp),
       );
-    }
-    return [];
-  }, [loaded, LoadError, pipelineRuns, snapshotName]);
+  }, [testPipelineRuns, buildPipelineRun]);
 
-  React.useEffect(() => {
-    if (loaded && SnapshotPipelineRuns.length === 0 && getNextPage) {
-      getNextPage();
-    }
-  }, [getNextPage, loaded, SnapshotPipelineRuns.length]);
+  const allLoaded = testPLRLoaded && (buildPLRLoaded || !buildPipelineRunName);
+  const combinedError = snapshotLoadErr || testPLRError || buildPLRError;
 
-  SnapshotPipelineRuns?.sort(
-    (app1, app2) =>
-      +new Date(app2.metadata.creationTimestamp) - +new Date(app1.metadata.creationTimestamp),
-  );
+  if (combinedError) {
+    return <StatusBox loadError={combinedError} loaded={allLoaded} />;
+  }
 
-  if (!loaded && pipelineRuns.length === 0) {
+  if (!allLoaded && sortedPipelineRuns.length === 0) {
     return (
       <Bullseye data-test="snapshot-plr-loading">
         <Spinner />
@@ -56,19 +69,15 @@ const SnapshotPipelineRunTab: React.FC = () => {
     );
   }
 
-  if (LoadError) {
-    <StatusBox loadError={LoadError} loaded={loaded} />;
-  }
-
-  if (loaded && (!SnapshotPipelineRuns || SnapshotPipelineRuns.length === 0)) {
+  if (allLoaded && (!sortedPipelineRuns || sortedPipelineRuns.length === 0)) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
   return (
     <FilterContextProvider filterParams={['name', 'status', 'type']}>
       <SnapshotPipelineRunsList
-        snapshotPipelineRuns={SnapshotPipelineRuns}
-        loaded={loaded}
+        snapshotPipelineRuns={sortedPipelineRuns}
+        loaded={allLoaded}
         applicationName={applicationName}
         getNextPage={getNextPage}
         nextPageProps={nextPageProps}

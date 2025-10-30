@@ -5,6 +5,7 @@ import { PodModel } from '~/models/pod';
 import { TaskRunKind } from '~/types';
 import { WatchK8sResource } from '~/types/k8s';
 import { PodKind } from '../../types';
+import { LOGS_QUERY_OPTIONS } from './const';
 import { MultiStreamLogs } from './MultiStreamLogs';
 import { TektonTaskRunLog } from './TektonTaskRunLog';
 
@@ -26,7 +27,7 @@ const K8sAndTektonLogsWrapper: React.FC<React.PropsWithChildren<K8sAndTektonLogs
     data: obj,
     isLoading,
     error,
-  } = useK8sWatchResource<PodKind>({ ...resource, watch: true }, PodModel, { retry: false });
+  } = useK8sWatchResource<PodKind>({ ...resource, watch: true }, PodModel, LOGS_QUERY_OPTIONS);
 
   return (
     <>

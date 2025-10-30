@@ -18,5 +18,13 @@
   &__body {
     flex: 1;
     position: relative;
+    
+    // Fix for modal context - override absolute positioning
+    .pipeline-run-logs {
+      top: auto !important;
+      bottom: auto !important;
+      height: 100%;
+
+    }
   }
 }

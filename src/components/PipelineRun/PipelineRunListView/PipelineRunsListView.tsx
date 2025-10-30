@@ -11,12 +11,12 @@ import {
 } from '../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
-import { useLocalStorage } from '../../../hooks/useLocalStorage';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import ColumnManagement from '../../../shared/components/table/ColumnManagement';
+import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';

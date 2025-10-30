@@ -13,12 +13,12 @@ import {
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useLocalStorage } from '../../../../hooks/useLocalStorage';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
 import FilteredEmptyState from '../../../../shared/components/empty-state/FilteredEmptyState';
 import ColumnManagement from '../../../../shared/components/table/ColumnManagement';
+import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
