@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import AboutModal from '../AboutModal';
+import AboutModal, { createAboutModal } from '../AboutModal';
 
 // Mock the documentation constants
 jest.mock('~/consts/documentation', () => ({
@@ -43,37 +43,22 @@ jest.mock('~/shared', () => ({
 }));
 
 describe('AboutModal Component', () => {
-  const defaultProps = {
-    isOpen: false,
-    onClose: jest.fn(),
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
   });
 
-  describe('Rendering', () => {
-    it('should not render when isOpen is false', () => {
-      render(<AboutModal {...defaultProps} />);
+  describe('Modal Content Rendering', () => {
+    it('should render the content component', () => {
+      render(<AboutModal />);
 
-      expect(screen.queryByText('About Konflux')).not.toBeInTheDocument();
-    });
-
-    it('should render modal when isOpen is true', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
-
-      expect(screen.getByText('About Konflux')).toBeInTheDocument();
-    });
-
-    it('should display the correct title', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
-
-      expect(screen.getByText('About Konflux')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Konflux is a comprehensive platform for modern application development/),
+      ).toBeInTheDocument();
     });
 
     it('should display the description text', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       expect(
         screen.getByText(/Konflux is a comprehensive platform for modern application development/),
@@ -83,13 +68,13 @@ describe('AboutModal Component', () => {
 
   describe('Key Features Section', () => {
     it('should display "Key Features" heading', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       expect(screen.getByText('Key Features')).toBeInTheDocument();
     });
 
     it('should display all key features', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       const expectedFeatures = [
         'Application lifecycle management',
@@ -106,7 +91,7 @@ describe('AboutModal Component', () => {
     });
 
     it('should render key features as a list', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       // Find the list directly by role, which is more reliable
       const lists = screen.getAllByRole('list');
@@ -116,14 +101,14 @@ describe('AboutModal Component', () => {
 
   describe('Resources Section', () => {
     it('should display "Resources" heading', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       expect(screen.getByText('Resources')).toBeInTheDocument();
     });
 
     it('should display external documentation link for public visibility', () => {
       mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       const docLink = screen.getByRole('link', { name: /Documentation/i });
       expect(docLink).toBeInTheDocument();
@@ -132,7 +117,7 @@ describe('AboutModal Component', () => {
 
     it('should display internal documentation link for private visibility', () => {
       mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'private' }]);
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       const docLink = screen.getByRole('link', { name: /Documentation/i });
       expect(docLink).toBeInTheDocument();
@@ -140,7 +125,7 @@ describe('AboutModal Component', () => {
     });
 
     it('should display GitHub repository link', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       const githubLink = screen.getByRole('link', { name: /GitHub Repository/i });
       expect(githubLink).toBeInTheDocument();
@@ -148,7 +133,7 @@ describe('AboutModal Component', () => {
     });
 
     it('should display official website link', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       const websiteLink = screen.getByRole('link', { name: /Official Website/i });
       expect(websiteLink).toBeInTheDocument();
@@ -156,7 +141,7 @@ describe('AboutModal Component', () => {
     });
 
     it('should render resources as external links with proper attributes', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       const links = screen.getAllByRole('link');
       links.forEach((link) => {
@@ -168,38 +153,28 @@ describe('AboutModal Component', () => {
 
   describe('Version Information', () => {
     it('should display version information', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       expect(screen.getByText(/Konflux UI /)).toBeInTheDocument();
       expect(screen.getByText(/Built with React and Patternfly/)).toBeInTheDocument();
     });
   });
 
-  describe('Modal Interaction', () => {
-    it('should call onClose when modal close is triggered', () => {
-      const mockOnClose = jest.fn();
-      render(<AboutModal {...defaultProps} isOpen={true} onClose={mockOnClose} />);
-
-      // Find the close button in PatternFly modal and click it
-      const closeButton = screen.getByLabelText('Close');
-      fireEvent.click(closeButton);
-
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
+  describe('Modal Launcher', () => {
+    it('should create a modal launcher function', () => {
+      expect(typeof createAboutModal).toBe('function');
     });
 
-    it('should have correct modal variant', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
-
-      // Check that modal exists - PatternFly Modal with medium variant
-      const modal = screen.getByRole('dialog');
-      expect(modal).toBeInTheDocument();
+    it('should create modal launcher with correct configuration', () => {
+      const launcher = createAboutModal();
+      expect(typeof launcher).toBe('function');
     });
   });
 
   describe('Visibility-based Behavior', () => {
     it('should default to external documentation when visibility is undefined', () => {
       mockUseKonfluxPublicInfo.mockReturnValue([{}]);
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       // Check for any link with external-docs URL instead of specific testid
       const docLink = screen.getByRole('link', { name: /Documentation/i });
@@ -209,7 +184,7 @@ describe('AboutModal Component', () => {
     it('should handle null Konflux public info gracefully', () => {
       mockUseKonfluxPublicInfo.mockReturnValue([null]);
 
-      expect(() => render(<AboutModal {...defaultProps} isOpen={true} />)).not.toThrow();
+      expect(() => render(<AboutModal />)).not.toThrow();
 
       const docLink = screen.getByRole('link', { name: /Documentation/i });
       expect(docLink).toHaveAttribute('href', 'https://external-docs.example.com');
@@ -218,18 +193,15 @@ describe('AboutModal Component', () => {
     it('should handle missing parsedData gracefully', () => {
       mockUseKonfluxPublicInfo.mockReturnValue([undefined]);
 
-      expect(() => render(<AboutModal {...defaultProps} isOpen={true} />)).not.toThrow();
+      expect(() => render(<AboutModal />)).not.toThrow();
     });
   });
 
   describe('Content Structure', () => {
     it('should have proper semantic structure', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
-      // Check for proper headings hierarchy
-      const modal = screen.getByRole('dialog');
-      expect(modal).toBeInTheDocument();
-
+      // Check for proper headings hierarchy (no modal wrapper in this component)
       const keyFeaturesHeading = screen.getByRole('heading', { name: 'Key Features' });
       const resourcesHeading = screen.getByRole('heading', { name: 'Resources' });
 
@@ -238,7 +210,7 @@ describe('AboutModal Component', () => {
     });
 
     it('should have accessible content organization', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       // Check that content is properly organized in lists
       const lists = screen.getAllByRole('list');
@@ -246,38 +218,9 @@ describe('AboutModal Component', () => {
     });
   });
 
-  describe('Props Handling', () => {
-    it('should respond to isOpen prop changes', () => {
-      const { rerender } = render(<AboutModal {...defaultProps} isOpen={false} />);
-
-      expect(screen.queryByText('About Konflux')).not.toBeInTheDocument();
-
-      rerender(<AboutModal {...defaultProps} isOpen={true} />);
-
-      expect(screen.getByText('About Konflux')).toBeInTheDocument();
-    });
-
-    it('should call onClose with different callback functions', () => {
-      const mockOnClose1 = jest.fn();
-      const mockOnClose2 = jest.fn();
-
-      const { rerender } = render(
-        <AboutModal {...defaultProps} isOpen={true} onClose={mockOnClose1} />,
-      );
-
-      // Simulate close action
-      fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
-
-      rerender(<AboutModal {...defaultProps} isOpen={true} onClose={mockOnClose2} />);
-
-      // The component should handle prop changes correctly
-      expect(() => fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })).not.toThrow();
-    });
-  });
-
   describe('Integration with External Dependencies', () => {
     it('should integrate properly with ExternalLink component', () => {
-      render(<AboutModal {...defaultProps} isOpen={true} />);
+      render(<AboutModal />);
 
       // Verify that ExternalLink components are rendered with correct props
       const links = screen.getAllByRole('link');
@@ -291,7 +234,7 @@ describe('AboutModal Component', () => {
     });
 
     it('should handle changes in Konflux public info', () => {
-      const { rerender } = render(<AboutModal {...defaultProps} isOpen={true} />);
+      const { rerender } = render(<AboutModal />);
 
       // Initially external
       let docLink = screen.getByRole('link', { name: /Documentation/i });
@@ -299,7 +242,7 @@ describe('AboutModal Component', () => {
 
       // Change to internal
       mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'private' }]);
-      rerender(<AboutModal {...defaultProps} isOpen={true} />);
+      rerender(<AboutModal />);
 
       docLink = screen.getByRole('link', { name: /Documentation/i });
       expect(docLink).toHaveAttribute('href', 'https://internal-docs.example.com');

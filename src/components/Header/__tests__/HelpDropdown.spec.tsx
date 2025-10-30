@@ -14,24 +14,24 @@ jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: () => mockUseKonfluxPublicInfo(),
 }));
 
-// Mock AboutModal component
+// Mock modal launcher
+const mockShowModal = jest.fn();
+jest.mock('../../modal/ModalProvider', () => ({
+  useModalLauncher: () => mockShowModal,
+}));
+
+// Mock AboutModal with proper initialization
 jest.mock('../AboutModal', () => ({
   __esModule: true,
-  default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
-    isOpen ? (
-      <div data-testid="about-modal">
-        <div>About Modal Content</div>
-        <button data-testid="close-modal" onClick={onClose}>
-          Close
-        </button>
-      </div>
-    ) : null,
+  default: () => <div>About Modal Content</div>,
+  createAboutModal: jest.fn(() => jest.fn()),
 }));
 
 describe('HelpDropdown Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
+    mockShowModal.mockClear();
   });
 
   describe('Rendering', () => {
@@ -136,8 +136,12 @@ describe('HelpDropdown Component', () => {
       const aboutButton = screen.getByRole('menuitem', { name: /About Konflux/i });
       expect(() => fireEvent.click(aboutButton)).not.toThrow();
 
-      // Verify the dropdown items are still accessible
-      expect(aboutButton).toBeInTheDocument();
+      // Verify the modal launcher was called
+      expect(mockShowModal).toHaveBeenCalledTimes(1);
+
+      // Get the mocked createAboutModal function
+      const { createAboutModal } = jest.requireMock('../AboutModal');
+      expect(createAboutModal).toHaveBeenCalledTimes(1);
     });
 
     it('should have About Konflux menu item with correct attributes', async () => {
@@ -153,7 +157,7 @@ describe('HelpDropdown Component', () => {
       });
     });
 
-    it('should render modal component in DOM when clicked', async () => {
+    it('should call modal launcher when About button is clicked', async () => {
       render(<HelpDropdown />);
 
       const helpIcon = screen.getByLabelText('Help menu toggle');
@@ -166,8 +170,12 @@ describe('HelpDropdown Component', () => {
       const aboutButton = screen.getByRole('menuitem', { name: /About Konflux/i });
       fireEvent.click(aboutButton);
 
-      // Check if modal content appears (more flexible check)
-      expect(screen.getByText('About Modal Content')).toBeInTheDocument();
+      // Verify modal launcher is called with the correct function
+      expect(mockShowModal).toHaveBeenCalledTimes(1);
+
+      // Get the mocked createAboutModal function
+      const { createAboutModal } = jest.requireMock('../AboutModal');
+      expect(createAboutModal).toHaveBeenCalledTimes(1);
     });
   });
 
