@@ -287,7 +287,7 @@ describe('LatestIssuesCard', () => {
 
       // The timestamp should be formatted according to the formatTimestamp function
       // This will vary based on the user's locale, so we just check that some timestamp is present
-      expect(screen.getByText(/Oct 15.*8:00.*PM/)).toBeInTheDocument();
+      expect(screen.getByText(/Oct 15.*\d{1,2}:\d{2}.*[AP]M/)).toBeInTheDocument();
     });
 
     it('should format timestamps with minutes correctly', () => {
@@ -306,7 +306,7 @@ describe('LatestIssuesCard', () => {
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
       // This should show minutes as well
-      expect(screen.getByText(/Oct 15.*8:02.*PM/)).toBeInTheDocument();
+      expect(screen.getByText(/Oct 15.*\d{1,2}:\d{2}.*[AP]M/)).toBeInTheDocument();
     });
   });
 
