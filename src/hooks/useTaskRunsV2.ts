@@ -9,7 +9,7 @@ import {
 } from '../kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
 import { TaskRunKind, TektonResourceLabel } from '../types';
-import { createKubearchiveWatchResource } from '../utils/task-run-filter-transforms';
+import { createKubearchiveWatchResource } from '../utils/kubearchive-filter-transform';
 import { sortTaskRunsByTime } from './useTaskRuns';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
 // eslint-disable-next-line import/order

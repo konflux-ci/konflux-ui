@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
-import { SECRET_LIST_PATH } from '@routes/paths';
+import PageLayout from '~/components/PageLayout/PageLayout';
+import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
+import { SECRET_LIST_PATH } from '~/routes/paths';
+import FormFooter from '~/shared/components/form-components/FormFooter';
+import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace';
-import FormFooter from '../../../shared/components/form-components/FormFooter';
-import ExternalLink from '../../../shared/components/links/ExternalLink';
-import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '../../../types';
-import { addSecretWithLinkingComponents } from '../../../utils/create-utils';
-import PageLayout from '../../PageLayout/PageLayout';
+import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '~/types';
+import { addSecretWithLinkingComponents } from '~/utils/create-utils';
 import { getAddSecretBreadcrumbs } from '../utils/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
@@ -68,9 +69,7 @@ const AddSecretForm: React.FC = () => {
           description={
             <>
               Add a secret that will be stored using AWS Secret Manager to keep your data private.{' '}
-              <ExternalLink href="https://konflux-ci.dev/docs/building/creating-secrets/">
-                Learn more
-              </ExternalLink>
+              <ExternalLink href={LEARN_MORE_ABOUT_SECRETS_CREATION}>Learn more</ExternalLink>
             </>
           }
           footer={

@@ -71,6 +71,14 @@ const octokit = new Octokit({ auth: GITHUB_TOKEN });
 // ----- Utility Functions -----
 
 /**
+ * Returns the correct singular or plural form of "PR" based on count.
+ *
+ * @param {number} count - Number of PRs
+ * @returns {string} "PR" if count is 1, "PRs" otherwise
+ */
+const prLabel = (count) => (count === 1 ? 'PR' : 'PRs');
+
+/**
  * Calculates business days (weekdays) between two dates, excluding weekends.
  * Uses a mathematical approach for better performance than iterating day-by-day.
  *
@@ -268,7 +276,7 @@ const checkStalePRs = async () => {
         ]);
 
         const daysOpen = now.diff(dayjs(pr.created_at), 'day');
-        const prInfo = { number: pr.number };
+        const prInfo = { number: pr.number, author: pr.user.login };
 
         // Skip draft PRs from staleness analysis (they're tracked separately)
         if (pr.draft) {
@@ -409,7 +417,7 @@ const checkStalePRs = async () => {
 
     // ----- Build Slack Message -----
     const today = now.format('MMM D, YYYY');
-    let message = `:bar_chart: *Konflux-UI PR Report — ${today}*\n\n*Open PRs:* ${prs.length}\n`;
+    let message = `:bar_chart: *Konflux-UI PR Report — ${today}*\n\n*Open ${prLabel(prs.length)}:* ${prs.length}\n`;
 
     // Calculate date ranges for GitHub filter links (for age-based categories)
     const twoMonthsAgo = now.subtract(60, 'day').format('YYYY-MM-DD');
@@ -468,15 +476,21 @@ const checkStalePRs = async () => {
       if (!cat.prs.length) return; // Skip empty categories
 
       if (cat.filterLink) {
-        // Age-based categories: show count with link to GitHub filter
-        message += `${cat.emoji} *${cat.name}:* <${cat.filterLink}|${cat.prs.length} PRs>\n`;
+        // Age-based categories: show count with link to GitHub filter + unique owners
+        // Extract unique owners for this category and sort alphabetically (case-insensitive)
+        const uniqueOwners = [...new Set(cat.prs.map((p) => p.author))].sort((a, b) =>
+          a.toLowerCase().localeCompare(b.toLowerCase()),
+        );
+        const ownersList = uniqueOwners.join(', ');
+        message += `${cat.emoji} *${cat.name}:* <${cat.filterLink}|${cat.prs.length} ${prLabel(cat.prs.length)} (${ownersList})>\n`;
       } else {
         // Action-based categories: show individual PR numbers as clickable links
         // Sort PR numbers from smallest to biggest for consistent, readable output
         const sortedPRs = cat.prs.sort((a, b) => a.number - b.number);
-        message += `${cat.emoji} *${cat.name}:* ${sortedPRs.length} PRs (${sortedPRs
+        message += `${cat.emoji} *${cat.name}:* ${sortedPRs.length} ${prLabel(sortedPRs.length)} (${sortedPRs
           .map(
-            (p) => `<https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${p.number}|#${p.number}>`,
+            (p) =>
+              `<https://github.com/${REPO_OWNER}/${REPO_NAME}/pull/${p.number}|#${p.number} - ${p.author}>`,
           )
           .join(', ')})\n`;
       }

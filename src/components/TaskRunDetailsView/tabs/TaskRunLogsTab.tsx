@@ -6,6 +6,7 @@ import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { TaskRunKind } from '~/types';
 import { taskRunStatus } from '~/utils/pipeline-utils';
+import '../../TaskRuns/TaskRunLogs.scss';
 
 export type TaskRunLogProps = {
   taskRun: TaskRunKind;
@@ -17,7 +18,11 @@ const TaskRunLogsTab: React.FC = () => {
   const [taskRun] = useTaskRunV2(namespace, taskRunName);
   const status = taskRunStatus(taskRun);
 
-  return <TaskRunLogs taskRun={taskRun} status={status} namespace={namespace} />;
+  return (
+    <div className="task-run-logs-tab">
+      <TaskRunLogs taskRun={taskRun} status={status} namespace={namespace} />
+    </div>
+  );
 };
 
 export default TaskRunLogsTab;

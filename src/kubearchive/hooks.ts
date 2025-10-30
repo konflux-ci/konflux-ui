@@ -8,7 +8,6 @@ import {
 } from '@tanstack/react-query';
 import {
   k8sListResource,
-  convertToK8sQueryParams,
   createQueryKeys,
   createGetQueryOptions,
   K8sResourceListOptions,
@@ -17,7 +16,7 @@ import { TQueryOptions } from '../k8s/query/type';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
 import { useIsKubeArchiveEnabled } from './conditional-checks';
 import { KUBEARCHIVE_PATH_PREFIX } from './const';
-import { withKubearchivePathPrefix } from './fetch-utils';
+import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from './fetch-utils';
 
 /**
  * Hook for fetching paginated list resources from KubeArchive with infinite query support.
@@ -34,7 +33,7 @@ export function useKubearchiveListResourceQuery(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
 ): UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown> {
-  const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
+  const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const queryKey = createQueryKeys({ model, queryOptions: k8sQueryOptions, prefix: 'kubearchive' });
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
   return useInfiniteQuery<K8sResourceCommon[]>({
@@ -87,7 +86,7 @@ export function useKubearchiveGetResourceQuery(
   queryOptions?: TQueryOptions<K8sResourceCommon>,
   options: Partial<RequestInit & { wsPrefix?: string; pathPrefix?: string }> = {},
 ): UseQueryResult<K8sResourceCommon, unknown> {
-  const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
+  const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const baseOptions = { requestInit: { ...options, pathPrefix: KUBEARCHIVE_PATH_PREFIX } };
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
   return useQuery<K8sResourceCommon>(

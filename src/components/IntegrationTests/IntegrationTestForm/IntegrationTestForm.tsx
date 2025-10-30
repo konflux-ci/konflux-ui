@@ -10,7 +10,7 @@ import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import IntegrationTestSection from './IntegrationTestSection';
 // [TODO]: Refactor form styles from the shared style sheet
-import '../../../shared/style.scss';
+import '~/shared/style.scss';
 import './IntegrationTestForm.scss';
 
 type IntegrationTestFormProps = {

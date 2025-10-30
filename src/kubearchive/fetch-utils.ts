@@ -9,7 +9,7 @@ import {
   k8sListResource,
 } from '../k8s';
 import { TQueryOptions } from '../k8s/query/type';
-import { K8sResourceCommon } from '../types/k8s';
+import { K8sResourceCommon, QueryOptionsWithSelector, WatchK8sResource } from '../types/k8s';
 import { KUBEARCHIVE_PATH_PREFIX } from './const';
 
 function withKubearchivePathPrefix<
@@ -33,10 +33,8 @@ export function kubearchiveQueryGetResource<TResource extends K8sResourceCommon>
   resourceInit: K8sResourceReadOptions,
   options?: TQueryOptions<TResource>,
 ): Promise<TResource> {
-  return (
-    queryClient.ensureQueryData<TResource>(
-      createGetQueryOptions<TResource>(withKubearchivePathPrefix(resourceInit), options),
-    )
+  return queryClient.ensureQueryData<TResource>(
+    createGetQueryOptions<TResource>(withKubearchivePathPrefix(resourceInit), options),
   );
 }
 
@@ -44,10 +42,8 @@ export function kubearchiveQueryListResourceItems<TResource extends K8sResourceC
   resourceInit: K8sResourceListOptions,
   options?: TQueryOptions<TResource>,
 ): Promise<TResource> {
-  return (
-    queryClient.ensureQueryData<TResource>(
-      createListqueryOptions<TResource>(withKubearchivePathPrefix(resourceInit), options),
-    )
+  return queryClient.ensureQueryData<TResource>(
+    createListqueryOptions<TResource>(withKubearchivePathPrefix(resourceInit), options),
   );
 }
 
@@ -55,13 +51,50 @@ export function kubearchiveQueryListResource<TResource extends K8sResourceCommon
   resourceInit: K8sResourceListOptions,
   options?: TQueryOptions<K8sResourceListResult<TResource>>,
 ): Promise<K8sResourceListResult<TResource>> {
-  return (
-    queryClient.ensureQueryData({
-      ...options,
-      queryKey: createQueryKeys(withKubearchivePathPrefix(resourceInit)),
-      queryFn: () => k8sListResource(withKubearchivePathPrefix(resourceInit)),
-    })
-  );
+  return queryClient.ensureQueryData({
+    ...options,
+    queryKey: createQueryKeys(withKubearchivePathPrefix(resourceInit)),
+    queryFn: () => k8sListResource(withKubearchivePathPrefix(resourceInit)),
+  });
 }
+
+export const convertToKubearchiveQueryParams = (
+  resourceInit?: WatchK8sResource,
+): QueryOptionsWithSelector => {
+  if (!resourceInit) {
+    return undefined;
+  }
+  const queryParams: QueryOptionsWithSelector['queryParams'] = {};
+
+  if (resourceInit.selector && Object.keys(resourceInit.selector).length > 0) {
+    queryParams.labelSelector = resourceInit.selector;
+  }
+
+  // e.g. name=*e2e*,creationTimestampAfter=2023-01-01T12:00:00Z
+  //
+  // ['name=*e2e**', 'creationTimestampAfter=2023-01-01T12:00:00Z']
+  //
+  // queryParams.name = '*e2e*'
+  // queryParams.creationTimestampAfter = '2023-01-01T12:00:00Z'
+  if (resourceInit.fieldSelector) {
+    const fields = resourceInit.fieldSelector.split(',');
+    fields.forEach((field) => {
+      const [key, value] = field.split('=');
+      if (key && value) {
+        queryParams[key] = value;
+      }
+    });
+  }
+
+  if (resourceInit.limit) {
+    queryParams.limit = resourceInit.limit;
+  }
+
+  return {
+    ns: resourceInit.namespace,
+    name: resourceInit.name,
+    queryParams,
+  };
+};
 
 export { withKubearchivePathPrefix };
