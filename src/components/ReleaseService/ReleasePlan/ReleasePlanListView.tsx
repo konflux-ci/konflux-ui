@@ -3,7 +3,7 @@ import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useApplications } from '~/hooks/useApplications';
-import { useLocalStorage } from '~/hooks/useLocalStorage';
+import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import {

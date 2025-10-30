@@ -9,3 +9,5 @@ export const GETTING_ACCESS_INTERNAL =
   'https://konflux.pages.redhat.com/docs/users/getting-started/getting-access-new.html';
 export const LEARN_MORE_ABOUT_INTEGRATION_TESTS =
   'https://konflux-ci.dev/docs/testing/integration/';
+export const LEARN_MORE_ABOUT_SECRETS_CREATION =
+  'https://konflux-ci.dev/docs/building/creating-secrets/';

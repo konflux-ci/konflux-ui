@@ -6,7 +6,7 @@ import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
+import { PipelineRunType } from '../../../consts/pipelinerun';
 import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -32,17 +32,13 @@ const CommitDetailsView: React.FC = () => {
     namespace,
     applicationName,
     commitName,
+    1,
+    undefined,
+    PipelineRunType.BUILD,
   );
 
   const commit = React.useMemo(
-    () =>
-      loaded &&
-      pipelineruns?.length &&
-      createCommitObjectFromPLR(
-        pipelineruns.find(
-          (p) => p.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-        ),
-      ),
+    () => loaded && pipelineruns?.length && createCommitObjectFromPLR(pipelineruns[0]),
     [loaded, pipelineruns],
   );
 
