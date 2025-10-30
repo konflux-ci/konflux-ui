@@ -45,6 +45,9 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     isLoading,
     clusterError,
     archiveError,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
@@ -133,7 +136,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           {filteredSnapshots.length === 0 ? (
             <FilteredEmptyState onClearFilters={onClearFilters} />
           ) : (
-            <SnapshotsList snapshots={filteredSnapshots} applicationName={applicationName} />
+            <SnapshotsList
+              snapshots={filteredSnapshots}
+              applicationName={applicationName}
+              infiniteLoadingProps={{ hasNextPage, isFetchingNextPage, fetchNextPage }}
+            />
           )}
         </>
       )}
