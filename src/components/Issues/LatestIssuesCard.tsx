@@ -13,6 +13,8 @@ import {
   List,
   ListItem,
   Spinner,
+  Text,
+  TextVariants,
 } from '@patternfly/react-core';
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
 import {
@@ -26,6 +28,7 @@ import { Issue, IssueState, IssueSeverity } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import EmptySearchImgUrl from '~/shared/assets/Not-found.svg';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import { dateTimeFormatter, isValid } from '~/shared/components/timestamp/datetime';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useNamespace } from '../../shared/providers/Namespace';
 import './LatestIssuesCard.scss';
@@ -51,13 +54,7 @@ interface LatestIssuesCardProps {
 
 const formatTimestamp = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  return isValid(date) ? dateTimeFormatter.format(date) : 'Invalid Date';
 };
 
 export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className }) => {
@@ -104,13 +101,15 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className })
                         {getSeverityIcon(issue.severity)}
                       </FlexItem>
                       <FlexItem flex={{ default: 'flex_1' }}>
-                        <div className="latest-issues-card__title">{issue.title}</div>
+                        <Text component={TextVariants.h4} className="latest-issues-card__title">
+                          {issue.title}
+                        </Text>
                       </FlexItem>
                     </Flex>
-                    <div className="latest-issues-card__description">{issue.description}</div>
-                    <div className="latest-issues-card__timestamp">
+                    <Text className="latest-issues-card__description">{issue.description}</Text>
+                    <Text component={TextVariants.small} className="latest-issues-card__timestamp">
                       {formatTimestamp(issue.detectedAt)}
-                    </div>
+                    </Text>
                   </div>
                 </ListItem>
               ))}
