@@ -1,10 +1,12 @@
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import Issues from '../Issues';
 
 // Mock only the feature flag hooks
 jest.mock('../../../feature-flags/hooks', () => ({
   useIsOnFeatureFlag: jest.fn(),
+  useFeatureFlags: jest.fn(),
   IfFeature: ({ children, flag }: { children: React.ReactNode; flag: string }) => {
     const { useIsOnFeatureFlag } = jest.requireMock('../../../feature-flags/hooks');
     const isEnabled = useIsOnFeatureFlag(flag);
@@ -15,9 +17,10 @@ jest.mock('../../../feature-flags/hooks', () => ({
 // Mock react-router-dom since DetailsPage uses it
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
-  useLocation: () => ({ state: null }),
+  useLocation: () => ({ pathname: '/issues', state: null, search: '', hash: '', key: 'default' }),
   useNavigate: () => jest.fn(),
   useSearchParams: () => [new URLSearchParams(), jest.fn()],
+  useResolvedPath: () => ({ pathname: '/issues' }),
 }));
 
 // Mock useDocumentTitle hook used by TabsLayout
@@ -25,12 +28,15 @@ jest.mock('../../../hooks/useDocumentTitle', () => ({
   useDocumentTitle: jest.fn(),
 }));
 
-const { useIsOnFeatureFlag } = jest.requireMock('../../../feature-flags/hooks');
+const { useIsOnFeatureFlag, useFeatureFlags } = jest.requireMock('../../../feature-flags/hooks');
 const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+const mockUseFeatureFlags = useFeatureFlags as jest.Mock;
 
 describe('Issues Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mock for useFeatureFlags - returns empty flags object and a setter function
+    mockUseFeatureFlags.mockReturnValue([{}, jest.fn()]);
   });
 
   describe('when issues-dashboard feature flag is enabled', () => {
@@ -39,7 +45,11 @@ describe('Issues Component', () => {
     });
 
     it('should render the Issues page with correct content', () => {
-      render(<Issues />);
+      render(
+        <MemoryRouter initialEntries={['/issues']}>
+          <Issues />
+        </MemoryRouter>,
+      );
 
       // Test user-visible content
       expect(screen.getByRole('heading', { name: /Issues/i })).toBeInTheDocument();
@@ -49,7 +59,7 @@ describe('Issues Component', () => {
 
       // Test tabs are rendered (user-visible)
       expect(screen.getByText('Overview')).toBeInTheDocument();
-      expect(screen.getByText('Issues')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /Issues/i })).toBeInTheDocument();
     });
   });
 
@@ -59,7 +69,11 @@ describe('Issues Component', () => {
     });
 
     it('should not render anything when feature flag is disabled', () => {
-      const { container } = render(<Issues />);
+      const { container } = render(
+        <MemoryRouter initialEntries={['/issues']}>
+          <Issues />
+        </MemoryRouter>,
+      );
       expect(container.firstChild).toBeNull();
     });
   });
