@@ -56,7 +56,17 @@ const getCommitSortFunction = (columnKey: CommitColumnKeys, direction: SortByDir
   };
 
   return (a: Commit, b: Commit) => {
-    const comparison = String(getValue(a)).localeCompare(String(getValue(b)));
+    const aValue = getValue(a);
+    const bValue = getValue(b);
+
+    // Handle date comparison for committedAt field
+    if (columnKey === 'committedAt') {
+      const aTime = new Date(aValue).getTime() || 0;
+      const bTime = new Date(bValue).getTime() || 0;
+      return direction === SortByDirection.asc ? aTime - bTime : bTime - aTime;
+    }
+
+    const comparison = String(aValue).localeCompare(String(bValue));
     return direction === SortByDirection.asc ? comparison : -comparison;
   };
 };

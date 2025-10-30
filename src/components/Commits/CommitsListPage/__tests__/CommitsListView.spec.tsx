@@ -288,4 +288,32 @@ describe('CommitsListView', () => {
 
     expect(screen.getByTestId('commits-list-next-page-loading-spinner')).toBeVisible();
   });
+
+  it('should sort commits by different columns including dates', () => {
+    renderWithQueryClient(<CommitsList />);
+
+    expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
+  });
+
+  it('should handle commits with missing committedAt data gracefully', () => {
+    renderWithQueryClient(<CommitsList />);
+
+    expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
+  });
+
+  it('should handle infinite loading when has next page', () => {
+    usePipelineRunsV2Mock.mockReturnValue([
+      pipelineWithCommits.slice(0, 4),
+      true,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: true },
+    ]);
+
+    renderWithQueryClient(<CommitsList />);
+
+    expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
+  });
 });

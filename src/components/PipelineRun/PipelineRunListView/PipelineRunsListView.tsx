@@ -79,6 +79,19 @@ const getPipelineRunSortFunction = (
       return direction === SortByDirection.asc ? aValue - bValue : bValue - aValue;
     }
 
+    // Handle date comparison for started and other timestamp fields
+    if (
+      columnKey === 'started' ||
+      (typeof aValue === 'string' &&
+        typeof bValue === 'string' &&
+        aValue.includes('T') &&
+        bValue.includes('T'))
+    ) {
+      const aTime = new Date(aValue as string).getTime() || 0;
+      const bTime = new Date(bValue as string).getTime() || 0;
+      return direction === SortByDirection.asc ? aTime - bTime : bTime - aTime;
+    }
+
     const comparison = String(aValue).localeCompare(String(bValue));
     return direction === SortByDirection.asc ? comparison : -comparison;
   };

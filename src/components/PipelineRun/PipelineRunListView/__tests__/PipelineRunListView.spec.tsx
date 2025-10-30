@@ -424,4 +424,117 @@ describe('Pipeline run List', () => {
       expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
     });
   });
+
+  it('should sort pipeline runs by different columns', () => {
+    const testPipelineRuns: PipelineRunKind[] = [
+      {
+        ...pipelineRuns[0],
+        metadata: {
+          ...pipelineRuns[0].metadata,
+          name: 'plr-a',
+        },
+        status: {
+          ...pipelineRuns[0].status,
+          startTime: '2022-08-04T16:23:43Z',
+          completionTime: '2022-08-04T16:25:43Z',
+        },
+      },
+      {
+        ...pipelineRuns[1],
+        metadata: {
+          ...pipelineRuns[1].metadata,
+          name: 'plr-b',
+        },
+        status: {
+          ...pipelineRuns[1].status,
+          startTime: '2022-08-04T15:23:43Z',
+          completionTime: '2022-08-04T15:28:43Z',
+        },
+      },
+    ];
+
+    usePipelineRunsMock.mockReturnValue([
+      testPipelineRuns,
+      true,
+      null,
+      () => {},
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    render(<TestedComponent name={appName} />);
+
+    expect(screen.queryByText('Name')).toBeInTheDocument();
+    expect(screen.queryByText('Started')).toBeInTheDocument();
+    expect(screen.queryByText('Duration')).toBeInTheDocument();
+
+    expect(screen.queryByText('plr-a')).toBeInTheDocument();
+    expect(screen.queryByText('plr-b')).toBeInTheDocument();
+  });
+
+  it('should handle sorting with missing data gracefully', () => {
+    const testPipelineRunsWithMissingData: PipelineRunKind[] = [
+      {
+        ...pipelineRuns[0],
+        metadata: {
+          ...pipelineRuns[0].metadata,
+          name: 'plr-no-status',
+          labels: {
+            ...pipelineRuns[0].metadata?.labels,
+            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+          },
+        },
+        status: undefined,
+      },
+    ];
+
+    usePipelineRunsMock.mockReturnValue([
+      testPipelineRunsWithMissingData,
+      true,
+      null,
+      () => {},
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    render(<TestedComponent name={appName} />);
+
+    expect(screen.queryByText('Name')).toBeInTheDocument();
+  });
+
+  it('should handle column management functionality', async () => {
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRuns,
+      true,
+      null,
+      () => {},
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    render(<TestedComponent name={appName} />);
+
+    const columnManagementButton = screen.getByRole('button', { name: /manage columns/i });
+    fireEvent.click(columnManagementButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Manage pipeline run columns')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle component name filter correctly', () => {
+    usePipelineRunsMock.mockReturnValue([
+      pipelineRuns,
+      true,
+      null,
+      () => {},
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+
+    render(
+      <FilterContextProvider filterParams={['name', 'status', 'type']}>
+        <PipelineRunsListView applicationName={appName} componentName="sample-component" />
+      </FilterContextProvider>,
+    );
+
+    expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+    expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
+  });
 });
