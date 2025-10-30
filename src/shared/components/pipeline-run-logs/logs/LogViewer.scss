@@ -23,6 +23,10 @@
   &__container {
     position: relative;
     font-family: Menlo, Monaco, 'Courier New', monospace;
+    max-height: 100% !important;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
   }
 
   &__resume-stream-button-wrapper {
@@ -39,8 +43,12 @@
     overflow-x: hidden !important;
     width: 100% !important;
   }
+  &__main {
+    margin-bottom: var(--pf-v5-global--spacer--md);
+    height: 100% !important;
+  }
 
-  .pf-v5-c-log-viewer__scroll-container {
+  &__scroll-container {
     overflow-y: visible !important;
   }
 }

@@ -7,8 +7,8 @@ import {
 } from '~/kubearchive/hooks';
 import {
   createKubearchiveWatchResource,
-  PipelineRunSelector,
-} from '~/utils/pipeline-run-filter-transform';
+  KubearchiveFilterTransformSelector,
+} from '~/utils/kubearchive-filter-transform';
 import { EQ } from '~/utils/tekton-results';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
@@ -20,7 +20,7 @@ import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResult
 
 interface UsePipelineRunsV2Options
   extends Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'fieldSelector'>> {
-  selector?: PipelineRunSelector;
+  selector?: KubearchiveFilterTransformSelector;
 }
 
 type UsePipelineRunsV2Result = [
@@ -322,10 +322,14 @@ export const usePipelineRunV2 = (
       }),
       [pipelineRunName],
     ),
+    {
+      staleTime: Infinity,
+    },
   );
 
   const kubearchiveResult = useKubearchiveGetResourceQuery(resourceInit, PipelineRunModel, {
     enabled: enabled && kubearchiveEnabled,
+    staleTime: Infinity,
   });
 
   return React.useMemo(() => {
