@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-core';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunType } from '../../../../consts/pipelinerun';
+import { PipelineRunType, runStatus } from '../../../../consts/pipelinerun';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
@@ -23,7 +23,6 @@ import {
   createRepoBranchURL,
   createRepoPullRequestURL,
 } from '../../../../utils/commits-utils';
-import { runStatus } from '../../../../utils/pipeline-utils';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { useCommitStatus } from '../../commit-status';

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Popover, Skeleton } from '@patternfly/react-core';
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
-import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType, runStatus } from '../../../consts/pipelinerun';
 import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
 import { ScanResults, useKarchScanResults } from '../../../hooks/useScanResults';
 import {
@@ -22,7 +22,6 @@ import {
   calculateDuration,
   getPipelineRunStatusResults,
   pipelineRunStatus,
-  runStatus,
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';

@@ -1,3 +1,4 @@
+import { runStatus } from '~/consts/pipelinerun';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
 import {
@@ -8,7 +9,6 @@ import {
   getLabelColorFromStatus,
   pipelineRunStatus,
   pipelineRunStatusToGitOpsStatus,
-  runStatus,
   taskName,
   isPipelineV1Beta1,
   isTaskV1Beta1,

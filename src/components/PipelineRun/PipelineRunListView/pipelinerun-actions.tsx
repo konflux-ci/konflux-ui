@@ -7,6 +7,7 @@ import {
   PipelineRunEventType,
   PipelineRunLabel,
   PipelineRunType,
+  runStatus,
 } from '../../../consts/pipelinerun';
 import { SnapshotLabels } from '../../../consts/snapshots';
 import { useComponent } from '../../../hooks/useComponents';
@@ -17,7 +18,7 @@ import { PipelineRunKind } from '../../../types';
 import { Snapshot } from '../../../types/coreBuildService';
 import { startNewBuild } from '../../../utils/component-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
-import { pipelineRunStatus, runStatus } from '../../../utils/pipeline-utils';
+import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
