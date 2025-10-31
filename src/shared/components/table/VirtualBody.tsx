@@ -10,8 +10,13 @@ import { TableData } from './TableData';
 import { TableRow, TableRowProps } from './TableRow';
 import './Table.scss';
 
+export type CustomExpand = {
+  disableRegularExpand?: boolean;
+  customExpand?: Set<number>;
+};
+
 export type VirtualBodyProps<D = unknown, C = unknown> = {
-  customData?: C;
+  customData?: C & CustomExpand;
   Row: React.FC<React.PropsWithChildren<RowFunctionArgs>>;
   ExpandedContent?: React.FC<React.PropsWithChildren<RowFunctionArgs<D, C>>>;
   height: number;
@@ -34,7 +39,7 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
 export type RowFunctionArgs<T = unknown, C = unknown> = {
   obj: T;
   columns: unknown[];
-  customData?: C;
+  customData?: C & CustomExpand;
   index?: number;
 };
 
@@ -47,7 +52,7 @@ const RowMemo = React.memo<
     index: number;
   }
 >(({ Row, expand, isExpanded, onToggle, index, ...props }) => {
-  if (expand) {
+  if (expand && !props.customData?.disableRegularExpand) {
     return (
       <>
         <TableData data-test="virtual-body-expand-row">
@@ -89,6 +94,10 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
   }, [props?.data]);
 
   const [expandedRowIndexes, setExpandedRowIndexes] = React.useState<Set<number>>(new Set());
+
+  React.useEffect(() => {
+    setExpandedRowIndexes(customData?.customExpand);
+  }, [customData?.customExpand]);
 
   const toggleRow = (index: number) => {
     setExpandedRowIndexes((prev) => {
