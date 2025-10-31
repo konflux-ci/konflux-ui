@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -24,6 +25,7 @@ import {
   COMMIT_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_COMMIT_COLUMNS,
   NON_HIDABLE_COMMIT_COLUMNS,
+  COMMIT_COLUMN_ORDER,
 } from './commits-columns-config';
 import { getCommitsListHeaderWithColumns } from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
@@ -32,6 +34,42 @@ interface CommitsListViewProps {
   applicationName?: string;
   componentName?: string;
 }
+
+const getCommitSortFunction = (columnKey: CommitColumnKeys, direction: SortByDirection) => {
+  const getValue = (commit: Commit) => {
+    switch (columnKey) {
+      case 'name':
+        return commit.shaTitle || commit.sha;
+      case 'branch':
+        return commit.branch || '';
+      case 'component':
+        return commit.components.join(', ');
+      case 'byUser':
+        return commit.user || '';
+      case 'committedAt':
+        return commit.pipelineRuns?.[0]?.metadata?.creationTimestamp || '';
+      case 'status':
+        return pipelineRunStatus(commit.pipelineRuns?.[0]) || '';
+      default:
+        return '';
+    }
+  };
+
+  return (a: Commit, b: Commit) => {
+    const aValue = getValue(a);
+    const bValue = getValue(b);
+
+    // Handle date comparison for committedAt field
+    if (columnKey === 'committedAt') {
+      const aTime = new Date(aValue).getTime() || 0;
+      const bTime = new Date(bValue).getTime() || 0;
+      return direction === SortByDirection.asc ? aTime - bTime : bTime - aTime;
+    }
+
+    const comparison = String(aValue).localeCompare(String(bValue));
+    return direction === SortByDirection.asc ? comparison : -comparison;
+  };
+};
 
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
@@ -45,6 +83,15 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     DEFAULT_VISIBLE_COMMIT_COLUMNS,
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
+  const [activeSortIndex, setActiveSortIndex] = React.useState(0);
+  const [activeSortDirection, setActiveSortDirection] = React.useState(SortByDirection.desc);
+
+  React.useEffect(() => {
+    const visibleColumnCount = COMMIT_COLUMN_ORDER.filter((col) => visibleColumns.has(col)).length;
+    if (activeSortIndex >= visibleColumnCount && visibleColumnCount > 0) {
+      setActiveSortIndex(0);
+    }
+  }, [visibleColumns, activeSortIndex]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
@@ -105,14 +152,25 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [loaded, buildPipelineRuns],
   );
 
+  const sortedCommits = React.useMemo(() => {
+    if (!commits.length) return commits;
+
+    const sortColumnKey = COMMIT_COLUMN_ORDER.filter((col) => visibleColumns.has(col))[
+      activeSortIndex
+    ];
+    if (!sortColumnKey) return commits;
+
+    return [...commits].sort(getCommitSortFunction(sortColumnKey, activeSortDirection));
+  }, [commits, activeSortIndex, activeSortDirection, visibleColumns]);
+
   const statusFilterObj = React.useMemo(
-    () => createFilterObj(commits, (c) => pipelineRunStatus(c.pipelineRuns[0]), statuses),
-    [commits],
+    () => createFilterObj(sortedCommits, (c) => pipelineRunStatus(c.pipelineRuns?.[0]), statuses),
+    [sortedCommits],
   );
 
   const filteredCommits = React.useMemo(
     () =>
-      commits.filter(
+      sortedCommits.filter(
         (commit) =>
           (!nameFilter ||
             commit.sha.indexOf(nameFilter) !== -1 ||
@@ -124,9 +182,9 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
             commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
           (!statusFilter.length ||
-            statusFilter.includes(pipelineRunStatus(commit.pipelineRuns[0]))),
+            statusFilter.includes(pipelineRunStatus(commit.pipelineRuns?.[0]))),
       ),
-    [commits, nameFilter, statusFilter],
+    [sortedCommits, nameFilter, statusFilter],
   );
 
   const NoDataEmptyMessage = () => <CommitsEmptyState applicationName={applicationName} />;
@@ -152,12 +210,6 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     </BaseTextFilterToolbar>
   );
 
-  // automatically fetch the next page of pipeline runs when:
-  // - Initial data is loaded
-  // - Current page is empt
-  // - More pages are available
-  // - Not currently fetching the next page
-  // This prevents showing the empty state message while more data is being loaded
   React.useEffect(() => {
     if (
       loaded &&
@@ -179,12 +231,20 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       <Table
         virtualize
         data={filteredCommits}
-        unfilteredData={commits}
+        unfilteredData={sortedCommits}
         EmptyMsg={EmptyMessage}
         NoDataEmptyMsg={NoDataEmptyMessage}
         Toolbar={DataToolbar}
         aria-label="Commit List"
-        Header={getCommitsListHeaderWithColumns(visibleColumns)}
+        Header={getCommitsListHeaderWithColumns(
+          visibleColumns,
+          activeSortIndex,
+          activeSortDirection,
+          (_, index, direction) => {
+            setActiveSortIndex(index);
+            setActiveSortDirection(direction);
+          },
+        )}
         Row={(props) => (
           <CommitsListRow
             obj={props.obj as Commit}

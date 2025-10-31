@@ -1,8 +1,10 @@
-import { PipelineRunColumnKeys } from '../../../consts/pipeline';
+import { SortByDirection, ThProps } from '@patternfly/react-table';
+import { PipelineRunColumnKeys, PIPELINE_RUN_COLUMNS_DEFINITIONS } from '../../../consts/pipeline';
 import {
   generateDynamicColumnClasses,
   COMMON_COLUMN_CONFIGS,
 } from '../../../shared/components/table/dynamic-columns';
+import { createTableHeaders, ColumnConfig } from '../../../shared/components/table/utils';
 
 export const getDynamicColumnClasses = (visibleColumns: Set<PipelineRunColumnKeys>) => {
   const rawClasses = generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS);
@@ -170,107 +172,43 @@ export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
   false,
 );
 
-// New dynamic header function that works with visible columns
-export const getPipelineRunListHeader = (visibleColumns: Set<PipelineRunColumnKeys>) => () => {
+export const getPipelineRunListHeader = (
+  visibleColumns: Set<PipelineRunColumnKeys>,
+  activeSortIndex?: number,
+  activeSortDirection?: SortByDirection,
+  onSort?: ThProps['sort']['onSort'],
+) => {
   const dynamicClasses = getDynamicColumnClasses(visibleColumns);
-  const columns = [];
 
-  if (visibleColumns.has('name')) {
-    columns.push({
-      title: 'Name',
-      props: {
-        className: dynamicClasses.name,
-      },
-    });
-  }
+  const FALLBACK_TITLES: Record<PipelineRunColumnKeys, string> = {
+    name: 'Name',
+    started: 'Started',
+    vulnerabilities: 'Fixable vulnerabilities',
+    duration: 'Duration',
+    status: 'Status',
+    type: 'Type',
+    component: 'Component',
+    snapshot: 'Snapshot',
+    namespace: 'Namespace',
+    trigger: 'Trigger',
+    reference: 'Reference',
+    testResult: 'Test result',
+  };
 
-  if (visibleColumns.has('started')) {
-    columns.push({
-      title: 'Started',
-      props: { className: dynamicClasses.started },
-    });
-  }
-
-  if (visibleColumns.has('vulnerabilities')) {
-    columns.push({
-      title: 'Fixable vulnerabilities',
-      props: { className: dynamicClasses.vulnerabilities },
-    });
-  }
-
-  if (visibleColumns.has('duration')) {
-    columns.push({
-      title: 'Duration',
-      props: { className: dynamicClasses.duration },
-    });
-  }
-
-  if (visibleColumns.has('status')) {
-    columns.push({
-      title: 'Status',
-      props: { className: dynamicClasses.status },
-    });
-  }
-
-  if (visibleColumns.has('testResult')) {
-    columns.push({
-      title: <div>Test result</div>,
-      props: {
-        className: dynamicClasses.testResultStatus,
-        info: {
-          popover: 'The test result is the TEST_OUTPUT of the pipeline run integration test.',
-        },
-      },
-    });
-  }
-
-  if (visibleColumns.has('type')) {
-    columns.push({
-      title: 'Type',
-      props: { className: dynamicClasses.type },
-    });
-  }
-
-  if (visibleColumns.has('component')) {
-    columns.push({
-      title: 'Component',
-      props: { className: dynamicClasses.component },
-    });
-  }
-
-  if (visibleColumns.has('snapshot')) {
-    columns.push({
-      title: 'Snapshot',
-      props: { className: dynamicClasses.snapshot },
-    });
-  }
-
-  if (visibleColumns.has('namespace')) {
-    columns.push({
-      title: 'Namespace',
-      props: { className: dynamicClasses.workspace },
-    });
-  }
-
-  if (visibleColumns.has('trigger')) {
-    columns.push({
-      title: 'Trigger',
-      props: { className: dynamicClasses.trigger },
-    });
-  }
-
-  if (visibleColumns.has('reference')) {
-    columns.push({
-      title: 'Reference',
-      props: { className: dynamicClasses.reference },
-    });
-  }
-
-  // Always add kebab menu
-  columns.push({
-    title: ' ',
-    props: { className: dynamicClasses.kebab },
+  const columnConfigs: ColumnConfig[] = Array.from(visibleColumns).map((columnKey) => {
+    const columnDef = PIPELINE_RUN_COLUMNS_DEFINITIONS.find((def) => def.key === columnKey);
+    return {
+      title: columnDef?.title ?? FALLBACK_TITLES[columnKey] ?? String(columnKey),
+      className: dynamicClasses[columnKey] || '',
+      sortable: columnDef?.sortable ?? false,
+    };
   });
 
-  return columns;
+  columnConfigs.push({
+    title: ' ',
+    className: dynamicClasses.kebab || '',
+    sortable: false,
+  });
+
+  return createTableHeaders(columnConfigs)(activeSortIndex, activeSortDirection, onSort);
 };
