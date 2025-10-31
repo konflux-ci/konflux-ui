@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { InfiniteData } from '@tanstack/react-query';
 import { difference, merge, uniq } from 'lodash-es';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
@@ -129,8 +130,10 @@ export const useScanResults = (pipelineRunName: string): [ScanResults, boolean, 
   ]);
 };
 
-const dataSelector = (data) => data.pages.flatMap((page) => page);
-
+const dataSelectorForScanResults = (data: InfiniteData<TaskRunKind[], unknown>): ScanResults => {
+  const taskRuns = data?.pages?.flatMap((page) => page) ?? [];
+  return processScanTaskRuns(taskRuns);
+};
 export const useKarchScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
 
@@ -146,7 +149,7 @@ export const useKarchScanResults = (pipelineRunName: string): [ScanResults, bool
       },
     },
     TaskRunModel,
-    { enabled: !!pipelineRunName, staleTime: Infinity, select: dataSelector },
+    { enabled: !!pipelineRunName, staleTime: Infinity, select: dataSelectorForScanResults },
   );
 
   React.useEffect(() => {
@@ -160,29 +163,7 @@ export const useKarchScanResults = (pipelineRunName: string): [ScanResults, bool
     }
   }, [karchRes]);
 
-  return React.useMemo(() => {
-    if (
-      karchRes.isLoading ||
-      !pipelineRunName ||
-      karchRes.isError ||
-      karchRes.isFetchingNextPage ||
-      karchRes.hasNextPage
-    ) {
-      return [undefined, !karchRes.isLoading, karchRes.error];
-    }
-
-    const resultObj = processScanTaskRuns(karchRes.data);
-
-    return [resultObj, !karchRes.isLoading, karchRes.error];
-  }, [
-    pipelineRunName,
-    karchRes.data,
-    karchRes.isLoading,
-    karchRes.isError,
-    karchRes.error,
-    karchRes.isFetchingNextPage,
-    karchRes.hasNextPage,
-  ]);
+  return [karchRes.data, !karchRes.isLoading, karchRes.error];
 };
 
 export const getScanResultsMap = (

@@ -44,7 +44,11 @@ export const convertFilterToKubearchiveSelectors = (
   // Build the final selector (excluding custom filter fields)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = filterBy;
-  const selector: Selector = { ...rest, matchLabels: filterBy.matchLabels, matchExpressions };
+  const selector: Selector = {
+    ...rest,
+    matchLabels: filterBy.matchLabels,
+    matchExpressions: matchExpressions.length ? matchExpressions : undefined,
+  }; // matchExpressions is optional only include if it has any expressions and to maintain tanstack query stable hash
 
   return { selector, fieldSelector };
 };
