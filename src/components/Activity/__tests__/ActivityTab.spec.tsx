@@ -18,7 +18,15 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../hooks/useTektonResults');
+jest.mock('../../../hooks/useTektonResults', () => ({
+  useTRTaskRuns: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    jest.fn(),
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+}));
 jest.mock('../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(() => [
     [],

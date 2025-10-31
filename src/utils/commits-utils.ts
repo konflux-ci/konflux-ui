@@ -1,8 +1,12 @@
-import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import {
+  PipelineRunEventType,
+  PipelineRunLabel,
+  PipelineRunType,
+  runStatus,
+} from '../consts/pipelinerun';
 import { SnapshotLabels } from '../consts/snapshots';
 import { PipelineRunKind, Commit } from '../types';
 import { Snapshot } from '../types/coreBuildService';
-import { runStatus } from './pipeline-utils';
 import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
 export const statuses = [

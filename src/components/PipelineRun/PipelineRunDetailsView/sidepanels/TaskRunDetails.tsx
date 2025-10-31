@@ -5,9 +5,10 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
 } from '@patternfly/react-core';
+import { runStatus } from '~/consts/pipelinerun';
 import { SyncMarkdownView, Timestamp } from '../../../../shared';
 import { TaskRunKind } from '../../../../types';
-import { calculateDuration, isTaskV1Beta1, runStatus } from '../../../../utils/pipeline-utils';
+import { calculateDuration, isTaskV1Beta1 } from '../../../../utils/pipeline-utils';
 import RunResultsList from '../tabs/RunResultsList';
 import ScanDescriptionListGroup from '../tabs/ScanDescriptionListGroup';
 

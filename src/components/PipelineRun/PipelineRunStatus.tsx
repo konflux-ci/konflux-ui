@@ -1,8 +1,9 @@
 import * as React from 'react';
+import { runStatus } from '~/consts/pipelinerun';
 import { Timestamp } from '../../shared';
 import { PipelineRunKind } from '../../types';
 import { getBuildStatusIcon } from '../../utils/gitops-utils';
-import { pipelineRunStatus, runStatus } from '../../utils/pipeline-utils';
+import { pipelineRunStatus } from '../../utils/pipeline-utils';
 
 const buildStatusString = (status: runStatus) => {
   switch (status) {

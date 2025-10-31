@@ -1,11 +1,10 @@
 import '@testing-library/jest-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
-import { PipelineRunEventType, PipelineRunLabel } from '../../../../consts/pipelinerun';
+import { PipelineRunEventType, PipelineRunLabel, runStatus } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { PipelineRunKind } from '../../../../types';
-import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { mockComponent } from '../../../Components/ComponentDetails/__data__/mockComponentDetails';

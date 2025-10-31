@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { runStatus } from '~/consts/pipelinerun';
 import { TaskRunKind } from '../../../../../types';
-import { runStatus } from '../../../../../utils/pipeline-utils';
 import TaskRunDetails from '../TaskRunDetails';
 
 jest.mock('react-router-dom', () => {

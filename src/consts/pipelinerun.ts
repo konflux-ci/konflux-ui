@@ -57,3 +57,35 @@ export enum PipelineRunEventType {
 export enum TaskRunLabel {
   TARGET_PLATFORM = 'build.appstudio.redhat.com/target-platform',
 }
+
+export enum runStatus {
+  Succeeded = 'Succeeded',
+  Failed = 'Failed',
+  Running = 'Running',
+  'In Progress' = 'In Progress',
+  FailedToStart = 'FailedToStart',
+  PipelineNotStarted = 'Starting',
+  NeedsMerge = 'PR needs merge',
+  Skipped = 'Skipped',
+  Cancelled = 'Cancelled',
+  Cancelling = 'Cancelling',
+  Pending = 'Pending',
+  Idle = 'Idle',
+  TestWarning = 'Test Warnings',
+  TestFailed = 'Test Failures',
+  Unknown = 'Unknown',
+}
+
+export enum SucceedConditionReason {
+  PipelineRunStopped = 'StoppedRunFinally',
+  PipelineRunCancelled = 'CancelledRunFinally',
+  TaskRunCancelled = 'TaskRunCancelled',
+  Cancelled = 'Cancelled',
+  PipelineRunStopping = 'PipelineRunStopping',
+  PipelineRunPending = 'PipelineRunPending',
+  TaskRunStopping = 'TaskRunStopping',
+  CreateContainerConfigError = 'CreateContainerConfigError',
+  ExceededNodeResources = 'ExceededNodeResources',
+  ExceededResourceQuota = 'ExceededResourceQuota',
+  ConditionCheckFailed = 'ConditionCheckFailed',
+}

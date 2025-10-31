@@ -1,5 +1,5 @@
+import { runStatus } from '~/consts/pipelinerun';
 import { TaskRunKind, PipelineRunKind, PipelineKind } from '../../../../../../types';
-import { runStatus } from '../../../../../../utils/pipeline-utils';
 import { appendStatus } from '../pipelinerun-graph-utils';
 
 const TektonResourceLabel = {

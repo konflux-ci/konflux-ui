@@ -1,6 +1,6 @@
 import { Node, PipelineNodeModel } from '@patternfly/react-topology';
+import { runStatus } from '~/consts/pipelinerun';
 import { BUILD_STATUS_ANNOTATION } from '../../../../../../../utils/component-utils';
-import { runStatus } from '../../../../../../../utils/pipeline-utils';
 import { componentCRMocks } from '../../../../../__data__/mock-data';
 import { WorkflowNodeModelData, WorkflowNodeType } from '../../types';
 import { getBuildNodeForComponent, getLinksForElement } from '../node-utils';

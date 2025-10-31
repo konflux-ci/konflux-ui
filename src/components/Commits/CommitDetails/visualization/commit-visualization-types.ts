@@ -1,7 +1,7 @@
 import { PipelineNodeModel } from '@patternfly/react-topology';
+import { runStatus } from '~/consts/pipelinerun';
 import { Commit } from '../../../../types';
 import { K8sResourceCommon } from '../../../../types/k8s';
-import { runStatus } from '../../../../utils/pipeline-utils';
 
 export enum NodeType {
   WORKFLOW_NODE = 'workflow-node',

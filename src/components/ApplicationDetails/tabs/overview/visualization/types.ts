@@ -1,4 +1,5 @@
 import { EdgeModel, PipelineNodeModel } from '@patternfly/react-topology';
+import { runStatus } from '~/consts/pipelinerun';
 import { Commit, ComponentKind, PipelineRunKind } from '../../../../../types';
 import {
   IntegrationTestScenarioKind,
@@ -6,7 +7,6 @@ import {
   ReleasePlanKind,
 } from '../../../../../types/coreBuildService';
 import { K8sResourceCommon } from '../../../../../types/k8s';
-import { runStatus } from '../../../../../utils/pipeline-utils';
 import { NodeType } from './const';
 
 export enum WorkflowNodeType {

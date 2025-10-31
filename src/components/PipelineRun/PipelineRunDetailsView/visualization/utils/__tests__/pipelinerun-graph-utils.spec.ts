@@ -1,6 +1,6 @@
 import { Node } from '@patternfly/react-topology';
+import { runStatus } from '~/consts/pipelinerun';
 import { PipelineRunKind, PipelineTask, TaskRunKind, PipelineKind } from '../../../../../../types';
-import { runStatus } from '../../../../../../utils/pipeline-utils';
 import { PipelineMixedNodeModel } from '../../../../../topology/types';
 import {
   PipelineRunNodeData,
