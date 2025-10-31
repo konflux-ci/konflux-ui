@@ -4,7 +4,7 @@ import { Page, PageSection } from '@patternfly/react-core';
 import { NAMESPACE_LIST_PATH, RELEASE_MONITOR_PATH } from '@routes/paths';
 import NotificationCenter from '~/components/KonfluxSystemNotifications/NotificationList';
 import SidePanelHost from '~/components/SidePanel/SidePanelHost';
-import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useIsOnFeatureFlag, IfFeature } from '~/feature-flags/hooks';
 import { usePreventWindowCloseIfTaskRunning } from '~/shared/hooks/usePreventWindowClose';
 import { KonfluxBanner } from '../components/KonfluxBanner/KonfluxBanner';
 import { useActiveRouteChecker } from '../hooks/useActiveRouteChecker';
@@ -14,6 +14,8 @@ import { AppHeader } from './AppHeader';
 import { AppSideBar } from './AppSideBar';
 
 import './AppRoot.scss';
+
+const WatsonChatBot = React.lazy(() => import('~/components/WatsonChatBot/WatsonChatBot'));
 
 const namespaceSwitcherNotAllowedRoutes = [
   RELEASE_MONITOR_PATH.path,
@@ -38,6 +40,11 @@ export const AppRoot: React.FC = () => {
   return (
     <>
       <KonfluxBanner />
+      <IfFeature flag="watson-chatbot">
+        <React.Suspense fallback={null}>
+          <WatsonChatBot />
+        </React.Suspense>
+      </IfFeature>
       <Page
         sidebar={<AppSideBar isOpen={isSideBarOpen} />}
         header={
