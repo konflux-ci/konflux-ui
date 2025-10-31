@@ -4,7 +4,7 @@ import { Popover, Skeleton } from '@patternfly/react-core';
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
-import { ScanResults, useScanResults } from '../../../hooks/useScanResults';
+import { ScanResults, useKarchScanResults } from '../../../hooks/useScanResults';
 import {
   PIPELINE_RUNS_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
@@ -70,28 +70,46 @@ const usePipelineRunScanResults = (
   const pipelineRunName = pipelineRun.metadata.name;
   const kubearchiveEnabled = useIsOnFeatureFlag('taskruns-kubearchive');
 
-  const [scanResultsKubearchive, scanLoadedKubearchive, scanErrorKubearchive] = useScanResults(
+  const [scanResultsKubearchive, scanLoadedKubearchive, scanErrorKubearchive] = useKarchScanResults(
     shouldShowScanResults && kubearchiveEnabled ? pipelineRunName : '',
   );
 
-  const [scanResultsTekton] = customData?.vulnerabilities?.[pipelineRunName] ?? [];
-  const scanLoadedTekton = (customData?.fetchedPipelineRuns || []).includes(pipelineRunName);
+  const scanResultsTekton = React.useMemo(
+    () => customData?.vulnerabilities?.[pipelineRunName]?.[0],
+    [customData?.vulnerabilities, pipelineRunName],
+  );
 
-  if (!shouldShowScanResults) {
-    return { scanResults: undefined, scanLoaded: true, scanError: undefined };
-  }
+  const scanLoadedTekton = React.useMemo(
+    () => (customData?.fetchedPipelineRuns || []).includes(pipelineRunName),
+    [customData?.fetchedPipelineRuns, pipelineRunName],
+  );
 
-  const scanResults = kubearchiveEnabled
-    ? scanLoadedKubearchive
-      ? scanResultsKubearchive || undefined
-      : undefined
-    : scanLoadedTekton
-      ? scanResultsTekton || undefined
-      : undefined;
-  const scanLoaded = kubearchiveEnabled ? scanLoadedKubearchive : scanLoadedTekton;
-  const scanError = kubearchiveEnabled ? scanErrorKubearchive : customData?.error;
+  return React.useMemo(() => {
+    if (!shouldShowScanResults) {
+      return { scanResults: undefined, scanLoaded: true, scanError: undefined };
+    }
 
-  return { scanResults, scanLoaded, scanError };
+    const scanResults = kubearchiveEnabled
+      ? scanLoadedKubearchive
+        ? scanResultsKubearchive || undefined
+        : undefined
+      : scanLoadedTekton
+        ? scanResultsTekton || undefined
+        : undefined;
+    const scanLoaded = kubearchiveEnabled ? scanLoadedKubearchive : scanLoadedTekton;
+    const scanError = kubearchiveEnabled ? scanErrorKubearchive : customData?.error;
+
+    return { scanResults, scanLoaded, scanError };
+  }, [
+    shouldShowScanResults,
+    kubearchiveEnabled,
+    scanLoadedKubearchive,
+    scanResultsKubearchive,
+    scanErrorKubearchive,
+    scanLoadedTekton,
+    scanResultsTekton,
+    customData?.error,
+  ]);
 };
 
 const shouldShowScanResults = (pipelineRun: PipelineRunKind): boolean => {

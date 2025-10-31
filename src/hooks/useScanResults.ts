@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { difference, merge, uniq } from 'lodash-es';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import { TaskRunGroupVersionKind, TaskRunModel } from '~/models';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { useNamespace } from '../shared/providers/Namespace';
 import { TektonResourceLabel, TaskRunKind, TektonResultsRun, PipelineRunKind } from '../types';
@@ -78,28 +80,109 @@ export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKi
   return [null, []];
 };
 
+const processScanTaskRuns = (taskRuns: TaskRunKind[]): ScanResults => {
+  const scanTaskRuns = taskRuns.filter((tr) => {
+    const results = isTaskV1Beta1(tr) ? tr.status?.taskResults : tr.status?.results;
+    return results?.some((result) => CVE_SCAN_RESULT_FIELDS.includes(result.name));
+  });
+
+  const [resultObj] = getScanResults(scanTaskRuns);
+  return resultObj;
+};
+
 export const useScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
-  const [taskRuns, loaded, error] = useTaskRunsForPipelineRuns(
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
     undefined,
     false, // Don't watch - scan results are for completed pipeline runs
   );
 
+  React.useEffect(() => {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
+      getNextPage();
+    }
+  }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, loaded, getNextPage, error]);
+
   return React.useMemo(() => {
-    if (!loaded || !pipelineRunName || error) {
-      return [null, loaded, error];
+    if (
+      !loaded ||
+      !pipelineRunName ||
+      nextPageProps.isFetchingNextPage ||
+      nextPageProps.hasNextPage ||
+      error
+    ) {
+      return [undefined, loaded, error];
     }
 
-    const scanTaskRuns = taskRuns.filter((tr) => {
-      const results = isTaskV1Beta1(tr) ? tr.status?.taskResults : tr.status?.results;
-      return results?.some((result) => CVE_SCAN_RESULT_FIELDS.includes(result.name));
-    });
+    const resultObj = processScanTaskRuns(taskRuns);
 
-    const [resultObj] = getScanResults(scanTaskRuns ?? []);
     return [resultObj, loaded, error];
-  }, [loaded, pipelineRunName, taskRuns, error]);
+  }, [
+    loaded,
+    pipelineRunName,
+    taskRuns,
+    error,
+    nextPageProps.isFetchingNextPage,
+    nextPageProps.hasNextPage,
+  ]);
+};
+
+const dataSelector = (data) => data.pages.flatMap((page) => page);
+
+export const useKarchScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
+  const namespace = useNamespace();
+
+  const karchRes = useKubearchiveListResourceQuery(
+    {
+      groupVersionKind: TaskRunGroupVersionKind,
+      isList: true,
+      namespace,
+      selector: {
+        matchLabels: {
+          [TektonResourceLabel.pipelinerun]: pipelineRunName,
+        },
+      },
+    },
+    TaskRunModel,
+    { enabled: !!pipelineRunName, staleTime: Infinity, select: dataSelector },
+  );
+
+  React.useEffect(() => {
+    if (
+      karchRes.hasNextPage &&
+      !karchRes.isFetchingNextPage &&
+      !karchRes.isLoading &&
+      !karchRes.isError
+    ) {
+      void karchRes.fetchNextPage();
+    }
+  }, [karchRes]);
+
+  return React.useMemo(() => {
+    if (
+      karchRes.isLoading ||
+      !pipelineRunName ||
+      karchRes.isError ||
+      karchRes.isFetchingNextPage ||
+      karchRes.hasNextPage
+    ) {
+      return [undefined, !karchRes.isLoading, karchRes.error];
+    }
+
+    const resultObj = processScanTaskRuns(karchRes.data);
+
+    return [resultObj, !karchRes.isLoading, karchRes.error];
+  }, [
+    pipelineRunName,
+    karchRes.data,
+    karchRes.isLoading,
+    karchRes.isError,
+    karchRes.error,
+    karchRes.isFetchingNextPage,
+    karchRes.hasNextPage,
+  ]);
 };
 
 export const getScanResultsMap = (

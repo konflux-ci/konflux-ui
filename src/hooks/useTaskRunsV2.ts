@@ -198,7 +198,7 @@ export const useTaskRunsForPipelineRuns = (
   pipelineRunName: string,
   taskName?: string,
   watch: boolean = true,
-): [TaskRunKind[], boolean, unknown] => {
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const selector = React.useMemo(
     () => ({
       matchLabels: {
@@ -209,19 +209,21 @@ export const useTaskRunsForPipelineRuns = (
     [pipelineRunName, taskName],
   );
 
-  const enabled = namespace && pipelineRunName;
-  const [taskRuns, loaded, error] = useTaskRunsV2(
-    enabled ? namespace : undefined,
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsV2(
+    namespace,
     {
       selector,
       watch,
     },
-    { staleTime: Infinity },
+    { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
   );
 
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
-  return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
+  return React.useMemo(
+    () => [sortedTaskRuns, loaded, error, getNextPage, nextPageProps],
+    [sortedTaskRuns, loaded, error, getNextPage, nextPageProps],
+  );
 };
 
 export const useTaskRunV2 = (
