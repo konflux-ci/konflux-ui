@@ -1,3 +1,4 @@
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { k8sQueryGetResource, K8sQueryListResourceItems } from '../../k8s';
 import { ReleaseModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
@@ -5,11 +6,15 @@ import { getLastUsedNamespace } from '../../shared/providers/Namespace/utils';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
 
 export const releaseListViewTabLoader = createLoaderWithAccessCheck(
-  async () => {
-    const ns = getLastUsedNamespace();
+  async ({ params }) => {
+    const ns = params[RouterParams.workspaceName];
+    const applicationName = params[RouterParams.applicationName];
     return K8sQueryListResourceItems({
       model: ReleaseModel,
-      queryOptions: { ns },
+      queryOptions: {
+        ns,
+        queryParams: { matchLabels: { [PipelineRunLabel.APPLICATION]: applicationName } },
+      },
     });
   },
   { model: ReleaseModel, verb: 'list' },
