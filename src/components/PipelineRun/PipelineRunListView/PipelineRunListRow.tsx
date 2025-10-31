@@ -24,7 +24,7 @@ import {
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { usePipelinerunActions } from './pipelinerun-actions';
+import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
 
@@ -80,7 +80,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
 
   const status = pipelineRunStatus(obj);
-  const actions = usePipelinerunActions(obj);
+  const [actions, onOpen] = usePipelinerunActionsLazy(obj);
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
@@ -219,7 +219,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         </TableData>
       ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
-        <ActionMenu actions={actions} />
+        <ActionMenu actions={actions} onOpen={onOpen} />
       </TableData>
     </>
   );
@@ -265,7 +265,7 @@ const DynamicPipelineRunListRow: React.FC<
   const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
 
   const status = pipelineRunStatus(obj);
-  const actions = usePipelinerunActions(obj);
+  const [actions, onOpen] = usePipelinerunActionsLazy(obj);
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
@@ -413,7 +413,7 @@ const DynamicPipelineRunListRow: React.FC<
         </TableData>
       )}
       <TableData data-test="plr-list-row-kebab" className={dynamicClasses.kebab}>
-        <ActionMenu actions={actions} />
+        <ActionMenu actions={actions} onOpen={onOpen} />
       </TableData>
     </>
   );
