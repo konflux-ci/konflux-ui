@@ -12,10 +12,10 @@ import {
   createGetQueryOptions,
   K8sResourceListOptions,
 } from '~/k8s';
-import { TQueryOptions } from '../k8s/query/type';
+import { TQueryInfiniteOptions, TQueryOptions } from '../k8s/query/type';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
 import { useIsKubeArchiveEnabled } from './conditional-checks';
-import { KUBEARCHIVE_PATH_PREFIX } from './const';
+import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_RESOURCE_LIMIT } from './const';
 import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from './fetch-utils';
 
 /**
@@ -29,15 +29,17 @@ import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from './fe
  * @param model - K8s model definition containing API group, version, and kind information
  * @returns UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown>
  */
-export function useKubearchiveListResourceQuery(
+export function useKubearchiveListResourceQuery<T extends K8sResourceCommon>(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
-): UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown> {
+  queryOptions?: TQueryInfiniteOptions<T[], Error, InfiniteData<T[], unknown>>,
+): UseInfiniteQueryResult<InfiniteData<T[], unknown>, Error> {
   const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const queryKey = createQueryKeys({ model, queryOptions: k8sQueryOptions, prefix: 'kubearchive' });
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
-  return useInfiniteQuery<K8sResourceCommon[]>({
-    enabled: isKubearchiveEnabled,
+  return useInfiniteQuery<T[]>({
+    ...(queryOptions ?? {}),
+    enabled: isKubearchiveEnabled && (queryOptions?.enabled ?? true),
     queryKey,
     queryFn: async ({ pageParam = undefined }) => {
       const pagedOptions = {
@@ -45,12 +47,13 @@ export function useKubearchiveListResourceQuery(
         queryOptions: {
           ...k8sQueryOptions,
           queryParams: {
+            limit: KUBEARCHIVE_RESOURCE_LIMIT,
             ...k8sQueryOptions.queryParams,
-            continue: pageParam as string | undefined,
+            continue: (pageParam ? pageParam : undefined) as string | undefined,
           },
         },
       };
-      const fullRes = await k8sListResource<K8sResourceCommon>(
+      const fullRes = await k8sListResource<T>(
         withKubearchivePathPrefix<K8sResourceListOptions>(pagedOptions),
       );
       // Attach the continue token to the result via a custom property
@@ -61,8 +64,7 @@ export function useKubearchiveListResourceQuery(
       return fullRes.items;
     },
     initialPageParam: undefined,
-    getNextPageParam: (lastPage: K8sResourceCommon[] & { _continue?: string }) =>
-      lastPage?._continue || undefined,
+    getNextPageParam: (lastPage: T[] & { _continue?: string }) => lastPage?._continue || undefined,
   });
 }
 

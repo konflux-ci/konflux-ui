@@ -39,7 +39,6 @@ const SnapshotPipelineRunTab: React.FC = () => {
               [PipelineRunLabel.SNAPSHOT]: snapshotName,
             },
           },
-          limit: 30,
         }),
         [applicationName, snapshotName],
       ),

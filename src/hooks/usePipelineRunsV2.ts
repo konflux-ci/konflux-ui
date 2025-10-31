@@ -170,7 +170,7 @@ export const usePipelineRunsV2 = (
             namespace,
             ...(createKubearchiveWatchResource(namespace, options?.selector) || {}),
             isList: true,
-            limit: options?.limit || 200,
+            limit: options?.limit,
           }
         : undefined,
     [namespace, options?.limit, options?.selector, kubearchiveEnabled, shouldQueryExternalSources],
