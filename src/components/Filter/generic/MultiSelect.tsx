@@ -19,6 +19,7 @@ type MultiSelectProps = {
   values: string[];
   setValues: (filters: string[]) => void;
   options: { [key: string]: number };
+  valueLabels?: { [key: string]: string }; // Optional mapping of values to display labels
 };
 
 export const MultiSelect = ({
@@ -30,14 +31,19 @@ export const MultiSelect = ({
   values,
   setValues,
   options,
+  valueLabels,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
+  const chipLabels = values.map((value) => valueLabels?.[value] || value);
+
   return (
     <ToolbarFilter
-      chips={values}
+      chips={chipLabels}
       deleteChip={(_type, chip) => {
-        setValues(values.filter((v) => v !== chip));
+        const originalValue =
+          values.find((value) => (valueLabels?.[value] || value) === chip) ?? chip;
+        setValues(values.filter((v) => v !== originalValue));
       }}
       deleteChipGroup={() => {
         setValues([]);
@@ -64,6 +70,7 @@ export const MultiSelect = ({
       >
         {[
           <SelectGroup label={label} key={filterKey}>
+<<<<<<< HEAD
             {Object.keys(options).map((filter) =>
               filter.startsWith(MENU_DIVIDER) ? (
                 <Divider key={filter} />
@@ -78,6 +85,18 @@ export const MultiSelect = ({
                 </SelectOption>
               ),
             )}
+=======
+            {Object.keys(options).map((filter) => (
+              <SelectOption
+                key={filter}
+                value={filter}
+                isChecked={values.includes(filter)}
+                itemCount={options[filter] ?? 0}
+              >
+                {valueLabels?.[filter] || filter.charAt(0).toUpperCase() + filter.slice(1)}
+              </SelectOption>
+            ))}
+>>>>>>> 1288183 (refactor: refactoring filters)
           </SelectGroup>,
         ]}
       </Select>
