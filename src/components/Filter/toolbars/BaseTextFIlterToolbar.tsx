@@ -6,7 +6,11 @@ import ColumnManagementButton from '../components/ColumnManagementButton';
 type BaseTextFilterToolbarProps = {
   text: string;
   label: string;
+<<<<<<< HEAD
   setText: (value: string) => void;
+=======
+  setText: (string) => void;
+>>>>>>> 1288183 (refactor: refactoring filters)
   onClearFilters: () => void;
   children?: React.ReactNode;
   dataTest?: string;
