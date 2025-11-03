@@ -5,8 +5,8 @@ import {
   Model,
   PipelineNodeModel,
 } from '@patternfly/react-topology';
+import { runStatus } from '~/consts/pipelinerun';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { runStatus } from '../../../../../../utils/pipeline-utils';
 import { NodeType } from '../const';
 import { WorkflowNodeType } from '../types';
 import { groupToPipelineNode, worstWorkflowStatus } from '../utils/node-utils';

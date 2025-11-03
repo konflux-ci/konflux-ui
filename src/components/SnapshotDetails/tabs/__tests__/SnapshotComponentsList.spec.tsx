@@ -22,7 +22,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock('../../../../utils/component-utils', () => {
-  const actual = jest.requireActual('../../../utils/component-utils');
+  const actual = jest.requireActual('../../../../utils/component-utils');
   return {
     ...actual,
     useURLForComponentPRs: jest.fn(),

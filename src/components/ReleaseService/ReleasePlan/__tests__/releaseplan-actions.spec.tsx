@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
+import { runStatus } from '~/consts/pipelinerun';
 import { ReleasePlanKind } from '../../../../types/coreBuildService';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { useReleasePlanActions } from '../releaseplan-actions';
 

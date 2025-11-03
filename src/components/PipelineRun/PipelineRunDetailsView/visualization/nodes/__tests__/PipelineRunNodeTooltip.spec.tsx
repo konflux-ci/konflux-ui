@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
-import { runStatus } from '../../../../../../utils/pipeline-utils';
+import { runStatus } from '~/consts/pipelinerun';
 import PipelineRunNodeTooltip from '../PipelineRunNodeTooltip';
 
 const mockSteps = [
