@@ -83,7 +83,6 @@ describe('task-run-filter-transforms', () => {
         fieldSelector: undefined,
         selector: {
           matchLabels: undefined,
-          matchExpressions: [],
         },
       });
     });
@@ -97,7 +96,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBe('creationTimestampAfter=2023-01-01T12:00:00Z');
       expect(result.selector).toEqual({
         matchLabels: undefined,
-        matchExpressions: [],
       });
     });
 
@@ -111,7 +109,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBe('name=*test*,creationTimestampAfter=2023-01-01T12:00:00Z');
       expect(result.selector).toEqual({
         matchLabels: undefined,
-        matchExpressions: [],
       });
     });
 
@@ -129,7 +126,6 @@ describe('task-run-filter-transforms', () => {
           'app.kubernetes.io/name': 'my-app',
           environment: 'production',
         },
-        matchExpressions: [],
       });
       expect(result.fieldSelector).toBeUndefined();
     });
@@ -232,7 +228,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBeUndefined();
       expect(result.selector).toEqual({
         matchLabels: undefined,
-        matchExpressions: [],
       });
     });
 
@@ -269,7 +264,6 @@ describe('task-run-filter-transforms', () => {
         matchLabels: {
           app: 'myapp',
         },
-        matchExpressions: [],
         someOtherProp: 'value',
       });
     });
@@ -281,7 +275,7 @@ describe('task-run-filter-transforms', () => {
       };
       const result = convertFilterToKubearchiveSelectors(filterBy);
 
-      expect(result.selector?.matchExpressions).toEqual([]);
+      expect(result.selector?.matchExpressions).toBeUndefined();
     });
   });
 
@@ -301,7 +295,6 @@ describe('task-run-filter-transforms', () => {
       );
       expect(result.selector).toEqual({
         matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        matchExpressions: [],
       });
     });
 
@@ -316,7 +309,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBeUndefined();
       expect(result.selector).toEqual({
         matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        matchExpressions: [],
       });
     });
 
