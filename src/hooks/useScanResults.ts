@@ -248,10 +248,10 @@ export const usePLRScanResults = (
   );
 
   React.useEffect(() => {
-    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded) {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
       getNextPage();
     }
-  }, [nextPageProps, getNextPage, loaded]);
+  }, [nextPageProps, getNextPage, loaded, error]);
 
   return React.useMemo(() => {
     if (!loaded || !pipelineRunNames) {
