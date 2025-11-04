@@ -114,15 +114,13 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className })
                 </ListItem>
               ))}
             </List>
-            <div className="latest-issues-card__footer">
-              <Button
-                variant="link"
-                isInline
-                component={(props) => <Link {...props} to="/issues?state=ACTIVE" />}
-              >
-                View all issues <ArrowRightIcon />
-              </Button>
-            </div>
+            <Button
+              variant="link"
+              isInline
+              component={(props) => <Link {...props} to="/issues?state=ACTIVE" />}
+            >
+              View all issues <ArrowRightIcon />
+            </Button>
           </>
         ) : (
           <AppEmptyState emptyStateImg={EmptySearchImgUrl} title="No issues found">
