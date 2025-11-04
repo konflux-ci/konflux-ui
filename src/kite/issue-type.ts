@@ -107,3 +107,9 @@ export type HealthResponse = {
     };
   };
 };
+
+export type IssueCounts = {
+  counts: Record<string, number>;
+  isLoaded: boolean;
+  error: unknown;
+};

@@ -33,6 +33,7 @@
   &__severity-label {
     font-size: var(--pf-v5-global--FontSize--md);
     color: var(--pf-v5-global--Color--200);
+    width: 5rem;
   }
 
   &__chart-section {
@@ -52,8 +53,9 @@
     justify-content: center;
     align-items: center;
 
+    max-width: 100%;
+
     svg {
-      max-width: 100%;
       height: auto;
     }
 
@@ -74,6 +76,11 @@
     border: 1px dashed var(--pf-v5-global--BorderColor--200);
     border-radius: var(--pf-v5-global--BorderRadius--sm);
     color: var(--pf-v5-global--Color--200);
+  }
+
+  &__chart-loading-state {
+    width: 300px;
+    height: 300px;
   }
 
   &__legend {
@@ -100,6 +107,7 @@
     font-size: var(--pf-v5-global--FontSize--sm);
     color: var(--pf-v5-global--Color--200);
     margin: 0;
+    white-space: nowrap;
   }
 
   &__actions {
