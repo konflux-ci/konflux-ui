@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import { runStatus } from '../../../utils/pipeline-utils';
+import { runStatus } from '~/consts/pipelinerun';
 import TaskRunLogs from '../TaskRunLogs';
 
 describe('TaskRunLogs', () => {

@@ -10,6 +10,7 @@ import {
   WhenStatus,
 } from '@patternfly/react-topology';
 import { PipelineNodeModel } from '@patternfly/react-topology/src/pipelines/types';
+import { runStatus } from '~/consts/pipelinerun';
 import { isCVEScanResult } from '../../../../../hooks/useScanResults';
 import { formatPrometheusDuration } from '../../../../../shared/components/timestamp/datetime';
 import {
@@ -24,7 +25,6 @@ import {
 } from '../../../../../types';
 import {
   pipelineRunStatus,
-  runStatus,
   taskRunStatus,
   isTaskV1Beta1,
 } from '../../../../../utils/pipeline-utils';

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Spinner, Bullseye, Stack } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { useSortedResources } from '../../../hooks/useSortedResources';
 import { Table } from '../../../shared';
@@ -29,6 +30,7 @@ const getLastSuccessfulReleaseTimestamp = (snapshot: Snapshot): string => {
 const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
   snapshots,
   applicationName,
+  infiniteLoadingProps,
 }) => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
     SortableSnapshotHeaders.name,
@@ -88,7 +90,28 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
           id: `${obj.metadata.name}-snapshot-list-item`,
           'aria-label': obj.metadata.name,
         })}
+        isInfiniteLoading
+        infiniteLoaderProps={{
+          isRowLoaded: (args) => {
+            return !!sortedSnapshots[args.index];
+          },
+          loadMoreRows: () => {
+            infiniteLoadingProps?.hasNextPage &&
+              !infiniteLoadingProps?.isFetchingNextPage &&
+              infiniteLoadingProps?.fetchNextPage?.();
+          },
+          rowCount: infiniteLoadingProps?.hasNextPage
+            ? sortedSnapshots.length + 1
+            : sortedSnapshots.length,
+        }}
       />
+      {infiniteLoadingProps?.isFetchingNextPage ? (
+        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
+          <Bullseye>
+            <Spinner size="lg" aria-label="Loading more snapshots" />
+          </Bullseye>
+        </Stack>
+      ) : null}
     </>
   );
 };

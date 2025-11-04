@@ -1,10 +1,11 @@
 import * as React from 'react';
+import { runStatus } from '~/consts/pipelinerun';
 import { useReleasePlans } from '../../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../../hooks/useReleases';
 import { Condition } from '../../../../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../../../../types/coreBuildService';
 import { K8sResourceCommon } from '../../../../../../types/k8s';
-import { conditionsRunStatus, runStatus } from '../../../../../../utils/pipeline-utils';
+import { conditionsRunStatus } from '../../../../../../utils/pipeline-utils';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,

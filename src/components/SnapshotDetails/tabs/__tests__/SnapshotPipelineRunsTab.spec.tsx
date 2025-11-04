@@ -35,6 +35,13 @@ jest.mock('../../../../hooks/useComponents', () => ({
 }));
 
 jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 

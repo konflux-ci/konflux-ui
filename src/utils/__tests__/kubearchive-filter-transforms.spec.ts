@@ -1,5 +1,3 @@
-import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { createEquals } from '~/k8s/k8s-utils';
 import { MatchExpression, MatchLabels } from '~/types/k8s';
 import {
   convertFilterToKubearchiveSelectors,
@@ -46,44 +44,12 @@ describe('task-run-filter-transforms', () => {
       expect(result.selector.matchExpressions).toEqual(matchExpressions);
     });
 
-    it('should convert filterByCommit to match expression', () => {
-      const commitSha = 'abc123def456';
-      const result = convertFilterToKubearchiveSelectors({
-        filterByCommit: commitSha,
-      });
-
-      expect(result.selector.matchExpressions).toEqual([
-        createEquals(PipelineRunLabel.COMMIT_LABEL, commitSha),
-      ]);
-    });
-
-    it('should combine existing matchExpressions with commit expression', () => {
-      const existingExpressions: MatchExpression[] = [
-        {
-          key: 'custom.label',
-          operator: 'Exists',
-        },
-      ];
-
-      const result = convertFilterToKubearchiveSelectors({
-        matchExpressions: existingExpressions,
-        filterByCommit: 'abc123',
-      });
-
-      expect(result.selector.matchExpressions).toHaveLength(2); // 1 existing + 1 commit expression
-      expect(result.selector.matchExpressions[0]).toEqual(existingExpressions[0]);
-      expect(result.selector.matchExpressions[1]).toEqual(
-        createEquals(PipelineRunLabel.COMMIT_LABEL, 'abc123'),
-      );
-    });
-
     it('should handle empty input', () => {
       const result = convertFilterToKubearchiveSelectors({});
       expect(result).toEqual({
         fieldSelector: undefined,
         selector: {
           matchLabels: undefined,
-          matchExpressions: [],
         },
       });
     });
@@ -97,7 +63,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBe('creationTimestampAfter=2023-01-01T12:00:00Z');
       expect(result.selector).toEqual({
         matchLabels: undefined,
-        matchExpressions: [],
       });
     });
 
@@ -111,7 +76,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBe('name=*test*,creationTimestampAfter=2023-01-01T12:00:00Z');
       expect(result.selector).toEqual({
         matchLabels: undefined,
-        matchExpressions: [],
       });
     });
 
@@ -129,7 +93,6 @@ describe('task-run-filter-transforms', () => {
           'app.kubernetes.io/name': 'my-app',
           environment: 'production',
         },
-        matchExpressions: [],
       });
       expect(result.fieldSelector).toBeUndefined();
     });
@@ -232,7 +195,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBeUndefined();
       expect(result.selector).toEqual({
         matchLabels: undefined,
-        matchExpressions: [],
       });
     });
 
@@ -269,7 +231,6 @@ describe('task-run-filter-transforms', () => {
         matchLabels: {
           app: 'myapp',
         },
-        matchExpressions: [],
         someOtherProp: 'value',
       });
     });
@@ -281,7 +242,7 @@ describe('task-run-filter-transforms', () => {
       };
       const result = convertFilterToKubearchiveSelectors(filterBy);
 
-      expect(result.selector?.matchExpressions).toEqual([]);
+      expect(result.selector?.matchExpressions).toBeUndefined();
     });
   });
 
@@ -301,7 +262,6 @@ describe('task-run-filter-transforms', () => {
       );
       expect(result.selector).toEqual({
         matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        matchExpressions: [],
       });
     });
 
@@ -316,7 +276,6 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBeUndefined();
       expect(result.selector).toEqual({
         matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' },
-        matchExpressions: [],
       });
     });
 

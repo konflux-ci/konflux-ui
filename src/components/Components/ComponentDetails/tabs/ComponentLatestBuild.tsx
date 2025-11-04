@@ -12,9 +12,9 @@ import {
   Spinner,
   Button,
 } from '@patternfly/react-core';
+import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { useLatestSuccessfulBuildPipelineRunForComponent } from '../../../../hooks/usePipelineRuns';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
@@ -33,7 +33,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
 }) => {
   const namespace = useNamespace();
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] =
-    useLatestSuccessfulBuildPipelineRunForComponent(namespace, component.metadata.name);
+    useLatestSuccessfulBuildPipelineRunForComponentV2(namespace, component.metadata.name);
   const commit = React.useMemo(
     () => ((pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1)) || [])[0],
     [pipelineRunLoaded, pipelineRun],
