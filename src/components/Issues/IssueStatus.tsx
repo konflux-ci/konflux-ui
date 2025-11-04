@@ -15,10 +15,8 @@ type IssueStatusProps = {
 };
 
 export const IssueStatus: React.FC<IssueStatusProps> = ({ locked, condensed }) => (
-  <span className="issue-status">
-    <span className="issue-status__state">
-      {locked ? <LockedIcon /> : <UnlockedIcon />}
-      {!condensed ? <> {locked ? 'Resolved' : 'Active'}</> : null}
-    </span>
+  <span>
+    {locked ? <LockedIcon /> : <UnlockedIcon />}
+    {!condensed ? <> {locked ? 'Resolved' : 'Active'}</> : null}
   </span>
 );

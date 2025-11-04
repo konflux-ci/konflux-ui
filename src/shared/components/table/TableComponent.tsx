@@ -8,7 +8,7 @@ import { useDeepCompareMemoize } from '../../hooks';
 import { WithScrollContainer } from '../../utils';
 import { ComponentProps, Filter, HeaderFunc, TableProps } from './Table';
 import { TableRow } from './TableRow';
-import { VirtualBody, CustomExpand } from './VirtualBody';
+import { VirtualBody } from './VirtualBody';
 
 import './Table.scss';
 
@@ -75,8 +75,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
     const expandColumn = [];
-    const cData = customData as CustomExpand;
-    if (expand && !cData?.disableRegularExpand) {
+    if (expand) {
       expandColumn.push({
         title: '',
         props: {
@@ -85,7 +84,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
       });
     }
     return [[...expandColumn, ...getActiveColumns(Header, cProps)], cProps];
-  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header, customData]);
+  }, [data, unfilteredData, filters, selected, match, kindObj, expand, Header]);
 
   const ariaRowCount = data && data.length;
   const renderVirtualizedTable = (scrollContainer) => (

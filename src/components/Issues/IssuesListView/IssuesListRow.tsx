@@ -7,23 +7,11 @@ import { IssueStatus } from '../IssueStatus';
 import { issuesTableColumnClasses } from './IssuesListHeader';
 import { severityIcon } from './utils/issue-utils';
 
-export type IssueListRowCustomData = {
-  onToggle?: (issueId: string) => void;
-};
-
-const IssuesListRow: React.FC<RowFunctionArgs<Issue, IssueListRowCustomData>> = ({
-  obj: issue,
-  customData,
-}) => {
+const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
 
   const handleModalToggle = () => {
     setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
-  };
-  const handleComponentClick = () => {
-    if (customData?.onToggle) {
-      customData.onToggle(issue.id);
-    }
   };
 
   const links =
@@ -44,14 +32,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue, IssueListRowCustomData>> = 
       </TableData>
 
       <TableData className={issuesTableColumnClasses.scope}>
-        <Button
-          variant="link"
-          isInline
-          onClick={handleComponentClick}
-          data-test="issues-component-name-button"
-        >
-          {issue.scope.resourceType}
-        </Button>
+        {capitalize(issue.scope.resourceType)}
       </TableData>
 
       <TableData className={issuesTableColumnClasses.severity}>

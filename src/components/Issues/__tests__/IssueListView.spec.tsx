@@ -52,30 +52,6 @@ const mockIssues: Issue[] = [
   }),
 ];
 
-const mockIssuesWithRelations: Issue[] = [
-  createMockIssue({
-    id: '1',
-    title: 'Parent Issue',
-    relatedFrom: [],
-    relatedTo: [
-      {
-        id: 'rel-1',
-        sourceID: '1',
-        targetID: '2',
-        source: createMockIssue({ id: '1', title: 'Parent Issue' }),
-        target: createMockIssue({ id: '2', title: 'Child Issue 1' }),
-      },
-      {
-        id: 'rel-2',
-        sourceID: '1',
-        targetID: '3',
-        source: createMockIssue({ id: '1', title: 'Parent Issue' }),
-        target: createMockIssue({ id: '3', title: 'Child Issue 2' }),
-      },
-    ],
-  }),
-];
-
 const IssueList = () => (
   <FilterContextProvider filterParams={['name', 'status', 'severity']}>
     <IssueListView />
@@ -141,8 +117,6 @@ describe('IssueListView', () => {
     renderWithQueryClient(<IssueList />);
     expect(screen.getByText('Issues')).toBeInTheDocument();
     expect(screen.getByText('This list shows current Konflux issues.')).toBeInTheDocument();
-    // Check that the issues-list container is rendered
-    expect(screen.getByTestId('issues-list')).toBeInTheDocument();
     // Check that table is rendered with role
     expect(screen.getByRole('grid')).toBeInTheDocument();
   });
@@ -155,7 +129,6 @@ describe('IssueListView', () => {
     });
 
     renderWithQueryClient(<IssueList />);
-    expect(screen.getByTestId('issues-list-toolbar')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Filter by issue name...')).toBeInTheDocument();
   });
 
@@ -168,8 +141,7 @@ describe('IssueListView', () => {
 
     const view = renderWithQueryClient(<IssueList />);
 
-    const nameSearchInput = screen.getByTestId('issue name-input-filter');
-    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    const searchInput = screen.getByRole('textbox', { name: /issue name filter/i });
 
     act(() => {
       fireEvent.change(searchInput, { target: { value: 'Critical' } });
@@ -178,9 +150,8 @@ describe('IssueListView', () => {
     act(() => jest.advanceTimersByTime(700));
     view.rerender(<IssueList />);
 
-    // After filtering, check that filtered state exists or items are reduced
-    const issuesList = screen.getByTestId('issues-list');
-    expect(issuesList).toBeInTheDocument();
+    // Verify filtering worked by checking the table still renders
+    expect(screen.getByRole('grid')).toBeInTheDocument();
   });
 
   it('should filter issues by status', () => {
@@ -203,7 +174,6 @@ describe('IssueListView', () => {
     renderWithQueryClient(<IssueList />);
 
     // Verify the issues list is rendered with filtered data showing only 1 row
-    expect(screen.getByTestId('issues-list')).toBeInTheDocument();
     expect(screen.getByRole('grid')).toBeInTheDocument();
 
     // Open status filter to verify it's accessible
@@ -211,7 +181,7 @@ describe('IssueListView', () => {
     fireEvent.click(statusFilterButton);
 
     // Verify the list still renders correctly with the resolved filter applied
-    expect(screen.getByTestId('issues-list')).toBeInTheDocument();
+    expect(screen.getByRole('grid')).toBeInTheDocument();
   });
 
   it('should filter issues by severity', () => {
@@ -234,7 +204,6 @@ describe('IssueListView', () => {
     renderWithQueryClient(<IssueList />);
 
     // Verify the issues list is rendered with filtered data showing only 1 row
-    expect(screen.getByTestId('issues-list')).toBeInTheDocument();
     expect(screen.getByRole('grid')).toBeInTheDocument();
 
     // Open severity filter to verify it's accessible
@@ -242,7 +211,7 @@ describe('IssueListView', () => {
     fireEvent.click(severityFilterButton);
 
     // Verify the list still renders correctly with the critical filter applied
-    expect(screen.getByTestId('issues-list')).toBeInTheDocument();
+    expect(screen.getByRole('grid')).toBeInTheDocument();
   });
 
   it('should display multiple filter options', () => {
@@ -276,55 +245,14 @@ describe('IssueListView', () => {
 
     renderWithQueryClient(<IssueList />);
 
-    // Get the name filter input
-    const nameSearchInput = screen.getByTestId('issue name-input-filter');
-    const searchInput = nameSearchInput.querySelector('.pf-v5-c-text-input-group__text-input');
+    const searchInput = screen.getByRole('textbox', { name: /issue name filter/i });
 
     // Verify we can type in the filter
     fireEvent.change(searchInput, { target: { value: 'test query' } });
     expect(searchInput).toHaveValue('test query');
   });
 
-  it('should toggle expanded row when clicking scope button', () => {
-    mockUseIssues.mockReturnValue({
-      data: { data: mockIssuesWithRelations, total: 1, limit: 10, offset: 0 },
-      isLoading: false,
-      error: null,
-    });
-
-    renderWithQueryClient(<IssueList />);
-
-    // Check if table is rendered
-    expect(screen.getByRole('grid')).toBeInTheDocument();
-  });
-
-  it('should render with issues without relations', () => {
-    mockUseIssues.mockReturnValue({
-      data: {
-        data: [
-          createMockIssue({
-            id: '1',
-            title: 'Issue Without Relations',
-            relatedFrom: [],
-            relatedTo: [],
-          }),
-        ],
-        total: 1,
-        limit: 10,
-        offset: 0,
-      },
-      isLoading: false,
-      error: null,
-    });
-
-    renderWithQueryClient(<IssueList />);
-
-    // Should render table with single issue
-    expect(screen.getByRole('grid')).toBeInTheDocument();
-    expect(screen.getByTestId('issues-list')).toBeInTheDocument();
-  });
-
-  it('should handle issues with single resource scope', () => {
+  it('should render issues', () => {
     mockUseIssues.mockReturnValue({
       data: {
         data: [
@@ -338,132 +266,6 @@ describe('IssueListView', () => {
               resourceName: 'test-component',
               resourceNamespace: 'test-ns',
             },
-          }),
-        ],
-        total: 1,
-        limit: 10,
-        offset: 0,
-      },
-      isLoading: false,
-      error: null,
-    });
-
-    renderWithQueryClient(<IssueList />);
-    expect(screen.getByRole('grid')).toBeInTheDocument();
-  });
-
-  it('should handle issues with multiple related resources of same type', () => {
-    const relatedIssue1 = createMockIssue({
-      id: '2',
-      title: 'Related 1',
-      scope: {
-        resourceType: 'component',
-        resourceName: 'comp-1',
-        resourceNamespace: 'test-ns',
-      },
-    });
-
-    const relatedIssue2 = createMockIssue({
-      id: '3',
-      title: 'Related 2',
-      scope: {
-        resourceType: 'component',
-        resourceName: 'comp-2',
-        resourceNamespace: 'test-ns',
-      },
-    });
-
-    mockUseIssues.mockReturnValue({
-      data: {
-        data: [
-          createMockIssue({
-            id: '1',
-            title: 'Parent Issue',
-            scope: {
-              resourceType: 'component',
-              resourceName: 'parent',
-              resourceNamespace: 'test-ns',
-            },
-            relatedFrom: [],
-            relatedTo: [
-              {
-                id: 'rel-1',
-                sourceID: '1',
-                targetID: '2',
-                source: createMockIssue({ id: '1' }),
-                target: relatedIssue1,
-              },
-              {
-                id: 'rel-2',
-                sourceID: '1',
-                targetID: '3',
-                source: createMockIssue({ id: '1' }),
-                target: relatedIssue2,
-              },
-            ],
-          }),
-        ],
-        total: 1,
-        limit: 10,
-        offset: 0,
-      },
-      isLoading: false,
-      error: null,
-    });
-
-    renderWithQueryClient(<IssueList />);
-    expect(screen.getByRole('grid')).toBeInTheDocument();
-  });
-
-  it('should handle issues with multiple related resource types', () => {
-    const relatedIssue1 = createMockIssue({
-      id: '2',
-      title: 'Related 1',
-      scope: {
-        resourceType: 'component',
-        resourceName: 'comp-1',
-        resourceNamespace: 'test-ns',
-      },
-    });
-
-    const relatedIssue2 = createMockIssue({
-      id: '3',
-      title: 'Related 2',
-      scope: {
-        resourceType: 'pipeline',
-        resourceName: 'pipe-1',
-        resourceNamespace: 'test-ns',
-      },
-    });
-
-    mockUseIssues.mockReturnValue({
-      data: {
-        data: [
-          createMockIssue({
-            id: '1',
-            title: 'Parent Issue',
-            scope: {
-              resourceType: 'component',
-              resourceName: 'parent',
-              resourceNamespace: 'test-ns',
-            },
-            relatedFrom: [],
-            relatedTo: [
-              {
-                id: 'rel-1',
-                sourceID: '1',
-                targetID: '2',
-                source: createMockIssue({ id: '1' }),
-                target: relatedIssue1,
-              },
-              {
-                id: 'rel-2',
-                sourceID: '1',
-                targetID: '3',
-                source: createMockIssue({ id: '1' }),
-                target: relatedIssue2,
-              },
-            ],
           }),
         ],
         total: 1,

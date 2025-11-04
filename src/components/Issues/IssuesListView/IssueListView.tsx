@@ -10,11 +10,8 @@ import { Table, useDeepCompareMemoize } from '~/shared';
 import emptyStateImgUrl from '~/shared/assets/Not-found.svg';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
-import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import IssuesListExpandedHeader from './IssuesListExpandedHeader';
-import { IssuesListExpandedRow } from './IssuesListExpandedRow';
 import IssuesListHeader from './IssuesListHeader';
 import IssuesListRow from './IssuesListRow';
 
@@ -30,10 +27,8 @@ const IssueListView = () => {
   });
   const { name: nameFilter, status: statusFilter, severity: severityFilter } = filters;
 
-  // State to track expanded rows
-  const [expandedIssues, setExpandedIssues] = React.useState<Set<number>>(new Set());
-
   const { data: issuesData, isLoading, error } = useIssues({ namespace });
+
   const issues = React.useMemo(() => {
     if (error) {
       // eslint-disable-next-line no-console
@@ -41,36 +36,7 @@ const IssueListView = () => {
       return [];
     }
     if (isLoading) return [];
-    return issuesData.data.map((issue) => {
-      const relatedIssues = issue.relatedFrom
-        .concat(issue.relatedTo)
-        .flatMap((related) => [related.source, related.target])
-        .reduce((acc, cur) => {
-          if (!acc.some((item) => item.id === cur.id)) {
-            acc.push(cur);
-          }
-          return acc;
-        }, [] as Issue[]);
-      const groups: Record<string, number> = relatedIssues.reduce((acc, cur) => {
-        if (!acc[cur.scope.resourceType]) {
-          acc[cur.scope.resourceType] = 0;
-        }
-        acc[cur.scope.resourceType]++;
-        return acc;
-      }, {});
-      return {
-        ...issue,
-        scope: {
-          resourceType:
-            Object.keys(groups).length === 0
-              ? `1 ${issue.scope.resourceType}`
-              : Object.keys(groups).length > 1
-                ? `${Object.keys(groups).length} groups`
-                : `${Object.values(groups)[0]} ${Object.keys(groups)[0]}${Object.values(groups)[0] > 1 ? 's' : ''}`,
-          data: relatedIssues,
-        },
-      };
-    });
+    return issuesData.data;
   }, [issuesData, isLoading, error]);
 
   const filteredIssues = React.useMemo(
@@ -101,21 +67,6 @@ const IssueListView = () => {
       ]),
     [issues],
   );
-
-  const handleToggle = (issueId: string) => {
-    const refRow = filteredIssues.findIndex((issue) => issue.id === issueId);
-    if (refRow >= 0 && filteredIssues[refRow].scope.data.length > 0) {
-      setExpandedIssues((prev) => {
-        const next = new Set(prev);
-        if (next.has(refRow)) {
-          next.delete(refRow);
-        } else {
-          next.add(refRow);
-        }
-        return next;
-      });
-    }
-  };
 
   const NoDataEmptyMessage = () => (
     <AppEmptyState emptyStateImg={emptyStateImgUrl} title="No issues found">
@@ -187,30 +138,6 @@ const IssueListView = () => {
             id: `${obj.id}-issue-list-item`,
             'aria-label': obj.title,
           })}
-          expand
-          ExpandedContent={(
-            props: RowFunctionArgs<Issue & { scope: { resourceType: string; data: Issue[] } }>,
-          ) => {
-            const issue = props.obj;
-            return (
-              <div className="issues-list-view__expanded-row">
-                <Table
-                  data={issue.scope.data}
-                  Row={IssuesListExpandedRow}
-                  Header={IssuesListExpandedHeader}
-                  loaded={!isLoading}
-                  EmptyMsg={EmptyMessage}
-                  aria-label="Expanded Issues List"
-                  virtualize
-                />
-              </div>
-            );
-          }}
-          customData={{
-            onToggle: handleToggle,
-            customExpand: expandedIssues,
-            disableRegularExpand: true,
-          }}
         />
       </div>
     </>

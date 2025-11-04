@@ -1,4 +1,4 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { IssueSeverity, IssueState } from '~/kite/issue-type';
 import { createMockIssue } from '~/unit-test-utils/mock-issues';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
@@ -14,8 +14,6 @@ jest.mock('react-router-dom', () => {
 });
 
 describe('IssuesListRow', () => {
-  const mockOnToggle = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -27,7 +25,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -49,55 +47,14 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
     );
 
-    const scopeButton = screen.getByRole('button', { name: /pipeline/i });
+    const scopeButton = screen.getByText('Pipeline');
     expect(scopeButton).toBeInTheDocument();
-  });
-
-  it('should call onToggle when scope button is clicked', () => {
-    const issue = createMockIssue({ id: 'test-issue-123' });
-
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
-          </tr>
-        </tbody>
-      </table>,
-    );
-
-    const scopeButton = screen.getByTestId('issues-component-name-button');
-    fireEvent.click(scopeButton);
-
-    expect(mockOnToggle).toHaveBeenCalledTimes(1);
-    expect(mockOnToggle).toHaveBeenCalledWith('test-issue-123');
-  });
-
-  it('should not error when onToggle is not provided', () => {
-    const issue = createMockIssue();
-
-    expect(() => {
-      renderWithQueryClient(
-        <table>
-          <tbody>
-            <tr>
-              <IssuesListRow obj={issue} columns={[]} customData={{}} />
-            </tr>
-          </tbody>
-        </table>,
-      );
-    }).not.toThrow();
-
-    const scopeButton = screen.getByTestId('issues-component-name-button');
-    expect(() => {
-      fireEvent.click(scopeButton);
-    }).not.toThrow();
   });
 
   it('should render critical severity with correct text', () => {
@@ -107,7 +64,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -125,7 +82,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -141,7 +98,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -157,7 +114,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -173,7 +130,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -191,7 +148,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -209,7 +166,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -225,7 +182,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -242,7 +199,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -274,7 +231,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -293,7 +250,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -314,7 +271,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -332,7 +289,7 @@ describe('IssuesListRow', () => {
       <table>
         <tbody>
           <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
+            <IssuesListRow obj={issue} columns={[]} />
           </tr>
         </tbody>
       </table>,
@@ -341,41 +298,5 @@ describe('IssuesListRow', () => {
     // Should render 7 TableData components (columns)
     const cells = container.querySelectorAll('td');
     expect(cells.length).toBe(7);
-  });
-
-  it('should have correct data-test attributes', () => {
-    const issue = createMockIssue();
-
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
-          </tr>
-        </tbody>
-      </table>,
-    );
-
-    expect(screen.getByTestId('issues-list-item')).toBeInTheDocument();
-    expect(screen.getByTestId('issues-list-item-title')).toBeInTheDocument();
-    expect(screen.getByTestId('issues-component-name-button')).toBeInTheDocument();
-  });
-
-  it('should render scope button as link variant', () => {
-    const issue = createMockIssue();
-
-    renderWithQueryClient(
-      <table>
-        <tbody>
-          <tr>
-            <IssuesListRow obj={issue} columns={[]} customData={{ onToggle: mockOnToggle }} />
-          </tr>
-        </tbody>
-      </table>,
-    );
-
-    const scopeButton = screen.getByTestId('issues-component-name-button');
-    expect(scopeButton).toHaveClass('pf-v5-c-button');
-    expect(scopeButton).toHaveClass('pf-m-link');
   });
 });
