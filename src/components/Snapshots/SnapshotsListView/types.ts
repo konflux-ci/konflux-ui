@@ -8,6 +8,11 @@ export type SnapshotsListViewProps = {
 export type SnapshotsListProps = {
   snapshots: Snapshot[];
   applicationName: string;
+  infiniteLoadingProps?: {
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+    fetchNextPage: () => void;
+  };
 };
 
 export type SnapshotsListRowProps = RowFunctionArgs<Snapshot> & {

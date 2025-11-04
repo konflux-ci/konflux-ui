@@ -141,25 +141,10 @@ export const usePipelineRunsV2 = (
 
   const queryTr = !kubearchiveEnabled && shouldQueryExternalSources;
 
-  // Tekton Results (raw) and mirrored commit filtering
-  const [trResourcesRaw, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
+  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
     queryTr ? namespace : null,
     optionsMemo,
   );
-
-  const trResources = React.useMemo((): PipelineRunKind[] => {
-    if (!trResourcesRaw || trResourcesRaw.length === 0) {
-      return [];
-    }
-
-    if (optionsMemo?.selector?.filterByCommit) {
-      return trResourcesRaw.filter(
-        (plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit,
-      );
-    }
-
-    return trResourcesRaw;
-  }, [trResourcesRaw, optionsMemo?.selector?.filterByCommit]);
 
   // KubeArchive query config when enabled
   const resourceInit = React.useMemo(
@@ -170,7 +155,7 @@ export const usePipelineRunsV2 = (
             namespace,
             ...(createKubearchiveWatchResource(namespace, options?.selector) || {}),
             isList: true,
-            limit: options?.limit || 200,
+            limit: options?.limit,
           }
         : undefined,
     [namespace, options?.limit, options?.selector, kubearchiveEnabled, shouldQueryExternalSources],

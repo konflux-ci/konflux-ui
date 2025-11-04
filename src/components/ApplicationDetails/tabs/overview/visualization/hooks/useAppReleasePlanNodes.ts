@@ -1,8 +1,9 @@
 import * as React from 'react';
+import { runStatus } from '~/consts/pipelinerun';
 import { useReleasePlans } from '../../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../../hooks/useReleases';
 import { Condition } from '../../../../../../types';
-import { conditionsRunStatus, runStatus } from '../../../../../../utils/pipeline-utils';
+import { conditionsRunStatus } from '../../../../../../utils/pipeline-utils';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
   emptyPipelineNode,
