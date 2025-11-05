@@ -206,7 +206,13 @@ describe('usePipelineRunsForCommitV2', () => {
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
-      expect(result.current).toEqual([[], false, null, undefined, undefined]);
+      expect(result.current).toEqual([
+        [],
+        false,
+        null,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
     });
     it('should handle error', () => {
       const error = new Error('Kubearchive error');
@@ -226,7 +232,13 @@ describe('usePipelineRunsForCommitV2', () => {
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
-      expect(result.current).toEqual([[], true, error, undefined, undefined]);
+      expect(result.current).toEqual([
+        [],
+        true,
+        error,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
     });
   });
 
@@ -332,7 +344,13 @@ describe('usePipelineRunsForCommitV2', () => {
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
-      expect(result.current).toEqual([[], false, null, undefined, undefined]);
+      expect(result.current).toEqual([
+        [],
+        false,
+        null,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
     });
 
     it('should handle error', () => {
@@ -350,7 +368,13 @@ describe('usePipelineRunsForCommitV2', () => {
         usePipelineRunsForCommitV2('test-ns', 'test-app', 'sample-sha'),
       );
 
-      expect(result.current).toEqual([[], false, error, undefined, undefined]);
+      expect(result.current).toEqual([
+        [],
+        false,
+        error,
+        undefined,
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
     });
   });
 });

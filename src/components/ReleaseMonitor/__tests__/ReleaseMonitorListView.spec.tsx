@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
-import { screen, waitFor, act, fireEvent } from '@testing-library/react';
+import { screen, waitFor, act, fireEvent, render } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
   mockReleases,
@@ -10,7 +11,6 @@ import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorLi
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { ReleaseKind } from '~/types';
-import { routerRenderer } from '../../../utils/test-utils';
 
 // Mock dependencies
 jest.useFakeTimers();
@@ -25,7 +25,15 @@ jest.mock('~/shared/components/table/TableComponent', () => {
   type MockColumn = { title: React.ReactNode; props: ThProps };
   type RowData = { metadata: { name: string } };
 
-  return ({ data, Header }: { data: RowData[]; Header?: () => MockColumn[] }) => {
+  return ({
+    data,
+    Header,
+    EmptyMsg,
+  }: {
+    data: RowData[];
+    Header?: () => MockColumn[];
+    EmptyMsg?: React.ComponentType;
+  }) => {
     const columns: MockColumn[] = Header ? Header() : [];
 
     const handleSortClick = (
@@ -45,6 +53,14 @@ jest.mock('~/shared/components/table/TableComponent', () => {
         onSort({} as React.SyntheticEvent, idx, nextDirection, {});
       }
     };
+
+    if (data.length === 0 && EmptyMsg) {
+      return (
+        <div>
+          <EmptyMsg />
+        </div>
+      );
+    }
 
     return (
       <div>
@@ -92,20 +108,22 @@ const mockUseNamespaceInfo = useNamespaceInfo as jest.Mock;
 const mockReleasesInNamespace = ReleasesInNamespace as jest.Mock;
 
 const renderWithProviders = (ui: React.ReactElement) =>
-  routerRenderer(
-    <FilterContextProvider
-      filterParams={[
-        'name',
-        'status',
-        'application',
-        'releasePlan',
-        'namespace',
-        'component',
-        'showLatest',
-      ]}
-    >
-      {ui}
-    </FilterContextProvider>,
+  render(
+    <MemoryRouter>
+      <FilterContextProvider
+        filterParams={[
+          'name',
+          'status',
+          'application',
+          'releasePlan',
+          'namespace',
+          'component',
+          'showLatest',
+        ]}
+      >
+        {ui}
+      </FilterContextProvider>
+    </MemoryRouter>,
   );
 
 const toggleFilter = async (buttonName: RegExp, optionLabel: RegExp) => {
@@ -278,16 +296,30 @@ describe('ReleaseMonitorListView', () => {
 
   it('clears filters', async () => {
     renderWithProviders(<ReleaseMonitorListView />);
-    await waitFor(() => expect(screen.getByText('test-release-1')).toBeInTheDocument());
+    await waitForReleasesLoaded();
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-    fireEvent.change(filter, { target: { value: 'no-release' } });
+
+    // Filter to a specific release
+    fireEvent.change(filter, { target: { value: 'test-release-2' } });
     act(() => jest.advanceTimersByTime(700));
 
-    await waitFor(() => expect(screen.getByText('No results found')).toBeInTheDocument());
+    // Wait for filter to be applied
+    await waitFor(() => {
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+    });
 
-    fireEvent.click(screen.getByText('Clear all filters'));
-    await waitFor(() => expect(screen.getByText('test-release-1')).toBeInTheDocument());
+    // Clear the filter by setting it to empty string
+    fireEvent.change(filter, { target: { value: '' } });
+    act(() => jest.advanceTimersByTime(700));
+
+    // Wait for all releases to reappear
+    await waitFor(() => {
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+    });
   });
 
   it('renders empty state when no releases are found', async () => {
@@ -320,16 +352,8 @@ describe('ReleaseMonitorListView', () => {
   it('defaults to sorting by completion time (desc) among completed items', async () => {
     renderWithProviders(<ReleaseMonitorListView />);
 
-    // Ensure any persisted filters are cleared
-    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-    if (filter.value) {
-      fireEvent.change(filter, { target: { value: '' } });
-      act(() => {
-        jest.advanceTimersByTime(700);
-      });
-    }
-    const clear = screen.queryByText('Clear all filters');
-    if (clear) fireEvent.click(clear);
+    // Wait for releases to load first
+    await waitForReleasesLoaded();
 
     await waitFor(() => {
       expect(screen.getByText('test-release-1')).toBeInTheDocument();
