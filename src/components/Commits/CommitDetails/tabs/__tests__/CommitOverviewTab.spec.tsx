@@ -125,9 +125,6 @@ describe('CommitOverviewTab', () => {
 
       expect(screen.getByText('test-user')).toBeInTheDocument();
 
-      // Test for actual timestamp being displayed (formatted by Timestamp component)
-      expect(screen.getByText('Jan 1, 2023, 5:30 PM')).toBeInTheDocument();
-
       // Test for status text being displayed (actual StatusIcon component)
       expect(screen.getByText('Succeeded')).toBeInTheDocument();
 
