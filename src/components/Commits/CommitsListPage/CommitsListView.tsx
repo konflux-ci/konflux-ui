@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -11,6 +12,7 @@ import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useComponents } from '../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
+import { useSortedResources } from '../../../hooks/useSortedResources';
 import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -24,6 +26,7 @@ import {
   COMMIT_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_COMMIT_COLUMNS,
   NON_HIDABLE_COMMIT_COLUMNS,
+  SortableHeaders,
 } from './commits-columns-config';
 import { getCommitsListHeaderWithColumns } from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
@@ -45,6 +48,20 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     DEFAULT_VISIBLE_COMMIT_COLUMNS,
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
+
+  const sortPaths: Record<SortableHeaders, string> = {
+    [SortableHeaders.name]: 'shaTitle',
+    [SortableHeaders.branch]: 'branch',
+    [SortableHeaders.component]: 'components[0]',
+    [SortableHeaders.byUser]: 'user',
+    [SortableHeaders.committedAt]: 'creationTime',
+    [SortableHeaders.status]: 'pipelineRuns[0].status.completionTime',
+  };
+
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
+    SortByDirection.desc,
+  );
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
@@ -129,6 +146,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [commits, nameFilter, statusFilter],
   );
 
+  const sortedCommits = useSortedResources(
+    filteredCommits,
+    activeSortIndex,
+    activeSortDirection,
+    sortPaths,
+  );
+
   const NoDataEmptyMessage = () => <CommitsEmptyState applicationName={applicationName} />;
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
 
@@ -170,6 +194,20 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     }
   }, [getNextPage, hasNextPage, isFetchingNextPage, loaded, buildPipelineRuns]);
 
+  const CommitsListHeaderWithSorting = React.useMemo(
+    () =>
+      getCommitsListHeaderWithColumns(
+        visibleColumns,
+        activeSortIndex,
+        activeSortDirection,
+        (_, index, direction) => {
+          setActiveSortIndex(index);
+          setActiveSortDirection(direction);
+        },
+      ),
+    [visibleColumns, activeSortIndex, activeSortDirection],
+  );
+
   if (error) {
     return getErrorState(error, loaded, 'commits');
   }
@@ -178,13 +216,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     <>
       <Table
         virtualize
-        data={filteredCommits}
+        data={sortedCommits}
         unfilteredData={commits}
         EmptyMsg={EmptyMessage}
         NoDataEmptyMsg={NoDataEmptyMessage}
         Toolbar={DataToolbar}
         aria-label="Commit List"
-        Header={getCommitsListHeaderWithColumns(visibleColumns)}
+        Header={CommitsListHeaderWithSorting}
         Row={(props) => (
           <CommitsListRow
             obj={props.obj as Commit}
@@ -199,7 +237,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         onRowsRendered={({ stopIndex }) => {
           if (
             loaded &&
-            stopIndex === filteredCommits.length - 1 &&
+            stopIndex === sortedCommits.length - 1 &&
             hasNextPage &&
             !isFetchingNextPage
           ) {

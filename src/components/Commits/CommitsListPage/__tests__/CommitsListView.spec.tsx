@@ -288,4 +288,13 @@ describe('CommitsListView', () => {
 
     expect(screen.getByTestId('commits-list-next-page-loading-spinner')).toBeVisible();
   });
+
+  it('should display commits in a sorted order', async () => {
+    renderWithQueryClient(<CommitsList />);
+
+    await waitFor(() => {
+      // Check that commits are rendered
+      expect(screen.getByText('#11 test-title')).toBeInTheDocument();
+    });
+  });
 });

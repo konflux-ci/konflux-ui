@@ -47,6 +47,15 @@ export const COMMIT_COLUMNS_DEFINITIONS: readonly ColumnDefinition<CommitColumnK
   { key: 'status', title: 'Status' },
 ];
 
+export const enum SortableHeaders {
+  name,
+  branch,
+  component,
+  byUser,
+  committedAt,
+  status,
+}
+
 export const commitsColumns = [
   { title: 'Name', className: commitsTableColumnClasses.name, sortable: true },
   { title: 'Branch', className: commitsTableColumnClasses.branch, sortable: true },
