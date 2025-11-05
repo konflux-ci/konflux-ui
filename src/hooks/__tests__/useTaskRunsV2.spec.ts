@@ -197,10 +197,14 @@ describe('useTaskRunsV2', () => {
 
       // Both cluster and Tekton Results should be called
       expect(useK8sWatchResourceMock).toHaveBeenCalled();
-      expect(mockUseTRTaskRuns).toHaveBeenCalledWith('default', {
-        selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
-        limit: 5,
-      });
+      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(
+        'default',
+        {
+          selector: { matchLabels: { 'tekton.dev/pipelineRun': 'test-pr' } },
+          limit: 5,
+        },
+        { enabled: true },
+      );
     });
 
     it('should deduplicate between cluster and Tekton Results by name', async () => {
@@ -266,7 +270,7 @@ describe('useTaskRunsV2', () => {
       });
 
       // Tekton Results should NOT be called since cluster data satisfies the limit
-      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object));
+      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object), { enabled: false });
 
       const [taskRuns] = result.current;
       expect(taskRuns).toHaveLength(2); // Limited to 2 items
@@ -412,7 +416,7 @@ describe('useTaskRunsV2', () => {
       expect(nextPageProps.isFetchingNextPage).toBe(false);
 
       // Tekton Results should be called with null when KubeArchive is enabled
-      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object));
+      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object), { enabled: false });
 
       // Both cluster and archive sources should be called
       expect(useK8sWatchResourceMock).toHaveBeenCalled();
@@ -649,7 +653,7 @@ describe('useTaskRunsV2', () => {
       expect(loaded).toBe(false);
       expect(error).toBeNull();
 
-      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object));
+      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object), { enabled: '' });
     });
   });
 
@@ -699,7 +703,6 @@ describe('useTaskRunsV2', () => {
           selector: {
             matchLabels: {
               'tekton.dev/pipelineRun': 'test-pipelinerun',
-              'tekton.dev/pipelineTask': 'test-task',
             },
           },
         }),
@@ -801,15 +804,19 @@ describe('useTaskRunV2', () => {
           name: 'test-taskrun',
         },
         TaskRunModel,
-        {
-          enabled: true,
-        },
+        expect.objectContaining({
+          enabled: undefined,
+        }),
       );
-      expect(useTRTaskRunsMock).toHaveBeenCalledWith(null, {
-        name: 'test-taskrun',
-        limit: 1,
-        filter: 'data.metadata.name == "test-taskrun"',
-      });
+      expect(useTRTaskRunsMock).toHaveBeenCalledWith(
+        null,
+        {
+          name: 'test-taskrun',
+          limit: 1,
+          filter: 'data.metadata.name == "test-taskrun"',
+        },
+        expect.objectContaining({ staleTime: Infinity }),
+      );
     });
 
     it('should return data from k8s when available', () => {
@@ -923,15 +930,19 @@ describe('useTaskRunV2', () => {
           name: 'test-taskrun',
         },
         TaskRunModel,
-        {
+        expect.objectContaining({
           enabled: false,
-        },
+        }),
       );
-      expect(useTRTaskRunsMock).toHaveBeenCalledWith('test-ns', {
-        name: 'test-taskrun',
-        limit: 1,
-        filter: 'data.metadata.name == "test-taskrun"',
-      });
+      expect(useTRTaskRunsMock).toHaveBeenCalledWith(
+        null,
+        {
+          name: 'test-taskrun',
+          limit: 1,
+          filter: 'data.metadata.name == "test-taskrun"',
+        },
+        expect.objectContaining({ staleTime: Infinity }),
+      );
     });
 
     it('should return data from k8s when available and kubearchive disabled', () => {

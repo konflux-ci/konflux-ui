@@ -1,10 +1,15 @@
 import * as React from 'react';
+import { InfiniteData } from '@tanstack/react-query';
 import { difference, merge, uniq } from 'lodash-es';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import { TaskRunGroupVersionKind, TaskRunModel } from '~/models';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { useNamespace } from '../shared/providers/Namespace';
 import { TektonResourceLabel, TaskRunKind, TektonResultsRun, PipelineRunKind } from '../types';
 import { isTaskV1Beta1 } from '../utils/pipeline-utils';
 import { OR } from '../utils/tekton-results';
+import { useTaskRunsForPipelineRuns } from './useTaskRunsV2';
 import { useTRTaskRuns } from './useTektonResults';
 
 export const SCAN_RESULT = 'CLAIR_SCAN_RESULT';
@@ -76,34 +81,89 @@ export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKi
   return [null, []];
 };
 
-export const useScanResults = (pipelineRunName: string): [ScanResults, boolean] => {
+const processScanTaskRuns = (taskRuns: TaskRunKind[]): ScanResults => {
+  const scanTaskRuns = taskRuns.filter((tr) => {
+    const results = isTaskV1Beta1(tr) ? tr.status?.taskResults : tr.status?.results;
+    return results?.some((result) => CVE_SCAN_RESULT_FIELDS.includes(result.name));
+  });
+
+  const [resultObj] = getScanResults(scanTaskRuns);
+  return resultObj;
+};
+
+export const useScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
-  // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
-  const [taskRuns, loaded] = useTRTaskRuns(
-    pipelineRunName ? namespace : null,
-    React.useMemo(
-      () => ({
-        filter: OR(
-          ...CVE_SCAN_RESULT_FIELDS.map((field) => `data.status.taskResults.contains("${field}")`),
-        ),
-        selector: {
-          matchLabels: {
-            [TektonResourceLabel.pipelinerun]: pipelineRunName,
-          },
-        },
-      }),
-      [pipelineRunName],
-    ),
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+    undefined,
+    false, // Don't watch - scan results are for completed pipeline runs
   );
 
+  React.useEffect(() => {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
+      getNextPage();
+    }
+  }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, loaded, getNextPage, error]);
+
   return React.useMemo(() => {
-    if (!loaded || !pipelineRunName) {
-      return [null, loaded];
+    if (
+      !loaded ||
+      !pipelineRunName ||
+      nextPageProps.isFetchingNextPage ||
+      nextPageProps.hasNextPage ||
+      error
+    ) {
+      return [undefined, loaded, error];
     }
 
-    const [resultObj] = getScanResults(taskRuns);
-    return [resultObj, loaded];
-  }, [loaded, pipelineRunName, taskRuns]);
+    const resultObj = processScanTaskRuns(taskRuns);
+
+    return [resultObj, loaded, error];
+  }, [
+    loaded,
+    pipelineRunName,
+    taskRuns,
+    error,
+    nextPageProps.isFetchingNextPage,
+    nextPageProps.hasNextPage,
+  ]);
+};
+
+const dataSelectorForScanResults = (data: InfiniteData<TaskRunKind[], unknown>): ScanResults => {
+  const taskRuns = data?.pages?.flatMap((page) => page) ?? [];
+  return processScanTaskRuns(taskRuns);
+};
+export const useKarchScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
+  const namespace = useNamespace();
+
+  const karchRes = useKubearchiveListResourceQuery(
+    {
+      groupVersionKind: TaskRunGroupVersionKind,
+      isList: true,
+      namespace,
+      selector: {
+        matchLabels: {
+          [TektonResourceLabel.pipelinerun]: pipelineRunName,
+        },
+      },
+    },
+    TaskRunModel,
+    { enabled: !!pipelineRunName, staleTime: Infinity, select: dataSelectorForScanResults },
+  );
+
+  React.useEffect(() => {
+    if (
+      karchRes.hasNextPage &&
+      !karchRes.isFetchingNextPage &&
+      !karchRes.isLoading &&
+      !karchRes.isError
+    ) {
+      void karchRes.fetchNextPage();
+    }
+  }, [karchRes]);
+
+  return [karchRes.data, !karchRes.isLoading, karchRes.error];
 };
 
 export const getScanResultsMap = (
@@ -163,9 +223,10 @@ export const usePLRScanResults = (
   }, [pipelineRunNames]);
 
   const namespace = useNamespace();
+  const kubearchiveEnabled = useIsOnFeatureFlag('taskruns-kubearchive');
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
-  const [taskRuns, loaded, error] = useTRTaskRuns(
-    pipelineRunNames.length > 0 ? namespace : null,
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTRTaskRuns(
+    pipelineRunNames.length > 0 && !kubearchiveEnabled ? namespace : null,
     React.useMemo(
       () => ({
         filter: OR(
@@ -186,6 +247,12 @@ export const usePLRScanResults = (
     ),
   );
 
+  React.useEffect(() => {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
+      getNextPage();
+    }
+  }, [nextPageProps, getNextPage, loaded, error]);
+
   return React.useMemo(() => {
     if (!loaded || !pipelineRunNames) {
       return [null, loaded, [], error];
@@ -203,7 +270,7 @@ export const usePLRScanResults = (
 export const usePLRVulnerabilities = (
   pipelineRuns: PipelineRunKind[],
 ): {
-  vulnerabilities: { [key: string]: ScanResults };
+  vulnerabilities: { [key: string]: [ScanResults, TaskRunKind[]] };
   fetchedPipelineRuns: string[];
   error: unknown;
 } => {

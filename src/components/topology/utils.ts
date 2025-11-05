@@ -1,5 +1,5 @@
 import { RunStatus } from '@patternfly/react-topology';
-import { runStatus } from '../../utils/pipeline-utils';
+import { runStatus } from '~/consts/pipelinerun';
 import { DEFAULT_CHAR_WIDTH, NODE_ICON_WIDTH, NODE_PADDING } from './const';
 
 export const runStatusToRunStatus = (status: runStatus): RunStatus => {

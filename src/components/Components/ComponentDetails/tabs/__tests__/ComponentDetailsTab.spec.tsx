@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { fireEvent, screen } from '@testing-library/dom';
-import { useComponent } from '../../../../../hooks/useComponents';
 import {
-  useLatestPushBuildPipelineRunForComponent,
-  useLatestSuccessfulBuildPipelineRunForComponent,
-} from '../../../../../hooks/usePipelineRuns';
-import { useTaskRuns } from '../../../../../hooks/useTaskRuns';
+  useLatestPushBuildPipelineRunForComponentV2,
+  useLatestSuccessfulBuildPipelineRunForComponentV2,
+} from '~/hooks/useLatestPushBuildPipeline';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { useComponent } from '../../../../../hooks/useComponents';
 import {
   createUseParamsMock,
   renderWithQueryClientAndRouter,
@@ -31,10 +31,9 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../../hooks/usePipelineRuns', () => ({
-  ...jest.requireActual('../../../../../hooks/usePipelineRuns'),
-  useLatestSuccessfulBuildPipelineRunForComponent: jest.fn(),
-  useLatestPushBuildPipelineRunForComponent: jest.fn(),
+jest.mock('../../../../../hooks/useLatestPushBuildPipeline', () => ({
+  useLatestSuccessfulBuildPipelineRunForComponentV2: jest.fn(),
+  useLatestPushBuildPipelineRunForComponentV2: jest.fn(),
 }));
 
 jest.mock('../../../../../hooks/useComponents', () => ({
@@ -42,20 +41,18 @@ jest.mock('../../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../../hooks/useTaskRuns', () => ({
-  ...jest.requireActual('../../../../../hooks/useTaskRuns'),
-  useTaskRuns: jest.fn(),
+jest.mock('../../../../../hooks/useTaskRunsV2', () => ({
+  useTaskRunsForPipelineRuns: jest.fn(),
 }));
 
 const useNavigateMock = useNavigate as jest.Mock;
 const useComponentMock = useComponent as jest.Mock;
 const useLatestSuccessfulBuildPipelineRunForComponentMock =
-  useLatestSuccessfulBuildPipelineRunForComponent as jest.Mock;
+  useLatestSuccessfulBuildPipelineRunForComponentV2 as jest.Mock;
 const useLatestPushBuildPipelineRunForComponentMock =
-  useLatestPushBuildPipelineRunForComponent as jest.Mock;
+  useLatestPushBuildPipelineRunForComponentV2 as jest.Mock;
 const useModalLauncherMock = useModalLauncher as jest.Mock;
-const useTaskRunsMock = useTaskRuns as jest.Mock;
-
+const useTaskRunsV2Mock = useTaskRunsForPipelineRuns as jest.Mock;
 describe('ComponentDetailTab', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
@@ -75,7 +72,7 @@ describe('ComponentDetailTab', () => {
       mockLatestSuccessfulBuild,
       true,
     ]);
-    useTaskRunsMock.mockReturnValue([mockTaskRuns, true]);
+    useTaskRunsV2Mock.mockReturnValue([mockTaskRuns, true]);
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
     useModalLauncherMock.mockImplementation(() => {

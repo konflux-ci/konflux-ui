@@ -20,7 +20,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import { MonitoredReleaseKind } from '~/types';
 import { statuses } from '~/utils/commits-utils';
 import MonitoredReleaseEmptyState from './ReleaseEmptyState';
-import getReleasesListHeader, { SortableHeaders } from './ReleaseListHeader';
+import { getReleasesListHeader, SortableHeaders } from './ReleaseListHeader';
 import ReleaseListRow from './ReleaseListRow';
 import ReleasesInNamespace from './ReleasesInNamespace';
 
@@ -51,15 +51,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   );
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
     SortByDirection.desc,
-  );
-
-  const ReleasesListHeader = React.useMemo(
-    () =>
-      getReleasesListHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
-        setActiveSortIndex(index);
-        setActiveSortDirection(direction);
-      }),
-    [activeSortDirection, activeSortIndex],
   );
 
   const { name, status, application, releasePlan, namespace, component } = filters;
@@ -201,6 +192,20 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     sortPaths,
   );
 
+  const ReleasesListHeader = React.useMemo(
+    () =>
+      getReleasesListHeader(
+        activeSortIndex,
+        activeSortDirection,
+        (_event: React.MouseEvent, index: number, direction: SortByDirection) => {
+          setActiveSortIndex(index);
+          setActiveSortDirection(direction);
+        },
+        sortedFilteredData.length,
+      ),
+    [activeSortDirection, activeSortIndex, sortedFilteredData.length],
+  );
+
   const EmptyMsg = React.useCallback(
     () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />,
     [onClearFilters],
@@ -251,8 +256,9 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       )}
 
       <Table
+        virtualize
         data={sortedFilteredData}
-        unfilteredData={releases}
+        unfilteredData={sortedFilteredData}
         EmptyMsg={EmptyMsg}
         NoDataEmptyMsg={MonitoredReleaseEmptyState}
         aria-label="Release List"

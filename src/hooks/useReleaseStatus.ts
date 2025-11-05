@@ -1,6 +1,6 @@
 import * as React from 'react';
+import { runStatus } from '~/consts/pipelinerun';
 import { ReleaseCondition, ReleaseKind } from '~/types';
-import { runStatus } from '~/utils/pipeline-utils';
 
 type RunStatusValue = (typeof runStatus)[keyof typeof runStatus];
 export const getReleaseStatus = (release: ReleaseKind): RunStatusValue => {
