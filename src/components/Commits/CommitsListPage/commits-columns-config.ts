@@ -48,12 +48,11 @@ export const COMMIT_COLUMNS_DEFINITIONS: readonly ColumnDefinition<CommitColumnK
 ];
 
 export const enum SortableHeaders {
-  name,
-  branch,
-  component,
-  byUser,
-  committedAt,
-  status,
+  name = 0,
+  branch = 1,
+  byUser = 3,
+  committedAt = 4,
+  status = 5,
 }
 
 export const commitsColumns = [
