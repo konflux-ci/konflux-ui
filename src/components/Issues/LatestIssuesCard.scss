@@ -1,20 +1,15 @@
 .latest-issues-card {
-  border-radius: var(--pf-v5-global--BorderRadius--lg);
-  padding-left: var(--pf-v5-global--spacer--md);
-  padding-top: var(--pf-v5-global--spacer--md);
-  padding-bottom: var(--pf-v5-global--spacer--md);
   &__list {
-    margin-top: var(--pf-v5-global--spacer--md);
-    margin-bottom: var(--pf-v5-global--spacer--md);
+    margin-bottom: var(--pf-v5-global--spacer--xl);
     .pf-v5-c-list__item:not(:last-child) {
       margin-bottom: var(--pf-v5-global--spacer--xl);
       padding-bottom: var(--pf-v5-global--spacer--md);
-      border-bottom: 1px solid var(--pf-v5-global--BorderColor--100);
     }
   }
 
   &__item {
     padding: 0;
+    margin-bottom: var(--pf-v5-global--spacer--lg);
   }
 
   &__icon-container {
@@ -53,7 +48,6 @@
     line-height: var(--pf-v5-global--LineHeight--md);
     margin-top: var(--pf-v5-global--spacer--sm);
     margin-left: 0;
-    margin-bottom: var(--pf-v5-global--spacer--lg);
   }
 
   &__empty {
