@@ -52,7 +52,6 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const sortPaths: Record<SortableHeaders, string> = {
     [SortableHeaders.name]: 'shaTitle',
     [SortableHeaders.branch]: 'branch',
-    [SortableHeaders.component]: 'components[0]',
     [SortableHeaders.byUser]: 'user',
     [SortableHeaders.committedAt]: 'creationTime',
     [SortableHeaders.status]: 'pipelineRuns[0].status.completionTime',
