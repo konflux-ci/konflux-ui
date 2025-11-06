@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook } from '@testing-library/react';
 import { useApplicationReleases } from '~/hooks/useApplicationReleases';
 import { ReleaseCondition, ReleaseKind } from '~/types';
 import { useSnapshotLastSuccessfulRelease } from '../useSnapshotLastSuccessfulRelease';

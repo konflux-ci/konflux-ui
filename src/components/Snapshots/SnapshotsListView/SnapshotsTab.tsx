@@ -18,7 +18,6 @@ export const SnapshotsListViewTab: React.FC = () => {
   const filterParams = ['name'];
   return (
     <FilterContextProvider
-      data-test="filter-provider"
       data-filter-params={JSON.stringify(filterParams)}
       filterParams={filterParams}
     >
