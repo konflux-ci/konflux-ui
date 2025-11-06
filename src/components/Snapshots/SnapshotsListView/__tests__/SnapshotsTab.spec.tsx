@@ -1,42 +1,106 @@
 import '@testing-library/jest-dom';
-import { screen } from '@testing-library/react';
+import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { act, fireEvent, screen } from '@testing-library/react';
+import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
+import { mockSnapshots } from '../../../../__data__/mock-snapshots';
+import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import SnapshotsListRow from '../SnapshotsListRow';
 import { SnapshotsListViewTab } from '../SnapshotsTab';
 
-// Mock the FilterContextProvider to observe the provided filterParams
-jest.mock('~/components/Filter/generic/FilterContext', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  FilterContextProvider: ({ children, filterParams }: any) => (
-    <div data-test="filter-provider" data-filter-params={JSON.stringify(filterParams)}>
-      {children}
-    </div>
-  ),
+jest.useFakeTimers();
+
+jest.mock('~/hooks/useK8sAndKarchResources', () => ({
+  useK8sAndKarchResources: jest.fn(),
 }));
 
-// Mock the child list view component to assert prop passthrough
-jest.mock('../SnapshotsListView', () => ({
-  __esModule: true,
-  default: ({ applicationName }: { applicationName: string }) => (
-    <div data-test="snapshots-list-view">App: {applicationName}</div>
-  ),
-}));
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    Link: (props) => <a href={props.to}>{props.children}</a>,
+  };
+});
+
+jest.mock('../../../../shared/components/table', () => {
+  const actual = jest.requireActual('../../../../shared/components/table');
+  return {
+    ...actual,
+    Table: (props) => {
+      const { data, filters, selected, match, kindObj } = props;
+      const cProps = { data, filters, selected, match, kindObj };
+      const columns = props.Header(cProps);
+      return (
+        <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
+          <TableHeader role="rowgroup" />
+          <tbody>
+            {props.data.map((obj, i) => (
+              <tr key={i}>
+                <SnapshotsListRow obj={obj} columns={null} customData={props.customData} />
+              </tr>
+            ))}
+          </tbody>
+        </PfTable>
+      );
+    },
+  };
+});
+
+const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 describe('SnapshotsListViewTab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseNamespaceHook('test-namespace');
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      isLoading: false,
+      clusterError: undefined,
+      archiveError: undefined,
+      hasError: false,
+    });
   });
 
-  it('renders SnapshotsListView with applicationName from route and sets filter params', () => {
-    createUseParamsMock({ applicationName: 'my-app' });
+  it('should display the filtered empty state when no results match the filter', () => {
+    createUseParamsMock({ applicationName: 'test-app' });
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
 
-    // Assert FilterContextProvider received expected filter params
-    const provider = screen.getByTestId('filter-provider');
-    expect(provider).toBeInTheDocument();
-    expect(provider).toHaveAttribute('data-filter-params', JSON.stringify(['name']));
+    // Verify the snapshot data is displayed initially
+    expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
 
-    // Assert child received applicationName from useParams
-    expect(screen.getByTestId('snapshots-list-view')).toHaveTextContent('App: my-app');
+    // Filter by name
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, {
+        target: { value: 'my-app-snapshot-invalid' },
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    expect(
+      screen.getByText('No results match this filter criteria. Clear all filters and try again.'),
+    ).toBeInTheDocument();
+  });
+
+  it('should display the snapshot data when the filter matches a snapshot', () => {
+    createUseParamsMock({ applicationName: 'test-app' });
+
+    renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
+
+    // Filter by name
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, {
+        target: { value: 'my-app-snapshot-1' },
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
   });
 });
