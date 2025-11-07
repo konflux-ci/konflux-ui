@@ -71,8 +71,10 @@ export const useTaskRunsV2 = (
       (clusterResources && options.limit > clusterResources.length) || // not enough data
       !!clusterError); // error after load
 
-  const shouldQueryTekton = !enableKubearchive && namespace && needsMoreData;
-  const shouldQueryKubearchive = enableKubearchive && namespace && needsMoreData;
+  const shouldQueryTekton =
+    !enableKubearchive && namespace && needsMoreData && (queryOptions?.enabled ?? true);
+  const shouldQueryKubearchive =
+    enableKubearchive && namespace && needsMoreData && (queryOptions?.enabled ?? true);
 
   // tekton historical data - only when we need more data
   const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
@@ -82,7 +84,7 @@ export const useTaskRunsV2 = (
         selector: options?.selector,
         limit: options?.limit,
       } as TektonResultsOptions,
-      queryOptions,
+      { ...(queryOptions ?? {}), enabled: shouldQueryTekton },
     );
 
   // KubeArchive historical data - only when we need more data
@@ -95,7 +97,7 @@ export const useTaskRunsV2 = (
     TaskRunModel,
     {
       ...(queryOptions ?? {}),
-      enabled: shouldQueryKubearchive && (queryOptions?.enabled ?? true),
+      enabled: shouldQueryKubearchive,
     },
   );
 
@@ -190,28 +192,45 @@ export const useTaskRunsV2 = (
  * @param namespace - Kubernetes namespace
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
+ * @param watch - Whether to watch for real-time updates (default: true). Set to false for completed pipeline runs.
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
 export const useTaskRunsForPipelineRuns = (
   namespace: string,
   pipelineRunName: string,
   taskName?: string,
-): [TaskRunKind[], boolean, unknown] => {
+  watch: boolean = true,
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const selector = React.useMemo(
     () => ({
       matchLabels: {
         [TektonResourceLabel.pipelinerun]: pipelineRunName,
-        ...(taskName ? { [TektonResourceLabel.pipelineTask]: taskName } : {}),
       },
     }),
-    [pipelineRunName, taskName],
+    [pipelineRunName],
   );
 
-  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, { selector }, { staleTime: Infinity });
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsV2(
+    namespace,
+    {
+      selector,
+      watch,
+    },
+    { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
+  );
 
-  const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
+  const sortedTaskRuns = React.useMemo(() => {
+    if (taskName) {
+      // used taskName here instead of api call to filter by task name because we cache all the task runs for a pipeline run,
+      // it's better we filter here instead of in the api call to avoid unnecessary api calls
+      return taskRuns.filter(
+        (tr) => tr.metadata?.labels?.[TektonResourceLabel.pipelineTask] === taskName,
+      );
+    }
+    return sortTaskRunsByTime(taskRuns);
+  }, [taskRuns, taskName]);
 
-  return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
+  return [sortedTaskRuns, loaded, error, getNextPage, nextPageProps];
 };
 
 export const useTaskRunV2 = (
