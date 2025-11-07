@@ -67,7 +67,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
                   isOpen={isModalOpen}
                   onClose={handleModalToggle}
                 >
-                  {links}
+                  <Flex direction={{ default: 'column' }}>{links}</Flex>
                 </Modal>
               </>
             ) : (
