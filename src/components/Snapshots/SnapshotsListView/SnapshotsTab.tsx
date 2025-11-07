@@ -15,12 +15,8 @@ export const snapshotsTabLoader = createLoaderWithAccessCheck(
 
 export const SnapshotsListViewTab: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
-  const filterParams = ['name'];
   return (
-    <FilterContextProvider
-      data-filter-params={JSON.stringify(filterParams)}
-      filterParams={filterParams}
-    >
+    <FilterContextProvider filterParams={['name']}>
       <SnapshotsListView applicationName={applicationName} />
     </FilterContextProvider>
   );
