@@ -1,49 +1,64 @@
+import { createTableHeaders } from '../../../shared/components/table/utils';
+
 export const issuesTableColumnClasses = {
   issue: 'pf-m-width-20 wrap-column',
   scope: 'pf-m-width-10',
   severity: 'pf-m-width-10',
   status: 'pf-m-width-10',
   createdOn: 'pf-m-width-15',
-  reason: 'pf-m-width-20',
+  description: 'pf-m-width-20',
   usefulLinks: 'pf-m-width-10',
   kebab: 'pf-m-width-5 issues-list-view__actions',
 };
 
-const IssuesListHeader = () => {
-  return [
-    {
-      title: 'Issue name',
-      props: { className: issuesTableColumnClasses.issue },
-    },
-    {
-      title: 'Scope',
-      props: { className: issuesTableColumnClasses.scope },
-    },
-    {
-      title: 'Severity',
-      props: { className: issuesTableColumnClasses.severity },
-    },
-    {
-      title: 'Status',
-      props: { className: issuesTableColumnClasses.status },
-    },
-    {
-      title: 'Created on',
-      props: { className: issuesTableColumnClasses.createdOn },
-    },
-    {
-      title: 'Reason',
-      props: { className: issuesTableColumnClasses.reason },
-    },
-    {
-      title: 'Useful links',
-      props: { className: issuesTableColumnClasses.usefulLinks },
-    },
-    {
-      title: ' ',
-      props: { className: issuesTableColumnClasses.kebab },
-    },
-  ];
-};
+export const IssuesListHeader = [
+  {
+    title: 'Issue name',
+    className: issuesTableColumnClasses.issue,
+    sortable: true,
+  },
+  {
+    title: 'Scope',
+    className: issuesTableColumnClasses.scope,
+    sortable: true,
+  },
+  {
+    title: 'Severity',
+    className: issuesTableColumnClasses.severity,
+    sortable: true,
+  },
+  {
+    title: 'Status',
+    className: issuesTableColumnClasses.status,
+    sortable: true,
+  },
+  {
+    title: 'Created on',
+    className: issuesTableColumnClasses.createdOn,
+    sortable: true,
+  },
+  {
+    title: 'Description',
+    className: issuesTableColumnClasses.description,
+    sortable: true,
+  },
+  {
+    title: 'Useful links',
+    className: issuesTableColumnClasses.usefulLinks,
+  },
+  {
+    title: ' ',
+    className: issuesTableColumnClasses.kebab,
+  },
+];
 
-export default IssuesListHeader;
+export const enum SortableIssuesHeaders {
+  title = 0,
+  scope = 1,
+  severity = 2,
+  status = 3,
+  createdAt = 4,
+  description = 5,
+}
+
+export const IssuesTableHeader = createTableHeaders(IssuesListHeader);

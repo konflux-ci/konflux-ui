@@ -24,16 +24,15 @@ const mockUseIssues = useIssues as jest.Mock;
 describe('IssuesListPage Component', () => {
   beforeEach(() => {
     mockUseNamespaceHook('test-namespace');
-    jest.clearAllMocks();
-  });
-
-  it('should render the list page content', () => {
     mockUseIssues.mockReturnValue({
       data: { data: [], total: 0, limit: 10, offset: 0 },
       isLoading: false,
       error: null,
     });
+    jest.clearAllMocks();
+  });
 
+  it('should render the list page content', () => {
     renderWithQueryClient(<IssuesListPage />);
 
     expect(screen.getByText('This list shows current Konflux issues.')).toBeInTheDocument();
@@ -48,12 +47,6 @@ describe('IssuesListPage Component', () => {
   it('should not crash when rendered', () => {
     renderWithQueryClient(<IssuesListPage />);
 
-    expect(screen.getByText('Issues')).toBeInTheDocument();
-  });
-
-  it('should render the expected text content', () => {
-    renderWithQueryClient(<IssuesListPage />);
-
-    expect(screen.getByText('This list shows current Konflux issues.')).toBeInTheDocument();
+    expect(screen.getByText('Issues list')).toBeInTheDocument();
   });
 });

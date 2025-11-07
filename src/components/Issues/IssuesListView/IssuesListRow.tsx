@@ -47,7 +47,9 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
         <Timestamp timestamp={issue.createdAt} />
       </TableData>
 
-      <TableData className={issuesTableColumnClasses.reason}>{issue.description ?? '-'}</TableData>
+      <TableData className={issuesTableColumnClasses.description}>
+        {issue.description ?? '-'}
+      </TableData>
 
       <TableData className={issuesTableColumnClasses.usefulLinks}>
         <Flex direction={{ default: 'column' }}>

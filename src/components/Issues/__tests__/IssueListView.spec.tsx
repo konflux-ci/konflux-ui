@@ -13,6 +13,10 @@ jest.mock('~/kite/kite-hooks', () => ({
   useIssues: jest.fn(),
 }));
 
+jest.mock('~/hooks/useSortedResources', () => ({
+  useSortedResources: jest.fn((data) => data),
+}));
+
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
@@ -115,7 +119,7 @@ describe('IssueListView', () => {
     });
 
     renderWithQueryClient(<IssueList />);
-    expect(screen.getByText('Issues')).toBeInTheDocument();
+    expect(screen.getByText('Issues list')).toBeInTheDocument();
     expect(screen.getByText('This list shows current Konflux issues.')).toBeInTheDocument();
     // Check that table is rendered with role
     expect(screen.getByRole('grid')).toBeInTheDocument();

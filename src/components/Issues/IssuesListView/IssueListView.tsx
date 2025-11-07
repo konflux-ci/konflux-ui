@@ -1,9 +1,11 @@
 import * as React from 'react';
 import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
+import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
+import { useSortedResources } from '~/hooks/useSortedResources';
 import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import { Table, useDeepCompareMemoize } from '~/shared';
@@ -12,10 +14,28 @@ import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import IssuesListHeader from './IssuesListHeader';
+import { IssuesTableHeader, SortableIssuesHeaders } from './IssuesListHeader';
 import IssuesListRow from './IssuesListRow';
 
 import './IssueListView.scss';
+
+const sortPaths: Record<SortableIssuesHeaders, string> = {
+  [SortableIssuesHeaders.title]: 'title',
+  [SortableIssuesHeaders.scope]: 'scope.resourceType',
+  [SortableIssuesHeaders.severity]: 'severity',
+  [SortableIssuesHeaders.status]: 'status',
+  [SortableIssuesHeaders.createdAt]: 'createdAt',
+  [SortableIssuesHeaders.description]: 'description',
+};
+
+const NoDataEmptyMessage = () => (
+  <AppEmptyState emptyStateImg={emptyStateImgUrl} title="No issues found">
+    <EmptyStateBody>
+      No issues have been detected for this application. Issues can include security
+      vulnerabilities, build failures, performance problems, and other concerns that need attention.
+    </EmptyStateBody>
+  </AppEmptyState>
+);
 
 const IssueListView = () => {
   const namespace = useNamespace();
@@ -39,6 +59,20 @@ const IssueListView = () => {
     return issuesData.data;
   }, [issuesData, isLoading, error]);
 
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableIssuesHeaders.title);
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
+    SortByDirection.asc,
+  );
+
+  const IssuesListHeaderWithSorting = React.useMemo(
+    () =>
+      IssuesTableHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
+        setActiveSortIndex(index);
+        setActiveSortDirection(direction);
+      }),
+    [activeSortIndex, activeSortDirection],
+  );
+
   const filteredIssues = React.useMemo(
     () =>
       issues.filter((issue) => {
@@ -50,6 +84,13 @@ const IssueListView = () => {
         return matchesName && matchesStatus && matchesSeverity;
       }),
     [issues, statusFilter, severityFilter, nameFilter],
+  );
+
+  const defaultSortedIssues = useSortedResources(
+    filteredIssues,
+    activeSortIndex,
+    activeSortDirection,
+    sortPaths,
   );
 
   const statusFilterObj = React.useMemo(
@@ -66,16 +107,6 @@ const IssueListView = () => {
         IssueSeverity.CRITICAL,
       ]),
     [issues],
-  );
-
-  const NoDataEmptyMessage = () => (
-    <AppEmptyState emptyStateImg={emptyStateImgUrl} title="No issues found">
-      <EmptyStateBody>
-        No issues have been detected for this application. Issues can include security
-        vulnerabilities, build failures, performance problems, and other concerns that need
-        attention.
-      </EmptyStateBody>
-    </AppEmptyState>
   );
 
   const EmptyMessage = () => (
@@ -117,7 +148,7 @@ const IssueListView = () => {
   return (
     <>
       <Title headingLevel="h3" className="pf-v5-u-mt-lg pf-v5-u-mb-sm">
-        Issues
+        Issues list
       </Title>
       <TextContent>
         <Text component={TextVariants.p}>This list shows current Konflux issues.</Text>
@@ -125,13 +156,13 @@ const IssueListView = () => {
       <div data-test="issues-list">
         <Table
           virtualize
-          data={filteredIssues}
+          data={defaultSortedIssues}
           unfilteredData={issues}
           EmptyMsg={EmptyMessage}
           NoDataEmptyMsg={NoDataEmptyMessage}
           Toolbar={toolbar}
           aria-label="Issues List"
-          Header={IssuesListHeader}
+          Header={IssuesListHeaderWithSorting}
           Row={IssuesListRow}
           loaded={!isLoading}
           getRowProps={(obj: Issue) => ({
