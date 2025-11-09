@@ -81,7 +81,7 @@ describe('useScrollDirection', () => {
 
   it('should update direction on subsequent scroll events', () => {
     const { result } = renderHook(() => useScrollDirection());
-    const [, handleScroll] = result.current;
+    let [, handleScroll] = result.current;
 
     // First scroll - sets initial position
     act(() => {
