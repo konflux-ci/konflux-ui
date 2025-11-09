@@ -44,8 +44,8 @@ const getSortCommitFunction = (key: string, activeSortDirection: SortByDirection
   switch (key) {
     case 'status':
       return (a: Commit, b: Commit) => {
-        const aStatus = pipelineRunStatus(a.pipelineRuns[0]);
-        const bStatus = pipelineRunStatus(b.pipelineRuns[0]);
+        const aStatus = pipelineRunStatus(a.pipelineRuns?.[0]);
+        const bStatus = pipelineRunStatus(b.pipelineRuns?.[0]);
 
         // Use centralized priority values, default to high number for unknown statuses
         const aValue = RUN_STATUS_PRIORITY[aStatus] || 999;
