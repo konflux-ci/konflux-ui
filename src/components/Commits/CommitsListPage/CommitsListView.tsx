@@ -8,7 +8,11 @@ import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
-import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
+import {
+  PipelineRunLabel,
+  PipelineRunType,
+  RUN_STATUS_PRIORITY,
+} from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useComponents } from '../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
@@ -36,6 +40,30 @@ interface CommitsListViewProps {
   componentName?: string;
 }
 
+const getSortCommitFunction = (key: string, activeSortDirection: SortByDirection) => {
+  switch (key) {
+    case 'status':
+      return (a: Commit, b: Commit) => {
+        const aStatus = pipelineRunStatus(a.pipelineRuns[0]);
+        const bStatus = pipelineRunStatus(b.pipelineRuns[0]);
+
+        // Use centralized priority values, default to high number for unknown statuses
+        const aValue = RUN_STATUS_PRIORITY[aStatus] || 999;
+        const bValue = RUN_STATUS_PRIORITY[bStatus] || 999;
+
+        if (aValue < bValue) {
+          return activeSortDirection === SortByDirection.asc ? -1 : 1;
+        } else if (aValue > bValue) {
+          return activeSortDirection === SortByDirection.asc ? 1 : -1;
+        }
+        return 0;
+      };
+
+    default:
+      return null; // Use default sorting for other columns
+  }
+};
+
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,
@@ -54,7 +82,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [SortableHeaders.branch]: 'branch',
     [SortableHeaders.byUser]: 'user',
     [SortableHeaders.committedAt]: 'creationTime',
-    [SortableHeaders.status]: 'pipelineRuns[0].status.completionTime',
+    [SortableHeaders.status]: 'pipelineRuns[0].status.completionTime', // Status column uses custom priority-based sorting
   };
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
@@ -145,12 +173,25 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [commits, nameFilter, statusFilter],
   );
 
-  const sortedCommits = useSortedResources(
+  // Default sorted commits using useSortedResources for standard columns
+  const defaultSortedCommits = useSortedResources(
     filteredCommits,
     activeSortIndex,
     activeSortDirection,
     sortPaths,
   );
+
+  // Apply custom sorting for status column, use default sorting for other columns
+  const sortedCommits = React.useMemo(() => {
+    if (activeSortIndex === SortableHeaders.status) {
+      // Status column uses custom priority-based sorting
+      const customSortFn = getSortCommitFunction('status', activeSortDirection);
+      return [...filteredCommits].sort(customSortFn);
+    }
+
+    // All other columns use standard sorting
+    return defaultSortedCommits;
+  }, [filteredCommits, activeSortIndex, activeSortDirection, defaultSortedCommits]);
 
   const NoDataEmptyMessage = () => <CommitsEmptyState applicationName={applicationName} />;
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
@@ -175,9 +216,9 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     </BaseTextFilterToolbar>
   );
 
-  // automatically fetch the next page of pipeline runs when:
+  // Automatically fetch the next page of pipeline runs when:
   // - Initial data is loaded
-  // - Current page is empt
+  // - Current page is empty
   // - More pages are available
   // - Not currently fetching the next page
   // This prevents showing the empty state message while more data is being loaded
