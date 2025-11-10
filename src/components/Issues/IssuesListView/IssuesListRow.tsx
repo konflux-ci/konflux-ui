@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Button, Flex, FlexItem, Modal, ModalVariant, capitalize } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, ModalVariant, Truncate, capitalize } from '@patternfly/react-core';
+import { createModalLauncher } from '~/components/modal/createModalLauncher';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { Issue, IssueState } from '~/kite/issue-type';
 import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -8,18 +10,17 @@ import { issuesTableColumnClasses } from './IssuesListHeader';
 import { severityIcon } from './utils/issue-utils';
 
 const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const showModal = useModalLauncher();
 
-  const handleModalToggle = () => {
-    setIsModalOpen((prevIsModalOpen) => !prevIsModalOpen);
-  };
-
-  const links =
-    issue.links?.map((link, index) => (
-      <FlexItem key={`${link.id}-${index}`}>
-        <ExternalLink href={link.url}>{link.title}</ExternalLink>
-      </FlexItem>
-    )) ?? [];
+  const LinksModal = () => (
+    <Flex direction={{ default: 'column' }}>
+      {issue.links?.map((link, index) => (
+        <FlexItem key={`${link.id}-${index}`}>
+          <ExternalLink href={link.url}>{link.title}</ExternalLink>
+        </FlexItem>
+      ))}
+    </Flex>
+  );
 
   return (
     <>
@@ -48,35 +49,36 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
       </TableData>
 
       <TableData className={issuesTableColumnClasses.description}>
-        {issue.description ?? '-'}
+        <Truncate content={issue.description ?? '-'} />
       </TableData>
 
       <TableData className={issuesTableColumnClasses.usefulLinks}>
-        <Flex direction={{ default: 'column' }}>
-          {issue.links?.length ? (
-            issue.links?.length > 2 ? (
-              <>
-                <Button variant="link" isInline onClick={handleModalToggle}>
-                  View all
-                </Button>
-                <Modal
-                  bodyAriaLabel="Scrollable modal content"
-                  tabIndex={0}
-                  variant={ModalVariant.small}
-                  title="All links"
-                  isOpen={isModalOpen}
-                  onClose={handleModalToggle}
-                >
-                  <Flex direction={{ default: 'column' }}>{links}</Flex>
-                </Modal>
-              </>
-            ) : (
-              links
-            )
+        {issue.links?.length ? (
+          issue.links?.length > 2 ? (
+            <>
+              <Button
+                variant="link"
+                isInline
+                onClick={() =>
+                  showModal(
+                    createModalLauncher(LinksModal, {
+                      'data-test': 'modal-links',
+                      bodyAriaLabel: 'Scrollable modal content',
+                      variant: ModalVariant.small,
+                      title: 'All links',
+                    })(),
+                  )
+                }
+              >
+                View all
+              </Button>
+            </>
           ) : (
-            '-'
-          )}
-        </Flex>
+            <LinksModal />
+          )
+        ) : (
+          '-'
+        )}
       </TableData>
     </>
   );

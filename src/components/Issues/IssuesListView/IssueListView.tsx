@@ -50,15 +50,8 @@ const IssueListView = () => {
 
   const { data: issuesData, isLoading, error } = useIssues({ namespace });
 
-  const issues = React.useMemo(() => {
-    if (error) {
-      // eslint-disable-next-line no-console
-      console.error(error);
-      return [];
-    }
-    if (isLoading) return [];
-    return issuesData.data;
-  }, [issuesData, isLoading, error]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const issues = issuesData?.data || [];
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableIssuesHeaders.title);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
