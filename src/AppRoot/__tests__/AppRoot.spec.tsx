@@ -8,6 +8,11 @@ import { AppRoot } from '../AppRoot';
 jest.mock('../../hooks/useActiveRouteChecker', () => ({
   useActiveRouteChecker: jest.fn(),
 }));
+
+jest.mock('../../hooks/useKonfluxPublicInfo', () => ({
+  useKonfluxPublicInfo: jest.fn(() => [{ visibility: 'private' }]),
+}));
+
 // This mock ensures different features have different status
 jest.mock('~/feature-flags/hooks', () => {
   const mockFn = jest.fn();
