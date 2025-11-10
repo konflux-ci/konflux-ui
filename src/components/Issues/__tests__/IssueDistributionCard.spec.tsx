@@ -1,4 +1,4 @@
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useIssueCountsBySeverity, useIssueCountsByType } from '~/kite/kite-hooks';
@@ -9,9 +9,15 @@ jest.mock('~/kite/kite-hooks');
 jest.mock('~/shared/providers/Namespace', () => ({
   useNamespace: () => 'test-namespace',
 }));
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: jest.fn(),
+}));
 
 const mockUseIssueCountsBySeverity = useIssueCountsBySeverity as jest.Mock;
 const mockUseIssueCountsByType = useIssueCountsByType as jest.Mock;
+const mockNavigate = jest.fn();
+const mockUseNavigate = useNavigate as jest.Mock;
 
 describe('IssueDistributionCard', () => {
   const renderComponent = () => {
@@ -24,6 +30,7 @@ describe('IssueDistributionCard', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseNavigate.mockReturnValue(mockNavigate);
   });
 
   describe('Loading states', () => {
@@ -58,10 +65,13 @@ describe('IssueDistributionCard', () => {
         error: undefined,
       });
 
-      renderComponent();
+      const { container } = renderComponent();
 
-      // Check for chart loading skeleton
-      expect(screen.getByRole('img', { hidden: true })).toBeInTheDocument();
+      // Check for chart loading skeleton by className
+      const chartSkeleton = container.querySelector(
+        '.issue-distribution-card__chart-loading-state',
+      );
+      expect(chartSkeleton).toBeInTheDocument();
     });
   });
 
@@ -225,8 +235,7 @@ describe('IssueDistributionCard', () => {
       const viewMoreButton = screen.getByRole('button', { name: /view more/i });
       await user.click(viewMoreButton);
 
-      // The navigation itself is handled by react-router, we just verify the button works
-      expect(viewMoreButton).toBeInTheDocument();
+      expect(mockNavigate).toHaveBeenCalledWith('list');
     });
   });
 

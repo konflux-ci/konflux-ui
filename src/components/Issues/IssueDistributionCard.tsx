@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChartPie } from '@patternfly/react-charts';
 import {
+  Bullseye,
   Button,
   Card,
   CardBody,
@@ -55,7 +56,7 @@ const SeverityDistributionSection: React.FC<{ namespace: string }> = ({ namespac
   return (
     <>
       <FlexItem>
-        <Title headingLevel="h3" size="lg" className="issue-distribution-card__section-title">
+        <Title headingLevel="h3" size="lg">
           Issues by severity
         </Title>
       </FlexItem>
@@ -69,7 +70,7 @@ const SeverityDistributionSection: React.FC<{ namespace: string }> = ({ namespac
             justifyContent={{ default: 'justifyContentSpaceAround' }}
           >
             {SEVERITY_ORDER.map((severity) => (
-              <FlexItem key={severity} className="issue-distribution-card__severity-item">
+              <FlexItem key={severity} style={{ textAlign: 'center' }}>
                 {isLoaded ? (
                   <Title
                     headingLevel="h4"
@@ -109,7 +110,7 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
   return (
     <>
       <FlexItem>
-        <Title headingLevel="h3" size="lg" className="issue-distribution-card__section-title">
+        <Title headingLevel="h3" size="lg">
           Issues by type
         </Title>
       </FlexItem>
@@ -123,7 +124,7 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
             gap={{ default: 'gapNone' }}
           >
             <FlexItem>
-              <div className="issue-distribution-card__chart-wrapper">
+              <Bullseye className="issue-distribution-card__chart-wrapper">
                 {isLoaded ? (
                   hasIssues ? (
                     <ChartPie
@@ -136,9 +137,13 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
                       colorScale={LEGEND_COLORS}
                     />
                   ) : (
-                    <div className="issue-distribution-card__chart-empty-state">
+                    <Flex
+                      className="issue-distribution-card__chart-empty-state"
+                      justifyContent={{ default: 'justifyContentCenter' }}
+                      alignItems={{ default: 'alignItemsCenter' }}
+                    >
                       <Text>No issues found</Text>
-                    </div>
+                    </Flex>
                   )
                 ) : (
                   <Skeleton
@@ -146,36 +151,45 @@ const TypeDistributionSection: React.FC<{ namespace: string }> = ({ namespace })
                     className="issue-distribution-card__chart-loading-state"
                   />
                 )}
-              </div>
+              </Bullseye>
             </FlexItem>
             <FlexItem>
-              <div className="issue-distribution-card__legend" role="img" aria-label="Chart legend">
+              <Flex
+                className="issue-distribution-card__legend"
+                direction={{ default: 'column' }}
+                gap={{ default: 'gapSm' }}
+                aria-label="Chart legend"
+              >
                 {isLoaded ? (
                   hasIssues ? (
                     resourceData.map((item, index) => (
-                      <div className="issue-distribution-card__legend-item" key={item.x}>
+                      <Flex
+                        gap={{ default: 'gapSm' }}
+                        alignItems={{ default: 'alignItemsCenter' }}
+                        key={item.x}
+                      >
                         <div
                           className="issue-distribution-card__legend-color"
                           style={{ backgroundColor: LEGEND_COLORS[index] }}
                           aria-hidden="true"
                         />
-                        <Text className="issue-distribution-card__legend-text">
+                        <Text>
                           {capitalize(item.x)}: {item.y}
                         </Text>
-                      </div>
+                      </Flex>
                     ))
                   ) : (
                     <Text>No data to display</Text>
                   )
                 ) : (
                   Array.from({ length: 5 }).map((_, index) => (
-                    <div className="issue-distribution-card__legend-item" key={`skeleton-${index}`}>
+                    <Flex gap={{ default: 'gapSm' }} key={`skeleton-${index}`}>
                       <Skeleton shape="square" width="16px" height="16px" />
                       <Skeleton width="120px" height="16px" />
-                    </div>
+                    </Flex>
                   ))
                 )}
-              </div>
+              </Flex>
             </FlexItem>
           </Flex>
         </FlexItem>
@@ -191,15 +205,11 @@ export const IssueDistributionCard = () => {
   return (
     <Card>
       <CardBody>
-        <Flex direction={{ default: 'column' }} className="issue-distribution-card">
+        <Flex direction={{ default: 'column' }} gap={{ default: 'gapXl' }}>
           <SeverityDistributionSection namespace={namespace} />
           <TypeDistributionSection namespace={namespace} />
           <FlexItem>
-            <Button
-              variant="link"
-              className="issue-distribution-card__view-more-button"
-              onClick={() => navigate(`list`)}
-            >
+            <Button variant="link" isInline onClick={() => navigate(`list`)}>
               View more
             </Button>
           </FlexItem>
