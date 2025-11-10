@@ -143,7 +143,7 @@ describe('useScrollToHash', () => {
     mockSetTimeout.mockRestore();
     mockSetTimeout = jest.spyOn(global, 'setTimeout').mockImplementation((_, delayValue) => {
       expect(delayValue).toBe(500);
-      return 123 as NodeJS.Timeout;
+      return 123 as unknown as NodeJS.Timeout;
     });
 
     renderHook(() =>
@@ -162,7 +162,9 @@ describe('useScrollToHash', () => {
 
     // Reset setTimeout to return a proper timer ID
     mockSetTimeout.mockRestore();
-    mockSetTimeout = jest.spyOn(global, 'setTimeout').mockReturnValue(123 as NodeJS.Timeout);
+    mockSetTimeout = jest
+      .spyOn(global, 'setTimeout')
+      .mockReturnValue(123 as unknown as NodeJS.Timeout);
 
     const { unmount } = renderHook(() =>
       useScrollToHash({
@@ -183,7 +185,9 @@ describe('useScrollToHash', () => {
 
     // Reset setTimeout to return a proper timer ID
     mockSetTimeout.mockRestore();
-    mockSetTimeout = jest.spyOn(global, 'setTimeout').mockReturnValue(123 as NodeJS.Timeout);
+    mockSetTimeout = jest
+      .spyOn(global, 'setTimeout')
+      .mockReturnValue(123 as unknown as NodeJS.Timeout);
 
     const { rerender } = renderHook(
       ({ loaded }) =>

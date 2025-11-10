@@ -57,7 +57,7 @@ describe('useScrollDirection', () => {
         scrollTop: 100,
         clientHeight: 200,
       },
-    } as React.UIEvent<HTMLElement>;
+    } as unknown as React.UIEvent<HTMLElement>;
   });
 
   it('should initialize with null scroll direction', () => {
@@ -258,7 +258,7 @@ describe('useScrollDirection', () => {
         scrollTop: 500,
         clientHeight: 400,
       },
-    } as React.UIEvent<HTMLElement>;
+    } as unknown as React.UIEvent<HTMLElement>;
 
     act(() => {
       handleScroll(customEvent);

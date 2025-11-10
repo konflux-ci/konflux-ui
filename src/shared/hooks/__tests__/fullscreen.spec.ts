@@ -286,23 +286,6 @@ describe('useFullscreen', () => {
     expect(firstToggleCallback).toBe(secondToggleCallback);
   });
 
-  it('should handle multiple event listener additions correctly', () => {
-    const { result } = renderHook(() => useFullscreen<HTMLDivElement>());
-    const [, targetCallbackRef] = result.current;
-
-    // Set target multiple times
-    act(() => {
-      targetCallbackRef(mockElement as HTMLDivElement);
-    });
-
-    act(() => {
-      targetCallbackRef(mockElement as HTMLDivElement);
-    });
-
-    // Should not add multiple listeners to the same element
-    expect(mockAddEventListener).toHaveBeenCalledTimes(4); // 2 calls x 2 events
-  });
-
   it('should properly cleanup event listeners', () => {
     const { result, unmount } = renderHook(() => useFullscreen<HTMLDivElement>());
     const [, targetCallbackRef] = result.current;

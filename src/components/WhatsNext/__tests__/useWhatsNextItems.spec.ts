@@ -35,9 +35,9 @@ describe('useWhatsNextItems', () => {
 
     // Default access permissions
     mockUseAccessReviewForModel.mockImplementation((_, action) => {
-      if (action === 'create') return [true]; // Can create components, integration tests, release plans
-      if (action === 'patch') return [true]; // Can patch components
-      return [false];
+      if (action === 'create') return [true, false]; // Can create components, integration tests, release plans
+      if (action === 'patch') return [true, false]; // Can patch components
+      return [false, false];
     });
   });
 
@@ -61,8 +61,8 @@ describe('useWhatsNextItems', () => {
 
   it('should disable add component when user lacks create permission', () => {
     mockUseAccessReviewForModel.mockImplementation((model, action) => {
-      if (model.kind === 'Component' && action === 'create') return [false];
-      return [true];
+      if (model.kind === 'Component' && action === 'create') return [false, false];
+      return [true, false];
     });
 
     const { result } = renderHook(() => useWhatsNextItems('test-app'));
@@ -74,8 +74,8 @@ describe('useWhatsNextItems', () => {
 
   it('should disable add integration test when user lacks create permission', () => {
     mockUseAccessReviewForModel.mockImplementation((model, action) => {
-      if (model.kind === 'IntegrationTestScenario' && action === 'create') return [false];
-      return [true];
+      if (model.kind === 'IntegrationTestScenario' && action === 'create') return [false, false];
+      return [true, false];
     });
 
     const { result } = renderHook(() => useWhatsNextItems('test-app'));
@@ -87,8 +87,8 @@ describe('useWhatsNextItems', () => {
 
   it('should disable create release plan when user lacks create permission', () => {
     mockUseAccessReviewForModel.mockImplementation((model, action) => {
-      if (model.kind === 'ReleasePlan' && action === 'create') return [false];
-      return [true];
+      if (model.kind === 'ReleasePlan' && action === 'create') return [false, false];
+      return [true, false];
     });
 
     const { result } = renderHook(() => useWhatsNextItems('test-app'));
@@ -100,8 +100,8 @@ describe('useWhatsNextItems', () => {
 
   it('should disable manage build pipelines when user lacks patch permission', () => {
     mockUseAccessReviewForModel.mockImplementation((model, action) => {
-      if (model.kind === 'Component' && action === 'patch') return [false];
-      return [true];
+      if (model.kind === 'Component' && action === 'patch') return [false, false];
+      return [true, false];
     });
 
     const { result } = renderHook(() => useWhatsNextItems('test-app'));
