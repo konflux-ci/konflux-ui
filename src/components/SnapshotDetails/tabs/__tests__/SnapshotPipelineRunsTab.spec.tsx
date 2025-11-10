@@ -1,13 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen } from '@testing-library/react';
+import { useSnapshot } from '~/hooks/useSnapshots';
 import { renderWithQueryClient } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
+import { usePipelineRunsV2, usePipelineRunV2 } from '../../../../hooks/usePipelineRunsV2';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
 import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
@@ -25,6 +26,7 @@ jest.mock('react-i18next', () => ({
 
 jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
+  usePipelineRunV2: jest.fn(),
 }));
 
 jest.mock('../../../../hooks/useComponents', () => ({
@@ -33,6 +35,13 @@ jest.mock('../../../../hooks/useComponents', () => ({
 }));
 
 jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 
@@ -83,7 +92,9 @@ jest.mock('../../../../utils/rbac', () => ({
 const useSearchParamBatchMock = useSearchParamBatch as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
+const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
+const useSnapshotMock = useSnapshot as jest.Mock;
 
 const appName = 'my-test-app';
 
@@ -95,20 +106,6 @@ const snapShotPLRs = [
       labels: {
         ...mockPipelineRuns[0].metadata.labels,
         [PipelineRunLabel.PIPELINE_TYPE]: 'test',
-      },
-      annotations: {
-        ...mockPipelineRuns[2].metadata.annotations,
-        [PipelineRunLabel.SNAPSHOT]: 'test-snapshot',
-      },
-    },
-  },
-  {
-    ...mockPipelineRuns[1],
-    metadata: {
-      ...mockPipelineRuns[1].metadata,
-      labels: {
-        ...mockPipelineRuns[1].metadata.labels,
-        [PipelineRunLabel.PIPELINE_TYPE]: 'build',
       },
       annotations: {
         ...mockPipelineRuns[2].metadata.annotations,
@@ -143,6 +140,29 @@ describe('SnapshotPipelinerunsTab', () => {
     useSearchParamBatchMock.mockImplementation(() => mockUseSearchParamBatch());
     useComponentsMock.mockReturnValue([mockComponentsData, true]);
     useNamespaceMock.mockReturnValue('test-ns');
+    usePipelineRunV2Mock.mockReturnValue([
+      {
+        ...mockPipelineRuns[1],
+        metadata: {
+          ...mockPipelineRuns[1].metadata,
+          labels: {
+            ...mockPipelineRuns[1].metadata.labels,
+            [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+          },
+          annotations: {
+            ...mockPipelineRuns[2].metadata.annotations,
+            [PipelineRunLabel.SNAPSHOT]: 'test-snapshot',
+          },
+        },
+      },
+      false,
+      null,
+    ]);
+    useSnapshotMock.mockReturnValue([
+      { metadata: { name: 'snap', namespace: 'test-ns' } },
+      true,
+      null,
+    ]);
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
@@ -165,9 +185,11 @@ describe('SnapshotPipelinerunsTab', () => {
       jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
+    usePipelineRunV2Mock.mockReturnValue([undefined, false, null]);
     renderWithQueryClient(<SnapshotPipelineRunsTab />);
-    screen.queryByText(/Not found/);
-    const button = screen.queryByText('Add component');
+    screen.getByText(/Keep tabs on components and activity/);
+    screen.getByText(/Monitor your components with pipelines and oversee CI\/CD activity./);
+    const button = screen.getByText('Add component');
     expect(button).toBeInTheDocument();
     expect(button.closest('a').href).toContain(
       `http://localhost/ns/test-ns/import?application=my-test-app`,

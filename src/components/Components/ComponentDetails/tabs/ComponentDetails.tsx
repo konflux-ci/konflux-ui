@@ -8,7 +8,7 @@ import {
   FlexItem,
 } from '@patternfly/react-core';
 import yamlParser from 'js-yaml';
-import { useLatestPushBuildPipelineRunForComponent } from '../../../../hooks/usePipelineRuns';
+import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
@@ -26,10 +26,8 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
   component,
 }) => {
   const namespace = useNamespace();
-  const [latestPushBuildPLR, pipelineRunLoaded, error] = useLatestPushBuildPipelineRunForComponent(
-    namespace,
-    component.metadata.name,
-  );
+  const [latestPushBuildPLR, pipelineRunLoaded, error] =
+    useLatestPushBuildPipelineRunForComponentV2(namespace, component.metadata.name);
 
   const results =
     !error && pipelineRunLoaded && latestPushBuildPLR?.status

@@ -18,6 +18,17 @@ jest.mock('react-router-dom', () => {
 
 const watchResourceMock = createK8sWatchResourceMock();
 
+jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+  usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
+}));
+
 describe('Pipeline run Row', () => {
   beforeEach(() => {
     watchResourceMock.mockReturnValue([[], false]);

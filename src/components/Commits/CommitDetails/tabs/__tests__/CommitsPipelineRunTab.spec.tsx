@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, act } from '@testing-library/react'
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
+import { renderWithQueryClient } from '~/unit-test-utils';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
 import { useK8sAndKarchResource } from '../../../../../hooks/useK8sAndKarchResources';
@@ -36,7 +37,15 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
   useLocation: jest.fn(() => ({ pathname: '/ns/test-ns' })),
 }));
-jest.mock('../../../../../hooks/useTektonResults');
+jest.mock('../../../../../hooks/useTektonResults', () => ({
+  useTRTaskRuns: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
+}));
 jest.mock('../../../../../hooks/usePipelineRunsForCommitV2', () => ({
   usePipelineRunsForCommitV2: jest.fn(),
 }));
@@ -145,7 +154,7 @@ describe('Commit Pipelinerun List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent />);
     screen.getByText(/Pipeline runs/);
     screen.getByText('Name');
     screen.getByText('Started');
@@ -155,14 +164,14 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render both Build and Test pipelineruns in the pipelinerun list', () => {
-    render(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent />);
 
     screen.getByText('Build');
     screen.getByText('Test');
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
-    render(<TestedComponent />);
+    renderWithQueryClient(<TestedComponent />);
 
     expect(screen.queryByText('java-springboot-sample-x778q')).toBeInTheDocument();
     expect(screen.queryByText('nodejs-sample-zth6t')).toBeInTheDocument();
@@ -171,7 +180,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render filtered pipelinerun list by name', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -202,7 +211,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render filtered pipelinerun list by status', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const statusFilter = screen.getByRole('button', {
       name: /status filter menu/i,
@@ -236,7 +245,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render filtered pipelinerun list by type', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const typeFilter = screen.getByRole('button', {
       name: /type filter menu/i,
@@ -270,7 +279,7 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should clear the filters and render the list again in the table', async () => {
-    const r = render(<TestedComponent />);
+    const r = renderWithQueryClient(<TestedComponent />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 

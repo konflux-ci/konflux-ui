@@ -172,6 +172,7 @@ describe('usePipelineRunV2', () => {
           filter: expect.any(String),
           limit: 1,
         }),
+        expect.objectContaining({ staleTime: Infinity }),
       );
     });
   });
@@ -228,6 +229,7 @@ describe('usePipelineRunV2', () => {
           filter: expect.any(String),
           limit: 1,
         }),
+        expect.objectContaining({ staleTime: Infinity }),
       );
     });
 
@@ -243,7 +245,7 @@ describe('usePipelineRunV2', () => {
           name: 'test-pipeline-run',
         }),
         PipelineRunModel,
-        { enabled: false }, // queryOptions
+        { enabled: false, staleTime: Infinity }, // queryOptions
       );
     });
   });

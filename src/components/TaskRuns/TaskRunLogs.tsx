@@ -1,8 +1,8 @@
 import React from 'react';
+import { runStatus } from '~/consts/pipelinerun';
 import { PodGroupVersionKind } from '../../models/pod';
 import LogsWrapperComponent from '../../shared/components/pipeline-run-logs/logs/LogsWrapperComponent';
 import { TaskRunKind } from '../../types';
-import { runStatus } from '../../utils/pipeline-utils';
 
 type Props = {
   taskRun: TaskRunKind;
