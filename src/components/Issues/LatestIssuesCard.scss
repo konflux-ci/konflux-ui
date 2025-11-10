@@ -26,34 +26,4 @@
     font-size: var(--pf-v5-global--FontSize--md);
   }
 
-  &__title {
-    font-weight: var(--pf-v5-global--FontWeight--semi-bold);
-    color: var(--pf-v5-global--Color--100);
-    line-height: var(--pf-v5-global--LineHeight--md);
-    font-size: var(--pf-v5-global--FontSize--md);
-  }
-
-  &__description {
-    color: var(--pf-v5-global--Color--200);
-    font-size: var(--pf-v5-global--FontSize--sm);
-    line-height: var(--pf-v5-global--LineHeight--md);
-    margin-bottom: var(--pf-v5-global--spacer--md);
-    margin-top: var(--pf-v5-global--spacer--sm);
-    margin-left: 0;
-  }
-
-  &__timestamp {
-    color: var(--pf-v5-global--Color--200);
-    font-size: var(--pf-v5-global--FontSize--sm);
-    line-height: var(--pf-v5-global--LineHeight--md);
-    margin-top: var(--pf-v5-global--spacer--sm);
-    margin-left: 0;
-  }
-
-  &__empty {
-    color: var(--pf-v5-global--Color--200);
-    font-style: italic;
-    text-align: center;
-    padding: var(--pf-v5-global--spacer--lg) 0;
-  }
 }

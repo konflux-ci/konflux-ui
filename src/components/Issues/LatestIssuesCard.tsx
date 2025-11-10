@@ -101,13 +101,17 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className })
                         {getSeverityIcon(issue.severity)}
                       </FlexItem>
                       <FlexItem flex={{ default: 'flex_1' }}>
-                        <Text component={TextVariants.h4} className="latest-issues-card__title">
-                          {issue.title}
-                        </Text>
+                        <Text component={TextVariants.h4}>{issue.title}</Text>
                       </FlexItem>
                     </Flex>
-                    <Text className="latest-issues-card__description">{issue.description}</Text>
-                    <Text component={TextVariants.small} className="latest-issues-card__timestamp">
+                    <Text
+                      component={TextVariants.p}
+                      color="subtle"
+                      className="pf-v5-u-mt-sm pf-v5-u-mb-md"
+                    >
+                      {issue.description}
+                    </Text>
+                    <Text component={TextVariants.small} color="subtle" className="pf-v5-u-mt-sm">
                       {formatTimestamp(issue.detectedAt)}
                     </Text>
                   </div>
