@@ -48,11 +48,11 @@ jest.mock('~/hooks/useScrollToHash', () => ({
 // Mock commit util to return a stable commit object
 jest.mock('~/utils/commits-utils', () => ({
   createCommitObjectFromPLR: jest.fn(() => ({
-    sha: 'abc123',
+    sha: 'abc5b3ad0a2c16726523b12cf3b8f0365be33566',
     shaTitle: 'abc123',
     displayName: 'Commit title',
     gitProvider: 'github',
-    shaURL: 'https://example.com/commit/abc123',
+    shaURL: 'https://example.com/commit/abc5b3ad0a2c16726523b12cf3b8f0365be33566',
   })),
 }));
 
