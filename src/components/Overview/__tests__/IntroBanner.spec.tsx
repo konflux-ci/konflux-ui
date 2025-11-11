@@ -37,14 +37,14 @@ describe('IntroBanner', () => {
   it('should render the overview banner image', () => {
     routerRenderer(<IntroBanner />);
 
-    expect(document.querySelector('.intro-banner__image')).toBeInTheDocument();
+    expect(screen.getByTestId('intro-banner-image')).toBeInTheDocument();
   });
 
   it('should apply correct CSS classes', () => {
     routerRenderer(<IntroBanner />);
 
-    expect(document.querySelector('.intro-banner')).toBeInTheDocument();
-    expect(document.querySelector('.intro-banner__content')).toBeInTheDocument();
-    expect(document.querySelector('.intro-banner__image')).toBeInTheDocument();
+    expect(screen.getByTestId('intro-banner')).toBeInTheDocument();
+    expect(screen.getByTestId('intro-banner-content')).toBeInTheDocument();
+    expect(screen.getByTestId('intro-banner-image')).toBeInTheDocument();
   });
 });

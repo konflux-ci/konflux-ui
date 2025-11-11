@@ -34,7 +34,9 @@ const mockCreateCommitObjectFromPLR = createCommitObjectFromPLR as jest.Mock;
 const renderCommitOverviewTab = () => {
   return renderWithQueryClient(
     WithTestNamespaceContext(
-      <MemoryRouter initialEntries={['/applications/test-app/commit/abc123']}>
+      <MemoryRouter
+        initialEntries={['/applications/test-app/commit/abc123456789012345678901234567890abcdefgh']}
+      >
         <Routes>
           <Route
             path="/applications/:applicationName/commit/:commitName"
@@ -48,8 +50,8 @@ const renderCommitOverviewTab = () => {
 };
 
 const mockCommit = {
-  sha: 'abc123',
-  shaURL: 'https://github.com/org/repo/commit/abc123',
+  sha: 'abc123456789012345678901234567890abcdefgh',
+  shaURL: 'https://github.com/org/repo/commit/abc123456789012345678901234567890abcdefgh',
   gitProvider: 'github',
   branch: 'main',
   user: 'test-user',
@@ -64,7 +66,7 @@ const mockPipelineRun = {
     name: 'test-pipeline-run',
     labels: {
       'appstudio.openshift.io/application': 'test-app',
-      'appstudio.openshift.io/commit': 'abc123',
+      'appstudio.openshift.io/commit': 'abc123456789012345678901234567890abcdefgh',
     },
   },
   spec: {},
@@ -118,8 +120,8 @@ describe('CommitOverviewTab', () => {
     it('should display commit details correctly', () => {
       renderCommitOverviewTab();
 
-      // Test for actual commit SHA being displayed
-      expect(screen.getByText('abc123')).toBeInTheDocument();
+      // Test for actual commit SHA being displayed (shortened)
+      expect(screen.getByText('abc1234')).toBeInTheDocument();
 
       expect(screen.getByText('main')).toBeInTheDocument();
 
@@ -138,12 +140,15 @@ describe('CommitOverviewTab', () => {
       expect(mockUsePipelineRunsForCommitV2).toHaveBeenCalledWith(
         'test-namespace',
         'test-app',
-        'abc123',
+        'abc123456789012345678901234567890abcdefgh',
         1,
         undefined,
         'build',
       );
-      expect(mockUseCommitStatus).toHaveBeenCalledWith('test-app', 'abc123');
+      expect(mockUseCommitStatus).toHaveBeenCalledWith(
+        'test-app',
+        'abc123456789012345678901234567890abcdefgh',
+      );
     });
   });
 });

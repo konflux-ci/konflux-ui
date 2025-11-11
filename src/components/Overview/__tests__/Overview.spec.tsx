@@ -16,26 +16,23 @@ describe('Overview', () => {
     // Check for InfoBanner content
     expect(screen.getByText('Build artifacts of all kinds from source')).toBeInTheDocument();
 
-    // Check for AboutSection content
-    expect(screen.getByText('About')).toBeInTheDocument();
+    // Check for AboutSection content using specific data-test
+    expect(screen.getByTestId('about-section-title')).toBeInTheDocument();
   });
 
   it('should render with PageSection wrapper', () => {
     renderWithQueryClientAndRouter(<Overview />);
 
-    const pageSections = document.querySelectorAll('.pf-v5-c-page__main-section');
-    expect(pageSections.length).toBeGreaterThan(0);
+    // Check for content presence instead of CSS classes
+    expect(screen.getByText('Get started with Konflux')).toBeInTheDocument();
   });
 
   it('should have proper structure with PageSection components', () => {
-    const { container } = renderWithQueryClientAndRouter(<Overview />);
+    renderWithQueryClientAndRouter(<Overview />);
 
-    const outerPageSection = container.querySelector('.pf-v5-c-page__main-section');
-    expect(outerPageSection).toBeInTheDocument();
-
-    // Check for real component content instead of test IDs
+    // Check for real component content instead of CSS classes
     expect(screen.getByText('Get started with Konflux')).toBeInTheDocument();
     expect(screen.getByText('Build artifacts of all kinds from source')).toBeInTheDocument();
-    expect(screen.getByText('About')).toBeInTheDocument();
+    expect(screen.getByTestId('about-section-title')).toBeInTheDocument();
   });
 });

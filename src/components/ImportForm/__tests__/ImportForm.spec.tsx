@@ -1,4 +1,5 @@
 import { screen } from '@testing-library/react';
+import { LEARN_MORE_ABOUT_CREATING_APPLICATIONS } from '../../../consts/documentation';
 import { renderWithQueryClientAndRouter } from '../../../unit-test-utils/rendering-utils';
 import ImportForm from '../ImportForm';
 
@@ -34,7 +35,7 @@ describe('ImportForm', () => {
       ).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Learn more' })).toHaveAttribute(
         'href',
-        'https://konflux-ci.dev/docs/building/creating/',
+        LEARN_MORE_ABOUT_CREATING_APPLICATIONS,
       );
     });
 
@@ -70,7 +71,7 @@ describe('ImportForm', () => {
       ).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Learn more' })).toHaveAttribute(
         'href',
-        'https://konflux-ci.dev/docs/building/creating/',
+        LEARN_MORE_ABOUT_CREATING_APPLICATIONS,
       );
     });
 
@@ -131,9 +132,8 @@ describe('ImportForm', () => {
     it('should render GitImportForm within PageSection', () => {
       renderWithQueryClientAndRouter(<ImportForm />);
 
-      // Check for real page structure instead of data-test attributes
-      expect(document.querySelector('.pf-v5-c-page__main-group')).toBeInTheDocument();
-      expect(document.querySelector('.pf-v5-c-page__main-section')).toBeInTheDocument();
+      // Check for page section using data-test attribute
+      expect(screen.getByTestId('import-form-page-section')).toBeInTheDocument();
       expect(document.querySelector('form')).toBeInTheDocument();
     });
   });
@@ -150,10 +150,7 @@ describe('ImportForm', () => {
       const externalLink = screen.getByRole('link', { name: 'Learn more' });
       expect(externalLink).toHaveAttribute('target', '_blank');
       expect(externalLink).toHaveAttribute('rel', 'noopener noreferrer');
-      expect(externalLink).toHaveAttribute(
-        'href',
-        'https://konflux-ci.dev/docs/building/creating/',
-      );
+      expect(externalLink).toHaveAttribute('href', LEARN_MORE_ABOUT_CREATING_APPLICATIONS);
     });
   });
 });
