@@ -310,36 +310,6 @@ describe('LatestIssuesCard', () => {
     });
   });
 
-  describe('Component props', () => {
-    it('should apply custom className when provided', () => {
-      mockUseIssues.mockReturnValue({
-        data: { data: [] },
-        isLoading: false,
-        error: null,
-      });
-
-      const { container } = renderWithQueryClientAndRouter(
-        <LatestIssuesCard className="custom-class" />,
-      );
-
-      const cardElement = container.querySelector('.latest-issues-card.custom-class');
-      expect(cardElement).toBeInTheDocument();
-    });
-
-    it('should work without className prop', () => {
-      mockUseIssues.mockReturnValue({
-        data: { data: [] },
-        isLoading: false,
-        error: null,
-      });
-
-      const { container } = renderWithQueryClientAndRouter(<LatestIssuesCard />);
-
-      const cardElement = container.querySelector('.latest-issues-card');
-      expect(cardElement).toBeInTheDocument();
-    });
-  });
-
   describe('Hook integration', () => {
     it('should call useIssues with correct parameters', () => {
       mockUseNamespace.mockReturnValue('test-workspace');
@@ -455,9 +425,8 @@ describe('LatestIssuesCard', () => {
 
       // Should still render the issue even with invalid date
       expect(screen.getByText('Malformed Date Issue')).toBeInTheDocument();
-      // The formatTimestamp function will create a Date object with invalid date,
-      // which will result in "Invalid Date" being displayed
-      expect(screen.getByText(/Invalid Date/)).toBeInTheDocument();
+      // The Timestamp component will handle invalid dates by displaying "-"
+      expect(screen.getByText('-')).toBeInTheDocument();
     });
 
     it('should handle issues with empty titles and descriptions', () => {

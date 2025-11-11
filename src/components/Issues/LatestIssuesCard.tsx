@@ -28,10 +28,9 @@ import { Issue, IssueState, IssueSeverity } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import EmptySearchImgUrl from '~/shared/assets/Not-found.svg';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
-import { dateTimeFormatter, isValid } from '~/shared/components/timestamp/datetime';
+import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useNamespace } from '../../shared/providers/Namespace';
-import './LatestIssuesCard.scss';
 
 const getSeverityIcon = (severity: Issue['severity']) => {
   switch (severity) {
@@ -48,16 +47,9 @@ const getSeverityIcon = (severity: Issue['severity']) => {
   }
 };
 
-interface LatestIssuesCardProps {
-  className?: string;
-}
+interface LatestIssuesCardProps {}
 
-const formatTimestamp = (dateString: string) => {
-  const date = new Date(dateString);
-  return isValid(date) ? dateTimeFormatter.format(date) : 'Invalid Date';
-};
-
-export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className }) => {
+export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = () => {
   const namespace = useNamespace();
   const { data, isLoading, error } = useIssues({
     namespace,
@@ -81,40 +73,37 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = ({ className })
   const hasIssues = issues.length > 0;
 
   return (
-    <Card className={`latest-issues-card ${className || ''}`}>
+    <Card>
       <CardHeader>
         <CardTitle component="h3">Latest issues</CardTitle>
       </CardHeader>
       <CardBody>
         {hasIssues ? (
           <>
-            <List isPlain className="latest-issues-card__list">
+            <List isPlain>
               {issues.map((issue) => (
-                <ListItem key={issue.id} className="latest-issues-card__item">
-                  <div className="latest-issues-card__item-content">
-                    <Flex
-                      alignItems={{ default: 'alignItemsCenter' }}
-                      gap={{ default: 'gapSm' }}
-                      className="latest-issues-card__title-row"
+                <ListItem key={issue.id}>
+                  <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+                    <FlexItem
+                      shrink={{ default: 'shrink' }}
+                      alignSelf={{ default: 'alignSelfFlexStart' }}
                     >
-                      <FlexItem className="latest-issues-card__icon-container">
-                        {getSeverityIcon(issue.severity)}
-                      </FlexItem>
-                      <FlexItem flex={{ default: 'flex_1' }}>
-                        <Text component={TextVariants.h4}>{issue.title}</Text>
-                      </FlexItem>
-                    </Flex>
-                    <Text
-                      component={TextVariants.p}
-                      color="subtle"
-                      className="pf-v5-u-mt-sm pf-v5-u-mb-md"
-                    >
-                      {issue.description}
-                    </Text>
-                    <Text component={TextVariants.small} color="subtle" className="pf-v5-u-mt-sm">
-                      {formatTimestamp(issue.detectedAt)}
-                    </Text>
-                  </div>
+                      {getSeverityIcon(issue.severity)}
+                    </FlexItem>
+                    <FlexItem flex={{ default: 'flex_1' }}>
+                      <Text component={TextVariants.h4}>{issue.title}</Text>
+                    </FlexItem>
+                  </Flex>
+                  <Text
+                    component={TextVariants.p}
+                    color="subtle"
+                    className="pf-v5-u-mt-sm pf-v5-u-mb-md"
+                  >
+                    {issue.description}
+                  </Text>
+                  <Text component={TextVariants.small} color="subtle" className="pf-v5-u-mt-sm">
+                    <Timestamp timestamp={issue.detectedAt} />
+                  </Text>
                 </ListItem>
               ))}
             </List>
