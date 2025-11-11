@@ -1,0 +1,49 @@
+.issue-distribution-card {
+  &__severity-count {
+    margin-bottom: var(--pf-v5-global--spacer--xs);
+  }
+
+  &__severity-label {
+    color: var(--pf-v5-global--Color--200);
+    width: var(--pf-v5-global--spacer--2xl);
+  }
+
+  &__chart-wrapper {
+    max-width: 100%;
+
+    svg {
+      height: auto;
+    }
+
+    @media (max-width: 768px) {
+      svg {
+        max-width: 250px;
+        max-height: 250px;
+      }
+    }
+  }
+
+  &__chart-empty-state {
+    width: 300px;
+    height: 300px;
+    border: 1px dashed var(--pf-v5-global--BorderColor--200);
+    border-radius: var(--pf-v5-global--BorderRadius--sm);
+    color: var(--pf-v5-global--Color--200);
+  }
+
+  &__chart-loading-state {
+    width: 300px;
+    height: 300px;
+  }
+
+  &__legend {
+    margin-left: var(--pf-v5-global--spacer--lg);
+  }
+
+  &__legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+}
