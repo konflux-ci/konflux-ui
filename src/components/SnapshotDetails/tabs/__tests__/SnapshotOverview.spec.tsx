@@ -3,7 +3,7 @@ import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useScanResults } from '~/hooks/useScanResults';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
+import { renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import SnapshotOverview from '../SnapshotOverview';
 
 // Mock router to turn Link into a simple anchor and control params
