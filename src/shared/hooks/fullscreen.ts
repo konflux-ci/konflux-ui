@@ -74,7 +74,7 @@ export const useFullscreen = <T extends HTMLElement>(): [
           elementRef.current.removeEventListener(nativeAPI.fullscreenchange, listener);
           elementRef.current.removeEventListener(nativeAPI.fullscreenerror, listener);
         }
-        if (node != null) {
+        if (node != null && elementRef.current !== node) {
           elementRef.current = node;
           node.addEventListener(nativeAPI.fullscreenchange, listener);
           node.addEventListener(nativeAPI.fullscreenerror, listener);
