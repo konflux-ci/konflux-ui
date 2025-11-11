@@ -8,6 +8,7 @@ import {
   NAMESPACE_LIST_PATH,
   RELEASE_MONITOR_PATH,
   RELEASE_SERVICE_PATH,
+  RESOURCES_PATH,
   SECRET_LIST_PATH,
   USER_ACCESS_LIST_PAGE,
 } from '@routes/paths';
@@ -117,6 +118,17 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                 }
               >
                 User Access
+              </NavLink>
+            </NavItem>
+
+            <NavItem
+              className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+              isActive={isActive(RESOURCES_PATH.path)}
+            >
+              <NavLink
+                to={namespace ? RESOURCES_PATH.createPath({ workspaceName: namespace }) : undefined}
+              >
+                Resources
               </NavLink>
             </NavItem>
           </NavList>

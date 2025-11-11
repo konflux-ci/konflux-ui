@@ -55,6 +55,9 @@ describe('AppSideBar', () => {
     expect(screen.getByText('User Access').closest('li')).toHaveClass(
       'app-side-bar__nav-item--disabled',
     );
+    expect(screen.getByText('Resources').closest('li')).toHaveClass(
+      'app-side-bar__nav-item--disabled',
+    );
   });
 
   it('should generate correct links when namespace is selected', () => {
@@ -70,6 +73,7 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/ns/test-namespace/secrets');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/ns/test-namespace/release');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/ns/test-namespace/access');
+    expect(screen.getByText('Resources')).toHaveAttribute('href', '/ns/test-namespace/resources');
   });
 
   it('should not render links for disabled namespace-dependent routes when no namespace is available', () => {
@@ -83,5 +87,6 @@ describe('AppSideBar', () => {
     expect(screen.getByText('Secrets')).toHaveAttribute('href', '/');
     expect(screen.getByText('Releases')).toHaveAttribute('href', '/');
     expect(screen.getByText('User Access')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Resources')).toHaveAttribute('href', '/');
   });
 });
