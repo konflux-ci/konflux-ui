@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { createK8sWatchResourceMock } from '~/unit-test-utils';
+import { ReleasePlanAdmissionModel } from '../../models/release-plan-admission';
 import { useReleasePlanAdmissions } from '../useReleasePlanAdmissions';
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
@@ -76,7 +77,7 @@ describe('useReleasePlanAdmissions', () => {
         namespace: 'test-namespace',
         isList: true,
       },
-      expect.any(Object), // ReleasePlanAdmissionModel
+      ReleasePlanAdmissionModel,
     );
   });
 
@@ -95,7 +96,7 @@ describe('useReleasePlanAdmissions', () => {
       expect.objectContaining({
         namespace: 'namespace-1',
       }),
-      expect.any(Object),
+      ReleasePlanAdmissionModel,
     );
 
     rerender({ namespace: 'namespace-2' });
@@ -104,7 +105,7 @@ describe('useReleasePlanAdmissions', () => {
       expect.objectContaining({
         namespace: 'namespace-2',
       }),
-      expect.any(Object),
+      ReleasePlanAdmissionModel,
     );
   });
 
@@ -121,7 +122,7 @@ describe('useReleasePlanAdmissions', () => {
       expect.objectContaining({
         namespace: '',
       }),
-      expect.any(Object),
+      ReleasePlanAdmissionModel,
     );
     expect(result.current).toEqual([[], true, undefined]);
   });
