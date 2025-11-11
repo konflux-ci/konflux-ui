@@ -54,10 +54,6 @@ jest.mock('~/utils/commits-utils', () => ({
     gitProvider: 'github',
     shaURL: 'https://example.com/commit/abc5b3ad0a2c16726523b12cf3b8f0365be33566',
   })),
-}));
-
-// Mock getCommitShortName utility function used by CommitLabel
-jest.mock('~/utils/commits-utils', () => ({
   ...jest.requireActual('~/utils/commits-utils'),
   getCommitShortName: jest.fn((sha: string) => sha.slice(0, 7)),
 }));
@@ -87,12 +83,13 @@ const basePipelineRun = {
     name: 'build-plr-1',
     namespace: 'test-ns',
     labels: {
-      'pipelinesascode.tekton.dev/sha': 'abc123',
+      'pipelinesascode.tekton.dev/sha': 'abc5b3ad0a2c16726523b12cf3b8f0365be33566',
       'appstudio.openshift.io/application': 'app-1',
       'appstudio.openshift.io/component': 'comp-a',
     },
     annotations: {
-      'appstudio.openshift.io/commit-url': 'https://example.com/commit/abc123',
+      'appstudio.openshift.io/commit-url':
+        'https://example.com/commit/abc5b3ad0a2c16726523b12cf3b8f0365be33566',
       'pipelinesascode.tekton.dev/sha-title': 'Commit title',
     },
   },
@@ -118,7 +115,9 @@ describe('SnapshotOverview', () => {
     const commitDesc = screen.getByTestId('snapshot-commit-link');
     const link = commitDesc.querySelector('a');
     expect(link).toBeTruthy();
-    expect(link.getAttribute('href')).toContain('/ns/test-ns/applications/app-1/commit/abc123');
+    expect(link.getAttribute('href')).toContain(
+      '/ns/test-ns/applications/app-1/commit/abc5b3ad0a2c16726523b12cf3b8f0365be33566',
+    );
     expect(link.textContent).toContain('Commit title');
   });
 
