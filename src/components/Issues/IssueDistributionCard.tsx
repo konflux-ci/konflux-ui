@@ -71,24 +71,29 @@ const SeverityDistributionSection: React.FC<{ namespace: string }> = ({ namespac
           >
             {SEVERITY_ORDER.map((severity) => (
               <FlexItem key={severity} style={{ textAlign: 'center' }}>
-                {isLoaded ? (
-                  <Title
-                    headingLevel="h4"
-                    size="3xl"
-                    className="issue-distribution-card__severity-count"
-                  >
-                    {counts?.[severity] ?? 0}
-                  </Title>
-                ) : (
-                  <Skeleton
-                    shape="square"
-                    width="45%"
-                    className="issue-distribution-card__severity-count"
-                  />
-                )}
-                <Text className="issue-distribution-card__severity-label">
-                  {capitalize(severity)}
-                </Text>
+                <Flex
+                  direction={{ default: 'column' }}
+                  alignItems={{ default: 'alignItemsCenter' }}
+                >
+                  {isLoaded ? (
+                    <Title
+                      headingLevel="h4"
+                      size="3xl"
+                      className="issue-distribution-card__severity-count"
+                    >
+                      {counts?.[severity] ?? 0}
+                    </Title>
+                  ) : (
+                    <Skeleton
+                      shape="square"
+                      width="45%"
+                      className="issue-distribution-card__severity-count"
+                    />
+                  )}
+                  <Text className="issue-distribution-card__severity-label">
+                    {capitalize(severity)}
+                  </Text>
+                </Flex>
               </FlexItem>
             ))}
           </Flex>
