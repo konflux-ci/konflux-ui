@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, ButtonVariant } from '@patternfly/react-core';
+import { LEARN_MORE_ABOUT_REGISTRY_LOGIN_URL } from '~/consts/documentation';
+import { ExternalLink } from '~/shared';
 import { useComponent } from '../../../../hooks/useComponents';
 import { RouterParams } from '../../../../routes/utils';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
@@ -12,6 +14,7 @@ import { useModalLauncher } from '../../../modal/ModalProvider';
 import ComponentBuildSettings from './ComponentBuildSettings';
 import ComponentDetails from './ComponentDetails';
 import ComponentLatestBuild from './ComponentLatestBuild';
+import ComponentRegistryLogin from './ComponentRegistryLogin';
 
 const ComponentDetailsTab: React.FC = () => {
   const namespace = useNamespace();
@@ -59,6 +62,22 @@ const ComponentDetailsTab: React.FC = () => {
       >
         <ComponentBuildSettings component={component} />
         <ComponentNudgesDependencies component={component} />
+      </DetailsSection>
+      <DetailsSection
+        title="Registry Login Information"
+        description={
+          <span>
+            Use this information for accessing the registry for build images.{` `}
+            <ExternalLink
+              href={LEARN_MORE_ABOUT_REGISTRY_LOGIN_URL}
+              data-test="registry-login-docs-link"
+            >
+              More info
+            </ExternalLink>
+          </span>
+        }
+      >
+        <ComponentRegistryLogin />
       </DetailsSection>
     </div>
   );
