@@ -47,9 +47,7 @@ const getSeverityIcon = (severity: Issue['severity']) => {
   }
 };
 
-interface LatestIssuesCardProps {}
-
-export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = () => {
+export const LatestIssuesCard: React.FC = () => {
   const namespace = useNamespace();
   const { data, isLoading, error } = useIssues({
     namespace,
@@ -95,16 +93,8 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = () => {
                         variant="link"
                         isInline
                         component={(props) => <Link {...props} to={`/issues/${issue.id}`} />}
-                        style={{
-                          padding: 0,
-                          fontSize: 'inherit',
-                          fontWeight: 'bold',
-                          textAlign: 'left',
-                        }}
                       >
-                        <Text component={TextVariants.h3} style={{ fontWeight: 'bold' }}>
-                          {issue.title}
-                        </Text>
+                        <Text component={TextVariants.h3}>{issue.title}</Text>
                       </Button>
                     </FlexItem>
                   </Flex>

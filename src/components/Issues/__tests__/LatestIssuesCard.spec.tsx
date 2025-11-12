@@ -1,18 +1,14 @@
 import { screen } from '@testing-library/react';
 import { Issue, IssueState, IssueSeverity, IssueType } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
-import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { LatestIssuesCard } from '../LatestIssuesCard';
 
 // Mock dependencies
 jest.mock('~/kite/kite-hooks', () => ({
   useIssues: jest.fn(),
-}));
-
-jest.mock('~/shared/providers/Namespace', () => ({
-  useNamespace: jest.fn(),
 }));
 
 jest.mock('~/shared/utils/error-utils', () => ({
@@ -22,7 +18,6 @@ jest.mock('~/shared/utils/error-utils', () => ({
 // Create mock functions
 const mockUseIssues = useIssues as jest.Mock;
 const mockGetErrorState = getErrorState as jest.Mock;
-const mockUseNamespace = useNamespace as jest.Mock;
 
 // Mock issues data
 const createMockIssue = (overrides: Partial<Issue> = {}): Issue => ({
@@ -50,7 +45,7 @@ const createMockIssue = (overrides: Partial<Issue> = {}): Issue => ({
 describe('LatestIssuesCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseNamespace.mockReturnValue('test-namespace');
+    mockUseNamespaceHook('test-namespace');
   });
 
   describe('Loading state', () => {
@@ -312,7 +307,7 @@ describe('LatestIssuesCard', () => {
 
   describe('Hook integration', () => {
     it('should call useIssues with correct parameters', () => {
-      mockUseNamespace.mockReturnValue('test-workspace');
+      mockUseNamespaceHook('test-workspace');
       mockUseIssues.mockReturnValue({
         data: { data: [] },
         isLoading: false,
@@ -329,7 +324,7 @@ describe('LatestIssuesCard', () => {
     });
 
     it('should handle different namespace values', () => {
-      mockUseNamespace.mockReturnValue('production-namespace');
+      mockUseNamespaceHook('production-namespace');
       mockUseIssues.mockReturnValue({
         data: { data: [] },
         isLoading: false,
