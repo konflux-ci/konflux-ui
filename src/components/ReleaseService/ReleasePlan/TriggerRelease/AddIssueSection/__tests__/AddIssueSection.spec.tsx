@@ -35,7 +35,7 @@ describe('AddIssueSection for Bugs', () => {
   it('should show correct heading ', () => {
     formikRenderer(AddIssue('bug', IssueType.BUG));
     expect(
-      screen.getByText('Are there any bug fixes you would like to add to this release?'),
+      screen.getByText('Are there any Jira issues you would like to add to this release?'),
     ).toBeVisible();
   });
 
@@ -102,7 +102,7 @@ describe('AddIssueSection for Bugs', () => {
     formikRenderer(AddIssue('bugs', IssueType.BUG), {
       bugs: [],
     });
-    expect(screen.getByText('No Bugs found'));
+    expect(screen.getByText('No Jira issues found'));
   });
 
   it('should show filteredEmptyState ', async () => {

@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
+import { runStatus } from '~/consts/pipelinerun';
 import { ReleasePlanKind } from '../../../../types/coreBuildService';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { runStatus } from '../../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { useReleasePlanActions } from '../releaseplan-actions';
 
@@ -44,7 +44,7 @@ describe('useReleasePlanActions', () => {
 
     expect(actions[0]).toEqual(
       expect.objectContaining({
-        label: 'Trigger release plan',
+        label: 'Trigger release',
         cta: {
           href: `/ns/test-ns/release/release-plan/trigger?releasePlan=test-release-plan`,
         },
@@ -93,7 +93,7 @@ describe('useReleasePlanActions', () => {
       } as ReleasePlanKind),
     );
     const actions = result.current;
-    expect(actions[0].label).toEqual('Trigger release plan');
+    expect(actions[0].label).toEqual('Trigger release');
     expect(actions[0].disabled).toEqual(true);
     expect(actions[0].disabledTooltip).toEqual(
       "You don't have permission to trigger this release plan",

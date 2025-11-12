@@ -23,7 +23,7 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../hooks/useLocalStorage', () => ({
+jest.mock('../../../../shared/hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(),
 }));
 

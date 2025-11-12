@@ -1,4 +1,5 @@
 import { curry } from 'lodash-es';
+import { HttpError } from '~/k8s/error';
 import { ApplicationKind } from '~/types';
 import { PipelineRunModel } from '../models';
 import { K8sModelCommon, K8sResourceCommon, OwnerReference } from '../types/k8s';
@@ -15,3 +16,7 @@ export const getResourceFromOwnerReference = curry(
 );
 
 export const getPipelineRunFromTaskRunOwnerRef = getResourceFromOwnerReference(PipelineRunModel);
+
+export const has404Error = (error: unknown): error is HttpError => {
+  return error instanceof HttpError && error.code === 404;
+};

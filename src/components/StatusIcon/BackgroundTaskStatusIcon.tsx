@@ -1,4 +1,4 @@
-import { runStatus } from '~/utils/pipeline-utils';
+import { runStatus } from '~/consts/pipelinerun';
 import { BackgroundJobStatus } from '~/utils/task-store';
 import { StatusIconWithText } from './StatusIcon';
 

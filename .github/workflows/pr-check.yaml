@@ -67,8 +67,6 @@ jobs:
       BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-      HAC_TEST_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-      SEALIGHTS_TOKEN: ${{ secrets.SEALIGHTS_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
       GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
@@ -77,6 +75,8 @@ jobs:
       SMEE_URL: ${{ secrets.SMEE_URL }}
       CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+      CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      JOB_TYPE: 'on-pr'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,7 +87,7 @@ jobs:
         id: pr-check-action
         uses: ./.github/actions/konflux-ui-deploy-test
         with:
-          job-type: 'on-pr'
+          job-type: ${{ env.JOB_TYPE }}
   
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test

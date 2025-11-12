@@ -32,6 +32,13 @@ jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);
 
 jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 

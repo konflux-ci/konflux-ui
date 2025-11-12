@@ -2,11 +2,11 @@ import React from 'react';
 import { ThProps } from '@patternfly/react-table';
 
 export const namespaceTableColumnClasses = {
-  name: 'pf-m-width-40',
-  applications: 'pf-m-width-40',
+  name: 'pf-m-width-35',
+  visibility: 'pf-m-width-25',
+  applications: 'pf-m-width-25',
   kebab: 'pf-m-width-15 pf-c-table__action',
 };
-
 interface NamespaceListHeaderOptions {
   showActions?: boolean;
 }
@@ -19,6 +19,10 @@ export const createNamespaceListHeader = ({
       {
         title: 'Name',
         props: { className: namespaceTableColumnClasses.name },
+      },
+      {
+        title: 'Visibility',
+        props: { className: namespaceTableColumnClasses.visibility },
       },
       {
         title: 'Applications',

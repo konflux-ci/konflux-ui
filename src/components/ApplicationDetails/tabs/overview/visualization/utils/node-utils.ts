@@ -5,7 +5,7 @@ import {
   INTEGRATION_TEST_DETAILS_PATH,
   PIPELINERUN_LIST_PATH,
 } from '@routes/paths';
-import { PipelineRunLabel } from '../../../../../../consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '../../../../../../consts/pipelinerun';
 import { ComponentKind, PipelineRunKind } from '../../../../../../types';
 import { GitOpsDeploymentHealthStatus } from '../../../../../../types/gitops-deployment';
 import { K8sResourceCommon } from '../../../../../../types/k8s';
@@ -16,7 +16,6 @@ import {
   MANAGED_ENV_DESC,
   pipelineRunStatus,
   RELEASE_DESC,
-  runStatus,
   STATIC_ENV_DESC,
   TESTS_DESC,
 } from '../../../../../../utils/pipeline-utils';

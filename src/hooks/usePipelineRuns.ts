@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { differenceBy, uniqBy } from 'lodash-es';
 import { useK8sWatchResource } from '~/k8s';
-import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import {
+  PipelineRunEventType,
+  PipelineRunLabel,
+  PipelineRunType,
+  runStatus,
+} from '../consts/pipelinerun';
 import {
   PipelineRunGroupVersionKind,
   PipelineRunModel,
@@ -12,7 +17,7 @@ import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind, TaskRunKind } from '../types';
 import { K8sGroupVersionKind, K8sModelCommon, K8sResourceCommon, Selector } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
-import { pipelineRunStatus, runStatus } from '../utils/pipeline-utils';
+import { pipelineRunStatus } from '../utils/pipeline-utils';
 import { EQ } from '../utils/tekton-results';
 import { useApplication } from './useApplications';
 import { useComponents } from './useComponents';
@@ -255,6 +260,7 @@ export const usePipelineRunsForCommit = (
   commit: string,
   limit?: number,
   filterByComponents = true,
+  plrType?: PipelineRunType,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const [components, componentsLoaded] = useComponents(namespace, applicationName);
   const [application, applicationLoaded] = useApplication(namespace, applicationName);
@@ -274,13 +280,14 @@ export const usePipelineRunsForCommit = (
           filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
+            ...(plrType && { [PipelineRunLabel.PIPELINE_TYPE]: plrType }),
           },
           filterByCommit: commit,
         },
         // TODO: Add limit when filtering by component name AND only PLRs are returned
         // limit,
       }),
-      [applicationName, commit, application],
+      [applicationName, commit, application, plrType],
     ),
   );
 

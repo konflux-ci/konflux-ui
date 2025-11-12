@@ -32,8 +32,7 @@ describe('AddIssueModal', () => {
     act(() => {
       fireEvent.click(launchModalBtn);
     });
-    screen.getByText('Add a bug fix');
-    screen.getByText('Provide information about a Bug that has already been resolved.');
+    screen.getByText('Provide information about a bug that has already been resolved.');
   });
 
   it('should show CVE fields for CVE IssueType', () => {
@@ -42,7 +41,9 @@ describe('AddIssueModal', () => {
     act(() => {
       fireEvent.click(launchModalBtn);
     });
-    screen.getByText('Add CVE');
-    screen.getByText('Provide information about a CVE that has already been resolved.');
+    screen.getByText('Add a CVE');
+    screen.getByText(
+      'Provide information about a Common Vulnerabilities and Exposures (CVE) entry that has already been addressed.',
+    );
   });
 });
