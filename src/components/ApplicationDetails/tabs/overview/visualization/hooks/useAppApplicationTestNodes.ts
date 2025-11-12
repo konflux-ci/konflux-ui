@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { PipelineRunLabel } from '../../../../../../consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '../../../../../../consts/pipelinerun';
 import { useIntegrationTestScenarios } from '../../../../../../hooks/useIntegrationTestScenarios';
 import { useLatestIntegrationTestPipelines } from '../../../../../../hooks/useLatestIntegrationTestPipelines';
 import { IntegrationTestScenarioKind } from '../../../../../../types/coreBuildService';
-import { pipelineRunStatus, runStatus } from '../../../../../../utils/pipeline-utils';
+import { pipelineRunStatus } from '../../../../../../utils/pipeline-utils';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import { emptyPipelineNode, resourceToPipelineNode } from '../utils/node-utils';
 import { updateParallelNodeWidths } from '../utils/visualization-utils';

@@ -1,4 +1,4 @@
-import { k8sQueryGetResource } from '../../k8s';
+import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 import { SnapshotModel } from '../../models';
 import { RouterParams } from '../../routes/utils';
 import { createLoaderWithAccessCheck } from '../../utils/rbac';
@@ -6,13 +6,14 @@ import { createLoaderWithAccessCheck } from '../../utils/rbac';
 export const snapshotDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = params[RouterParams.workspaceName];
-    return k8sQueryGetResource({
+
+    return fetchResourceWithK8sAndKubeArchive({
       model: SnapshotModel,
       queryOptions: {
         ns,
         name: params[RouterParams.snapshotName],
       },
-    });
+    }).then((result) => result.resource);
   },
   { model: SnapshotModel, verb: 'get' },
 );

@@ -2,8 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Popover, Skeleton } from '@patternfly/react-core';
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
-import { ScanResults } from '../../../hooks/useScanResults';
+import { PipelineRunLabel, PipelineRunType, runStatus } from '../../../consts/pipelinerun';
+import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
+import { ScanResults, useKarchScanResults } from '../../../hooks/useScanResults';
 import {
   PIPELINE_RUNS_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
@@ -14,7 +15,7 @@ import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
 import { TriggerColumnData } from '../../../shared/components/trigger-column-data/trigger-column-data';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { PipelineRunKind } from '../../../types';
+import { PipelineRunKind, TaskRunKind } from '../../../types';
 import { ReleaseKind, ReleasePlanKind } from '../../../types/coreBuildService';
 import { createCommitObjectFromPLR } from '../../../utils/commits-utils';
 import {
@@ -24,14 +25,16 @@ import {
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
-import { usePipelinerunActions } from './pipelinerun-actions';
+import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
 import { ScanStatus } from './ScanStatus';
+
+const UNSCANNED_PLR_STATUSES = [runStatus.Pending, runStatus.Running, runStatus.Idle];
 
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,
   {
-    vulnerabilities: { [key: string]: ScanResults };
+    vulnerabilities: { [key: string]: [ScanResults, TaskRunKind[]] };
     fetchedPipelineRuns: string[];
     error?: unknown;
     releasePlan?: ReleasePlanKind;
@@ -58,6 +61,64 @@ export enum PipelineRunEventTypeLabel {
   'retest-all-comment' = 'Retest All Comment',
 }
 
+const usePipelineRunScanResults = (
+  pipelineRun: PipelineRunKind,
+  shouldShowScanResults: boolean,
+  customData?: PipelineRunListRowProps['customData'],
+) => {
+  const pipelineRunName = pipelineRun.metadata.name;
+  const kubearchiveEnabled = useIsOnFeatureFlag('taskruns-kubearchive');
+
+  const [scanResultsKubearchive, scanLoadedKubearchive, scanErrorKubearchive] = useKarchScanResults(
+    shouldShowScanResults && kubearchiveEnabled ? pipelineRunName : '',
+  );
+
+  const scanResultsTekton = React.useMemo(
+    () => customData?.vulnerabilities?.[pipelineRunName]?.[0],
+    [customData?.vulnerabilities, pipelineRunName],
+  );
+
+  const scanLoadedTekton = React.useMemo(
+    () => (customData?.fetchedPipelineRuns || []).includes(pipelineRunName),
+    [customData?.fetchedPipelineRuns, pipelineRunName],
+  );
+
+  return React.useMemo(() => {
+    if (!shouldShowScanResults) {
+      return { scanResults: undefined, scanLoaded: true, scanError: undefined };
+    }
+
+    const scanResults = kubearchiveEnabled
+      ? scanLoadedKubearchive
+        ? scanResultsKubearchive || undefined
+        : undefined
+      : scanLoadedTekton
+        ? scanResultsTekton || undefined
+        : undefined;
+    const scanLoaded = kubearchiveEnabled ? scanLoadedKubearchive : scanLoadedTekton;
+    const scanError = kubearchiveEnabled ? scanErrorKubearchive : customData?.error;
+
+    return { scanResults, scanLoaded, scanError };
+  }, [
+    shouldShowScanResults,
+    kubearchiveEnabled,
+    scanLoadedKubearchive,
+    scanResultsKubearchive,
+    scanErrorKubearchive,
+    scanLoadedTekton,
+    scanResultsTekton,
+    customData?.error,
+  ]);
+};
+
+const shouldShowScanResults = (pipelineRun: PipelineRunKind): boolean => {
+  return (
+    pipelineRun.metadata.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD &&
+    !UNSCANNED_PLR_STATUSES.includes(pipelineRunStatus(pipelineRun)) &&
+    pipelineRun.status?.completionTime !== undefined
+  );
+};
+
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
   showVulnerabilities,
@@ -74,13 +135,15 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
   const { releaseName, integrationTestName, releasePlan, release } = customData || {};
-  // @ts-expect-error vulnerabilities will not be available until fetched for the next page
-  const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
-  const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
-  const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
+  const shouldShowScan = shouldShowScanResults(obj);
+  const { scanResults, scanLoaded, scanError } = usePipelineRunScanResults(
+    obj,
+    shouldShowScan,
+    customData,
+  );
 
   const status = pipelineRunStatus(obj);
-  const actions = usePipelinerunActions(obj);
+  const [actions, onOpen] = usePipelinerunActionsLazy(obj);
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
@@ -123,9 +186,9 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           data-test="vulnerabilities"
           className={pipelineRunTableColumnClasses.vulnerabilities}
         >
-          {customData?.error ? (
+          {scanError ? (
             <>N/A</>
-          ) : !obj?.status?.completionTime ? (
+          ) : !shouldShowScan || (scanLoaded && !scanResults) ? (
             '-'
           ) : scanLoaded ? (
             <ScanStatus scanResults={scanResults} />
@@ -219,7 +282,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         </TableData>
       ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
-        <ActionMenu actions={actions} />
+        <ActionMenu actions={actions} onOpen={onOpen} />
       </TableData>
     </>
   );
@@ -260,12 +323,15 @@ const DynamicPipelineRunListRow: React.FC<
     return label && label.charAt(0).toUpperCase() + label.slice(1);
   };
   const { releaseName, integrationTestName, releasePlan, release } = customData || {};
-  const [vulnerabilities] = customData?.vulnerabilities?.[obj.metadata.name] ?? [];
-  const scanLoaded = (customData?.fetchedPipelineRuns || []).includes(obj.metadata.name);
-  const scanResults = scanLoaded ? vulnerabilities || {} : undefined;
+  const shouldShowScan = shouldShowScanResults(obj);
+  const { scanResults, scanLoaded, scanError } = usePipelineRunScanResults(
+    obj,
+    shouldShowScan,
+    customData,
+  );
 
   const status = pipelineRunStatus(obj);
-  const actions = usePipelinerunActions(obj);
+  const [actions, onOpen] = usePipelinerunActionsLazy(obj);
   if (!obj.metadata?.labels) {
     obj.metadata.labels = {};
   }
@@ -309,9 +375,9 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('vulnerabilities') && (
         <TableData data-test="vulnerabilities" className={dynamicClasses.vulnerabilities}>
-          {customData?.error ? (
+          {scanError ? (
             <>N/A</>
-          ) : !obj?.status?.completionTime ? (
+          ) : !shouldShowScan || (scanLoaded && !scanResults) ? (
             '-'
           ) : scanLoaded ? (
             <ScanStatus scanResults={scanResults} />
@@ -413,7 +479,7 @@ const DynamicPipelineRunListRow: React.FC<
         </TableData>
       )}
       <TableData data-test="plr-list-row-kebab" className={dynamicClasses.kebab}>
-        <ActionMenu actions={actions} />
+        <ActionMenu actions={actions} onOpen={onOpen} />
       </TableData>
     </>
   );

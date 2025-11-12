@@ -18,9 +18,13 @@ const tryJSONParse = <T = unknown>(data: string): string | T => {
 export const useLocalStorage = <T>(key: string): [T | string, React.Dispatch<T>] => {
   const [value, setValue] = React.useState(tryJSONParse<T>(window.localStorage.getItem(key)));
 
-  useEventListener(window, 'storage', () => {
-    setValue(tryJSONParse(window.localStorage.getItem(key)));
-  });
+  useEventListener(
+    'storage',
+    () => {
+      setValue(tryJSONParse(window.localStorage.getItem(key)));
+    },
+    window,
+  );
 
   const updateValue = React.useCallback(
     (val: T) => {

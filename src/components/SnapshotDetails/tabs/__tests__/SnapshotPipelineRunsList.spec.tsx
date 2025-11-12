@@ -1,6 +1,7 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { PipelineRunListRow } from '~/components/PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
@@ -9,7 +10,6 @@ import { useComponents } from '../../../../hooks/useComponents';
 import { useSearchParamBatch } from '../../../../hooks/useSearchParam';
 import { PipelineRunStatus } from '../../../../types';
 import { mockComponentsData } from '../../../ApplicationDetails/__data__';
-import { PipelineRunListRow } from '../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import SnapshotPipelineRunsList from '../SnapshotPipelineRunsList';
 
 jest.useFakeTimers();
@@ -28,6 +28,13 @@ jest.mock('../../../../hooks/useComponents', () => ({
 }));
 
 jest.mock('../../../../hooks/useScanResults', () => ({
+  useKarchScanResults: jest.fn(() => [
+    [],
+    true,
+    undefined,
+    () => {},
+    { isFetchingNextPage: false, hasNextPage: false },
+  ]),
   usePLRVulnerabilities: jest.fn(() => ({ vulnerabilities: {}, fetchedPipelineRuns: [] })),
 }));
 
@@ -159,12 +166,12 @@ const TestedComponent = ({ name, pipelineruns, loaded }) => (
       getNextPage={null}
       snapshotPipelineRuns={pipelineruns}
       loaded={loaded}
-      nextPageProps={{ hasNextPage: true }}
+      nextPageProps={{ hasNextPage: true, isFetchingNextPage: false }}
     />
   </FilterContextProvider>
 );
 
-describe('SnapshotPipelinerunsTab', () => {
+describe('SnapshotPipelinerunslist', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {

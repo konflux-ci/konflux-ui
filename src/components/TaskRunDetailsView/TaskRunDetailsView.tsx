@@ -2,10 +2,10 @@ import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
-import { runStatus, taskRunStatus } from '~/utils/pipeline-utils';
+import { taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
 import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
 import {

@@ -1,7 +1,11 @@
 import * as React from 'react';
+import { InfiniteData } from '@tanstack/react-query';
 import { uniqBy } from 'lodash-es';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { TQueryInfiniteOptions } from '~/k8s/query/type';
 import { WatchK8sResource } from '~/types/k8s';
+import { has404Error } from '~/utils/common-utils';
+import { EQ, TektonResultsOptions } from '~/utils/tekton-results';
 import { useK8sWatchResource } from '../k8s';
 import {
   useKubearchiveGetResourceQuery,
@@ -9,11 +13,9 @@ import {
 } from '../kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '../models';
 import { TaskRunKind, TektonResourceLabel } from '../types';
-import { createKubearchiveWatchResource } from '../utils/task-run-filter-transforms';
+import { createKubearchiveWatchResource } from '../utils/kubearchive-filter-transform';
 import { sortTaskRunsByTime } from './useTaskRuns';
 import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
-// eslint-disable-next-line import/order
-import { EQ, TektonResultsOptions } from '~/utils/tekton-results';
 
 /**
  * Hook for fetching TaskRuns with feature flag controlled data source switching.
@@ -27,6 +29,7 @@ import { EQ, TektonResultsOptions } from '~/utils/tekton-results';
 export const useTaskRunsV2 = (
   namespace: string,
   options?: Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'selector' | 'fieldSelector'>>,
+  queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const enableKubearchive = useIsOnFeatureFlag('taskruns-kubearchive');
 
@@ -68,26 +71,34 @@ export const useTaskRunsV2 = (
       (clusterResources && options.limit > clusterResources.length) || // not enough data
       !!clusterError); // error after load
 
-  const shouldQueryTekton = !enableKubearchive && namespace && needsMoreData;
-  const shouldQueryKubearchive = enableKubearchive && namespace && needsMoreData;
+  const shouldQueryTekton =
+    !enableKubearchive && namespace && needsMoreData && (queryOptions?.enabled ?? true);
+  const shouldQueryKubearchive =
+    enableKubearchive && namespace && needsMoreData && (queryOptions?.enabled ?? true);
 
   // tekton historical data - only when we need more data
   const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
-    useTRTaskRuns(shouldQueryTekton ? namespace : null, {
-      selector: options?.selector,
-      limit: options?.limit,
-    } as TektonResultsOptions); // useTRTaskRuns only accept two paramets: namespaces and options
+    useTRTaskRuns(
+      shouldQueryTekton ? namespace : null,
+      {
+        selector: options?.selector,
+        limit: options?.limit,
+      } as TektonResultsOptions,
+      { ...(queryOptions ?? {}), enabled: shouldQueryTekton },
+    );
 
   // KubeArchive historical data - only when we need more data
-  const kubearchiveQuery = useKubearchiveListResourceQuery(
-    shouldQueryKubearchive
-      ? {
-          groupVersionKind: TaskRunGroupVersionKind,
-          isList: true,
-          ...createKubearchiveWatchResource(namespace, options?.selector),
-        }
-      : undefined,
+  const kubearchiveQuery = useKubearchiveListResourceQuery<TaskRunKind>(
+    {
+      groupVersionKind: TaskRunGroupVersionKind,
+      isList: true,
+      ...createKubearchiveWatchResource(namespace, options?.selector),
+    },
     TaskRunModel,
+    {
+      ...(queryOptions ?? {}),
+      enabled: shouldQueryKubearchive,
+    },
   );
 
   // Combine and return data based on feature flag
@@ -102,8 +113,7 @@ export const useTaskRunsV2 = (
       );
     } else {
       // KubeArchive: cluster + archive
-      const archiveData = (kubearchiveQuery.data?.pages?.flatMap((page) => page) ??
-        []) as TaskRunKind[];
+      const archiveData = kubearchiveQuery.data?.pages?.flatMap((page) => page) ?? [];
       combinedData = uniqBy([...processedClusterData, ...archiveData], (r) => r.metadata?.uid);
 
       combinedData.sort((a, b) =>
@@ -182,28 +192,45 @@ export const useTaskRunsV2 = (
  * @param namespace - Kubernetes namespace
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
+ * @param watch - Whether to watch for real-time updates (default: true). Set to false for completed pipeline runs.
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
 export const useTaskRunsForPipelineRuns = (
   namespace: string,
   pipelineRunName: string,
   taskName?: string,
-): [TaskRunKind[], boolean, unknown] => {
+  watch: boolean = true,
+): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const selector = React.useMemo(
     () => ({
       matchLabels: {
         [TektonResourceLabel.pipelinerun]: pipelineRunName,
-        ...(taskName ? { [TektonResourceLabel.pipelineTask]: taskName } : {}),
       },
     }),
-    [pipelineRunName, taskName],
+    [pipelineRunName],
   );
 
-  const [taskRuns, loaded, error] = useTaskRunsV2(namespace, { selector });
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsV2(
+    namespace,
+    {
+      selector,
+      watch,
+    },
+    { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
+  );
 
-  const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
+  const sortedTaskRuns = React.useMemo(() => {
+    if (taskName) {
+      // used taskName here instead of api call to filter by task name because we cache all the task runs for a pipeline run,
+      // it's better we filter here instead of in the api call to avoid unnecessary api calls
+      return taskRuns.filter(
+        (tr) => tr.metadata?.labels?.[TektonResourceLabel.pipelineTask] === taskName,
+      );
+    }
+    return sortTaskRunsByTime(taskRuns);
+  }, [taskRuns, taskName]);
 
-  return React.useMemo(() => [sortedTaskRuns, loaded, error], [sortedTaskRuns, loaded, error]);
+  return [sortedTaskRuns, loaded, error, getNextPage, nextPageProps];
 };
 
 export const useTaskRunV2 = (
@@ -227,6 +254,8 @@ export const useTaskRunV2 = (
     { retry: false },
   );
 
+  const is404Error = k8sQuery.isError && has404Error(k8sQuery.error);
+
   // kubearachive query
   const kubearchiveQuery = useKubearchiveGetResourceQuery(
     {
@@ -236,13 +265,14 @@ export const useTaskRunV2 = (
     },
     TaskRunModel,
     {
-      enabled: isKubeArchiveOn && enabled,
+      enabled: isKubeArchiveOn && enabled && is404Error,
+      staleTime: Infinity,
     },
   );
 
   // tekton-results query
   const tektonResultsQuery = useTRTaskRuns(
-    !isKubeArchiveOn && enabled ? namespace : null,
+    !isKubeArchiveOn && enabled && is404Error ? namespace : null,
     React.useMemo(
       () => ({
         name: taskRunName,
@@ -251,7 +281,10 @@ export const useTaskRunV2 = (
       }),
       [taskRunName],
     ),
-  ) as unknown as [TaskRunKind[], boolean, unknown];
+    {
+      staleTime: Infinity,
+    },
+  );
 
   return React.useMemo(() => {
     if (k8sQuery.data) {

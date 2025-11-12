@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-core';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
+import { PipelineRunType, runStatus } from '../../../../consts/pipelinerun';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
@@ -23,7 +23,6 @@ import {
   createRepoBranchURL,
   createRepoPullRequestURL,
 } from '../../../../utils/commits-utils';
-import { runStatus } from '../../../../utils/pipeline-utils';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import CommitLabel from '../../commit-label/CommitLabel';
 import { useCommitStatus } from '../../commit-status';
@@ -37,17 +36,13 @@ const CommitOverviewTab: React.FC = () => {
     namespace,
     applicationName,
     commitName,
+    1,
+    undefined,
+    PipelineRunType.BUILD,
   );
 
   const commit = React.useMemo(
-    () =>
-      loaded &&
-      pipelineRuns?.length &&
-      createCommitObjectFromPLR(
-        pipelineRuns.find(
-          (p) => p.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-        ),
-      ),
+    () => loaded && pipelineRuns?.length && createCommitObjectFromPLR(pipelineRuns[0]),
     [loaded, pipelineRuns],
   );
 

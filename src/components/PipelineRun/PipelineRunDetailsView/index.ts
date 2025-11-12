@@ -1,12 +1,19 @@
-import { PipelineRunModel, TaskRunModel } from '../../../models';
-import { RouterParams } from '../../../routes/utils';
-import { QueryPipelineRun } from '../../../utils/pipelinerun-utils';
-import { createLoaderWithAccessCheck } from '../../../utils/rbac';
+import { isFeatureFlagOn } from '~/feature-flags/utils';
+import { PipelineRunModel, TaskRunModel } from '~/models';
+import { RouterParams } from '~/routes/utils';
+import { QueryPipelineRun, QueryPipelineRunWithKubearchive } from '~/utils/pipelinerun-utils';
+import { createLoaderWithAccessCheck } from '~/utils/rbac';
 
 export const pipelineRunDetailsViewLoader = createLoaderWithAccessCheck(
   ({ params }) => {
     const ns = params[RouterParams.workspaceName];
-    return QueryPipelineRun(ns, params[RouterParams.pipelineRunName]);
+    const pipelineRunName = params[RouterParams.pipelineRunName];
+
+    if (isFeatureFlagOn('pipelineruns-kubearchive')) {
+      return QueryPipelineRunWithKubearchive(ns, pipelineRunName);
+    }
+
+    return QueryPipelineRun(ns, pipelineRunName);
   },
   [
     { model: PipelineRunModel, verb: 'list' },

@@ -1,5 +1,7 @@
 import React from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
+import { TQueryInfiniteOptions } from '~/k8s/query/type';
+import { K8sResourceCommon } from '~/types/k8s';
 import { PipelineRunKind, TaskRunKind } from '../types';
 import { getPipelineRunFromTaskRunOwnerRef } from '../utils/common-utils';
 import {
@@ -15,17 +17,22 @@ export type NextPageProps = {
   isFetchingNextPage: boolean;
 };
 
+const selector = <T extends K8sResourceCommon>(data: { pages: { data: T[] }[] }) =>
+  data?.pages?.flatMap((page) => page.data) ?? [];
+
 export const useTRPipelineRuns = (
   namespace: string,
   options?: TektonResultsOptions,
+  queryOptions?: TQueryInfiniteOptions<PipelineRunKind>,
 ): [PipelineRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
-    useInfiniteQuery(createPipelineRunTektonResultsQueryOptions(namespace, options));
-  const resourceData = React.useMemo(() => {
-    return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
-  }, [data]);
+    useInfiniteQuery({
+      ...createPipelineRunTektonResultsQueryOptions(namespace, options),
+      ...(queryOptions ?? ({} as TQueryInfiniteOptions<PipelineRunKind>)),
+      select: selector<PipelineRunKind>,
+    });
   return [
-    resourceData,
+    data ?? [],
     !isLoading,
     error,
     hasNextPage ? fetchNextPage : null,
@@ -39,14 +46,16 @@ export const useTRPipelineRuns = (
 export const useTRTaskRuns = (
   namespace: string,
   options?: TektonResultsOptions,
+  queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const { data, isLoading, isFetchingNextPage, error, fetchNextPage, hasNextPage } =
-    useInfiniteQuery(createTaskRunTektonResultsQueryOptions(namespace, options));
-  const resourceData = React.useMemo(() => {
-    return data?.pages ? data?.pages?.flatMap((page) => page.data) : [];
-  }, [data]);
+    useInfiniteQuery({
+      ...createTaskRunTektonResultsQueryOptions(namespace, options),
+      ...(queryOptions ?? ({} as TQueryInfiniteOptions<TaskRunKind>)),
+      select: selector<TaskRunKind>,
+    });
   return [
-    resourceData,
+    data ?? [],
     !isLoading,
     error,
     hasNextPage ? fetchNextPage : null,
