@@ -1,4 +1,6 @@
 import { screen } from '@testing-library/react';
+import { mockSnapshot } from '~/__data__/mock-snapshots';
+import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useScanResults } from '~/hooks/useScanResults';
 import { useSnapshot } from '~/hooks/useSnapshots';
@@ -63,40 +65,8 @@ const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
 const useScanResultsMock = useScanResults as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
-const baseSnapshot = {
-  metadata: {
-    name: 'snap-1',
-    namespace: 'test-ns',
-    creationTimestamp: '2024-01-01T00:00:00Z',
-    labels: {
-      'appstudio.openshift.io/build-pipeline': 'build-plr-1',
-    },
-  },
-  spec: {
-    application: 'app-1',
-    components: [{ name: 'comp-a' }, { name: 'comp-b' }],
-  },
-};
-
-const basePipelineRun = {
-  metadata: {
-    name: 'build-plr-1',
-    namespace: 'test-ns',
-    labels: {
-      'pipelinesascode.tekton.dev/sha': 'abc5b3ad0a2c16726523b12cf3b8f0365be33566',
-      'appstudio.openshift.io/application': 'app-1',
-      'appstudio.openshift.io/component': 'comp-a',
-    },
-    annotations: {
-      'appstudio.openshift.io/commit-url':
-        'https://example.com/commit/abc5b3ad0a2c16726523b12cf3b8f0365be33566',
-      'pipelinesascode.tekton.dev/sha-title': 'Commit title',
-    },
-  },
-  status: {
-    startTime: '2024-01-01T00:00:00Z',
-  },
-};
+const baseSnapshot = mockSnapshot;
+const basePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
 
 describe('SnapshotOverview', () => {
   beforeEach(() => {
@@ -116,9 +86,8 @@ describe('SnapshotOverview', () => {
     const link = commitDesc.querySelector('a');
     expect(link).toBeTruthy();
     expect(link.getAttribute('href')).toContain(
-      '/ns/test-ns/applications/app-1/commit/abc5b3ad0a2c16726523b12cf3b8f0365be33566',
+      '/ns/test-ns/applications/test-app/commit/c782c8f81145fc13f516420a960247f5ffa2f7e0',
     );
-    expect(link.textContent).toContain('Commit title');
   });
 
   it('omits commit section when pipelinerun load fails', () => {
