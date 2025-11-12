@@ -28,6 +28,34 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
     mockUseEnterpriseContractResults.mockReturnValue([mockEnterpriseContractUIData, true]);
   });
 
+  it('should handle error when taskrun fails to load', () => {
+    mockUseTaskRunV2.mockReturnValue([null, false]);
+
+    renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
+
+    expect(screen.queryByText('Testing apps against Enterprise Contract')).not.toBeInTheDocument();
+  });
+
+  it('should handle error when enterprise contract fails to load', () => {
+    const mockTaskRun = {
+      ...testTaskRuns[0],
+      metadata: {
+        ...testTaskRuns[0].metadata,
+        labels: {
+          'tekton.dev/pipelineRun': 'test-pipelinerun',
+        },
+      },
+    };
+
+    mockUseTaskRunV2.mockReturnValue([mockTaskRun, true]);
+
+    mockUseEnterpriseContractResults.mockReturnValue([null, false]);
+
+    renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
+
+    expect(screen.queryByText('Testing apps against Enterprise Contract')).not.toBeInTheDocument();
+  });
+
   it('should render spinner when taskrun data is not loaded', () => {
     mockUseTaskRunV2.mockReturnValue([null, false]);
 
