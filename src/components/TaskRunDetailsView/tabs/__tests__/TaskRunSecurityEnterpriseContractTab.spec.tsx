@@ -3,6 +3,8 @@ import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useTaskRunV2 } from '../../../../hooks/useTaskRunsV2';
 import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils/rendering-utils';
 import { createUseParamsMock } from '../../../../utils/test-utils';
+import { mockEnterpriseContractUIData } from '../../../EnterpriseContract/__data__/mockEnterpriseContractLogsJson';
+import { useEnterpriseContractResults } from '../../../EnterpriseContract/useEnterpriseContractResultFromLogs';
 import { testTaskRuns } from '../../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskrunSecurityEnterpriseContractTab } from '../TaskRunSecurityEnterpriseContractTab';
 
@@ -10,16 +12,12 @@ jest.mock('../../../../hooks/useTaskRunsV2', () => ({
   useTaskRunV2: jest.fn(),
 }));
 
-// Mock the SecurityEnterpriseContractTab component
-jest.mock('../../../EnterpriseContract/SecurityEnterpriseContractTab', () => ({
-  SecurityEnterpriseContractTab: ({ pipelineRun }: { pipelineRun: string }) => (
-    <div data-test="security-enterprise-contract-tab">
-      Security Tab for PipelineRun: {pipelineRun || 'undefined'}
-    </div>
-  ),
+jest.mock('../../../EnterpriseContract/useEnterpriseContractResultFromLogs', () => ({
+  useEnterpriseContractResults: jest.fn(),
 }));
 
 const mockUseTaskRunV2 = useTaskRunV2 as jest.Mock;
+const mockUseEnterpriseContractResults = useEnterpriseContractResults as jest.Mock;
 
 describe('TaskrunSecurityEnterpriseContractTab', () => {
   createUseParamsMock({ taskRunName: 'test-taskrun' });
@@ -27,6 +25,7 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseEnterpriseContractResults.mockReturnValue([mockEnterpriseContractUIData, true]);
   });
 
   it('should render spinner when taskrun data is not loaded', () => {
@@ -35,7 +34,7 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    expect(screen.queryByTestId('security-enterprise-contract-tab')).not.toBeInTheDocument();
+    expect(screen.queryByText('Testing apps against Enterprise Contract')).not.toBeInTheDocument();
   });
 
   it('should render SecurityEnterpriseContractTab when taskrun is loaded with pipelineRun label', () => {
@@ -53,8 +52,8 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
-    expect(screen.getByTestId('security-enterprise-contract-tab')).toBeInTheDocument();
-    expect(screen.getByText('Security Tab for PipelineRun: test-pipelinerun')).toBeInTheDocument();
+    expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith('test-pipelinerun');
+    expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
@@ -71,8 +70,8 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
-    expect(screen.getByTestId('security-enterprise-contract-tab')).toBeInTheDocument();
-    expect(screen.getByText('Security Tab for PipelineRun: undefined')).toBeInTheDocument();
+    expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith(undefined);
+    expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
   });
 
   it('should render SecurityEnterpriseContractTab with undefined pipelineRun when metadata is missing', () => {
@@ -85,8 +84,8 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
-    expect(screen.getByTestId('security-enterprise-contract-tab')).toBeInTheDocument();
-    expect(screen.getByText('Security Tab for PipelineRun: undefined')).toBeInTheDocument();
+    expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith(undefined);
+    expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
   });
 
   it('should call useTaskRunV2 with correct parameters', () => {
@@ -113,9 +112,7 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
-    expect(screen.getByTestId('security-enterprise-contract-tab')).toBeInTheDocument();
-    expect(
-      screen.getByText('Security Tab for PipelineRun: different-pipelinerun'),
-    ).toBeInTheDocument();
+    expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith('different-pipelinerun');
+    expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
   });
 });
