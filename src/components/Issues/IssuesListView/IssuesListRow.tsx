@@ -14,8 +14,8 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
 
   const LinksModal = () => (
     <Flex direction={{ default: 'column' }}>
-      {issue.links?.map((link, index) => (
-        <FlexItem key={`${link.id}-${index}`}>
+      {issue.links?.map((link) => (
+        <FlexItem key={link.id}>
           <ExternalLink href={link.url}>{link.title}</ExternalLink>
         </FlexItem>
       ))}
@@ -37,7 +37,15 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
       </TableData>
 
       <TableData className={issuesTableColumnClasses.severity}>
-        {severityIcon(issue.severity)} {capitalize(issue.severity)}
+        <Flex direction={{ default: 'row' }}>
+          <FlexItem
+            data-test="issues-list-item-severity"
+            style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+          >
+            {severityIcon(issue.severity)}
+          </FlexItem>
+          <FlexItem>{capitalize(issue.severity)}</FlexItem>
+        </Flex>
       </TableData>
 
       <TableData className={issuesTableColumnClasses.status}>
