@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { EmptyStateBody, Text, TextContent, TextVariants, Title } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import emptyStateImgUrl from '~/assets/success.svg';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -10,7 +11,6 @@ import { useSortedResources } from '~/hooks/useSortedResources';
 import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
 import { Table, useDeepCompareMemoize } from '~/shared';
-import emptyStateImgUrl from '~/shared/assets/Not-found.svg';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
