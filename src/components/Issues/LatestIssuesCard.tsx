@@ -124,7 +124,7 @@ export const LatestIssuesCard: React.FC<LatestIssuesCardProps> = () => {
             <Button
               variant="link"
               isInline
-              component={(props) => <Link {...props} to="/issues?state=ACTIVE" />}
+              component={(props) => <Link {...props} to="/issues/list" />}
             >
               View all issues <ArrowRightIcon />
             </Button>
