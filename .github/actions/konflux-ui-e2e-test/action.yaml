@@ -7,5 +7,14 @@ runs:
     - name: Run Konflux UI E2E tests
       run: |
         : Run Konflux UI E2E tests
-        ./pr_check.sh test
+        if [[ ${{ env.JOB_TYPE }} == 'periodic' ]]; then
+          echo "Running test suite against stage backend..."
+          export CYPRESS_PERIODIC_RUN=true
+          export CYPRESS_PR_CHECK=false
+          ./pr_check.sh test-stage
+        else
+          echo "Running test suite against local backend..."
+          export CYPRESS_PR_CHECK=true
+          ./pr_check.sh test
+        fi
       shell: bash
