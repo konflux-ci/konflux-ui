@@ -16,12 +16,13 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import GitRepoLink from '~/components/GitLink/GitRepoLink';
+import MetadataList from '~/components/MetadataList';
+import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
-import { useNamespace } from '~/shared/providers/Namespace';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useSbomUrl } from '../../../../hooks/useUIInstance';
+import { useSbomUrl } from '~/hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
@@ -29,23 +30,22 @@ import {
   COMPONENT_DETAILS_PATH,
   COMMIT_DETAILS_PATH,
   INTEGRATION_TEST_DETAILS_PATH,
-} from '../../../../routes/paths';
-import { RouterParams } from '../../../../routes/utils';
-import { Timestamp } from '../../../../shared';
-import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
-import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
-import { getCommitSha, getCommitShortName } from '../../../../utils/commits-utils';
+} from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import { Timestamp } from '~/shared';
+import ExternalLink from '~/shared/components/links/ExternalLink';
+import { ErrorDetailsWithStaticLog } from '~/shared/components/pipeline-run-logs/logs/log-snippet-types';
+import { getPLRLogSnippet } from '~/shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
 import {
   calculateDuration,
   getPipelineRunStatusResultForName,
   getPipelineRunStatusResults,
   pipelineRunStatus,
   SBOMResultKeys,
-} from '../../../../utils/pipeline-utils';
-import GitRepoLink from '../../../GitLink/GitRepoLink';
-import MetadataList from '../../../MetadataList';
-import { StatusIconWithText } from '../../../StatusIcon/StatusIcon';
+} from '~/utils/pipeline-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSourceUrl } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
@@ -62,8 +62,11 @@ const PipelineRunDetailsTab: React.FC = () => {
     pipelineRunName,
   );
 
+  // Use optional chaining to safely access pipelineRun properties before the loading/error checks
+  // This prevents crashes when pipelineRun is null (e.g., during error states)
+  // The hooks (useMemo) will run unconditionally but safely handle undefined values
   const snapshotStatusAnnotation =
-    pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
+    pipelineRun?.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
 
   const snapshotCreationStatus = React.useMemo(() => {
     try {

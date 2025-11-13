@@ -21,12 +21,17 @@
  *    - Not yet merged
  *    - Ready for final merge action
  *
- * 4. **Age-based Categories**:
+ * 4. **Konflux Bot PRs**:
+ *    - PRs raised by konflux-ci[bot]
+ *    - Excluded from "Needs Review" and "Needs Author Followup" categories
+ *    - Tracked separately to avoid noise in human workflow tracking
+ *
+ * 5. **Age-based Categories**:
  *    - Created > 2 Weeks: 14-29 days old
  *    - Created > 1 Month: 30-59 days old
  *    - Created > 2 Months: 60+ days old
  *
- * 5. **Drafts**: Work-in-progress PRs marked as draft
+ * 6. **Drafts**: Work-in-progress PRs marked as draft
  *
  * BUSINESS DAY CALCULATION:
  * - Only weekdays (Monday-Friday) are counted
@@ -244,6 +249,7 @@ const checkStalePRs = async () => {
     const openOver2Weeks = []; // PRs open 14-29 days
     const openOver1Month = []; // PRs open 30-59 days
     const openOver2Months = []; // PRs open 60+ days
+    const konfluxBotPRs = []; // PRs raised by red-hat-konflux[bot]
 
     const now = dayjs();
 
@@ -264,6 +270,16 @@ const checkStalePRs = async () => {
       );
     };
 
+    /**
+     * Helper to check if a PR was raised by the konflux bot.
+     *
+     * @param {object} pr - The PR object from GitHub API
+     * @returns {boolean} True if the PR author is konflux bot
+     */
+    const isKonfluxBotPR = (pr) => {
+      return pr.user?.login?.toLowerCase() === 'red-hat-konflux[bot]';
+    };
+
     // Use Promise.all for concurrent processing of PR details (improves performance)
     await Promise.all(
       prs.map(async (pr) => {
@@ -278,137 +294,156 @@ const checkStalePRs = async () => {
         const daysOpen = now.diff(dayjs(pr.created_at), 'day');
         const prInfo = { number: pr.number, author: pr.user.login };
 
+        // Track konflux bot PRs separately for the bot section
+        const isKonfluxBot = isKonfluxBotPR(pr);
+        if (isKonfluxBot) {
+          konfluxBotPRs.push(prInfo);
+          // Don't return - continue to process for age-based categories
+        }
+
         // Skip draft PRs from staleness analysis (they're tracked separately)
         if (pr.draft) {
           draftPRs.push(prInfo);
           return;
         }
 
-        // Track latest review state per reviewer (for approval counting)
-        const latestReviewStateByReviewer = new Map();
+        // Skip action-based categorization for Konflux bot PRs
+        // (but still process age-based categories below)
+        if (isKonfluxBot) {
+          // Skip to age-based categories at the end
+        } else {
+          // Track latest review state per reviewer (for approval counting)
+          const latestReviewStateByReviewer = new Map();
 
-        // Initialize author activity to PR creation time (opening the PR is author's first action)
-        let lastActivityByAuthor = dayjs(pr.created_at);
-        let lastActivityByReviewer = null;
+          // Initialize author activity to PR creation time (opening the PR is author's first action)
+          let lastActivityByAuthor = dayjs(pr.created_at);
+          let lastActivityByReviewer = null;
 
-        // --- 1. Process Explicit Activity (Comments and Reviews) ---
-        // Combine all activity types and filter out bots and invalid entries
-        const allActivity = [...comments, ...reviewActions, ...inlineComments].filter(
-          (a) => !!a.user && !isBot(a.user),
-        );
+          // --- 1. Process Explicit Activity (Comments and Reviews) ---
+          // Combine all activity types and filter out bots and invalid entries
+          const allActivity = [...comments, ...reviewActions, ...inlineComments].filter(
+            (a) => !!a.user && !isBot(a.user),
+          );
 
-        allActivity.forEach((activity) => {
-          // Use 'created_at' for comments/reviewComments and 'submitted_at' for reviews
-          const timestamp = dayjs(activity.created_at || activity.submitted_at);
+          allActivity.forEach((activity) => {
+            // Use 'created_at' for comments/reviewComments and 'submitted_at' for reviews
+            const timestamp = dayjs(activity.created_at || activity.submitted_at);
 
-          if (!timestamp.isValid()) return; // Skip invalid timestamps
+            if (!timestamp.isValid()) return; // Skip invalid timestamps
 
-          const login = activity.user.login;
+            const login = activity.user.login;
 
-          if (login === pr.user.login) {
-            // Activity by PR Author (comments on their own PR)
-            if (timestamp.isAfter(lastActivityByAuthor)) lastActivityByAuthor = timestamp;
-          } else {
-            // Activity by Reviewer (anyone other than the PR author)
-            if (!lastActivityByReviewer || timestamp.isAfter(lastActivityByReviewer)) {
-              lastActivityByReviewer = timestamp;
-            }
-          }
-
-          // --- Track Latest Review State Per User (for approval counting) ---
-          // Only reviews have a 'state' field (APPROVED, CHANGES_REQUESTED, etc.)
-          if (activity.state) {
-            const prior = latestReviewStateByReviewer.get(login);
-            // Keep only the most recent review from each reviewer
-            if (!prior || timestamp.isAfter(prior.submitted_at)) {
-              latestReviewStateByReviewer.set(login, {
-                state: activity.state,
-                submitted_at: timestamp,
-              });
-            }
-          }
-        });
-
-        // --- 2. Incorporate Last Commit Push (Implicit Author Activity) ---
-        // Commits represent implicit author activity - pushing new code in response to feedback.
-        // Only count commits that were authored by the PR owner (not co-authors or other contributors).
-        if (commits && commits.length > 0) {
-          // Filter commits by the PR author
-          const authorCommits = commits.filter((commit) => {
-            // Check GitHub user login (most reliable method)
-            const githubAuthor = commit.author?.login;
-            const prAuthorLogin = pr.user.login;
-
-            // Match by GitHub username
-            if (githubAuthor && githubAuthor === prAuthorLogin) {
-              return true;
+            if (login === pr.user.login) {
+              // Activity by PR Author (comments on their own PR)
+              if (timestamp.isAfter(lastActivityByAuthor)) lastActivityByAuthor = timestamp;
+            } else {
+              // Activity by Reviewer (anyone other than the PR author)
+              if (!lastActivityByReviewer || timestamp.isAfter(lastActivityByReviewer)) {
+                lastActivityByReviewer = timestamp;
+              }
             }
 
-            // Note: We don't use git email as fallback because it's unreliable
-            // (could be different from GitHub account, or commits could be from co-authors)
-            return false;
+            // --- Track Latest Review State Per User (for approval counting) ---
+            // Only reviews have a 'state' field (APPROVED, CHANGES_REQUESTED, etc.)
+            if (activity.state) {
+              const prior = latestReviewStateByReviewer.get(login);
+              // Keep only the most recent review from each reviewer
+              if (!prior || timestamp.isAfter(prior.submitted_at)) {
+                latestReviewStateByReviewer.set(login, {
+                  state: activity.state,
+                  submitted_at: timestamp,
+                });
+              }
+            }
           });
 
-          if (authorCommits.length > 0) {
-            // Get the most recent commit by the author (commits are chronologically ordered)
-            const latestAuthorCommit = authorCommits[authorCommits.length - 1];
-            const commitDate = dayjs(latestAuthorCommit.commit.author.date);
+          // --- 2. Incorporate Last Commit Push (Implicit Author Activity) ---
+          // Commits represent implicit author activity - pushing new code in response to feedback.
+          // Only count commits that were authored by the PR owner (not co-authors or other contributors).
+          if (commits && commits.length > 0) {
+            // Filter commits by the PR author
+            const authorCommits = commits.filter((commit) => {
+              // Check GitHub user login (most reliable method)
+              const githubAuthor = commit.author?.login;
+              const prAuthorLogin = pr.user.login;
 
-            // Update author's last activity if this commit is more recent
-            if (commitDate.isAfter(lastActivityByAuthor)) {
-              lastActivityByAuthor = commitDate;
+              // Match by GitHub username
+              if (githubAuthor && githubAuthor === prAuthorLogin) {
+                return true;
+              }
+
+              // Note: We don't use git email as fallback because it's unreliable
+              // (could be different from GitHub account, or commits could be from co-authors)
+              return false;
+            });
+
+            if (authorCommits.length > 0) {
+              // Get the most recent commit by the author (commits are chronologically ordered)
+              const latestAuthorCommit = authorCommits[authorCommits.length - 1];
+              const commitDate = dayjs(latestAuthorCommit.commit.author.date);
+
+              // Update author's last activity if this commit is more recent
+              if (commitDate.isAfter(lastActivityByAuthor)) {
+                lastActivityByAuthor = commitDate;
+              }
             }
           }
-        }
 
-        // ----- Categorize PR -----
-        // PRs are categorized in priority order. First matching category wins.
+          // ----- Categorize PR -----
+          // PRs are categorized in priority order. First matching category wins.
 
-        // 1. Waiting Merge: >= 2 approvals but not merged yet
-        const activeApprovals = Array.from(latestReviewStateByReviewer.values()).filter(
-          (rev) => rev.state === 'APPROVED',
-        );
+          // 1. Waiting Merge: >= 2 approvals but not merged yet
+          const activeApprovals = Array.from(latestReviewStateByReviewer.values()).filter(
+            (rev) => rev.state === 'APPROVED',
+          );
 
-        if (activeApprovals.length >= 2 && !pr.merged_at) {
-          approvedButOpen.push(prInfo);
-        }
-        // 2. Needs Review:
-        // - Author acted last and it's been >2 business days with no reviewer response
-        else if (!lastActivityByReviewer || lastActivityByAuthor.isAfter(lastActivityByReviewer)) {
-          // Author acted last (or no reviewer activity at all)
-          const businessDaysSinceAuthorActivity = getBusinessDaysDiff(lastActivityByAuthor, now);
-
-          if (businessDaysSinceAuthorActivity > 2) {
-            needsReview.push(prInfo);
+          if (activeApprovals.length >= 2 && !pr.merged_at) {
+            approvedButOpen.push(prInfo);
           }
-          // If within 2 business days, don't flag (give reviewer time to respond)
-        }
-        // - After author refreshed commit, just got 1 approval and no other comments in the past 2 business days
-        // This catches PRs that have 1 approval but need a second reviewer to approve
-        else if (activeApprovals.length === 1) {
-          // Check if the single approval came after the author's last activity
-          const approvalTimestamp = activeApprovals[0].submitted_at;
-          const businessDaysSinceApproval = getBusinessDaysDiff(approvalTimestamp, now);
+          // 2. Needs Review:
+          // - Author acted last and it's been >2 business days with no reviewer response
+          else if (
+            !lastActivityByReviewer ||
+            lastActivityByAuthor.isAfter(lastActivityByReviewer)
+          ) {
+            // Author acted last (or no reviewer activity at all)
+            const businessDaysSinceAuthorActivity = getBusinessDaysDiff(lastActivityByAuthor, now);
 
-          // If approval was given >2 business days ago, needs another review
-          if (businessDaysSinceApproval > 2) {
-            needsReview.push(prInfo);
+            if (businessDaysSinceAuthorActivity > 2) {
+              needsReview.push(prInfo);
+            }
+            // If within 2 business days, don't flag (give reviewer time to respond)
           }
-          // If within 2 business days, don't flag (give second reviewer time to review)
-        }
-        // 3. Stale PR (Needs Author Followup): Reviewer acted last and it's been >2 business days
-        else {
-          // Reviewer acted last (lastActivityByReviewer is after lastActivityByAuthor)
-          const businessDaysSinceReviewerComment = getBusinessDaysDiff(lastActivityByReviewer, now);
+          // - After author refreshed commit, just got 1 approval and no other comments in the past 2 business days
+          // This catches PRs that have 1 approval but need a second reviewer to approve
+          else if (activeApprovals.length === 1) {
+            // Check if the single approval came after the author's last activity
+            const approvalTimestamp = activeApprovals[0].submitted_at;
+            const businessDaysSinceApproval = getBusinessDaysDiff(approvalTimestamp, now);
 
-          if (businessDaysSinceReviewerComment > 2) {
-            // Reviewer commented >2 business days ago, author hasn't responded
-            stalePRs.push(prInfo);
+            // If approval was given >2 business days ago, needs another review
+            if (businessDaysSinceApproval > 2) {
+              needsReview.push(prInfo);
+            }
+            // If within 2 business days, don't flag (give second reviewer time to review)
           }
-          // If reviewer commented within past 2 business days, don't flag (give author time)
-        }
+          // 3. Stale PR (Needs Author Followup): Reviewer acted last and it's been >2 business days
+          else {
+            // Reviewer acted last (lastActivityByReviewer is after lastActivityByAuthor)
+            const businessDaysSinceReviewerComment = getBusinessDaysDiff(
+              lastActivityByReviewer,
+              now,
+            );
 
-        // Age-based categories (non-overlapping ranges, all PRs are counted)
+            if (businessDaysSinceReviewerComment > 2) {
+              // Reviewer commented >2 business days ago, author hasn't responded
+              stalePRs.push(prInfo);
+            }
+            // If reviewer commented within past 2 business days, don't flag (give author time)
+          }
+        } // Close the else block for non-bot PRs
+
+        // Age-based categories (non-overlapping ranges, all PRs are counted including bot PRs)
         if (daysOpen >= 14 && daysOpen < 30) openOver2Weeks.push(prInfo);
         else if (daysOpen >= 30 && daysOpen < 60) openOver1Month.push(prInfo);
         else if (daysOpen >= 60) openOver2Months.push(prInfo);
@@ -444,6 +479,12 @@ const checkStalePRs = async () => {
         name: 'Waiting Merge',
         prs: approvedButOpen,
         filterLink: null, // No GitHub filter exists for this custom logic
+      },
+      {
+        emoji: ':robot_face:',
+        name: 'Konflux Bot PRs',
+        prs: konfluxBotPRs,
+        filterLink: `https://github.com/${REPO_OWNER}/${REPO_NAME}/pulls?q=is:open+author:app/red-hat-konflux`,
       },
       {
         emoji: ':hourglass_flowing_sand:',
