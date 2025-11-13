@@ -185,4 +185,5 @@ export enum TektonResourceLabel {
   taskrun = 'tekton.dev/taskRun',
   task = 'tekton.dev/task',
   pipelineTask = 'tekton.dev/pipelineTask',
+  targetPlatform = 'build.appstudio.redhat.com/target-platform',
 }

@@ -6,7 +6,14 @@ import {
   KonfluxPublicInfo,
 } from '~/types/konflux-public-info';
 import { mockUseKonfluxPublicInfo } from '~/unit-test-utils';
-import { useSbomUrl, useBombinoUrl, useUIInstance, useInstanceVisibility, useNotifications, useApplicationUrl } from '../useUIInstance';
+import {
+  useSbomUrl,
+  useBombinoUrl,
+  useUIInstance,
+  useInstanceVisibility,
+  useNotifications,
+  useApplicationUrl,
+} from '../useUIInstance';
 
 const useKonfluxPublicInfoMock = mockUseKonfluxPublicInfo();
 
@@ -43,7 +50,7 @@ describe('useSbomUrl', () => {
       {
         integrations: {
           sbom_server: {
-            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
+            sbom_sha: 'https://atlas.devshift.net/sboms/<PLACEHOLDER>',
           },
         },
         rbac: [],
@@ -53,30 +60,8 @@ describe('useSbomUrl', () => {
     ]);
 
     const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash');
-    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
-  });
-
-  it('should return an empty string if SBOM URL is not available', () => {
-    useKonfluxPublicInfoMock.mockReturnValue([
-      {
-        integrations: {
-          image_controller: {
-            notifications: [],
-          },
-          sbom_server: {
-            url: '',
-          },
-        },
-        rbac: [],
-      },
-      true,
-      null,
-    ]);
-
-    const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash');
-    expect(sbomUrl).toBe('');
+    const sbomUrl = result.current('test-sbom-sha');
+    expect(sbomUrl).toBe('https://atlas.devshift.net/sboms/test-sbom-sha');
   });
 
   it('should handle undefined integrations gracefully', () => {
@@ -90,7 +75,7 @@ describe('useSbomUrl', () => {
     ]);
 
     const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash');
+    const sbomUrl = result.current('test-sbom-sha');
     expect(sbomUrl).toBe('');
   });
 
@@ -107,48 +92,8 @@ describe('useSbomUrl', () => {
     ]);
 
     const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash');
+    const sbomUrl = result.current('test-sbom-sha');
     expect(sbomUrl).toBe('');
-  });
-
-  it('should prioritize sbom_sha URL when both sbom_sha and imageHash are provided', () => {
-    useKonfluxPublicInfoMock.mockReturnValue([
-      {
-        integrations: {
-          sbom_server: {
-            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
-            sbom_sha: 'https://atlas.devshift.net/sbom/sha/<PLACEHOLDER>',
-          },
-        },
-        rbac: [],
-      },
-      true,
-      null,
-    ]);
-
-    const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
-    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/sha/test-sbom-sha');
-  });
-
-  it('should fallback to regular URL when sbom_sha is undefined but sbomSha parameter is provided', () => {
-    useKonfluxPublicInfoMock.mockReturnValue([
-      {
-        integrations: {
-          sbom_server: {
-            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
-            sbom_sha: undefined,
-          },
-        },
-        rbac: [],
-      },
-      true,
-      null,
-    ]);
-
-    const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
-    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
   });
 
   it('should handle empty sbom_sha gracefully', () => {
@@ -156,7 +101,6 @@ describe('useSbomUrl', () => {
       {
         integrations: {
           sbom_server: {
-            url: 'https://atlas.devshift.net/sbom/content/<PLACEHOLDER>',
             sbom_sha: '',
           },
         },
@@ -167,15 +111,15 @@ describe('useSbomUrl', () => {
     ]);
 
     const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash', 'test-sbom-sha');
-    expect(sbomUrl).toBe('https://atlas.devshift.net/sbom/content/test-image-hash');
+    const sbomUrl = result.current('test-sbom-sha');
+    expect(sbomUrl).toBe('');
   });
 
   it('should return undefined when data is still loading', () => {
     useKonfluxPublicInfoMock.mockReturnValue([{ rbac: [] }, false, null]);
 
     const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash');
+    const sbomUrl = result.current('test-sbom-sha');
     expect(sbomUrl).toBe(undefined);
   });
 
@@ -183,7 +127,7 @@ describe('useSbomUrl', () => {
     useKonfluxPublicInfoMock.mockReturnValue([{ rbac: [] }, true, new Error('Failed to load')]);
 
     const { result } = renderHook(() => useSbomUrl());
-    const sbomUrl = result.current('test-image-hash');
+    const sbomUrl = result.current('test-sbom-sha');
     expect(sbomUrl).toBe(undefined);
   });
 });
@@ -298,7 +242,7 @@ describe('useApplicationUrl', () => {
         rbac: [],
       },
       true,
-      undefined
+      undefined,
     ]);
 
     const { result } = renderHook(() => useApplicationUrl());
@@ -312,7 +256,7 @@ describe('useApplicationUrl', () => {
         rbac: [],
       },
       true,
-      undefined
+      undefined,
     ]);
 
     const { result } = renderHook(() => useApplicationUrl());
@@ -328,7 +272,7 @@ describe('useApplicationUrl', () => {
         rbac: [],
       },
       true,
-      undefined
+      undefined,
     ]);
 
     const { result } = renderHook(() => useApplicationUrl());
@@ -360,7 +304,7 @@ describe('useApplicationUrl', () => {
         rbac: [],
       },
       true,
-      undefined
+      undefined,
     ]);
 
     const { result } = renderHook(() => useApplicationUrl());
@@ -403,7 +347,7 @@ describe('useNotifications', () => {
         rbac: [],
       },
       true,
-      null
+      null,
     ]);
 
     const { result } = renderHook(() => useNotifications());
@@ -418,7 +362,7 @@ describe('useNotifications', () => {
         },
       } as KonfluxPublicInfo,
       true,
-      undefined
+      undefined,
     ]);
 
     const { result } = renderHook(() => useNotifications());
@@ -435,7 +379,7 @@ describe('useNotifications', () => {
         },
       } as KonfluxPublicInfo,
       true,
-      undefined
+      undefined,
     ]);
 
     const { result } = renderHook(() => useNotifications());
