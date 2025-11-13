@@ -82,7 +82,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [SortableHeaders.branch]: 'branch',
     [SortableHeaders.byUser]: 'user',
     [SortableHeaders.committedAt]: 'creationTime',
-    [SortableHeaders.status]: 'pipelineRuns[0].status.completionTime', // Status column uses custom priority-based sorting
+    [SortableHeaders.status]: '', // Status column uses custom priority-based sorting
   };
 
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
