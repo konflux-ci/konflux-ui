@@ -8,13 +8,19 @@ import {
   FlexItem,
 } from '@patternfly/react-core';
 import yamlParser from 'js-yaml';
+import GitRepoLink from '~/components/GitLink/GitRepoLink';
+import HelpPopover from '~/components/HelpPopover';
+import { useImageRepository } from '~/hooks/useImageRepository';
 import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
-import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
-import { ComponentKind } from '../../../../types';
-import { getLastestImage } from '../../../../utils/component-utils';
-import { getPipelineRunStatusResults } from '../../../../utils/pipeline-utils';
-import GitRepoLink from '../../../GitLink/GitRepoLink';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
+import { ImageRepositoryModel } from '~/models';
+import ExternalLink from '~/shared/components/links/ExternalLink';
+import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
+import { ComponentKind } from '~/types';
+import { getLastestImage } from '~/utils/component-utils';
+import { getPipelineRunStatusResults } from '~/utils/pipeline-utils';
+import { useAccessReviewForModel } from '~/utils/rbac';
+import ComponentImageRepositoryVisibility from './ComponentImageRepositoryVisibility';
 
 type ComponentDetailsProps = {
   component: ComponentKind;
@@ -35,6 +41,20 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
       : null;
   const latestImageURL = results?.find((result) => result.name === RESULT_NAME);
   const componentImageURL = latestImageURL?.value ?? getLastestImage(component);
+
+  // Check if image controller is enabled for this cluster
+  const { isImageControllerEnabled } = useIsImageControllerEnabled();
+
+  // Check if user has permission to update image repository using RBAC
+  const [canUpdateImageRepository] = useAccessReviewForModel(ImageRepositoryModel, 'update');
+
+  // Only fetch ImageRepository if both image controller is enabled AND user has update permission
+  const shouldFetchOrShowImageRepository = isImageControllerEnabled && canUpdateImageRepository;
+  const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
+    shouldFetchOrShowImageRepository ? component?.metadata?.namespace : null,
+    shouldFetchOrShowImageRepository ? component?.metadata?.name : null,
+    false,
+  );
 
   const runTime = React.useMemo(() => {
     try {
@@ -68,6 +88,42 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
                   url={component.spec.source?.git?.url}
                   revision={component.spec.source?.git?.revision}
                   context={component.spec.source?.git?.context}
+                />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+        </FlexItem>
+      )}
+      {shouldFetchOrShowImageRepository && (
+        <FlexItem style={{ flex: 1 }}>
+          <DescriptionList
+            columnModifier={{
+              default: '1Col',
+            }}
+          >
+            <DescriptionListGroup>
+              <DescriptionListTerm>
+                Image repository visibility{' '}
+                <HelpPopover
+                  bodyContent={
+                    <>
+                      Controls whether the built container images are publicly accessible or
+                      private. Pull and push secrets are automatically created and managed by the
+                      image controller for your build pipelines.
+                      <br />
+                      <br />
+                      If the visibility shows &quot;-&quot;, it means the visibility has not been
+                      set yet. Click Edit to configure it.
+                    </>
+                  }
+                />
+              </DescriptionListTerm>
+              <DescriptionListDescription data-test="image-repository-visibility">
+                <ComponentImageRepositoryVisibility
+                  component={component}
+                  imageRepository={imageRepository}
+                  imageRepoLoaded={imageRepoLoaded}
+                  imageRepoError={imageRepoError}
                 />
               </DescriptionListDescription>
             </DescriptionListGroup>

@@ -1,16 +1,17 @@
 import { useNavigate } from 'react-router-dom';
 import { fireEvent, screen } from '@testing-library/dom';
+import { mockPublicImageRepository } from '~/__data__/image-repository-data';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { useComponent } from '~/hooks/useComponents';
+import { useImageRepository } from '~/hooks/useImageRepository';
 import {
   useLatestPushBuildPipelineRunForComponentV2,
   useLatestSuccessfulBuildPipelineRunForComponentV2,
 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
-import { useComponent } from '../../../../../hooks/useComponents';
-import {
-  createUseParamsMock,
-  renderWithQueryClientAndRouter,
-} from '../../../../../utils/test-utils';
-import { useModalLauncher } from '../../../../modal/ModalProvider';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
+import { useAccessReviewForModel } from '~/utils/rbac';
+import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import {
   mockComponent,
   mockLatestSuccessfulBuild,
@@ -18,8 +19,8 @@ import {
 } from '../../__data__/mockComponentDetails';
 import ComponentDetailsTab from '../ComponentDetailsTab';
 
-jest.mock('../../../../modal/ModalProvider', () => ({
-  ...jest.requireActual('../../../../modal/ModalProvider'),
+jest.mock('~/components/modal/ModalProvider', () => ({
+  ...jest.requireActual('~/components/modal/ModalProvider'),
   useModalLauncher: jest.fn(() => () => {}),
 }));
 
@@ -31,18 +32,30 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../../hooks/useLatestPushBuildPipeline', () => ({
+jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
   useLatestSuccessfulBuildPipelineRunForComponentV2: jest.fn(),
   useLatestPushBuildPipelineRunForComponentV2: jest.fn(),
 }));
 
-jest.mock('../../../../../hooks/useComponents', () => ({
-  ...jest.requireActual('../../../../../hooks/useComponents'),
+jest.mock('~/hooks/useComponents', () => ({
+  ...jest.requireActual('~/hooks/useComponents'),
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../../hooks/useTaskRunsV2', () => ({
+jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
+}));
+
+jest.mock('~/hooks/useImageRepository', () => ({
+  useImageRepository: jest.fn(),
+}));
+
+jest.mock('~/image-controller/conditional-checks', () => ({
+  useIsImageControllerEnabled: jest.fn(),
+}));
+
+jest.mock('~/utils/rbac', () => ({
+  useAccessReviewForModel: jest.fn(),
 }));
 
 const useNavigateMock = useNavigate as jest.Mock;
@@ -53,6 +66,9 @@ const useLatestPushBuildPipelineRunForComponentMock =
   useLatestPushBuildPipelineRunForComponentV2 as jest.Mock;
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 const useTaskRunsV2Mock = useTaskRunsForPipelineRuns as jest.Mock;
+const useImageRepositoryMock = useImageRepository as jest.Mock;
+const useIsImageControllerEnabledMock = useIsImageControllerEnabled as jest.Mock;
+const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 describe('ComponentDetailTab', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
@@ -73,6 +89,9 @@ describe('ComponentDetailTab', () => {
       true,
     ]);
     useTaskRunsV2Mock.mockReturnValue([mockTaskRuns, true]);
+    useImageRepositoryMock.mockReturnValue([null, true, null]);
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
     useModalLauncherMock.mockImplementation(() => {
@@ -145,6 +164,54 @@ describe('ComponentDetailTab', () => {
     const latestImage = screen.getByTestId('component-latest-image');
     expect(latestImage.children[0].children[0].getAttribute('href')).toBe(
       'https://build-container.image.url',
+    );
+  });
+
+  it('should not show image repository visibility field when image controller is disabled', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: false });
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(screen.queryByText('Image repository visibility')).not.toBeInTheDocument();
+  });
+
+  it('should not show image repository visibility field when user has no update permission', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
+    useAccessReviewForModelMock.mockReturnValue([false, true]);
+    useImageRepositoryMock.mockReturnValue([null, true, null]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(screen.queryByText('Image repository visibility')).not.toBeInTheDocument();
+  });
+
+  it('should show image repository visibility field when image controller is enabled and user has permission', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    useImageRepositoryMock.mockReturnValue([mockPublicImageRepository, true, null]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(screen.getByText('Image repository visibility')).toBeInTheDocument();
+  });
+
+  it('should not fetch image repository when image controller is disabled', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: false });
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(useImageRepositoryMock).toHaveBeenCalledWith(null, null, false);
+  });
+
+  it('should not fetch image repository when user has no update permission', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
+    useAccessReviewForModelMock.mockReturnValue([false, true]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(useImageRepositoryMock).toHaveBeenCalledWith(null, null, false);
+  });
+
+  it('should fetch image repository when image controller is enabled and user has permission', () => {
+    useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(useImageRepositoryMock).toHaveBeenCalledWith(
+      mockComponent.metadata.namespace,
+      mockComponent.metadata.name,
+      false,
     );
   });
 });
