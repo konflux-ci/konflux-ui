@@ -5,7 +5,7 @@ import CodeEditorShortcut from '../CodeEditorShortcut';
 export const useShortcutPopover = (onHideShortcuts?: () => void): PopoverProps => ({
   'aria-label': 'Shortcuts',
   bodyContent: (
-    <Table>
+    <Table style={{ backgroundColor: 'transparent' }}>
       <Tbody>
         <CodeEditorShortcut keyName="F1">View all editor shortcuts</CodeEditorShortcut>
         <CodeEditorShortcut hover>View property descriptions</CodeEditorShortcut>
