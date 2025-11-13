@@ -2,6 +2,7 @@ const CONDITIONS = {
   KUBEARCHIVE: 'isKubearchiveEnabled',
   KITESERVICE: 'isKiteServiceEnabled',
   STAGING: 'isStagingCluster',
+  IMAGE_CONTROLLER: 'isImageControllerEnabled',
 } as const;
 
 export type ConditionState = Partial<Record<ConditionKey, boolean>>;
