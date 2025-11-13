@@ -1,16 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { fireEvent, screen } from '@testing-library/dom';
+import { mockPublicImageRepository } from '~/__data__/image-repository-data';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { useComponent } from '~/hooks/useComponents';
+import { useImageRepository } from '~/hooks/useImageRepository';
 import {
   useLatestPushBuildPipelineRunForComponentV2,
   useLatestSuccessfulBuildPipelineRunForComponentV2,
 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
-import { useComponent } from '../../../../../hooks/useComponents';
-import {
-  createUseParamsMock,
-  renderWithQueryClientAndRouter,
-} from '../../../../../utils/test-utils';
-import { useModalLauncher } from '../../../../modal/ModalProvider';
+import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import {
   mockComponent,
   mockLatestSuccessfulBuild,
@@ -18,8 +17,8 @@ import {
 } from '../../__data__/mockComponentDetails';
 import ComponentDetailsTab from '../ComponentDetailsTab';
 
-jest.mock('../../../../modal/ModalProvider', () => ({
-  ...jest.requireActual('../../../../modal/ModalProvider'),
+jest.mock('~/components/modal/ModalProvider', () => ({
+  ...jest.requireActual('~/components/modal/ModalProvider'),
   useModalLauncher: jest.fn(() => () => {}),
 }));
 
@@ -31,18 +30,22 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../../../hooks/useLatestPushBuildPipeline', () => ({
+jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
   useLatestSuccessfulBuildPipelineRunForComponentV2: jest.fn(),
   useLatestPushBuildPipelineRunForComponentV2: jest.fn(),
 }));
 
-jest.mock('../../../../../hooks/useComponents', () => ({
-  ...jest.requireActual('../../../../../hooks/useComponents'),
+jest.mock('~/hooks/useComponents', () => ({
+  ...jest.requireActual('~/hooks/useComponents'),
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../../hooks/useTaskRunsV2', () => ({
+jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
+}));
+
+jest.mock('~/hooks/useImageRepository', () => ({
+  useImageRepository: jest.fn(),
 }));
 
 const useNavigateMock = useNavigate as jest.Mock;
@@ -53,6 +56,7 @@ const useLatestPushBuildPipelineRunForComponentMock =
   useLatestPushBuildPipelineRunForComponentV2 as jest.Mock;
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 const useTaskRunsV2Mock = useTaskRunsForPipelineRuns as jest.Mock;
+const useImageRepositoryMock = useImageRepository as jest.Mock;
 describe('ComponentDetailTab', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
@@ -73,6 +77,7 @@ describe('ComponentDetailTab', () => {
       true,
     ]);
     useTaskRunsV2Mock.mockReturnValue([mockTaskRuns, true]);
+    useImageRepositoryMock.mockReturnValue([null, true, null]);
     navigateMock = jest.fn();
     useNavigateMock.mockImplementation(() => navigateMock);
     useModalLauncherMock.mockImplementation(() => {
@@ -146,5 +151,23 @@ describe('ComponentDetailTab', () => {
     expect(latestImage.children[0].children[0].getAttribute('href')).toBe(
       'https://build-container.image.url',
     );
+  });
+
+  it('should not show image repository visibility field when user has no permission', () => {
+    useImageRepositoryMock.mockReturnValue([null, true, { code: 403 }]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(screen.queryByText('Image repository visibility')).not.toBeInTheDocument();
+  });
+
+  it('should show image repository visibility field when user has permission', () => {
+    useImageRepositoryMock.mockReturnValue([mockPublicImageRepository, true, null]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(screen.getByText('Image repository visibility')).toBeInTheDocument();
+  });
+
+  it('should not show image repository visibility field while loading', () => {
+    useImageRepositoryMock.mockReturnValue([null, false, null]);
+    renderWithQueryClientAndRouter(<ComponentDetailsTab />);
+    expect(screen.queryByText('Image repository visibility')).not.toBeInTheDocument();
   });
 });

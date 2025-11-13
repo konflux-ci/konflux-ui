@@ -1,6 +1,11 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { ComponentModel } from '../../models';
-import { ComponentKind } from '../../types';
+import {
+  mockPrivateImageRepository,
+  mockPublicImageRepository,
+} from '~/__data__/image-repository-data';
+import { K8sQueryUpdateResource } from '~/k8s/query/fetch';
+import { ComponentModel } from '~/models/component';
+import { ComponentKind, ImageRepositoryVisibility } from '~/types';
 import {
   isPACEnabled,
   useComponentBuildStatus,
@@ -11,8 +16,13 @@ import {
   getLastestImage,
   getConfigurationTime,
   LAST_CONFIGURATION_ANNOTATION,
+  updateImageRepositoryVisibility,
 } from '../component-utils';
 import { createK8sUtilMock } from '../test-utils';
+jest.mock('~/k8s/query/fetch', () => ({
+  K8sQueryPatchResource: jest.fn(() => Promise.resolve()),
+  K8sQueryUpdateResource: jest.fn(() => Promise.resolve()),
+}));
 
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 
@@ -176,5 +186,109 @@ describe('component-utils', () => {
       },
     } as unknown as ComponentKind;
     expect(getConfigurationTime(mockComponent)).toEqual('2025-02-11T19:36:25Z');
+  });
+});
+
+describe('updateImageRepositoryVisibility', () => {
+  const K8sQueryUpdateResourceMock = K8sQueryUpdateResource as jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should update image repository visibility to private', async () => {
+    K8sQueryUpdateResourceMock.mockResolvedValue(mockPrivateImageRepository);
+
+    await updateImageRepositoryVisibility(mockPrivateImageRepository, true);
+
+    expect(K8sQueryUpdateResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: expect.objectContaining({
+          spec: expect.objectContaining({
+            image: expect.objectContaining({
+              visibility: ImageRepositoryVisibility.private,
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should update image repository visibility to public', async () => {
+    K8sQueryUpdateResourceMock.mockResolvedValue(mockPrivateImageRepository);
+
+    await updateImageRepositoryVisibility(mockPrivateImageRepository, false);
+
+    expect(K8sQueryUpdateResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: expect.objectContaining({
+          spec: expect.objectContaining({
+            image: expect.objectContaining({
+              visibility: ImageRepositoryVisibility.public,
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should preserve other image repository properties', async () => {
+    const imageRepositoryWithExtraProps = {
+      ...mockPublicImageRepository,
+      spec: {
+        image: {
+          visibility: ImageRepositoryVisibility.public,
+          name: 'test-image',
+          repository: 'quay.io/test',
+        },
+      },
+    };
+
+    K8sQueryUpdateResourceMock.mockResolvedValue(imageRepositoryWithExtraProps);
+
+    await updateImageRepositoryVisibility(imageRepositoryWithExtraProps, true);
+
+    expect(K8sQueryUpdateResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: expect.objectContaining({
+          spec: expect.objectContaining({
+            image: expect.objectContaining({
+              visibility: ImageRepositoryVisibility.private,
+              name: 'test-image',
+              repository: 'quay.io/test',
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should include correct query options', async () => {
+    K8sQueryUpdateResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, true);
+
+    expect(K8sQueryUpdateResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: { ns: 'test-ns' },
+      }),
+    );
+  });
+
+  it('should return the updated image repository', async () => {
+    const updatedImageRepository = {
+      ...mockPublicImageRepository,
+      spec: {
+        image: {
+          visibility: ImageRepositoryVisibility.private,
+        },
+      },
+    };
+
+    K8sQueryUpdateResourceMock.mockResolvedValue(updatedImageRepository);
+
+    const result = await updateImageRepositoryVisibility(mockPrivateImageRepository, true);
+
+    expect(result).toEqual(updatedImageRepository);
   });
 });
