@@ -1,6 +1,12 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { ComponentModel } from '../../models';
-import { ComponentKind } from '../../types';
+import {
+  mockPrivateImageRepository,
+  mockPublicImageRepository,
+  mockImageRepositoryWithoutVisibility,
+} from '~/__data__/image-repository-data';
+import { K8sQueryPatchResource } from '~/k8s/query/fetch';
+import { ComponentModel, ImageRepositoryModel } from '~/models';
+import { ComponentKind, ImageRepositoryVisibility } from '~/types';
 import {
   isPACEnabled,
   useComponentBuildStatus,
@@ -11,8 +17,12 @@ import {
   getLastestImage,
   getConfigurationTime,
   LAST_CONFIGURATION_ANNOTATION,
+  updateImageRepositoryVisibility,
 } from '../component-utils';
 import { createK8sUtilMock } from '../test-utils';
+jest.mock('~/k8s/query/fetch', () => ({
+  K8sQueryPatchResource: jest.fn(() => Promise.resolve()),
+}));
 
 const k8sPatchResourceMock = createK8sUtilMock('K8sQueryPatchResource');
 
@@ -176,5 +186,122 @@ describe('component-utils', () => {
       },
     } as unknown as ComponentKind;
     expect(getConfigurationTime(mockComponent)).toEqual('2025-02-11T19:36:25Z');
+  });
+});
+
+describe('updateImageRepositoryVisibility', () => {
+  const K8sQueryPatchResourceMock = K8sQueryPatchResource as jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should patch image repository visibility to private', async () => {
+    K8sQueryPatchResourceMock.mockResolvedValue(mockPrivateImageRepository);
+
+    await updateImageRepositoryVisibility(mockPrivateImageRepository, true);
+
+    expect(K8sQueryPatchResourceMock).toHaveBeenCalledWith({
+      model: ImageRepositoryModel,
+      queryOptions: {
+        name: mockPrivateImageRepository.metadata.name,
+        ns: mockPrivateImageRepository.metadata.namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: '/spec/image/visibility',
+          value: ImageRepositoryVisibility.private,
+        },
+      ],
+    });
+  });
+
+  it('should patch image repository visibility to public', async () => {
+    K8sQueryPatchResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, false);
+
+    expect(K8sQueryPatchResourceMock).toHaveBeenCalledWith({
+      model: ImageRepositoryModel,
+      queryOptions: {
+        name: mockPublicImageRepository.metadata.name,
+        ns: mockPublicImageRepository.metadata.namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: '/spec/image/visibility',
+          value: ImageRepositoryVisibility.public,
+        },
+      ],
+    });
+  });
+
+  it('should use the correct patch operation', async () => {
+    K8sQueryPatchResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, true);
+
+    expect(K8sQueryPatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patches: expect.arrayContaining([
+          expect.objectContaining({
+            op: 'replace',
+            path: '/spec/image/visibility',
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it('should include correct query options with name and namespace', async () => {
+    K8sQueryPatchResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, true);
+
+    expect(K8sQueryPatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: {
+          name: mockPublicImageRepository.metadata.name,
+          ns: mockPublicImageRepository.metadata.namespace,
+        },
+      }),
+    );
+  });
+
+  it('should return the updated image repository', async () => {
+    const updatedImageRepository = {
+      ...mockPublicImageRepository,
+      spec: {
+        image: {
+          visibility: ImageRepositoryVisibility.private,
+        },
+      },
+    };
+
+    K8sQueryPatchResourceMock.mockResolvedValue(updatedImageRepository);
+
+    const result = await updateImageRepositoryVisibility(mockPrivateImageRepository, true);
+
+    expect(result).toEqual(updatedImageRepository);
+  });
+
+  it('should use add operation when visibility is not set', async () => {
+    K8sQueryPatchResourceMock.mockResolvedValue(mockImageRepositoryWithoutVisibility);
+
+    await updateImageRepositoryVisibility(mockImageRepositoryWithoutVisibility, true);
+
+    expect(K8sQueryPatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patches: [
+          expect.objectContaining({
+            op: 'add',
+            path: '/spec/image/visibility',
+            value: ImageRepositoryVisibility.private,
+          }),
+        ],
+      }),
+    );
   });
 });

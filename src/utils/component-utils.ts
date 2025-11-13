@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { K8sQueryPatchResource } from '../k8s';
-import { ComponentModel } from '../models';
-import { ComponentKind } from '../types';
+import { ComponentModel, ImageRepositoryModel } from '../models';
+import { ComponentKind, ImageRepositoryKind, ImageRepositoryVisibility } from '../types';
 
 // Indicates whether the component was built from a sample and therefore does not support PAC without first forking.
 // values: 'true' | 'false'
@@ -186,3 +186,39 @@ export const getConfigurationTime = (component: ComponentKind): string => {
 
 export const useConfigurationTime = (component: ComponentKind) =>
   React.useMemo(() => getConfigurationTime(component), [component]);
+
+/**
+ * Update ImageRepository visibility (public/private)
+ * @param imageRepository - The ImageRepository resource to update
+ * @param isPrivate - Whether the image should be private
+ * @returns Updated ImageRepository resource
+ *
+ * Note: Automatically detects whether to use 'add' or 'replace' based on
+ * whether spec.image.visibility already exists to handle both new and existing fields
+ */
+export const updateImageRepositoryVisibility = async (
+  imageRepository: ImageRepositoryKind,
+  isPrivate: boolean,
+): Promise<ImageRepositoryKind> => {
+  const newVisibility = isPrivate
+    ? ImageRepositoryVisibility.private
+    : ImageRepositoryVisibility.public;
+
+  // Check if visibility field already exists
+  const visibilityExists = imageRepository?.spec?.image?.visibility !== undefined;
+
+  return K8sQueryPatchResource<ImageRepositoryKind>({
+    model: ImageRepositoryModel,
+    queryOptions: {
+      name: imageRepository.metadata.name,
+      ns: imageRepository.metadata.namespace,
+    },
+    patches: [
+      {
+        op: visibilityExists ? 'replace' : 'add',
+        path: '/spec/image/visibility',
+        value: newVisibility,
+      },
+    ],
+  });
+};
