@@ -23,9 +23,15 @@ const IntroBanner: React.FC = () => {
       className="intro-banner"
       direction={{ default: 'row' }}
       alignItems={{ default: 'alignItemsStretch' }}
+      data-test="intro-banner"
     >
       <FlexItem flex={{ default: 'flex_2' }}>
-        <Card className="intro-banner__content" isLarge isFullHeight>
+        <Card
+          className="intro-banner__content"
+          isLarge
+          isFullHeight
+          data-test="intro-banner-content"
+        >
           <CardTitle>
             <Title headingLevel="h1" size="2xl">
               Get started with Konflux
@@ -65,7 +71,7 @@ const IntroBanner: React.FC = () => {
         </Card>
       </FlexItem>
       <FlexItem flex={{ default: 'flex_1' }}>
-        <Bullseye className="intro-banner__image">
+        <Bullseye className="intro-banner__image" data-test="intro-banner-image">
           <OverviewBannerSvg />
         </Bullseye>
       </FlexItem>
