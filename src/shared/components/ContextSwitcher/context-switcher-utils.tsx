@@ -1,7 +1,5 @@
 import React from 'react';
-import { Divider, DrilldownMenu, MenuItem } from '@patternfly/react-core';
-import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
-import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
+import { Divider, DrilldownMenu, Flex, MenuItem } from '@patternfly/react-core';
 import { ContextMenuItem } from './ContextSwitcher';
 
 export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: ContextMenuItem }>> = ({
@@ -28,22 +26,21 @@ export const ContextMenuListItem: React.FC<React.PropsWithChildren<{ item: Conte
       </MenuItem>
     );
   }
-
-  const VisibilityIcon = item.visibility === 'public' ? LockOpenIcon : LockIcon;
+  const Icon = item.icon;
+  const isIcon = Icon !== undefined;
   return (
     <MenuItem itemId={item.key}>
-      {item.visibility && (
-        <VisibilityIcon
-          data-test={`visibility-icon-${item.visibility}`}
-          role="img"
-          aria-label={`${item.visibility} namespace`}
-          style={{
-            marginRight: 'var(--pf-v5-global--spacer--sm)',
-            color: item.visibility === 'Unknown' ? 'transparent' : undefined,
-          }}
-        />
+      {isIcon ? (
+        <Flex alignItems={{ default: 'alignItemsCenter' }}>
+          <Icon
+            data-test={`context-switcher-icon-${item.key}`}
+            style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+          />
+          {item.name}
+        </Flex>
+      ) : (
+        item.name
       )}
-      {item.name}
     </MenuItem>
   );
 };
