@@ -2,17 +2,14 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Button,
-  Bullseye,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
-  EmptyStateBody,
   Flex,
   FlexItem,
   List,
   ListItem,
-  Spinner,
   Text,
   TextVariants,
 } from '@patternfly/react-core';
@@ -26,8 +23,7 @@ import {
 } from '~/components/PipelineRun/ScanDetailStatus';
 import { Issue, IssueState, IssueSeverity } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
-import EmptySearchImgUrl from '~/shared/assets/Not-found.svg';
-import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import { LoadingSkeleton } from '~/shared';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -55,18 +51,6 @@ export const LatestIssuesCard: React.FC = () => {
     limit: 10,
   });
 
-  if (isLoading) {
-    return (
-      <Bullseye>
-        <Spinner />
-      </Bullseye>
-    );
-  }
-
-  if (error) {
-    return getErrorState(error, !isLoading, 'issues');
-  }
-
   const issues = data?.data || [];
   const hasIssues = issues.length > 0;
 
@@ -76,7 +60,16 @@ export const LatestIssuesCard: React.FC = () => {
         <CardTitle component="h3">Latest issues</CardTitle>
       </CardHeader>
       <CardBody>
-        {hasIssues ? (
+        {error && !isLoading ? (
+          getErrorState(error, !isLoading, 'issues', true)
+        ) : isLoading ? (
+          <LoadingSkeleton
+            count={5}
+            height="1.25rem"
+            widths="80%"
+            data-test="loading-skeleton-latest-issues"
+          />
+        ) : hasIssues ? (
           <>
             <List isPlain>
               {issues.map((issue) => (
@@ -111,19 +104,17 @@ export const LatestIssuesCard: React.FC = () => {
                 </ListItem>
               ))}
             </List>
-            <Button
-              variant="link"
-              isInline
-              component={(props) => <Link {...props} to="/issues/list" />}
-            >
-              View all issues <ArrowRightIcon />
-            </Button>
           </>
         ) : (
-          <AppEmptyState emptyStateImg={EmptySearchImgUrl} title="No issues found">
-            <EmptyStateBody>No active issues found for this namespace.</EmptyStateBody>
-          </AppEmptyState>
+          <Text component={TextVariants.p}>No active issues found for this namespace.</Text>
         )}
+        <Button
+          variant="link"
+          isInline
+          component={(props) => <Link {...props} to="/issues/list" />}
+        >
+          View all issues <ArrowRightIcon />
+        </Button>
       </CardBody>
     </Card>
   );
