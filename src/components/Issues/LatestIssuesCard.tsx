@@ -4,13 +4,16 @@ import {
   Button,
   Card,
   CardBody,
+  CardFooter,
   CardHeader,
   CardTitle,
   Flex,
-  FlexItem,
+  HelperText,
+  HelperTextItem,
   List,
   ListItem,
   Text,
+  TextContent,
   TextVariants,
 } from '@patternfly/react-core';
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
@@ -50,8 +53,7 @@ export const LatestIssuesCard: React.FC = () => {
     state: IssueState.ACTIVE,
     limit: 10,
   });
-
-  const issues = data?.data || [];
+  const issues = data?.data ?? [];
   const hasIssues = issues.length > 0;
 
   return (
@@ -70,44 +72,31 @@ export const LatestIssuesCard: React.FC = () => {
             data-test="loading-skeleton-latest-issues"
           />
         ) : hasIssues ? (
-          <>
-            <List isPlain>
-              {issues.map((issue) => (
-                <ListItem key={issue.id}>
-                  <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
-                    <FlexItem
-                      shrink={{ default: 'shrink' }}
-                      alignSelf={{ default: 'alignSelfFlexStart' }}
-                    >
-                      {getSeverityIcon(issue.severity)}
-                    </FlexItem>
-                    <FlexItem flex={{ default: 'flex_1' }}>
-                      <Button
-                        variant="link"
-                        isInline
-                        component={(props) => <Link {...props} to={`/issues/${issue.id}`} />}
-                      >
-                        <Text component={TextVariants.h3}>{issue.title}</Text>
-                      </Button>
-                    </FlexItem>
-                  </Flex>
-                  <Text
-                    component={TextVariants.p}
-                    color="subtle"
-                    className="pf-v5-u-mt-sm pf-v5-u-mb-md"
-                  >
-                    {issue.description}
-                  </Text>
-                  <Text component={TextVariants.small} color="subtle" className="pf-v5-u-mt-sm">
+          <List isPlain>
+            {issues.map((issue) => (
+              <ListItem key={issue.id} icon={getSeverityIcon(issue.severity)}>
+                <Flex
+                  direction={{ default: 'column' }}
+                  alignItems={{ default: 'alignItemsFlexStart' }}
+                >
+                  <TextContent style={{ marginBlockEnd: 0 }}>
+                    <Text component={TextVariants.h6}>{issue.title}</Text>
+                  </TextContent>
+                  <HelperText>
+                    <HelperTextItem variant="default">{issue.description}</HelperTextItem>
+                  </HelperText>
+                  <Text component={TextVariants.small}>
                     <Timestamp timestamp={issue.detectedAt} />
                   </Text>
-                </ListItem>
-              ))}
-            </List>
-          </>
+                </Flex>
+              </ListItem>
+            ))}
+          </List>
         ) : (
           <Text component={TextVariants.p}>No active issues found for this namespace.</Text>
         )}
+      </CardBody>
+      <CardFooter>
         <Button
           variant="link"
           isInline
@@ -115,7 +104,7 @@ export const LatestIssuesCard: React.FC = () => {
         >
           View all issues <ArrowRightIcon />
         </Button>
-      </CardBody>
+      </CardFooter>
     </Card>
   );
 };
