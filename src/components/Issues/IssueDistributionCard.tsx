@@ -81,7 +81,7 @@ const SeverityDistributionSection: React.FC<{ namespace: string }> = ({ namespac
                       size="3xl"
                       className="issue-distribution-card__severity-count"
                     >
-                      {counts?.[severity] ?? 0}
+                      {counts?.[severity] ?? '-'}
                     </Title>
                   ) : (
                     <Skeleton

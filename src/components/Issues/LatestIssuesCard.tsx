@@ -2,18 +2,18 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import {
   Button,
-  Bullseye,
   Card,
   CardBody,
+  CardFooter,
   CardHeader,
   CardTitle,
-  EmptyStateBody,
   Flex,
-  FlexItem,
+  HelperText,
+  HelperTextItem,
   List,
   ListItem,
-  Spinner,
   Text,
+  TextContent,
   TextVariants,
 } from '@patternfly/react-core';
 import { ArrowRightIcon } from '@patternfly/react-icons/dist/esm/icons/arrow-right-icon';
@@ -26,8 +26,7 @@ import {
 } from '~/components/PipelineRun/ScanDetailStatus';
 import { Issue, IssueState, IssueSeverity } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
-import EmptySearchImgUrl from '~/shared/assets/Not-found.svg';
-import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import { LoadingSkeleton } from '~/shared';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -54,20 +53,7 @@ export const LatestIssuesCard: React.FC = () => {
     state: IssueState.ACTIVE,
     limit: 10,
   });
-
-  if (isLoading) {
-    return (
-      <Bullseye>
-        <Spinner />
-      </Bullseye>
-    );
-  }
-
-  if (error) {
-    return getErrorState(error, !isLoading, 'issues');
-  }
-
-  const issues = data?.data || [];
+  const issues = data?.data ?? [];
   const hasIssues = issues.length > 0;
 
   return (
@@ -76,55 +62,49 @@ export const LatestIssuesCard: React.FC = () => {
         <CardTitle component="h3">Latest issues</CardTitle>
       </CardHeader>
       <CardBody>
-        {hasIssues ? (
-          <>
-            <List isPlain>
-              {issues.map((issue) => (
-                <ListItem key={issue.id}>
-                  <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
-                    <FlexItem
-                      shrink={{ default: 'shrink' }}
-                      alignSelf={{ default: 'alignSelfFlexStart' }}
-                    >
-                      {getSeverityIcon(issue.severity)}
-                    </FlexItem>
-                    <FlexItem flex={{ default: 'flex_1' }}>
-                      <Button
-                        variant="link"
-                        isInline
-                        component={(props) => <Link {...props} to={`/issues/${issue.id}`} />}
-                      >
-                        <Text component={TextVariants.h3}>{issue.title}</Text>
-                      </Button>
-                    </FlexItem>
-                  </Flex>
-                  <Text
-                    component={TextVariants.p}
-                    color="subtle"
-                    className="pf-v5-u-mt-sm pf-v5-u-mb-md"
-                  >
-                    {issue.description}
-                  </Text>
-                  <Text component={TextVariants.small} color="subtle" className="pf-v5-u-mt-sm">
+        {error && !isLoading ? (
+          getErrorState(error, !isLoading, 'issues', true)
+        ) : isLoading ? (
+          <LoadingSkeleton
+            count={5}
+            height="1.25rem"
+            widths="80%"
+            data-test="loading-skeleton-latest-issues"
+          />
+        ) : hasIssues ? (
+          <List isPlain>
+            {issues.map((issue) => (
+              <ListItem key={issue.id} icon={getSeverityIcon(issue.severity)}>
+                <Flex
+                  direction={{ default: 'column' }}
+                  alignItems={{ default: 'alignItemsFlexStart' }}
+                >
+                  <TextContent style={{ marginBlockEnd: 0 }}>
+                    <Text component={TextVariants.h6}>{issue.title}</Text>
+                  </TextContent>
+                  <HelperText>
+                    <HelperTextItem variant="default">{issue.description}</HelperTextItem>
+                  </HelperText>
+                  <Text component={TextVariants.small}>
                     <Timestamp timestamp={issue.detectedAt} />
                   </Text>
-                </ListItem>
-              ))}
-            </List>
-            <Button
-              variant="link"
-              isInline
-              component={(props) => <Link {...props} to="/issues/list" />}
-            >
-              View all issues <ArrowRightIcon />
-            </Button>
-          </>
+                </Flex>
+              </ListItem>
+            ))}
+          </List>
         ) : (
-          <AppEmptyState emptyStateImg={EmptySearchImgUrl} title="No issues found">
-            <EmptyStateBody>No active issues found for this namespace.</EmptyStateBody>
-          </AppEmptyState>
+          <Text component={TextVariants.p}>No active issues found for this namespace.</Text>
         )}
       </CardBody>
+      <CardFooter>
+        <Button
+          variant="link"
+          isInline
+          component={(props) => <Link {...props} to="/issues/list" />}
+        >
+          View all issues <ArrowRightIcon />
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
