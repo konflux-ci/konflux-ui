@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { K8sQueryPatchResource } from '../k8s';
-import { ComponentModel } from '../models';
-import { ComponentKind } from '../types';
+import { K8sQueryPatchResource, K8sQueryUpdateResource } from '../k8s';
+import { ComponentModel, ImageRepositoryModel } from '../models';
+import { ComponentKind, ImageRepositoryKind, ImageRepositoryVisibility } from '../types';
 
 // Indicates whether the component was built from a sample and therefore does not support PAC without first forking.
 // values: 'true' | 'false'
@@ -186,3 +186,33 @@ export const getConfigurationTime = (component: ComponentKind): string => {
 
 export const useConfigurationTime = (component: ComponentKind) =>
   React.useMemo(() => getConfigurationTime(component), [component]);
+
+/**
+ * Update ImageRepository visibility (public/private)
+ * @param imageRepository - The ImageRepository resource to update
+ * @param isPrivate - Whether the image should be private
+ * @returns Updated ImageRepository resource
+ */
+export const updateImageRepositoryVisibility = async (
+  imageRepository: ImageRepositoryKind,
+  isPrivate: boolean,
+): Promise<ImageRepositoryKind> => {
+  const updatedResource: ImageRepositoryKind = {
+    ...imageRepository,
+    spec: {
+      ...imageRepository.spec,
+      image: {
+        ...imageRepository.spec.image,
+        visibility: isPrivate
+          ? ImageRepositoryVisibility.private
+          : ImageRepositoryVisibility.public,
+      },
+    },
+  };
+
+  return K8sQueryUpdateResource<ImageRepositoryKind>({
+    model: ImageRepositoryModel,
+    resource: updatedResource,
+    queryOptions: { ns: imageRepository.metadata.namespace },
+  });
+};
