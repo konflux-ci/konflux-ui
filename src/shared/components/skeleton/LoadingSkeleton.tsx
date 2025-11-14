@@ -77,7 +77,6 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
     >
       {Array.from({ length: count }).map((_, index) => (
         <Skeleton
-          // eslint-disable-next-line react/no-array-index-key
           key={index}
           width={widthsArray[index]}
           height={height}
