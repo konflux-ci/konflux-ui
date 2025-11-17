@@ -31,6 +31,7 @@ import { useFullscreen } from '../../../hooks/fullscreen';
 import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
+import { useLogSyntaxHighlighting } from './useLogSyntaxHighlighting';
 
 import './LogViewer.scss';
 
@@ -63,10 +64,14 @@ const LogViewer: React.FC<Props> = ({
   const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
   const [autoScroll, setAutoScroll] = React.useState(allowAutoScroll);
 
-  const scrolledRow = React.useMemo(
-    () => (autoScroll ? data.split('\n').length : 0),
-    [autoScroll, data],
-  );
+  // Apply syntax highlighting with a maximum of 20000 lines for performance
+  // PatternFly LogViewer's built-in virtualization handles rendering performance
+  // Incremental processing ensures dynamic logs are highlighted in real-time
+  const highlightedData = useLogSyntaxHighlighting(data, 20000);
+
+  const scrolledRow = React.useMemo(() => {
+    return autoScroll ? data.split('\n').length : 0;
+  }, [autoScroll, data]);
 
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
@@ -112,7 +117,7 @@ const LogViewer: React.FC<Props> = ({
         {...props}
         hasLineNumbers={false}
         height={isFullscreen ? '100%' : undefined}
-        data={data}
+        data={highlightedData}
         theme={logTheme}
         scrollToRow={scrolledRow}
         onScroll={(onScrollProps) => {

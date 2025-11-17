@@ -91,10 +91,12 @@ describe('LogViewer', () => {
       render(<LogViewer {...defaultProps} />);
 
       expect(screen.getByTestId('patternfly-log-viewer')).toBeInTheDocument();
-      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
-        'data-log-data',
-        defaultProps.data,
-      );
+      // Note: data may be syntax highlighted (with ANSI codes), so we check it contains original data
+      const logViewer = screen.getByTestId('patternfly-log-viewer');
+      const actualData = logViewer.getAttribute('data-log-data') || '';
+      // Check that the original lines are present (ignoring ANSI codes)
+      // eslint-disable-next-line no-control-regex
+      expect(actualData.replace(/\x1b\[[0-9;]*m/g, '')).toBe(defaultProps.data);
     });
 
     it('should display task name when taskRun is provided', () => {
@@ -340,8 +342,9 @@ describe('LogViewer', () => {
       render(<LogViewer {...defaultProps} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      const container = logViewer.parentElement;
-      expect(container).toHaveStyle({ height: '100vh' });
+      // DOM structure: outer container > PatternFlyLogViewer
+      const outerContainer = logViewer.parentElement;
+      expect(outerContainer).toHaveStyle({ height: '100vh' });
       expect(logViewer).toHaveAttribute('height', '100%');
     });
 
@@ -351,8 +354,9 @@ describe('LogViewer', () => {
       render(<LogViewer {...defaultProps} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      const container = logViewer.parentElement;
-      expect(container).toHaveStyle({ height: '100%' });
+      // DOM structure: outer container > PatternFlyLogViewer
+      const outerContainer = logViewer.parentElement;
+      expect(outerContainer).toHaveStyle({ height: '100%' });
       expect(logViewer).not.toHaveAttribute('height');
     });
 
