@@ -64,7 +64,7 @@ const InternalFLAGS = {
   'kubearchive-logs': {
     key: 'kubearchive-logs',
     description: 'Use Kubearchive to fetch logs instead of Tekton',
-    defaultEnabled: false,
+    defaultEnabled: true,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
@@ -86,7 +86,7 @@ const InternalFLAGS = {
   'taskruns-kubearchive': {
     key: 'taskruns-kubearchive',
     description: 'Use Kubearchive as data source for TaskRuns instead of Tekton results',
-    defaultEnabled: false,
+    defaultEnabled: true,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
@@ -97,7 +97,7 @@ const InternalFLAGS = {
   'pipelineruns-kubearchive': {
     key: 'pipelineruns-kubearchive',
     description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
-    defaultEnabled: false,
+    defaultEnabled: true,
     status: 'wip',
     guard: {
       allOf: ['isKubearchiveEnabled'],
