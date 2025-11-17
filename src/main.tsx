@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
 import { AuthProvider } from './auth/AuthContext';
+import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
 import { getAllConditionsKeysFromFlags } from './feature-flags/utils';
 import { queryClient } from './k8s/query/core';
@@ -15,6 +16,11 @@ import { ThemeProvider } from './shared/theme/ThemeContext';
 import '@patternfly/react-core/dist/styles/base.css';
 import '@patternfly/react-styles/css/utilities/Spacing/spacing.css';
 import './main.scss';
+
+// TEMP: Force-enable selected flags once per release/build
+forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-kubearchive'], {
+  releaseId: '2025-11-17',
+});
 
 const App = () => {
   React.useEffect(() => {
