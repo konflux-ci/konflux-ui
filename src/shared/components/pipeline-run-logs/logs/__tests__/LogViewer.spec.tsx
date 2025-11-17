@@ -340,8 +340,8 @@ describe('LogViewer', () => {
       render(<LogViewer {...defaultProps} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      const container = logViewer.parentElement;
-      expect(container).toHaveStyle({ height: '100vh' });
+      const outerContainer = logViewer.closest('.log-viewer__container');
+      expect(outerContainer).toHaveStyle({ height: '100vh' });
       expect(logViewer).toHaveAttribute('height', '100%');
     });
 
@@ -351,8 +351,8 @@ describe('LogViewer', () => {
       render(<LogViewer {...defaultProps} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      const container = logViewer.parentElement;
-      expect(container).toHaveStyle({ height: '100%' });
+      const outerContainer = logViewer.closest('.log-viewer__container');
+      expect(outerContainer).toHaveStyle({ height: '100%' });
       expect(logViewer).not.toHaveAttribute('height');
     });
 
