@@ -72,7 +72,6 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
-  //const [, setWindowWidth] = React.useState(window.innerWidth);
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
     const expandColumn = [];

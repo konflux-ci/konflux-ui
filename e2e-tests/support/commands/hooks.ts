@@ -16,8 +16,10 @@ before(() => {
     JSON.stringify({ 'application-list-getting-started-modal': true }),
   );
 
-  if (Cypress.env('PR_CHECK') || Cypress.env('PERIODIC_RUN')) {
+  if (Cypress.env('PR_CHECK')) {
     Login.localKonfluxLogin();
+  } else if (Cypress.env('PERIODIC_RUN')) {
+    Login.stageKonfluxLogin();
   } else {
     Login.login();
   }
