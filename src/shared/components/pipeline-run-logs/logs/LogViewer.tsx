@@ -31,8 +31,10 @@ import { useFullscreen } from '../../../hooks/fullscreen';
 import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
+import { useLogSyntaxHighlighting } from './useLogSyntaxHighlighting';
 
 import './LogViewer.scss';
+import './LogViewerEnhancements.scss';
 
 export type Props = LogViewerProps & {
   showSearch?: boolean;
@@ -59,14 +61,205 @@ const LogViewer: React.FC<Props> = ({
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const { effectiveTheme } = useTheme();
   const [logTheme, setLogTheme] = React.useState<LogViewerProps['theme']>('dark');
+  const [syntaxHighlightEnabled, setSyntaxHighlightEnabled] = React.useState(true);
 
   const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
   const [autoScroll, setAutoScroll] = React.useState(allowAutoScroll);
 
-  const scrolledRow = React.useMemo(
-    () => (autoScroll ? data.split('\n').length : 0),
-    [autoScroll, data],
-  );
+  // Apply syntax highlighting to log data
+  const highlightedData = useLogSyntaxHighlighting(data, syntaxHighlightEnabled);
+
+  // Ref for log viewer container to add line number click handlers
+  const logViewerRef = React.useRef<HTMLDivElement>(null);
+
+  // Track last clicked line for range selection
+  const [lastClickedLine, setLastClickedLine] = React.useState<number | null>(null);
+
+  // Track selected line range (for re-applying after virtual scroll updates)
+  const [selectedRange, setSelectedRange] = React.useState<{ start: number; end: number } | null>(null);
+
+  // Track target scroll row for hash navigation
+  const [targetScrollRow, setTargetScrollRow] = React.useState<number | null>(null);
+
+  // Helper function to highlight lines
+  const highlightLines = React.useCallback((start: number, end: number) => {
+    const container = logViewerRef.current;
+    if (!container) return;
+
+    // Remove all previous highlights
+    container.querySelectorAll('.log-line-selected').forEach((el) => {
+      el.classList.remove('log-line-selected');
+    });
+
+    // Add highlight to selected range by finding elements with matching line numbers
+    const allLines = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+
+    allLines.forEach((lineElement) => {
+      // Find the line number element within this line
+      const lineNumberEl = lineElement.querySelector('.pf-v5-c-log-viewer__index');
+      if (!lineNumberEl) return;
+
+      const lineText = lineNumberEl.textContent?.trim();
+      if (!lineText) return;
+
+      const lineNumber = parseInt(lineText, 10);
+      if (isNaN(lineNumber)) return;
+
+      // Check if this line is in the selected range
+      if (lineNumber >= start && lineNumber <= end) {
+        lineElement.classList.add('log-line-selected');
+      }
+    });
+
+    // Store the selected range for re-application after DOM updates
+    setSelectedRange({ start, end });
+  }, []);
+
+  // Add click handler for line numbers with range selection and highlighting
+  React.useEffect(() => {
+    const container = logViewerRef.current;
+    if (!container) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as Element;
+
+      // Check if click was on a line number element
+      // PatternFly uses class: pf-v5-c-log-viewer__index
+      const lineNumberEl = target.closest('.pf-v5-c-log-viewer__index');
+      if (!lineNumberEl) return;
+
+      // Get the line number from the element's text content
+      const lineText = lineNumberEl.textContent?.trim();
+      if (!lineText) return;
+
+      const lineNumber = parseInt(lineText, 10);
+      if (isNaN(lineNumber)) return;
+
+      // Check if Shift key is pressed for range selection
+      if (e.shiftKey && lastClickedLine !== null) {
+        // Range selection: from lastClickedLine to current lineNumber
+        const start = Math.min(lastClickedLine, lineNumber);
+        const end = Math.max(lastClickedLine, lineNumber);
+        window.location.hash = `#L${start}-L${end}`;
+        highlightLines(start, end);
+        setTargetScrollRow(null);
+      } else {
+        // Single line selection
+        window.location.hash = `#L${lineNumber}`;
+        setLastClickedLine(lineNumber);
+        highlightLines(lineNumber, lineNumber);
+        setTargetScrollRow(null);
+      }
+    };
+
+    // Use event delegation on the container
+    container.addEventListener('click', handleClick);
+
+    return () => {
+      container.removeEventListener('click', handleClick);
+    };
+  }, [lastClickedLine, highlightLines]);
+
+  // Monitor DOM changes to re-apply highlights after virtual scroll updates
+  React.useEffect(() => {
+    const container = logViewerRef.current;
+    if (!container || !selectedRange) return;
+
+    let isApplying = false; // Prevent infinite loops
+
+    const observer = new MutationObserver(() => {
+      // Re-apply highlights when DOM changes (virtual scroll)
+      if (selectedRange && !isApplying) {
+        isApplying = true;
+        // Use requestAnimationFrame to avoid blocking
+        requestAnimationFrame(() => {
+          highlightLines(selectedRange.start, selectedRange.end);
+          isApplying = false;
+        });
+      }
+    });
+
+    // Observe the log viewer list for changes
+    const listElement = container.querySelector('.pf-v5-c-log-viewer__list');
+    if (listElement) {
+      observer.observe(listElement, {
+        childList: true,
+        subtree: false, // Only watch direct children, not all descendants
+      });
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [selectedRange, highlightLines]);
+
+  // Helper function to navigate to a hash
+  const navigateToHash = React.useCallback((hash: string) => {
+    if (!hash) return;
+
+    const match = hash.match(/#L(\d+)(?:-L(\d+))?/);
+    if (!match) return;
+
+    const start = parseInt(match[1], 10);
+    const end = match[2] ? parseInt(match[2], 10) : start;
+
+    // Disable auto-scroll when navigating to a specific line
+    setAutoScroll(false);
+
+    // Use PatternFly's scrollToRow to ensure the line is rendered
+    setTargetScrollRow(start);
+
+    // Highlight after a delay to ensure DOM is updated
+    setTimeout(() => {
+      highlightLines(start, end);
+      setLastClickedLine(start);
+    }, 300);
+  }, [highlightLines]);
+
+  // Handle initial URL hash navigation (e.g., #L25 or #L10-L20)
+  React.useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash || !data) return;
+
+    // Delay to ensure DOM is ready after data loads
+    const timeoutId = setTimeout(() => {
+      navigateToHash(hash);
+    }, 500); // Increased delay to ensure virtual scroll has rendered
+
+    return () => clearTimeout(timeoutId);
+  }, [data, navigateToHash]); // Re-run when data loads
+
+  // Handle hash changes (browser back/forward)
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        navigateToHash(hash);
+      } else {
+        // Clear highlights if hash is removed
+        const container = logViewerRef.current;
+        container?.querySelectorAll('.log-line-selected').forEach((el) => {
+          el.classList.remove('log-line-selected');
+        });
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, [navigateToHash]);
+
+
+  const scrolledRow = React.useMemo(() => {
+    // If we have a target row from hash navigation, use that
+    if (targetScrollRow !== null) {
+      return targetScrollRow;
+    }
+    // Otherwise use auto-scroll behavior
+    return autoScroll ? data.split('\n').length : 0;
+  }, [autoScroll, data, targetScrollRow]);
 
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
@@ -108,13 +301,15 @@ const LogViewer: React.FC<Props> = ({
       style={{ height: isFullscreen ? '100vh' : '100%' }}
       className={classNames('log-viewer__container')}
     >
-      <PatternFlyLogViewer
+      <div ref={logViewerRef} style={{ height: '100%' }}>
+        <PatternFlyLogViewer
         {...props}
-        hasLineNumbers={false}
+        hasLineNumbers={true}
         height={isFullscreen ? '100%' : undefined}
-        data={data}
+        data={highlightedData}
         theme={logTheme}
         scrollToRow={scrolledRow}
+        isTextWrapped={true}
         onScroll={(onScrollProps) => {
           const { scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested } =
             onScrollProps;
@@ -166,6 +361,15 @@ const LogViewer: React.FC<Props> = ({
                     isDisabled={effectiveTheme === 'dark'}
                     checked={logTheme === 'dark'}
                     onClick={() => setLogTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                  />
+                </ToolbarItem>
+                <ToolbarItem variant="separator" className="log-viewer__divider" />
+                <ToolbarItem>
+                  <Checkbox
+                    id="syntax-highlight"
+                    label="Syntax highlighting"
+                    checked={syntaxHighlightEnabled}
+                    onClick={() => setSyntaxHighlightEnabled((prev) => !prev)}
                   />
                 </ToolbarItem>
                 <ToolbarItem variant="separator" className="log-viewer__divider" />
@@ -229,6 +433,7 @@ const LogViewer: React.FC<Props> = ({
           )
         }
       />
+      </div>
     </div>
   );
 };

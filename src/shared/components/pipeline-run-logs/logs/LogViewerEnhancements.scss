@@ -1,0 +1,29 @@
+/**
+ * Enhanced log viewer styles using PatternFly design tokens
+ * Adds clickable line numbers, line selection highlighting, and ANSI color classes
+ */
+
+// Make line numbers clickable
+.pf-v5-c-log-viewer__index {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
+// Selected line highlight using PatternFly tokens
+.log-line-selected {
+  background-color: var(--pf-v5-global--BackgroundColor--light-300) !important;
+}
+
+// Dark theme support - multiple selectors to ensure it works
+.pf-v5-theme-dark .log-line-selected,
+.pf-v5-c-log-viewer.pf-m-dark .log-line-selected,
+.pf-v5-c-log-viewer[class*="dark"] .log-line-selected {
+  background-color: rgba(56, 139, 253, 0.12) !important;
+  color: var(--pf-v5-global--Color--light-100) !important;
+}
