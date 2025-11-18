@@ -3,21 +3,20 @@ import {
   useQuery,
   UseInfiniteQueryResult,
   UseQueryResult,
-  InfiniteData,
   UseQueryOptions,
+  InfiniteData,
 } from '@tanstack/react-query';
 import {
   k8sListResource,
-  convertToK8sQueryParams,
   createQueryKeys,
   createGetQueryOptions,
   K8sResourceListOptions,
 } from '~/k8s';
-import { TQueryOptions } from '../k8s/query/type';
+import { TQueryInfiniteOptions, TQueryOptions } from '../k8s/query/type';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
 import { useIsKubeArchiveEnabled } from './conditional-checks';
-import { KUBEARCHIVE_PATH_PREFIX } from './const';
-import { withKubearchivePathPrefix } from './fetch-utils';
+import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_RESOURCE_LIMIT } from './const';
+import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from './fetch-utils';
 
 /**
  * Hook for fetching paginated list resources from KubeArchive with infinite query support.
@@ -30,15 +29,20 @@ import { withKubearchivePathPrefix } from './fetch-utils';
  * @param model - K8s model definition containing API group, version, and kind information
  * @returns UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown>
  */
-export function useKubearchiveListResourceQuery(
+export function useKubearchiveListResourceQuery<
+  T extends K8sResourceCommon,
+  TData = InfiniteData<T[], unknown>,
+>(
   resourceInit: WatchK8sResource,
   model: K8sModelCommon,
-): UseInfiniteQueryResult<InfiniteData<K8sResourceCommon[], unknown>, unknown> {
-  const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
+  queryOptions?: TQueryInfiniteOptions<T[], Error, TData, T[]>,
+): UseInfiniteQueryResult<TData, Error> {
+  const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const queryKey = createQueryKeys({ model, queryOptions: k8sQueryOptions, prefix: 'kubearchive' });
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
-  return useInfiniteQuery<K8sResourceCommon[]>({
-    enabled: isKubearchiveEnabled,
+  return useInfiniteQuery<T[], Error, TData>({
+    ...(queryOptions ?? {}),
+    enabled: isKubearchiveEnabled && (queryOptions?.enabled ?? true),
     queryKey,
     queryFn: async ({ pageParam = undefined }) => {
       const pagedOptions = {
@@ -46,12 +50,13 @@ export function useKubearchiveListResourceQuery(
         queryOptions: {
           ...k8sQueryOptions,
           queryParams: {
+            limit: KUBEARCHIVE_RESOURCE_LIMIT,
             ...k8sQueryOptions.queryParams,
-            continue: pageParam as string | undefined,
+            continue: (pageParam ? pageParam : undefined) as string | undefined,
           },
         },
       };
-      const fullRes = await k8sListResource<K8sResourceCommon>(
+      const fullRes = await k8sListResource<T>(
         withKubearchivePathPrefix<K8sResourceListOptions>(pagedOptions),
       );
       // Attach the continue token to the result via a custom property
@@ -62,8 +67,7 @@ export function useKubearchiveListResourceQuery(
       return fullRes.items;
     },
     initialPageParam: undefined,
-    getNextPageParam: (lastPage: K8sResourceCommon[] & { _continue?: string }) =>
-      lastPage?._continue || undefined,
+    getNextPageParam: (lastPage: T[] & { _continue?: string }) => lastPage?._continue || undefined,
   });
 }
 
@@ -87,7 +91,7 @@ export function useKubearchiveGetResourceQuery(
   queryOptions?: TQueryOptions<K8sResourceCommon>,
   options: Partial<RequestInit & { wsPrefix?: string; pathPrefix?: string }> = {},
 ): UseQueryResult<K8sResourceCommon, unknown> {
-  const k8sQueryOptions = convertToK8sQueryParams(resourceInit);
+  const k8sQueryOptions = convertToKubearchiveQueryParams(resourceInit);
   const baseOptions = { requestInit: { ...options, pathPrefix: KUBEARCHIVE_PATH_PREFIX } };
   const { isKubearchiveEnabled } = useIsKubeArchiveEnabled();
   return useQuery<K8sResourceCommon>(

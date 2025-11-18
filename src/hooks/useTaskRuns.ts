@@ -45,7 +45,7 @@ export const sortTaskRunsByTime = (taskRuns?: TaskRunKind[]): TaskRunKind[] => {
     // @ts-expect-error: toSorted might not be in TS yet
     return taskRuns.toSorted(sortFunction);
   }
-  return [...taskRuns].sort(sortFunction);
+  return taskRuns.slice().sort(sortFunction);
 };
 
 export const useTaskRuns = (

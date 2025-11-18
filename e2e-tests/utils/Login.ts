@@ -1,6 +1,6 @@
 import common = require('mocha/lib/interfaces/common');
 import { NavItem, pageTitles } from '../support/constants/PageTitle';
-import { localKonfluxLoginPO, stageLoginPO } from '../support/pageObjects/global-po';
+import { localKonfluxLoginPO, stageLoginPO } from '../support/pageObjects/login-po';
 import { GetStartedPage, GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { Common } from './Common';
 import { goToApplicationsPagePo } from '../support/pageObjects/pages-po';
@@ -25,12 +25,37 @@ export class Login {
     username: string = Cypress.env('USERNAME'),
     password: string = Cypress.env('PASSWORD'),
   ) {
+    console.log('Logging in to local Konflux...');
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     cy.get(localKonfluxLoginPO.dex).should('be.visible').click();
     cy.get(localKonfluxLoginPO.username).type(username);
     cy.get(localKonfluxLoginPO.password).type(password, { log: false });
     cy.get(localKonfluxLoginPO.loginButton).click();
     cy.contains(localKonfluxLoginPO.grantAccessClass, localKonfluxLoginPO.grantAccessText).click();
+    this.waitForApps();
+  }
+
+  static stageKonfluxLogin(
+    username: string = Cypress.env('USERNAME'),
+    password: string = Cypress.env('PASSWORD'),
+  ) {
+    console.log('Logging in to stage Konflux...');
+    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    cy.get(stageLoginPO.dex).should('be.visible').click();
+    cy.get(stageLoginPO.username).type(username);
+    cy.get(stageLoginPO.password).type(password, { log: false });
+    cy.get(stageLoginPO.loginButton).click();
+
+    // ----- Workaround -----
+    // Sometimes page doesn't go to homepage but shows
+    // "Something went wrong - Invalid token" message.
+    cy.contains('You have successfully logged into Red Hat Internal SSO', {
+      timeout: 10000,
+    }).should('be.visible');
+    cy.wait(2000);
+    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
+    // ----- end of workaround -----
+
     this.waitForApps();
   }
 

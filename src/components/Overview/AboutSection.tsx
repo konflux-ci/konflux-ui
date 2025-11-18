@@ -15,8 +15,8 @@ import './AboutSection.scss';
 const AboutSection: React.FC<React.PropsWithChildren<unknown>> = () => (
   <Grid hasGutter>
     <GridItem sm={12} lg={8}>
-      <Card isLarge>
-        <CardTitle>About</CardTitle>
+      <Card isLarge data-test="about-section">
+        <CardTitle data-test="about-section-title">About</CardTitle>
         <CardBody style={{ paddingLeft: '16px' }}>
           <Card isPlain isCompact>
             <CardTitle>Build</CardTitle>

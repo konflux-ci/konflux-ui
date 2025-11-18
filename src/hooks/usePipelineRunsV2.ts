@@ -7,8 +7,8 @@ import {
 } from '~/kubearchive/hooks';
 import {
   createKubearchiveWatchResource,
-  PipelineRunSelector,
-} from '~/utils/pipeline-run-filter-transform';
+  KubearchiveFilterTransformSelector,
+} from '~/utils/kubearchive-filter-transform';
 import { EQ } from '~/utils/tekton-results';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
@@ -20,7 +20,7 @@ import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResult
 
 interface UsePipelineRunsV2Options
   extends Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'fieldSelector'>> {
-  selector?: PipelineRunSelector;
+  selector?: KubearchiveFilterTransformSelector;
 }
 
 type UsePipelineRunsV2Result = [
@@ -141,25 +141,10 @@ export const usePipelineRunsV2 = (
 
   const queryTr = !kubearchiveEnabled && shouldQueryExternalSources;
 
-  // Tekton Results (raw) and mirrored commit filtering
-  const [trResourcesRaw, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
+  const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
     queryTr ? namespace : null,
     optionsMemo,
   );
-
-  const trResources = React.useMemo((): PipelineRunKind[] => {
-    if (!trResourcesRaw || trResourcesRaw.length === 0) {
-      return [];
-    }
-
-    if (optionsMemo?.selector?.filterByCommit) {
-      return trResourcesRaw.filter(
-        (plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit,
-      );
-    }
-
-    return trResourcesRaw;
-  }, [trResourcesRaw, optionsMemo?.selector?.filterByCommit]);
 
   // KubeArchive query config when enabled
   const resourceInit = React.useMemo(
@@ -170,7 +155,7 @@ export const usePipelineRunsV2 = (
             namespace,
             ...(createKubearchiveWatchResource(namespace, options?.selector) || {}),
             isList: true,
-            limit: options?.limit || 200,
+            limit: options?.limit,
           }
         : undefined,
     [namespace, options?.limit, options?.selector, kubearchiveEnabled, shouldQueryExternalSources],
@@ -322,10 +307,14 @@ export const usePipelineRunV2 = (
       }),
       [pipelineRunName],
     ),
+    {
+      staleTime: Infinity,
+    },
   );
 
   const kubearchiveResult = useKubearchiveGetResourceQuery(resourceInit, PipelineRunModel, {
     enabled: enabled && kubearchiveEnabled,
+    staleTime: Infinity,
   });
 
   return React.useMemo(() => {

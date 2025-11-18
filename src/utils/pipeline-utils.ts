@@ -1,5 +1,6 @@
 import { RunStatus } from '@patternfly/react-topology';
 import { curry, merge } from 'lodash-es';
+import { runStatus, SucceedConditionReason } from '~/consts/pipelinerun';
 import { preferredNameAnnotation } from '../consts/pipeline';
 import { isCVEScanResult, ScanResults } from '../hooks/useScanResults';
 import { PipelineRunModel } from '../models';
@@ -26,38 +27,6 @@ export const MANAGED_ENV_DESC = `A managed environment is your application relea
 export enum SBOMResultKeys {
   IMAGE_DIGEST = 'IMAGE_DIGEST',
   SBOM_SHA = 'SBOM_BLOB_URL',
-}
-
-export enum runStatus {
-  Succeeded = 'Succeeded',
-  Failed = 'Failed',
-  Running = 'Running',
-  'In Progress' = 'In Progress',
-  FailedToStart = 'FailedToStart',
-  PipelineNotStarted = 'Starting',
-  NeedsMerge = 'PR needs merge',
-  Skipped = 'Skipped',
-  Cancelled = 'Cancelled',
-  Cancelling = 'Cancelling',
-  Pending = 'Pending',
-  Idle = 'Idle',
-  TestWarning = 'Test Warnings',
-  TestFailed = 'Test Failures',
-  Unknown = 'Unknown',
-}
-
-export enum SucceedConditionReason {
-  PipelineRunStopped = 'StoppedRunFinally',
-  PipelineRunCancelled = 'CancelledRunFinally',
-  TaskRunCancelled = 'TaskRunCancelled',
-  Cancelled = 'Cancelled',
-  PipelineRunStopping = 'PipelineRunStopping',
-  PipelineRunPending = 'PipelineRunPending',
-  TaskRunStopping = 'TaskRunStopping',
-  CreateContainerConfigError = 'CreateContainerConfigError',
-  ExceededNodeResources = 'ExceededNodeResources',
-  ExceededResourceQuota = 'ExceededResourceQuota',
-  ConditionCheckFailed = 'ConditionCheckFailed',
 }
 
 export const getDuration = (seconds: number, long?: boolean): string => {
@@ -364,10 +333,11 @@ export const taskName = (taskrun: TaskRunKind) =>
   taskrun.metadata.labels[TektonResourceLabel.task] ||
   taskrun.spec.taskRef?.params?.find((r) => r.name === 'name')?.value;
 
+// Use optional chaining to handle null pipelineRun safely (e.g., during loading or error states)
 export const getPipelineRunStatusResults = (pipelineRun: PipelineRunKind) => {
   return isPipelineV1Beta1(pipelineRun)
-    ? pipelineRun.status?.pipelineResults
-    : pipelineRun.status?.results;
+    ? pipelineRun?.status?.pipelineResults
+    : pipelineRun?.status?.results;
 };
 
 const getPipelineRunStatusResultForKey = curry(

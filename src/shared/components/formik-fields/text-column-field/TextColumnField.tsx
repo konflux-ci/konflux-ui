@@ -3,8 +3,8 @@ import { FormGroup, HelperText, HelperTextItem } from '@patternfly/react-core';
 import { FieldArray, useField } from 'formik';
 import DragAndDrop from '../../drag-drop/DragAndDrop';
 import { getFieldId } from '../field-utils';
-import MultiColumnFieldFooter from '../multi-column-field/MultiColumnFieldFooter';
 import { TextColumnFieldProps } from './text-column-types';
+import TextColumnFieldFooter from './TextColumnFieldFooter';
 import TextColumnItem from './TextColumnItem';
 import TextColumnItemWithDnd from './TextColumnItemWithDnd';
 
@@ -70,7 +70,7 @@ const TextColumnField: React.FC<TextColumnFieldProps> = (props) => {
               </>
             )}
             {!isReadOnly && !noFooter && (
-              <MultiColumnFieldFooter
+              <TextColumnFieldFooter
                 addLabel={addLabel}
                 onAdd={() => {
                   arrayHelpers.push('');
