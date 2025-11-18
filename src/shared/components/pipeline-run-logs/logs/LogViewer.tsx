@@ -31,7 +31,7 @@ import { useFullscreen } from '../../../hooks/fullscreen';
 import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
 import LogsTaskDuration from './LogsTaskDuration';
-import { useLogSyntaxHighlighting } from './useLogSyntaxHighlighting';
+import { useLogSyntaxHighlightingWorker } from './useLogSyntaxHighlightingWorker';
 
 import './LogViewer.scss';
 import './LogViewerEnhancements.scss';
@@ -66,8 +66,23 @@ const LogViewer: React.FC<Props> = ({
   const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
   const [autoScroll, setAutoScroll] = React.useState(allowAutoScroll);
 
-  // Apply syntax highlighting to log data
-  const highlightedData = useLogSyntaxHighlighting(data, syntaxHighlightEnabled);
+  // Apply syntax highlighting to log data using Web Worker (non-blocking)
+  const { data: highlightedData, error: workerError } = useLogSyntaxHighlightingWorker(data, syntaxHighlightEnabled);
+
+  // Log worker errors for debugging
+  React.useEffect(() => {
+    if (workerError) {
+      // eslint-disable-next-line no-console
+      console.error('Syntax highlighting worker error:', workerError);
+    }
+  }, [workerError]);
+
+  // Disable syntax highlighting if worker error occurs
+  React.useEffect(() => {
+    if (workerError && syntaxHighlightEnabled) {
+      setSyntaxHighlightEnabled(false);
+    }
+  }, [workerError, syntaxHighlightEnabled]);
 
   // Ref for log viewer container to add line number click handlers
   const logViewerRef = React.useRef<HTMLDivElement>(null);
@@ -368,7 +383,8 @@ const LogViewer: React.FC<Props> = ({
                   <Checkbox
                     id="syntax-highlight"
                     label="Syntax highlighting"
-                    checked={syntaxHighlightEnabled}
+                    checked={syntaxHighlightEnabled && !workerError}
+                    isDisabled={workerError !== null}
                     onClick={() => setSyntaxHighlightEnabled((prev) => !prev)}
                   />
                 </ToolbarItem>
