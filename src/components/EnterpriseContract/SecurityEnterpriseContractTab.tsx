@@ -42,9 +42,12 @@ const getResultsSummary = (ECs, ecLoaded) => {
 };
 
 export const SecurityEnterpriseContractTab: React.FC<
-  React.PropsWithChildren<{ pipelineRun: string }>
-> = ({ pipelineRun }) => {
-  const [ecResult, ecResultLoaded] = useEnterpriseContractResults(pipelineRun);
+  React.PropsWithChildren<{ pipelineRun: string; pipelineRunCreationTimestamp?: string }>
+> = ({ pipelineRun, pipelineRunCreationTimestamp }) => {
+  const [ecResult, ecResultLoaded] = useEnterpriseContractResults(
+    pipelineRun,
+    pipelineRunCreationTimestamp,
+  );
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({

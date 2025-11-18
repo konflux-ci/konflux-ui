@@ -15,9 +15,15 @@ import { extractEcResultsFromTaskRunLogs } from './utils';
 
 export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,
+  pipelineRunCreationTimestamp?: string,
 ): [ComponentEnterpriseContractResult[], boolean] => {
   const namespace = useNamespace();
-  const [taskRun, loaded, error] = useTaskRunsForPipelineRuns(namespace, pipelineRunName, 'verify');
+  const [taskRun, loaded, error] = useTaskRunsForPipelineRuns(
+    namespace,
+    pipelineRunName,
+    'verify', // taskName
+    pipelineRunCreationTimestamp,
+  );
   const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
   const [ecJson, setEcJson] = React.useState<EnterpriseContractResult>();
   const [ecLoaded, setEcLoaded] = React.useState<boolean>(false);
@@ -161,8 +167,12 @@ export const mapEnterpriseContractResultData = (
 
 export const useEnterpriseContractResults = (
   pipelineRunName: string,
+  pipelineRunCreationTimestamp?: string,
 ): [UIEnterpriseContractData[], boolean] => {
-  const [ec, ecLoaded] = useEnterpriseContractResultFromLogs(pipelineRunName);
+  const [ec, ecLoaded] = useEnterpriseContractResultFromLogs(
+    pipelineRunName,
+    pipelineRunCreationTimestamp,
+  );
   const ecResult = React.useMemo(() => {
     return ecLoaded && ec ? mapEnterpriseContractResultData(ec) : undefined;
   }, [ec, ecLoaded]);

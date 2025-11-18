@@ -91,12 +91,16 @@ const processScanTaskRuns = (taskRuns: TaskRunKind[]): ScanResults => {
   return resultObj;
 };
 
-export const useScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
+export const useScanResults = (
+  pipelineRunName: string,
+  pipelineRunCreationTimestamp?: string,
+): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
   const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
-    undefined,
+    undefined, // taskName
+    pipelineRunCreationTimestamp,
     false, // Don't watch - scan results are for completed pipeline runs
   );
 
@@ -134,8 +138,33 @@ const dataSelectorForScanResults = (data: InfiniteData<TaskRunKind[], unknown>):
   const taskRuns = data?.pages?.flatMap((page) => page) ?? [];
   return processScanTaskRuns(taskRuns);
 };
-export const useKarchScanResults = (pipelineRunName: string): [ScanResults, boolean, unknown] => {
+export const useKarchScanResults = (
+  pipelineRunName: string,
+  pipelineRunCreationTimestamp: string,
+): [ScanResults, boolean, unknown] => {
   const namespace = useNamespace();
+
+  const fieldSelector = React.useMemo(() => {
+    if (!pipelineRunCreationTimestamp) {
+      // eslint-disable-next-line no-console
+      console.error(
+        'useKarchScanResults: pipelineRunCreationTimestamp is required for KubeArchive queries',
+      );
+      return undefined;
+    }
+
+    try {
+      const creationTime = new Date(pipelineRunCreationTimestamp);
+      const timestampAfter = pipelineRunCreationTimestamp;
+      const timestampBefore = new Date(creationTime.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+      return `creationTimestampAfter=${timestampAfter},creationTimestampBefore=${timestampBefore}`;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('useKarchScanResults: Invalid timestamp format', error);
+      return undefined;
+    }
+  }, [pipelineRunCreationTimestamp]);
 
   const karchRes = useKubearchiveListResourceQuery(
     {
@@ -147,6 +176,7 @@ export const useKarchScanResults = (pipelineRunName: string): [ScanResults, bool
           [TektonResourceLabel.pipelinerun]: pipelineRunName,
         },
       },
+      fieldSelector,
     },
     TaskRunModel,
     { enabled: !!pipelineRunName, staleTime: Infinity, select: dataSelectorForScanResults },

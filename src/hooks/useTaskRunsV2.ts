@@ -45,7 +45,6 @@ export const useTaskRunsV2 = (
           namespace,
           isList: true,
           selector: options?.selector,
-          fieldSelector: options?.fieldSelector,
           watch: options?.watch !== false,
         }
       : null,
@@ -76,6 +75,16 @@ export const useTaskRunsV2 = (
   const shouldQueryKubearchive =
     enableKubearchive && namespace && needsMoreData && (queryOptions?.enabled ?? true);
 
+  // Warn if querying KubeArchive without timestamp filter for performance
+  React.useEffect(() => {
+    if (shouldQueryKubearchive && !options?.fieldSelector) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'useTaskRunsV2: Querying KubeArchive without timestamp filter may have poor performance. Consider providing creationTimestamp filtering via fieldSelector.',
+      );
+    }
+  }, [shouldQueryKubearchive, options?.fieldSelector]);
+
   // tekton historical data - only when we need more data
   const [tektonTaskRuns, tektonLoaded, tektonError, tektonGetNextPage, tektonNextPageProps] =
     useTRTaskRuns(
@@ -93,6 +102,8 @@ export const useTaskRunsV2 = (
       groupVersionKind: TaskRunGroupVersionKind,
       isList: true,
       ...createKubearchiveWatchResource(namespace, options?.selector),
+      // Pass fieldSelector directly for timestamp filtering
+      fieldSelector: options?.fieldSelector,
     },
     TaskRunModel,
     {
@@ -192,6 +203,7 @@ export const useTaskRunsV2 = (
  * @param namespace - Kubernetes namespace
  * @param pipelineRunName - Name of the pipeline run to fetch TaskRuns for
  * @param taskName - Optional specific task name to filter by
+ * @param pipelineRunCreationTimestamp - Creation timestamp of the pipeline run (ISO 8601 format) for query optimization
  * @param watch - Whether to watch for real-time updates (default: true). Set to false for completed pipeline runs.
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
@@ -199,6 +211,7 @@ export const useTaskRunsForPipelineRuns = (
   namespace: string,
   pipelineRunName: string,
   taskName?: string,
+  pipelineRunCreationTimestamp?: string,
   watch: boolean = true,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const selector = React.useMemo(
@@ -210,10 +223,28 @@ export const useTaskRunsForPipelineRuns = (
     [pipelineRunName],
   );
 
+  const fieldSelector = React.useMemo(() => {
+    if (!pipelineRunCreationTimestamp) {
+      return undefined;
+    }
+
+    try {
+      const creationTime = new Date(pipelineRunCreationTimestamp);
+      const timestampAfter = pipelineRunCreationTimestamp;
+      const timestampBefore = new Date(creationTime.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+      return `creationTimestampAfter=${timestampAfter},creationTimestampBefore=${timestampBefore}`;
+    } catch (error) {
+      // If timestamp parsing fails, don't use fieldSelector
+      return undefined;
+    }
+  }, [pipelineRunCreationTimestamp]);
+
   const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsV2(
     namespace,
     {
       selector,
+      fieldSelector,
       watch,
     },
     { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },

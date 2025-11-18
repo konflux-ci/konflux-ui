@@ -16,6 +16,8 @@ const PipelineRunLogsTab: React.FC = () => {
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
+    undefined,
+    pipelineRun?.metadata?.creationTimestamp,
   );
   const [activeTask, setActiveTask, unSetActiveTask] = useSearchParam('task', undefined);
 

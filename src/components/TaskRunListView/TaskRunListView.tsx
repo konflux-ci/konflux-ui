@@ -13,12 +13,14 @@ type Props = {
   namespace: string;
   pipelineRunName: string;
   taskName?: string;
+  pipelineRunCreationTimestamp?: string;
 };
 
 const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
   namespace,
   pipelineRunName,
   taskName,
+  pipelineRunCreationTimestamp,
 }) => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -30,6 +32,7 @@ const TaskRunListView: React.FC<React.PropsWithChildren<Props>> = ({
     namespace,
     pipelineRunName,
     taskName,
+    pipelineRunCreationTimestamp,
   );
 
   // TaskRuns are already sorted by useTaskRunsForPipelineRuns, no need to re-sort

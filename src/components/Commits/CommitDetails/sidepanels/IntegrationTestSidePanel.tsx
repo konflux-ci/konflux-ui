@@ -47,6 +47,8 @@ const IntegrationTestSidePanel: React.FC<
   const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     namespace,
     integrationTestPipeline?.metadata.name,
+    undefined,
+    integrationTestPipeline?.metadata?.creationTimestamp,
   );
 
   const duration = integrationTestPipeline
@@ -82,10 +84,10 @@ const IntegrationTestSidePanel: React.FC<
               workflowNode.getLabel()
             )}
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
-            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test{' '}
+            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />

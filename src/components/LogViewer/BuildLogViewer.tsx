@@ -39,6 +39,8 @@ export const BuildLogViewer: React.FC<React.PropsWithChildren<BuildLogViewerProp
   const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     pipelineRun?.metadata?.namespace,
     pipelineRun?.metadata?.name,
+    undefined,
+    pipelineRun?.metadata?.creationTimestamp,
   );
   const plrStatus = React.useMemo(
     () => loaded && pipelineRun && pipelineRunStatus(pipelineRun),

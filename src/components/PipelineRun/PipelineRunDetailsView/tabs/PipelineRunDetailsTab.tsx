@@ -60,6 +60,8 @@ const PipelineRunDetailsTab: React.FC = () => {
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
+    undefined,
+    pipelineRun?.metadata?.creationTimestamp,
   );
 
   // Use optional chaining to safely access pipelineRun properties before the loading/error checks

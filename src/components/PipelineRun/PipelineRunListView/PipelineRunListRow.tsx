@@ -67,10 +67,12 @@ const usePipelineRunScanResults = (
   customData?: PipelineRunListRowProps['customData'],
 ) => {
   const pipelineRunName = pipelineRun.metadata.name;
+  const pipelineRunCreationTimestamp = pipelineRun.metadata.creationTimestamp;
   const kubearchiveEnabled = useIsOnFeatureFlag('taskruns-kubearchive');
 
   const [scanResultsKubearchive, scanLoadedKubearchive, scanErrorKubearchive] = useKarchScanResults(
     shouldShowScanResults && kubearchiveEnabled ? pipelineRunName : '',
+    pipelineRunCreationTimestamp || '',
   );
 
   const scanResultsTekton = React.useMemo(

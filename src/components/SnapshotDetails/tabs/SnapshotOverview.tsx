@@ -46,7 +46,10 @@ const SnapshotOverviewTab: React.FC = () => {
     () => plrLoaded && !plrLoadError && createCommitObjectFromPLR(buildPipelineRun),
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
-  const [scanResults, scanLoaded, scanError] = useScanResults(buildPipelineName);
+  const [scanResults, scanLoaded, scanError] = useScanResults(
+    buildPipelineName,
+    buildPipelineRun?.metadata?.creationTimestamp,
+  );
 
   const componentsTableData: SnapshotComponentTableData[] = React.useMemo(
     () =>

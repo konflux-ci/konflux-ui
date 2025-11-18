@@ -41,6 +41,8 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRun?.metadata?.name,
+    undefined,
+    pipelineRun?.metadata?.creationTimestamp,
   );
   const buildLogsModal = useBuildLogViewerModal(component);
 

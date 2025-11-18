@@ -48,6 +48,8 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
   const [taskRuns, taskRunsLoaded, taskRunsError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRun?.metadata?.name ?? '',
+    undefined,
+    pipelineRun?.metadata?.creationTimestamp,
   );
 
   if (!pipelineRun) {
@@ -82,10 +84,10 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
               {pipelineRun.metadata.name}
             </Link>
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
-            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run{' '}
+            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
