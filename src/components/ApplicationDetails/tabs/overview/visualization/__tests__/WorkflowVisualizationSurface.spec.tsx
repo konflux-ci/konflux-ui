@@ -69,14 +69,10 @@ describe('WorkflowVisualizationSurface', () => {
     (window.SVGElement as any).prototype.getBBox = undefined;
   });
 
-  it('should render VisualizationFactory', () => {
+  it('should render VisualizationFactory with topology surface', () => {
     const { container } = routerRenderer(<WorkflowVisualizationSurface model={mockModel} />);
     expect(container.firstChild).toBeInTheDocument();
-  });
-
-  it('should pass model to VisualizationFactory', () => {
-    const { container } = routerRenderer(<WorkflowVisualizationSurface model={mockModel} />);
-    expect(container.firstChild).toBeInTheDocument();
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should render with empty model', () => {
@@ -93,6 +89,8 @@ describe('WorkflowVisualizationSurface', () => {
     };
     const { container } = routerRenderer(<WorkflowVisualizationSurface model={emptyModel} />);
     expect(container.firstChild).toBeInTheDocument();
+    // Should render without errors even with empty nodes/edges
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should render with expanded layout', () => {
@@ -105,6 +103,8 @@ describe('WorkflowVisualizationSurface', () => {
     };
     const { container } = routerRenderer(<WorkflowVisualizationSurface model={expandedModel} />);
     expect(container.firstChild).toBeInTheDocument();
+    // Verify expanded layout renders successfully
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should render with multiple nodes', () => {
@@ -125,19 +125,8 @@ describe('WorkflowVisualizationSurface', () => {
     };
     const { container } = routerRenderer(<WorkflowVisualizationSurface model={multiNodeModel} />);
     expect(container.firstChild).toBeInTheDocument();
-  });
-
-  it('should render with different graph coordinates', () => {
-    const customModel = {
-      ...mockModel,
-      graph: {
-        ...mockModel.graph,
-        x: 30,
-        y: 30,
-      },
-    };
-    const { container } = routerRenderer(<WorkflowVisualizationSurface model={customModel} />);
-    expect(container.firstChild).toBeInTheDocument();
+    // Verify visualization renders with 3 nodes in model
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should update when model changes', () => {
@@ -145,6 +134,7 @@ describe('WorkflowVisualizationSurface', () => {
       <WorkflowVisualizationSurface model={mockModel} />,
     );
     expect(container.firstChild).toBeInTheDocument();
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
 
     const updatedModel = {
       ...mockModel,
@@ -180,11 +170,8 @@ describe('WorkflowVisualizationSurface', () => {
 
     rerender(<WorkflowVisualizationSurface model={updatedModel} />);
     expect(container.firstChild).toBeInTheDocument();
-  });
-
-  it('should pass all props correctly', () => {
-    const { container } = routerRenderer(<WorkflowVisualizationSurface model={mockModel} />);
-    expect(container.firstChild).toBeTruthy();
+    // Verify visualization updates with new model
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should handle single node model', () => {
@@ -195,5 +182,7 @@ describe('WorkflowVisualizationSurface', () => {
     };
     const { container } = routerRenderer(<WorkflowVisualizationSurface model={singleNodeModel} />);
     expect(container.firstChild).toBeInTheDocument();
+    // Should render successfully with single node and no edges
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 });

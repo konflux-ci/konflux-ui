@@ -65,15 +65,21 @@ describe('WorkflowGraph', () => {
     expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
   });
 
-  it('should render WorkflowVisualizationSurface', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
+  it('should render WorkflowVisualizationSurface with topology view', () => {
+    const { container } = routerRenderer(
+      <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />,
+    );
     expect(screen.getByTestId('workflow-graph')).toHaveClass('workflow-graph');
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should use correct layout for non-expanded view', () => {
     const { container } = routerRenderer(
       <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />,
     );
+    const graph = screen.getByTestId('workflow-graph');
+    expect(graph).toBeInTheDocument();
+    // Collapsed view should render with default layout
     expect(container.querySelector('.workflow-graph')).toBeInTheDocument();
   });
 
@@ -81,54 +87,27 @@ describe('WorkflowGraph', () => {
     const { container } = routerRenderer(
       <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={true} />,
     );
+    const graph = screen.getByTestId('workflow-graph');
+    expect(graph).toBeInTheDocument();
+    // Expanded view should render with expanded layout
     expect(container.querySelector('.workflow-graph')).toBeInTheDocument();
   });
 
-  it('should pass nodes to WorkflowVisualizationSurface', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
-    expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
-  });
-
-  it('should pass edges to WorkflowVisualizationSurface', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
-    expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
-  });
-
-  it('should create model with correct graph configuration for collapsed view', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
-    const graph = screen.getByTestId('workflow-graph');
-    expect(graph).toBeInTheDocument();
-  });
-
-  it('should create model with correct graph configuration for expanded view', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={true} />);
-    const graph = screen.getByTestId('workflow-graph');
-    expect(graph).toBeInTheDocument();
-  });
-
-  it('should use correct x and y coordinates for collapsed view', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
-    expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
-  });
-
-  it('should use correct x and y coordinates for expanded view', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={true} />);
-    expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
-  });
-
   it('should render with empty nodes and edges', () => {
-    routerRenderer(<WorkflowGraph nodes={[]} edges={[]} expanded={false} />);
+    const { container } = routerRenderer(<WorkflowGraph nodes={[]} edges={[]} expanded={false} />);
     expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should handle expanded toggle', () => {
-    const { rerender } = routerRenderer(
+    const { container, rerender } = routerRenderer(
       <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />,
     );
     expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
 
     rerender(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={true} />);
     expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 
   it('should render with multiple nodes', () => {
@@ -144,30 +123,23 @@ describe('WorkflowGraph', () => {
         },
       },
     ];
-    routerRenderer(<WorkflowGraph nodes={multipleNodes} edges={mockEdges} expanded={false} />);
-    expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
-  });
-
-  it('should render with single edge', () => {
-    routerRenderer(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
-    expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
-  });
-
-  it('should apply correct graph configuration', () => {
     const { container } = routerRenderer(
-      <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />,
-    );
-    const graphDiv = container.querySelector('.workflow-graph');
-    expect(graphDiv).toBeInTheDocument();
-  });
-
-  it('should handle component re-render', () => {
-    const { rerender } = routerRenderer(
-      <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />,
+      <WorkflowGraph nodes={multipleNodes} edges={mockEdges} expanded={false} />,
     );
     expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
+    // Verify visualization surface renders with multiple nodes
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
+  });
+
+  it('should handle component re-render with same props', () => {
+    const { container, rerender } = routerRenderer(
+      <WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />,
+    );
+    const initialElement = screen.getByTestId('workflow-graph');
+    expect(initialElement).toBeInTheDocument();
 
     rerender(<WorkflowGraph nodes={mockNodes} edges={mockEdges} expanded={false} />);
     expect(screen.getByTestId('workflow-graph')).toBeInTheDocument();
+    expect(container.querySelector('.pf-topology-visualization-surface')).toBeInTheDocument();
   });
 });
