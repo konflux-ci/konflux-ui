@@ -110,4 +110,22 @@ describe('YAMLCodeEditor', () => {
     const editor = screen.getByTestId('mock-editor');
     expect(editor).toHaveTextContent('{}');
   });
+
+  it('should handle swagger definitions fetch error gracefully', () => {
+    (useSwaggerDefinitions as jest.Mock).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: true,
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <YAMLCodeEditor code={{ application: 'test-app' }} />
+      </QueryClientProvider>,
+    );
+
+    const editor = screen.getByTestId('mock-editor');
+    expect(editor).toBeInTheDocument();
+    expect(registerYAMLinMonaco).not.toHaveBeenCalled();
+  });
 });
