@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react-hooks';
+import { runStatus } from '../../../../../../../consts/pipelinerun';
 import { useReleasePlans } from '../../../../../../../hooks/useReleasePlans';
 import { useReleases } from '../../../../../../../hooks/useReleases';
-import { runStatus } from '../../../../../../../utils/pipeline-utils';
 import { mockReleasePlansData, mockReleasesData } from '../../../../../__data__';
 import { useAppReleasePlanNodes } from '../useAppReleasePlanNodes';
 
