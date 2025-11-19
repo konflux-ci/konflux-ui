@@ -5,18 +5,23 @@ import { useRelease } from '../../hooks/useReleases';
 import { RouterParams } from '../../routes/utils';
 import { YAMLCodeEditor } from '../../shared/components/code-editor/YAMLCodeEditor';
 import { useNamespace } from '../../shared/providers/Namespace';
+import { getErrorState } from '../../shared/utils/error-utils';
 
 export const ReleaseYamlTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [release, finishedLoading] = useRelease(namespace, releaseName);
+  const [release, loaded, error] = useRelease(namespace, releaseName);
 
-  if (!finishedLoading) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner size="lg" />
       </Bullseye>
     );
+  }
+
+  if (error) {
+    return getErrorState(error, loaded, 'release');
   }
 
   return (
