@@ -4,7 +4,7 @@ import { OpenAPISchemaDefinitions } from '../types';
 
 const SWAGGER_QUERY_KEY = 'swagger';
 
-const fetchSwaggerDefinitions = async (): Promise<OpenAPISchemaDefinitions> => {
+const fetchSwaggerDefinitions = async (): Promise<OpenAPISchemaDefinitions | null> => {
   try {
     const response = await commonFetch('/openapi/v2');
     const data = await response.json();
@@ -21,12 +21,11 @@ const fetchSwaggerDefinitions = async (): Promise<OpenAPISchemaDefinitions> => {
   }
 };
 
-export const useSwaggerDefinitions = () => {
-  return useQuery(
+export const useSwaggerDefinitions = () =>
+  useQuery<OpenAPISchemaDefinitions | null>(
     queryOptions({
       queryKey: [SWAGGER_QUERY_KEY],
-      queryFn: () => fetchSwaggerDefinitions(),
+      queryFn: fetchSwaggerDefinitions,
       staleTime: Infinity,
     }),
   );
-};
