@@ -1,16 +1,13 @@
 import { PopoverProps } from '@patternfly/react-core';
-import { Tbody, Table } from '@patternfly/react-table';
 import CodeEditorShortcut from '../CodeEditorShortcut';
 
 export const useShortcutPopover = (onHideShortcuts?: () => void): PopoverProps => ({
   'aria-label': 'Shortcuts',
   bodyContent: (
-    <Table style={{ backgroundColor: 'transparent' }}>
-      <Tbody>
-        <CodeEditorShortcut keyName="F1">View all editor shortcuts</CodeEditorShortcut>
-        <CodeEditorShortcut hover>View property descriptions</CodeEditorShortcut>
-      </Tbody>
-    </Table>
+    <div>
+      <CodeEditorShortcut keyName="F1">View all editor shortcuts</CodeEditorShortcut>
+      <CodeEditorShortcut hover>View property descriptions</CodeEditorShortcut>
+    </div>
   ),
   maxWidth: '25rem',
   distance: 18,
