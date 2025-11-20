@@ -5,8 +5,6 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 export type Props = {
   code: string;
   language?: string;
-  height?: string;
-  showShortcuts?: boolean;
 };
 
 export const CodeViewer: React.FC<Props> = ({ code, language = 'yaml' }) => {

@@ -14,29 +14,25 @@ jest.mock('react-syntax-highlighter/dist/esm/styles/prism', () => ({
 }));
 
 describe('CodeViewer', () => {
-  it('should render the editor with the correct code', () => {
+  it('should render the viewer with the correct code', () => {
     const code = 'application: test-app';
     render(<CodeViewer code={code} />);
 
-    const editorContent = screen.getByTestId('syntax-highlighter');
-    expect(editorContent).toHaveTextContent(code);
-  });
-
-  it('should trigger onEditorDidMount when the editor is mounted', () => {
-    render(<CodeViewer code="application: test-app" />);
+    const viewerContent = screen.getByTestId('syntax-highlighter');
+    expect(viewerContent).toHaveTextContent(code);
   });
 
   it('should use yaml as default language', () => {
     render(<CodeViewer code="application: test-app" />);
 
-    const editor = screen.getByTestId('syntax-highlighter');
-    expect(editor).toHaveAttribute('data-language', 'yaml');
+    const viewer = screen.getByTestId('syntax-highlighter');
+    expect(viewer).toHaveAttribute('data-language', 'yaml');
   });
 
   it('should respect custom language prop', () => {
     render(<CodeViewer code="{}" language="json" />);
 
-    const editor = screen.getByTestId('syntax-highlighter');
-    expect(editor).toHaveAttribute('data-language', 'json');
+    const viewer = screen.getByTestId('syntax-highlighter');
+    expect(viewer).toHaveAttribute('data-language', 'json');
   });
 });
