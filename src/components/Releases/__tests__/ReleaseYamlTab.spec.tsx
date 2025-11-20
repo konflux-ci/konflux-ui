@@ -39,15 +39,10 @@ describe('ReleaseYamlTab', () => {
   it('should render loading indicator when data is not loaded', () => {
     mockUseRelease.mockReturnValue([null, false, undefined]);
 
-    const { container } = renderWithQueryClient(<ReleaseYamlTab />);
+    renderWithQueryClient(<ReleaseYamlTab />);
 
-    const spinner = screen.getByRole('progressbar');
-    expect(spinner).toBeVisible();
-
-    const bullseye = container.querySelector('.pf-v5-l-bullseye');
-    expect(bullseye).toBeInTheDocument();
-    expect(bullseye).toContainElement(spinner);
-
+    expect(screen.getByTestId('release-yaml-loading')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeVisible();
     expect(screen.queryByTestId('mock-viewer')).not.toBeInTheDocument();
     expect(screen.queryByText('Unable to load release')).not.toBeInTheDocument();
   });

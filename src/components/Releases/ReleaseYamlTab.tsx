@@ -14,7 +14,7 @@ export const ReleaseYamlTab: React.FC = () => {
 
   if (!loaded) {
     return (
-      <Bullseye>
+      <Bullseye data-test="release-yaml-loading">
         <Spinner size="lg" />
       </Bullseye>
     );
