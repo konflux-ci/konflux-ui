@@ -38,7 +38,7 @@ describe('ReleaseYamlTab', () => {
   });
 
   it('should render loading indicator', () => {
-    mockUseRelease.mockReturnValue([mockReleases[0], false]);
+    mockUseRelease.mockReturnValue([mockReleases[0], false, undefined]);
 
     render(<ReleaseYamlTab />);
 
@@ -47,7 +47,7 @@ describe('ReleaseYamlTab', () => {
 
   it('should render correct YAML content', () => {
     const release = mockReleases[0];
-    mockUseRelease.mockReturnValue([release, true]);
+    mockUseRelease.mockReturnValue([release, true, undefined]);
 
     render(
       <QueryClientProvider client={queryClient}>
