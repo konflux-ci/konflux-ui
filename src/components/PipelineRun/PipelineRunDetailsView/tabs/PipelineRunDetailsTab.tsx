@@ -211,7 +211,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                       <DescriptionListTerm>Message</DescriptionListTerm>
                       <DescriptionListDescription>
                         <CodeBlock>
-                          <CodeBlockCode id="code-content">
+                          <CodeBlockCode id="message-code-content">
                             {pipelineRun.status?.conditions[0]?.type === 'Succeeded' &&
                             pipelineRun.status?.conditions[0]?.status === 'False'
                               ? pipelineRun.status?.conditions[0]?.message
