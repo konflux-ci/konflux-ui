@@ -16,11 +16,21 @@ jest.mock('../../../hooks/useReleases', () => ({
 }));
 
 jest.mock('react-syntax-highlighter', () => ({
-  Prism: ({ children, language, ...props }: { children: string; language: string }) => (
-    <pre data-test="mock-viewer" data-language={language} {...props}>
-      {children}
-    </pre>
+  PrismLight: Object.assign(
+    ({ children, language, ...props }: { children: string; language: string }) => (
+      <pre data-test="mock-viewer" data-language={language} {...props}>
+        {children}
+      </pre>
+    ),
+    {
+      registerLanguage: jest.fn(),
+    },
   ),
+}));
+
+jest.mock('react-syntax-highlighter/dist/esm/languages/prism/yaml', () => ({
+  __esModule: true,
+  default: {},
 }));
 
 jest.mock('react-syntax-highlighter/dist/esm/styles/prism', () => ({
