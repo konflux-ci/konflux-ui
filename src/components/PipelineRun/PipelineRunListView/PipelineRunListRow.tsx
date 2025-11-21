@@ -1,8 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Popover, Skeleton, Tooltip } from '@patternfly/react-core';
-import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipboard-check-icon';
-import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
+import { Popover, Skeleton } from '@patternfly/react-core';
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '../../../consts/pipelinerun';
 import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
@@ -352,13 +350,6 @@ const DynamicPipelineRunListRow: React.FC<
       ? `?integrationTestName=${encodeURIComponent(integrationTestName)}`
       : '';
 
-  const isAttested =
-    obj.metadata?.annotations?.[PipelineRunLabel.CHAINS_SIGNED_ANNOTATION] === 'true';
-  const AttestationIcon = isAttested ? ClipboardCheckIcon : ExclamationTriangleIcon;
-  const attestationTooltip = isAttested
-    ? 'Pipeline run is signed and attested'
-    : 'Pipeline run is not signed';
-
   return (
     <>
       {visibleColumns.has('name') && (
@@ -371,16 +362,6 @@ const DynamicPipelineRunListRow: React.FC<
             })}${queryString}`}
             title={obj.metadata?.name}
           >
-            <Tooltip content={attestationTooltip}>
-              <AttestationIcon
-                color={
-                  isAttested
-                    ? 'var(--pf-v5-global--success-color--100)'
-                    : 'var(--pf-v5-global--warning-color--100)'
-                }
-                style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
-              />
-            </Tooltip>
             {obj.metadata?.name}
           </Link>
         </TableData>
