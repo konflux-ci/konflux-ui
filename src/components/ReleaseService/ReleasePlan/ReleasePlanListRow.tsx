@@ -16,6 +16,7 @@ import {
   releasesPlanTableColumnClasses,
   getDynamicReleasePlanColumnClasses,
 } from './ReleasePlanListHeader';
+import { isMatched } from './utils/release-plan';
 
 export type ReleasePlanWithApplicationData = ReleasePlanKind & {
   application?: ApplicationKind;
@@ -39,6 +40,8 @@ const ReleasePlanListRow: React.FC<React.PropsWithChildren<ReleasePlanListRowPro
   const columnClasses = visibleColumns
     ? getDynamicReleasePlanColumnClasses(visibleColumns)
     : releasesPlanTableColumnClasses;
+
+  const matched = isMatched(obj);
 
   return (
     <>
@@ -78,7 +81,7 @@ const ReleasePlanListRow: React.FC<React.PropsWithChildren<ReleasePlanListRowPro
 
       {(!visibleColumns || visibleColumns.has('status')) && (
         <TableData className={columnClasses.status}>
-          {obj.status?.releasePlanAdmission ? (
+          {matched ? (
             <Label variant="outline" color="green" icon={<CheckCircleIcon />}>
               Matched
             </Label>
