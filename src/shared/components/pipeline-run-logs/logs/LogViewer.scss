@@ -51,4 +51,29 @@
   &__scroll-container {
     overflow-y: visible !important;
   }
+
+  // Log line navigation: Clickable line numbers with URL hash support
+  &__index {
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Selected line highlight
+.log-line-selected {
+  background-color: var(--pf-v5-global--BackgroundColor--light-300) !important;
+}
+
+// Dark theme support for selected lines
+.pf-v5-theme-dark .log-line-selected,
+.pf-v5-c-log-viewer.pf-m-dark .log-line-selected,
+.pf-v5-c-log-viewer[class*='dark'] .log-line-selected {
+  background-color: rgba(56, 139, 253, 0.12) !important;
+  color: var(--pf-v5-global--Color--light-100) !important;
 }
