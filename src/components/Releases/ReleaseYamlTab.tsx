@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Flex, Spinner } from '@patternfly/react-core';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 import { useRelease } from '../../hooks/useReleases';
 import { RouterParams } from '../../routes/utils';
 import { YAMLViewer } from '../../shared/components/code-viewer/YAMLViewer';
@@ -24,11 +24,7 @@ export const ReleaseYamlTab: React.FC = () => {
     return getErrorState(error, loaded, 'release');
   }
 
-  return (
-    <Flex className="pf-v5-u-py-lg">
-      <YAMLViewer code={release} />
-    </Flex>
-  );
+  return <YAMLViewer code={release} />;
 };
 
 export default ReleaseYamlTab;
