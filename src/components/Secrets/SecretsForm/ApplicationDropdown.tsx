@@ -30,7 +30,8 @@ export const ApplicationDropdown: React.FC<React.PropsWithChildren<ApplicationDr
             ]
           : applications.map((a) => ({
               key: a.metadata.name,
-              value: getApplicationDisplayName(a),
+              value: a.metadata.name,
+              label: getApplicationDisplayName(a),
             }))
         : [],
     [applications, loaded, error],
