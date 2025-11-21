@@ -1,10 +1,8 @@
 import {
-  Bullseye,
   Card,
   CardBody,
   CardTitle,
   HelperText,
-  Spinner,
   Split,
   SplitItem,
   Text,
@@ -16,6 +14,7 @@ import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-i
 import { global_palette_green_400 as greenColor } from '@patternfly/react-tokens/dist/js/global_palette_green_400';
 import dayjs from 'dayjs';
 import { useIssues } from '~/kite/kite-hooks';
+import { LoadingSkeleton } from '~/shared';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Issue, IssueState } from '../../kite/issue-type';
@@ -44,45 +43,45 @@ const IssuesByStatusCard = () => {
   const namespace = useNamespace();
   const { data, isLoading, error } = useIssues({ namespace });
 
-  const issues = data?.data;
-
-  if (isLoading) {
-    return (
-      <Bullseye>
-        <Spinner />
-      </Bullseye>
-    );
-  }
-
-  if (error) {
-    return getErrorState(error, isLoading, 'issues');
-  }
+  const issues = data?.data ?? [];
 
   return (
     <Card>
       <CardTitle>Issues by status</CardTitle>
       <CardBody>
-        <Split hasGutter>
-          <SplitItem>
-            <TextContent>
-              <Text component={TextVariants.h6}>
-                <LockOpenIcon /> Open
-              </Text>
-            </TextContent>
-            <HelperText>{getOpenIssueCount(issues)} open as of today</HelperText>
-          </SplitItem>
+        {error ? (
+          getErrorState(error, !isLoading, 'issues', true)
+        ) : (
+          <Split hasGutter>
+            <SplitItem>
+              <TextContent>
+                <Text component={TextVariants.h6}>
+                  <LockOpenIcon /> Open
+                </Text>
+              </TextContent>
+              {isLoading ? (
+                <LoadingSkeleton count={1} widths="100%" height="16px" />
+              ) : (
+                <HelperText>{getOpenIssueCount(issues)} open as of today</HelperText>
+              )}
+            </SplitItem>
 
-          <SplitItem style={{ paddingLeft: '1rem' }}>
-            <TextContent>
-              <Text component={TextVariants.h6}>
-                <CheckCircleIcon color={greenColor.value} /> Resolved
-              </Text>
-            </TextContent>
-            <HelperText>
-              {getResolvedIssuesInLast24Hours(issues)} resolved in last 24 hours
-            </HelperText>
-          </SplitItem>
-        </Split>
+            <SplitItem style={{ paddingLeft: '1rem' }}>
+              <TextContent>
+                <Text component={TextVariants.h6}>
+                  <CheckCircleIcon color={greenColor.value} /> Resolved
+                </Text>
+              </TextContent>
+              {isLoading ? (
+                <LoadingSkeleton count={1} widths="100%" height="16px" />
+              ) : (
+                <HelperText>
+                  {getResolvedIssuesInLast24Hours(issues)} resolved in last 24 hours
+                </HelperText>
+              )}
+            </SplitItem>
+          </Split>
+        )}
       </CardBody>
     </Card>
   );
