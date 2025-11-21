@@ -5,6 +5,7 @@ import './a11y';
 import 'cypress-mochawesome-reporter/register';
 import { Result } from 'axe-core';
 import { initPerfMeasuring } from './perf';
+import { now } from 'cypress/types/lodash';
 
 declare global {
   namespace Cypress {
@@ -25,19 +26,26 @@ Cypress.on('uncaught:exception', (err) => {
 
 Cypress.on('test:after:run', (test, runnable) => {
   if (test.state === 'failed') {
-    // Capture DOM structure
     cy.window().then((win) => {
       cy.log('Capturing DOM structure');
+      // Capture DOM structure
       const domContent = win.document.documentElement.outerHTML;
-      // You'll need to decide how to save/attach this DOM content.
-      // Directly embedding large DOM structures in mochawesome context might make the report very large.
-      // A better approach might be to save it to a file and link to it.
-      // For demonstration, let's add a small snippet to the report.
+      // Saving timestamp as unique name itentifier
+      const timestamp = now.toString().replace(/[:.]/g, '-');
+
+      // Construct the filename (replace '/assets/saved-doms' if needed )
+      const domFileName = `${runnable.parent.title} -- ${test.title} (failed) -- ${timestamp}.html`;
+      cy.writeFile(
+        `./assets/saved-doms/${domFileName}`,
+        domContent.length > 10000 ? domContent.substring(0, 10000) + '...' : domContent,
+      );
+
+      // Add the context to the report
       addContext(
         { test },
         {
           title: 'Failed DOM Structure (Snippet)',
-          value: domContent.length > 10000 ? domContent.substring(0, 10000) + '...' : domContent,
+          value: `./assets/saved-doms/${domFileName}`,
         },
       );
     });
