@@ -76,6 +76,25 @@ export enum runStatus {
   Unknown = 'Unknown',
 }
 
+// Status priority for sorting - active states first, then errors, then completed
+export const RUN_STATUS_PRIORITY: Record<string, number> = {
+  [runStatus.Running]: 1,
+  [runStatus['In Progress']]: 2,
+  [runStatus.Pending]: 3,
+  [runStatus.PipelineNotStarted]: 4,
+  [runStatus.Idle]: 5,
+  [runStatus.Cancelling]: 6,
+  [runStatus.FailedToStart]: 7,
+  [runStatus.Failed]: 8,
+  [runStatus.TestFailed]: 9,
+  [runStatus.TestWarning]: 10,
+  [runStatus.NeedsMerge]: 11,
+  [runStatus.Cancelled]: 12,
+  [runStatus.Succeeded]: 13,
+  [runStatus.Skipped]: 14,
+  [runStatus.Unknown]: 15,
+};
+
 export enum SucceedConditionReason {
   PipelineRunStopped = 'StoppedRunFinally',
   PipelineRunCancelled = 'CancelledRunFinally',
