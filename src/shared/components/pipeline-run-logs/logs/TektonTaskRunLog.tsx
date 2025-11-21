@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { PageSection } from '@patternfly/react-core';
 import { useTRTaskRunLog } from '../../../../hooks/useTektonResults';
 import { HttpError } from '../../../../k8s/error';
 import { TaskRunKind } from '../../../../types';
@@ -25,15 +24,13 @@ export const TektonTaskRunLog: React.FC<React.PropsWithChildren<TektonTaskRunLog
       : null;
 
   return (
-    <PageSection isFilled data-testid="tr-logs-container">
-      <LogViewer
-        data={trResults ?? ''}
-        downloadAllLabel={downloadAllLabel}
-        onDownloadAll={onDownloadAll}
-        taskRun={taskRun}
-        isLoading={!trLoaded && !errorMessage}
-        errorMessage={errorMessage}
-      />
-    </PageSection>
+    <LogViewer
+      data={trResults ?? ''}
+      downloadAllLabel={downloadAllLabel}
+      onDownloadAll={onDownloadAll}
+      taskRun={taskRun}
+      isLoading={!trLoaded && !errorMessage}
+      errorMessage={errorMessage}
+    />
   );
 };
