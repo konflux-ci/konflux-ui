@@ -34,7 +34,7 @@ const enum ContextTab {
 export type ContextMenuItem = {
   key: string;
   name: string;
-  visibility?: string;
+  icon?: React.ElementType;
   subItems?: ContextMenuItem[];
 };
 

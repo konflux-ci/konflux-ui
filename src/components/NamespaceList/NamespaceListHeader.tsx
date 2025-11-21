@@ -7,13 +7,8 @@ export const namespaceTableColumnClasses = {
   applications: 'pf-m-width-25',
   kebab: 'pf-m-width-15 pf-c-table__action',
 };
-interface NamespaceListHeaderOptions {
-  showActions?: boolean;
-}
 
-export const createNamespaceListHeader = ({
-  showActions = true,
-}: NamespaceListHeaderOptions = {}) => {
+export const createNamespaceListHeader = () => {
   return () => {
     const columns: Array<{ title: string | React.ReactNode; props: ThProps }> = [
       {
@@ -30,19 +25,8 @@ export const createNamespaceListHeader = ({
       },
     ];
 
-    if (showActions) {
-      columns.push({
-        title: React.createElement('span', { className: 'pf-u-screen-reader' }, 'Actions'),
-        props: {
-          className: namespaceTableColumnClasses.kebab,
-          'aria-label': 'Actions',
-        } as ThProps,
-      });
-    }
-
     return columns;
   };
 };
 
-// Default header with actions enabled for backward compatibility
 export const NamespaceListHeader = createNamespaceListHeader();
