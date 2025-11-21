@@ -122,6 +122,10 @@ const PipelineRunDetailsTab: React.FC = () => {
     namespace;
 
   const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
+  const showFailedMessage =
+    pipelineRun.status?.conditions[0]?.type === 'Succeeded' &&
+    pipelineRun.status?.conditions[0]?.status === 'False' &&
+    pipelineRun.status?.conditions[0]?.reason === 'Failed';
 
   return (
     <>
@@ -210,15 +214,14 @@ const PipelineRunDetailsTab: React.FC = () => {
                     <DescriptionListGroup>
                       <DescriptionListTerm>Message</DescriptionListTerm>
                       <DescriptionListDescription>
-                        <CodeBlock>
-                          <CodeBlockCode id="message-code-content">
-                            {pipelineRun.status?.conditions[0]?.type === 'Succeeded' &&
-                            pipelineRun.status?.conditions[0]?.status === 'False'
-                              ? pipelineRun.status?.conditions[0]?.message
-                              : '-'}
-                          </CodeBlockCode>
-                        </CodeBlock>
                         {pipelineRunFailed.title ?? '-'}
+                        {showFailedMessage && (
+                          <CodeBlock>
+                            <CodeBlockCode id="message-code-content">
+                              {pipelineRun.status?.conditions[0]?.message}
+                            </CodeBlockCode>
+                          </CodeBlock>
+                        )}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>
