@@ -215,4 +215,27 @@ describe('Basic Happy Path', () => {
       ComponentDetailsPage.checkBuildImage();
     });
   });
+
+  describe('Check vulnerability in pipeline runs list page', () => {
+    before(() => {
+      Common.navigateTo(NavItem.applications);
+      Applications.clickBreadcrumbLink(applicationName);
+      Applications.goToComponentsTab();
+      ComponentsTabPage.openComponent(componentName);
+    });
+
+    it('Verify Pipeline runs Tab on component Details page', () => {
+      UIhelper.clickTab('Pipeline runs', false);
+      UIhelper.verifyRowInTable('Pipeline run List', `${componentName}-on-push`, [
+        // skipping due to https://issues.redhat.com/browse/HAC-5808
+        /vulnerabilities/,
+        /Succeeded/,
+      ]);
+      UIhelper.verifyRowInTable('Pipeline run List', `${componentName}-on-pull-request`, [
+        // skipping due to https://issues.redhat.com/browse/HAC-5808
+        // vulnerabilities,
+        /Succeeded/,
+      ]);
+    });
+  });
 });
