@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -7,10 +8,15 @@ import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
-import { PipelineRunLabel, PipelineRunType } from '../../../consts/pipelinerun';
+import {
+  PipelineRunLabel,
+  PipelineRunType,
+  RUN_STATUS_PRIORITY,
+} from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useComponents } from '../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
+import { useSortedResources } from '../../../hooks/useSortedResources';
 import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -24,6 +30,7 @@ import {
   COMMIT_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_COMMIT_COLUMNS,
   NON_HIDABLE_COMMIT_COLUMNS,
+  SortableHeaders,
 } from './commits-columns-config';
 import { getCommitsListHeaderWithColumns } from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
@@ -32,6 +39,30 @@ interface CommitsListViewProps {
   applicationName?: string;
   componentName?: string;
 }
+
+const getSortCommitFunction = (key: string, activeSortDirection: SortByDirection) => {
+  switch (key) {
+    case 'status':
+      return (a: Commit, b: Commit) => {
+        const aStatus = pipelineRunStatus(a.pipelineRuns?.[0]);
+        const bStatus = pipelineRunStatus(b.pipelineRuns?.[0]);
+
+        // Use centralized priority values, default to high number for unknown statuses
+        const aValue = RUN_STATUS_PRIORITY[aStatus] || 999;
+        const bValue = RUN_STATUS_PRIORITY[bStatus] || 999;
+
+        if (aValue < bValue) {
+          return activeSortDirection === SortByDirection.asc ? -1 : 1;
+        } else if (aValue > bValue) {
+          return activeSortDirection === SortByDirection.asc ? 1 : -1;
+        }
+        return 0;
+      };
+
+    default:
+      return null; // Use default sorting for other columns
+  }
+};
 
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
@@ -45,6 +76,19 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     DEFAULT_VISIBLE_COMMIT_COLUMNS,
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
+
+  const sortPaths: Record<SortableHeaders, string> = {
+    [SortableHeaders.name]: 'shaTitle',
+    [SortableHeaders.branch]: 'branch',
+    [SortableHeaders.byUser]: 'user',
+    [SortableHeaders.committedAt]: 'creationTime',
+    [SortableHeaders.status]: '', // Status column uses custom priority-based sorting
+  };
+
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
+  const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
+    SortByDirection.desc,
+  );
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
@@ -129,6 +173,26 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [commits, nameFilter, statusFilter],
   );
 
+  // Default sorted commits using useSortedResources for standard columns
+  const defaultSortedCommits = useSortedResources(
+    filteredCommits,
+    activeSortIndex,
+    activeSortDirection,
+    sortPaths,
+  );
+
+  // Apply custom sorting for status column, use default sorting for other columns
+  const sortedCommits = React.useMemo(() => {
+    if (activeSortIndex === SortableHeaders.status) {
+      // Status column uses custom priority-based sorting
+      const customSortFn = getSortCommitFunction('status', activeSortDirection);
+      return [...filteredCommits].sort(customSortFn);
+    }
+
+    // All other columns use standard sorting
+    return defaultSortedCommits;
+  }, [filteredCommits, activeSortIndex, activeSortDirection, defaultSortedCommits]);
+
   const NoDataEmptyMessage = () => <CommitsEmptyState applicationName={applicationName} />;
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
 
@@ -152,9 +216,9 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     </BaseTextFilterToolbar>
   );
 
-  // automatically fetch the next page of pipeline runs when:
+  // Automatically fetch the next page of pipeline runs when:
   // - Initial data is loaded
-  // - Current page is empt
+  // - Current page is empty
   // - More pages are available
   // - Not currently fetching the next page
   // This prevents showing the empty state message while more data is being loaded
@@ -170,6 +234,20 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     }
   }, [getNextPage, hasNextPage, isFetchingNextPage, loaded, buildPipelineRuns]);
 
+  const CommitsListHeaderWithSorting = React.useMemo(
+    () =>
+      getCommitsListHeaderWithColumns(
+        visibleColumns,
+        activeSortIndex,
+        activeSortDirection,
+        (_, index, direction) => {
+          setActiveSortIndex(index);
+          setActiveSortDirection(direction);
+        },
+      ),
+    [visibleColumns, activeSortIndex, activeSortDirection],
+  );
+
   if (error) {
     return getErrorState(error, loaded, 'commits');
   }
@@ -178,13 +256,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     <>
       <Table
         virtualize
-        data={filteredCommits}
+        data={sortedCommits}
         unfilteredData={commits}
         EmptyMsg={EmptyMessage}
         NoDataEmptyMsg={NoDataEmptyMessage}
         Toolbar={DataToolbar}
         aria-label="Commit List"
-        Header={getCommitsListHeaderWithColumns(visibleColumns)}
+        Header={CommitsListHeaderWithSorting}
         Row={(props) => (
           <CommitsListRow
             obj={props.obj as Commit}
@@ -199,7 +277,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         onRowsRendered={({ stopIndex }) => {
           if (
             loaded &&
-            stopIndex === filteredCommits.length - 1 &&
+            stopIndex === sortedCommits.length - 1 &&
             hasNextPage &&
             !isFetchingNextPage
           ) {
