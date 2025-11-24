@@ -121,7 +121,7 @@ const shouldShowScanResults = (pipelineRun: PipelineRunKind): boolean => {
   );
 };
 
-const getPipelineRunAttestation = (pipelineRun: PipelineRunKind): React.ReactNode => {
+const PipelineRunAttestation = ({ pipelineRun }: { pipelineRun: PipelineRunKind }) => {
   const hasAttestation =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.CHAINS_SIGNED_ANNOTATION] === 'true';
   const AttestationIcon = hasAttestation ? ClipboardCheckIcon : ExclamationTriangleIcon;
@@ -198,7 +198,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           })}${queryString}`}
           title={obj.metadata?.name}
         >
-          {getPipelineRunAttestation(obj)}
+          <PipelineRunAttestation pipelineRun={obj} />
           {obj.metadata?.name}
         </Link>
       </TableData>
@@ -388,7 +388,7 @@ const DynamicPipelineRunListRow: React.FC<
             })}${queryString}`}
             title={obj.metadata?.name}
           >
-            {getPipelineRunAttestation(obj)}
+            <PipelineRunAttestation pipelineRun={obj} />
             {obj.metadata?.name}
           </Link>
         </TableData>
