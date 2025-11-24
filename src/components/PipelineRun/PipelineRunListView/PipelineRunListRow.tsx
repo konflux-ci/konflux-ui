@@ -121,6 +121,29 @@ const shouldShowScanResults = (pipelineRun: PipelineRunKind): boolean => {
   );
 };
 
+const getPipelineRunAttestation = (pipelineRun: PipelineRunKind): React.ReactNode => {
+  const hasAttestation =
+    pipelineRun.metadata?.annotations?.[PipelineRunLabel.CHAINS_SIGNED_ANNOTATION] === 'true';
+  const AttestationIcon = hasAttestation ? ClipboardCheckIcon : ExclamationTriangleIcon;
+
+  return (
+    <Tooltip
+      content={
+        hasAttestation ? 'Pipeline run is signed and attested' : 'Pipeline run is not signed'
+      }
+    >
+      <AttestationIcon
+        color={
+          hasAttestation
+            ? 'var(--pf-v5-global--success-color--100)'
+            : 'var(--pf-v5-global--warning-color--100)'
+        }
+        style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+      />
+    </Tooltip>
+  );
+};
+
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
   showVulnerabilities,
@@ -175,6 +198,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           })}${queryString}`}
           title={obj.metadata?.name}
         >
+          {getPipelineRunAttestation(obj)}
           {obj.metadata?.name}
         </Link>
       </TableData>
@@ -352,13 +376,6 @@ const DynamicPipelineRunListRow: React.FC<
       ? `?integrationTestName=${encodeURIComponent(integrationTestName)}`
       : '';
 
-  const isAttested =
-    obj.metadata?.annotations?.[PipelineRunLabel.CHAINS_SIGNED_ANNOTATION] === 'true';
-  const AttestationIcon = isAttested ? ClipboardCheckIcon : ExclamationTriangleIcon;
-  const attestationTooltip = isAttested
-    ? 'Pipeline run is signed and attested'
-    : 'Pipeline run is not signed';
-
   return (
     <>
       {visibleColumns.has('name') && (
@@ -371,16 +388,7 @@ const DynamicPipelineRunListRow: React.FC<
             })}${queryString}`}
             title={obj.metadata?.name}
           >
-            <Tooltip content={attestationTooltip}>
-              <AttestationIcon
-                color={
-                  isAttested
-                    ? 'var(--pf-v5-global--success-color--100)'
-                    : 'var(--pf-v5-global--warning-color--100)'
-                }
-                style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
-              />
-            </Tooltip>
+            {getPipelineRunAttestation(obj)}
             {obj.metadata?.name}
           </Link>
         </TableData>
