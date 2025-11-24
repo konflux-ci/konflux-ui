@@ -48,10 +48,10 @@ export function useKubearchiveListResourceQuery<
       const pagedOptions = {
         model,
         queryOptions: {
-          ...k8sQueryOptions,
+          ...(k8sQueryOptions || {}),
           queryParams: {
             limit: KUBEARCHIVE_RESOURCE_LIMIT,
-            ...k8sQueryOptions.queryParams,
+            ...(k8sQueryOptions?.queryParams || {}),
             continue: (pageParam ? pageParam : undefined) as string | undefined,
           },
         },
