@@ -124,6 +124,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
   const showFailedMessage =
     pipelineStatus === runStatus.Failed &&
+    pipelineRun.status?.conditions?.length > 0 &&
     pipelineRun.status?.conditions[0]?.message !== pipelineRunFailed.staticMessage;
 
   return (
