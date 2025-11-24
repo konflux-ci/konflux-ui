@@ -333,10 +333,11 @@ export const taskName = (taskrun: TaskRunKind) =>
   taskrun.metadata.labels[TektonResourceLabel.task] ||
   taskrun.spec.taskRef?.params?.find((r) => r.name === 'name')?.value;
 
+// Use optional chaining to handle null pipelineRun safely (e.g., during loading or error states)
 export const getPipelineRunStatusResults = (pipelineRun: PipelineRunKind) => {
   return isPipelineV1Beta1(pipelineRun)
-    ? pipelineRun.status?.pipelineResults
-    : pipelineRun.status?.results;
+    ? pipelineRun?.status?.pipelineResults
+    : pipelineRun?.status?.results;
 };
 
 const getPipelineRunStatusResultForKey = curry(

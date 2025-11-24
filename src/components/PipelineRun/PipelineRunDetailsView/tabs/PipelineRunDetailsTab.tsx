@@ -16,12 +16,14 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import GitRepoLink from '~/components/GitLink/GitRepoLink';
+import MetadataList from '~/components/MetadataList';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
+import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
-import { useNamespace } from '~/shared/providers/Namespace';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useSbomUrl } from '../../../../hooks/useUIInstance';
+import { useSbomUrl } from '~/hooks/useUIInstance';
 import {
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
@@ -29,26 +31,25 @@ import {
   COMPONENT_DETAILS_PATH,
   COMMIT_DETAILS_PATH,
   INTEGRATION_TEST_DETAILS_PATH,
-} from '../../../../routes/paths';
-import { RouterParams } from '../../../../routes/utils';
-import { Timestamp } from '../../../../shared';
-import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
-import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
-import { getCommitSha, getCommitShortName } from '../../../../utils/commits-utils';
+} from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import { Timestamp } from '~/shared';
+import ExternalLink from '~/shared/components/links/ExternalLink';
+import { ErrorDetailsWithStaticLog } from '~/shared/components/pipeline-run-logs/logs/log-snippet-types';
+import { getPLRLogSnippet } from '~/shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
 import {
   calculateDuration,
   getPipelineRunStatusResultForName,
   getPipelineRunStatusResults,
   pipelineRunStatus,
-  SBOMResultKeys,
-} from '../../../../utils/pipeline-utils';
-import GitRepoLink from '../../../GitLink/GitRepoLink';
-import MetadataList from '../../../MetadataList';
-import { StatusIconWithText } from '../../../StatusIcon/StatusIcon';
+} from '~/utils/pipeline-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
-import { getSourceUrl } from '../utils/pipelinerun-utils';
+import { getSourceUrl, getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
+import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
@@ -56,14 +57,18 @@ const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
+  const showModal = useModalLauncher();
   const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
   );
 
+  // Use optional chaining to safely access pipelineRun properties before the loading/error checks
+  // This prevents crashes when pipelineRun is null (e.g., during error states)
+  // The hooks (useMemo) will run unconditionally but safely handle undefined values
   const snapshotStatusAnnotation =
-    pipelineRun.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
+    pipelineRun?.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
 
   const snapshotCreationStatus = React.useMemo(() => {
     try {
@@ -73,16 +78,10 @@ const PipelineRunDetailsTab: React.FC = () => {
     }
   }, [snapshotStatusAnnotation]);
 
-  const imageDigest = getPipelineRunStatusResultForName(
-    SBOMResultKeys.IMAGE_DIGEST,
-    pipelineRun,
-  )?.value;
-  const sbomSha = getPipelineRunStatusResultForName(SBOMResultKeys.SBOM_SHA, pipelineRun)?.value;
-
-  const sbomURL = React.useMemo(() => {
-    if (!imageDigest) return null;
-    return generateSbomUrl(imageDigest, sbomSha) || null;
-  }, [generateSbomUrl, imageDigest, sbomSha]);
+  const sboms = React.useMemo(
+    () => (taskRuns ? getSBOMsFromTaskRuns(taskRuns, generateSbomUrl) : []),
+    [taskRuns, generateSbomUrl],
+  );
 
   if (!(loaded && taskRunsLoaded)) {
     return (
@@ -121,6 +120,8 @@ const PipelineRunDetailsTab: React.FC = () => {
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.RELEASE_NAMESPACE] ||
     pipelineRun.metadata?.labels?.[PipelineRunLabel.RELEASE_NAMESPACE] ||
     namespace;
+
+  const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
 
   return (
     <>
@@ -275,11 +276,21 @@ const PipelineRunDetailsTab: React.FC = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}
-                {sbomURL && (
+                {showSbom && (
                   <DescriptionListGroup>
                     <DescriptionListTerm>SBOM</DescriptionListTerm>
                     <DescriptionListDescription>
-                      <ExternalLink href={sbomURL}>View SBOM</ExternalLink>
+                      {sboms.length === 1 ? (
+                        <ExternalLink href={sboms[0].url}>View SBOM</ExternalLink>
+                      ) : (
+                        <Button
+                          variant="link"
+                          onClick={() => showModal(createPipelineRunSBOMsModal({ sboms }))}
+                          style={{ padding: 0 }}
+                        >
+                          View SBOMs
+                        </Button>
+                      )}
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}

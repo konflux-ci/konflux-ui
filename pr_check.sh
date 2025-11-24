@@ -2,6 +2,9 @@
 
 script_path="$(dirname -- "${BASH_SOURCE[0]}")"
 
+
+export TEST_IMAGE="quay.io/konflux_ui_qe/konflux-ui-tests:latest"
+
 build_ui_image() {
     set -euo pipefail
 
@@ -39,15 +42,54 @@ build_ui_image() {
 
 }
 
-
-run_test() {
-    # default image used if test code is not changed in a PR
-    TEST_IMAGE="quay.io/konflux_ui_qe/konflux-ui-tests:latest"
+execute_test() {
 
     # monitor memory usage during a test
     while true; do date '+%F_%H:%M:%S' >> mem.log && free -m >> mem.log; sleep 1; done 2>&1 &
     MEM_PID=$!
 
+    mkdir artifacts
+    echo "running tests using image ${TEST_IMAGE}"
+    COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
+        -v $PWD/e2e-tests:/e2e:Z,U \
+        --timeout=3600 \
+        -e CYPRESS_PR_CHECK=${CYPRESS_PR_CHECK} \
+        -e CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} \
+        -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
+        -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
+        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
+        -e CYPRESS_PERIODIC_RUN=${CYPRESS_PERIODIC_RUN}"
+
+    TEST_RUN=0
+    set -e
+    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE}
+    PODMAN_RETURN_CODE=$?
+    if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
+        case $PODMAN_RETURN_CODE in
+            255)
+                echo "Test took too long, podman exited due to timeout set to 1 hour."
+                ;;
+            130)
+                echo "Podman run was interrupted."
+                ;;
+            *)
+                echo "Podman exited with exit code: ${PODMAN_RETURN_CODE}"
+                ;;
+        esac
+        TEST_RUN=1
+    fi
+    set +e
+
+    kubectl logs "$(kubectl get pods -n konflux-ui -o name | grep proxy)" --all-containers=true -n konflux-ui > "$PWD/artifacts/konflux-ui.log"
+
+    # kill the background process monitoring memory usage
+    kill $MEM_PID
+    cp mem.log "$PWD/artifacts"
+
+    return $TEST_RUN
+}
+
+run_test_pr() {
     # fetch also target branch
     git fetch origin "${TARGET_BRANCH}"
 
@@ -65,43 +107,20 @@ run_test() {
     else 
         echo "Using latest image from quay."
     fi
-    mkdir artifacts
-    echo "running tests using image ${TEST_IMAGE}"
-    COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
-        -v $PWD/e2e-tests:/e2e:Z,U \
-        --timeout=3600 \
-        -e CYPRESS_PR_CHECK=true \
-        -e CYPRESS_KONFLUX_BASE_URL=https://localhost:9443 \
-        -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
-        -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
-        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN}"
-
-    TEST_RUN=0
-    set +e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE}
-    PODMAN_RETURN_CODE=$?
-    if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
-        case $PODMAN_RETURN_CODE in
-            255)
-                echo "Test took too long, podman exited due to timeout set to 1 hour."
-                ;;
-            130)
-                echo "Podman run was interrupted."
-                ;;
-            *)
-                echo "Podman exited with exit code: ${PODMAN_RETURN_CODE}"
-                ;;
-        esac
-        TEST_RUN=1
-    fi
-
-    kubectl logs "$(kubectl get pods -n konflux-ui -o name | grep proxy)" --all-containers=true -n konflux-ui > "$PWD/artifacts/konflux-ui.log"
-
-    # kill the background process monitoring memory usage
-    kill $MEM_PID
-    cp mem.log "$PWD/artifacts"
+   
+    execute_test
+    TEST_RUN=$?
 
     echo "Exiting pr_check.sh with code $TEST_RUN"
+
+    exit $TEST_RUN
+}
+
+run_test_stage() {
+    echo "Running test suite against stage UI and backend..."
+        
+    execute_test
+    TEST_RUN=$?
 
     exit $TEST_RUN
 }
@@ -118,7 +137,10 @@ case "$1" in
         ;;
     test)
         echo "Running test suite..."
-        run_test
+        run_test_pr
+        ;;
+    test-stage)
+        run_test_stage
         ;;
     *)
         echo "Invalid argument: $1"
