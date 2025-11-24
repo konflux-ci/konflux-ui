@@ -217,7 +217,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                         {pipelineRunFailed.title ?? '-'}
                         {showFailedMessage && (
                           <CodeBlock>
-                            <CodeBlockCode id="message-code-content">
+                            <CodeBlockCode data-test="message-code-block" id="message-code-content">
                               {pipelineRun.status?.conditions[0]?.message}
                             </CodeBlockCode>
                           </CodeBlock>
