@@ -20,7 +20,7 @@ import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
@@ -123,9 +123,8 @@ const PipelineRunDetailsTab: React.FC = () => {
 
   const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
   const showFailedMessage =
-    pipelineRun.status?.conditions[0]?.type === 'Succeeded' &&
-    pipelineRun.status?.conditions[0]?.status === 'False' &&
-    pipelineRun.status?.conditions[0]?.reason === 'Failed';
+    pipelineRunStatus(pipelineRun) === runStatus.Failed &&
+    pipelineRun.status?.conditions[0]?.message !== pipelineRunFailed.staticMessage;
 
   return (
     <>
