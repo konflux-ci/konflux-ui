@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import { PipelineRunType } from '~/consts/pipelinerun';
+import { useComponents } from '~/hooks/useComponents';
+import { useIntegrationTestScenarios } from '~/hooks/useIntegrationTestScenarios';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
-import { useComponents } from '../../../../../hooks/useComponents';
-import { useIntegrationTestScenarios } from '../../../../../hooks/useIntegrationTestScenarios';
-import { useReleasePlans } from '../../../../../hooks/useReleasePlans';
-import { useReleases } from '../../../../../hooks/useReleases';
-import { CustomError } from '../../../../../k8s/error';
-import { Commit } from '../../../../../types';
+import { useReleasePlans } from '~/hooks/useReleasePlans';
+import { useReleases } from '~/hooks/useReleases';
+import { CustomError } from '~/k8s/error';
+import { Commit } from '~/types';
 import {
   MockBuildPipelines,
   MockIntegrationTests,
@@ -51,10 +52,28 @@ describe('CommitVisualization', () => {
   /* eslint-disable @typescript-eslint/no-explicit-any */
 
   beforeEach(() => {
-    mockUsePipelineRunsForCommit.mockReturnValue([
-      [...MockBuildPipelines, ...MockTestPipelines],
-      true,
-    ]);
+    // Mock usePipelineRunsForCommitV2 to return different values based on PipelineRunType (6th parameter)
+    mockUsePipelineRunsForCommit.mockImplementation(
+      (_namespace, _appName, _commitSha, _limit, _filterByComponents, plrType) => {
+        if (plrType === PipelineRunType.BUILD) {
+          return [
+            MockBuildPipelines,
+            true,
+            undefined,
+            jest.fn(),
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        }
+        // TEST type
+        return [
+          MockTestPipelines,
+          true,
+          undefined,
+          jest.fn(),
+          { isFetchingNextPage: false, hasNextPage: false },
+        ];
+      },
+    );
     mockUseComponents.mockReturnValue([MockComponents, true]);
     mockUseIntegrationTestScenarios.mockReturnValue([MockIntegrationTests, true]);
     mockUseReleasePlans.mockReturnValue([MockReleasePlans, true]);
@@ -74,7 +93,13 @@ describe('CommitVisualization', () => {
   });
 
   it('should not render the commit visualization graph', () => {
-    mockUsePipelineRunsForCommit.mockReturnValue([[], false]);
+    mockUsePipelineRunsForCommit.mockImplementation(() => [
+      [],
+      false,
+      undefined,
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
     mockUseComponents.mockReturnValue([[], false]);
     mockUseIntegrationTestScenarios.mockReturnValue([[], false]);
     mockUseReleasePlans.mockReturnValue([[], false]);
@@ -89,10 +114,12 @@ describe('CommitVisualization', () => {
   });
 
   it('should render the commit visualization graph', () => {
-    mockUsePipelineRunsForCommit.mockReturnValue([
+    mockUsePipelineRunsForCommit.mockImplementation(() => [
       [],
       true,
       new CustomError('Model does not exist'),
+      jest.fn(),
+      { isFetchingNextPage: false, hasNextPage: false },
     ]);
     mockUseComponents.mockReturnValue([[], true]);
     mockUseIntegrationTestScenarios.mockReturnValue([[], true]);

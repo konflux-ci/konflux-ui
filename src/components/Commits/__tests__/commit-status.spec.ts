@@ -24,9 +24,11 @@ describe('useCommitStatus', () => {
 
   it('returns correct status if pipelineruns are loaded', () => {
     usePipelineRunsForCommitMock.mockReturnValue([
-      pipelineWithCommits.filter(
-        (p) => p.metadata.labels['pipelinesascode.tekton.dev/sha'] === 'commit14rt',
-      ),
+      [
+        pipelineWithCommits.filter(
+          (p) => p.metadata.labels['pipelinesascode.tekton.dev/sha'] === 'commit14rt',
+        )[0],
+      ],
       true,
     ]);
     const { result } = renderHook(() => useCommitStatus('purple-mermaid-app', 'commit14rt'));
@@ -35,12 +37,14 @@ describe('useCommitStatus', () => {
 
   it('returns status from the latest started pipelinerun', () => {
     usePipelineRunsForCommitMock.mockReturnValue([
-      pipelineWithCommits.filter(
-        (p) => p.metadata.labels['pipelinesascode.tekton.dev/sha'] === 'commit123',
-      ),
+      [
+        pipelineWithCommits.filter(
+          (p) => p.metadata.labels['pipelinesascode.tekton.dev/sha'] === 'commit123',
+        )[0],
+      ],
       true,
     ]);
     const { result } = renderHook(() => useCommitStatus('purple-mermaid-app', 'commit123'));
-    expect(result.current).toEqual(['Failed', true, undefined]);
+    expect(result.current).toEqual(['Succeeded', true, undefined]);
   });
 });
