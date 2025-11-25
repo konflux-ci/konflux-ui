@@ -139,7 +139,7 @@ export class DetailsTab {
       .invoke('val')
       .then((value) => {
         cy.exec(`${value}`).then((obj) => {
-          expect(obj.code).to.equal(0);
+          expect(obj.exitCode).to.equal(0);
           expect(JSON.parse(obj.stdout).components.length).to.greaterThan(0);
         });
       });

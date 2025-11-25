@@ -4,6 +4,7 @@ const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/li
 const codeCoverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
+  projectId: process.env.CYPRESS_PROJECT_ID,
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
   pageLoadTimeout: 90000,
@@ -32,6 +33,7 @@ export default defineConfig({
     supportFile: 'support/commands/index.ts',
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
+    experimentalPromptCommand: true,
     excludeSpecPattern:
       process.env.CYPRESS_PERIODIC_RUN_STAGE ||
       process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
