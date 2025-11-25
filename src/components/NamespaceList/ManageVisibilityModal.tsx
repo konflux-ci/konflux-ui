@@ -12,6 +12,7 @@ import { Formik } from 'formik';
 import { RadioGroupField } from 'formik-pf';
 import { useK8sWatchResource } from '~/k8s';
 import { RoleBindingGroupVersionKind, RoleBindingModel } from '~/models';
+import { invalidateNamespaceQuery } from '~/shared/providers/Namespace/utils';
 import { NamespaceKind, RoleBinding } from '~/types';
 import {
   findPublicRoleBinding,
@@ -85,6 +86,8 @@ const ManageVisibilityModal: React.FC<ManageVisibilityModalProps> = ({ namespace
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(`Failed to save visibility setting: ${message}`);
+    } finally {
+      void invalidateNamespaceQuery();
     }
   };
 

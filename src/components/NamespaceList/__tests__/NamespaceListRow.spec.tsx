@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { HttpError } from '~/k8s/error';
-import { NAMESPACE_VISIBILITY_LABEL } from '~/shared/const';
+import { NAMESPACE_VISIBILITY_LABEL } from '~/shared/providers/const';
 import NamespaceListRow from '.././NamespaceListRow';
 import { useApplications } from '../../../hooks/useApplications';
 import { NamespaceKind } from '../../../types';
@@ -90,7 +90,7 @@ describe('NamespaceListRow', () => {
       metadata: {
         ...mockNamespace.metadata,
         labels: {
-          [NAMESPACE_VISIBILITY_LABEL]: 'public',
+          [NAMESPACE_VISIBILITY_LABEL]: 'authenticated',
         },
       },
     };
