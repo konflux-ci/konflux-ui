@@ -186,6 +186,26 @@ describe('Basic Happy Path', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       DetailsTab.waitForPLRAndDownloadAllLogs(false);
     });
+
+    it('Verify vulnerabilities column exists in Pipeline runs table', () => {
+      Applications.clickBreadcrumbLink('Pipeline runs');
+      UIhelper.verifyVulnerabilityColumn();
+    });
+
+    it('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
+      UIhelper.verifyVulnerabilityIndicators(
+        `${componentName}-on-push`,
+        /(-|N\/A|Critical\d+High\d+Medium\d+Low\d+Unknown\d+)/,
+      );
+    });
+
+    it('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+      UIhelper.verifyVulnerabilityCellVisibility(`${componentName}-on-pull-request`);
+    });
+
+    it('Verify vulnerability scan details when available', () => {
+      UIhelper.verifyVulnerabilityScanDetails();
+    });
   });
 
   describe('Check Component in Components tab', () => {
@@ -213,29 +233,6 @@ describe('Basic Happy Path', () => {
 
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
-    });
-  });
-
-  describe('Check vulnerability in pipeline runs list page', () => {
-    before(() => {
-      Common.navigateTo(NavItem.applications);
-      Applications.clickBreadcrumbLink(applicationName);
-      Applications.goToComponentsTab();
-      ComponentsTabPage.openComponent(componentName);
-    });
-
-    it('Verify Pipeline runs Tab on component Details page', () => {
-      UIhelper.clickTab('Pipeline runs', false);
-      UIhelper.verifyRowInTable('Pipeline run List', `${componentName}-on-push`, [
-        // skipping due to https://issues.redhat.com/browse/HAC-5808
-        /vulnerabilities/,
-        /Succeeded/,
-      ]);
-      UIhelper.verifyRowInTable('Pipeline run List', `${componentName}-on-pull-request`, [
-        // skipping due to https://issues.redhat.com/browse/HAC-5808
-        // vulnerabilities,
-        /Succeeded/,
-      ]);
     });
   });
 });
