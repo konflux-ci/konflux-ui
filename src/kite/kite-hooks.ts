@@ -34,10 +34,10 @@ export const useIssueCountsBySeverity = (namespace: string): IssueCounts => {
 
     return {
       counts: {
-        critical: criticalResult.data?.total ?? 0,
-        major: majorResult.data?.total ?? 0,
-        minor: minorResult.data?.total ?? 0,
-        info: infoResult.data?.total ?? 0,
+        critical: criticalResult.data?.total,
+        major: majorResult.data?.total,
+        minor: minorResult.data?.total,
+        info: infoResult.data?.total,
       },
       isLoaded,
       error,

@@ -9,3 +9,4 @@ export * from './help-tooltip';
 export * from './pipeline-run-logs';
 export * from './ContextSwitcher';
 export { default as ExternalLink } from './links/ExternalLink';
+export * from './skeleton';
