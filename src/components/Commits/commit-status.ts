@@ -1,4 +1,5 @@
 import React from 'react';
+import { PipelineRunType } from '~/consts/pipelinerun';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { statuses } from '../../utils/commits-utils';
@@ -10,14 +11,13 @@ export const useCommitStatus = (
 ): [string, boolean, unknown] => {
   const namespace = useNamespace();
 
-  const [pipelineRuns, loaded, error] = usePipelineRunsForCommitV2(namespace, application, commit);
-
-  const plrsForCommit = React.useMemo(
-    () =>
-      pipelineRuns?.sort(
-        (a, b) => new Date(b.status?.startTime).getTime() - new Date(a.status?.startTime).getTime(),
-      ),
-    [pipelineRuns],
+  const [pipelineRuns, loaded, error] = usePipelineRunsForCommitV2(
+    namespace,
+    application,
+    commit,
+    1,
+    undefined,
+    PipelineRunType.BUILD,
   );
 
   const commitStatus = React.useMemo(() => {
@@ -25,12 +25,12 @@ export const useCommitStatus = (
       return 'Pending';
     }
 
-    const plrStatus = pipelineRunStatus(plrsForCommit?.[0]);
+    const plrStatus = pipelineRunStatus(pipelineRuns[0]);
     if (statuses.includes(plrStatus)) {
       return plrStatus;
     }
     return 'Pending';
-  }, [loaded, error, plrsForCommit]);
+  }, [loaded, error, pipelineRuns]);
 
   return [commitStatus, loaded, error];
 };
