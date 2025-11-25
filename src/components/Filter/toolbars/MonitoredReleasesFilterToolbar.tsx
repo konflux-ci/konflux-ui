@@ -3,6 +3,7 @@ import { Switch } from '@patternfly/react-core';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { MonitoredReleasesFilterState } from '~/components/Filter/utils/monitoredreleases-filter-utils';
+import './MonitoredReleasesFilterToolbar.scss';
 
 type MonitoredReleasesFilterToolbarProps = {
   filters: MonitoredReleasesFilterState;
@@ -74,6 +75,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         label="Show latest release for each component"
         isChecked={showLatest}
         onChange={(_event, checked) => setFilters({ ...filters, showLatest: checked })}
+        className="monitored-releases-switch"
       />
     </BaseTextFilterToolbar>
   );
