@@ -117,4 +117,44 @@ export class UIhelper {
         .should('be.visible');
     });
   }
+
+  static verifyVulnerabilityColumn() {
+    cy.get('[aria-label="Pipeline run List"]').within(() => {
+      cy.contains('th', 'Fixable vulnerabilities').should('be.visible');
+    });
+  }
+
+  static verifyVulnerabilityCellVisibility(componentName: string) {
+    UIhelper.getTableRow('Pipeline run List', componentName).within(() => {
+      cy.get('[data-test="vulnerabilities"]').should('exist');
+    });
+  }
+
+  static verifyVulnerabilityIndicators(componentName: string, expectedPattern: RegExp) {
+    UIhelper.getTableRow('Pipeline run List', componentName).within(() => {
+      cy.get('[data-test="vulnerabilities"]')
+        .should('be.visible')
+        .invoke('text')
+        .should('match', expectedPattern);
+      cy.contains(/Succeeded/).should('be.visible');
+    });
+  }
+
+  static verifyVulnerabilityScanDetails() {
+    cy.get('body').then(($body) => {
+      const $cells = $body.find('[aria-label="Pipeline run List"] [data-test="vulnerabilities"]');
+      const $cellsWithData = $cells.filter((_, el) => {
+        const text = Cypress.$(el).text().trim();
+        return text !== '-' && text !== 'N/A' && text !== '';
+      });
+
+      if ($cellsWithData.length > 0) {
+        cy.wrap($cellsWithData.first()).within(() => {
+          cy.get('[data-test*="scan-status"]').should('have.length.at.least', 1);
+        });
+      } else {
+        cy.log('No vulnerability scan results available yet, skipping detailed check');
+      }
+    });
+  }
 }
