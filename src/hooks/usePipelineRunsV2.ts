@@ -148,24 +148,24 @@ export const usePipelineRunsV2 = (
 
   // KubeArchive query config when enabled
   const resourceInit = React.useMemo(
-    () =>
-      kubearchiveEnabled && shouldQueryExternalSources && namespace
-        ? {
-            groupVersionKind: PipelineRunGroupVersionKind,
-            namespace,
-            ...(createKubearchiveWatchResource(namespace, options?.selector) || {}),
-            isList: true,
-            limit: options?.limit,
-          }
-        : undefined,
-    [namespace, options?.limit, options?.selector, kubearchiveEnabled, shouldQueryExternalSources],
+    () => ({
+      groupVersionKind: PipelineRunGroupVersionKind,
+      namespace,
+      ...(createKubearchiveWatchResource(namespace, options?.selector) || {}),
+      isList: true,
+      limit: options?.limit,
+    }),
+    [namespace, options?.limit, options?.selector],
   );
+  const shouldQueryKubearchive = !!(kubearchiveEnabled && shouldQueryExternalSources && namespace);
 
-  const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel);
+  const kubearchiveResult = useKubearchiveListResourceQuery(resourceInit, PipelineRunModel, {
+    enabled: shouldQueryKubearchive,
+  });
 
   // KubeArchive results with commit filter, sorted and limited
   const kubearchiveData = React.useMemo((): PipelineRunKind[] => {
-    if (!kubearchiveEnabled) return [];
+    if (!shouldQueryKubearchive) return [];
 
     const pages = kubearchiveResult.data?.pages;
     const archiveData = pages?.flatMap((page) => page) ?? [];
@@ -183,7 +183,7 @@ export const usePipelineRunsV2 = (
       : sorted;
   }, [
     kubearchiveResult.data?.pages,
-    kubearchiveEnabled,
+    shouldQueryKubearchive,
     optionsMemo?.limit,
     optionsMemo?.selector?.filterByCommit,
   ]);
@@ -191,7 +191,7 @@ export const usePipelineRunsV2 = (
   // Merge cluster with external source, dedupe by UID, sort, and limit
   const combinedData = React.useMemo((): PipelineRunKind[] => {
     const mergedData = uniqBy(
-      [...processedClusterData, ...(kubearchiveEnabled ? kubearchiveData : trResources || [])],
+      [...processedClusterData, ...(shouldQueryKubearchive ? kubearchiveData : trResources || [])],
       (r) => r.metadata?.uid,
     );
 
@@ -202,19 +202,25 @@ export const usePipelineRunsV2 = (
     return optionsMemo?.limit && optionsMemo.limit < sortedData.length
       ? sortedData.slice(0, optionsMemo.limit)
       : sortedData;
-  }, [kubearchiveEnabled, processedClusterData, kubearchiveData, trResources, optionsMemo?.limit]);
+  }, [
+    shouldQueryKubearchive,
+    processedClusterData,
+    kubearchiveData,
+    trResources,
+    optionsMemo?.limit,
+  ]);
 
   const isLoadingCluster = React.useMemo(() => {
     return !!namespace && isLoading;
   }, [namespace, isLoading]);
 
   const isLoadingKubeArchive = React.useMemo(() => {
-    return kubearchiveEnabled && !!namespace && kubearchiveResult.isLoading;
-  }, [kubearchiveEnabled, namespace, kubearchiveResult.isLoading]);
+    return shouldQueryKubearchive && kubearchiveResult.isLoading;
+  }, [shouldQueryKubearchive, kubearchiveResult.isLoading]);
 
   const isLoadingTektonResults = React.useMemo(() => {
-    return !kubearchiveEnabled && queryTr && !trLoaded;
-  }, [kubearchiveEnabled, queryTr, trLoaded]);
+    return !shouldQueryKubearchive && queryTr && !trLoaded;
+  }, [shouldQueryKubearchive, queryTr, trLoaded]);
 
   // Loading coordination: cluster + (archive | TR)
   const isFullyLoaded = React.useMemo(() => {
@@ -222,14 +228,14 @@ export const usePipelineRunsV2 = (
       return false;
     }
 
-    if (kubearchiveEnabled) {
+    if (shouldQueryKubearchive) {
       return !isLoadingCluster && !isLoadingKubeArchive;
     }
 
     return !isLoadingCluster && !isLoadingTektonResults;
   }, [
     namespace,
-    kubearchiveEnabled,
+    shouldQueryKubearchive,
     isLoadingCluster,
     isLoadingKubeArchive,
     isLoadingTektonResults,
@@ -240,15 +246,15 @@ export const usePipelineRunsV2 = (
       return [[], false, null, undefined, { hasNextPage: false, isFetchingNextPage: false }];
     }
 
-    const hookError = kubearchiveEnabled ? kubearchiveResult.error || error : trError || error;
+    const hookError = shouldQueryKubearchive ? kubearchiveResult.error || error : trError || error;
 
-    const getNextPage: GetNextPage = kubearchiveEnabled
+    const getNextPage: GetNextPage = shouldQueryKubearchive
       ? kubearchiveResult.hasNextPage
         ? kubearchiveResult.fetchNextPage
         : undefined
       : trGetNextPage;
 
-    const nextPagePropsState: NextPageProps = kubearchiveEnabled
+    const nextPagePropsState: NextPageProps = shouldQueryKubearchive
       ? {
           hasNextPage: kubearchiveResult.hasNextPage || false,
           isFetchingNextPage: kubearchiveResult.isFetchingNextPage || false,
@@ -260,7 +266,7 @@ export const usePipelineRunsV2 = (
     namespace,
     combinedData,
     isFullyLoaded,
-    kubearchiveEnabled,
+    shouldQueryKubearchive,
     kubearchiveResult.error,
     kubearchiveResult.hasNextPage,
     kubearchiveResult.fetchNextPage,
