@@ -76,6 +76,7 @@ jobs:
       CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
       CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
       JOB_TYPE: 'on-pr'
     steps:
       - uses: actions/checkout@v4
