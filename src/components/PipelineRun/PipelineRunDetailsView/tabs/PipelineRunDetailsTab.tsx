@@ -20,7 +20,7 @@ import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
@@ -122,6 +122,10 @@ const PipelineRunDetailsTab: React.FC = () => {
     namespace;
 
   const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
+  const showFailedMessage =
+    pipelineStatus === runStatus.Failed &&
+    pipelineRun.status?.conditions?.length > 0 &&
+    pipelineRun.status?.conditions[0]?.message !== pipelineRunFailed.staticMessage;
 
   return (
     <>
@@ -211,6 +215,13 @@ const PipelineRunDetailsTab: React.FC = () => {
                       <DescriptionListTerm>Message</DescriptionListTerm>
                       <DescriptionListDescription>
                         {pipelineRunFailed.title ?? '-'}
+                        {showFailedMessage && (
+                          <CodeBlock>
+                            <CodeBlockCode data-test="message-code-block" id="message-code-content">
+                              {pipelineRun.status?.conditions[0]?.message}
+                            </CodeBlockCode>
+                          </CodeBlock>
+                        )}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>
