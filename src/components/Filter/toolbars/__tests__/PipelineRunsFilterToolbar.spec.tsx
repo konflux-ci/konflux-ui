@@ -8,6 +8,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -31,6 +32,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -56,6 +58,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -81,6 +84,7 @@ describe('PipelineRunsFilterToolbar', () => {
     expect(setFilters).toHaveBeenCalledTimes(1);
     expect(setFilters).toHaveBeenCalledWith({
       name: '',
+      commit: '',
       status: ['Succeeded'],
       type: [],
     });
@@ -94,6 +98,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -119,6 +124,7 @@ describe('PipelineRunsFilterToolbar', () => {
     expect(setFilters).toHaveBeenCalledTimes(1);
     expect(setFilters).toHaveBeenCalledWith({
       name: '',
+      commit: '',
       status: [],
       type: ['build'],
     });

@@ -99,6 +99,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by name', () => {
       const filters = {
         name: 'basic-node-js-first',
+        commit: '',
         status: [],
         type: [],
       };
@@ -110,6 +111,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by status', () => {
       const filters = {
         name: '',
+        commit: '',
         status: ['Succeeded'],
         type: [],
       };
@@ -121,6 +123,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by type', () => {
       const filters = {
         name: '',
+        commit: '',
         status: [],
         type: ['build'],
       };
@@ -135,6 +138,7 @@ describe('pipelineruns-filter-utils', () => {
     it('should filter pipeline runs by custom filter', () => {
       const filters = {
         name: '',
+        commit: '',
         status: [],
         type: [],
       };

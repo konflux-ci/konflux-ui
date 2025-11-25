@@ -47,6 +47,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    commit: unparsedFilters.commit ? (unparsedFilters.commit as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
@@ -63,7 +64,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
   }, [persistedColumns]);
 
-  const { name, status, type } = filters;
+  const { name, commit, status, type } = filters;
 
   const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
     usePipelineRunsV2(
@@ -72,7 +73,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         () => ({
           selector: {
             filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
-            filterByName: name || undefined,
+            filterByName: name || undefined, // Only filter by name at API level, commit filtering happens client-side
             matchLabels: {
               [PipelineRunLabel.APPLICATION]: applicationName,
               ...(componentName && {
@@ -123,7 +124,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     [sortedPipelineRuns, filters, customFilter, componentName],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : sortedPipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(name || commit ? filteredPLRs : sortedPipelineRuns);
 
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
@@ -132,7 +133,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     return getErrorState(error, loaded, 'pipeline runs');
   }
 
-  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
+  const isFiltered = name.length > 0 || commit.length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>
