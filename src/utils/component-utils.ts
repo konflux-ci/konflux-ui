@@ -3,6 +3,10 @@ import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel, ImageRepositoryModel } from '../models';
 import { ComponentKind, ImageRepositoryKind, ImageRepositoryVisibility } from '../types';
 
+// Image registry constants
+export const QUAY_IO_HOST = 'quay.io';
+export const IMAGE_PROXY_HOST = 'image-rbac-proxy';
+
 // Indicates whether the component was built from a sample and therefore does not support PAC without first forking.
 // values: 'true' | 'false'
 export const SAMPLE_ANNOTATION = 'appstudio.openshift.io/sample';
@@ -221,4 +225,39 @@ export const updateImageRepositoryVisibility = async (
       },
     ],
   });
+};
+
+/**
+ * Converts a quay.io image URL to use the image proxy host
+ * @param imageUrl - The original image URL (e.g., "quay.io/namespace/repo@sha256:...")
+ * @returns The proxied image URL (e.g., "image-rbac-proxy/namespace/repo@sha256:...")
+ */
+export const convertToProxyImageUrl = (imageUrl: string): string => {
+  if (!imageUrl) {
+    return imageUrl;
+  }
+  return imageUrl.replace(QUAY_IO_HOST, IMAGE_PROXY_HOST);
+};
+
+/**
+ * Determines if an image URL should use the proxy based on repository visibility
+ * @param imageUrl - The image URL to check
+ * @param visibility - The ImageRepository visibility setting
+ * @returns The appropriate URL (proxied for private, original for public)
+ */
+export const getImageUrlForVisibility = (
+  imageUrl: string,
+  visibility?: ImageRepositoryVisibility,
+): string => {
+  if (!imageUrl) {
+    return imageUrl;
+  }
+
+  // Use proxy URL for private repositories
+  if (visibility === ImageRepositoryVisibility.private) {
+    return convertToProxyImageUrl(imageUrl);
+  }
+
+  // Use original URL for public or undefined visibility
+  return imageUrl;
 };

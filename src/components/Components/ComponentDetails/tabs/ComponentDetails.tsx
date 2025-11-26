@@ -10,13 +10,17 @@ import {
 import yamlParser from 'js-yaml';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import HelpPopover from '~/components/HelpPopover';
+import { useImageRepository } from '~/hooks/useImageRepository';
 import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
+import { ImageRepositoryModel } from '~/models';
+import { CopyableText } from '~/shared/components';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
-import { ComponentKind } from '~/types';
-import { getLastestImage } from '~/utils/component-utils';
+import { ComponentKind, ImageRepositoryVisibility } from '~/types';
+import { getImageUrlForVisibility, getLastestImage } from '~/utils/component-utils';
 import { getPipelineRunStatusResults } from '~/utils/pipeline-utils';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import ComponentImageRepositoryVisibility from './ComponentImageRepositoryVisibility';
 
 type ComponentDetailsProps = {
@@ -41,6 +45,18 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
 
   // Check if image controller is enabled for this cluster
   const { isImageControllerEnabled } = useIsImageControllerEnabled();
+
+  // Check if user has permission to list image repository
+  const [canListImageRepository] = useAccessReviewForModel(ImageRepositoryModel, 'list');
+
+  // Fetch ImageRepository to get visibility setting
+  const [imageRepository] = useImageRepository(
+    canListImageRepository ? component?.metadata?.namespace : null,
+    canListImageRepository ? component?.metadata?.name : null,
+    false,
+  );
+
+  const visibility = imageRepository?.spec?.image?.visibility;
 
   const runTime = React.useMemo(() => {
     try {
@@ -120,15 +136,22 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
             <DescriptionListGroup>
               <DescriptionListTerm>Latest image</DescriptionListTerm>
               <DescriptionListDescription data-test="component-latest-image">
-                <ExternalLink
-                  href={
-                    componentImageURL.startsWith('http')
-                      ? componentImageURL
-                      : `https://${componentImageURL}`
-                  }
-                  text={componentImageURL}
-                  isHighlightable
-                />
+                {visibility === ImageRepositoryVisibility.private ? (
+                  <CopyableText
+                    text={getImageUrlForVisibility(componentImageURL, visibility)}
+                    data-test="component-latest-image-copyable"
+                  />
+                ) : (
+                  <ExternalLink
+                    href={
+                      componentImageURL.startsWith('http')
+                        ? componentImageURL
+                        : `https://${componentImageURL}`
+                    }
+                    text={componentImageURL}
+                    isHighlightable
+                  />
+                )}
               </DescriptionListDescription>
             </DescriptionListGroup>
           </DescriptionList>

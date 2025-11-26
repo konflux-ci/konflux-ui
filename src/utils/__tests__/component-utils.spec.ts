@@ -18,6 +18,8 @@ import {
   getConfigurationTime,
   LAST_CONFIGURATION_ANNOTATION,
   updateImageRepositoryVisibility,
+  convertToProxyImageUrl,
+  getImageUrlForVisibility,
 } from '../component-utils';
 import { createK8sUtilMock } from '../test-utils';
 jest.mock('~/k8s/query/fetch', () => ({
@@ -303,5 +305,56 @@ describe('updateImageRepositoryVisibility', () => {
         ],
       }),
     );
+  });
+});
+
+describe('convertToProxyImageUrl', () => {
+  it('should convert quay.io URL to proxy URL', () => {
+    const input =
+      'quay.io/redhat-user-workloads-stage/wlin-tenant/konflux-ui-f25c9@sha256:36b3d9d0a0a61ee1de07eaf801805a154c6367ece5398fbf4f323bf0871ddba3';
+    const expected =
+      'image-rbac-proxy/redhat-user-workloads-stage/wlin-tenant/konflux-ui-f25c9@sha256:36b3d9d0a0a61ee1de07eaf801805a154c6367ece5398fbf4f323bf0871ddba3';
+
+    expect(convertToProxyImageUrl(input)).toBe(expected);
+  });
+
+  it('should handle URL without quay.io', () => {
+    const input = 'docker.io/library/nginx:latest';
+    expect(convertToProxyImageUrl(input)).toBe(input);
+  });
+
+  it('should handle empty string', () => {
+    expect(convertToProxyImageUrl('')).toBe('');
+  });
+
+  it('should handle null/undefined', () => {
+    expect(convertToProxyImageUrl(null)).toBe(null);
+    expect(convertToProxyImageUrl(undefined)).toBe(undefined);
+  });
+});
+
+describe('getImageUrlForVisibility', () => {
+  const quayUrl = 'quay.io/namespace/repo@sha256:abc123';
+  const proxyUrl = 'image-rbac-proxy/namespace/repo@sha256:abc123';
+
+  it('should return proxy URL for private visibility', () => {
+    expect(getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private)).toBe(proxyUrl);
+  });
+
+  it('should return original URL for public visibility', () => {
+    expect(getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.public)).toBe(quayUrl);
+  });
+
+  it('should return original URL when visibility is undefined', () => {
+    expect(getImageUrlForVisibility(quayUrl, undefined)).toBe(quayUrl);
+  });
+
+  it('should handle empty string', () => {
+    expect(getImageUrlForVisibility('', ImageRepositoryVisibility.private)).toBe('');
+  });
+
+  it('should handle null/undefined URL', () => {
+    expect(getImageUrlForVisibility(null, ImageRepositoryVisibility.private)).toBe(null);
+    expect(getImageUrlForVisibility(undefined, ImageRepositoryVisibility.private)).toBe(undefined);
   });
 });
