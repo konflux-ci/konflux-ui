@@ -206,7 +206,7 @@ describe('SnapshotPipelinerunsTab', () => {
     ]);
     renderWithQueryClient(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Pipeline runs/);
-    screen.queryByText('Name');
+    screen.queryAllByText('Name'); // Can appear in filter dropdown and column header
     screen.queryByText('Started');
     screen.queryByText('Duration');
     screen.queryAllByText('Status');

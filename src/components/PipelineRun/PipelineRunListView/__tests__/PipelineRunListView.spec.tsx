@@ -271,7 +271,7 @@ describe('Pipeline run List', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<TestedComponent name={appName} />);
-    screen.queryByText('Name');
+    screen.queryAllByText('Name'); // Can appear in filter dropdown and column header
     screen.queryByText('Started');
     screen.queryByText('Duration');
     screen.queryAllByText('Status');

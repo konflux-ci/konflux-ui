@@ -47,7 +47,7 @@ describe('PipelineRunsFilterToolbar', () => {
     await user.type(name, 'test');
     expect(name.value).toBe('test');
     await waitFor(() => expect(setFilters).toHaveBeenCalledTimes(1));
-    expect(setFilters).toHaveBeenCalledWith({ name: 'test', status: [], type: [] });
+    expect(setFilters).toHaveBeenCalledWith({ name: 'test', commit: '', status: [], type: [] });
   });
 
   it('it should update status filter', async () => {

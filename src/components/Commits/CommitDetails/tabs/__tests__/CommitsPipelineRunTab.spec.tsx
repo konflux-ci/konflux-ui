@@ -156,7 +156,7 @@ describe('Commit Pipelinerun List', () => {
     ]);
     renderWithQueryClient(<TestedComponent />);
     screen.getByText(/Pipeline runs/);
-    screen.getByText('Name');
+    screen.getAllByText('Name'); // Can appear in filter dropdown and column header
     screen.getByText('Started');
     screen.getByText('Duration');
     screen.getAllByText('Status');
