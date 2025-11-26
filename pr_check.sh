@@ -157,13 +157,16 @@ upload_coverage() {
     echo "Commit SHA: ${COMMIT_SHA}"
     echo "Coverage directory: ${COVERAGE_DIR}"
 
-    # Create output directory for coverport
+    # Create output directory for coverport with write permissions
     mkdir -p artifacts/coverport-output
+    chmod 777 artifacts/coverport-output
 
     # Run coverport to process coverage and upload to Codecov
+    # Use --user to run as current user to avoid permission issues
     podman run --rm \
-        -v "$PWD/${COVERAGE_DIR}:/workspace/coverage:ro" \
-        -v "$PWD/artifacts/coverport-output:/workspace/output:rw" \
+        --user "$(id -u):$(id -g)" \
+        -v "$PWD/${COVERAGE_DIR}:/workspace/coverage:ro,Z" \
+        -v "$PWD/artifacts/coverport-output:/workspace/output:rw,Z" \
         -e CODECOV_TOKEN="${CODECOV_TOKEN}" \
         quay.io/konflux-ci/konflux-devprod/coverport-cli@sha256:bd8dc5b1048d3385d77a17954638e1b8ae1ac2236a65560612e535e5d0888e27 \
         process \
@@ -172,7 +175,8 @@ upload_coverage() {
             --repo-url="${REPO_URL}" \
             --commit-sha="${COMMIT_SHA}" \
             --workspace=/workspace/output \
-            --codecov-flags=e2e
+            --codecov-flags=e2e \
+            --keep-workspace
 
     UPLOAD_RESULT=$?
     if [ $UPLOAD_RESULT -eq 0 ]; then
