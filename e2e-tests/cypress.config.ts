@@ -1,6 +1,8 @@
 import { defineConfig } from 'cypress';
 import * as fs from 'fs-extra';
 const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
+const codeCoverageTask = require('@cypress/code-coverage/task');
+
 export default defineConfig({
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
@@ -35,6 +37,9 @@ export default defineConfig({
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
+      // Code coverage plugin - must be registered first
+      codeCoverageTask(on, config);
+
       require('cypress-mochawesome-reporter/plugin')(on);
 
       const logOptions = {

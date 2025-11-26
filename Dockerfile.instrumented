@@ -1,0 +1,47 @@
+##
+# Dockerfile for building an instrumented image for e2e test code coverage collection.
+# This image contains the application code instrumented with Istanbul for V8 coverage.
+#
+# Usage:
+#   docker build -f Dockerfile.instrumented -t konflux-ui:instrumented .
+#
+# The instrumented application exposes coverage data via window.__coverage__ which
+# can be collected by Cypress tests using @cypress/code-coverage plugin.
+##
+
+FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ede5bc00a4dfda5e259ee4a57f67973720a565d1 as builder
+
+WORKDIR /opt/app-root/src
+RUN npm install yarn --global
+
+# Copy source files
+COPY @types @types
+COPY public public
+COPY src src
+COPY package.json package.json
+COPY tsconfig.json tsconfig.json
+COPY webpack.config.js webpack.config.js
+COPY webpack.instrumented.config.js webpack.instrumented.config.js
+COPY yarn.lock yarn.lock
+COPY aliases.config.js aliases.config.js
+# Note: .swcrc is not needed for instrumented build as we use babel-loader
+
+# Install dependencies and build instrumented version
+RUN yarn install
+RUN yarn build:instrumented
+
+FROM registry.access.redhat.com/ubi9/nginx-120@sha256:c5fdf1b976571cf1f058b8f2dd955a94d80ced7a43756362d7e87d99e9c92337
+
+COPY --from=builder /opt/app-root/src/dist/* /opt/app-root/src/
+
+USER 0
+# Disable IPv6 since it's not enabled on all systems
+RUN sed -i '/\s*listen\s*\[::\]:8080 default_server;/d' /etc/nginx/nginx.conf
+USER 1001
+
+# Label to identify this as an instrumented image
+LABEL io.konflux.coverage.instrumented="true" \
+      io.konflux.coverage.provider="istanbul-v8"
+
+CMD ["nginx", "-g", "daemon off;"]
+
