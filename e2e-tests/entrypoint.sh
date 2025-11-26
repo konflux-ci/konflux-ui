@@ -18,6 +18,8 @@ npx cypress run $args
 EXIT_CODE=$?
 echo "Tests exited with code $EXIT_CODE. Archiving artifacts."
 
+ls -la
+
 if [ -d "/e2e/cypress" ]; then
   cp -a /e2e/cypress/* /tmp/artifacts
   chmod -R a+rwx /tmp/artifacts

@@ -1,24 +1,23 @@
-import { merge } from 'webpack-merge';
-import commonConfig from './webpack.config.js';
-import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { mergeWithRules } from 'webpack-merge';
+import prodConfig from './webpack.prod.config.js';
 
 /**
  * Webpack configuration for building an instrumented version of the application
- * for collecting e2e test code coverage using Istanbul/V8.
+ * for collecting e2e test code coverage using Istanbul.
  *
- * This configuration uses babel-loader with babel-plugin-istanbul to instrument
- * the code, which allows coverage data to be collected via window.__coverage__
- * during Cypress e2e tests.
+ * Extends the production config but replaces swc-loader with babel-loader + istanbul
+ * to instrument the code for coverage collection via window.__coverage__.
  */
-export default merge(commonConfig, {
-  mode: 'production',
-  devtool: 'source-map',
+export default mergeWithRules({
+  module: {
+    rules: {
+      test: 'match',
+      use: 'replace',
+    },
+  },
+})(prodConfig, {
   module: {
     rules: [
-      {
-        test: /\.s?[ac]ss$/i,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
-      },
       {
         test: /\.[jt]sx?$/i,
         exclude: /(node_modules)/,
@@ -53,5 +52,4 @@ export default merge(commonConfig, {
       },
     ],
   },
-  plugins: [new MiniCssExtractPlugin({ filename: '[name].css' })],
 });
