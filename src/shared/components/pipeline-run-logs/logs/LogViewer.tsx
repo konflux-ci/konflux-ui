@@ -5,6 +5,8 @@ import {
   Bullseye,
   Button,
   Checkbox,
+  Flex,
+  FlexItem,
   Spinner,
   Toolbar,
   ToolbarContent,
@@ -128,7 +130,12 @@ const LogViewer: React.FC<Props> = ({
         }}
         header={
           <Banner data-testid="logs-taskName">
-            {taskName} <LogsTaskDuration taskRun={taskRun} />
+            <Flex gap={{ default: 'gapSm' }}>
+              <FlexItem>{taskName}</FlexItem>
+              <FlexItem>
+                <LogsTaskDuration taskRun={taskRun} />
+              </FlexItem>
+            </Flex>
             {isLoading && (
               <Bullseye>
                 <Spinner size="lg" />
