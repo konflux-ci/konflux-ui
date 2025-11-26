@@ -31,20 +31,28 @@ describe('ApplicationDropdown', () => {
 
   it('should show dropdown if applications are loaded', async () => {
     useApplicationsMock.mockReturnValue([
-      [{ metadata: { name: 'app1' } }, { metadata: { name: 'app2' } }],
+      [
+        { metadata: { name: 'app1' }, spec: { displayName: 'app1' } },
+        { metadata: { name: 'app2' }, spec: { displayName: 'App 2' } },
+      ],
       true,
     ]);
     formikRenderer(<ApplicationDropdown name="app" />);
     await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
     await waitFor(() => {
-      expect(screen.getByRole('menuitem', { name: 'app1' })).toBeVisible();
-      expect(screen.getByRole('menuitem', { name: 'app2' })).toBeVisible();
+      const app1Elements = screen.getAllByText('app1');
+      const app2Elements = screen.getAllByText('app2');
+      expect(app1Elements.length).toEqual(2);
+      expect(app2Elements.length).toEqual(1);
     });
   });
 
   it('should change the application dropdown value', async () => {
     useApplicationsMock.mockReturnValue([
-      [{ metadata: { name: 'app1' } }, { metadata: { name: 'app2' } }],
+      [
+        { metadata: { name: 'app1' }, spec: { displayName: 'app1' } },
+        { metadata: { name: 'app2' }, spec: { displayName: 'App 2' } },
+      ],
       true,
     ]);
 
@@ -56,11 +64,23 @@ describe('ApplicationDropdown', () => {
     await waitFor(() => {
       const menuItems = screen.getAllByRole('menuitem');
       expect(menuItems.length).toEqual(2);
-      screen.getByText('app2');
+      screen.getByText('App 2');
     });
-    await act(() => fireEvent.click(screen.getByText('app2')));
+    await act(() => fireEvent.click(screen.getByText('App 2')));
     await waitFor(() => {
       expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('app2');
+    });
+
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+
+    await waitFor(() => {
+      const menuItems = screen.getAllByRole('menuitem');
+      expect(menuItems.length).toEqual(2);
+      screen.getAllByText('app1');
+    });
+    await act(() => fireEvent.click(screen.getAllByText('app1')[0]));
+    await waitFor(() => {
+      expect(screen.getByTestId('dropdown-toggle').textContent).toEqual('app1');
     });
   });
 });
