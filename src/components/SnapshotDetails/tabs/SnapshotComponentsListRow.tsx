@@ -1,10 +1,14 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ClipboardCopy } from '@patternfly/react-core';
-import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '@routes/paths';
+import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
+import GitRepoLink from '~/components/GitLink/GitRepoLink';
+import { useImageProxyHost } from '~/hooks/useImageProxyHost';
+import { useImageRepository } from '~/hooks/useImageRepository';
+import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '~/routes/paths';
+import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { RowFunctionArgs, TableData } from '../../../shared/components/table';
-import GitRepoLink from '../../GitLink/GitRepoLink';
+import { ImageRepositoryVisibility } from '~/types';
+import { getImageUrlForVisibility } from '~/utils/component-utils';
 import { commitsTableColumnClasses } from './SnapshotComponentsListHeader';
 
 export type SnapshotComponentTableData = {
@@ -19,6 +23,22 @@ const SnapshotComponentsListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<SnapshotComponentTableData>>
 > = ({ obj }) => {
   const namespace = useNamespace();
+  const [proxyHost, proxyHostLoaded, proxyHostError] = useImageProxyHost();
+
+  // Fetch ImageRepository to get visibility setting
+  const [imageRepository] = useImageRepository(namespace, obj.name, false);
+
+  // Get the appropriate image URL based on visibility
+  // When proxyHost has error, fallback to original URL
+  const displayImageUrl = getImageUrlForVisibility(
+    obj.containerImage,
+    imageRepository?.spec?.image?.visibility ?? null,
+    proxyHostError ? null : proxyHost,
+  );
+
+  const isPrivateImage =
+    imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
+
   return (
     <>
       <TableData data-test="snapshot-component-list-row" className={commitsTableColumnClasses.name}>
@@ -32,9 +52,13 @@ const SnapshotComponentsListRow: React.FC<
         </Link>
       </TableData>
       <TableData className={commitsTableColumnClasses.image}>
-        <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">
-          {obj.containerImage}
-        </ClipboardCopy>
+        {isPrivateImage && !proxyHostLoaded ? (
+          <Skeleton aria-label="Loading image URL" />
+        ) : (
+          <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">
+            {displayImageUrl}
+          </ClipboardCopy>
+        )}
       </TableData>
       {obj.source?.git && (
         <TableData className={commitsTableColumnClasses.url}>

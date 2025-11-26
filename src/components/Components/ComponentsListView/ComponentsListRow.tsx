@@ -5,7 +5,7 @@ import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents
 import { COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
-import ExternalLink from '../../../shared/components/links/ExternalLink';
+import { ImageUrlDisplay } from '../../../shared/components/image-display';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
@@ -75,12 +75,13 @@ const ComponentsListRow: React.FC<
           )}
           {latestImage && (
             <FlexItem>
-              <ExternalLink
-                /** by default patternfly button disable text selection on Button component
-                    this enables it on <a /> tag */
-                style={{ userSelect: 'auto' }}
-                href={getContainerImageLink(latestImage)}
-                text={latestImage}
+              <ImageUrlDisplay
+                imageUrl={latestImage}
+                namespace={component.metadata.namespace}
+                componentName={component.metadata.name}
+                formatLinkUrl={getContainerImageLink}
+                linkStyle={{ userSelect: 'auto' }}
+                data-test="component-list-latest-image"
               />
             </FlexItem>
           )}
