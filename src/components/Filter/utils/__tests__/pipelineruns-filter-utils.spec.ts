@@ -1,3 +1,4 @@
+/* eslint-disable max-nested-callbacks */
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
 import { filterPipelineRuns } from '../pipelineruns-filter-utils';
@@ -228,7 +229,7 @@ const pipelineRuns: PipelineRunKind[] = [
 
 describe('pipelineruns-filter-utils', () => {
   describe('filterPipelineRuns', () => {
-    describe('filterPipelineRuns', () => {
+    describe('name filtering', () => {
       it('should filter pipeline runs by exact name match', () => {
         const filters = {
           name: 'basic-node-js-first',
