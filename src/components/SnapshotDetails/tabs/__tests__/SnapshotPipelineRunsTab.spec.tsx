@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { renderWithQueryClient } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
@@ -206,7 +206,12 @@ describe('SnapshotPipelinerunsTab', () => {
     ]);
     renderWithQueryClient(<SnapshotPipelineRunsTab />);
     screen.queryByText(/Pipeline runs/);
-    screen.queryAllByText('Name'); // Can appear in filter dropdown and column header
+
+    // Find Name column header specifically in the table header
+    const tableHeaders = screen.queryAllByRole('columnheader');
+    const nameHeader = tableHeaders.find((header) => within(header).queryByText('Name'));
+    expect(nameHeader).toBeTruthy();
+
     screen.queryByText('Started');
     screen.queryByText('Duration');
     screen.queryAllByText('Status');

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
@@ -271,7 +271,12 @@ describe('Pipeline run List', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     render(<TestedComponent name={appName} />);
-    screen.queryAllByText('Name'); // Can appear in filter dropdown and column header
+
+    // Find Name column header specifically in the table header
+    const tableHeaders = screen.queryAllByRole('columnheader');
+    const nameHeader = tableHeaders.find((header) => within(header).queryByText('Name'));
+    expect(nameHeader).toBeTruthy();
+
     screen.queryByText('Started');
     screen.queryByText('Duration');
     screen.queryAllByText('Status');
@@ -354,6 +359,89 @@ describe('Pipeline run List', () => {
     fireEvent.click(succeededOption);
     r.rerender(<TestedComponent name={appName} />);
     expect(succeededOption).not.toBeChecked();
+  });
+
+  it('should render filtered pipelinerun list by multiple statuses', async () => {
+    const r = render(<TestedComponent name={appName} />);
+
+    // Initially all pipeline runs should be visible
+    expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+    expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
+
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+
+    fireEvent.click(statusFilter);
+    expect(statusFilter).toHaveAttribute('aria-expanded', 'true');
+
+    // Select multiple status options
+    const succeededOption = r.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+
+    await act(() => fireEvent.click(succeededOption));
+    r.rerender(<TestedComponent name={appName} />);
+
+    await waitFor(() => {
+      expect(succeededOption).toBeChecked();
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
+    });
+
+    // clean up for other tests
+    fireEvent.click(succeededOption);
+    r.rerender(<TestedComponent name={appName} />);
+    expect(succeededOption).not.toBeChecked();
+  });
+
+  it('should combine status filter with name filter', async () => {
+    const r = render(<TestedComponent name={appName} />);
+
+    // First apply name filter
+    const nameFilter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    await act(() =>
+      fireEvent.change(nameFilter, {
+        target: { value: 'basic-node-js' },
+      }),
+    );
+
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    r.rerender(<TestedComponent name={appName} />);
+
+    // All matching pipeline runs should be visible
+    await waitFor(() => {
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
+    });
+
+    // Now apply status filter
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+
+    fireEvent.click(statusFilter);
+    const succeededOption = r.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+
+    await act(() => fireEvent.click(succeededOption));
+    r.rerender(<TestedComponent name={appName} />);
+
+    // Only pipeline runs matching both name and status should be visible
+    await waitFor(() => {
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-third')).not.toBeInTheDocument();
+    });
+
+    // clean up
+    await act(() => fireEvent.click(screen.queryByRole('button', { name: 'Clear all filters' })));
+    r.rerender(<TestedComponent name={appName} />);
   });
 
   it('should render filtered pipelinerun list by type', async () => {

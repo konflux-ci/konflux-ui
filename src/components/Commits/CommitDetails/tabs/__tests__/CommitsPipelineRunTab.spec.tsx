@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, act, within } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
@@ -156,7 +156,12 @@ describe('Commit Pipelinerun List', () => {
     ]);
     renderWithQueryClient(<TestedComponent />);
     screen.getByText(/Pipeline runs/);
-    screen.getAllByText('Name'); // Can appear in filter dropdown and column header
+
+    // Find Name column header specifically in the table header
+    const tableHeaders = screen.getAllByRole('columnheader');
+    const nameHeader = tableHeaders.find((header) => within(header).queryByText('Name'));
+    expect(nameHeader).toBeTruthy();
+
     screen.getByText('Started');
     screen.getByText('Duration');
     screen.getAllByText('Status');

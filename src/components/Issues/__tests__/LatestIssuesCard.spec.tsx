@@ -288,7 +288,7 @@ describe('LatestIssuesCard', () => {
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
       // This should show minutes as well
-      //expect(screen.getByText(/Oct 15.*\d{1,2}:\d{2}.*[AP]M/)).toBeInTheDocument();
+      expect(screen.getByText(/Oct 15.*\d{1,2}:\d{2}.*[AP]M/)).toBeInTheDocument();
     });
   });
 
