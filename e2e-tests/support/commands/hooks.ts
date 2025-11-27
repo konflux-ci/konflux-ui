@@ -1,6 +1,8 @@
 import { Common } from '../../utils/Common';
 import { Login } from '../../utils/Login';
 
+const addContext = require('mochawesome/addContext');
+
 before(() => {
   //Clear namespace before running the tests
   Common.cleanNamespace();
@@ -22,6 +24,24 @@ before(() => {
     Login.stageKonfluxLogin();
   } else {
     Login.login();
+  }
+});
+
+afterEach(function () {
+  if (this.currentTest?.state === 'failed') {
+    cy.window().then((win) => {
+      cy.log('Capturing DOM structure');
+      // Capture DOM structure
+      const domContent = win.document.body.outerHTML;
+      // Saving timestamp as unique name itentifier
+      const dateNow = new Date();
+      const standardDate = `${dateNow.getFullYear()}${(dateNow.getUTCMonth() + 1).toString()}${dateNow.getDate()}`;
+      const timestamp = `${standardDate}-${dateNow.getTime()}`;
+
+      // In case of retaining dom structure (replace '/cypress/saved-doms' to a location outside "./cypress" )
+      const domFileName = `./cypress/saved-doms/${standardDate}/${timestamp}_${this.currentTest.title}__(${this.currentTest.state}).html`;
+      cy.writeFile(domFileName, domContent);
+    });
   }
 });
 

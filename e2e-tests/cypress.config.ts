@@ -76,6 +76,18 @@ export default defineConfig({
         await beforeRunHook(details);
       });
 
+      on('after:spec', async (spec, res) => {
+        // cypress-mochawesome-reporter
+        const results = res as CypressCommandLine.RunResult;
+        if (results.stats?.failures > 0) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
+          );
+        }
+        return null;
+      });
+
       on('after:run', async () => {
         // cypress-mochawesome-reporter
         await afterRunHook();
