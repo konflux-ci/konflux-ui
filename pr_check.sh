@@ -13,7 +13,7 @@ build_ui_image() {
     export IMAGE_NAME=localhost/test/test
     export IMAGE_TAG=konflux-ui
     export KONFLUX_UI_IMAGE_REF=${IMAGE_NAME}:${IMAGE_TAG}
-    # if TARGET_BRANCH is not set (usually for periodic jobs), use REF_BRANCH
+    # if TARGET_BRANCH is not set (usually for periodic-stage jobs), use REF_BRANCH
     if [ -z ${TARGET_BRANCH} ]; then
         TARGET_BRANCH=${REF_BRANCH}
     fi
@@ -49,17 +49,25 @@ execute_test() {
     while true; do date '+%F_%H:%M:%S' >> mem.log && free -m >> mem.log; sleep 1; done 2>&1 &
     MEM_PID=$!
 
+    export CYPRESS_LOCAL_CLUSTER=true
+    export CYPRESS_PERIODIC_RUN_STAGE=false
+
+    if [ "${JOB_TYPE}" == 'periodic-stage' ]; then
+        CYPRESS_LOCAL_CLUSTER=false
+        CYPRESS_PERIODIC_RUN_STAGE=true
+    fi
+
     mkdir artifacts
     echo "running tests using image ${TEST_IMAGE}"
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
         --timeout=3600 \
-        -e CYPRESS_PR_CHECK=${CYPRESS_PR_CHECK} \
+        -e CYPRESS_LOCAL_CLUSTER=${CYPRESS_LOCAL_CLUSTER} \
+        -e CYPRESS_PERIODIC_RUN_STAGE=${CYPRESS_PERIODIC_RUN_STAGE} \
         -e CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} \
         -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
-        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
-        -e CYPRESS_PERIODIC_RUN=${CYPRESS_PERIODIC_RUN}"
+        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN}"
 
     TEST_RUN=0
     set -e
