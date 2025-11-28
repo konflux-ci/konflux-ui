@@ -47,10 +47,11 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    commit: unparsedFilters.commit ? (unparsedFilters.commit as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
-  const { name, status, type } = filters;
+  const { name, commit, status, type } = filters;
 
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [visibleColumnKeys, setVisibleColumnKeys] = useLocalStorage<string[]>(
@@ -91,7 +92,9 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     [snapshotPipelineRuns, filters, customFilter],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : snapshotPipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(
+    name || commit ? filteredPLRs : snapshotPipelineRuns,
+  );
 
   if (!loaded) {
     return (
@@ -101,7 +104,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     );
   }
 
-  if (!name && snapshotPipelineRuns.length === 0) {
+  if (!name && !commit && snapshotPipelineRuns.length === 0) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
@@ -111,7 +114,7 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
 
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
-  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
+  const isFiltered = name.length > 0 || commit.length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>

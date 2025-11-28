@@ -8,6 +8,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -31,6 +32,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -45,7 +47,7 @@ describe('PipelineRunsFilterToolbar', () => {
     await user.type(name, 'test');
     expect(name.value).toBe('test');
     await waitFor(() => expect(setFilters).toHaveBeenCalledTimes(1));
-    expect(setFilters).toHaveBeenCalledWith({ name: 'test', status: [], type: [] });
+    expect(setFilters).toHaveBeenCalledWith({ name: 'test', commit: '', status: [], type: [] });
   });
 
   it('it should update status filter', async () => {
@@ -56,6 +58,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -81,6 +84,148 @@ describe('PipelineRunsFilterToolbar', () => {
     expect(setFilters).toHaveBeenCalledTimes(1);
     expect(setFilters).toHaveBeenCalledWith({
       name: '',
+      commit: '',
+      status: ['Succeeded'],
+      type: [],
+    });
+  });
+
+  it('it should update status filter with multiple selections', async () => {
+    const setFilters = jest.fn();
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          commit: '',
+          status: [],
+          type: [],
+        }}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 2, Failed: 1, Running: 1 }}
+      />,
+    );
+
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+    await user.click(statusFilter);
+
+    const succeededOption = screen.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+    const failedOption = screen.getByLabelText(/failed/i, {
+      selector: 'input',
+    });
+
+    // Click first option
+    await user.click(succeededOption);
+    expect(setFilters).toHaveBeenLastCalledWith({
+      name: '',
+      commit: '',
+      status: ['Succeeded'],
+      type: [],
+    });
+
+    // Update component with new filter state
+    rerender(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          commit: '',
+          status: ['Succeeded'],
+          type: [],
+        }}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 2, Failed: 1, Running: 1 }}
+      />,
+    );
+
+    // Click second option
+    await user.click(failedOption);
+    expect(setFilters).toHaveBeenLastCalledWith({
+      name: '',
+      commit: '',
+      status: ['Succeeded', 'Failed'],
+      type: [],
+    });
+  });
+
+  it('it should deselect status filter', async () => {
+    const setFilters = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          commit: '',
+          status: ['Succeeded'],
+          type: [],
+        }}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4, Failed: 2 }}
+      />,
+    );
+
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+    await user.click(statusFilter);
+
+    const succeededOption = screen.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+    expect(succeededOption).toBeChecked();
+
+    await user.click(succeededOption);
+    expect(setFilters).toHaveBeenCalledWith({
+      name: '',
+      commit: '',
+      status: [],
+      type: [],
+    });
+  });
+
+  it('it should combine status filter with name filter', async () => {
+    const setFilters = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: 'test',
+          commit: '',
+          status: [],
+          type: [],
+        }}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4 }}
+      />,
+    );
+
+    const statusFilter = screen.getByRole('button', {
+      name: /status filter menu/i,
+    });
+    await user.click(statusFilter);
+
+    const succeededOption = screen.getByLabelText(/succeeded/i, {
+      selector: 'input',
+    });
+    await user.click(succeededOption);
+
+    expect(setFilters).toHaveBeenCalledWith({
+      name: 'test',
+      commit: '',
       status: ['Succeeded'],
       type: [],
     });
@@ -94,6 +239,7 @@ describe('PipelineRunsFilterToolbar', () => {
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
+          commit: '',
           status: [],
           type: [],
         }}
@@ -119,6 +265,7 @@ describe('PipelineRunsFilterToolbar', () => {
     expect(setFilters).toHaveBeenCalledTimes(1);
     expect(setFilters).toHaveBeenCalledWith({
       name: '',
+      commit: '',
       status: [],
       type: ['build'],
     });

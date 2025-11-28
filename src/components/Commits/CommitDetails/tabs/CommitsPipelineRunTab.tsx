@@ -41,6 +41,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    commit: unparsedFilters.commit ? (unparsedFilters.commit as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
   });
@@ -57,7 +58,7 @@ const CommitsPipelineRunTab: React.FC = () => {
     return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
   }, [visibleColumnKeys]);
 
-  const { name, status, type } = filters;
+  const { name, commit, status, type } = filters;
 
   const statusFilterObj = React.useMemo(
     () => createFilterObj(pipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
@@ -79,7 +80,7 @@ const CommitsPipelineRunTab: React.FC = () => {
     [pipelineRuns, filters],
   );
 
-  const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
+  const vulnerabilities = usePLRVulnerabilities(name || commit ? filteredPLRs : pipelineRuns);
 
   if (error) {
     return getErrorState(error, loaded, 'pipeline runs');
@@ -92,7 +93,7 @@ const CommitsPipelineRunTab: React.FC = () => {
   const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
-  const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
+  const isFiltered = name.length > 0 || commit.length > 0 || type.length > 0 || status.length > 0;
 
   return (
     <>

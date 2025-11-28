@@ -18,7 +18,7 @@ const commitRoutes = [
       {
         path: 'pipelineruns',
         element: (
-          <FilterContextProvider filterParams={['name', 'status', 'type']}>
+          <FilterContextProvider filterParams={['name', 'commit', 'status', 'type']}>
             <CommitsPipelineRunTab />
           </FilterContextProvider>
         ),

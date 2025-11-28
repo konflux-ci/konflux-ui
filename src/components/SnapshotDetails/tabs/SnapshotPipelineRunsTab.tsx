@@ -73,7 +73,7 @@ const SnapshotPipelineRunTab: React.FC = () => {
   }
 
   return (
-    <FilterContextProvider filterParams={['name', 'status', 'type']}>
+    <FilterContextProvider filterParams={['name', 'commit', 'status', 'type']}>
       <SnapshotPipelineRunsList
         snapshotPipelineRuns={sortedPipelineRuns}
         loaded={allLoaded}
