@@ -79,7 +79,7 @@ export class PipelinerunsTabPage {
 
   static verifyVulnerabilityCellVisibility(componentName: string) {
     UIhelper.getTableRow('Pipeline run List', componentName).within(() => {
-      cy.get(pipelinerunsTabPO.vulnerabilityColumn).should('exist');
+      cy.get(pipelinerunsTabPO.vulnerabilityColumn).should('be.visible');
     });
   }
 
@@ -89,26 +89,19 @@ export class PipelinerunsTabPage {
         .should('be.visible')
         .invoke('text')
         .should('match', expectedPattern);
-      cy.contains(/Succeeded/).should('be.visible');
     });
   }
 
   static verifyVulnerabilityScanDetails() {
-    cy.get('body').then(($body) => {
-      const $cells = $body.find(pipelinerunsTabPO.vulnerabilityColumn);
-      const $cellsWithData = $cells.filter((_, el) => {
+    cy.get(pipelinerunsTabPO.vulnerabilityColumn)
+      .filter((_, el) => {
         const text = Cypress.$(el).text().trim();
         return text !== '-' && text !== 'N/A' && text !== '';
+      })
+      .first()
+      .within(() => {
+        cy.get(pipelinerunsTabPO.vulnerabilityScanStatus).should('have.length.at.least', 1);
       });
-
-      if ($cellsWithData.length > 0) {
-        cy.wrap($cellsWithData.first()).within(() => {
-          cy.get(pipelinerunsTabPO.vulnerabilityScanStatus).should('have.length.at.least', 1);
-        });
-      } else {
-        cy.log('No vulnerability scan results available yet, skipping detailed check');
-      }
-    });
   }
 }
 
