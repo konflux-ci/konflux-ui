@@ -11,3 +11,5 @@ export const SESSION_STORAGE_KEYS = {
   RELEASES_VISIBLE_COLUMNS: 'releases-visible-columns',
   RELEASE_PIPELINE_VISIBLE_COLUMNS: 'release-pipeline-visible-columns',
 } as const;
+
+export const IMAGE_PROXY_HOSTNAME = 'image-rbac-proxy';
