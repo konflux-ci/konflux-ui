@@ -1,9 +1,11 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MenuToggle } from '@patternfly/react-core';
+import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
+import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
 import { useQuery } from '@tanstack/react-query';
 import { ContextMenuItem, ContextSwitcher } from '../../components';
-import { NAMESPACE_VISIBILITY_LABEL } from '../../const';
+import { NAMESPACE_VISIBILITY_LABEL, NAMESPACE_VISIBILITY_VALUES } from '../const';
 import { useNamespace } from './useNamespaceInfo';
 import { createNamespaceQueryOptions } from './utils';
 
@@ -20,7 +22,11 @@ export const NamespaceSwitcher: React.FC<
       namespaces?.map((app) => ({
         key: app.metadata.name,
         name: app.metadata.name,
-        visibility: app.metadata.labels?.[NAMESPACE_VISIBILITY_LABEL] ?? 'Unknown',
+        icon:
+          app.metadata.labels?.[NAMESPACE_VISIBILITY_LABEL] ===
+          NAMESPACE_VISIBILITY_VALUES.AUTHENTICATED
+            ? LockOpenIcon
+            : LockIcon,
       })) || [],
     [namespaces],
   );

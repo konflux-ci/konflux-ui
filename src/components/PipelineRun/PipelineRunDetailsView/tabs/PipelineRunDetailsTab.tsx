@@ -18,8 +18,9 @@ import {
 } from '@patternfly/react-core';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
+import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
@@ -44,11 +45,11 @@ import {
   getPipelineRunStatusResultForName,
   getPipelineRunStatusResults,
   pipelineRunStatus,
-  SBOMResultKeys,
 } from '~/utils/pipeline-utils';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
-import { getSourceUrl } from '../utils/pipelinerun-utils';
+import { getSourceUrl, getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
+import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
@@ -56,6 +57,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
+  const showModal = useModalLauncher();
   const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
@@ -76,16 +78,10 @@ const PipelineRunDetailsTab: React.FC = () => {
     }
   }, [snapshotStatusAnnotation]);
 
-  const imageDigest = getPipelineRunStatusResultForName(
-    SBOMResultKeys.IMAGE_DIGEST,
-    pipelineRun,
-  )?.value;
-  const sbomSha = getPipelineRunStatusResultForName(SBOMResultKeys.SBOM_SHA, pipelineRun)?.value;
-
-  const sbomURL = React.useMemo(() => {
-    if (!imageDigest) return null;
-    return generateSbomUrl(imageDigest, sbomSha) || null;
-  }, [generateSbomUrl, imageDigest, sbomSha]);
+  const sboms = React.useMemo(
+    () => (taskRuns ? getSBOMsFromTaskRuns(taskRuns, generateSbomUrl) : []),
+    [taskRuns, generateSbomUrl],
+  );
 
   if (!(loaded && taskRunsLoaded)) {
     return (
@@ -124,6 +120,12 @@ const PipelineRunDetailsTab: React.FC = () => {
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.RELEASE_NAMESPACE] ||
     pipelineRun.metadata?.labels?.[PipelineRunLabel.RELEASE_NAMESPACE] ||
     namespace;
+
+  const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
+  const showFailedMessage =
+    pipelineStatus === runStatus.Failed &&
+    pipelineRun.status?.conditions?.length > 0 &&
+    pipelineRun.status?.conditions[0]?.message !== pipelineRunFailed.staticMessage;
 
   return (
     <>
@@ -213,6 +215,13 @@ const PipelineRunDetailsTab: React.FC = () => {
                       <DescriptionListTerm>Message</DescriptionListTerm>
                       <DescriptionListDescription>
                         {pipelineRunFailed.title ?? '-'}
+                        {showFailedMessage && (
+                          <CodeBlock>
+                            <CodeBlockCode data-test="message-code-block" id="message-code-content">
+                              {pipelineRun.status?.conditions[0]?.message}
+                            </CodeBlockCode>
+                          </CodeBlock>
+                        )}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>
@@ -278,11 +287,21 @@ const PipelineRunDetailsTab: React.FC = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}
-                {sbomURL && (
+                {showSbom && (
                   <DescriptionListGroup>
                     <DescriptionListTerm>SBOM</DescriptionListTerm>
                     <DescriptionListDescription>
-                      <ExternalLink href={sbomURL}>View SBOM</ExternalLink>
+                      {sboms.length === 1 ? (
+                        <ExternalLink href={sboms[0].url}>View SBOM</ExternalLink>
+                      ) : (
+                        <Button
+                          variant="link"
+                          onClick={() => showModal(createPipelineRunSBOMsModal({ sboms }))}
+                          style={{ padding: 0 }}
+                        >
+                          View SBOMs
+                        </Button>
+                      )}
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}

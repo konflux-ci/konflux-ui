@@ -1,3 +1,5 @@
+import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
+import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
@@ -92,8 +94,8 @@ describe('ContextSwitcher', () => {
 
   it('should render items with visibility icons', () => {
     const items = [
-      { name: 'Public Item', key: 'public', visibility: 'public' },
-      { name: 'Private Item', key: 'private', visibility: 'private' },
+      { name: 'Public Item', key: 'public', icon: LockOpenIcon },
+      { name: 'Private Item', key: 'private', icon: LockIcon },
       { name: 'No Visibility Item', key: 'none' },
     ];
     render(<ContextSwitcher menuItems={items} />);
@@ -101,11 +103,15 @@ describe('ContextSwitcher', () => {
 
     // Verify public item shows lock-open icon
     const publicItem = screen.getByText('Public Item').closest('[role="menuitem"]');
-    expect(publicItem?.querySelector('[data-test="visibility-icon-public"]')).toBeInTheDocument();
+    expect(
+      publicItem?.querySelector('[data-test="context-switcher-icon-public"]'),
+    ).toBeInTheDocument();
 
     // Verify private item shows lock icon
     const privateItem = screen.getByText('Private Item').closest('[role="menuitem"]');
-    expect(privateItem?.querySelector('[data-test="visibility-icon-private"]')).toBeInTheDocument();
+    expect(
+      privateItem?.querySelector('[data-test="context-switcher-icon-private"]'),
+    ).toBeInTheDocument();
 
     // Verify no visibility item has no icon
     const noVisibilityItem = screen.getByText('No Visibility Item').closest('[role="menuitem"]');
@@ -114,8 +120,8 @@ describe('ContextSwitcher', () => {
 
   it('should handle items with visibility correctly', () => {
     const items = [
-      { name: 'Public Item', key: 'public', visibility: 'public' },
-      { name: 'Private Item', key: 'private', visibility: 'private' },
+      { name: 'Public Item', key: 'public', icon: LockOpenIcon },
+      { name: 'Private Item', key: 'private', icon: LockIcon },
       { name: 'No Visibility Item', key: 'none' },
     ];
     render(<ContextSwitcher menuItems={items} />);
