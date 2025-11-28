@@ -10,6 +10,7 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 import { useDeepCompareMemoize } from '~/shared';
+import { SECURITY_ENTERPRISE_CONTRACT_POLICY_URL } from '../../consts/documentation';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
@@ -150,7 +151,7 @@ export const SecurityEnterpriseContractTab: React.FC<
             component={(props) => (
               <a
                 {...props}
-                href="https://enterprisecontract.dev/docs/ec-policies/index.html"
+                href={SECURITY_ENTERPRISE_CONTRACT_POLICY_URL}
                 target="_blank"
                 rel="noreferrer"
               />
