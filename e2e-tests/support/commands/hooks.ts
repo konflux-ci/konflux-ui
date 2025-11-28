@@ -16,9 +16,9 @@ before(() => {
     JSON.stringify({ 'application-list-getting-started-modal': true }),
   );
 
-  if (Cypress.env('PR_CHECK')) {
+  if (Cypress.env('LOCAL_CLUSTER')) {
     Login.localKonfluxLogin();
-  } else if (Cypress.env('PERIODIC_RUN')) {
+  } else if (Cypress.env('PERIODIC_RUN_STAGE')) {
     Login.stageKonfluxLogin();
   } else {
     Login.login();

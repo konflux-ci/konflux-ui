@@ -1,6 +1,8 @@
 import { defineConfig } from 'cypress';
 import * as fs from 'fs-extra';
 const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
+const codeCoverageTask = require('@cypress/code-coverage/task');
+
 export default defineConfig({
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
@@ -31,10 +33,14 @@ export default defineConfig({
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
     excludeSpecPattern:
-      process.env.CYPRESS_PERIODIC_RUN || process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
+      process.env.CYPRESS_PERIODIC_RUN_STAGE ||
+      process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
+      // Code coverage plugin - must be registered first
+      codeCoverageTask(on, config);
+
       require('cypress-mochawesome-reporter/plugin')(on);
 
       const logOptions = {
@@ -92,8 +98,8 @@ export default defineConfig({
         GH_SETUP_KEY: '',
         KUBECONFIG: '~/.kube/appstudio-config',
         CLEAN_NAMESPACE: 'false',
-        PR_CHECK: '',
-        PERIODIC_RUN: false,
+        LOCAL_CLUSTER: false,
+        PERIODIC_RUN_STAGE: false,
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
         SNYK_TOKEN: '',
