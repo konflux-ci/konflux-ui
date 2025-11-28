@@ -70,6 +70,39 @@ export class PipelinerunsTabPage {
       cy.contains(rowValues.message).scrollIntoView().should('be.visible');
     });
   }
+
+  static verifyVulnerabilityColumn() {
+    cy.get(pipelinerunsTabPO.pipelineRunsListTable).within(() => {
+      cy.contains('th', 'Fixable vulnerabilities').should('be.visible');
+    });
+  }
+
+  static verifyVulnerabilityCellVisibility(componentName: string) {
+    UIhelper.getTableRow('Pipeline run List', componentName).within(() => {
+      cy.get(pipelinerunsTabPO.vulnerabilityColumn).should('be.visible');
+    });
+  }
+
+  static verifyVulnerabilityIndicators(componentName: string, expectedPattern: RegExp) {
+    UIhelper.getTableRow('Pipeline run List', componentName).within(() => {
+      cy.get(pipelinerunsTabPO.vulnerabilityColumn)
+        .should('be.visible')
+        .invoke('text')
+        .should('match', expectedPattern);
+    });
+  }
+
+  static verifyVulnerabilityScanDetails() {
+    cy.get(pipelinerunsTabPO.vulnerabilityColumn)
+      .filter((_, el) => {
+        const text = Cypress.$(el).text().trim();
+        return text !== '-' && text !== 'N/A' && text !== '';
+      })
+      .first()
+      .within(() => {
+        cy.get(pipelinerunsTabPO.vulnerabilityScanStatus).should('have.length.at.least', 1);
+      });
+  }
 }
 
 // Pipelineruns Details view page
