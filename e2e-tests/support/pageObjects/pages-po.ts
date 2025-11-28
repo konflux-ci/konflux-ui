@@ -47,7 +47,8 @@ export const pipelinerunsTabPO = {
   ecResultSummary: 'div[data-test="result-summary"]',
   ecSecurityRulesTableRow: 'tr[data-ouia-component-type="PF5/TableRow"]:not([hidden])',
 
-  pipelineRunsListTable: '[aria-label="Pipeline run List"]',
+  pipelineRunsListTable: 'Pipeline run List',
+  ariaLabelPipelineRunsListTable: '[aria-label="Pipeline run List"]',
   vulnerabilityColumn: '[data-test="vulnerabilities"]',
   vulnerabilityScanStatus: '[data-test*="scan-status"]',
 };

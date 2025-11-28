@@ -208,7 +208,7 @@ describe('Basic Happy Path', () => {
     });
 
     it('Verify vulnerability scan details when available', () => {
-      PipelinerunsTabPage.verifyVulnerabilityScanDetails();
+      PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
     });
   });
 
