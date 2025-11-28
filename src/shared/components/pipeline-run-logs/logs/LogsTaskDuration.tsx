@@ -11,11 +11,7 @@ const LogsTaskDuration: React.FC<LogsTaskDurationProps> = ({ taskRun }) => {
     taskRun?.status?.startTime &&
     calculateDuration(taskRun.status.startTime, taskRun.status.completionTime);
 
-  return duration ? (
-    <span data-test="logs-task-duration" className="pf-v5-u-ml-md">
-      [Duration: {duration}]
-    </span>
-  ) : null;
+  return duration ? <span data-test="logs-task-duration">[Duration: {duration}]</span> : null;
 };
 
 export default LogsTaskDuration;
