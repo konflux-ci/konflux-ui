@@ -5,14 +5,15 @@
   "private": true,
   "scripts": {
     "clean-reports": "rm -rf cypress/",
-    "cy:run": "cypress run -b chrome",
+    "cy:run": "cypress run -b chrome --spec 'tests/basic-happy-path.spec.ts'",
+    "cy:run:features": "cypress run -b chrome --spec 'tests/features.spec.ts'",
     "cy:open": "cypress open"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
     "@types/node": "^17.0.13",
     "axe-core": "^4.4.2",
-    "cypress": "14.2.1",
+    "cypress": "^15.7.0",
     "cypress-axe": "^1.6.0",
     "cypress-high-resolution": "^1.0.0",
     "cypress-mochawesome-reporter": "^3.4.0",
