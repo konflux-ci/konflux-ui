@@ -2,8 +2,12 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardCopy } from '@patternfly/react-core';
 import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '@routes/paths';
+import { useImageRepository } from '~/hooks/useImageRepository';
+import { ImageRepositoryModel } from '~/models';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
+import { getImageUrlForVisibility } from '../../../utils/component-utils';
+import { useAccessReviewForModel } from '../../../utils/rbac';
 import GitRepoLink from '../../GitLink/GitRepoLink';
 import { commitsTableColumnClasses } from './SnapshotComponentsListHeader';
 
@@ -19,6 +23,22 @@ const SnapshotComponentsListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<SnapshotComponentTableData>>
 > = ({ obj }) => {
   const namespace = useNamespace();
+
+  // Check if user has permission to list image repository
+  const [canListImageRepository] = useAccessReviewForModel(ImageRepositoryModel, 'list');
+
+  // Fetch ImageRepository to get visibility setting
+  const [imageRepository] = useImageRepository(
+    canListImageRepository ? namespace : null,
+    canListImageRepository ? obj.name : null,
+    false,
+  );
+
+  const visibility = imageRepository?.spec?.image?.visibility;
+
+  // Get the appropriate image URL based on visibility
+  const displayImageUrl = getImageUrlForVisibility(obj.containerImage, visibility);
+
   return (
     <>
       <TableData data-test="snapshot-component-list-row" className={commitsTableColumnClasses.name}>
@@ -33,7 +53,7 @@ const SnapshotComponentsListRow: React.FC<
       </TableData>
       <TableData className={commitsTableColumnClasses.image}>
         <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">
-          {obj.containerImage}
+          {displayImageUrl}
         </ClipboardCopy>
       </TableData>
       {obj.source?.git && (

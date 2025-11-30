@@ -33,7 +33,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
     componentName: '',
     gitProviderAnnotation: '',
     gitURLAnnotation: '',
-    isPrivateRepo: false,
+    isPrivateRepo: true,
     source: {
       git: {
         url: '',
