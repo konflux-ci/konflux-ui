@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import CodeEditorShortcut, { ShortcutCommand } from '../CodeEditorShortcut';
+import { ShortcutCommand, CodeEditorShortcut } from '../CodeEditorShortcut';
 
 describe('ShortcutCommand', () => {
   it('should render children inside kbd element', () => {

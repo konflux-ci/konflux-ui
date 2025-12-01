@@ -101,4 +101,29 @@ describe('CodeEditor', () => {
     expect(capturedProps.isDarkTheme).toBe(true);
     expect(capturedProps.options).toEqual({ readOnly: true });
   });
+
+  it('should handle all props together', () => {
+    const code = 'test: value';
+    render(
+      <CodeEditor
+        code={code}
+        onEditorDidMount={mockOnEditorDidMount}
+        height="400px"
+        language={Language.json}
+        showShortcuts={true}
+      />,
+    );
+
+    expect(capturedProps.code).toBe(code);
+    expect(capturedProps.height).toBe('400px');
+    expect(capturedProps.language).toBe(Language.json);
+    expect(capturedProps.shortcutsPopoverProps).toBe(mockShortcutPopover);
+    expect(capturedProps.isDarkTheme).toBe(true);
+  });
+
+  it('should render with showShortcuts explicitly set to true', () => {
+    render(<CodeEditor code="test" onEditorDidMount={mockOnEditorDidMount} showShortcuts={true} />);
+
+    expect(capturedProps.shortcutsPopoverProps).toBe(mockShortcutPopover);
+  });
 });
