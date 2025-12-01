@@ -1,15 +1,13 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { stringify as yamlStringify } from 'yaml';
 import { useRelease } from '../../../hooks/useReleases';
 import { mockedSwaggerDefinitions } from '../../../shared/components/code-editor/__data__/mock-data';
 import { useSwaggerDefinitions } from '../../../shared/components/code-editor/hooks/useSwaggerDefinitions';
+import { renderWithQueryClient } from '../../../unit-test-utils';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { mockReleases } from '../__data__/mock-release-data';
 import { ReleaseYamlTab } from '../ReleaseYamlTab';
-
-const queryClient = new QueryClient();
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
@@ -56,7 +54,7 @@ describe('ReleaseYamlTab', () => {
   it('should render loading indicator', () => {
     mockUseRelease.mockReturnValue([mockReleases[0], false]);
 
-    render(<ReleaseYamlTab />);
+    renderWithQueryClient(<ReleaseYamlTab />);
 
     expect(screen.getByRole('progressbar')).toBeVisible();
   });
@@ -65,11 +63,7 @@ describe('ReleaseYamlTab', () => {
     const release = mockReleases[0];
     mockUseRelease.mockReturnValue([release, true]);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ReleaseYamlTab />
-      </QueryClientProvider>,
-    );
+    renderWithQueryClient(<ReleaseYamlTab />);
 
     const expectedYaml = yamlStringify(release);
     const editorContent = screen.getByTestId('mock-editor').textContent;
