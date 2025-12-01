@@ -118,4 +118,26 @@ describe('CodeEditorShortcut', () => {
     expect(screen.getByText('Test description')).toBeInTheDocument();
     expect(container.querySelector('[data-test-id$="-button"]')).not.toBeInTheDocument();
   });
+
+  it('should handle keyName with uppercase multi-character', () => {
+    render(<CodeEditorShortcut keyName="ESCAPE">Press Escape</CodeEditorShortcut>);
+
+    expect(screen.getByText('Escape')).toBeInTheDocument();
+    expect(screen.queryByText('ESCAPE')).not.toBeInTheDocument();
+  });
+
+  it('should render HoverCommand component when hover is true', () => {
+    const { container } = render(<CodeEditorShortcut hover>Test</CodeEditorShortcut>);
+
+    expect(container.querySelector('[data-test-id="hover"]')).toBeInTheDocument();
+    expect(screen.getByText('Hover')).toBeInTheDocument();
+  });
+
+  it('should render KeyNameCommand component when keyName is provided', () => {
+    const { container } = render(<CodeEditorShortcut keyName="Tab">Test</CodeEditorShortcut>);
+
+    const keyCommand = container.querySelector('[data-test-id="Tab-button"]');
+    expect(keyCommand).toBeInTheDocument();
+    expect(screen.getByText('Tab')).toBeInTheDocument();
+  });
 });
