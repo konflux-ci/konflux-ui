@@ -31,7 +31,6 @@ export const CodeEditor: React.FC<Props> = ({
   return (
     <div style={{ flexGrow: 1 }}>
       <PatternFlyCodeEditor
-        data-test="monaco-editor"
         language={language}
         code={code}
         options={{
