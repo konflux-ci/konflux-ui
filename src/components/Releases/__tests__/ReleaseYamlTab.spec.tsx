@@ -24,6 +24,10 @@ jest.mock('../../../shared/components/code-editor/hooks/useSwaggerDefinitions', 
   useSwaggerDefinitions: jest.fn(),
 }));
 
+jest.mock('../../../shared/components/code-editor/monaco', () => ({
+  registerYAMLinMonaco: jest.fn(),
+}));
+
 jest.mock('@patternfly/react-code-editor', () => ({
   CodeEditor: (props) => {
     React.useEffect(() => {
