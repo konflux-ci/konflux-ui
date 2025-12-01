@@ -12,6 +12,7 @@ import {
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
+  Truncate,
 } from '@patternfly/react-core';
 import {
   CompressIcon,
@@ -131,7 +132,9 @@ const LogViewer: React.FC<Props> = ({
         header={
           <Banner data-testid="logs-taskName">
             <Flex gap={{ default: 'gapSm' }}>
-              <FlexItem>{taskName}</FlexItem>
+              <FlexItem>
+                <Truncate content={taskName || ''} />
+              </FlexItem>
               <FlexItem>
                 <LogsTaskDuration taskRun={taskRun} />
               </FlexItem>
