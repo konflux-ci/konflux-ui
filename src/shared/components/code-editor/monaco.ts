@@ -24,7 +24,7 @@ export const registerYAMLinMonaco = (
    * We check that > 1 YAML language exists because one is the default and
    * the other is the language server that we register.
    */
-  if (monacoInstance.languages?.getLanguages().filter((x) => x.id === 'yaml').length <= 1) {
+  if ((monacoInstance.languages?.getLanguages() ?? []).filter((x) => x.id === 'yaml').length <= 1) {
     // Convert the openAPI schema to something the language server understands
     const kubernetesJSONSchema = openAPItoJSONSchema(swaggerDefinitions);
 
