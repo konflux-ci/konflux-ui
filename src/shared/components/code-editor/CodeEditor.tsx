@@ -6,6 +6,7 @@ import {
   EditorDidMount,
   CodeEditorProps,
 } from '@patternfly/react-code-editor';
+import { Flex, FlexItem } from '@patternfly/react-core';
 import * as monacoConfig from 'monaco-editor/esm/vs/editor/editor.api';
 import { useShortcutPopover } from './hooks/useShortcutPopover';
 
@@ -29,18 +30,20 @@ export const CodeEditor: React.FC<Props> = ({
   const shortcutPopover = useShortcutPopover();
 
   return (
-    <div style={{ flexGrow: 1 }}>
-      <PatternFlyCodeEditor
-        language={language}
-        code={code}
-        options={{
-          readOnly: true,
-        }}
-        onEditorDidMount={onEditorDidMount}
-        isDarkTheme
-        height={height}
-        shortcutsPopoverProps={showShortcuts ? shortcutPopover : undefined}
-      />
-    </div>
+    <Flex flex={{ default: 'flex_1' }}>
+      <FlexItem flex={{ default: 'flex_1' }}>
+        <PatternFlyCodeEditor
+          language={language}
+          code={code}
+          options={{
+            readOnly: true,
+          }}
+          onEditorDidMount={onEditorDidMount}
+          isDarkTheme
+          height={height}
+          shortcutsPopoverProps={showShortcuts ? shortcutPopover : undefined}
+        />
+      </FlexItem>
+    </Flex>
   );
 };

@@ -14,7 +14,7 @@ type Props = Omit<CodeEditorProps, 'code' | 'onEditorDidMount'> & {
 export const YAMLCodeEditor: React.FC<Props> = ({ code, ...props }) => {
   const { data: swaggerDefinitions, isLoading } = useSwaggerDefinitions();
 
-  const [monacoInstance, setMonacoInstance] = React.useState<Monaco>(null);
+  const [monacoInstance, setMonacoInstance] = React.useState<Monaco | null>(null);
 
   const handleEditorDidMount = (monaco: Monaco) => {
     if (!monaco) return;
