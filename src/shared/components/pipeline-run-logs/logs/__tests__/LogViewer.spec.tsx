@@ -65,7 +65,10 @@ describe('LogViewer', () => {
         name: 'test-task',
       },
     },
-    status: {},
+    status: {
+      startTime: '2024-01-01T00:00:00Z',
+      completionTime: '2024-01-01T00:01:00Z',
+    },
   };
 
   const defaultProps = {
@@ -106,6 +109,17 @@ describe('LogViewer', () => {
       expect(screen.getByTestId('task-duration')).toBeInTheDocument();
     });
 
+    it('should render task name in Truncate component when taskRun has taskRef.name', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
+
+      const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
+      expect(taskNameElement).toBeInTheDocument();
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).toBeInTheDocument();
+      expect(truncateElement).toHaveTextContent('test-task');
+    });
+
     it('should display metadata name when taskRef name is not available', () => {
       const taskRunWithoutTaskRef = {
         ...mockTaskRun,
@@ -117,6 +131,66 @@ describe('LogViewer', () => {
       const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
       expect(taskNameElement).toBeInTheDocument();
       expect(taskNameElement).toHaveTextContent('test-task-run');
+    });
+
+    it('should not render Truncate FlexItem when taskName is null or undefined', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={null} />);
+
+      const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
+      expect(taskNameElement).toBeInTheDocument();
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+    });
+
+    it('should not render Truncate FlexItem when taskRun has neither taskRef.name nor metadata.name', () => {
+      const taskRunWithoutName = {
+        ...mockTaskRun,
+        spec: {},
+        metadata: {},
+      };
+
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunWithoutName} />);
+
+      const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
+      expect(taskNameElement).toBeInTheDocument();
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+    });
+
+    it('should render Truncate FlexItem when taskName exists', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).toBeInTheDocument();
+      expect(truncateElement).toHaveTextContent('test-task');
+    });
+
+    it('should not render Truncate FlexItem when taskName is falsy', () => {
+      const taskRunWithoutName = {
+        ...mockTaskRun,
+        spec: {},
+        metadata: {},
+      };
+
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunWithoutName} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+    });
+
+    it('should conditionally render Truncate FlexItem based on taskName', () => {
+      const { container: container1 } = render(
+        <LogViewer {...defaultProps} taskRun={mockTaskRun} />,
+      );
+      const truncate1 = container1.querySelector('.pf-v5-c-truncate');
+      expect(truncate1).toBeInTheDocument();
+      expect(truncate1).toHaveTextContent('test-task');
+
+      const { container: container2 } = render(<LogViewer {...defaultProps} taskRun={null} />);
+      const truncate2 = container2.querySelector('.pf-v5-c-truncate');
+      expect(truncate2).not.toBeInTheDocument();
     });
 
     it('should show loading indicator when isLoading is true', () => {
