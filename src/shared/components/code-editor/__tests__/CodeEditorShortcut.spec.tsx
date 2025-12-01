@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { ShortcutCommand, CodeEditorShortcut } from '../CodeEditorShortcut';
+import { CodeEditorShortcut, ShortcutCommand } from '../CodeEditorShortcut';
 
 describe('ShortcutCommand', () => {
   it('should render children inside kbd element', () => {
@@ -68,6 +68,27 @@ describe('CodeEditorShortcut', () => {
     expect(screen.getByText('F1')).toBeInTheDocument();
   });
 
+  it('should format single character keyName as uppercase', () => {
+    render(<CodeEditorShortcut keyName="f">Press F</CodeEditorShortcut>);
+
+    expect(screen.getByText('F')).toBeInTheDocument();
+    expect(screen.queryByText('f')).not.toBeInTheDocument();
+  });
+
+  it('should format multi-character keyName with upperFirst', () => {
+    render(<CodeEditorShortcut keyName="ctrl">Press Ctrl</CodeEditorShortcut>);
+
+    expect(screen.getByText('Ctrl')).toBeInTheDocument();
+    expect(screen.queryByText('ctrl')).not.toBeInTheDocument();
+    expect(screen.queryByText('CTRL')).not.toBeInTheDocument();
+  });
+
+  it('should handle keyName with mixed case', () => {
+    render(<CodeEditorShortcut keyName="F1">Press F1</CodeEditorShortcut>);
+
+    expect(screen.getByText('F1')).toBeInTheDocument();
+  });
+
   it('should render both hover and keyName when both props are provided', () => {
     const { container } = render(
       <CodeEditorShortcut hover keyName="F1">
@@ -86,6 +107,15 @@ describe('CodeEditorShortcut', () => {
 
     expect(screen.getByText('Just a description')).toBeInTheDocument();
     expect(container.querySelector('[data-test-id="hover"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-test-id$="-button"]')).not.toBeInTheDocument();
+  });
+
+  it('should not render keyName shortcut when keyName is empty string', () => {
+    const { container } = render(
+      <CodeEditorShortcut keyName="">Test description</CodeEditorShortcut>,
+    );
+
+    expect(screen.getByText('Test description')).toBeInTheDocument();
     expect(container.querySelector('[data-test-id$="-button"]')).not.toBeInTheDocument();
   });
 });

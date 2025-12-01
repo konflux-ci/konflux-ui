@@ -283,4 +283,162 @@ describe('openAPItoJSONSchema', () => {
       oneOf: [],
     });
   });
+
+  it('should handle GroupVersionKind with only version (no group, no kind)', () => {
+    const openAPI = {
+      'io.k8s.api.core.v1.Pod': {
+        type: 'object',
+        properties: {
+          metadata: { type: 'object' },
+        },
+        'x-kubernetes-group-version-kind': [
+          {
+            group: '',
+            version: 'v1',
+            kind: '',
+          },
+        ],
+      },
+    };
+
+    const result = openAPItoJSONSchema(openAPI);
+
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.apiVersion.enum).toEqual([
+      'v1',
+    ]);
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.kind).toEqual({
+      enum: [],
+    });
+  });
+
+  it('should handle apiVersion without existing enum property', () => {
+    const openAPI = {
+      'io.k8s.api.core.v1.Pod': {
+        type: 'object',
+        properties: {
+          apiVersion: {
+            type: 'string',
+          },
+          metadata: { type: 'object' },
+        },
+        'x-kubernetes-group-version-kind': [
+          {
+            group: '',
+            version: 'v1',
+            kind: 'Pod',
+          },
+        ],
+      },
+    };
+
+    const result = openAPItoJSONSchema(openAPI);
+
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.apiVersion.enum).toEqual([
+      'v1',
+    ]);
+  });
+
+  it('should handle kind without existing enum property', () => {
+    const openAPI = {
+      'io.k8s.api.core.v1.Pod': {
+        type: 'object',
+        properties: {
+          kind: {
+            type: 'string',
+          },
+          metadata: { type: 'object' },
+        },
+        'x-kubernetes-group-version-kind': [
+          {
+            group: '',
+            version: 'v1',
+            kind: 'Pod',
+          },
+        ],
+      },
+    };
+
+    const result = openAPItoJSONSchema(openAPI);
+
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.kind.enum).toEqual(['Pod']);
+  });
+
+  it('should handle GroupVersionKind with group but no version', () => {
+    const openAPI = {
+      'io.k8s.api.core.v1.Pod': {
+        type: 'object',
+        properties: {
+          metadata: { type: 'object' },
+        },
+        'x-kubernetes-group-version-kind': [
+          {
+            group: 'apps',
+            version: '',
+            kind: 'Pod',
+          },
+        ],
+      },
+    };
+
+    const result = openAPItoJSONSchema(openAPI);
+
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.apiVersion).toEqual({
+      enum: [],
+    });
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.kind.enum).toEqual(['Pod']);
+  });
+
+  it('should execute createOrAppendAPIVersion when apiVersion exists', () => {
+    const openAPI = {
+      'io.k8s.api.core.v1.Pod': {
+        type: 'object',
+        properties: {
+          apiVersion: {
+            type: 'string',
+          },
+          metadata: { type: 'object' },
+        },
+        'x-kubernetes-group-version-kind': [
+          {
+            group: '',
+            version: 'v1',
+            kind: 'Pod',
+          },
+        ],
+      },
+    };
+
+    const result = openAPItoJSONSchema(openAPI);
+
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.apiVersion).toBeDefined();
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.apiVersion.enum).toEqual([
+      'v1',
+    ]);
+  });
+
+  it('should execute createOrAppendKind when kind exists', () => {
+    const openAPI = {
+      'io.k8s.api.core.v1.Pod': {
+        type: 'object',
+        properties: {
+          kind: {
+            type: 'string',
+          },
+          metadata: { type: 'object' },
+        },
+        'x-kubernetes-group-version-kind': [
+          {
+            group: '',
+            version: 'v1',
+            kind: 'Pod',
+          },
+        ],
+      },
+    };
+
+    const result = openAPItoJSONSchema(openAPI);
+
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.kind).toBeDefined();
+    expect(result?.definitions['io.k8s.api.core.v1.Pod'].properties.kind.enum).toEqual(['Pod']);
+  });
 });
