@@ -61,12 +61,21 @@ describe('ReleaseYamlTab', () => {
 
   it('should render correct YAML content', () => {
     const release = mockReleases[0];
-    mockUseRelease.mockReturnValue([release, true]);
+    mockUseRelease.mockReturnValue([release, true, undefined]);
 
     renderWithQueryClient(<ReleaseYamlTab />);
 
     const expectedYaml = yamlStringify(release);
     const editorContent = screen.getByTestId('mock-editor').textContent;
     expect(editorContent?.replace(/\s+/g, '')).toEqual(expectedYaml.replace(/\s+/g, ''));
+  });
+
+  it('should render error state when release fetch fails', () => {
+    const error = new Error('Failed to fetch release');
+    mockUseRelease.mockReturnValue([null, true, error]);
+
+    renderWithQueryClient(<ReleaseYamlTab />);
+
+    expect(screen.getByText(/Unable to load release/i)).toBeInTheDocument();
   });
 });
