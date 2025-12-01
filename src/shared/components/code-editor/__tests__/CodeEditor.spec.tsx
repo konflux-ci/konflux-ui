@@ -6,6 +6,12 @@ import { CodeEditor } from '../CodeEditor';
 const mockUseShortcutPopover = jest.fn();
 const mockShortcutPopover = { 'aria-label': 'Shortcuts' };
 
+jest.mock('@monaco-editor/react', () => ({
+  loader: {
+    config: jest.fn(),
+  },
+}));
+
 jest.mock('../hooks/useShortcutPopover', () => ({
   useShortcutPopover: (...args: unknown[]) => mockUseShortcutPopover(...args),
 }));
@@ -100,6 +106,17 @@ describe('CodeEditor', () => {
     expect(capturedProps.onEditorDidMount).toBe(mockOnEditorDidMount);
     expect(capturedProps.isDarkTheme).toBe(true);
     expect(capturedProps.options).toEqual({ readOnly: true });
+  });
+
+  it('should render Flex and FlexItem structure', () => {
+    const { container } = render(
+      <CodeEditor code="test" onEditorDidMount={mockOnEditorDidMount} />,
+    );
+
+    expect(container.querySelector('.pf-v5-l-flex')).toBeInTheDocument();
+    const flexElement = container.querySelector('.pf-v5-l-flex');
+    expect(flexElement).toBeInTheDocument();
+    expect(flexElement?.children.length).toBeGreaterThan(0);
   });
 
   it('should handle all props together', () => {
