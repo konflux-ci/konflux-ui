@@ -1,5 +1,5 @@
 import { PopoverProps } from '@patternfly/react-core';
-import CodeEditorShortcut from '../CodeEditorShortcut';
+import { CodeEditorShortcut } from '../CodeEditorShortcut';
 
 export const useShortcutPopover = (onHideShortcuts?: () => void): PopoverProps => ({
   'aria-label': 'Shortcuts',

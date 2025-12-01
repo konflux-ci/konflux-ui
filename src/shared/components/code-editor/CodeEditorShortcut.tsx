@@ -19,7 +19,11 @@ export const ShortcutCommand: React.FC<ShortcutCommandProps> = ({ children, ...s
   </span>
 );
 
-const CodeEditorShortcut: React.FC<CodeEditorShortcutProps> = ({ children, hover, keyName }) => {
+export const CodeEditorShortcut: React.FC<CodeEditorShortcutProps> = ({
+  children,
+  hover,
+  keyName,
+}) => {
   return (
     <Grid>
       <GridItem span={4} className="code-editor-shortcut__cell">
@@ -40,5 +44,3 @@ const CodeEditorShortcut: React.FC<CodeEditorShortcutProps> = ({ children, hover
     </Grid>
   );
 };
-
-export default CodeEditorShortcut;
