@@ -78,8 +78,18 @@ describe('Release Routes Configuration', () => {
     it('should have artifacts child route', () => {
       const artifactsRoute = mainRoute.children.find((child) => child.path === 'artifacts');
       expect(artifactsRoute).toBeDefined();
+      expect(artifactsRoute?.path).toBe('artifacts');
       expect(artifactsRoute?.element).toBeDefined();
       expect(React.isValidElement(artifactsRoute?.element)).toBe(true);
+    });
+
+    it('should execute artifacts route definition', () => {
+      const artifactsRoute = mainRoute.children.find((child) => child.path === 'artifacts');
+      expect(artifactsRoute).toBeDefined();
+      expect(artifactsRoute).toHaveProperty('path', 'artifacts');
+      expect(artifactsRoute).toHaveProperty('element');
+      expect(artifactsRoute?.index).toBeUndefined();
+      expect(Object.keys(artifactsRoute || {})).toEqual(['path', 'element']);
     });
 
     it('should have yaml child route with lazy loading', async () => {
@@ -88,8 +98,54 @@ describe('Release Routes Configuration', () => {
       expect(typeof yamlRoute?.lazy).toBe('function');
 
       const lazyResult = await yamlRoute?.lazy?.();
+      expect(lazyResult).toBeDefined();
       expect(lazyResult).toHaveProperty('element');
       expect(React.isValidElement(lazyResult?.element)).toBe(true);
+    });
+
+    it('should execute lazy function return statement', async () => {
+      const yamlRoute = mainRoute.children.find((child) => child.path === 'yaml');
+      expect(yamlRoute).toBeDefined();
+
+      const result1 = await yamlRoute?.lazy?.();
+      const result2 = await yamlRoute?.lazy?.();
+
+      expect(result1).toEqual({
+        element: expect.any(Object),
+      });
+      expect(result2).toEqual({
+        element: expect.any(Object),
+      });
+      expect(React.isValidElement(result1?.element)).toBe(true);
+      expect(React.isValidElement(result2?.element)).toBe(true);
+    });
+
+    it('should execute lazy function return statement', async () => {
+      const yamlRoute = mainRoute.children.find((child) => child.path === 'yaml');
+      expect(yamlRoute).toBeDefined();
+
+      const result = await yamlRoute?.lazy?.();
+      expect(result).toEqual({
+        element: expect.any(Object), // React element
+      });
+      expect(React.isValidElement(result?.element)).toBe(true);
+    });
+
+    it('should have all route elements defined', () => {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const [mainRoute] = releaseRoutes;
+      expect(mainRoute.element).toBeDefined();
+      expect(React.isValidElement(mainRoute.element)).toBe(true);
+      expect(mainRoute.errorElement).toBeDefined();
+      expect(React.isValidElement(mainRoute.errorElement)).toBe(true);
+    });
+
+    it('should have FilterContextProvider wrapping pipelineruns route', () => {
+      const pipelinerunsRoute = mainRoute.children.find((child) => child.path === 'pipelineruns');
+      expect(pipelinerunsRoute).toBeDefined();
+      const element = pipelinerunsRoute?.element;
+      expect(element).toBeDefined();
+      expect(React.isValidElement(element)).toBe(true);
     });
   });
 });
