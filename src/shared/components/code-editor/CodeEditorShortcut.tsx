@@ -19,6 +19,18 @@ export const ShortcutCommand: React.FC<ShortcutCommandProps> = ({ children, ...s
   </span>
 );
 
+const HoverCommand: React.FC = () => (
+  <ShortcutCommand data-test-id="hover">
+    <MouseIcon /> Hover
+  </ShortcutCommand>
+);
+
+const KeyNameCommand: React.FC<{ keyName: string }> = ({ keyName }) => {
+  const displayText =
+    keyName.length === 1 ? keyName.toUpperCase() : upperFirst(keyName.toLowerCase());
+  return <ShortcutCommand data-test-id={`${keyName}-button`}>{displayText}</ShortcutCommand>;
+};
+
 export const CodeEditorShortcut: React.FC<CodeEditorShortcutProps> = ({
   children,
   hover,
@@ -27,16 +39,8 @@ export const CodeEditorShortcut: React.FC<CodeEditorShortcutProps> = ({
   return (
     <Grid>
       <GridItem span={4} className="code-editor-shortcut__cell">
-        {hover && (
-          <ShortcutCommand data-test-id="hover">
-            <MouseIcon /> Hover
-          </ShortcutCommand>
-        )}
-        {keyName && (
-          <ShortcutCommand data-test-id={`${keyName}-button`}>
-            {keyName.length === 1 ? keyName.toUpperCase() : upperFirst(keyName.toLowerCase())}
-          </ShortcutCommand>
-        )}
+        {hover && <HoverCommand />}
+        {keyName && <KeyNameCommand keyName={keyName} />}
       </GridItem>
       <GridItem span={8} className="code-editor-shortcut__cell">
         {children}
