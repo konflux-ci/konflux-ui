@@ -26,7 +26,7 @@ export const ReleaseYamlTab: React.FC = () => {
 
   return (
     <Flex className="pf-v5-u-py-lg">
-      <YAMLCodeEditor code={release} data-test="monaco-editor" />
+      <YAMLCodeEditor code={release} />
     </Flex>
   );
 };
