@@ -8,7 +8,7 @@ runs:
       run: |
         set -euo pipefail
         : Generate error logs
-        # This file is not present for periodic jobs as we don't deploy Konflux
+        # This file is not present for periodic-stage jobs as we don't deploy Konflux
         if [ -f ./konflux-ci/generate-err-logs.sh ]; then
           ./konflux-ci/generate-err-logs.sh
         fi

@@ -54,12 +54,12 @@ execute_test() {
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
         --timeout=3600 \
-        -e CYPRESS_PR_CHECK=${CYPRESS_PR_CHECK} \
+        -e CYPRESS_LOCAL_CLUSTER=${CYPRESS_LOCAL_CLUSTER} \
+        -e CYPRESS_PERIODIC_RUN_STAGE=${CYPRESS_PERIODIC_RUN_STAGE} \
         -e CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} \
         -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
-        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
-        -e CYPRESS_PERIODIC_RUN=${CYPRESS_PERIODIC_RUN}"
+        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN}"
 
     TEST_RUN=0
     set -e
@@ -109,6 +109,9 @@ run_test_pr() {
         echo "Using latest image from quay."
     fi
 
+    export CYPRESS_LOCAL_CLUSTER=true
+    export CYPRESS_PERIODIC_RUN_STAGE=false
+
     execute_test
     TEST_RUN=$?
 
@@ -119,6 +122,8 @@ run_test_pr() {
 
 run_test_stage() {
     echo "Running test suite against stage UI and backend..."
+    export CYPRESS_LOCAL_CLUSTER=false
+    export CYPRESS_PERIODIC_RUN_STAGE=true
 
     execute_test
     TEST_RUN=$?
