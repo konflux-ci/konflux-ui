@@ -13,7 +13,7 @@ build_ui_image() {
     export IMAGE_NAME=localhost/test/test
     export IMAGE_TAG=konflux-ui
     export KONFLUX_UI_IMAGE_REF=${IMAGE_NAME}:${IMAGE_TAG}
-    # if TARGET_BRANCH is not set (usually for periodic-stage jobs), use REF_BRANCH
+    # if TARGET_BRANCH is not set (usually for periodic jobs), use REF_BRANCH
     if [ -z ${TARGET_BRANCH} ]; then
         TARGET_BRANCH=${REF_BRANCH}
     fi
@@ -48,14 +48,6 @@ execute_test() {
     # monitor memory usage during a test
     while true; do date '+%F_%H:%M:%S' >> mem.log && free -m >> mem.log; sleep 1; done 2>&1 &
     MEM_PID=$!
-
-    export CYPRESS_LOCAL_CLUSTER=true
-    export CYPRESS_PERIODIC_RUN_STAGE=false
-
-    if [ "${JOB_TYPE}" == 'periodic-stage' ]; then
-        CYPRESS_LOCAL_CLUSTER=false
-        CYPRESS_PERIODIC_RUN_STAGE=true
-    fi
 
     mkdir artifacts
     echo "running tests using image ${TEST_IMAGE}"
@@ -117,6 +109,9 @@ run_test_pr() {
         echo "Using latest image from quay."
     fi
 
+    export CYPRESS_LOCAL_CLUSTER=true
+    export CYPRESS_PERIODIC_RUN_STAGE=false
+
     execute_test
     TEST_RUN=$?
 
@@ -127,6 +122,8 @@ run_test_pr() {
 
 run_test_stage() {
     echo "Running test suite against stage UI and backend..."
+    export CYPRESS_LOCAL_CLUSTER=false
+    export CYPRESS_PERIODIC_RUN_STAGE=true
 
     execute_test
     TEST_RUN=$?
