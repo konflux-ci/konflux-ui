@@ -117,7 +117,7 @@ export default defineConfig({
       }
 
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
-      if (config.env.PR_CHECK === true) {
+      if (config.env.LOCAL_CLUSTER === true) {
         config.env.HAC_NAMESPACE = `user-ns2`;
       } else {
         config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;
