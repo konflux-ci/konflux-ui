@@ -22,26 +22,30 @@ export type Props = {
 
 export const CodeEditor: React.FC<Props> = ({
   code,
-  height = '500px',
-  showShortcuts = true,
-  language = Language.yaml,
+  height,
+  showShortcuts,
+  language,
   onEditorDidMount,
 }) => {
+  const finalHeight = height ?? '500px';
+  const finalShowShortcuts = showShortcuts ?? true;
+  const finalLanguage = language ?? Language.yaml;
+
   const shortcutPopover = useShortcutPopover();
 
   return (
     <Flex flex={{ default: 'flex_1' }}>
       <FlexItem flex={{ default: 'flex_1' }}>
         <PatternFlyCodeEditor
-          language={language}
+          language={finalLanguage}
           code={code}
           options={{
             readOnly: true,
           }}
           onEditorDidMount={onEditorDidMount}
           isDarkTheme
-          height={height}
-          shortcutsPopoverProps={showShortcuts ? shortcutPopover : undefined}
+          height={finalHeight}
+          shortcutsPopoverProps={finalShowShortcuts ? shortcutPopover : undefined}
         />
       </FlexItem>
     </Flex>
