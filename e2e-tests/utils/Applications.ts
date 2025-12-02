@@ -23,19 +23,19 @@ import { UIhelper } from './UIhelper';
 
 export class Applications {
   static checkPipelineIsCancellingOrCancelled(componentName: string) {
-    UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).then((row) => {
-      const text = row.text();
-      let isCancellingOrCancelled = false;
+    UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(($row) => {
+      const text = $row.text();
+      const isCancellingOrCancelled = text.includes('Cancelling') || text.includes('Cancelled');
+
       if (text.includes('Cancelling')) {
         cy.log('Pipeline was in a state Cancelling.');
-        isCancellingOrCancelled = true;
       } else if (text.includes('Cancelled')) {
         cy.log('Pipeline was in a state Cancelled.');
-        isCancellingOrCancelled = true;
-      } else {
-        cy.log("Status wasn't Cancelling nor Cancelled.");
       }
-      assert(isCancellingOrCancelled == true);
+      assert(
+        isCancellingOrCancelled,
+        `Expected pipeline to be Cancelling or Cancelled, but found: ${text}`,
+      );
     });
   }
 
