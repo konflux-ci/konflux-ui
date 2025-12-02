@@ -35,9 +35,14 @@ jest.mock('../LogsTaskDuration', () => {
 
 jest.mock('@patternfly/react-log-viewer', () => ({
   LogViewer: (props: Record<string, unknown>) => {
-    const { data, header, toolbar, ...otherProps } = props;
+    const { data, header, toolbar, scrollToRow, ...otherProps } = props;
     return (
-      <div data-test="patternfly-log-viewer" data-log-data={data as string} {...otherProps}>
+      <div
+        data-test="patternfly-log-viewer"
+        data-log-data={data as string}
+        data-scroll-to-row={scrollToRow as number}
+        {...otherProps}
+      >
         {header as React.ReactNode}
         {toolbar as React.ReactNode}
       </div>
@@ -91,13 +96,16 @@ describe('LogViewer', () => {
 
   describe('rendering', () => {
     it('should render the LogViewer with basic props', () => {
-      render(<LogViewer {...defaultProps} />);
+      const { container } = render(<LogViewer {...defaultProps} />);
 
       expect(screen.getByTestId('patternfly-log-viewer')).toBeInTheDocument();
       expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
         'data-log-data',
         defaultProps.data,
       );
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
     });
 
     it('should display task name when taskRun is provided', () => {
@@ -193,6 +201,24 @@ describe('LogViewer', () => {
       expect(truncate2).not.toBeInTheDocument();
     });
 
+    it('should not render Truncate FlexItem when taskName is empty string', () => {
+      const taskRunWithEmptyName = {
+        ...mockTaskRun,
+        spec: {
+          taskRef: {
+            name: '',
+          },
+        },
+        metadata: {
+          name: '',
+        },
+      };
+
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunWithEmptyName} />);
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+    });
+
     it('should show loading indicator when isLoading is true', () => {
       render(<LogViewer {...defaultProps} isLoading={true} taskRun={mockTaskRun} />);
 
@@ -246,25 +272,31 @@ describe('LogViewer', () => {
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
       // scrollToRow should be the number of lines (3 lines in defaultProps.data)
-      expect(logViewer).toHaveAttribute('scrolltorow', '3');
+      expect(logViewer).toHaveAttribute('data-scroll-to-row', '3');
     });
 
     it('should set scrolledRow to 0 when allowAutoScroll is false', () => {
       render(<LogViewer {...defaultProps} allowAutoScroll={false} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      expect(logViewer).toHaveAttribute('scrolltorow', '0');
+      expect(logViewer).toHaveAttribute('data-scroll-to-row', '0');
     });
 
     it('should recalculate scrolledRow when data changes', () => {
       const { rerender } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
-      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('scrolltorow', '3');
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-scroll-to-row',
+        '3',
+      );
 
       const newData = 'line 1\nline 2\nline 3\nline 4\nline 5';
       rerender(<LogViewer {...defaultProps} data={newData} allowAutoScroll={true} />);
 
-      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('scrolltorow', '5');
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-scroll-to-row',
+        '5',
+      );
     });
   });
 
@@ -437,6 +469,30 @@ describe('LogViewer', () => {
 
       const toolbarContent = document.querySelector('.log-viewer--fullscreen');
       expect(toolbarContent).toBeInTheDocument();
+    });
+  });
+
+  describe('downloadLogs edge cases', () => {
+    it('should not download when data is empty', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} data="" taskRun={mockTaskRun} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).not.toHaveBeenCalled();
+    });
+
+    it('should use uuid for filename when taskName is null', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} taskRun={null} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).toHaveBeenCalled();
+      const [, filename] = mockSaveAs.mock.calls[0];
+      expect(filename).toMatch(/^task-run-.*\.log$/);
     });
   });
 });
