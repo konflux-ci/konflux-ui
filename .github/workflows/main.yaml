@@ -29,9 +29,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-  
+
       - name: Install Dependencies 🥁
-        run: | 
+        run: |
           yarn install --frozen-lockfile
           cd e2e-tests
           yarn install
@@ -42,14 +42,14 @@ jobs:
 
       - name: Type Checking
         run: yarn type-checks
-        
+
       - name: Run unit tests 🧪
         run: yarn test --maxWorkers=2 --coverage --silent --ci --verbose=false
         env:
           CI: true
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
