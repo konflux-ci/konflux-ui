@@ -12,7 +12,7 @@ build_ui_image() {
 
     export IMAGE_NAME=localhost/test/test
     export IMAGE_TAG=konflux-ui
-    export KONFLUX_UI_IMAGE_REF=${IMAGE_NAME}:${IMAGE_TAG}   
+    export KONFLUX_UI_IMAGE_REF=${IMAGE_NAME}:${IMAGE_TAG}
     # if TARGET_BRANCH is not set (usually for periodic jobs), use REF_BRANCH
     if [ -z ${TARGET_BRANCH} ]; then
         TARGET_BRANCH=${REF_BRANCH}
@@ -27,8 +27,9 @@ build_ui_image() {
 
     export COMPONENT=konflux-ui
 
+    # Build instrumented image for e2e coverage collection
     podman build -t ${KONFLUX_UI_IMAGE_REF} \
-        -f Dockerfile .
+        -f Dockerfile.instrumented .
 
     podman image save -o konflux-ui.tar ${KONFLUX_UI_IMAGE_REF}
     kind load image-archive konflux-ui.tar -n konflux
@@ -93,7 +94,7 @@ run_test_pr() {
     # fetch also target branch
     git fetch origin "${TARGET_BRANCH}"
 
-    # Rebuild test image if Containerfile or entrypoint from e2e-tests was changed 
+    # Rebuild test image if Containerfile or entrypoint from e2e-tests was changed
     git diff --exit-code --quiet "origin/${TARGET_BRANCH}" HEAD -- e2e-tests/Containerfile || is_changed_cf=$?
     git diff --exit-code --quiet "origin/${TARGET_BRANCH}" HEAD -- e2e-tests/entrypoint.sh || is_changed_ep=$?
 
@@ -104,10 +105,10 @@ run_test_pr() {
         cd e2e-tests
         podman build -t "$TEST_IMAGE" . -f Containerfile
         cd ..
-    else 
+    else
         echo "Using latest image from quay."
     fi
-   
+
     execute_test
     TEST_RUN=$?
 
@@ -118,15 +119,77 @@ run_test_pr() {
 
 run_test_stage() {
     echo "Running test suite against stage UI and backend..."
-        
+
     execute_test
     TEST_RUN=$?
 
     exit $TEST_RUN
 }
 
+upload_coverage() {
+    echo "Uploading e2e coverage to Codecov..."
+
+    # Coverage data is copied to artifacts/.nyc_output by entrypoint.sh
+    local COVERAGE_DIR="artifacts/.nyc_output"
+
+    # Check if coverage data exists
+    if [ ! -d "${COVERAGE_DIR}" ]; then
+        echo "No coverage data found at ${COVERAGE_DIR} - skipping upload"
+        return 0
+    fi
+
+    if [ ! -f "${COVERAGE_DIR}/out.json" ]; then
+        echo "No coverage file found at ${COVERAGE_DIR}/out.json - skipping upload"
+        return 0
+    fi
+
+    # Check if CODECOV_TOKEN is set
+    if [ -z "${CODECOV_TOKEN:-}" ]; then
+        echo "CODECOV_TOKEN not set - skipping coverage upload"
+        return 0
+    fi
+
+    # Get repository URL and commit SHA
+    local REPO_URL="${BASE_REPO_URL:-https://github.com/konflux-ci/konflux-ui}"
+    local COMMIT_SHA="${HEAD_SHA:-$(git rev-parse HEAD)}"
+
+    echo "Repository: ${REPO_URL}"
+    echo "Commit SHA: ${COMMIT_SHA}"
+    echo "Coverage directory: ${COVERAGE_DIR}"
+
+    # Create output directory for coverport with write permissions
+    mkdir -p artifacts/coverport-output
+    chmod 777 artifacts/coverport-output
+
+    # Run coverport to process coverage and upload to Codecov
+    # Use --user to run as current user to avoid permission issues
+    podman run --rm \
+        --user "$(id -u):$(id -g)" \
+        -v "$PWD/${COVERAGE_DIR}:/workspace/coverage:ro,Z" \
+        -v "$PWD/artifacts/coverport-output:/workspace/output:rw,Z" \
+        -e CODECOV_TOKEN="${CODECOV_TOKEN}" \
+        quay.io/konflux-ci/konflux-devprod/coverport-cli@sha256:bd8dc5b1048d3385d77a17954638e1b8ae1ac2236a65560612e535e5d0888e27 \
+        process \
+            --coverage-dir=/workspace/coverage \
+            --format=nyc \
+            --repo-url="${REPO_URL}" \
+            --commit-sha="${COMMIT_SHA}" \
+            --workspace=/workspace/output \
+            --codecov-flags=e2e \
+            --keep-workspace
+
+    UPLOAD_RESULT=$?
+    if [ $UPLOAD_RESULT -eq 0 ]; then
+        echo "✅ Coverage uploaded to Codecov successfully"
+    else
+        echo "⚠️ Coverage upload failed with exit code: $UPLOAD_RESULT"
+    fi
+
+    return $UPLOAD_RESULT
+}
+
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 [build|test]"
+    echo "Usage: $0 [build|test|upload-coverage]"
     exit 1
 fi
 
@@ -142,9 +205,13 @@ case "$1" in
     test-stage)
         run_test_stage
         ;;
+    upload-coverage)
+        echo "Uploading coverage..."
+        upload_coverage
+        ;;
     *)
         echo "Invalid argument: $1"
-        echo "Usage: $0 [build|test]"
+        echo "Usage: $0 [build|test|upload-coverage]"
         exit 1
         ;;
 esac

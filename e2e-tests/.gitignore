@@ -1,2 +1,5 @@
 cypress/
 node_modules
+coverage/
+.nyc_output/
+coverport-output/
