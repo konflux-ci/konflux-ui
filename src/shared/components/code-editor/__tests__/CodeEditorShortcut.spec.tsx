@@ -140,4 +140,77 @@ describe('CodeEditorShortcut', () => {
     expect(keyCommand).toBeInTheDocument();
     expect(screen.getByText('Tab')).toBeInTheDocument();
   });
+
+  it('should handle children as null', () => {
+    const { container } = render(<CodeEditorShortcut>{null}</CodeEditorShortcut>);
+
+    const grid = container.querySelector('.pf-v5-l-grid');
+    expect(grid).toBeInTheDocument();
+  });
+
+  it('should handle children as empty string', () => {
+    const { container } = render(<CodeEditorShortcut>{''}</CodeEditorShortcut>);
+
+    const grid = container.querySelector('.pf-v5-l-grid');
+    expect(grid).toBeInTheDocument();
+  });
+
+  it('should handle children as number', () => {
+    render(<CodeEditorShortcut>{123}</CodeEditorShortcut>);
+
+    expect(screen.getByText('123')).toBeInTheDocument();
+  });
+
+  it('should handle children as array', () => {
+    render(
+      <CodeEditorShortcut>
+        <span>First</span>
+        <span>Second</span>
+      </CodeEditorShortcut>,
+    );
+
+    expect(screen.getByText('First')).toBeInTheDocument();
+    expect(screen.getByText('Second')).toBeInTheDocument();
+  });
+
+  it('should render GridItem with span={4} when hover or keyName is provided', () => {
+    const { container } = render(
+      <CodeEditorShortcut hover keyName="F1">
+        Test
+      </CodeEditorShortcut>,
+    );
+
+    const gridItems = container.querySelectorAll('.code-editor-shortcut__cell');
+    expect(gridItems).toHaveLength(2);
+    expect(gridItems[0]).toBeInTheDocument();
+  });
+
+  it('should render GridItem with span={8} for children', () => {
+    const { container } = render(<CodeEditorShortcut>Test content</CodeEditorShortcut>);
+
+    const gridItems = container.querySelectorAll('.code-editor-shortcut__cell');
+    expect(gridItems).toHaveLength(2);
+    expect(gridItems[1]).toBeInTheDocument();
+    expect(screen.getByText('Test content')).toBeInTheDocument();
+  });
+
+  it('should handle keyName with special characters', () => {
+    const { container } = render(
+      <CodeEditorShortcut keyName="Ctrl+Shift">Press Ctrl+Shift</CodeEditorShortcut>,
+    );
+
+    const keyCommand = container.querySelector('[data-test-id="Ctrl+Shift-button"]');
+    expect(keyCommand).toBeInTheDocument();
+    expect(screen.getByText('Ctrl+shift')).toBeInTheDocument();
+  });
+
+  it('should handle keyName with whitespace', () => {
+    const { container } = render(
+      <CodeEditorShortcut keyName="Space ">Press Space</CodeEditorShortcut>,
+    );
+
+    const keyCommand = container.querySelector('[data-test-id="Space -button"]');
+    expect(keyCommand).toBeInTheDocument();
+    expect(keyCommand?.textContent).toBe('Space ');
+  });
 });

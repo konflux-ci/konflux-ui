@@ -6,11 +6,21 @@ import { CodeEditor } from '../CodeEditor';
 const mockUseShortcutPopover = jest.fn();
 const mockShortcutPopover = { 'aria-label': 'Shortcuts' };
 
-jest.mock('@monaco-editor/react', () => ({
-  loader: {
-    config: jest.fn(),
-  },
+jest.mock('monaco-editor/esm/vs/editor/editor.api', () => ({
+  // Providing a minimal mock object to satisfy the shape expected by loader.config
+  editor: {},
+  languages: {},
 }));
+
+jest.mock('@monaco-editor/react', () => {
+  const original = jest.requireActual('@monaco-editor/react');
+  return {
+    ...original,
+    loader: {
+      config: jest.fn(),
+    },
+  };
+});
 
 jest.mock('../hooks/useShortcutPopover', () => ({
   useShortcutPopover: (...args: unknown[]) => mockUseShortcutPopover(...args),
@@ -18,21 +28,30 @@ jest.mock('../hooks/useShortcutPopover', () => ({
 
 let capturedProps: Record<string, unknown> = {};
 
-jest.mock('@patternfly/react-code-editor', () => ({
-  CodeEditor: (props: Record<string, unknown>) => {
+// The mock needs to be defined BEFORE the import of CodeEditor
+jest.mock('@patternfly/react-code-editor', () => {
+  const original = jest.requireActual('@patternfly/react-code-editor');
+
+  const MockPatternFlyCodeEditor = (props) => {
+    // Capture props to assert against them later
     capturedProps = props;
+
+    // Immediately run onEditorDidMount to satisfy test requirements
     React.useEffect(() => {
-      const onEditorDidMount = props.onEditorDidMount as
-        | ((editor: unknown, monaco: unknown) => void)
-        | undefined;
-      onEditorDidMount?.({}, {});
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-    return <pre data-test="mock-editor">{props.code as string}</pre>;
-  },
-  Language: { yaml: 'yaml', json: 'json' },
-  EditorDidMount: jest.fn(),
-}));
+      props.onEditorDidMount?.({}, {});
+    }, [props, props.onEditorDidMount]);
+
+    // Render a simple element for testing content
+    return <pre data-test="mock-editor">{props.code}</pre>;
+  };
+  MockPatternFlyCodeEditor.displayName = 'PatternFlyCodeEditor';
+
+  return {
+    ...original, // Keep Language and other exports
+    CodeEditor: MockPatternFlyCodeEditor,
+    EditorDidMount: original.EditorDidMount,
+  };
+});
 
 describe('CodeEditor', () => {
   const mockOnEditorDidMount = jest.fn();
