@@ -1,7 +1,6 @@
 import { screen } from '@testing-library/react';
 import { Issue, IssueState, IssueSeverity, IssueType } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
-import { getErrorState } from '~/shared/utils/error-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { LatestIssuesCard } from '../LatestIssuesCard';
@@ -11,13 +10,7 @@ jest.mock('~/kite/kite-hooks', () => ({
   useIssues: jest.fn(),
 }));
 
-jest.mock('~/shared/utils/error-utils', () => ({
-  getErrorState: jest.fn(),
-}));
-
-// Create mock functions
 const mockUseIssues = useIssues as jest.Mock;
-const mockGetErrorState = getErrorState as jest.Mock;
 
 // Mock issues data
 const createMockIssue = (overrides: Partial<Issue> = {}): Issue => ({
@@ -58,26 +51,21 @@ describe('LatestIssuesCard', () => {
 
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByTestId('loading-skeleton-latest-issues')).toBeInTheDocument();
     });
   });
 
   describe('Error state', () => {
     it('should render error state when there is an error', () => {
-      const mockError = new Error('Test error');
+      const mockError = { code: 500, message: 'Internal Server Error' };
       mockUseIssues.mockReturnValue({
         data: undefined,
         isLoading: false,
         error: mockError,
       });
 
-      const mockErrorComponent = <div>Error component</div>;
-      mockGetErrorState.mockReturnValue(mockErrorComponent);
-
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
-
-      expect(mockGetErrorState).toHaveBeenCalledWith(mockError, true, 'issues');
-      expect(screen.getByText('Error component')).toBeInTheDocument();
+      expect(screen.getByText('Unable to load issues')).toBeInTheDocument();
     });
   });
 
@@ -92,7 +80,6 @@ describe('LatestIssuesCard', () => {
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
       expect(screen.getByText('Latest issues')).toBeInTheDocument();
-      expect(screen.getByText('No issues found')).toBeInTheDocument();
       expect(screen.getByText('No active issues found for this namespace.')).toBeInTheDocument();
     });
 
@@ -106,7 +93,7 @@ describe('LatestIssuesCard', () => {
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
       expect(screen.getByText('Latest issues')).toBeInTheDocument();
-      expect(screen.getByText('No issues found')).toBeInTheDocument();
+      expect(screen.getByText('No active issues found for this namespace.')).toBeInTheDocument();
     });
 
     it('should render empty state when data.data is undefined', () => {
@@ -119,7 +106,7 @@ describe('LatestIssuesCard', () => {
       renderWithQueryClientAndRouter(<LatestIssuesCard />);
 
       expect(screen.getByText('Latest issues')).toBeInTheDocument();
-      expect(screen.getByText('No issues found')).toBeInTheDocument();
+      expect(screen.getByText('No active issues found for this namespace.')).toBeInTheDocument();
     });
   });
 
