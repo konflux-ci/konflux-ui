@@ -1,4 +1,4 @@
-name: Periodic job: LOCAL (test Konflux UI against local cluster)
+name: "Periodic job: LOCAL (test Konflux UI against local cluster)"
 
 on:
   workflow_dispatch:

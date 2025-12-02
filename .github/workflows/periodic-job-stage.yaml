@@ -1,4 +1,4 @@
-name: Periodic job: STAGE (test Konflux UI against stage cluster)
+name: "Periodic job: STAGE (test Konflux UI against stage cluster)"
 
 on:
   workflow_dispatch:
