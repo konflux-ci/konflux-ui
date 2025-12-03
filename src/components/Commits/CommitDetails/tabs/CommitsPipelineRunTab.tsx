@@ -96,7 +96,7 @@ const CommitsPipelineRunTab: React.FC = () => {
     () => [...(testPipelineRuns ?? []), ...(buildPipelineRuns ?? [])],
     [buildPipelineRuns, testPipelineRuns],
   );
-  const pipelineRunsLoaded = testPlrLoaded && buildPlrLoaded;
+  const pipelineRunsLoaded = testPlrLoaded && (shouldFetchBuildPlr ? buildPlrLoaded : true);
   const pipelineRunsError = testPlrError ?? buildPlrError;
 
   const statusFilterObj = React.useMemo(
