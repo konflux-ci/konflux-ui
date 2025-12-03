@@ -7,9 +7,8 @@ import { TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { Commit, PipelineRunKind } from '../../../types';
-import { createRepoBranchURL, getCommitSha, statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { Commit } from '../../../types';
+import { createRepoBranchURL, statuses } from '../../../utils/commits-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
@@ -27,30 +26,16 @@ import './CommitsListRow.scss';
 interface CommitsListRowProps {
   obj: Commit;
   visibleColumns?: Set<CommitColumnKeys>;
-  pipelineRuns: PipelineRunKind[];
+  status: runStatus;
 }
 
 const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({
   obj,
   visibleColumns,
-  pipelineRuns,
+  status,
 }) => {
   const actions = useCommitActions(obj);
   const namespace = useNamespace();
-
-  const status = React.useMemo<runStatus>(() => {
-    const plrsForCommit = pipelineRuns
-      ?.filter((plr) => getCommitSha(plr) === obj.sha)
-      ?.sort(
-        (a, b) => new Date(b.status?.startTime).getTime() - new Date(a.status?.startTime).getTime(),
-      );
-
-    const plrStatus = pipelineRunStatus(plrsForCommit?.[0]);
-    if (statuses.includes(plrStatus)) {
-      return plrStatus;
-    }
-    return runStatus.Unknown;
-  }, [obj.sha, pipelineRuns]);
 
   const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
 

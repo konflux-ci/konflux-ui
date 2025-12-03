@@ -13,7 +13,7 @@ import {
 } from '@patternfly/react-core';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunType, runStatus } from '../../../../consts/pipelinerun';
+import { PipelineRunType } from '../../../../consts/pipelinerun';
 import { RouterParams } from '../../../../routes/utils';
 import { Timestamp } from '../../../../shared';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
@@ -130,7 +130,7 @@ const CommitOverviewTab: React.FC = () => {
               <DescriptionListGroup>
                 <DescriptionListTerm>Status</DescriptionListTerm>
                 <DescriptionListDescription>
-                  <StatusIconWithTextLabel status={commitStatus as runStatus} />
+                  <StatusIconWithTextLabel status={commitStatus} />
                 </DescriptionListDescription>
               </DescriptionListGroup>
               <DescriptionListGroup>
