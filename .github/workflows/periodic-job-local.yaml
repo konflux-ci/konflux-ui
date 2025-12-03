@@ -42,6 +42,10 @@ jobs:
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test
 
+      - name: Upload e2e coverage to Codecov
+        if: ${{ always() && env.CODECOV_TOKEN != '' }}
+        run: ./pr_check.sh upload-coverage
+
       - name: Generate error logs
         if: ${{ always() }}
         uses: ./.github/actions/generate-error-logs
