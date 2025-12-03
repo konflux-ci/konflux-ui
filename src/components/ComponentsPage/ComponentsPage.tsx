@@ -5,9 +5,8 @@ import { IfFeature } from '~/feature-flags/hooks';
 import { ExternalLink } from '~/shared';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import emptyStateImgUrl from '../../assets/Components.svg';
+import { LEARN_MORE_ABOUT_COMPONENTS } from '../../consts/documentation';
 import PageLayout from '../PageLayout/PageLayout';
-
-const LEARN_MORE_ABOUT_COMPONENTS = 'https://konflux-ci.dev/docs/building/creating/';
 
 const ComponentsPage: React.FC = () => {
   return (
@@ -42,7 +41,7 @@ const ComponentsPage: React.FC = () => {
               A component is an image built from source code in a repository. One or more components
               can be grouped to form a component group.
               <br />
-              To gets started, create a new component.
+              To get started, create a new component.
             </EmptyStateBody>
           </AppEmptyState>
         </PageSection>
