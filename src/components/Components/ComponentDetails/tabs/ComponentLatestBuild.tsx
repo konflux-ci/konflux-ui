@@ -12,14 +12,18 @@ import {
   Spinner,
   Button,
 } from '@patternfly/react-core';
+import { useImageRepository } from '~/hooks/useImageRepository';
 import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { ImageRepositoryModel } from '~/models';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../../../types';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
+import { getImageUrlForVisibility } from '../../../../utils/component-utils';
+import { useAccessReviewForModel } from '../../../../utils/rbac';
 import CommitLabel from '../../../Commits/commit-label/CommitLabel';
 import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
@@ -44,9 +48,24 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   );
   const buildLogsModal = useBuildLogViewerModal(component);
 
+  // Check if user has permission to list image repository
+  const [canListImageRepository] = useAccessReviewForModel(ImageRepositoryModel, 'list');
+
+  // Fetch ImageRepository to get visibility setting
+  const [imageRepository] = useImageRepository(
+    canListImageRepository ? component?.metadata?.namespace : null,
+    canListImageRepository ? component?.metadata?.name : null,
+    false,
+  );
+
+  const visibility = imageRepository?.spec?.image?.visibility;
+
   // Avoid getLastestImage fallback to spec.containerImage, which lacks image tag
   // and causes 'cosign download sbom' to fail. Use lastPromotedImage explicitly.
   const containerImage = component?.status?.lastPromotedImage;
+
+  // Get the appropriate image URL based on visibility
+  const displayImageUrl = getImageUrlForVisibility(containerImage, visibility);
 
   if (pipelineRunError) {
     return getErrorState(pipelineRunError, pipelineRunLoaded, 'pipeline run', true);
@@ -131,9 +150,9 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
           <DescriptionListGroup>
             <DescriptionListTerm>SBOM</DescriptionListTerm>
             <DescriptionListDescription>
-              {containerImage ? (
+              {displayImageUrl ? (
                 <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied" data-test="sbom-test">
-                  {`cosign download sbom ${containerImage}`}
+                  {`cosign download sbom ${displayImageUrl}`}
                 </ClipboardCopy>
               ) : (
                 '-'
@@ -143,14 +162,14 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
           <DescriptionListGroup>
             <DescriptionListTerm>Build container image</DescriptionListTerm>
             <DescriptionListDescription>
-              {containerImage ? (
+              {displayImageUrl ? (
                 <ClipboardCopy
                   isReadOnly
                   hoverTip="Copy"
                   clickTip="Copied"
                   data-test="build-container-image-test"
                 >
-                  {containerImage}
+                  {displayImageUrl}
                 </ClipboardCopy>
               ) : (
                 '-'

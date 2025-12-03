@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Flex, FlexItem, Skeleton } from '@patternfly/react-core';
+import { useImageRepository } from '../../../hooks/useImageRepository';
 import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents';
+import { ImageRepositoryModel } from '../../../models';
 import { COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '../../../routes/paths';
-import { RowFunctionArgs, TableData } from '../../../shared';
+import { CopyableText, RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
-import { ComponentKind, PipelineRunKind } from '../../../types';
+import { ComponentKind, ImageRepositoryVisibility, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs } from '../../../utils/commits-utils';
-import { getLastestImage } from '../../../utils/component-utils';
+import { getImageUrlForVisibility, getLastestImage } from '../../../utils/component-utils';
+import { useAccessReviewForModel } from '../../../utils/rbac';
 import CommitLabel from '../../Commits/commit-label/CommitLabel';
 import { ComponentRelationStatusIcon } from '../../ComponentRelation/details-page/ComponentRelationStatusIcon';
 import GitRepoLink from '../../GitLink/GitRepoLink';
@@ -36,6 +39,18 @@ const ComponentsListRow: React.FC<
   const actions = useComponentActions(component, name);
   const buildLogsModal = useBuildLogViewerModal(component);
   const latestImage = getLastestImage(component);
+
+  // Check if user has permission to list image repository
+  const [canListImageRepository] = useAccessReviewForModel(ImageRepositoryModel, 'list');
+
+  // Fetch ImageRepository to get visibility setting
+  const [imageRepository] = useImageRepository(
+    canListImageRepository ? component?.metadata?.namespace : null,
+    canListImageRepository ? component?.metadata?.name : null,
+    false,
+  );
+
+  const visibility = imageRepository?.spec?.image?.visibility;
 
   const commit = React.useMemo(
     () =>
@@ -75,13 +90,20 @@ const ComponentsListRow: React.FC<
           )}
           {latestImage && (
             <FlexItem>
-              <ExternalLink
-                /** by default patternfly button disable text selection on Button component
-                    this enables it on <a /> tag */
-                style={{ userSelect: 'auto' }}
-                href={getContainerImageLink(latestImage)}
-                text={latestImage}
-              />
+              {visibility === ImageRepositoryVisibility.private ? (
+                <CopyableText
+                  text={getImageUrlForVisibility(latestImage, visibility)}
+                  data-test="component-list-latest-image-copyable"
+                />
+              ) : (
+                <ExternalLink
+                  /** by default patternfly button disable text selection on Button component
+                      this enables it on <a /> tag */
+                  style={{ userSelect: 'auto' }}
+                  href={getContainerImageLink(latestImage)}
+                  text={latestImage}
+                />
+              )}
             </FlexItem>
           )}
         </Flex>
