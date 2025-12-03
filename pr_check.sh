@@ -64,7 +64,7 @@ execute_test() {
         -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY}"
 
     RECORD_FLAG=""
-    if [[ -n "${CYPRESS_PROJECT_ID}" || -n "${CYPRESS_RECORD_KEY}" ]]; then
+    if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
         RECORD_FLAG="--record"
         echo "Cypress recording enabled"
     else

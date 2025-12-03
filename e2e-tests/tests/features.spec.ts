@@ -7,7 +7,6 @@ describe('Test Features Flags', function () {
     cy.prompt(['Open Experimental Features', 'Click Reset to Defaults button']);
     cy.get(featureFlagsPO.issueDashboard).click({ force: true });
     cy.prompt([
-      'Click line with Summary of Issues text use {force:true}',
       'Close the modal',
       'Click Issues in the menu',
       'Verify that the title is Issues Unstable',
