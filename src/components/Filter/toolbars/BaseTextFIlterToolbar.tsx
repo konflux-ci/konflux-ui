@@ -47,7 +47,9 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
           </ToolbarItem>
         )}
         {React.Children.map(children, (child, index) => (
-          <ToolbarItem key={index}>{child}</ToolbarItem>
+          <ToolbarItem alignSelf="center" key={index}>
+            {child}
+          </ToolbarItem>
         ))}
         <ToolbarItem>
           <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
