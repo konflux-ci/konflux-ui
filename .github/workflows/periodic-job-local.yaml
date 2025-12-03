@@ -1,4 +1,4 @@
-name: Periodic job - test Konflux UI against local cluster
+name: "Periodic job: LOCAL (test Konflux UI against local cluster)"
 
 on:
   workflow_dispatch:
@@ -33,8 +33,18 @@ jobs:
           repository: ${{ github.repository }}
           ref: "${{ github.event.pull_request.head.sha }}"
 
+      - name: Deploy konflux-ci
+        id: pr-check-action
+        uses: ./.github/actions/konflux-ui-deploy-test
+        with:
+          job-type: ${{ env.JOB_TYPE }}
+
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test
+
+      - name: Upload e2e coverage to Codecov
+        if: ${{ always() && env.CODECOV_TOKEN != '' }}
+        run: ./pr_check.sh upload-coverage
 
       - name: Generate error logs
         if: ${{ always() }}
