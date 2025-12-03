@@ -39,7 +39,11 @@ export default defineConfig({
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
       // Code coverage plugin - must be registered first
-      codeCoverageTask(on, config);
+      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true') {
+        codeCoverageTask(on, config);
+      } else {
+        console.log('Skipping code coverage for periodic run stage');
+      }
 
       require('cypress-mochawesome-reporter/plugin')(on);
 
