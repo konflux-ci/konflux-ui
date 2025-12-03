@@ -39,7 +39,11 @@ export default defineConfig({
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
       // Code coverage plugin - must be registered first
-      codeCoverageTask(on, config);
+      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true') {
+        codeCoverageTask(on, config);
+      } else {
+        console.log('Skipping code coverage for periodic run stage');
+      }
 
       require('cypress-mochawesome-reporter/plugin')(on);
 
@@ -80,6 +84,18 @@ export default defineConfig({
       on('before:run', async (details) => {
         // cypress-mochawesome-reporter
         await beforeRunHook(details);
+      });
+
+      on('after:spec', async (spec, res) => {
+        // cypress-mochawesome-reporter
+        const results = res as CypressCommandLine.RunResult;
+        if (results.stats?.failures > 0) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
+          );
+        }
+        return null;
       });
 
       on('after:run', async () => {

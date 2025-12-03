@@ -66,6 +66,9 @@ const LogViewer: React.FC<Props> = ({
   const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
   const [autoScroll, setAutoScroll] = React.useState(allowAutoScroll);
 
+  // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
+  data = data.replace(/\r/g, '\n');
+
   const scrolledRow = React.useMemo(
     () => (autoScroll ? data.split('\n').length : 0),
     [autoScroll, data],
