@@ -84,7 +84,7 @@ describe('Basic Happy Path', () => {
 
   it('Check default Integration Test', () => {
     Applications.goToIntegrationTestsTab();
-    integrationTestsTab.hasIntegrationTest(`${applicationName}-please-fail`);
+    integrationTestsTab.hasIntegrationTest(`${applicationName}-enterprise-contract`);
   });
 
   describe('Check different ways to add a component', () => {
