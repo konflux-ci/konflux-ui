@@ -27,7 +27,7 @@ describe('IntroBanner', () => {
     expect(viewNamespacesButton).toHaveAttribute('href', '/ns');
   });
 
-  it('should render the Release Monitor Board button when release monitor feature is online offical', () => {
+  it('should render the Release Monitor Board button when release monitor feature is online official', () => {
     routerRenderer(<IntroBanner />);
 
     const releaseMonitorButton = screen.queryByRole('link', { name: 'Release Monitor Board' });

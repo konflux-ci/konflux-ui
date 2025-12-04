@@ -15,6 +15,8 @@ jest.mock('../flags', () => {
         },
         'column-management': {
           description: 'Enable the column management',
+          defaultEnabled: false,
+          status: 'wip',
         },
       },
     };
