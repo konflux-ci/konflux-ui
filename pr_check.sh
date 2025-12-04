@@ -59,11 +59,21 @@ execute_test() {
         -e CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} \
         -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
-        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN}"
+        -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
+        -e CYPRESS_PROJECT_ID=${CYPRESS_PROJECT_ID} \
+        -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY}"
+
+    RECORD_FLAG=""
+    if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
+        RECORD_FLAG="--record"
+        echo "Cypress recording enabled"
+    else
+        echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
+    fi
 
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE}
+    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec /e2e/tests/basic-happy-path.spec.ts
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
         case $PODMAN_RETURN_CODE in
