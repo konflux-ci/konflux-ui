@@ -107,7 +107,7 @@ const InternalFLAGS = {
   },
   'components-page': {
     key: 'components-page',
-    description: 'Show Components page',
+    description: 'New Application / Component model - Components page',
     defaultEnabled: false,
     status: 'wip',
     guard: {

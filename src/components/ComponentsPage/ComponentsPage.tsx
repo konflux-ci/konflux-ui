@@ -13,11 +13,9 @@ const ComponentsPage: React.FC = () => {
     <IfFeature flag="components-page">
       <PageLayout
         title={
-          <>
-            <Title headingLevel="h1" size="2xl">
-              Components <FeatureFlagIndicator flags={['components-page']} fullLabel />
-            </Title>
-          </>
+          <Title headingLevel="h1" size="2xl">
+            Components <FeatureFlagIndicator flags={['components-page']} fullLabel />
+          </Title>
         }
         description={
           <>
