@@ -9,7 +9,7 @@ import {
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
-import { SECURITY_ENTERPRISE_CONTRACT_POLICY_URL } from '~/consts/documentation';
+import { SECURITY_ENTERPRISE_CONTRACT_POLICYL_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
@@ -151,7 +151,7 @@ export const SecurityEnterpriseContractTab: React.FC<
             component={(props) => (
               <a
                 {...props}
-                href={SECURITY_ENTERPRISE_CONTRACT_POLICY_URL}
+                href={SECURITY_ENTERPRISE_CONTRACT_POLICYL_AVAILABLE_RULE_COLLECTIONS_URL}
                 target="_blank"
                 rel="noreferrer"
               />
