@@ -9,6 +9,7 @@ import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespac
 import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
 import componentRoutes from './page-routes/components';
+import componentsPageRoutes from './page-routes/components-page';
 import integrationTestRoutes from './page-routes/integration-test';
 import issuesRoutes from './page-routes/issues';
 import workspaceRoutes from './page-routes/namespace';
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
       ...releaseMonitorRoutes,
       ...applicationRoutes,
       ...componentRoutes,
+      ...componentsPageRoutes,
       ...releaseRoutes,
       ...releaseServiceRoutes,
       ...secretRoutes,

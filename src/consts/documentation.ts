@@ -15,3 +15,4 @@ export const LEARN_MORE_ABOUT_SECRETS_CREATION =
   'https://konflux-ci.dev/docs/building/creating-secrets/';
 export const LEARN_MORE_ABOUT_CREATING_APPLICATIONS =
   'https://konflux-ci.dev/docs/building/creating/';
+export const LEARN_MORE_ABOUT_COMPONENTS = 'https://konflux-ci.dev/docs/building/creating/'; // Duplicate for readability

@@ -105,6 +105,17 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: true,
     },
   },
+  'components-page': {
+    key: 'components-page',
+    description: 'New Application / Component model - Components page',
+    defaultEnabled: false,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster'],
+      failureReason: 'Not a staging cluster',
+      visibleInFeatureFlagPanel: true,
+    },
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

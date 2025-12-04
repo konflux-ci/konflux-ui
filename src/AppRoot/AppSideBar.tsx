@@ -4,6 +4,7 @@ import { Nav, NavItem, NavList, PageSidebar, PageSidebarBody } from '@patternfly
 import { css } from '@patternfly/react-styles';
 import {
   APPLICATION_LIST_PATH,
+  COMPONENTS_PATH,
   ISSUES_PATH,
   NAMESPACE_LIST_PATH,
   RELEASE_MONITOR_PATH,
@@ -38,6 +39,21 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
             >
               <NavLink to={NAMESPACE_LIST_PATH.createPath({} as never)}>Namespaces</NavLink>
             </NavItem>
+
+            <IfFeature flag="components-page">
+              <NavItem
+                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+                isActive={isActive(COMPONENTS_PATH.path)}
+              >
+                <Link
+                  to={
+                    namespace ? COMPONENTS_PATH.createPath({ workspaceName: namespace }) : undefined
+                  }
+                >
+                  Components <FeatureFlagIndicator flags={['components-page']} />
+                </Link>
+              </NavItem>
+            </IfFeature>
 
             <IfFeature flag="release-monitor">
               <NavItem
