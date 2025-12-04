@@ -1,0 +1,51 @@
+name: "Periodic job: LOCAL (test Konflux UI against local cluster)"
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  periodic-local-e2e-test:
+    runs-on: ubuntu-latest
+    env:
+      REF_BRANCH: ${{ github.ref_name}}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      # secrets
+      CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+      QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+      QUAY_TOKEN_TEST: ${{ secrets.QUAY_TOKEN_TEST }}
+      SMEE_URL: ${{ secrets.SMEE_URL }}
+      CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
+      CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
+      CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      JOB_TYPE: 'periodic-local'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: "${{ github.event.pull_request.head.sha }}"
+
+      - name: Deploy konflux-ci
+        id: pr-check-action
+        uses: ./.github/actions/konflux-ui-deploy-test
+        with:
+          job-type: ${{ env.JOB_TYPE }}
+
+      - name: Konflux-ui e2e test
+        uses: ./.github/actions/konflux-ui-e2e-test
+
+      - name: Upload e2e coverage to Codecov
+        if: ${{ always() && env.CODECOV_TOKEN != '' }}
+        run: ./pr_check.sh upload-coverage
+
+      - name: Generate error logs
+        if: ${{ always() }}
+        uses: ./.github/actions/generate-error-logs

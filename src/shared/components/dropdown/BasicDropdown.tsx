@@ -21,6 +21,7 @@ import { NO_RESULTS } from '~/consts/constants';
 export type DropdownItemObject = {
   key: string;
   value: string;
+  label?: string;
   description?: string;
   separator?: boolean;
   isDisabled?: boolean;
@@ -190,7 +191,7 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
         toggle={menuToggle}
       >
         <SelectList id="basic-dropdown-listbox">
-          {currItems.map(({ key, value, description, separator, isDisabled }) =>
+          {currItems.map(({ key, label, value, description, separator, isDisabled }) =>
             separator ? (
               <Divider key={key} component="li" />
             ) : (
@@ -198,11 +199,12 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
                 key={key}
                 value={value}
                 role="menuitem"
+                description={value}
                 ref={null}
                 isDisabled={isDisabled}
               >
                 <div>
-                  {value}
+                  {label}
                   {value === recommended && (
                     <>
                       &nbsp;<Badge isRead>Recommended</Badge>
