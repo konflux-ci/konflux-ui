@@ -9,8 +9,8 @@ import {
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
+import { SECURITY_ENTERPRISE_CONTRACT_POLICY_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
-import { SECURITY_ENTERPRISE_CONTRACT_POLICY_URL } from '../../consts/documentation';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
