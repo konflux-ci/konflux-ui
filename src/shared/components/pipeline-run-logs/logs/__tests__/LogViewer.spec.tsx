@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -35,9 +36,15 @@ jest.mock('../LogsTaskDuration', () => {
 
 jest.mock('@patternfly/react-log-viewer', () => ({
   LogViewer: (props: Record<string, unknown>) => {
-    const { data, header, toolbar, ...otherProps } = props;
+    const { data, header, toolbar, scrollToRow, theme, ...otherProps } = props;
     return (
-      <div data-test="patternfly-log-viewer" data-log-data={data as string} {...otherProps}>
+      <div
+        data-test="patternfly-log-viewer"
+        data-log-data={data as string}
+        data-scroll-to-row={scrollToRow as number}
+        data-theme={theme}
+        {...otherProps}
+      >
         {header as React.ReactNode}
         {toolbar as React.ReactNode}
       </div>
@@ -65,7 +72,10 @@ describe('LogViewer', () => {
         name: 'test-task',
       },
     },
-    status: {},
+    status: {
+      startTime: '2024-01-01T00:00:00Z',
+      completionTime: '2024-01-01T00:01:00Z',
+    },
   };
 
   const defaultProps = {
@@ -88,13 +98,16 @@ describe('LogViewer', () => {
 
   describe('rendering', () => {
     it('should render the LogViewer with basic props', () => {
-      render(<LogViewer {...defaultProps} />);
+      const { container } = render(<LogViewer {...defaultProps} />);
 
       expect(screen.getByTestId('patternfly-log-viewer')).toBeInTheDocument();
       expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
         'data-log-data',
         defaultProps.data,
       );
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
     });
 
     it('should display task name when taskRun is provided', () => {
@@ -104,6 +117,19 @@ describe('LogViewer', () => {
       expect(taskNameElement).toBeInTheDocument();
       expect(screen.getByText('test-task')).toBeInTheDocument();
       expect(screen.getByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should render task name in Truncate component within a Flex layout', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
+
+      const banner = document.querySelector('[data-testid="logs-taskName"]');
+
+      const flexContainer = banner.querySelector('.pf-v5-l-flex');
+      expect(flexContainer).toBeInTheDocument();
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).toBeInTheDocument();
+      expect(truncateElement).toHaveTextContent('test-task');
     });
 
     it('should display metadata name when taskRef name is not available', () => {
@@ -117,6 +143,37 @@ describe('LogViewer', () => {
       const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
       expect(taskNameElement).toBeInTheDocument();
       expect(taskNameElement).toHaveTextContent('test-task-run');
+    });
+
+    it('should NOT render task name block but SHOULD render duration when taskRun is null', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={null} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+
+      expect(screen.queryByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should NOT render task name block but SHOULD render duration when task names are missing', () => {
+      const taskRunNoNames = { ...mockTaskRun, spec: {}, metadata: {} };
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunNoNames} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+      expect(screen.queryByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should NOT render task name block but SHOULD render duration when task names are empty strings', () => {
+      const taskRunEmptyName = {
+        ...mockTaskRun,
+        spec: { taskRef: { name: '' } },
+        metadata: { name: '' },
+      };
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunEmptyName} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+      expect(screen.queryByTestId('task-duration')).toBeInTheDocument();
     });
 
     it('should show loading indicator when isLoading is true', () => {
@@ -171,30 +228,59 @@ describe('LogViewer', () => {
       render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      // scrollToRow should be the number of lines (3 lines in defaultProps.data)
-      expect(logViewer).toHaveAttribute('scrolltorow', '3');
+
+      expect(logViewer).toHaveAttribute('data-scroll-to-row', '3');
     });
 
     it('should set scrolledRow to 0 when allowAutoScroll is false', () => {
       render(<LogViewer {...defaultProps} allowAutoScroll={false} />);
 
       const logViewer = screen.getByTestId('patternfly-log-viewer');
-      expect(logViewer).toHaveAttribute('scrolltorow', '0');
+      expect(logViewer).toHaveAttribute('data-scroll-to-row', '0');
     });
 
     it('should recalculate scrolledRow when data changes', () => {
       const { rerender } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
 
-      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('scrolltorow', '3');
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-scroll-to-row',
+        '3',
+      );
 
       const newData = 'line 1\nline 2\nline 3\nline 4\nline 5';
       rerender(<LogViewer {...defaultProps} data={newData} allowAutoScroll={true} />);
 
-      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('scrolltorow', '5');
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-scroll-to-row',
+        '5',
+      );
     });
   });
 
   describe('user interactions', () => {
+    it('should toggle theme when checkbox is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      const themeCheckbox = screen.getByLabelText('Dark theme');
+      expect(themeCheckbox).toBeChecked();
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('data-theme', 'dark');
+
+      await user.click(themeCheckbox);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('data-theme', 'light');
+      });
+    });
+
+    it('should disable theme checkbox when effectiveTheme is dark', () => {
+      mockUseTheme.mockReturnValue({ effectiveTheme: 'dark' });
+      render(<LogViewer {...defaultProps} />);
+
+      const themeCheckbox = screen.getByLabelText('Dark theme');
+      expect(themeCheckbox).toBeDisabled();
+    });
+
     it('should download logs when download button is clicked', async () => {
       const user = userEvent.setup();
       render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
@@ -363,6 +449,30 @@ describe('LogViewer', () => {
 
       const toolbarContent = document.querySelector('.log-viewer--fullscreen');
       expect(toolbarContent).toBeInTheDocument();
+    });
+  });
+
+  describe('downloadLogs edge cases', () => {
+    it('should not download when data is empty', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} data="" taskRun={mockTaskRun} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).not.toHaveBeenCalled();
+    });
+
+    it('should use uuid for filename when taskName is null', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} taskRun={null} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).toHaveBeenCalled();
+      const [, filename] = mockSaveAs.mock.calls[0];
+      expect(filename).toMatch(/^task-run-.*\.log$/);
     });
   });
 });

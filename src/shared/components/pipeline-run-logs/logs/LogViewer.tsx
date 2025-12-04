@@ -5,11 +5,14 @@ import {
   Bullseye,
   Button,
   Checkbox,
+  Flex,
+  FlexItem,
   Spinner,
   Toolbar,
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
+  Truncate,
 } from '@patternfly/react-core';
 import {
   CompressIcon,
@@ -131,7 +134,16 @@ const LogViewer: React.FC<Props> = ({
         }}
         header={
           <Banner data-testid="logs-taskName">
-            {taskName} <LogsTaskDuration taskRun={taskRun} />
+            <Flex gap={{ default: 'gapSm' }}>
+              {taskName && (
+                <FlexItem flex={{ default: 'flex_1' }} style={{ minWidth: 0 }}>
+                  <Truncate content={taskName} />
+                </FlexItem>
+              )}
+              <FlexItem flex={{ default: 'flexNone' }}>
+                <LogsTaskDuration taskRun={taskRun} />
+              </FlexItem>
+            </Flex>
             {isLoading && (
               <Bullseye>
                 <Spinner size="lg" />
