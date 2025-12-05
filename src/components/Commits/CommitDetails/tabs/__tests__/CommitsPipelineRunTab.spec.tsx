@@ -1,14 +1,14 @@
 import { useParams } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { useK8sAndKarchResource } from '~/hooks/useK8sAndKarchResources';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { renderWithQueryClient } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
-import { PipelineRunLabel } from '../../../../../consts/pipelinerun';
-import { useK8sAndKarchResource } from '../../../../../hooks/useK8sAndKarchResources';
-import { mockUseNamespaceHook } from '../../../../../unit-test-utils/mock-namespace';
-import { createK8sWatchResourceMock } from '../../../../../utils/test-utils';
+import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { PipelineRunListRow } from '../../../../PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { pipelineWithCommits } from '../../../__data__/pipeline-with-commits';
 import { MockSnapshots } from '../../visualization/__data__/MockCommitWorkflowData';
@@ -112,15 +112,48 @@ describe('Commit Pipelinerun List', () => {
       wsError: undefined,
       isError: false,
     });
+    // Default mock: return different values based on PipelineRunType (6th parameter)
+    usePipelineRunsForCommitMock.mockImplementation(
+      (_namespace, _appName, _commitName, _limit, _filterByComponents, plrType) => {
+        if (plrType === PipelineRunType.TEST) {
+          return [
+            commitPlrs.filter(
+              (plr) => plr.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === 'test',
+            ),
+            true,
+            undefined,
+            jest.fn(),
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        }
+        // BUILD type
+        return [
+          commitPlrs.filter(
+            (plr) => plr.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] !== 'test',
+          ),
+          true,
+          undefined,
+          jest.fn(),
+          { isFetchingNextPage: false, hasNextPage: false },
+        ];
+      },
+    );
   });
   it('should render error state if the API errors out', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([
-      [],
-      true,
-      new Error('500: Internal server error'),
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    usePipelineRunsForCommitMock.mockImplementation(
+      (_namespace, _appName, _commitName, _limit, _filterByComponents, plrType) => {
+        if (plrType === PipelineRunType.TEST) {
+          return [
+            [],
+            true,
+            new Error('500: Internal server error'),
+            jest.fn(),
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        }
+        return [[], true, undefined, jest.fn(), { isFetchingNextPage: false, hasNextPage: false }];
+      },
+    );
 
     render(<TestedComponent />);
 
@@ -128,11 +161,11 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render empty state if no pipelinerun is present', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([
+    usePipelineRunsForCommitMock.mockImplementation(() => [
       [],
       true,
       undefined,
-      () => {},
+      jest.fn(),
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     watchResourceMock.mockReturnValue([[], true]);
@@ -147,13 +180,6 @@ describe('Commit Pipelinerun List', () => {
   });
 
   it('should render pipelineRuns list when pipelineRuns are present', () => {
-    usePipelineRunsForCommitMock.mockReturnValue([
-      commitPlrs,
-      true,
-      undefined,
-      () => {},
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
     renderWithQueryClient(<TestedComponent />);
     screen.getByText(/Pipeline runs/);
     screen.getByText('Name');
@@ -314,6 +340,160 @@ describe('Commit Pipelinerun List', () => {
     await waitFor(() => {
       expect(screen.queryByText('java-springboot-sample-x778q')).toBeInTheDocument();
       expect(screen.queryByText('nodejs-sample-zth6t')).toBeInTheDocument();
+    });
+  });
+
+  describe('Sequential fetching logic', () => {
+    const getTestPlrs = () =>
+      commitPlrs.filter((plr) => plr.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === 'test');
+    const getBuildPlrs = () =>
+      commitPlrs.filter((plr) => plr.metadata.labels[PipelineRunLabel.PIPELINE_TYPE] === 'build');
+
+    it('should not fetch build pipeline runs until test pipeline runs are fully loaded', () => {
+      const testGetNextPage = jest.fn();
+      const buildGetNextPage = jest.fn();
+
+      usePipelineRunsForCommitMock.mockImplementation(
+        (_namespace, _appName, _commitName, _limit, _filterByComponents, plrType) => {
+          if (plrType === PipelineRunType.TEST) {
+            return [
+              getTestPlrs(),
+              true,
+              undefined,
+              testGetNextPage,
+              { isFetchingNextPage: false, hasNextPage: true },
+            ];
+          }
+
+          return [
+            [],
+            false,
+            undefined,
+            buildGetNextPage,
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        },
+      );
+
+      renderWithQueryClient(<TestedComponent />);
+
+      expect(usePipelineRunsForCommitMock).toHaveBeenCalledWith(
+        null, // namespace should be null when test is not complete
+        appName,
+        'test-sha-1',
+        undefined,
+        false,
+        PipelineRunType.BUILD,
+      );
+    });
+
+    it('should fetch build pipeline runs after test pipeline runs are complete', () => {
+      const testGetNextPage = jest.fn();
+      const buildGetNextPage = jest.fn();
+
+      usePipelineRunsForCommitMock.mockImplementation(
+        (_namespace, _appName, _commitName, _limit, _filterByComponents, plrType) => {
+          if (plrType === PipelineRunType.TEST) {
+            return [
+              getTestPlrs(),
+              true,
+              undefined,
+              testGetNextPage,
+              { isFetchingNextPage: false, hasNextPage: false },
+            ];
+          }
+
+          return [
+            getBuildPlrs(),
+            true,
+            undefined,
+            buildGetNextPage,
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        },
+      );
+
+      renderWithQueryClient(<TestedComponent />);
+
+      expect(usePipelineRunsForCommitMock).toHaveBeenCalledWith(
+        'test-ns', // namespace should be provided when test is complete
+        appName,
+        'test-sha-1',
+        undefined,
+        false,
+        PipelineRunType.BUILD,
+      );
+    });
+
+    it('should not fetch build if test is still loading', () => {
+      usePipelineRunsForCommitMock.mockImplementation(
+        (_namespace, _appName, _commitName, _limit, _filterByComponents, plrType) => {
+          if (plrType === PipelineRunType.TEST) {
+            return [
+              [],
+              false, // Still loading
+              undefined,
+              jest.fn(),
+              { isFetchingNextPage: false, hasNextPage: false },
+            ];
+          }
+
+          return [
+            [],
+            false,
+            undefined,
+            jest.fn(),
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        },
+      );
+
+      renderWithQueryClient(<TestedComponent />);
+
+      expect(usePipelineRunsForCommitMock).toHaveBeenCalledWith(
+        null,
+        appName,
+        'test-sha-1',
+        undefined,
+        false,
+        PipelineRunType.BUILD,
+      );
+    });
+
+    it('should not fetch build if test has an error', () => {
+      usePipelineRunsForCommitMock.mockImplementation(
+        (_namespace, _appName, _commitName, _limit, _filterByComponents, plrType) => {
+          if (plrType === PipelineRunType.TEST) {
+            return [
+              [],
+              true,
+              new Error('Test error'),
+              jest.fn(),
+              { isFetchingNextPage: false, hasNextPage: false },
+            ];
+          }
+
+          return [
+            [],
+            false,
+            undefined,
+            jest.fn(),
+            { isFetchingNextPage: false, hasNextPage: false },
+          ];
+        },
+      );
+
+      renderWithQueryClient(<TestedComponent />);
+
+      // Verify BUILD was called with null namespace (disabled because test has error)
+      expect(usePipelineRunsForCommitMock).toHaveBeenCalledWith(
+        null,
+        appName,
+        'test-sha-1',
+        undefined,
+        false,
+        PipelineRunType.BUILD,
+      );
     });
   });
 });
