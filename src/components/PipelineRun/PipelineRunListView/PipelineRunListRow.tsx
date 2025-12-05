@@ -231,7 +231,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             )
           : '-'}
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.status}>
+      <TableData data-test="status" className={pipelineRunTableColumnClasses.status}>
         <StatusIconWithText status={status} />
       </TableData>
       {showTestResult ? (
