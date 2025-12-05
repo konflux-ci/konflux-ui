@@ -13,6 +13,8 @@ type MonitoredReleasesFilterToolbarProps = {
   releasePlanOptions: { [key: string]: number };
   namespaceOptions: { [key: string]: number };
   componentOptions: { [key: string]: number };
+  productOptions: { [key: string]: number };
+  productVersionOptions: { [key: string]: number };
 };
 
 const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarProps> = ({
@@ -24,8 +26,20 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   releasePlanOptions,
   namespaceOptions,
   componentOptions,
+  productOptions,
+  productVersionOptions,
 }: MonitoredReleasesFilterToolbarProps) => {
-  const { name, status, application, releasePlan, namespace, component, showLatest } = filters;
+  const {
+    name,
+    status,
+    application,
+    releasePlan,
+    namespace,
+    component,
+    product,
+    productVersion,
+    showLatest,
+  } = filters;
 
   return (
     <BaseTextFilterToolbar
@@ -68,6 +82,20 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         values={namespace}
         setValues={(newValues) => setFilters({ ...filters, namespace: newValues })}
         options={namespaceOptions}
+      />
+      <MultiSelect
+        label="Product"
+        filterKey="product"
+        values={product}
+        setValues={(newValues) => setFilters({ ...filters, product: newValues })}
+        options={productOptions}
+      />
+      <MultiSelect
+        label="Product Version"
+        filterKey="productVersion"
+        values={productVersion}
+        setValues={(newValues) => setFilters({ ...filters, productVersion: newValues })}
+        options={productVersionOptions}
       />
       <Switch
         id="show-latest-switch"

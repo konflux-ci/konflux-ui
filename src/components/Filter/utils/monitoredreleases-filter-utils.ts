@@ -1,4 +1,5 @@
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ReleaseMonitorFilterOptionKeys } from '~/consts/release';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { MonitoredReleaseKind } from '~/types';
 
@@ -9,6 +10,8 @@ export type MonitoredReleasesFilterState = {
   releasePlan: string[];
   namespace: string[];
   component: string[];
+  product: string[];
+  productVersion: string[];
   showLatest: boolean;
 };
 
@@ -16,23 +19,39 @@ export const filterMonitoredReleases = (
   monitoredReleases: MonitoredReleaseKind[],
   filters: MonitoredReleasesFilterState,
 ): MonitoredReleaseKind[] => {
-  const { name, status, application, releasePlan, namespace, component } = filters;
+  const { name, status, application, releasePlan, namespace, component, product, productVersion } =
+    filters;
 
   return monitoredReleases.filter((mr) => {
     const applicationName = mr?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
     const releasePlanName = mr?.spec.releasePlan;
     const namespaceName = mr?.metadata?.namespace;
     const componentName = mr?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+    const productName = mr?.product;
+    const productVersionName = mr?.productVersion;
 
     const applicationFilter =
       !application.length ||
       application.includes(applicationName) ||
-      (application.includes('No application') && applicationName === undefined);
+      (application.includes(ReleaseMonitorFilterOptionKeys.noApplication) &&
+        applicationName === undefined);
 
     const componentFilter =
       !component.length ||
       component.includes(componentName) ||
-      (component.includes('No component') && componentName === undefined);
+      (component.includes(ReleaseMonitorFilterOptionKeys.noComponent) &&
+        componentName === undefined);
+
+    const productFilter =
+      !product.length ||
+      product.includes(productName) ||
+      (product.includes(ReleaseMonitorFilterOptionKeys.noProduct) && !productName);
+
+    const productVersionFilter =
+      !productVersion.length ||
+      productVersion.includes(productVersionName) ||
+      (productVersion.includes(ReleaseMonitorFilterOptionKeys.noProductVersion) &&
+        !productVersionName);
 
     return (
       (!name || mr?.metadata?.name?.indexOf(name) >= 0) &&
@@ -40,7 +59,9 @@ export const filterMonitoredReleases = (
       applicationFilter &&
       (!releasePlan.length || releasePlan.includes(releasePlanName)) &&
       (!namespace.length || namespace.includes(namespaceName)) &&
-      componentFilter
+      componentFilter &&
+      productFilter &&
+      productVersionFilter
     );
   });
 };
