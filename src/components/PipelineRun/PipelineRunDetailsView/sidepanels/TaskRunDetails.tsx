@@ -4,11 +4,13 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Divider,
 } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
 import { SyncMarkdownView, Timestamp } from '../../../../shared';
 import { TaskRunKind } from '../../../../types';
 import { calculateDuration, isTaskV1Beta1 } from '../../../../utils/pipeline-utils';
+import RunParamsList from '../tabs/RunParamsList';
 import RunResultsList from '../tabs/RunResultsList';
 import ScanDescriptionListGroup from '../tabs/ScanDescriptionListGroup';
 
@@ -19,6 +21,7 @@ type Props = {
 
 const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, status }) => {
   const results = isTaskV1Beta1(taskRun) ? taskRun?.status?.taskResults : taskRun?.status?.results;
+  const specParams = taskRun?.spec?.params;
   return (
     <>
       {status !== runStatus.Skipped ? (
@@ -58,6 +61,13 @@ const TaskRunDetails: React.FC<React.PropsWithChildren<Props>> = ({ taskRun, sta
           <RunResultsList status={status} results={results} compressed />
         </>
       ) : null}
+
+      {specParams?.length && (
+        <>
+          <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+          <RunParamsList params={specParams} compressed />
+        </>
+      )}
     </>
   );
 };

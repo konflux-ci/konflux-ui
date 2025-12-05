@@ -5,6 +5,7 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Divider,
   DrawerActions,
   DrawerCloseButton,
   DrawerHead,
@@ -28,6 +29,7 @@ import {
   pipelineRunStatus,
   isPipelineV1Beta1,
 } from '../../../../utils/pipeline-utils';
+import RunParamsList from '../../../PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '../../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
@@ -67,6 +69,8 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
     ? pipelineRun.status?.pipelineResults
     : pipelineRun.status?.results;
 
+  const specParams = pipelineRun?.spec?.params;
+
   return (
     <>
       <div className="commit-side-panel__head">
@@ -82,10 +86,10 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
               {pipelineRun.metadata.name}
             </Link>
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
-            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Pipeline run{' '}
+            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
@@ -170,6 +174,13 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
               <RunResultsList results={results} status={pipelineStatus} compressed />
             </div>
           ) : null}
+
+          {specParams?.length && (
+            <>
+              <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
+              <RunParamsList params={specParams} compressed />
+            </>
+          )}
         </DrawerPanelBody>
       </div>
     </>
