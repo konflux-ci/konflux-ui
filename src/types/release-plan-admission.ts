@@ -6,6 +6,12 @@ export type ReleasePlanAdmissionSpec = {
   environment?: string;
   origin: string;
   releaseStrategy: string;
+  data?: {
+    releaseNotes?: {
+      product_name?: string;
+      product_version?: string;
+    };
+  };
 };
 
 export type ReleasePlanAdmissionKind = K8sResourceCommon & {

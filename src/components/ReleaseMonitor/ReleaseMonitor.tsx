@@ -13,6 +13,8 @@ const ReleaseMonitor: React.FunctionComponent = () => {
         'namespace',
         'component',
         'showLatest',
+        'product',
+        'productVersion',
       ]}
     >
       <ReleaseMonitorListView />

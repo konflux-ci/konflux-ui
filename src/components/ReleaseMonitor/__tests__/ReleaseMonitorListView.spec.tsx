@@ -10,7 +10,7 @@ import {
 import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
-import { ReleaseKind } from '~/types';
+import { ReleaseKind, MonitoredReleaseKind } from '~/types';
 
 // Mock dependencies
 jest.useFakeTimers();
@@ -118,6 +118,8 @@ const renderWithProviders = (ui: React.ReactElement) =>
           'releasePlan',
           'namespace',
           'component',
+          'product',
+          'productVersion',
           'showLatest',
         ]}
       >
@@ -140,7 +142,7 @@ const toggleFilter = async (buttonName: RegExp, optionLabel: RegExp) => {
 };
 
 describe('ReleaseMonitorListView', () => {
-  let releases: ReleaseKind[];
+  let releases: MonitoredReleaseKind[];
 
   const mockNamespacesInfo = {
     namespaces: mockNamespaces,
@@ -158,9 +160,17 @@ describe('ReleaseMonitorListView', () => {
       release4.metadata.creationTimestamp = '2023-01-02T10:30:00Z';
     }
 
+    // Add mock product data
+    releases[0].product = 'Product A';
+    releases[0].productVersion = 'v1.0';
+    releases[1].product = 'Product B';
+    releases[1].productVersion = 'v2.0';
+    releases[2].product = 'Product A';
+    releases[2].productVersion = 'v1.0';
+
     const triggerReleasesLoaded = (
       namespace: string,
-      onReleasesLoaded: (releases: ReleaseKind[]) => void,
+      onReleasesLoaded: (releases: MonitoredReleaseKind[]) => void,
     ) => {
       const namespaceReleases = releases.filter(
         (release) => release.metadata.namespace === namespace,
@@ -174,7 +184,7 @@ describe('ReleaseMonitorListView', () => {
         onReleasesLoaded,
       }: {
         namespace: string;
-        onReleasesLoaded: (releases: ReleaseKind[]) => void;
+        onReleasesLoaded: (releases: MonitoredReleaseKind[]) => void;
       }) => {
         React.useEffect(() => {
           triggerReleasesLoaded(namespace, onReleasesLoaded);
@@ -288,6 +298,40 @@ describe('ReleaseMonitorListView', () => {
       // Others should not be visible
       expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
       expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('filters releases by product', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    const option = await toggleFilter(/Product filter menu/i, /Product A/i);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('filters releases by product version', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    const option = await toggleFilter(/Product Version filter menu/i, /v2.0/i);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-3')).not.toBeInTheDocument();
     });
 
     fireEvent.click(option);

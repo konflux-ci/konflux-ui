@@ -10,6 +10,7 @@ export * from './pipeline';
 export * from './project';
 export * from './release';
 export * from './release-plan';
+export * from './release-plan-admission';
 export * from './release-strategy';
 export * from './route';
 export * from './service-provider-integration';

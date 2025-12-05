@@ -10,6 +10,7 @@ import {
 } from '~/components/Filter/utils/monitoredreleases-filter-utils';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { ReleaseMonitorFilterOptionKeys } from '~/consts/release';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { useSortedResources } from '~/hooks/useSortedResources';
@@ -40,6 +41,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       releasePlan: filters?.releasePlan || [],
       namespace: filters?.namespace || [],
       component: filters?.component || [],
+      product: filters?.product || [],
+      productVersion: filters?.productVersion || [],
       showLatest: filters?.showLatest || false,
     } as MonitoredReleasesFilterState;
   };
@@ -53,7 +56,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     SortByDirection.desc,
   );
 
-  const { name, status, application, releasePlan, namespace, component } = filters;
+  const { name, status, application, releasePlan, namespace, component, product, productVersion } =
+    filters;
 
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
 
@@ -102,6 +106,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         releasePlanOptions: {},
         namespaceOptions: {},
         componentOptions: {},
+        productOptions: {},
+        productVersionOptions: {},
       };
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
@@ -115,7 +121,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const applicationFilterOptions =
       noApplication > 0
         ? {
-            'No application': noApplication,
+            [ReleaseMonitorFilterOptionKeys.noApplication]: noApplication,
             [MENU_DIVIDER]: 1,
             ...applicationOptions,
           }
@@ -131,11 +137,37 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const componentFilterOptions =
       noComponent > 0
         ? {
-            'No component': noComponent,
+            [ReleaseMonitorFilterOptionKeys.noComponent]: noComponent,
             [MENU_DIVIDER]: 1,
             ...componentOptions,
           }
         : componentOptions;
+
+    const productOptions = createFilterObj(releases, (mr) => mr?.product);
+    const noProduct = productOptions.undefined;
+    delete productOptions.undefined;
+
+    const productFilterOptions =
+      noProduct > 0
+        ? {
+            [ReleaseMonitorFilterOptionKeys.noProduct]: noProduct,
+            [MENU_DIVIDER]: 1,
+            ...productOptions,
+          }
+        : productOptions;
+
+    const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
+    const noProductVersion = productVersionOptions.undefined;
+    delete productVersionOptions.undefined;
+
+    const productVersionFilterOptions =
+      noProductVersion > 0
+        ? {
+            [ReleaseMonitorFilterOptionKeys.noProductVersion]: noProductVersion,
+            [MENU_DIVIDER]: 1,
+            ...productVersionOptions,
+          }
+        : productVersionOptions;
 
     return {
       statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
@@ -143,6 +175,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
       namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
       componentOptions: componentFilterOptions,
+      productOptions: productFilterOptions,
+      productVersionOptions: productVersionFilterOptions,
     };
   }, [releases, namespaces]);
 
@@ -222,6 +256,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     releasePlan.length > 0 ||
     namespace.length > 0 ||
     component.length > 0 ||
+    product.length > 0 ||
+    productVersion.length > 0 ||
     filters.showLatest;
 
   return (
@@ -252,6 +288,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           releasePlanOptions={filterOptions.releasePlanOptions}
           namespaceOptions={filterOptions.namespaceOptions}
           componentOptions={filterOptions.componentOptions}
+          productOptions={filterOptions.productOptions}
+          productVersionOptions={filterOptions.productVersionOptions}
         />
       )}
 

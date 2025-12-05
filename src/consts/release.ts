@@ -95,5 +95,12 @@ export const DEFAULT_VISIBLE_RELEASE_PLAN_COLUMNS: Set<ReleasePlanColumnKeys> = 
   'rpa',
 ]);
 
+export enum ReleaseMonitorFilterOptionKeys {
+  noComponent = 'No Component',
+  noProduct = 'No Product',
+  noProductVersion = 'No Product Version',
+  noApplication = 'No Application',
+}
+
 // Columns that cannot be hidden (name should always be visible)
 export const NON_HIDABLE_RELEASE_PLAN_COLUMNS: readonly ReleasePlanColumnKeys[] = ['name'];
