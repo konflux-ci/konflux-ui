@@ -21,3 +21,5 @@ export * from './workspace';
 export * from './image-repository';
 export * from './enterprise-contract';
 export * from './namespace';
+export * from './release-plan';
+export * from './release-plan-admission';
