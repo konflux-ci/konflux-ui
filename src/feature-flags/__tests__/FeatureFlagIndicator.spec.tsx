@@ -13,8 +13,10 @@ jest.mock('../flags', () => {
           description:
             'Enable the theme switcher in the header to toggle between light and dark modes.',
         },
-        'release-monitor': {
-          description: 'Enable the release monitor page',
+        'column-management': {
+          description: 'Enable the column management',
+          defaultEnabled: false,
+          status: 'wip',
         },
       },
     };
@@ -25,7 +27,7 @@ jest.mock('../hooks', () => ({
   useFeatureFlags: jest.fn(() => [
     {
       'dark-theme': true,
-      'release-monitor': true,
+      'column-management': true,
     },
   ]),
 }));
@@ -59,13 +61,13 @@ describe('FeatureFlagIndicator', () => {
   it('shows popover with descriptions for all flags on click', async () => {
     render(
       <FeatureFlagIndicator
-        flags={['dark-theme', 'release-monitor'] as unknown as FlagKey[]}
+        flags={['dark-theme', 'column-management'] as unknown as FlagKey[]}
         data-test="ff-pop"
       />,
     );
     await userEvent.click(screen.getByTestId('ff-pop'));
 
     expect(screen.getByText(FLAGS['dark-theme' as FlagKey].description)).toBeInTheDocument();
-    expect(screen.getByText(FLAGS['release-monitor' as FlagKey].description)).toBeInTheDocument();
+    expect(screen.getByText(FLAGS['column-management' as FlagKey].description)).toBeInTheDocument();
   });
 });
