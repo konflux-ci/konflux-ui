@@ -12,6 +12,7 @@ import { useModalLauncher } from '../../../modal/ModalProvider';
 import ComponentBuildSettings from './ComponentBuildSettings';
 import ComponentDetails from './ComponentDetails';
 import ComponentLatestBuild from './ComponentLatestBuild';
+import ComponentRegistryLogin from './ComponentRegistryLogin';
 
 const ComponentDetailsTab: React.FC = () => {
   const namespace = useNamespace();
@@ -59,6 +60,12 @@ const ComponentDetailsTab: React.FC = () => {
       >
         <ComponentBuildSettings component={component} />
         <ComponentNudgesDependencies component={component} />
+      </DetailsSection>
+      <DetailsSection
+        title="Registry Login Information"
+        description="Use this information for accessing the registry for build images."
+      >
+        <ComponentRegistryLogin />
       </DetailsSection>
     </div>
   );
