@@ -1,20 +1,16 @@
 import { render, waitFor } from '@testing-library/react';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
-import { useK8sWatchResource } from '~/k8s';
 import { ReleasePlanAdmissionModel, ReleasePlanModel } from '~/models';
+import { createK8sWatchResourceMock } from '~/unit-test-utils/mock-k8s';
 import ReleasesInNamespace from '../ReleasesInNamespace';
+
+// No jest.mock() needed - the utility handles it
+const mockUseK8sWatchResource = createK8sWatchResourceMock();
 
 // Only mock the specific hooks you mentioned
 jest.mock('~/hooks/useK8sAndKarchResources');
-jest.mock('~/k8s', () => ({
-  useK8sWatchResource: jest.fn(),
-}));
-
-// DO NOT mock MultipleNamespaceAdmissionsWatcher
-// This allows the real component to run
 
 const mockUseK8sAndKarchResources = useK8sAndKarchResources as jest.Mock;
-const mockUseK8sWatchResource = useK8sWatchResource as jest.Mock;
 
 describe('ReleasesInNamespace', () => {
   const mockReleases = [

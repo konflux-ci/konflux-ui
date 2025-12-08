@@ -67,7 +67,7 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
     isLoading: releasesLoading,
     clusterError: releasesClusterError,
     archiveError: releasesArchiveError,
-  } = useK8sAndKarchResources<ReleaseKind>( // ✅ Changed to ReleaseKind
+  } = useK8sAndKarchResources<ReleaseKind>(
     {
       groupVersionKind: ReleaseGroupVersionKind,
       namespace,

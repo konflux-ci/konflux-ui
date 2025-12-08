@@ -1,22 +1,12 @@
 import { UseQueryResult } from '@tanstack/react-query';
 import { render, waitFor } from '@testing-library/react';
-import { useK8sWatchResource } from '~/k8s';
 import { ReleasePlanAdmissionKind } from '~/types';
 import { createJestMockFunction } from '~/unit-test-utils/common';
+import { createK8sWatchResourceMock } from '~/unit-test-utils/mock-k8s';
 import { MultipleNamespaceAdmissionsWatcher } from '../MultipleNamespaceAdmissionsWatcher';
 
-// We need to mock the useK8sWatchResource hook
-jest.mock('~/k8s', () => {
-  const actual = jest.requireActual('~/k8s');
-  return {
-    ...actual,
-    useK8sWatchResource: jest.fn(),
-  };
-});
-
-const mockUseK8sWatchResource = useK8sWatchResource as jest.MockedFunction<
-  typeof useK8sWatchResource
->;
+// No jest.mock() needed - the utility handles it
+const mockUseK8sWatchResource = createK8sWatchResourceMock();
 
 describe('MultipleNamespaceAdmissionsWatcher', () => {
   const mockAdmissions1: ReleasePlanAdmissionKind[] = [
