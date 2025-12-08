@@ -27,18 +27,18 @@ Find the supported variables in the table below:
 | -- | -- | -- | -- |
 | `KONFLUX_BASE_URL` | The URL to the main page of Konflux | Yes | 'https://localhost:8080' |
 | `USERNAME` | Username for local Konflux | Yes | 'user2@konflux.dev' |
-| `PASSWORD` | Password for local Konflux | Only with PR_CHECK=true | 'password' |
-| `PR_CHECK` | Assume the test is a PR check, using flow for local login | For PR checks | '' |
+| `PASSWORD` | Password for local Konflux | Only with LOCAL_CLUSTER=true | 'password' |
+| `LOCAL_CLUSTER` | Assume the test should be running against a local cluster, using flow for local login | No  | '' |
 | `REMOVE_APP_ON_FAIL` | Clean up applications from the cluster even if tests fail | No | false |
 | `GH_TOKEN` | GitHub token for network requests | Yes | '' |
 | `GH_REPO_OWNER` | GitHub username where testing repo will be pushed. GH_TOKEN must have rights there. | Yes | `redhat-hac-qe` |
 
-Please note, that `USERNAME` and `PASSWORD` are used only when the login process s automated. Currently, the login is automated just for the Konflux backend running locally. When running against a stage backend, the 2FA is required and is not supported by tests. 
+Please note, that `USERNAME` and `PASSWORD` are used only when the login process s automated. Currently, the login is automated just for the Konflux backend running locally. When running against a stage backend, the 2FA is required and is not supported by tests.
 
 ### Running test from source against local Konflux UI and staging Konflux backend
-This is the recommended way when either developing tests or a headed test runner is preferred. 
+This is the recommended way when either developing tests or a headed test runner is preferred.
 
-Go to the parent directory and run `yarn install` and `yarn start` to start a local Konflux UI. Please notice that the UI is connected to the backend running on a staging environment, so you would need access to the staging Konflux. You may check by logging in here https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com. 
+Go to the parent directory and run `yarn install` and `yarn start` to start a local Konflux UI. Please notice that the UI is connected to the backend running on a staging environment, so you would need access to the staging Konflux. You may check by logging in here https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com.
 
 Once Konflux UI is running locally, head to the e2e-tests folder. After running `yarn install` and setting the appropriate environment variables, use one of the following commands to run Cypress.
 
@@ -61,17 +61,17 @@ $ yarn run cy:run -b chrome -s 'tests/basic-happy-path*'
 ```
 
 ### Running test from source against local Konflux UI and local Konflux backend
-It's possible to run the backend locally using the same scripts as are used for PR check automation. The process of Konflux backend installation and requirements is described here https://github.com/konflux-ci/konflux-ci?tab=readme-ov-file#trying-out-konflux. 
+It's possible to run the backend locally using the same scripts as are used for PR check automation. The process of Konflux backend installation and requirements is described here https://github.com/konflux-ci/konflux-ci?tab=readme-ov-file#trying-out-konflux.
 
-For this setup, set also `PR_CHECK` variable to `true` to enable automated login.
+For this setup, set also `LOCAL_CLUSTER` variable to `true` to enable automated login.
 ```
-export CYPRESS_PR_CHECK=true
+export CYPRESS_LOCAL_CLUSTER=true
 ```
 
 Run tests by using the command `$ yarn run cy:open` or pick some other way described in a previous chapter. Once tests are run, no manual interaction is needed.
 
 ### Running tests using the container image
-The `e2e-tests` folder contains two Containerfiles used mainly for the test automation. 
+The `e2e-tests` folder contains two Containerfiles used mainly for the test automation.
 
 **BaseContainerfile** is based on a Cypress image `cypress/factory` as it contains all dependencies required for the Cypress tests to run. In the BaseContainerfile we install some additional dependencies due to additional logic that needs to be performed during the tests (e.g. skopeo to check deployed image). The base image serves as a base image for building test images used in the automation. The base image should be updated just occasionally.
 
@@ -83,7 +83,7 @@ If there are no changes in your local test code, you can pull and run the image 
 ```
 $ podman run -e CYPRESS_KONFLUX_BASE_URL=https://<HOSTNAME>/application-pipeline -e CYPRESS_USERNAME="username" -e CYPRESS_PASSWORD="password" quay.io/konflux_ui_qe/konflux-ui-tests:latest
 ```
-Note that container-specific arguments like environment and mountpoints are defined before the image tag. Any arguments defined after the image tag will be interpreted as options and passed directly to Cypress. 
+Note that container-specific arguments like environment and mountpoints are defined before the image tag. Any arguments defined after the image tag will be interpreted as options and passed directly to Cypress.
 In general, the command structure is as follows:
 ```
 $ <container engine> run <mount points> <container environment variables> quay.io/konflux_ui_qe/konflux-ui-tests:latest <cypress arguments>
@@ -127,7 +127,7 @@ $ podman build -f Containerfile -t <awesome tag>
 ```
 
 #### Publishing the image
-The image is published automatically after a change to this folder is pushed to the main. If however, the need arises to publish it manually, you will first need access to the `quay.io/konflux_ui_qe/konflux-ui-tests` repository, ask `Katka92` (kfoniok) for rights. 
+The image is published automatically after a change to this folder is pushed to the main. If however, the need arises to publish it manually, you will first need access to the `quay.io/konflux_ui_qe/konflux-ui-tests` repository, ask `Katka92` (kfoniok) for rights.
 
 Of course, we will now need to build the image with the appropriate tag and push it (after logging in):
 ```
@@ -140,13 +140,13 @@ $ podman push quay.io/konflux_ui_qe/konflux-ui-tests:mytag
 Test automation allows us to test early in the process and discover bugs before pushing code to the staging environment.
 
 ### PR checks
-Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). To be able to run the PR check job, you have to be a public member of `konflux-ci` organization. 
+Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). To be able to run the PR check job, you have to be a public member of `konflux-ci` organization.
 
 The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. Retriggering the job is possible either by pushing a commit to the branch or trigger it directly in the GitHub Action Summary page by `Re-run jobs` button.
 
 > [!IMPORTANT]
-> The direct changes in the GitHub Action file `pr-check.yaml` won't be executed in a PR - that's intended due to security reasons. If you do change in this file, you should test it in your fork. 
-> 
+> The direct changes in the GitHub Action file `pr-check.yaml` won't be executed in a PR - that's intended due to security reasons. If you do change in this file, you should test it in your fork.
+>
 > This feature is caused by a trigger which is set as:
 > ```
 > on:
@@ -156,12 +156,12 @@ The job installs Konflux from a main branch and Konflux UI from a PR. It runs te
 
 The workflow is separated into the actions files within `.github/actions` directory. Each action is a composite action, which makes it reusable across multiple workflows. This way it's also visible as separated steps and is easier for debugging.
 
-The job installs Konflux from the konflux-ci main branch. Konflux UI with all the changes introduced in a PR is build into an image which is deployed on local a kind cluster (image is not pushed anywhere). 
+The job installs Konflux from the konflux-ci main branch. Konflux UI with all the changes introduced in a PR is build into an image which is deployed on local a kind cluster (image is not pushed anywhere).
 
-The test step executes `pr_check.sh` file which does the tests setup and runs tests. Changes made in this bash file are already propagated to the PR check run, so they can be tested directly by the PR check job. If the Containerfile is changed, the image is rebuilt (not pushed). Environment variables are set and tests are run with the test code mounted from the PR to ensure it contains a fresh code. 
+The test step executes `pr_check.sh` file which does the tests setup and runs tests. Changes made in this bash file are already propagated to the PR check run, so they can be tested directly by the PR check job. If the Containerfile is changed, the image is rebuilt (not pushed). Environment variables are set and tests are run with the test code mounted from the PR to ensure it contains a fresh code.
 
 ### Periodic tests
-Periodic tests are not in place yet. 
+Periodic tests are not in place yet.
 
 ## Reporting issues
 If you find a problem with the tests, feel free to open an issue at the [Konflux-UI Jira project](https://issues.redhat.com/projects/KFLUXUI). You can set the label as `qa` to indicate it is a quality problem.

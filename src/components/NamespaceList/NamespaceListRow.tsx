@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { pluralize, Skeleton } from '@patternfly/react-core';
+import { capitalize, pluralize, Skeleton } from '@patternfly/react-core';
 import { APPLICATION_LIST_PATH } from '@routes/paths';
 import { useApplications } from '~/hooks/useApplications';
 import { RowFunctionArgs, TableData } from '~/shared';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
-import { NAMESPACE_VISIBILITY_LABEL } from '~/shared/const';
+import { NAMESPACE_VISIBILITY_VALUES, NAMESPACE_VISIBILITY_LABEL } from '~/shared/providers/const';
 import { NamespaceKind } from '~/types';
 import { namespaceTableColumnClasses } from './NamespaceListHeader';
 import { useNamespaceActions } from './useNamespaceActions';
@@ -29,7 +29,11 @@ const NamespaceListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<Namespa
         </Link>
       </TableData>
       <TableData className={namespaceTableColumnClasses.visibility}>
-        {namespaceVisibility ? (namespaceVisibility === 'public' ? 'Public' : 'Private') : 'N/A'}
+        {namespaceVisibility
+          ? namespaceVisibility === NAMESPACE_VISIBILITY_VALUES.AUTHENTICATED
+            ? 'Public'
+            : capitalize(namespaceVisibility)
+          : 'N/A'}
       </TableData>
       <TableData className={namespaceTableColumnClasses.applications}>
         {loaded ? (

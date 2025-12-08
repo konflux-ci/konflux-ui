@@ -197,4 +197,19 @@ describe('useKubearchiveListResourceQuery', () => {
     expect(result.current.isLoading).toBe(true);
     expect(result.current.data).toBeUndefined();
   });
+
+  it('should not fail if resourceInit is undefined', () => {
+    mockK8sListResource.mockResolvedValue(mockListResponse);
+
+    const { result } = renderHook(
+      () => useKubearchiveListResourceQuery(undefined as WatchK8sResource, mockModel),
+      {
+        wrapper: createWrapper(),
+      },
+    );
+
+    expect(result.current).toBeDefined();
+    expect(result.current.status).toBeDefined();
+    expect(result.current.isError).toBe(false);
+  });
 });

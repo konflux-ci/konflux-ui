@@ -15,3 +15,6 @@ export const LEARN_MORE_ABOUT_SECRETS_CREATION =
   'https://konflux-ci.dev/docs/building/creating-secrets/';
 export const LEARN_MORE_ABOUT_CREATING_APPLICATIONS =
   'https://konflux-ci.dev/docs/building/creating/';
+export const SECURITY_ENTERPRISE_CONTRACT_POLICY_URL =
+  'https://conforma.dev/docs/policy/release_policy.html';
+export const SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL = `${SECURITY_ENTERPRISE_CONTRACT_POLICY_URL}#_available_rule_collections`;

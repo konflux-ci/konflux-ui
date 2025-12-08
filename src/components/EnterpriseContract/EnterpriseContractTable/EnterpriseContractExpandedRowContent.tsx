@@ -5,9 +5,9 @@ import {
   DescriptionListTerm,
 } from '@patternfly/react-core';
 import { ExpandableRowContent, Tr } from '@patternfly/react-table';
+import { SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { ExternalLink, Timestamp } from '../../../shared';
 import { UIEnterpriseContractData } from '../types';
-
 import './EnterpriceContractTable.scss';
 
 interface Props {
@@ -30,7 +30,9 @@ export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj }) =
             <DescriptionListGroup>
               <DescriptionListTerm>Collection</DescriptionListTerm>
               <DescriptionListDescription>
-                <ExternalLink href="https://enterprisecontract.dev/docs/ec-policies/release_policy.html#_available_rule_collections">
+                <ExternalLink
+                  href={SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}
+                >
                   {obj.collection.join(', ')}
                 </ExternalLink>
               </DescriptionListDescription>

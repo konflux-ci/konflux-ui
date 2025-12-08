@@ -70,6 +70,33 @@ export class PipelinerunsTabPage {
       cy.contains(rowValues.message).scrollIntoView().should('be.visible');
     });
   }
+
+  static verifyVulnerabilityColumn() {
+    cy.get(pipelinerunsTabPO.ariaLabelPipelineRunsListTable).within(() => {
+      cy.contains('th', 'Fixable vulnerabilities').should('be.visible');
+    });
+  }
+
+  static verifyVulnerabilityCellVisibility(componentName: string) {
+    UIhelper.getTableRow(pipelinerunsTabPO.pipelineRunsListTable, componentName).within(() => {
+      cy.get(pipelinerunsTabPO.vulnerabilityColumn).should('be.visible');
+    });
+  }
+
+  static verifyVulnerabilityIndicators(componentName: string, expectedPattern: RegExp) {
+    UIhelper.getTableRow(pipelinerunsTabPO.pipelineRunsListTable, componentName).within(() => {
+      cy.get(pipelinerunsTabPO.vulnerabilityColumn)
+        .should('be.visible')
+        .invoke('text')
+        .should('match', expectedPattern);
+    });
+  }
+
+  static verifyVulnerabilityScanDetails(componentName: string) {
+    UIhelper.getTableRow(pipelinerunsTabPO.pipelineRunsListTable, componentName).within(() => {
+      cy.get(pipelinerunsTabPO.vulnerabilityScanStatus).should('have.length.at.least', 1);
+    });
+  }
 }
 
 // Pipelineruns Details view page
@@ -139,7 +166,7 @@ export class DetailsTab {
       .invoke('val')
       .then((value) => {
         cy.exec(`${value}`).then((obj) => {
-          expect(obj.code).to.equal(0);
+          expect(obj.exitCode).to.equal(0);
           expect(JSON.parse(obj.stdout).components.length).to.greaterThan(0);
         });
       });

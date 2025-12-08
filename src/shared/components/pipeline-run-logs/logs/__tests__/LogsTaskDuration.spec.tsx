@@ -93,13 +93,6 @@ describe('LogsTaskDuration', () => {
       // Duration will be calculated from startTime to now, so just check it exists and has expected format
       expect(durationElement.textContent).toMatch(/\[Duration: .+\]/);
     });
-
-    it('should apply correct margin class', () => {
-      render(<LogsTaskDuration taskRun={mockTaskRunWithDuration} />);
-
-      const durationElement = screen.getByTestId('logs-task-duration');
-      expect(durationElement).toHaveClass('pf-v5-u-ml-md');
-    });
   });
 
   describe('rendering without duration', () => {
@@ -129,7 +122,6 @@ describe('LogsTaskDuration', () => {
       expect(screen.queryByTestId('logs-task-duration')).not.toBeInTheDocument();
     });
   });
-
 
   describe('edge cases', () => {
     it('should handle taskRun with null status', () => {

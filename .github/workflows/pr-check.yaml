@@ -2,7 +2,7 @@ name: PR Check Test
 
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened, labeled, unlabeled]  
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   merge_group:
     types: [checks_requested]
 
@@ -76,6 +76,9 @@ jobs:
       CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
       CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       JOB_TYPE: 'on-pr'
     steps:
       - uses: actions/checkout@v4
@@ -88,10 +91,14 @@ jobs:
         uses: ./.github/actions/konflux-ui-deploy-test
         with:
           job-type: ${{ env.JOB_TYPE }}
-  
+
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test
-  
+
+      - name: Upload e2e coverage to Codecov
+        if: ${{ always() && env.CODECOV_TOKEN != '' }}
+        run: ./pr_check.sh upload-coverage
+
       - name: Generate error logs
         if: ${{ always() }}
         uses: ./.github/actions/generate-error-logs
