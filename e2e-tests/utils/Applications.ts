@@ -20,11 +20,11 @@ import { hacAPIEndpoints } from '../utils/APIEndpoints';
 import { APIHelper } from '../utils/APIHelper';
 import { Common } from './Common';
 import { UIhelper } from './UIhelper';
-// Testing e2e
+
 export class Applications {
   static checkPipelineIsCancellingOrCancelled(componentName: string) {
     UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).then((row) => {
-      const text = row.text();
+      const text = row.text() || '';
       let isCancellingOrCancelled = false;
       if (text.includes('Cancelling')) {
         cy.log('Pipeline was in a state Cancelling.');
