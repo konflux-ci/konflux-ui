@@ -28,13 +28,7 @@ describe('Basic Happy Path', () => {
   const repoOwner = Cypress.env('GH_REPO_OWNER');
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
-  const piplinerunlogsTasks = [
-    'init',
-    'clone-repository',
-    'build-container',
-    'apply-tags',
-    'push-dockerfile',
-  ];
+  const piplinerunlogsTasks = ['init', 'clone-repository', 'build-container', 'push-dockerfile'];
   const pipeline = 'docker-build-oci-ta';
 
   before(function () {
