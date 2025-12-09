@@ -15,6 +15,9 @@ import {
   Bullseye,
   Spinner,
 } from '@patternfly/react-core';
+import { DownloadIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { saveAs } from 'file-saver';
+import { dump } from 'js-yaml';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import {
@@ -40,6 +43,7 @@ import MetadataList from '../../MetadataList';
 import RunResultsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
 import ScanDescriptionListGroup from '../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithText } from '../../topology/StatusIcon';
+
 const TaskRunDetailsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const namespace = useNamespace();
@@ -68,6 +72,17 @@ const TaskRunDetailsTab: React.FC = () => {
   const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const status = !error ? taskRunStatus(taskRun) : null;
   const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+
+  const downloadTaskRunYaml = () => {
+    if (!taskRun) return;
+    const taskRunYaml = dump(taskRun) as string;
+    const blob = new Blob([taskRunYaml], {
+      type: 'text/yaml;charset=utf-8',
+    });
+
+    const filename = `${taskRunName || 'taskrun-details'}.yaml`;
+    saveAs(blob, filename);
+  };
 
   return (
     <>
@@ -246,6 +261,20 @@ const TaskRunDetailsTab: React.FC = () => {
                     ) : (
                       '-'
                     )}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>Download Task run Details</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        downloadTaskRunYaml();
+                      }}
+                    >
+                      <DownloadIcon style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }} />
+                      Download Task run YAML
+                    </Button>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               </DescriptionList>
