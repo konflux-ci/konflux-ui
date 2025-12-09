@@ -1,5 +1,4 @@
 import { pageTitles, FULL_APPLICATION_TITLE } from '../support/constants/PageTitle';
-import { addComponentPagePO } from '../support/pageObjects/createApplication-po';
 import { actions, breadcrumb } from '../support/pageObjects/global-po';
 import {
   actionsDropdown,
@@ -23,19 +22,19 @@ import { UIhelper } from './UIhelper';
 
 export class Applications {
   static checkPipelineIsCancellingOrCancelled(componentName: string) {
-    UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(($row) => {
-      const text = $row.text();
-      const isCancellingOrCancelled = text.includes('Cancelling') || text.includes('Cancelled');
-
+    UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).then((row) => {
+      const text = row.text() || '';
+      let isCancellingOrCancelled = false;
       if (text.includes('Cancelling')) {
         cy.log('Pipeline was in a state Cancelling.');
+        isCancellingOrCancelled = true;
       } else if (text.includes('Cancelled')) {
         cy.log('Pipeline was in a state Cancelled.');
+        isCancellingOrCancelled = true;
+      } else {
+        cy.log("Status wasn't Cancelling nor Cancelled.");
       }
-      assert(
-        isCancellingOrCancelled,
-        `Expected pipeline to be Cancelling or Cancelled, but found: ${text}`,
-      );
+      assert(isCancellingOrCancelled == true);
     });
   }
 
@@ -84,8 +83,6 @@ export class Applications {
 
     addComponent.setSource(publicGitRepo);
     this.configureComponentsStep(componentName, pipeline, applicationName, dockerfilePath, secret);
-    // make sure advanced git options is closed, so the repo validation icon is in the viewport
-    cy.contains('button', 'Hide advanced Git options').click();
     addComponent.waitRepoValidated();
     if (isPrivate) {
       addComponent.setPrivate();
@@ -96,7 +93,7 @@ export class Applications {
   static checkComponentInListView(
     componentName: string,
     applicationName: string,
-    componentStatus: string | RegExp,
+    componentStatus: string,
   ) {
     this.createdComponentExists(componentName, applicationName);
     this.checkComponentStatus(componentName, componentStatus);
@@ -110,7 +107,7 @@ export class Applications {
     ComponentsTabPage.getComponentListItem(componentName).should('exist');
   }
 
-  static checkComponentStatus(componentName: string, componentStatus: string | RegExp) {
+  static checkComponentStatus(componentName: string, componentStatus: string) {
     cy.get(componentsTabPO.componentListItem(componentName)).contains(componentStatus, {
       timeout: 80000,
     });
