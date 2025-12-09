@@ -52,6 +52,7 @@ export type KonfluxInstanceEnvironmentType =
   (typeof KonfluxInstanceEnvironments)[keyof typeof KonfluxInstanceEnvironments];
 
 export type KonfluxPublicInfo = {
+  imageProxyUrl?: string;
   environment?: KonfluxInstanceEnvironmentType;
   statusPageUrl?: string;
   integrations?: KonfluxPublicInfoIntegrations;
