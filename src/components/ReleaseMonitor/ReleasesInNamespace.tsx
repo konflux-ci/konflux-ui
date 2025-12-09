@@ -51,8 +51,8 @@ const enhanceReleaseToMonitored = (
 
   return {
     ...release,
-    product,
-    productVersion,
+    product: product || undefined,
+    productVersion: productVersion || undefined,
     rpa,
   };
 };
@@ -162,7 +162,6 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
       releasePlanAdmissions;
 
     if (allDataLoaded) {
-      // ✅ Create new array using immutable approach
       const monitoredReleases: MonitoredReleaseKind[] = releases.map((release) =>
         enhanceReleaseToMonitored(release, releasePlans, allReleasePlanAdmissions),
       );

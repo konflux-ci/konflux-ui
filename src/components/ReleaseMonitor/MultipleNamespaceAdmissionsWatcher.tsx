@@ -29,6 +29,53 @@ const SingleNamespaceWatcher: React.FC<{
   return null;
 });
 
+/**
+ * MultipleNamespaceAdmissionsWatcher is a headless component that watches ReleasePlanAdmission
+ * resources across multiple Kubernetes namespaces and aggregates their results.
+ *
+ * This component returns null and does not render any UI. Consumers should handle
+ * the loading and error states passed to the onUpdate callback.
+ *
+ * @example
+ * // Consumer component should handle loading and error states
+ * const MyComponent = () => {
+ *   const [admissions, setAdmissions] = React.useState<ReleasePlanAdmissionKind[]>([]);
+ *   const [isLoading, setIsLoading] = React.useState(true);
+ *   const [error, setError] = React.useState<unknown>(undefined);
+ *
+ *   const handleUpdate = React.useCallback((data, loading, err) => {
+ *     setAdmissions(data);
+ *     setIsLoading(loading);
+ *     setError(err);
+ *   }, []);
+ *
+ *   // Handle loading state with Skeleton
+ *   if (isLoading) {
+ *     return <Skeleton aria-label="Loading admissions" data-test="admissions-skeleton" />;
+ *   }
+ *
+ *   // Handle error state with getErrorState utility
+ *   if (error) {
+ *     return getErrorState(error, !isLoading, 'release plan admissions', true);
+ *   }
+ *
+ *   return (
+ *     <>
+ *       <MultipleNamespaceAdmissionsWatcher
+ *         namespaces={['ns1', 'ns2']}
+ *         onUpdate={handleUpdate}
+ *       />
+ *       {/* Render admissions data *\/}
+ *     </>
+ *   );
+ * };
+ *
+ * @see {@link getErrorState} from '~/shared/utils/error-utils' for error handling
+ * @see {@link Skeleton} from '@patternfly/react-core' for loading states
+ *
+ * @param namespaces - Array of namespace names to watch
+ * @param onUpdate - Callback invoked with aggregated data, loading state, and any errors (403 errors are filtered out)
+ */
 export const MultipleNamespaceAdmissionsWatcher: React.FC<{
   namespaces: string[];
   onUpdate: (data: ReleasePlanAdmissionKind[], isLoading: boolean, error: unknown) => void;

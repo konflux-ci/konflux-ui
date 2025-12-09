@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { render, waitFor } from '@testing-library/react';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { ReleasePlanAdmissionModel, ReleasePlanModel } from '~/models';
@@ -39,8 +40,8 @@ describe('ReleasesInNamespace', () => {
       spec: {
         data: {
           releaseNotes: {
-            'product_name': 'Test Product',
-            'product_version': '1.0',
+            product_name: 'Test Product',
+            product_version: '1.0',
           },
         },
       },
@@ -133,21 +134,7 @@ describe('ReleasesInNamespace', () => {
 
   it('should handle ReleasePlans error', async () => {
     const error = new Error('RP error');
-    mockUseK8sWatchResource.mockImplementation((resourceSpec, model) => {
-      const { namespace } = resourceSpec || {};
-
-      if (model === ReleasePlanModel) {
-        return { data: null, isLoading: false, error };
-      }
-
-      if (model === ReleasePlanAdmissionModel) {
-        if (namespace === 'ns1') {
-          return { data: [], isLoading: false, error: null };
-        }
-      }
-
-      return { data: [], isLoading: false, error: null };
-    });
+    mockUseK8sWatchResource.mockReturnValue({ data: null, isLoading: false, error });
 
     render(
       <ReleasesInNamespace namespace="ns1" onReleasesLoaded={onReleasesLoaded} onError={onError} />,
@@ -216,8 +203,12 @@ describe('ReleasesInNamespace', () => {
       });
 
       expect(rpaCalls).toHaveLength(2);
-      expect(rpaCalls.some(call => (call[0] as { namespace: string }).namespace === 'target-ns')).toBe(true);
-      expect(rpaCalls.some(call => (call[0] as { namespace: string }).namespace === 'another-ns')).toBe(true);
+      expect(
+        rpaCalls.some((call) => (call[0] as { namespace: string }).namespace === 'target-ns'),
+      ).toBe(true);
+      expect(
+        rpaCalls.some((call) => (call[0] as { namespace: string }).namespace === 'another-ns'),
+      ).toBe(true);
     });
   });
 
