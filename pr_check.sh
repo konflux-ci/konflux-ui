@@ -54,16 +54,26 @@ execute_test() {
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
         --timeout=3600 \
-        -e CYPRESS_PR_CHECK=${CYPRESS_PR_CHECK} \
+        -e CYPRESS_LOCAL_CLUSTER=${CYPRESS_LOCAL_CLUSTER} \
+        -e CYPRESS_PERIODIC_RUN_STAGE=${CYPRESS_PERIODIC_RUN_STAGE} \
         -e CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} \
         -e CYPRESS_USERNAME=${CYPRESS_USERNAME} \
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
         -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
-        -e CYPRESS_PERIODIC_RUN=${CYPRESS_PERIODIC_RUN}"
+        -e CYPRESS_PROJECT_ID=${CYPRESS_PROJECT_ID} \
+        -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY}"
+
+    RECORD_FLAG=""
+    if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
+        RECORD_FLAG="--record"
+        echo "Cypress recording enabled"
+    else
+        echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
+    fi
 
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE}
+    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec /e2e/tests/basic-happy-path.spec.ts
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
         case $PODMAN_RETURN_CODE in
@@ -109,6 +119,9 @@ run_test_pr() {
         echo "Using latest image from quay."
     fi
 
+    export CYPRESS_LOCAL_CLUSTER=true
+    export CYPRESS_PERIODIC_RUN_STAGE=false
+
     execute_test
     TEST_RUN=$?
 
@@ -119,6 +132,8 @@ run_test_pr() {
 
 run_test_stage() {
     echo "Running test suite against stage UI and backend..."
+    export CYPRESS_LOCAL_CLUSTER=false
+    export CYPRESS_PERIODIC_RUN_STAGE=true
 
     execute_test
     TEST_RUN=$?

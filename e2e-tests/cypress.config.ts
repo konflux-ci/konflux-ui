@@ -4,6 +4,7 @@ const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/li
 const codeCoverageTask = require('@cypress/code-coverage/task');
 
 export default defineConfig({
+  projectId: process.env.CYPRESS_PROJECT_ID,
   defaultCommandTimeout: 40000,
   execTimeout: 150000,
   pageLoadTimeout: 90000,
@@ -32,13 +33,19 @@ export default defineConfig({
     supportFile: 'support/commands/index.ts',
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
+    experimentalPromptCommand: true,
     excludeSpecPattern:
-      process.env.CYPRESS_PERIODIC_RUN || process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
+      process.env.CYPRESS_PERIODIC_RUN_STAGE ||
+      process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
       // Code coverage plugin - must be registered first
-      codeCoverageTask(on, config);
+      if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true') {
+        codeCoverageTask(on, config);
+      } else {
+        console.log('Skipping code coverage for periodic run stage');
+      }
 
       require('cypress-mochawesome-reporter/plugin')(on);
 
@@ -81,6 +88,18 @@ export default defineConfig({
         await beforeRunHook(details);
       });
 
+      on('after:spec', async (spec, res) => {
+        // cypress-mochawesome-reporter
+        const results = res as CypressCommandLine.RunResult;
+        if (results.stats?.failures > 0) {
+          // eslint-disable-next-line no-console
+          console.log(
+            `A total of ${results.stats.failures} tests failed, DOM content saved at './cypress/saved-doms'`,
+          );
+        }
+        return null;
+      });
+
       on('after:run', async () => {
         // cypress-mochawesome-reporter
         await afterRunHook();
@@ -97,8 +116,8 @@ export default defineConfig({
         GH_SETUP_KEY: '',
         KUBECONFIG: '~/.kube/appstudio-config',
         CLEAN_NAMESPACE: 'false',
-        PR_CHECK: '',
-        PERIODIC_RUN: false,
+        LOCAL_CLUSTER: false,
+        PERIODIC_RUN_STAGE: false,
         resolution: 'high',
         REMOVE_APP_ON_FAIL: false,
         SNYK_TOKEN: '',
@@ -116,7 +135,7 @@ export default defineConfig({
       }
 
       config.env.HAC_WORKSPACE = config.env.USERNAME.toLowerCase();
-      if (config.env.PR_CHECK === true) {
+      if (config.env.LOCAL_CLUSTER === true) {
         config.env.HAC_NAMESPACE = `user-ns2`;
       } else {
         config.env.HAC_NAMESPACE = `${config.env.HAC_WORKSPACE}-tenant`;

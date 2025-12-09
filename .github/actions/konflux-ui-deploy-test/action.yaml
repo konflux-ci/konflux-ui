@@ -2,7 +2,7 @@ name: 'Deploy Konflux CI on kind cluster and run Konflux UI E2E tests'
 description: 'Reusable action for running konflux-ui E2E test against konflux-ci instance deployed on kind cluster'
 inputs:
   job-type:
-    description: '"on-pr" or "periodic"'
+    description: '"on-pr" or "periodic-local" or "periodic-stage"'
     required: true
 
 runs:

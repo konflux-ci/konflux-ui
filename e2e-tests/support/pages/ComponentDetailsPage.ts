@@ -15,7 +15,7 @@ export class ComponentDetailsPage {
         cy.exec(`skopeo inspect -f "Name: {{.Name}} Digest: {{.Digest}}" docker://${value}`, {
           timeout: 300000,
         })
-          .its('code')
+          .its('exitCode')
           .should('eq', 0);
       });
   }
