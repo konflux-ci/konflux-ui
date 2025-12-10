@@ -257,17 +257,25 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
       let snapshot: Snapshot | null = null;
 
       if (runType === PipelineRunType.BUILD && isPushBuildType && componentName) {
-        component = await k8sQueryGetResource<ComponentKind>({
-          model: ComponentModel,
-          queryOptions: { ns: namespace, name: componentName },
-        });
+        try {
+          component = await k8sQueryGetResource<ComponentKind>({
+            model: ComponentModel,
+            queryOptions: { ns: namespace, name: componentName },
+          });
+        } catch {
+          component = null;
+        }
       }
 
       if (runType === PipelineRunType.TEST && snapshotName) {
-        snapshot = await k8sQueryGetResource<Snapshot>({
-          model: SnapshotModel,
-          queryOptions: { ns: namespace, name: snapshotName },
-        });
+        try {
+          snapshot = await k8sQueryGetResource<Snapshot>({
+            model: SnapshotModel,
+            queryOptions: { ns: namespace, name: snapshotName },
+          });
+        } catch {
+          snapshot = null;
+        }
       }
 
       return { component, snapshot };
