@@ -8,24 +8,6 @@ export class ComponentDetailsPage {
     UIhelper.clickTab(tab);
   }
 
-  static checkVisibility(visibility: string) {
-    cy.get('span.pf-v5-c-label__text').should('contain', visibility).and('be.visible');
-  }
-
-  static updateVisibility(visibility: 'public' | 'private') {
-    cy.get('[data-test="edit-visibility-button"]', { timeout: 5000 }).as('btn').click();
-    cy.get('[data-test="visibility-switch"]').then(($input) => {
-      const isPrivate = $input.is(':checked');
-      const shouldToggle =
-        (isPrivate && visibility === 'public') || (!isPrivate && visibility === 'private');
-
-      if (shouldToggle) {
-        cy.get('label[for="visibility-switch"]').click({ force: true });
-      }
-    });
-    cy.get('[data-test="save-visibility-button"]').click();
-  }
-
   static checkBuildImage() {
     cy.get(componentDetailsPO.buildImage)
       .invoke('val')

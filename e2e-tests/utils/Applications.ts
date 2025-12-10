@@ -81,9 +81,17 @@ export class Applications {
   ) {
     const addComponent = new AddComponentPage();
     const componentPage = new ComponentPage();
+    const imageRepoVisibility = isPrivate ? 'private' : 'public';
 
     addComponent.setSource(publicGitRepo);
-    this.configureComponentsStep(componentName, pipeline, applicationName, dockerfilePath, secret);
+    this.configureComponentsStep(
+      componentName,
+      imageRepoVisibility,
+      pipeline,
+      applicationName,
+      dockerfilePath,
+      secret,
+    );
     // make sure advanced git options is closed, so the repo validation icon is in the viewport
     cy.contains('button', 'Hide advanced Git options').click();
     addComponent.waitRepoValidated();
@@ -165,6 +173,7 @@ export class Applications {
 
   static configureComponentsStep(
     componentName: string,
+    imageRepoVisibility: 'public' | 'private',
     pipeline: string,
     applicationName?: string,
     dockerfilePath?: string,
@@ -172,6 +181,7 @@ export class Applications {
   ) {
     const componentPage = new ComponentPage();
     componentPage.editComponentName(componentName);
+    componentPage.setImageRepoVisibility(imageRepoVisibility);
     componentPage.setPipeline(pipeline);
 
     if (applicationName) {

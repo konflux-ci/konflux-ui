@@ -235,15 +235,6 @@ describe('Basic Happy Path', () => {
       ComponentsTabPage.openComponent(componentName);
     });
 
-    it('verify the image repo is private by default', () => {
-      ComponentDetailsPage.checkVisibility('private');
-    });
-
-    it('verify the image repo can be edited as public', () => {
-      ComponentDetailsPage.updateVisibility('public');
-      ComponentDetailsPage.checkVisibility('public');
-    });
-
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
     });
