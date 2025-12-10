@@ -180,10 +180,7 @@ describe('Basic Happy Path', () => {
 
     it('Verify that on-pull pipeline was cancelled', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(
-        'contain.text',
-        'Cancelled',
-      );
+      Applications.checkPipelineIsCancelled(componentName);
     });
 
     it('Verify Enterprise contract Test pipeline run Details', () => {
