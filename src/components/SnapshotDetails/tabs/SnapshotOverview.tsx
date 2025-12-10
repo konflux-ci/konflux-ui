@@ -98,12 +98,12 @@ const SnapshotOverviewTab: React.FC = () => {
                       title={commit.displayName || commit.shaTitle}
                     >
                       {commit.displayName || commit.shaTitle}{' '}
-                      <CommitLabel
-                        gitProvider={commit.gitProvider}
-                        sha={commit.sha}
-                        shaURL={commit.shaURL}
-                      />
                     </Link>
+                    <CommitLabel
+                      gitProvider={commit.gitProvider}
+                      sha={commit.sha}
+                      shaURL={commit.shaURL}
+                    />
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               )}
