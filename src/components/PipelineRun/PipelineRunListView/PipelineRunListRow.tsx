@@ -364,7 +364,6 @@ const DynamicPipelineRunListRow: React.FC<
   const labels = obj.metadata.labels;
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
   const commit = createCommitObjectFromPLR(obj);
-
   const testStatus = React.useMemo(() => {
     const results = getPipelineRunStatusResults(obj);
     return taskTestResultStatus(results);
