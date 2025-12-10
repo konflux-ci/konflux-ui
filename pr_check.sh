@@ -144,6 +144,14 @@ run_test_stage() {
 upload_coverage() {
     echo "Uploading e2e coverage to Codecov..."
 
+    # Free up disk space before pulling coverport image
+    echo "Disk space before cleanup:"
+    df -h /
+    echo "Pruning container images and build cache..."
+    podman system prune --all --force || true
+    echo "Disk space after cleanup:"
+    df -h /
+
     # Coverage data is copied to artifacts/.nyc_output by entrypoint.sh
     local COVERAGE_DIR="artifacts/.nyc_output"
 
