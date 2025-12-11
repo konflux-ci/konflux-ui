@@ -26,7 +26,7 @@ export class Applications {
     const pipelineRunName = `${componentName}-on-pull-request`;
 
     UIhelper.getTableRow('Pipeline run List', pipelineRunName).should(($row) => {
-      const rowText = $row.text();
+      const rowText = $row.text() || '';
       if (!rowText.includes(pipelineRunName)) {
         return false;
       }
