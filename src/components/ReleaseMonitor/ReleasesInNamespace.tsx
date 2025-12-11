@@ -14,12 +14,6 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
   onReleasesLoaded,
   onError,
 }) => {
-  const renderCount = React.useRef(0);
-  React.useEffect(() => {
-    renderCount.current++;
-    console.log(`Component releaseinNamespace rendered ${renderCount.current} times`);
-  });
-
   const releasesDataRef = React.useRef<MonitoredReleaseKind[]>([]);
   const isLoadingRef = React.useRef(false);
   const errorRef = React.useRef<unknown>(null);
@@ -50,7 +44,7 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
         hasReportedRef.current = true;
       }
     }
-  }, [data, isLoading, clusterError, archiveError]);
+  }, [data, isLoading, clusterError, archiveError, onError, onReleasesLoaded]);
 
   return null;
 };
