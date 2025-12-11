@@ -50,6 +50,7 @@ import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSourceUrl, getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
 import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
+import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
@@ -96,6 +97,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   }
 
   const results = getPipelineRunStatusResults(pipelineRun);
+  const specParams = pipelineRun?.spec?.params;
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
   const duration = calculateDuration(
@@ -405,6 +407,12 @@ const PipelineRunDetailsTab: React.FC = () => {
               <RunResultsList results={results} status={pipelineStatus} />
             </>
           ) : null}
+
+          {specParams?.length && (
+            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+              <RunParamsList params={specParams} />
+            </div>
+          )}
         </>
       )}
     </>
