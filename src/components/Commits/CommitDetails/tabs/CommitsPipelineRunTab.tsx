@@ -12,7 +12,7 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
@@ -36,8 +36,41 @@ import { PipelineRunListRowWithColumns } from '../../../PipelineRun/PipelineRunL
 const CommitsPipelineRunTab: React.FC = () => {
   const { applicationName, commitName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [pipelineRuns, loaded, error, getNextPage, { isFetchingNextPage, hasNextPage }] =
-    usePipelineRunsForCommitV2(namespace, applicationName, commitName, undefined, false);
+  const [
+    testPipelineRuns,
+    testPlrLoaded,
+    testPlrError,
+    testPlrGetNextPage,
+    { isFetchingNextPage: testPlrIsFetchingNextPage, hasNextPage: testPlrHasNextPage },
+  ] = usePipelineRunsForCommitV2(
+    namespace,
+    applicationName,
+    commitName,
+    undefined,
+    false,
+    PipelineRunType.TEST,
+  );
+
+  // To ensure correct order of pipeline runs while the queries are split based on type, we need to first fetch
+  // all test pipeline runs before fetching any build pipeline runs. Test pipeline runs are only started after
+  // build pipeline runs are finished.
+  const shouldFetchBuildPlr =
+    testPlrLoaded && !testPlrError && !testPlrIsFetchingNextPage && !testPlrHasNextPage;
+
+  const [
+    buildPipelineRuns,
+    buildPlrLoaded,
+    buildPlrError,
+    buildPlrGetNextPage,
+    { isFetchingNextPage: buildPlrIsFetchingNextPage, hasNextPage: buildPlrHasNextPage },
+  ] = usePipelineRunsForCommitV2(
+    shouldFetchBuildPlr ? namespace : null,
+    applicationName,
+    commitName,
+    undefined,
+    false,
+    PipelineRunType.BUILD,
+  );
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
@@ -58,6 +91,13 @@ const CommitsPipelineRunTab: React.FC = () => {
   }, [visibleColumnKeys]);
 
   const { name, status, type } = filters;
+
+  const pipelineRuns = React.useMemo(
+    () => [...(testPipelineRuns ?? []), ...(buildPipelineRuns ?? [])],
+    [buildPipelineRuns, testPipelineRuns],
+  );
+  const pipelineRunsLoaded = testPlrLoaded && (shouldFetchBuildPlr ? buildPlrLoaded : true);
+  const pipelineRunsError = testPlrError ?? buildPlrError;
 
   const statusFilterObj = React.useMemo(
     () => createFilterObj(pipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
@@ -81,11 +121,11 @@ const CommitsPipelineRunTab: React.FC = () => {
 
   const vulnerabilities = usePLRVulnerabilities(name ? filteredPLRs : pipelineRuns);
 
-  if (error) {
-    return getErrorState(error, loaded, 'pipeline runs');
+  if (pipelineRunsError) {
+    return getErrorState(pipelineRunsError, pipelineRunsLoaded, 'pipeline runs');
   }
 
-  if (loaded && (!pipelineRuns || pipelineRuns.length === 0)) {
+  if (pipelineRunsLoaded && (!pipelineRuns || pipelineRuns.length === 0)) {
     return <PipelineRunEmptyState applicationName={applicationName} />;
   }
 
@@ -93,6 +133,8 @@ const CommitsPipelineRunTab: React.FC = () => {
   const NoDataEmptyMsg = () => <PipelineRunEmptyState applicationName={applicationName} />;
 
   const isFiltered = name.length > 0 || type.length > 0 || status.length > 0;
+  const isFetchingNextPage = testPlrIsFetchingNextPage || buildPlrIsFetchingNextPage;
+  const hasNextPage = testPlrHasNextPage || buildPlrHasNextPage;
 
   return (
     <>
@@ -117,7 +159,7 @@ const CommitsPipelineRunTab: React.FC = () => {
           data={filteredPLRs}
           aria-label="Pipelinerun List"
           Header={getPipelineRunListHeader(safeVisibleColumns)}
-          loaded={isFetchingNextPage || loaded}
+          loaded={isFetchingNextPage || pipelineRunsLoaded}
           customData={vulnerabilities}
           EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
           NoDataEmptyMsg={NoDataEmptyMsg}
@@ -139,7 +181,16 @@ const CommitsPipelineRunTab: React.FC = () => {
               return !!filteredPLRs[args.index];
             },
             loadMoreRows: () => {
-              hasNextPage && !isFetchingNextPage && getNextPage?.();
+              if (testPlrHasNextPage && !testPlrIsFetchingNextPage && testPlrLoaded) {
+                testPlrGetNextPage?.();
+              } else if (
+                testPlrLoaded &&
+                !testPlrHasNextPage &&
+                buildPlrHasNextPage &&
+                !buildPlrIsFetchingNextPage
+              ) {
+                buildPlrGetNextPage?.();
+              }
             },
             rowCount: hasNextPage ? filteredPLRs.length + 1 : filteredPLRs.length,
           }}

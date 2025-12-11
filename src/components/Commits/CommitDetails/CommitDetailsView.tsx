@@ -6,7 +6,7 @@ import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { PipelineRunType, runStatus } from '../../../consts/pipelinerun';
+import { PipelineRunType } from '../../../consts/pipelinerun';
 import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
@@ -95,7 +95,7 @@ const CommitDetailsView: React.FC = () => {
               <CommitIcon isPR={commit.isPullRequest} className="commit-details__title-icon" />{' '}
               <b>{commit.shaTitle}</b>
             </span>
-            <StatusIconWithTextLabel status={commitStatus as runStatus} />
+            <StatusIconWithTextLabel status={commitStatus} />
             <FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />
           </Text>
         }
