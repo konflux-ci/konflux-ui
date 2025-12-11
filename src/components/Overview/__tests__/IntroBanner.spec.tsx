@@ -27,11 +27,11 @@ describe('IntroBanner', () => {
     expect(viewNamespacesButton).toHaveAttribute('href', '/ns');
   });
 
-  it('should not render the Release Monitor Board button when feature flag is disabled', () => {
+  it('should render the Release Monitor Board button when release monitor feature is online official', () => {
     routerRenderer(<IntroBanner />);
 
     const releaseMonitorButton = screen.queryByRole('link', { name: 'Release Monitor Board' });
-    expect(releaseMonitorButton).not.toBeInTheDocument();
+    expect(releaseMonitorButton).toBeInTheDocument();
   });
 
   it('should render the overview banner image', () => {
