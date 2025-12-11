@@ -1,14 +1,19 @@
 import '@testing-library/jest-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { renderHook } from '@testing-library/react-hooks';
+import { renderHook, act } from '@testing-library/react-hooks';
 import { PipelineRunEventType, PipelineRunLabel, runStatus } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useSnapshot } from '../../../../hooks/useSnapshots';
+import { k8sQueryGetResource } from '../../../../k8s';
 import { PipelineRunKind } from '../../../../types';
 import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { mockComponent } from '../../../Components/ComponentDetails/__data__/mockComponentDetails';
-import { usePipelinererunAction, usePipelinerunActions } from '../pipelinerun-actions';
+import {
+  usePipelinererunAction,
+  usePipelinerunActions,
+  useRerunActionLazy,
+} from '../pipelinerun-actions';
 
 jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
@@ -43,6 +48,7 @@ const useNavigateMock = useNavigate as jest.Mock;
 const mockUseSnapshots = useSnapshot as jest.Mock;
 const useComponentMock = useComponent as jest.Mock;
 const mockUseLocation = useLocation as jest.Mock;
+const k8sQueryGetResourceMock = k8sQueryGetResource as jest.Mock;
 
 // helper function to create location object
 const createMockLocation = (pathname: string | undefined | null) => ({
@@ -56,6 +62,11 @@ const createMockLocation = (pathname: string | undefined | null) => ({
 jest.mock('../../../../k8s', () => ({
   ...jest.requireActual('../../../../k8s'),
   K8sQueryPatchResource: jest.fn(() => Promise.resolve()),
+  k8sQueryGetResource: jest.fn(),
+}));
+
+jest.mock('../../../../shared/providers/Namespace', () => ({
+  useNamespace: jest.fn(() => 'test-ns'),
 }));
 
 describe('usePipelinerunActions', () => {
@@ -939,6 +950,255 @@ describe('usePipelinererunAction', () => {
 
       await result.current.cta();
       expect(navigateMock).toHaveBeenCalled();
+    });
+  });
+});
+
+describe('useRerunActionLazy', () => {
+  const mockSnapshot = {
+    metadata: { name: 'snp1', namespace: 'test-ns' },
+    spec: { application: 'test-app' },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseLocation.mockReturnValue(
+      createMockLocation('/ns/test-ns/applications/app/pipelineruns'),
+    );
+    useAccessReviewForModelMock.mockReturnValue([true, true]);
+    k8sQueryGetResourceMock.mockReset();
+  });
+
+  describe('snapshot fetch error handling', () => {
+    it('should catch snapshot fetch error and set snapshot to null', async () => {
+      const pipelineRun = {
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'test',
+            [PipelineRunLabel.SNAPSHOT]: 'snp1',
+            [PipelineRunLabel.TEST_SERVICE_SCENARIO]: 'scn1',
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind;
+
+      k8sQueryGetResourceMock.mockRejectedValueOnce(new Error('Snapshot not found'));
+
+      const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+      // open menu to trigger lazy loading (loadContext will be called)
+      await act(async () => {
+        const [, onOpen] = result.current;
+        onOpen(true);
+        await Promise.resolve();
+      });
+
+      // after error is caught in try-catch, snapshot should be null and action should be disabled
+      const [actions] = result.current;
+      expect(actions[0]).toEqual(
+        expect.objectContaining({
+          disabled: true,
+          disabledTooltip: 'Missing snapshot or scenario',
+        }),
+      );
+
+      // verify snapshot fetch was attempted
+      expect(k8sQueryGetResourceMock).toHaveBeenCalledWith({
+        model: expect.any(Object),
+        queryOptions: { ns: 'test-ns', name: 'snp1' },
+      });
+      expect(k8sQueryGetResourceMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should catch 404 error when snapshot is not found', async () => {
+      const pipelineRun = {
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'test',
+            [PipelineRunLabel.SNAPSHOT]: 'missing-snapshot',
+            [PipelineRunLabel.TEST_SERVICE_SCENARIO]: 'scn1',
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind;
+
+      const httpError = new Error('Not Found') as Error & { code?: number };
+      httpError.code = 404;
+      k8sQueryGetResourceMock.mockRejectedValueOnce(httpError);
+
+      const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+      await act(async () => {
+        const [, onOpen] = result.current;
+        onOpen(true);
+        await Promise.resolve();
+      });
+
+      const [actions] = result.current;
+      expect(actions[0]).toEqual(
+        expect.objectContaining({
+          disabled: true,
+          disabledTooltip: 'Missing snapshot or scenario',
+        }),
+      );
+    });
+
+    it('should work correctly when snapshot fetch succeeds (no error)', async () => {
+      const pipelineRun = {
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'test',
+            [PipelineRunLabel.SNAPSHOT]: 'snp1',
+            [PipelineRunLabel.TEST_SERVICE_SCENARIO]: 'scn1',
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind;
+
+      k8sQueryGetResourceMock.mockResolvedValueOnce(mockSnapshot);
+
+      const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+      await act(async () => {
+        const [, onOpen] = result.current;
+        onOpen(true);
+        await Promise.resolve();
+      });
+
+      // after successful fetch, snapshot should be set and action enabled
+      const [actions] = result.current;
+      expect(actions[0]).toEqual(
+        expect.objectContaining({
+          disabled: false,
+          disabledTooltip: undefined,
+        }),
+      );
+
+      // verify snapshot fetch was called successfully
+      expect(k8sQueryGetResourceMock).toHaveBeenCalledWith({
+        model: expect.any(Object),
+        queryOptions: { ns: 'test-ns', name: 'snp1' },
+      });
+    });
+  });
+
+  describe('component fetch error handling', () => {
+    it('should catch component fetch error and set component to null', async () => {
+      const pipelineRun = {
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMPONENT]: 'test-component',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind;
+
+      k8sQueryGetResourceMock.mockRejectedValueOnce(new Error('Component not found'));
+
+      const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+      // open menu to trigger lazy loading
+      await act(async () => {
+        const [, onOpen] = result.current;
+        onOpen(true);
+        await Promise.resolve();
+      });
+
+      // after error is caught in try-catch, component should be null and action should be disabled
+      const [actions] = result.current;
+      expect(actions[0]).toEqual(
+        expect.objectContaining({
+          disabled: true,
+          disabledTooltip: 'Component not available',
+        }),
+      );
+
+      // verify component fetch was attempted
+      expect(k8sQueryGetResourceMock).toHaveBeenCalledWith({
+        model: expect.any(Object),
+        queryOptions: { ns: 'test-ns', name: 'test-component' },
+      });
+      expect(k8sQueryGetResourceMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should catch 404 error when component is not found', async () => {
+      const pipelineRun = {
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMPONENT]: 'missing-component',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind;
+
+      const httpError = new Error('Not Found') as Error & { code?: number };
+      httpError.code = 404;
+      k8sQueryGetResourceMock.mockRejectedValueOnce(httpError);
+
+      const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+      await act(async () => {
+        const [, onOpen] = result.current;
+        onOpen(true);
+        await Promise.resolve();
+      });
+
+      // error should be caught, component set to null, action disabled
+      const [actions] = result.current;
+      expect(actions[0]).toEqual(
+        expect.objectContaining({
+          disabled: true,
+          disabledTooltip: 'Component not available',
+        }),
+      );
+    });
+
+    it('should work correctly when component fetch succeeds (no error)', async () => {
+      const pipelineRun = {
+        metadata: {
+          labels: {
+            'pipelines.appstudio.openshift.io/type': 'build',
+            [PipelineRunLabel.COMPONENT]: 'test-component',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
+            [PipelineRunLabel.APPLICATION]: 'test-app',
+          },
+        },
+        status: { conditions: [{ type: 'Succeeded', status: runStatus.Running }] },
+      } as unknown as PipelineRunKind;
+
+      k8sQueryGetResourceMock.mockResolvedValueOnce(mockComponent);
+
+      const { result } = renderHook(() => useRerunActionLazy(pipelineRun));
+
+      await act(async () => {
+        const [, onOpen] = result.current;
+        onOpen(true);
+        await Promise.resolve();
+      });
+
+      // after successful fetch, component should be set and action enabled
+      const [actions] = result.current;
+      expect(actions[0]).toEqual(
+        expect.objectContaining({
+          disabled: false,
+          disabledTooltip: undefined,
+        }),
+      );
+
+      // verify component fetch was called successfully
+      expect(k8sQueryGetResourceMock).toHaveBeenCalledWith({
+        model: expect.any(Object),
+        queryOptions: { ns: 'test-ns', name: 'test-component' },
+      });
     });
   });
 });
