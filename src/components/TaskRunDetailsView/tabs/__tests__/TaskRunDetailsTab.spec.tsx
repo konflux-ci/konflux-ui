@@ -76,4 +76,54 @@ describe('TaskRunDetailsTab', () => {
     renderWithQueryClientAndRouter(<TaskRunDetailsTab />);
     expect(screen.queryByRole('link', { name: /logs/ })).toBeInTheDocument();
   });
+
+  it('should render RunParamsList when spec params are available', () => {
+    const taskRunWithParams = {
+      ...testTaskRuns[0],
+      spec: {
+        ...testTaskRuns[0].spec,
+        params: [
+          { name: 'taskParam1', value: 'taskValue1' },
+          { name: 'taskParam2', value: 123 },
+        ],
+      },
+    };
+    watchResourceMock.mockReturnValue([taskRunWithParams, true]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsTab />);
+
+    expect(screen.getByTestId('run-params-list')).toBeInTheDocument();
+    expect(screen.getByText('Parameters')).toBeInTheDocument();
+    expect(screen.getByText('taskParam1')).toBeInTheDocument();
+    expect(screen.getByText('taskValue1')).toBeInTheDocument();
+    expect(screen.getByText('taskParam2')).toBeInTheDocument();
+    expect(screen.getByText('123')).toBeInTheDocument();
+  });
+
+  it('should not render RunParamsList when spec params are not available', () => {
+    const taskRunWithoutParams = {
+      ...testTaskRuns[0],
+      spec: {
+        ...testTaskRuns[0].spec,
+        params: undefined,
+      },
+    };
+    watchResourceMock.mockReturnValue([taskRunWithoutParams, true]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsTab />);
+
+    expect(screen.queryByTestId('run-params-list')).not.toBeInTheDocument();
+  });
+
+  it('should not render RunParamsList when spec params array is empty', () => {
+    const taskRunWithEmptyParams = {
+      ...testTaskRuns[0],
+      spec: {
+        ...testTaskRuns[0].spec,
+        params: [],
+      },
+    };
+    watchResourceMock.mockReturnValue([taskRunWithEmptyParams, true]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsTab />);
+
+    expect(screen.queryByTestId('run-params-list')).not.toBeInTheDocument();
+  });
 });
