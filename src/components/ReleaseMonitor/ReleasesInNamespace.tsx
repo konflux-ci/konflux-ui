@@ -30,6 +30,19 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
     );
 
   React.useEffect(() => {
+    // Reset report flag when namespace changes or when transitioning to loading
+    hasReportedRef.current = false;
+  }, [namespace]);
+
+  const onErrorRef = React.useRef(onError);
+  const onReleasesLoadedRef = React.useRef(onReleasesLoaded);
+
+  React.useEffect(() => {
+    onErrorRef.current = onError;
+    onReleasesLoadedRef.current = onReleasesLoaded;
+  });
+
+  React.useEffect(() => {
     releasesDataRef.current = data || [];
     isLoadingRef.current = isLoading;
     errorRef.current = clusterError && archiveError;
@@ -37,14 +50,14 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
     if (!isLoading && !hasReportedRef.current) {
       const error = clusterError && archiveError;
       if (error) {
-        onError(error);
+        onErrorRef.current(error);
         hasReportedRef.current = true;
       } else if (data) {
-        onReleasesLoaded(data);
+        onReleasesLoadedRef.current(data);
         hasReportedRef.current = true;
       }
     }
-  }, [data, isLoading, clusterError, archiveError, onError, onReleasesLoaded]);
+  }, [data, isLoading, clusterError, archiveError]);
 
   return null;
 };
