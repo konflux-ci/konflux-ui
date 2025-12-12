@@ -5,6 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: Run Konflux UI E2E tests
+      id: e2e
       run: |
         : Run Konflux UI E2E tests
         if [[ ${{ env.JOB_TYPE }} == 'periodic-stage' ]]; then
@@ -13,5 +14,13 @@ runs:
         else
           echo "Running test suite against local Konflux UI and backend"
           ./pr_check.sh test
+        fi
+      shell: bash
+
+    - name: Report job result to Slack
+      if: ${{ always() }}
+      run: |
+        if [[ ${{ env.JOB_TYPE }} == 'periodic'* ]]; then
+          ./pr_check.sh send-report ${{ steps.e2e.outcome }}
         fi
       shell: bash

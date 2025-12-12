@@ -211,6 +211,41 @@ upload_coverage() {
     return $UPLOAD_RESULT
 }
 
+send_report() {
+    EXIT_CODE=$1
+    # Format date as "MMM D", e.g., "Jun 3"
+    MESSAGE="Report $(date '+%b %-d'):"
+    if [ $EXIT_CODE -eq 0 ]; then
+        MESSAGE="$MESSAGE :tick-green: "
+    else
+        MESSAGE="$MESSAGE :x: "
+    fi
+
+    case "$JOB_TYPE" in
+        "periodic-local")
+            MESSAGE="$MESSAGE LOCAL Periodic job ${JOB_URL}"
+            ;;
+        "periodic-stage")
+            if [ $SUITE == "features" ]; then
+                MESSAGE="$MESSAGE STAGE FEATURES Periodic job ${JOB_URL}"
+            else
+                MESSAGE="$MESSAGE STAGE Periodic job ${JOB_URL}"
+            fi
+            ;;
+        *)
+            MESSAGE="$MESSAGE Unknown job type: ${JOB_TYPE} ${JOB_URL}"
+            ;;
+    esac
+    
+    echo "Message: $MESSAGE"
+
+    # curl -X POST https://slack.com/api/chat.postMessage \
+    #     -H "Authorization: Bearer ${SLACK_TOKEN}" \
+    #     -H "Content-Type: application/json; charset=utf-8" \
+    #     -d '{ "channel": "${SLACK_CHANNEL_ID}", "text": "${MESSAGE}"}'
+
+}
+
 if [ $# -eq 0 ]; then
     echo "Usage: $0 [build|test|upload-coverage]"
     exit 1
@@ -231,6 +266,10 @@ case "$1" in
     upload-coverage)
         echo "Uploading coverage..."
         upload_coverage
+        ;;
+    send-report)
+        echo "Sending Slack report..."
+        send_report $2
         ;;
     *)
         echo "Invalid argument: $1"
