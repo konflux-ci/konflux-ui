@@ -5,6 +5,7 @@ import { RouterParams } from '@routes/utils';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
+import { downloadTaskRunYaml } from '~/utils/common-utils';
 import { taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
 import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
@@ -102,6 +103,13 @@ export const TaskRunDetailsView: React.FC = () => {
           <StatusIconWithTextLabel status={trStatus} />
         </>
       }
+      actions={[
+        {
+          key: 'download-task-run-yaml',
+          label: 'Download Task Run YAML',
+          onClick: () => downloadTaskRunYaml(taskRun),
+        },
+      ]}
       baseURL={baseURL}
       tabs={[
         {
