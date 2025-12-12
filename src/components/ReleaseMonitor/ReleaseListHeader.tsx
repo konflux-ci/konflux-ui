@@ -4,14 +4,16 @@ import { ComponentProps } from '~/shared/components/table/Table';
 import { createTableHeaders } from '~/shared/components/table/utils';
 
 export const releaseTableColumnClasses = {
-  name: 'pf-m-width-20  pf-m-width-10-on-xl wrap-column',
-  status: 'pf-m-width-20  pf-m-width-10-on-xl',
-  completionTime: 'pf-m-width-20  pf-m-width-10-on-xl',
-  component: 'pf-m-width-20  pf-m-width-10-on-xl',
-  application: 'pf-m-width-20  pf-m-width-10-on-xl',
-  releasePlan: 'pf-m-width-20  pf-m-width-10-on-xl',
-  namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
-  count: 'pf-m-width-10  pf-m-width-5-on-xl',
+  name: 'pf-m-width-10  pf-m-width-10-on-xl wrap-column',
+  status: 'pf-m-width-10  pf-m-width-10-on-xl',
+  completionTime: 'pf-m-width-10  pf-m-width-10-on-xl',
+  component: 'pf-m-width-10  pf-m-width-10-on-xl wrap-column',
+  application: 'pf-m-width-10  pf-m-width-10-on-xl',
+  releasePlan: 'pf-m-width-10  pf-m-width-10-on-xl wrap-column',
+  namespace: 'pf-m-width-10  pf-m-width-10-on-xl',
+  product: 'pf-m-width-10  pf-m-width-10-on-xl wrap-column',
+  productVersion: 'pf-m-width-10  pf-m-width-10-on-xl',
+  count: 'pf-m-width-2  pf-m-width-2-on-xl',
 } as const;
 
 export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
@@ -52,6 +54,14 @@ const releaseColumns = [
   {
     title: 'Namespace',
     className: releaseTableColumnClasses.namespace,
+  },
+  {
+    title: 'Product',
+    className: releaseTableColumnClasses.product,
+  },
+  {
+    title: 'Product Version',
+    className: releaseTableColumnClasses.productVersion,
   },
 ] satisfies Parameters<typeof createTableHeaders>[0];
 
