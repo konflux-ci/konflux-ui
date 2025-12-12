@@ -6,9 +6,19 @@
 .commits-component-list {
   display: flex;
   flex-direction: column;
-  gap: var(--pf-v5-global--spacer--sm)
+  gap: var(--pf-v5-global--spacer--sm);
 }
 
 .commits-list__branch {
   word-break: break-all;
+}
+
+.commits-popover-stack {
+  > * {
+    margin-bottom: var(--pf-v5-global--spacer--xs);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 }

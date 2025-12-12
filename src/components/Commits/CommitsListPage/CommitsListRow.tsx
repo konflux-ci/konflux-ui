@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Truncate } from '@patternfly/react-core';
+import { Button, Popover, Stack, StackItem, Truncate } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData, Timestamp } from '../../../shared';
@@ -61,6 +61,32 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     ? getDynamicCommitsColumnClasses(visibleColumns)
     : commitsTableColumnClasses;
 
+  const getComponentLink = React.useCallback(
+    (component: string) => (
+      <Link
+        key={component}
+        to={COMPONENT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName: obj.application,
+          componentName: component.trim(),
+        })}
+      >
+        {component.trim()}
+      </Link>
+    ),
+    [namespace, obj.application],
+  );
+
+  const compCount = obj.components.length;
+  const visibleComponents = React.useMemo(() => obj.components.slice(0, 3), [obj.components]);
+  const hiddenComponents = React.useMemo(() => obj.components.slice(3), [obj.components]);
+
+  const popoverBodyContent = React.useMemo(
+    () =>
+      hiddenComponents.map((comp) => <StackItem key={comp}>{getComponentLink(comp)}</StackItem>),
+    [hiddenComponents, getComponentLink],
+  );
+
   const columnComponents = {
     name: (
       <TableData key="name" className={columnClasses.name}>
@@ -94,20 +120,35 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     component: (
       <TableData key="component" className={columnClasses.component}>
         <div className="commits-component-list">
-          {obj.components.length > 0
-            ? obj.components.map((c) => (
-                <Link
-                  key={c}
-                  to={COMPONENT_DETAILS_PATH.createPath({
-                    workspaceName: namespace,
-                    applicationName: obj.application,
-                    componentName: c.trim(),
-                  })}
+          {compCount > 0 ? (
+            <>
+              {visibleComponents.map((comp) => getComponentLink(comp))}
+              {hiddenComponents.length > 0 && (
+                <Popover
+                  data-testid="more-components-popover"
+                  aria-label="More commit components"
+                  headerContent="More commit components"
+                  bodyContent={
+                    <Stack
+                      className="commits-popover-stack"
+                      style={{
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      {popoverBodyContent}
+                    </Stack>
+                  }
                 >
-                  {c.trim()}
-                </Link>
-              ))
-            : '-'}
+                  <Button variant="link" isInline>
+                    {`${hiddenComponents.length} more`}
+                  </Button>
+                </Popover>
+              )}
+            </>
+          ) : (
+            '-'
+          )}
         </div>
       </TableData>
     ),
