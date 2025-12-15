@@ -90,6 +90,15 @@ describe('SnapshotOverview', () => {
     );
   });
 
+  it('renders CommitLabel when commit is available', () => {
+    useNamespaceMock.mockReturnValue('test-ns');
+    renderWithQueryClientAndRouter(<SnapshotOverview />);
+
+    const commitLabel = screen.queryByTestId('commit-label-c782c8f');
+
+    expect(commitLabel).toBeInTheDocument();
+  });
+
   it('omits commit section when pipelinerun load fails', () => {
     usePipelineRunV2Mock.mockReturnValue([basePipelineRun, true, true]);
     renderWithQueryClientAndRouter(<SnapshotOverview />);

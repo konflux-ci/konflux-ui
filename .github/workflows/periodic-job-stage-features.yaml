@@ -1,13 +1,17 @@
-name: "Periodic job: STAGE (test Konflux UI against stage cluster)"
+name: "Periodic job: STAGE FEATURES (test Konflux UI against stage cluster for feature flags)"
 
 on:
   workflow_dispatch:
 
+  # Setting daily runs in a way that can be summarized 
+  # at the beginning of the working day on CET timezone.
   schedule:
     - cron: '0 0 * * *'
+    - cron: '0 6 * * *'
+    - cron: '0 19 * * *'
 
 jobs:
-  periodic-stage-e2e-test:
+  periodic-stage-features-e2e-test:
     runs-on: ubuntu-latest
     env:
       REF_BRANCH: ${{ github.ref_name}}
@@ -22,6 +26,7 @@ jobs:
       CYPRESS_PASSWORD: ${{ secrets.STAGE_CYPRESS_PASSWORD }}
       CYPRESS_KONFLUX_BASE_URL: "https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
       JOB_TYPE: 'periodic-stage'
+      SUITE: 'features'
     steps:
       - uses: actions/checkout@v4
         with:

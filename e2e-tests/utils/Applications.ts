@@ -22,21 +22,31 @@ import { Common } from './Common';
 import { UIhelper } from './UIhelper';
 
 export class Applications {
-  static checkPipelineIsCancellingOrCancelled(componentName: string) {
-    UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).then((row) => {
-      const text = row.text();
-      let isCancellingOrCancelled = false;
-      if (text.includes('Cancelling')) {
-        cy.log('Pipeline was in a state Cancelling.');
-        isCancellingOrCancelled = true;
-      } else if (text.includes('Cancelled')) {
-        cy.log('Pipeline was in a state Cancelled.');
-        isCancellingOrCancelled = true;
-      } else {
-        cy.log("Status wasn't Cancelling nor Cancelled.");
+  static checkPipelineStatuses(componentName: string, statuses: string[]) {
+    const pipelineRunName = `${componentName}-on-pull-request`;
+
+    UIhelper.getTableRow('Pipeline run List', pipelineRunName).should(($row) => {
+      const rowText = $row.text();
+      if (!rowText.includes(pipelineRunName)) {
+        return false;
       }
-      assert(isCancellingOrCancelled == true);
+
+      const $statusElement = $row.find('[data-test="status"]');
+      if ($statusElement.length > 0) {
+        const statusText = $statusElement.text();
+        return statuses.some((status) => statusText.includes(status));
+      }
+
+      return statuses.some((status) => rowText.includes(status));
     });
+  }
+
+  static checkPipelineIsCancellingOrCancelled(componentName: string) {
+    return this.checkPipelineStatuses(componentName, ['Cancelling', 'Cancelled']);
+  }
+
+  static checkPipelineIsCancelled(componentName: string) {
+    return this.checkPipelineStatuses(componentName, ['Cancelled']);
   }
 
   static createCleanApp(applicationName: string) {
@@ -81,9 +91,17 @@ export class Applications {
   ) {
     const addComponent = new AddComponentPage();
     const componentPage = new ComponentPage();
+    const imageRepoVisibility = isPrivate ? 'private' : 'public';
 
     addComponent.setSource(publicGitRepo);
-    this.configureComponentsStep(componentName, pipeline, applicationName, dockerfilePath, secret);
+    this.configureComponentsStep(
+      componentName,
+      imageRepoVisibility,
+      pipeline,
+      applicationName,
+      dockerfilePath,
+      secret,
+    );
     // make sure advanced git options is closed, so the repo validation icon is in the viewport
     cy.contains('button', 'Hide advanced Git options').click();
     addComponent.waitRepoValidated();
@@ -165,6 +183,7 @@ export class Applications {
 
   static configureComponentsStep(
     componentName: string,
+    imageRepoVisibility: 'public' | 'private',
     pipeline: string,
     applicationName?: string,
     dockerfilePath?: string,
@@ -172,6 +191,7 @@ export class Applications {
   ) {
     const componentPage = new ComponentPage();
     componentPage.editComponentName(componentName);
+    componentPage.setImageRepoVisibility(imageRepoVisibility);
     componentPage.setPipeline(pipeline);
 
     if (applicationName) {

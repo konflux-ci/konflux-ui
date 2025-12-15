@@ -37,6 +37,7 @@ import {
   taskRunStatus,
 } from '../../../utils/pipeline-utils';
 import MetadataList from '../../MetadataList';
+import RunParamsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunParamsList';
 import RunResultsList from '../../PipelineRun/PipelineRunDetailsView/tabs/RunResultsList';
 import ScanDescriptionListGroup from '../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithText } from '../../topology/StatusIcon';
@@ -69,6 +70,7 @@ const TaskRunDetailsTab: React.FC = () => {
   const applicationName = taskRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
   const status = !error ? taskRunStatus(taskRun) : null;
   const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+  const specParams = taskRun?.spec?.params;
 
   return (
     <>
@@ -258,6 +260,12 @@ const TaskRunDetailsTab: React.FC = () => {
               <RunResultsList results={results} status={status} />
             </>
           ) : null}
+
+          {specParams?.length && (
+            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+              <RunParamsList params={specParams} />
+            </div>
+          )}
         </Flex>
       )}
     </>
