@@ -24,6 +24,8 @@ jobs:
       QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
       CYPRESS_USERNAME: ${{ secrets.STAGE_CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.STAGE_CYPRESS_PASSWORD }}
+      CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       CYPRESS_KONFLUX_BASE_URL: "https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
       JOB_TYPE: 'periodic-stage'
       SUITE: 'features'
