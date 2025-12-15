@@ -71,9 +71,19 @@ execute_test() {
         echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
     fi
 
+    case "${SUITE}" in
+        "features")
+            SPEC_FILE="/e2e/tests/features.spec.ts"
+            ;;
+        *)
+            SPEC_FILE="/e2e/tests/basic-happy-path.spec.ts"
+            ;;
+    esac
+    echo "Running tests from ${SPEC_FILE}"
+
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec /e2e/tests/basic-happy-path.spec.ts
+    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec ${SPEC_FILE}
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
         case $PODMAN_RETURN_CODE in
