@@ -5,7 +5,7 @@ import { MonitoredReleaseKind } from '~/types';
 
 type ReleasesInNamespaceProps = {
   namespace: string;
-  onReleasesLoaded: (releases: MonitoredReleaseKind[]) => void;
+  onReleasesLoaded: (namespace: string, releases: MonitoredReleaseKind[]) => void;
   onError: (error: unknown) => void;
 };
 
@@ -53,11 +53,11 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
         onErrorRef.current(error);
         hasReportedRef.current = true;
       } else if (data) {
-        onReleasesLoadedRef.current(data);
+        onReleasesLoadedRef.current(namespace, data);
         hasReportedRef.current = true;
       }
     }
-  }, [data, isLoading, clusterError, archiveError]);
+  }, [data, isLoading, clusterError, archiveError, namespace]);
 
   return null;
 };

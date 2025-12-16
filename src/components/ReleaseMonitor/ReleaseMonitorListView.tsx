@@ -238,7 +238,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           <ReleasesInNamespace
             key={ns.metadata.name}
             namespace={ns.metadata.name}
-            onReleasesLoaded={(data) => handleReleasesLoaded(ns.metadata.name, data)}
+            onReleasesLoaded={handleReleasesLoaded}
             onError={handleError}
           />
         ))}
