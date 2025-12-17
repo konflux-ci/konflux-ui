@@ -117,5 +117,6 @@ describe('ReleasesInNamespace', () => {
     );
 
     expect(mockOnReleasesLoaded).toHaveBeenCalledWith(namespace, mockData2);
+    expect(mockOnReleasesLoaded).toHaveBeenCalledTimes(2);
   });
 });
