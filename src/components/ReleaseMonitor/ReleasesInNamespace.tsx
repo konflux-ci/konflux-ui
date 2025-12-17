@@ -14,11 +14,6 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
   onReleasesLoaded,
   onError,
 }) => {
-  const releasesDataRef = React.useRef<MonitoredReleaseKind[]>([]);
-  const isLoadingRef = React.useRef(false);
-  const errorRef = React.useRef<unknown>(null);
-  const hasReportedRef = React.useRef(false);
-
   const { data, isLoading, clusterError, archiveError } =
     useK8sAndKarchResources<MonitoredReleaseKind>(
       {
@@ -30,34 +25,15 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
     );
 
   React.useEffect(() => {
-    // Reset report flag when namespace changes or when transitioning to loading
-    hasReportedRef.current = false;
-  }, [namespace]);
-
-  const onErrorRef = React.useRef(onError);
-  const onReleasesLoadedRef = React.useRef(onReleasesLoaded);
-
-  React.useEffect(() => {
-    onErrorRef.current = onError;
-    onReleasesLoadedRef.current = onReleasesLoaded;
-  });
-
-  React.useEffect(() => {
-    releasesDataRef.current = data || [];
-    isLoadingRef.current = isLoading;
-    errorRef.current = clusterError && archiveError;
-
-    if (!isLoading && !hasReportedRef.current) {
+    if (!isLoading) {
       const error = clusterError && archiveError;
       if (error) {
-        onErrorRef.current(error);
-        hasReportedRef.current = true;
+        onError(error);
       } else if (data) {
-        onReleasesLoadedRef.current(namespace, data);
-        hasReportedRef.current = true;
+        onReleasesLoaded(namespace, data);
       }
     }
-  }, [data, isLoading, clusterError, archiveError, namespace]);
+  }, [data, isLoading, clusterError, archiveError, namespace, onError, onReleasesLoaded]);
 
   return null;
 };
