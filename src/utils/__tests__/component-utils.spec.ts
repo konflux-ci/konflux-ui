@@ -1,6 +1,11 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { ComponentModel } from '../../models';
-import { ComponentKind } from '../../types';
+import {
+  mockImageRepositoryWithoutVisibility,
+  mockPrivateImageRepository,
+  mockPublicImageRepository,
+} from '~/__data__/image-repository-data';
+import { ComponentModel, ImageRepositoryModel } from '~/models';
+import { ComponentKind, ImageRepositoryVisibility } from '~/types';
 import {
   isPACEnabled,
   useComponentBuildStatus,
@@ -11,6 +16,8 @@ import {
   getLastestImage,
   getConfigurationTime,
   LAST_CONFIGURATION_ANNOTATION,
+  updateImageRepositoryVisibility,
+  getImageUrlForVisibility,
 } from '../component-utils';
 import { createK8sUtilMock } from '../test-utils';
 
@@ -176,5 +183,166 @@ describe('component-utils', () => {
       },
     } as unknown as ComponentKind;
     expect(getConfigurationTime(mockComponent)).toEqual('2025-02-11T19:36:25Z');
+  });
+});
+
+describe('updateImageRepositoryVisibility', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should patch image repository visibility to private', async () => {
+    k8sPatchResourceMock.mockResolvedValue(mockPrivateImageRepository);
+
+    await updateImageRepositoryVisibility(mockPrivateImageRepository, true);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ImageRepositoryModel,
+      queryOptions: {
+        name: mockPrivateImageRepository.metadata.name,
+        ns: mockPrivateImageRepository.metadata.namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: '/spec/image/visibility',
+          value: ImageRepositoryVisibility.private,
+        },
+      ],
+    });
+  });
+
+  it('should patch image repository visibility to public', async () => {
+    k8sPatchResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, false);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith({
+      model: ImageRepositoryModel,
+      queryOptions: {
+        name: mockPublicImageRepository.metadata.name,
+        ns: mockPublicImageRepository.metadata.namespace,
+      },
+      patches: [
+        {
+          op: 'replace',
+          path: '/spec/image/visibility',
+          value: ImageRepositoryVisibility.public,
+        },
+      ],
+    });
+  });
+
+  it('should use the correct patch operation', async () => {
+    k8sPatchResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, true);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patches: expect.arrayContaining([
+          expect.objectContaining({
+            op: 'replace',
+            path: '/spec/image/visibility',
+          }),
+        ]),
+      }),
+    );
+  });
+
+  it('should include correct query options with name and namespace', async () => {
+    k8sPatchResourceMock.mockResolvedValue(mockPublicImageRepository);
+
+    await updateImageRepositoryVisibility(mockPublicImageRepository, true);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        queryOptions: {
+          name: mockPublicImageRepository.metadata.name,
+          ns: mockPublicImageRepository.metadata.namespace,
+        },
+      }),
+    );
+  });
+
+  it('should return the updated image repository', async () => {
+    const updatedImageRepository = {
+      ...mockPublicImageRepository,
+      spec: {
+        image: {
+          visibility: ImageRepositoryVisibility.private,
+        },
+      },
+    };
+
+    k8sPatchResourceMock.mockResolvedValue(updatedImageRepository);
+
+    const result = await updateImageRepositoryVisibility(mockPrivateImageRepository, true);
+
+    expect(result).toEqual(updatedImageRepository);
+  });
+
+  it('should use add operation when visibility is not set', async () => {
+    k8sPatchResourceMock.mockResolvedValue(mockImageRepositoryWithoutVisibility);
+
+    await updateImageRepositoryVisibility(mockImageRepositoryWithoutVisibility, true);
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        patches: [
+          expect.objectContaining({
+            op: 'add',
+            path: '/spec/image/visibility',
+            value: ImageRepositoryVisibility.private,
+          }),
+        ],
+      }),
+    );
+  });
+});
+
+describe('getImageUrlForVisibility', () => {
+  const quayUrl = 'quay.io/namespace/repo@sha256:abc123';
+  const customProxyHost = 'custom-proxy.example.com';
+  const customProxyUrl = 'custom-proxy.example.com/namespace/repo@sha256:abc123';
+
+  it('should return original URL for private visibility when proxyHost is null', () => {
+    expect(getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, null)).toBe(
+      quayUrl,
+    );
+  });
+
+  it('should return proxy URL for private visibility with custom host', () => {
+    expect(
+      getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, customProxyHost),
+    ).toBe(customProxyUrl);
+  });
+
+  it('should return original URL for public visibility', () => {
+    expect(
+      getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.public, customProxyHost),
+    ).toBe(quayUrl);
+  });
+
+  it('should return original URL when visibility is null', () => {
+    expect(getImageUrlForVisibility(quayUrl, null, customProxyHost)).toBe(quayUrl);
+  });
+
+  it('should ignore proxyHost for public visibility', () => {
+    expect(
+      getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.public, customProxyHost),
+    ).toBe(quayUrl);
+  });
+
+  it('should handle empty string', () => {
+    expect(getImageUrlForVisibility('', ImageRepositoryVisibility.private, null)).toBe(null);
+  });
+
+  it('should handle null URL', () => {
+    expect(getImageUrlForVisibility(null, ImageRepositoryVisibility.private, null)).toBe(null);
+  });
+
+  it('should return original URL for private visibility when proxyHost is empty string', () => {
+    expect(getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, '')).toBe(quayUrl);
   });
 });

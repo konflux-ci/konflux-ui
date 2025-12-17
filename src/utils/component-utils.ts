@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { K8sQueryPatchResource } from '../k8s';
-import { ComponentModel } from '../models';
-import { ComponentKind } from '../types';
+import { ComponentModel, ImageRepositoryModel } from '../models';
+import { ComponentKind, ImageRepositoryKind, ImageRepositoryVisibility } from '../types';
+
+// Image registry constants
+export const QUAY_IO_HOST = 'quay.io';
 
 // Indicates whether the component was built from a sample and therefore does not support PAC without first forking.
 // values: 'true' | 'false'
@@ -186,3 +189,75 @@ export const getConfigurationTime = (component: ComponentKind): string => {
 
 export const useConfigurationTime = (component: ComponentKind) =>
   React.useMemo(() => getConfigurationTime(component), [component]);
+
+/**
+ * Update ImageRepository visibility (public/private)
+ * @param imageRepository - The ImageRepository resource to update
+ * @param isPrivate - Whether the image should be private
+ * @returns Updated ImageRepository resource
+ *
+ * Note: Automatically detects whether to use 'add' or 'replace' based on
+ * whether spec.image.visibility already exists to handle both new and existing fields
+ */
+export const updateImageRepositoryVisibility = async (
+  imageRepository: ImageRepositoryKind,
+  isPrivate: boolean,
+): Promise<ImageRepositoryKind> => {
+  const newVisibility = isPrivate
+    ? ImageRepositoryVisibility.private
+    : ImageRepositoryVisibility.public;
+
+  // Check if visibility field already exists
+  const visibilityExists = imageRepository?.spec?.image?.visibility !== undefined;
+
+  return K8sQueryPatchResource<ImageRepositoryKind>({
+    model: ImageRepositoryModel,
+    queryOptions: {
+      name: imageRepository.metadata.name,
+      ns: imageRepository.metadata.namespace,
+    },
+    patches: [
+      {
+        op: visibilityExists ? 'replace' : 'add',
+        path: '/spec/image/visibility',
+        value: newVisibility,
+      },
+    ],
+  });
+};
+
+/**
+ * Converts a quay.io image URL to use the image proxy host
+ * @param imageUrl - The original image URL (e.g., "quay.io/namespace/repo@sha256:...")
+ * @param proxyHost - The proxy host to use
+ * @returns The proxied image URL (e.g., "image-proxy.example.com/namespace/repo@sha256:...")
+ */
+const convertToProxyImageUrl = (imageUrl: string, proxyHost: string): string => {
+  return imageUrl.replace(QUAY_IO_HOST, proxyHost);
+};
+
+/**
+ * Determines if an image URL should use the proxy based on repository visibility
+ * @param imageUrl - The image URL to check
+ * @param visibility - The ImageRepository visibility setting (null if unknown)
+ * @param proxyHost - The proxy host to use for private images (if null, returns original URL)
+ * @returns The appropriate URL (proxied for private with valid proxyHost, original otherwise), or null if not provided
+ */
+export const getImageUrlForVisibility = (
+  imageUrl: string | null,
+  visibility: ImageRepositoryVisibility | null,
+  proxyHost: string | null,
+): string | null => {
+  // Return null for empty or null imageUrl
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Use proxy URL for private repositories only if proxyHost is available
+  if (visibility === ImageRepositoryVisibility.private && proxyHost) {
+    return convertToProxyImageUrl(imageUrl, proxyHost);
+  }
+
+  // Use original URL for public, null visibility, or when proxyHost is not available
+  return imageUrl;
+};
