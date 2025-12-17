@@ -1,5 +1,5 @@
-import { render } from '@testing-library/react';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import ReleasesInNamespace from '../ReleasesInNamespace';
 
 jest.mock('~/hooks/useK8sAndKarchResources', () => ({
@@ -26,7 +26,7 @@ describe('ReleasesInNamespace', () => {
       archiveError: null,
     });
 
-    render(
+    renderWithQueryClientAndRouter(
       <ReleasesInNamespace
         namespace={namespace}
         onReleasesLoaded={mockOnReleasesLoaded}
@@ -35,6 +35,7 @@ describe('ReleasesInNamespace', () => {
     );
 
     expect(mockOnReleasesLoaded).toHaveBeenCalledWith(namespace, mockData);
+    expect(mockOnReleasesLoaded).toHaveBeenCalledTimes(1);
     expect(mockOnError).not.toHaveBeenCalled();
   });
 
@@ -47,7 +48,7 @@ describe('ReleasesInNamespace', () => {
       archiveError: error,
     });
 
-    render(
+    renderWithQueryClientAndRouter(
       <ReleasesInNamespace
         namespace={namespace}
         onReleasesLoaded={mockOnReleasesLoaded}
@@ -67,7 +68,7 @@ describe('ReleasesInNamespace', () => {
       archiveError: null,
     });
 
-    render(
+    renderWithQueryClientAndRouter(
       <ReleasesInNamespace
         namespace={namespace}
         onReleasesLoaded={mockOnReleasesLoaded}
@@ -90,7 +91,7 @@ describe('ReleasesInNamespace', () => {
       archiveError: null,
     });
 
-    const { rerender } = render(
+    const { rerender } = renderWithQueryClientAndRouter(
       <ReleasesInNamespace
         namespace={namespace}
         onReleasesLoaded={mockOnReleasesLoaded}
