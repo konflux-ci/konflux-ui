@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-  
+
       - name: Install Dependencies 🥁
         run: yarn install --frozen-lockfile
 
@@ -37,7 +37,7 @@ jobs:
           CI: true
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
 
   push-test-image:
     runs-on: ubuntu-latest
-    steps:      
+    steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v4
 

@@ -20,7 +20,7 @@ import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
@@ -50,6 +50,7 @@ import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSourceUrl, getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
 import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
+import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
@@ -96,6 +97,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   }
 
   const results = getPipelineRunStatusResults(pipelineRun);
+  const specParams = pipelineRun?.spec?.params;
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
   const duration = calculateDuration(
@@ -122,6 +124,10 @@ const PipelineRunDetailsTab: React.FC = () => {
     namespace;
 
   const showSbom = sboms && ((sboms.length === 1 && sboms[0].url) || sboms.length > 1);
+  const showFailedMessage =
+    pipelineStatus === runStatus.Failed &&
+    pipelineRun.status?.conditions?.length > 0 &&
+    pipelineRun.status?.conditions[0]?.message !== pipelineRunFailed.staticMessage;
 
   return (
     <>
@@ -211,6 +217,13 @@ const PipelineRunDetailsTab: React.FC = () => {
                       <DescriptionListTerm>Message</DescriptionListTerm>
                       <DescriptionListDescription>
                         {pipelineRunFailed.title ?? '-'}
+                        {showFailedMessage && (
+                          <CodeBlock>
+                            <CodeBlockCode data-test="message-code-block" id="message-code-content">
+                              {pipelineRun.status?.conditions[0]?.message}
+                            </CodeBlockCode>
+                          </CodeBlock>
+                        )}
                       </DescriptionListDescription>
                     </DescriptionListGroup>
                     <DescriptionListGroup>
@@ -270,7 +283,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                       <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">
                         {`cosign download sbom ${buildImage}`}
                       </ClipboardCopy>
-                      <ExternalLink href="https://docs.sigstore.dev/cosign/installation">
+                      <ExternalLink href="https://docs.sigstore.dev/cosign/system_config/installation">
                         Install Cosign
                       </ExternalLink>
                     </DescriptionListDescription>
@@ -394,6 +407,12 @@ const PipelineRunDetailsTab: React.FC = () => {
               <RunResultsList results={results} status={pipelineStatus} />
             </>
           ) : null}
+
+          {specParams?.length && (
+            <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
+              <RunParamsList params={specParams} />
+            </div>
+          )}
         </>
       )}
     </>

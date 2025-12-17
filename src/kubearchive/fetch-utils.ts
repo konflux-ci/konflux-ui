@@ -60,7 +60,7 @@ export function kubearchiveQueryListResource<TResource extends K8sResourceCommon
 
 export const convertToKubearchiveQueryParams = (
   resourceInit?: WatchK8sResource,
-): QueryOptionsWithSelector => {
+): QueryOptionsWithSelector | undefined => {
   if (!resourceInit) {
     return undefined;
   }

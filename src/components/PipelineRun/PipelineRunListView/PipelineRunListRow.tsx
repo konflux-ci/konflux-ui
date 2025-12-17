@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Popover, Skeleton } from '@patternfly/react-core';
+import { Popover, Skeleton, Tooltip } from '@patternfly/react-core';
+import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipboard-check-icon';
+import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '../../../consts/pipelinerun';
 import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
@@ -119,6 +121,29 @@ const shouldShowScanResults = (pipelineRun: PipelineRunKind): boolean => {
   );
 };
 
+const PipelineRunAttestation = ({ pipelineRun }: { pipelineRun: PipelineRunKind }) => {
+  const hasAttestation =
+    pipelineRun.metadata?.annotations?.[PipelineRunLabel.CHAINS_SIGNED_ANNOTATION] === 'true';
+  const AttestationIcon = hasAttestation ? ClipboardCheckIcon : ExclamationTriangleIcon;
+
+  return (
+    <Tooltip
+      content={
+        hasAttestation ? 'Pipeline run is signed and attested' : 'Pipeline run is not signed'
+      }
+    >
+      <AttestationIcon
+        color={
+          hasAttestation
+            ? 'var(--pf-v5-global--success-color--100)'
+            : 'var(--pf-v5-global--warning-color--100)'
+        }
+        style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}
+      />
+    </Tooltip>
+  );
+};
+
 const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunListRowProps>> = ({
   obj,
   showVulnerabilities,
@@ -173,6 +198,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           })}${queryString}`}
           title={obj.metadata?.name}
         >
+          <PipelineRunAttestation pipelineRun={obj} />
           {obj.metadata?.name}
         </Link>
       </TableData>
@@ -205,7 +231,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
             )
           : '-'}
       </TableData>
-      <TableData className={pipelineRunTableColumnClasses.status}>
+      <TableData data-test="status" className={pipelineRunTableColumnClasses.status}>
         <StatusIconWithText status={status} />
       </TableData>
       {showTestResult ? (
@@ -362,6 +388,7 @@ const DynamicPipelineRunListRow: React.FC<
             })}${queryString}`}
             title={obj.metadata?.name}
           >
+            <PipelineRunAttestation pipelineRun={obj} />
             {obj.metadata?.name}
           </Link>
         </TableData>

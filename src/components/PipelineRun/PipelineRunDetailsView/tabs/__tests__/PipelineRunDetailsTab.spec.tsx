@@ -38,6 +38,27 @@ const mockPipelineRun = {
   },
 } as unknown as PipelineRunKind;
 
+const baseFailedRun = testPipelineRuns[DataState.FAILED];
+const failedPipelineRun = {
+  ...baseFailedRun,
+  status: {
+    ...baseFailedRun.status,
+    conditions: [
+      {
+        status: 'True',
+        type: 'Failure',
+        message: 'Pipeline execution failed with detailed error information',
+      },
+      {
+        status: 'False',
+        type: 'Succeeded',
+        message: 'Error retrieving pipeline for pipelinerun',
+        reason: 'CouldntGetPipeline',
+      },
+    ],
+  },
+} as PipelineRunKind;
+
 const mockTaskRuns: TaskRunKind[] = [];
 
 jest.mock('~/hooks/usePipelineRunsV2', () => ({
@@ -190,5 +211,95 @@ describe('PipelineRunDetailsTab', () => {
     // Check Duration label and value (5 minutes from mock data)
     expect(screen.getByText('Duration')).toBeInTheDocument();
     expect(screen.getByText('5 minutes')).toBeInTheDocument();
+  });
+
+  it('should display code block in message field when pipeline run failed', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(failedPipelineRun));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.getByTestId('message-code-block')).toBeInTheDocument();
+  });
+
+  it('should not display code block in message field when pipeline run failed and message is the same as the static message', () => {
+    mockUsePipelineRunV2.mockReturnValue(
+      mockPipelineRunStates.loaded(testPipelineRuns[DataState.TASK_RUN_CANCELLED]),
+    );
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.queryByTestId('message-code-block')).toBeNull();
+  });
+
+  it('should not display code block in message field when pipeline run succeeded', () => {
+    mockUsePipelineRunV2.mockReturnValue(
+      mockPipelineRunStates.loaded(testPipelineRuns[DataState.SUCCEEDED]),
+    );
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.queryByTestId('message-code-block')).toBeNull();
+  });
+
+  it('should render RunParamsList when spec params are available', () => {
+    const pipelineRunWithParams = {
+      ...mockPipelineRun,
+      spec: {
+        ...mockPipelineRun.spec,
+        params: [
+          { name: 'param1', value: 'value1' },
+          { name: 'param2', value: ['array', 'value'] },
+        ],
+      },
+    } as PipelineRunKind;
+
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithParams));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.getByTestId('run-params-list')).toBeInTheDocument();
+    expect(screen.getByText('Parameters')).toBeInTheDocument();
+    expect(screen.getByText('param1')).toBeInTheDocument();
+    expect(screen.getByText('value1')).toBeInTheDocument();
+    expect(screen.getByText('param2')).toBeInTheDocument();
+    expect(screen.getByText('array, value')).toBeInTheDocument();
+  });
+
+  it('should not render RunParamsList when spec params are not available', () => {
+    const pipelineRunWithoutParams = {
+      ...mockPipelineRun,
+      spec: {
+        ...mockPipelineRun.spec,
+        params: undefined,
+      },
+    } as PipelineRunKind;
+
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithoutParams));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.queryByTestId('run-params-list')).not.toBeInTheDocument();
+  });
+
+  it('should not render RunParamsList when spec params array is empty', () => {
+    const pipelineRunWithEmptyParams = {
+      ...mockPipelineRun,
+      spec: {
+        ...mockPipelineRun.spec,
+        params: [],
+      },
+    } as PipelineRunKind;
+
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithEmptyParams));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+    expect(screen.queryByTestId('run-params-list')).not.toBeInTheDocument();
   });
 });

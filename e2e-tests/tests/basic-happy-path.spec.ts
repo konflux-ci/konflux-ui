@@ -6,7 +6,11 @@ import { ComponentPage } from '../support/pages/ComponentsPage';
 import { GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
-import { DetailsTab, TaskRunsTab } from '../support/pages/tabs/PipelinerunsTabPage';
+import {
+  DetailsTab,
+  PipelinerunsTabPage,
+  TaskRunsTab,
+} from '../support/pages/tabs/PipelinerunsTabPage';
 import { APIHelper } from '../utils/APIHelper';
 import { Applications } from '../utils/Applications';
 import { Common } from '../utils/Common';
@@ -176,15 +180,32 @@ describe('Basic Happy Path', () => {
 
     it('Verify that on-pull pipeline was cancelled', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
-      UIhelper.getTableRow('Pipeline run List', `${componentName}-on-pull-request`).should(
-        'contain.text',
-        'Cancelled',
-      );
+      Applications.checkPipelineIsCancelled(componentName);
     });
 
     it('Verify Enterprise contract Test pipeline run Details', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       DetailsTab.waitForPLRAndDownloadAllLogs(false);
+    });
+
+    it('Verify vulnerabilities column exists in Pipeline runs table', () => {
+      Applications.clickBreadcrumbLink('Pipeline runs');
+      PipelinerunsTabPage.verifyVulnerabilityColumn();
+    });
+
+    it('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
+      PipelinerunsTabPage.verifyVulnerabilityIndicators(
+        `${componentName}-on-push`,
+        /(-|N\/A|Critical\d+High\d+Medium\d+Low\d+Unknown\d+)/,
+      );
+    });
+
+    it('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+      PipelinerunsTabPage.verifyVulnerabilityCellVisibility(`${componentName}-on-pull-request`);
+    });
+
+    it('Verify vulnerability scan details when available', () => {
+      PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
     });
   });
 

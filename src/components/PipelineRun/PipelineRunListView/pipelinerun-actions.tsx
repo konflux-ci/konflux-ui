@@ -9,7 +9,6 @@ import {
   PipelineRunType,
   runStatus,
 } from '../../../consts/pipelinerun';
-import { SnapshotLabels } from '../../../consts/snapshots';
 import { useComponent } from '../../../hooks/useComponents';
 import { K8sQueryPatchResource, k8sQueryGetResource } from '../../../k8s';
 import { ComponentModel, PipelineRunModel, SnapshotModel } from '../../../models';
@@ -120,10 +119,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
             startNewBuild(component).then(() => {
               if (isSnapshotsPage) return;
               navigate(
-                `${PIPELINE_RUNS_LIST_PATH.createPath({
+                PIPELINE_RUNS_LIST_PATH.createPath({
                   workspaceName: namespace,
                   applicationName: component.spec.application,
-                })}?name=${component.metadata.name}`,
+                }),
               );
             }),
           isDisabled: false,
@@ -144,12 +143,11 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
           cta: () =>
             rerunTestPipeline(snapshot, scenario).then(() => {
               if (isIntegrationTestsPage || isSnapshotsPage) return;
-              const componentName = snapshot.metadata.labels?.[SnapshotLabels.COMPONENT];
               navigate(
-                `${PIPELINE_RUNS_LIST_PATH.createPath({
+                PIPELINE_RUNS_LIST_PATH.createPath({
                   workspaceName: namespace,
                   applicationName: snapshot.spec.application,
-                })}?name=${componentName}`,
+                }),
               );
             }),
           isDisabled: false,
@@ -259,17 +257,25 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
       let snapshot: Snapshot | null = null;
 
       if (runType === PipelineRunType.BUILD && isPushBuildType && componentName) {
-        component = await k8sQueryGetResource<ComponentKind>({
-          model: ComponentModel,
-          queryOptions: { ns: namespace, name: componentName },
-        });
+        try {
+          component = await k8sQueryGetResource<ComponentKind>({
+            model: ComponentModel,
+            queryOptions: { ns: namespace, name: componentName },
+          });
+        } catch {
+          component = null;
+        }
       }
 
       if (runType === PipelineRunType.TEST && snapshotName) {
-        snapshot = await k8sQueryGetResource<Snapshot>({
-          model: SnapshotModel,
-          queryOptions: { ns: namespace, name: snapshotName },
-        });
+        try {
+          snapshot = await k8sQueryGetResource<Snapshot>({
+            model: SnapshotModel,
+            queryOptions: { ns: namespace, name: snapshotName },
+          });
+        } catch {
+          snapshot = null;
+        }
       }
 
       return { component, snapshot };
@@ -323,10 +329,10 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                 startNewBuild(rerunCtx.component).then(() => {
                   if (isSnapshotsPage) return;
                   navigate(
-                    `${PIPELINE_RUNS_LIST_PATH.createPath({
+                    PIPELINE_RUNS_LIST_PATH.createPath({
                       workspaceName: namespace,
                       applicationName,
-                    })}?name=${rerunCtx.component.metadata.name}`,
+                    }),
                   );
                 }),
               disabled: false,
@@ -353,13 +359,11 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
               cta: () =>
                 rerunTestPipeline(rerunCtx.snapshot, scenario).then(() => {
                   if (isIntegrationTestsPage || isSnapshotsPage) return;
-                  const componentNameFromSnapshot =
-                    rerunCtx.snapshot?.metadata.labels?.[SnapshotLabels.COMPONENT];
                   navigate(
-                    `${PIPELINE_RUNS_LIST_PATH.createPath({
+                    PIPELINE_RUNS_LIST_PATH.createPath({
                       workspaceName: namespace,
                       applicationName: rerunCtx.snapshot?.spec.application,
-                    })}?name=${componentNameFromSnapshot}`,
+                    }),
                   );
                 }),
               disabled: false,
