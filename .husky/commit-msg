@@ -55,7 +55,7 @@ if [ "$is_authorized" -eq 1 ]; then
 
     elif [ "$os_name" == "Darwin" ]; then
       # macOS (Darwin) method: Uses lsof (List Open Files)
-      cwd=$(lsof -a -d cwd -p "$pid" 2>/dev/null | tail -n 1 | awk 'NF > 0 {print $NF}' || echo "")
+      cwd=$(lsof -a -d cwd -p "$pid" -F n 2>/dev/null | grep '^n' | sed 's/^n//' || echo "")
     fi
 
     if [[ -n "$cwd" && "$cwd" == "$REPO_ROOT"* ]]; then
