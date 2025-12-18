@@ -3,6 +3,9 @@ import { K8sQueryPatchResource } from '../k8s';
 import { ComponentModel, ImageRepositoryModel } from '../models';
 import { ComponentKind, ImageRepositoryKind, ImageRepositoryVisibility } from '../types';
 
+// Image registry constants
+export const QUAY_IO_HOST = 'quay.io';
+
 // Indicates whether the component was built from a sample and therefore does not support PAC without first forking.
 // values: 'true' | 'false'
 export const SAMPLE_ANNOTATION = 'appstudio.openshift.io/sample';
@@ -221,4 +224,40 @@ export const updateImageRepositoryVisibility = async (
       },
     ],
   });
+};
+
+/**
+ * Converts a quay.io image URL to use the image proxy host
+ * @param imageUrl - The original image URL (e.g., "quay.io/namespace/repo@sha256:...")
+ * @param proxyHost - The proxy host to use
+ * @returns The proxied image URL (e.g., "image-proxy.example.com/namespace/repo@sha256:...")
+ */
+const convertToProxyImageUrl = (imageUrl: string, proxyHost: string): string => {
+  return imageUrl.replace(QUAY_IO_HOST, proxyHost);
+};
+
+/**
+ * Determines if an image URL should use the proxy based on repository visibility
+ * @param imageUrl - The image URL to check
+ * @param visibility - The ImageRepository visibility setting (null if unknown)
+ * @param proxyHost - The proxy host to use for private images (if null, returns original URL)
+ * @returns The appropriate URL (proxied for private with valid proxyHost, original otherwise), or null if not provided
+ */
+export const getImageUrlForVisibility = (
+  imageUrl: string | null,
+  visibility: ImageRepositoryVisibility | null,
+  proxyHost: string | null,
+): string | null => {
+  // Return null for empty or null imageUrl
+  if (!imageUrl) {
+    return null;
+  }
+
+  // Use proxy URL for private repositories only if proxyHost is available
+  if (visibility === ImageRepositoryVisibility.private && proxyHost) {
+    return convertToProxyImageUrl(imageUrl, proxyHost);
+  }
+
+  // Use original URL for public, null visibility, or when proxyHost is not available
+  return imageUrl;
 };
