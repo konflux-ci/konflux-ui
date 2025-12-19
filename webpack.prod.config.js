@@ -13,6 +13,11 @@ export default merge(commonConfig, {
   module: {
     rules: [
       {
+        test: /\.css$/i,
+        include: path.resolve(__dirname, 'node_modules/monaco-editor'),
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
+      },
+      {
         test: /\.s?[ac]ss$/i,
         exclude: path.resolve(__dirname, 'node_modules/monaco-editor'), // Exclude Monaco's CSS
         use: [

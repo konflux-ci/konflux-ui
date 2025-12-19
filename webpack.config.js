@@ -54,11 +54,6 @@ export default {
         include: path.resolve(__dirname, 'src/assets/iconsUrl'),
         type: 'asset/resource',
       },
-      {
-        test: /\.css$/,
-        include: path.resolve(__dirname, 'node_modules/monaco-editor'),
-        use: ['style-loader', 'css-loader'],
-      },
     ],
   },
   plugins: [
