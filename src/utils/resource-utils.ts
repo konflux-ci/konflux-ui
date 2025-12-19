@@ -10,9 +10,9 @@ export const filterDeletedResources = <R extends K8sResourceCommon[]>(resources:
   While the tekton record would keep the conditions as:
   "conditions": [
     {
-      "type": "Unknown",
-      "reason": "Succeeded",
-      "status": "Running",
+      "type": "Succeeded",
+      "reason": "Running",
+      "status": "Unknown",
     ...
   Deleting pipelines from etcd makes the tekton record would be never updated as others.
   So for those tekton results, it is useless to users and we need to filter them out.
