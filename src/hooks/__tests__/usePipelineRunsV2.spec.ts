@@ -836,6 +836,299 @@ describe('usePipelineRunsV2', () => {
       // Should be loading when either source is loading
       expect(result.current[1]).toBe(false); // not loaded
     });
+
+    describe('filtering running PipelineRuns from archive data', () => {
+      it('should filter out PipelineRuns with Unknown status, Succeeded type, and Running reason', async () => {
+        const runningPipelineRun: PipelineRunKind = {
+          ...mockPipelineRun[0],
+          metadata: {
+            ...mockPipelineRun[0].metadata,
+            name: 'running-pipeline-run',
+            uid: 'running-uid',
+            creationTimestamp: '2024-01-04T00:00:00Z',
+          },
+          status: {
+            conditions: [
+              {
+                type: 'Succeeded',
+                status: 'Unknown',
+                reason: 'Running',
+              },
+            ],
+            pipelineSpec: {
+              tasks: [],
+            },
+          },
+        };
+
+        const completedPipelineRun: PipelineRunKind = {
+          ...mockPipelineRun[1],
+          metadata: {
+            ...mockPipelineRun[1].metadata,
+            name: 'completed-pipeline-run',
+            uid: 'completed-uid',
+          },
+          status: {
+            conditions: [
+              {
+                type: 'Succeeded',
+                status: 'True',
+                reason: 'Succeeded',
+              },
+            ],
+            pipelineSpec: {
+              tasks: [],
+            },
+          },
+        };
+
+        mockUseK8sWatchResource.mockReturnValue({
+          data: [],
+          isLoading: false,
+          error: null,
+        });
+
+        // @ts-expect-error - Mocking partial infinite query result for testing
+        mockUseKubearchiveListResourceQuery.mockReturnValue({
+          data: {
+            pages: [[runningPipelineRun, completedPipelineRun]],
+            pageParams: [],
+          },
+          isLoading: false,
+          error: null,
+          hasNextPage: false,
+          isFetchingNextPage: false,
+          fetchNextPage: undefined,
+        });
+
+        const { result } = renderHookWithQueryClient('default');
+
+        await waitFor(() => {
+          expect(result.current[1]).toBe(true);
+        });
+
+        const [pipelineRuns] = result.current;
+        // should only contain the completed PipelineRun, not the running one
+        expect(pipelineRuns).toHaveLength(1);
+        expect(pipelineRuns[0].metadata.name).toBe('completed-pipeline-run');
+        expect(
+          pipelineRuns.find((pr) => pr.metadata.name === 'running-pipeline-run'),
+        ).toBeUndefined();
+      });
+
+      it('should keep PipelineRuns without the specific running condition', async () => {
+        const pipelineRunWithOtherCondition: PipelineRunKind = {
+          ...mockPipelineRun[0],
+          metadata: {
+            ...mockPipelineRun[0].metadata,
+            name: 'other-condition-pipeline-run',
+            uid: 'other-uid',
+          },
+          status: {
+            conditions: [
+              {
+                type: 'Succeeded',
+                status: 'Unknown',
+                reason: 'Pending',
+              },
+            ],
+            pipelineSpec: {
+              tasks: [],
+            },
+          },
+        };
+
+        mockUseK8sWatchResource.mockReturnValue({
+          data: [],
+          isLoading: false,
+          error: null,
+        });
+
+        // @ts-expect-error - Mocking partial infinite query result for testing
+        mockUseKubearchiveListResourceQuery.mockReturnValue({
+          data: {
+            pages: [[pipelineRunWithOtherCondition]],
+            pageParams: [],
+          },
+          isLoading: false,
+          error: null,
+          hasNextPage: false,
+          isFetchingNextPage: false,
+          fetchNextPage: undefined,
+        });
+
+        const { result } = renderHookWithQueryClient('default');
+
+        await waitFor(() => {
+          expect(result.current[1]).toBe(true);
+        });
+
+        const [pipelineRuns] = result.current;
+        // should keep PipelineRun with different reason
+        expect(pipelineRuns).toHaveLength(1);
+        expect(pipelineRuns[0].metadata.name).toBe('other-condition-pipeline-run');
+      });
+
+      it('should keep PipelineRuns with no conditions', async () => {
+        const pipelineRunNoConditions: PipelineRunKind = {
+          ...mockPipelineRun[0],
+          metadata: {
+            ...mockPipelineRun[0].metadata,
+            name: 'no-conditions-pipeline-run',
+            uid: 'no-conditions-uid',
+          },
+          status: {
+            pipelineSpec: {
+              tasks: [],
+            },
+          },
+        };
+
+        mockUseK8sWatchResource.mockReturnValue({
+          data: [],
+          isLoading: false,
+          error: null,
+        });
+
+        // @ts-expect-error - Mocking partial infinite query result for testing
+        mockUseKubearchiveListResourceQuery.mockReturnValue({
+          data: {
+            pages: [[pipelineRunNoConditions]],
+            pageParams: [],
+          },
+          isLoading: false,
+          error: null,
+          hasNextPage: false,
+          isFetchingNextPage: false,
+          fetchNextPage: undefined,
+        });
+
+        const { result } = renderHookWithQueryClient('default');
+
+        await waitFor(() => {
+          expect(result.current[1]).toBe(true);
+        });
+
+        const [pipelineRuns] = result.current;
+        // should keep PipelineRun with no conditions
+        expect(pipelineRuns).toHaveLength(1);
+        expect(pipelineRuns[0].metadata.name).toBe('no-conditions-pipeline-run');
+      });
+
+      it('should filter out PipelineRuns with multiple conditions where any condition matches the running pattern', async () => {
+        const pipelineRunMultipleConditions: PipelineRunKind = {
+          ...mockPipelineRun[0],
+          metadata: {
+            ...mockPipelineRun[0].metadata,
+            name: 'multiple-conditions-pipeline-run',
+            uid: 'multiple-uid',
+          },
+          status: {
+            conditions: [
+              {
+                type: 'Succeeded',
+                status: 'Unknown',
+                reason: 'Running',
+              },
+              {
+                type: 'Succeeded',
+                status: 'True',
+                reason: 'Succeeded',
+              },
+            ],
+            pipelineSpec: {
+              tasks: [],
+            },
+          },
+        };
+
+        mockUseK8sWatchResource.mockReturnValue({
+          data: [],
+          isLoading: false,
+          error: null,
+        });
+
+        // @ts-expect-error - Mocking partial infinite query result for testing
+        mockUseKubearchiveListResourceQuery.mockReturnValue({
+          data: {
+            pages: [[pipelineRunMultipleConditions]],
+            pageParams: [],
+          },
+          isLoading: false,
+          error: null,
+          hasNextPage: false,
+          isFetchingNextPage: false,
+          fetchNextPage: undefined,
+        });
+
+        const { result } = renderHookWithQueryClient('default');
+
+        await waitFor(() => {
+          expect(result.current[1]).toBe(true);
+        });
+
+        const [pipelineRuns] = result.current;
+        // should filter out PipelineRun because ANY condition matches the pattern
+        expect(pipelineRuns).toHaveLength(0);
+      });
+
+      it('should filter out PipelineRuns where all conditions match the running pattern', async () => {
+        const pipelineRunAllRunning: PipelineRunKind = {
+          ...mockPipelineRun[0],
+          metadata: {
+            ...mockPipelineRun[0].metadata,
+            name: 'all-running-pipeline-run',
+            uid: 'all-running-uid',
+          },
+          status: {
+            conditions: [
+              {
+                type: 'Succeeded',
+                status: 'Unknown',
+                reason: 'Running',
+              },
+              {
+                type: 'Succeeded',
+                status: 'Unknown',
+                reason: 'Running',
+              },
+            ],
+            pipelineSpec: {
+              tasks: [],
+            },
+          },
+        };
+
+        mockUseK8sWatchResource.mockReturnValue({
+          data: [],
+          isLoading: false,
+          error: null,
+        });
+
+        // @ts-expect-error - Mocking partial infinite query result for testing
+        mockUseKubearchiveListResourceQuery.mockReturnValue({
+          data: {
+            pages: [[pipelineRunAllRunning]],
+            pageParams: [],
+          },
+          isLoading: false,
+          error: null,
+          hasNextPage: false,
+          isFetchingNextPage: false,
+          fetchNextPage: undefined,
+        });
+
+        const { result } = renderHookWithQueryClient('default');
+
+        await waitFor(() => {
+          expect(result.current[1]).toBe(true);
+        });
+
+        const [pipelineRuns] = result.current;
+        // should filter out PipelineRun because ALL conditions match the pattern
+        expect(pipelineRuns).toHaveLength(0);
+      });
+    });
   });
 
   describe('when disabled', () => {
