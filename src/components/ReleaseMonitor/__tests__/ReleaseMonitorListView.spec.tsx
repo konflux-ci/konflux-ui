@@ -160,12 +160,12 @@ describe('ReleaseMonitorListView', () => {
 
     const triggerReleasesLoaded = (
       namespace: string,
-      onReleasesLoaded: (releases: ReleaseKind[]) => void,
+      onReleasesLoaded: (namespace: string, releases: ReleaseKind[]) => void,
     ) => {
       const namespaceReleases = releases.filter(
         (release) => release.metadata.namespace === namespace,
       );
-      setTimeout(() => onReleasesLoaded(namespaceReleases), 0);
+      setTimeout(() => onReleasesLoaded(namespace, namespaceReleases), 0);
     };
 
     mockReleasesInNamespace.mockImplementation(
@@ -174,7 +174,7 @@ describe('ReleaseMonitorListView', () => {
         onReleasesLoaded,
       }: {
         namespace: string;
-        onReleasesLoaded: (releases: ReleaseKind[]) => void;
+        onReleasesLoaded: (namespace: string, releases: ReleaseKind[]) => void;
       }) => {
         React.useEffect(() => {
           triggerReleasesLoaded(namespace, onReleasesLoaded);
