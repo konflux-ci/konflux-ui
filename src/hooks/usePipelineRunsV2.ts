@@ -16,6 +16,7 @@ import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
 import { WatchK8sResource } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
+import { filterOutStaleRunningPipelineRunsFromArchive } from '../utils/resource-utils';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
 interface UsePipelineRunsV2Options
@@ -174,6 +175,8 @@ export const usePipelineRunsV2 = (
     if (optionsMemo?.selector?.filterByCommit) {
       data = data.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
     }
+
+    data = filterOutStaleRunningPipelineRunsFromArchive(data);
 
     const creationTimestamp = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
     const sorted = data.sort((a, b) => creationTimestamp(b).localeCompare(creationTimestamp(a)));
