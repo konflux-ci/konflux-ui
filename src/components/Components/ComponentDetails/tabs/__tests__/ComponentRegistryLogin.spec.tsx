@@ -1,19 +1,14 @@
 import { screen } from '@testing-library/react';
+import { useImageProxy } from '~/hooks/useImageProxy';
 import { renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import ComponentRegistryLogin from '../ComponentRegistryLogin';
-import { useRegistryLoginUrl } from '../useRegistryLoginUrl';
 
-jest.mock('../useRegistryLoginUrl');
+jest.mock('~/hooks/useImageProxy');
 
-const useRegistryLoginUrlMock = useRegistryLoginUrl as jest.Mock;
-
+const useImageProxyMock = useImageProxy as jest.Mock;
 describe('ComponentRegistryLogin', () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should show skeleton while loading', () => {
-    useRegistryLoginUrlMock.mockReturnValue([null, false, null]);
+    useImageProxyMock.mockReturnValue([null, false, null]);
 
     renderWithQueryClientAndRouter(<ComponentRegistryLogin />);
 
@@ -22,7 +17,7 @@ describe('ComponentRegistryLogin', () => {
 
   it('should show error state when there is an error', () => {
     const error = { code: 500, message: 'Internal server error' };
-    useRegistryLoginUrlMock.mockReturnValue([null, true, error]);
+    useImageProxyMock.mockReturnValue([null, true, error]);
 
     renderWithQueryClientAndRouter(<ComponentRegistryLogin />);
 
@@ -30,7 +25,7 @@ describe('ComponentRegistryLogin', () => {
   });
 
   it('should show warning when domain is not configured', () => {
-    useRegistryLoginUrlMock.mockReturnValue([null, true, null]);
+    useImageProxyMock.mockReturnValue([null, true, null]);
 
     renderWithQueryClientAndRouter(<ComponentRegistryLogin />);
 
@@ -39,17 +34,28 @@ describe('ComponentRegistryLogin', () => {
     expect(screen.getByText('Registry domain not configured')).toBeInTheDocument();
   });
 
-  it('should display link with correct URL when domain is configured', () => {
-    const mockUrl =
-      'https://oauth-openshift.apps.kflux-ocp-p01.7ayg.p1.openshiftapps.com/oauth/token/request';
-    useRegistryLoginUrlMock.mockReturnValue([mockUrl, true, null]);
+  it('should display authentication token link and login command when domain is configured', () => {
+    const mockHost = 'registry.example.com';
+    const mockUrlInfo = {
+      fullUrl: `https://${mockHost}`,
+      hostname: mockHost,
+      oauthPath: '/oauth',
+      buildUrl: (path: string) => `https://${mockHost}${path}`,
+    };
+    useImageProxyMock.mockReturnValue([mockUrlInfo, true, null]);
 
     renderWithQueryClientAndRouter(<ComponentRegistryLogin />);
 
-    const link = screen.getByRole('link', { name: /Copy Login cmd/i });
+    // Check for authentication token link
+    const link = screen.getByRole('link', { name: /Get your authentication token/i });
     expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', mockUrl);
+    expect(link).toHaveAttribute('href', `https://${mockHost}/oauth`);
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+
+    // Check for clipboard copy with podman login command
+    const clipboardInput = screen.getByDisplayValue(/podman login -u/i);
+    expect(clipboardInput).toBeInTheDocument();
+    expect(clipboardInput).toHaveValue(`podman login -u unused ${mockHost}`);
   });
 });

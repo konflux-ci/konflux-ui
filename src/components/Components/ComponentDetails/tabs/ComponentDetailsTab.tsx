@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Button, ButtonVariant } from '@patternfly/react-core';
+import { LEARN_MORE_ABOUT_LOGIN_IMAGE_REPO } from '~/consts/documentation';
+import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useComponent } from '../../../../hooks/useComponents';
 import { RouterParams } from '../../../../routes/utils';
 import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
@@ -63,7 +65,12 @@ const ComponentDetailsTab: React.FC = () => {
       </DetailsSection>
       <DetailsSection
         title="Registry Login Information"
-        description="Use this information for accessing the registry for build images."
+        description={
+          <>
+            Use this information for accessing the registry for build images.{' '}
+            <ExternalLink href={LEARN_MORE_ABOUT_LOGIN_IMAGE_REPO}>More info</ExternalLink>
+          </>
+        }
       >
         <ComponentRegistryLogin />
       </DetailsSection>

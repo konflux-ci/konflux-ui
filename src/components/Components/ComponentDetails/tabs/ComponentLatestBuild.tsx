@@ -12,7 +12,7 @@ import {
   Spinner,
   Button,
 } from '@patternfly/react-core';
-import { useImageProxyHost } from '~/hooks/useImageProxyHost';
+import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
@@ -46,7 +46,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
     pipelineRun?.metadata?.name,
   );
   const buildLogsModal = useBuildLogViewerModal(component);
-  const [proxyHost, proxyHostLoaded, proxyHostError] = useImageProxyHost();
+  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
 
   // Fetch ImageRepository for this component
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
@@ -60,11 +60,11 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const containerImage = component?.status?.lastPromotedImage ?? null;
 
   // Get the appropriate image URL based on visibility
-  // When proxyHost or imageRepo has error, fallback to original URL (null triggers fallback in getImageUrlForVisibility)
+  // When proxy or imageRepo has error or urlInfo is null, fallback to original URL (null triggers fallback in getImageUrlForVisibility)
   const displayImageUrl = getImageUrlForVisibility(
     containerImage,
     imageRepository?.spec?.image?.visibility ?? null,
-    proxyHostError || imageRepoError ? null : proxyHost,
+    proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
   );
 
   if (pipelineRunError) {
@@ -74,14 +74,14 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   // Note: imageRepoError is handled gracefully by falling back to original URL
   // We don't show error state to avoid blocking the entire component
 
-  // Wait for all required data including proxyHost for private images
+  // Wait for all required data including proxy for private images
   // Once error occurs, fallback to display the content
   const isPrivate = imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
   if (
     !pipelineRunLoaded ||
     !taskRunsLoaded ||
     (!imageRepoLoaded && !imageRepoError) ||
-    (isPrivate && !proxyHostLoaded && !proxyHostError)
+    (isPrivate && !proxyLoaded && !proxyError)
   ) {
     return (
       <div className="pf-u-m-lg">
