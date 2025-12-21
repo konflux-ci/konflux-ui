@@ -10,6 +10,8 @@ export const releaseTableColumnClasses = {
   component: 'pf-m-width-20  pf-m-width-10-on-xl',
   application: 'pf-m-width-20  pf-m-width-10-on-xl',
   releasePlan: 'pf-m-width-20  pf-m-width-10-on-xl',
+  product: 'pf-m-width-20  pf-m-width-10-on-xl',
+  productVersion: 'pf-m-width-20  pf-m-width-10-on-xl',
   namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
   count: 'pf-m-width-10  pf-m-width-5-on-xl',
 } as const;
@@ -52,6 +54,14 @@ const releaseColumns = [
   {
     title: 'Namespace',
     className: releaseTableColumnClasses.namespace,
+  },
+  {
+    title: 'Product',
+    className: releaseTableColumnClasses.product,
+  },
+  {
+    title: 'Product Version',
+    className: releaseTableColumnClasses.productVersion,
   },
 ] satisfies Parameters<typeof createTableHeaders>[0];
 
