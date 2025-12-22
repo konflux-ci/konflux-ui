@@ -102,6 +102,6 @@ export type ReleaseKind = K8sResourceCommon & {
 // prodcut, product_version etc.
 export type MonitoredReleaseKind = ReleaseKind & {
   product: string;
-  product_version: string;
+  productVersion: string;
   rpa: string;
 };
