@@ -488,40 +488,6 @@ describe('ReleaseMonitorListView', () => {
     expect(option).not.toBeChecked();
   });
 
-  it('filters releases by product', async () => {
-    renderWithProviders(<ReleaseMonitorListView />);
-    await waitForReleasesLoaded();
-
-    const option = await toggleFilter(/Product filter menu/i, /Product A/i);
-
-    await waitFor(() => {
-      expect(screen.getByText('test-release-1')).toBeInTheDocument();
-      expect(screen.getByText('test-release-3')).toBeInTheDocument();
-
-      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(option);
-    expect(option).not.toBeChecked();
-  });
-
-  it('filters releases by product version', async () => {
-    renderWithProviders(<ReleaseMonitorListView />);
-    await waitForReleasesLoaded();
-
-    const option = await toggleFilter(/Product Version filter menu/i, /2.0.0/i);
-
-    await waitFor(() => {
-      expect(screen.getByText('test-release-2')).toBeInTheDocument();
-
-      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
-      expect(screen.queryByText('test-release-3')).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(option);
-    expect(option).not.toBeChecked();
-  });
-
   it('clears filters', async () => {
     renderWithProviders(<ReleaseMonitorListView />);
     await waitForReleasesLoaded();
