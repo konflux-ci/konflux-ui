@@ -8,13 +8,16 @@ import {
   FlexItem,
 } from '@patternfly/react-core';
 import yamlParser from 'js-yaml';
+import GitRepoLink from '~/components/GitLink/GitRepoLink';
+import HelpPopover from '~/components/HelpPopover';
 import { useLatestPushBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
-import ExternalLink from '../../../../shared/components/links/ExternalLink';
-import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
-import { ComponentKind } from '../../../../types';
-import { getLastestImage } from '../../../../utils/component-utils';
-import { getPipelineRunStatusResults } from '../../../../utils/pipeline-utils';
-import GitRepoLink from '../../../GitLink/GitRepoLink';
+import { useIsImageControllerEnabled } from '~/image-controller/conditional-checks';
+import { ImageUrlDisplay } from '~/shared/components/image-display';
+import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
+import { ComponentKind } from '~/types';
+import { getLastestImage } from '~/utils/component-utils';
+import { getPipelineRunStatusResults } from '~/utils/pipeline-utils';
+import ComponentImageRepositoryVisibility from './ComponentImageRepositoryVisibility';
 
 type ComponentDetailsProps = {
   component: ComponentKind;
@@ -36,6 +39,9 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
   const latestImageURL = results?.find((result) => result.name === RESULT_NAME);
   const componentImageURL = latestImageURL?.value ?? getLastestImage(component);
 
+  // Check if image controller is enabled for this cluster
+  const { isImageControllerEnabled } = useIsImageControllerEnabled();
+
   const runTime = React.useMemo(() => {
     try {
       const loadedYaml = yamlParser?.load(component.status?.devfile) as {
@@ -55,7 +61,7 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
   return (
     <Flex direction={{ default: 'row' }}>
       {component.spec.source?.git && (
-        <FlexItem style={{ flex: 1 }}>
+        <FlexItem flex={{ default: 'flex_1' }}>
           <DescriptionList
             columnModifier={{
               default: '1Col',
@@ -74,23 +80,64 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
           </DescriptionList>
         </FlexItem>
       )}
-      {componentImageURL && (
-        <FlexItem style={{ flex: 1 }}>
+      {isImageControllerEnabled && (
+        <FlexItem flex={{ default: 'flex_1' }}>
           <DescriptionList
             columnModifier={{
               default: '1Col',
             }}
           >
             <DescriptionListGroup>
-              <DescriptionListTerm>Latest image</DescriptionListTerm>
-              <DescriptionListDescription data-test="component-latest-image">
-                <ExternalLink
-                  href={
-                    componentImageURL.startsWith('http')
-                      ? componentImageURL
-                      : `https://${componentImageURL}`
+              <DescriptionListTerm>
+                Image repository visibility{' '}
+                <HelpPopover
+                  bodyContent={
+                    <>
+                      Controls whether the built container images are publicly accessible or
+                      private.
+                      <br />
+                      <br />
+                      Pull and push secrets are automatically created and managed by the image
+                      controller for your build pipelines.
+                    </>
                   }
-                  text={componentImageURL}
+                />
+              </DescriptionListTerm>
+              <DescriptionListDescription data-test="image-repository-visibility">
+                <ComponentImageRepositoryVisibility component={component} />
+              </DescriptionListDescription>
+            </DescriptionListGroup>
+          </DescriptionList>
+        </FlexItem>
+      )}
+      {componentImageURL && (
+        <FlexItem flex={{ default: 'flex_1' }}>
+          <DescriptionList
+            columnModifier={{
+              default: '1Col',
+            }}
+          >
+            <DescriptionListGroup>
+              <DescriptionListTerm>
+                Latest image{' '}
+                <HelpPopover
+                  bodyContent={
+                    <>
+                      For private repositories, shows the proxied URL when available, otherwise
+                      shows the original URL.
+                      <br />
+                      <br />
+                      Use with the &apos;Registry Login Information&apos; below to pull private
+                      images.
+                    </>
+                  }
+                />
+              </DescriptionListTerm>
+              <DescriptionListDescription data-test="component-latest-image">
+                <ImageUrlDisplay
+                  imageUrl={componentImageURL}
+                  namespace={component.metadata.namespace}
+                  componentName={component.metadata.name}
                   isHighlightable
                 />
               </DescriptionListDescription>
@@ -98,7 +145,7 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
           </DescriptionList>
         </FlexItem>
       )}
-      <FlexItem style={{ flex: 1 }}>
+      <FlexItem flex={{ default: 'flex_1' }}>
         <DescriptionList
           data-test="component-details-2"
           columnModifier={{

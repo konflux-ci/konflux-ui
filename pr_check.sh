@@ -71,9 +71,19 @@ execute_test() {
         echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
     fi
 
+    case "${SUITE}" in
+        "features")
+            SPEC_FILE="/e2e/tests/features.spec.ts"
+            ;;
+        *)
+            SPEC_FILE="/e2e/tests/basic-happy-path.spec.ts"
+            ;;
+    esac
+    echo "Running tests from ${SPEC_FILE}"
+
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec /e2e/tests/basic-happy-path.spec.ts
+    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec ${SPEC_FILE}
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
         case $PODMAN_RETURN_CODE in
@@ -144,6 +154,14 @@ run_test_stage() {
 upload_coverage() {
     echo "Uploading e2e coverage to Codecov..."
 
+    # Free up disk space before pulling coverport image
+    echo "Disk space before cleanup:"
+    df -h /
+    echo "Pruning container images and build cache..."
+    podman system prune --all --force || true
+    echo "Disk space after cleanup:"
+    df -h /
+
     # Coverage data is copied to artifacts/.nyc_output by entrypoint.sh
     local COVERAGE_DIR="artifacts/.nyc_output"
 
@@ -203,6 +221,44 @@ upload_coverage() {
     return $UPLOAD_RESULT
 }
 
+send_report() {
+    EXIT_STATUS=$1
+    if [[ $EXIT_STATUS == "success" ]]; then
+        MESSAGE=":tick-green: "
+    else
+        MESSAGE=":x: "
+    fi
+
+    # Format date as "MMM D", e.g., "Jun 3"
+    MESSAGE="$MESSAGE Report $(date '+%b %-d'):"
+
+    case "$JOB_TYPE" in
+        "periodic-local")
+            MESSAGE="$MESSAGE LOCAL Periodic job"
+            ;;
+        "periodic-stage")
+            if [ $SUITE == "features" ]; then
+                MESSAGE="$MESSAGE STAGE FEATURES Periodic job"
+            else
+                MESSAGE="$MESSAGE STAGE Periodic job"
+            fi
+            ;;
+        *)
+            MESSAGE="$MESSAGE Unknown job type: ${JOB_TYPE} ${JOB_URL}"
+            ;;
+    esac
+
+    MESSAGE="$MESSAGE $JOB_URL"
+    
+    echo "Message: $MESSAGE"
+
+    curl -X POST https://slack.com/api/chat.postMessage \
+        -H "Authorization: Bearer ${SLACK_TOKEN}" \
+        -H "Content-Type: application/json; charset=utf-8" \
+        -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE}\"}"
+
+}
+
 if [ $# -eq 0 ]; then
     echo "Usage: $0 [build|test|upload-coverage]"
     exit 1
@@ -223,6 +279,10 @@ case "$1" in
     upload-coverage)
         echo "Uploading coverage..."
         upload_coverage
+        ;;
+    send-report)
+        echo "Sending Slack report..."
+        send_report "$2"
         ;;
     *)
         echo "Invalid argument: $1"

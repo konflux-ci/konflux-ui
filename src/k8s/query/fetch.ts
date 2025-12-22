@@ -53,8 +53,11 @@ export const K8sQueryUpdateResource = <TResource extends K8sResourceCommon>(
   });
 };
 
-export const K8sQueryPatchResource = (requestInit: K8sResourcePatchOptions) => {
-  return k8sPatchResource(requestInit).finally(() => {
+export const K8sQueryPatchResource = <
+  TResource extends K8sResourceCommon,
+  TPatchedResource extends TResource = TResource,
+>(requestInit: K8sResourcePatchOptions): Promise<TPatchedResource> => {
+  return k8sPatchResource<TResource, TPatchedResource>(requestInit).finally(() => {
     !requestInit.queryOptions?.queryParams?.dryRun &&
       void queryClient.invalidateQueries({
         queryKey: createQueryKeys({

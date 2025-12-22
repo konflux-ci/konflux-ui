@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { Button, Flex, FlexItem, ModalVariant, Truncate, capitalize } from '@patternfly/react-core';
+import { Button, Flex, FlexItem, ModalVariant, capitalize } from '@patternfly/react-core';
 import { createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { Issue, IssueState } from '~/kite/issue-type';
 import { RowFunctionArgs, TableData, Timestamp } from '~/shared';
 import ExternalLink from '~/shared/components/links/ExternalLink';
+import { Truncate } from '~/shared/components/truncate-text/Truncate';
 import { IssueStatus } from '../IssueStatus';
 import { issuesTableColumnClasses } from './IssuesListHeader';
 import { severityIcon } from './utils/issue-utils';
@@ -57,7 +58,7 @@ const IssuesListRow: React.FC<RowFunctionArgs<Issue>> = ({ obj: issue }) => {
       </TableData>
 
       <TableData className={issuesTableColumnClasses.description}>
-        <Truncate content={issue.description ?? '-'} />
+        <Truncate modalTitle="Full description" content={issue.description ?? '-'} />
       </TableData>
 
       <TableData className={issuesTableColumnClasses.usefulLinks}>

@@ -27,6 +27,18 @@ export class ComponentPage extends AbstractWizardPage {
       });
   }
 
+  setImageRepoVisibility(visibility: 'public' | 'private') {
+    cy.get('[id="form-checkbox-isPrivateRepo-field"]').then(($input) => {
+      const isPrivate = $input.is(':checked');
+      const shouldToggle =
+        (isPrivate && visibility === 'public') || (!isPrivate && visibility === 'private');
+
+      if (shouldToggle) {
+        cy.get('[id="form-checkbox-isPrivateRepo-field"]').click({ force: true });
+      }
+    });
+  }
+
   setDockerfilePath(dockerfilePath: string) {
     cy.get(ComponentsPagePO.dockerfileInput).clear().type(dockerfilePath);
   }

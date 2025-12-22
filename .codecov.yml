@@ -12,8 +12,8 @@ coverage:
         threshold: 1%
     patch:
       default:
-        informational: true
-        target: 80%
+        target: 85%
+        threshold: 5%
 
 ignore:
   - "**/*__data__*/*.ts"

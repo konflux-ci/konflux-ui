@@ -42,13 +42,6 @@ export interface FeatureMeta {
 }
 
 const InternalFLAGS = {
-  'release-monitor': {
-    key: 'release-monitor',
-    description:
-      'New release monitor page that make user see all the related releases of viable namespaces',
-    defaultEnabled: false,
-    status: 'wip',
-  },
   'column-management': {
     key: 'column-management',
     description: 'Enable the "Manage columns" button for tables with more than six columns',

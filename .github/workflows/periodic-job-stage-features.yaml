@@ -1,0 +1,46 @@
+name: "Periodic job: STAGE FEATURES (test Konflux UI against stage cluster for feature flags)"
+
+on:
+  workflow_dispatch:
+
+  # Setting daily runs in a way that can be summarized 
+  # at the beginning of the working day on CET timezone.
+  schedule:
+    - cron: '0 0 * * *'
+    - cron: '0 6 * * *'
+    - cron: '0 19 * * *'
+
+jobs:
+  periodic-stage-features-e2e-test:
+    runs-on: ubuntu-latest
+    env:
+      REF_BRANCH: ${{ github.ref_name }}
+      HEAD_SHA: ${{ github.sha }}
+      JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
+      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
+      # secrets
+      CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      GH_APP_ID: ${{ secrets.GH_APP_ID }}
+      GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
+      GH_APP_WEBHOOK_SECRET: ${{ secrets.GH_APP_WEBHOOK_SECRET }}
+      QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+      CYPRESS_USERNAME: ${{ secrets.STAGE_CYPRESS_USERNAME }}
+      CYPRESS_PASSWORD: ${{ secrets.STAGE_CYPRESS_PASSWORD }}
+      CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
+      CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      CYPRESS_KONFLUX_BASE_URL: "https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com"
+      JOB_TYPE: 'periodic-stage'
+      SUITE: 'features'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          ref: "${{ env.HEAD_SHA }}"
+
+      - name: Konflux-ui e2e test
+        uses: ./.github/actions/konflux-ui-e2e-test
+
+      - name: Generate error logs
+        if: ${{ always() }}
+        uses: ./.github/actions/generate-error-logs

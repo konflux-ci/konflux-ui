@@ -55,17 +55,13 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
               </NavItem>
             </IfFeature>
 
-            <IfFeature flag="release-monitor">
-              <NavItem
-                isActive={isActive(RELEASE_MONITOR_PATH.path, {
-                  exact: true,
-                })}
-              >
-                <NavLink to={RELEASE_MONITOR_PATH.createPath({} as never)}>
-                  Release Monitor <FeatureFlagIndicator flags={['release-monitor']} />
-                </NavLink>
-              </NavItem>
-            </IfFeature>
+            <NavItem
+              isActive={isActive(RELEASE_MONITOR_PATH.path, {
+                exact: true,
+              })}
+            >
+              <NavLink to={RELEASE_MONITOR_PATH.createPath({} as never)}>Release Monitor</NavLink>
+            </NavItem>
 
             <IfFeature flag="issues-dashboard">
               <NavItem
