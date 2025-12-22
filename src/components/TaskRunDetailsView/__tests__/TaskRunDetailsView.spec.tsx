@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../utils/test-utils';
@@ -44,5 +45,16 @@ describe('TaskRunDetailsView', () => {
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
     screen.getByText('404: Page not found');
     screen.getByText('Go to applications list');
+  });
+
+  it('should render the actions button', async () => {
+    useTaskRunMock.mockReturnValue([testTaskRuns[0], true]);
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+    const actionsButton = screen.getByRole('button', { name: /Actions/i });
+    await act(async () => {
+      await userEvent.click(actionsButton);
+    });
+
+    expect(screen.getByText('Download Task Run YAML')).toBeInTheDocument();
   });
 });
