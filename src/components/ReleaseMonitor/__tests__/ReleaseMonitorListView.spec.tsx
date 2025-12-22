@@ -178,7 +178,7 @@ describe('ReleaseMonitorListView', () => {
         apiVersion: 'appstudio.redhat.com/v1alpha1',
         kind: 'ReleasePlan',
         metadata: {
-          name: 'test-plan',
+          name: 'test-plan-1',
           namespace: 'namespace-1',
           labels: {
             'release.appstudio.openshift.io/releasePlanAdmission': 'rpa-1',
@@ -482,6 +482,40 @@ describe('ReleaseMonitorListView', () => {
       // Others should not be visible
       expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
       expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('filters releases by product', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    const option = await toggleFilter(/Product filter menu/i, /Product A/i);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('filters releases by product version', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    const option = await toggleFilter(/Product Version filter menu/i, /2.0.0/i);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-2')).toBeInTheDocument();
+
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-3')).not.toBeInTheDocument();
     });
 
     fireEvent.click(option);
