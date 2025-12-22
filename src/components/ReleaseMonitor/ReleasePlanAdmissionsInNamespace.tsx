@@ -33,8 +33,10 @@ const ReleasePlanAdmissionsInNamespace: React.FC<ReleasePlanAdmissionsInNamespac
           // For other errors, still report them (but this could also be changed to ignore all RPA errors)
           onError(error);
         }
-      } else if (data) {
-        onReleasePlanAdmissionsLoaded(namespace, data);
+      } else {
+        // Always call the callback when loaded (even if data is falsy)
+        // to prevent parent component from waiting indefinitely
+        onReleasePlanAdmissionsLoaded(namespace, data || []);
       }
     }
   }, [data, loaded, error, namespace, onError, onReleasePlanAdmissionsLoaded]);
