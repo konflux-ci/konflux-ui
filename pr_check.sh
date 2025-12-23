@@ -76,9 +76,14 @@ execute_test() {
         -e COMMIT_INFO_EMAIL=${COMMIT_INFO_EMAIL}"
 
     RECORD_FLAG=""
+    TAG_FLAG=""
     if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
         RECORD_FLAG="--record"
-        echo "Cypress recording enabled"
+        # Add tag to identify which workflow/job type this run is from
+        JOB_TAG="${JOB_TYPE:-unknown}"
+        [[ -n "${SUITE}" ]] && JOB_TAG="${JOB_TAG}-${SUITE}"
+        TAG_FLAG="--tag ${JOB_TAG}"
+        echo "Cypress recording enabled with tag: ${JOB_TAG}"
     else
         echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
     fi
@@ -95,7 +100,8 @@ execute_test() {
 
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec ${SPEC_FILE}
+    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} ${TAG_FLAG} --spec ${SPEC_FILE}
+
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
         case $PODMAN_RETURN_CODE in
