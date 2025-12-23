@@ -52,11 +52,26 @@ execute_test() {
     mkdir artifacts
     echo "running tests using image ${TEST_IMAGE}"
 
-    COMMIT_INFO_SHA="${COMMIT_INFO_SHA:-}"
-    COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH:-}"
-    COMMIT_INFO_MESSAGE="${COMMIT_INFO_MESSAGE:-}"
-    COMMIT_INFO_AUTHOR="${COMMIT_INFO_AUTHOR:-}"
-    COMMIT_INFO_EMAIL="${COMMIT_INFO_EMAIL:-}"
+    # set COMMIT_INFO_* with fallbacks
+    COMMIT_INFO_SHA="${COMMIT_INFO_SHA:-${HEAD_SHA}}"
+    [[ -z "${COMMIT_INFO_SHA}" ]] && COMMIT_INFO_SHA=$(git rev-parse HEAD 2>/dev/null || echo '')
+
+    COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH:-${SOURCE_BRANCH:-${REF_BRANCH}}}"
+    [[ -z "${COMMIT_INFO_BRANCH}" ]] && COMMIT_INFO_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')
+
+    if [[ -z "${COMMIT_INFO_MESSAGE}" && -n "${COMMIT_INFO_SHA}" ]]; then
+        COMMIT_INFO_MESSAGE=$(git log -1 --pretty=format:'%s' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')
+    fi
+    if [[ -z "${COMMIT_INFO_AUTHOR}" && -n "${COMMIT_INFO_SHA}" ]]; then
+        COMMIT_INFO_AUTHOR=$(git log -1 --pretty=format:'%an' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')
+    fi
+
+    echo "=== COMMIT_INFO_* ==="
+    echo "COMMIT_INFO_SHA: '${COMMIT_INFO_SHA}'"
+    echo "COMMIT_INFO_BRANCH: '${COMMIT_INFO_BRANCH}'"
+    echo "COMMIT_INFO_MESSAGE: '${COMMIT_INFO_MESSAGE}'"
+    echo "COMMIT_INFO_AUTHOR: '${COMMIT_INFO_AUTHOR}'"
+    echo "================================="
 
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
@@ -68,17 +83,23 @@ execute_test() {
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
         -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
         -e CYPRESS_PROJECT_ID=${CYPRESS_PROJECT_ID} \
-        -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY} \
-        -e COMMIT_INFO_SHA=${COMMIT_INFO_SHA} \
-        -e COMMIT_INFO_BRANCH=${COMMIT_INFO_BRANCH} \
-        -e COMMIT_INFO_MESSAGE=\"${COMMIT_INFO_MESSAGE}\" \
-        -e COMMIT_INFO_AUTHOR=\"${COMMIT_INFO_AUTHOR}\" \
-        -e COMMIT_INFO_EMAIL=${COMMIT_INFO_EMAIL}"
+        -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY}"
+
+    COMMIT_ENV_ARGS_ARRAY=()
+    [[ -n "${COMMIT_INFO_SHA}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_SHA=${COMMIT_INFO_SHA}")
+    [[ -n "${COMMIT_INFO_BRANCH}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_BRANCH=${COMMIT_INFO_BRANCH}")
+    [[ -n "${COMMIT_INFO_MESSAGE}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_MESSAGE=${COMMIT_INFO_MESSAGE}")
+    [[ -n "${COMMIT_INFO_AUTHOR}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_AUTHOR=${COMMIT_INFO_AUTHOR}")
 
     RECORD_FLAG=""
+    TAG_FLAG=""
     if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
         RECORD_FLAG="--record"
-        echo "Cypress recording enabled"
+        # add tag to identify which workflow/job type this run is from
+        JOB_TAG="${JOB_TYPE:-unknown}"
+        [[ -n "${SUITE}" ]] && JOB_TAG="${JOB_TAG}-${SUITE}"
+        TAG_FLAG="--tag ${JOB_TAG}"
+        echo "Cypress recording enabled with tag: ${JOB_TAG}"
     else
         echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
     fi
@@ -95,7 +116,8 @@ execute_test() {
 
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} ${TEST_IMAGE} ${RECORD_FLAG} --spec ${SPEC_FILE}
+    podman run --network host ${COMMON_SETUP} "${COMMIT_ENV_ARGS_ARRAY[@]}" ${TEST_IMAGE} ${RECORD_FLAG} ${TAG_FLAG} --spec ${SPEC_FILE}
+
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
         case $PODMAN_RETURN_CODE in
