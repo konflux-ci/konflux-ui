@@ -34,6 +34,7 @@ export default defineConfig({
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
     experimentalPromptCommand: true,
+    experimentalMemoryManagement: true,
     excludeSpecPattern:
       process.env.CYPRESS_PERIODIC_RUN_STAGE ||
       process.env.GH_COMMENTBODY?.toLowerCase() === '[test]'
