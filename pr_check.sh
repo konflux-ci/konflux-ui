@@ -53,10 +53,18 @@ execute_test() {
     echo "running tests using image ${TEST_IMAGE}"
 
     # set COMMIT_INFO_* with fallbacks
-    COMMIT_INFO_SHA="${COMMIT_INFO_SHA:-${HEAD_SHA:-$(git rev-parse HEAD 2>/dev/null || echo '')}}"
-    COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH:-${SOURCE_BRANCH:-${REF_BRANCH:-$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')}}}"
-    COMMIT_INFO_MESSAGE="${COMMIT_INFO_MESSAGE:-$(git log -1 --pretty=format:'%s' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')}"
-    COMMIT_INFO_AUTHOR="${COMMIT_INFO_AUTHOR:-$(git log -1 --pretty=format:'%an' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')}"
+    COMMIT_INFO_SHA="${COMMIT_INFO_SHA:-${HEAD_SHA}}"
+    [[ -z "${COMMIT_INFO_SHA}" ]] && COMMIT_INFO_SHA=$(git rev-parse HEAD 2>/dev/null || echo '')
+
+    COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH:-${SOURCE_BRANCH:-${REF_BRANCH}}}"
+    [[ -z "${COMMIT_INFO_BRANCH}" ]] && COMMIT_INFO_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')
+
+    if [[ -z "${COMMIT_INFO_MESSAGE}" && -n "${COMMIT_INFO_SHA}" ]]; then
+        COMMIT_INFO_MESSAGE=$(git log -1 --pretty=format:'%s' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')
+    fi
+    if [[ -z "${COMMIT_INFO_AUTHOR}" && -n "${COMMIT_INFO_SHA}" ]]; then
+        COMMIT_INFO_AUTHOR=$(git log -1 --pretty=format:'%an' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')
+    fi
 
     echo "=== COMMIT_INFO_* ==="
     echo "COMMIT_INFO_SHA: '${COMMIT_INFO_SHA}'"
