@@ -95,7 +95,7 @@ execute_test() {
     TAG_FLAG=""
     if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
         RECORD_FLAG="--record"
-        # Add tag to identify which workflow/job type this run is from
+        # add tag to identify which workflow/job type this run is from
         JOB_TAG="${JOB_TYPE:-unknown}"
         [[ -n "${SUITE}" ]] && JOB_TAG="${JOB_TAG}-${SUITE}"
         TAG_FLAG="--tag ${JOB_TAG}"
