@@ -58,6 +58,13 @@ execute_test() {
     COMMIT_INFO_AUTHOR="${COMMIT_INFO_AUTHOR:-}"
     COMMIT_INFO_EMAIL="${COMMIT_INFO_EMAIL:-}"
 
+    echo "Cypress Cloud commit info:"
+    echo "  COMMIT_INFO_SHA: ${COMMIT_INFO_SHA}"
+    echo "  COMMIT_INFO_BRANCH: ${COMMIT_INFO_BRANCH}"
+    echo "  COMMIT_INFO_MESSAGE: ${COMMIT_INFO_MESSAGE}"
+    echo "  COMMIT_INFO_AUTHOR: ${COMMIT_INFO_AUTHOR}"
+    echo "  COMMIT_INFO_EMAIL: ${COMMIT_INFO_EMAIL}"
+
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
         --timeout=3600 \
