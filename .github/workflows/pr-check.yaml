@@ -75,7 +75,6 @@ jobs:
       COMMIT_INFO_BRANCH: ${{ github.event.pull_request.head.ref }}
       COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
       COMMIT_INFO_AUTHOR: ${{ github.event.pull_request.user.login }}
-      COMMIT_INFO_EMAIL: ${{ github.event.pull_request.user.email }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
