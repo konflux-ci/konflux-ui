@@ -51,6 +51,13 @@ execute_test() {
 
     mkdir artifacts
     echo "running tests using image ${TEST_IMAGE}"
+
+    COMMIT_INFO_SHA="${COMMIT_INFO_SHA:-}"
+    COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH:-}"
+    COMMIT_INFO_MESSAGE="${COMMIT_INFO_MESSAGE:-}"
+    COMMIT_INFO_AUTHOR="${COMMIT_INFO_AUTHOR:-}"
+    COMMIT_INFO_EMAIL="${COMMIT_INFO_EMAIL:-}"
+
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
         --timeout=3600 \
@@ -61,7 +68,12 @@ execute_test() {
         -e CYPRESS_PASSWORD=${CYPRESS_PASSWORD} \
         -e CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} \
         -e CYPRESS_PROJECT_ID=${CYPRESS_PROJECT_ID} \
-        -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY}"
+        -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY} \
+        -e COMMIT_INFO_SHA=${COMMIT_INFO_SHA} \
+        -e COMMIT_INFO_BRANCH=${COMMIT_INFO_BRANCH} \
+        -e COMMIT_INFO_MESSAGE=\"${COMMIT_INFO_MESSAGE}\" \
+        -e COMMIT_INFO_AUTHOR=\"${COMMIT_INFO_AUTHOR}\" \
+        -e COMMIT_INFO_EMAIL=${COMMIT_INFO_EMAIL}"
 
     RECORD_FLAG=""
     if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
