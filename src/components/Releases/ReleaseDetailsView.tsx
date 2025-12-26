@@ -25,7 +25,7 @@ const ReleaseDetailsView: React.FC = () => {
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
   const [release, loaded, error] = useRelease(namespace, releaseName);
-  const canCreateRelease = useAccessReviewForModel(ReleaseModel, 'create');
+  const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
   const track = useTrackEvent();
   const {
     user: { email },
