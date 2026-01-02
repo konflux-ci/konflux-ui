@@ -91,14 +91,13 @@ execute_test() {
     [[ -n "${COMMIT_INFO_MESSAGE}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_MESSAGE=${COMMIT_INFO_MESSAGE}")
     [[ -n "${COMMIT_INFO_AUTHOR}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_AUTHOR=${COMMIT_INFO_AUTHOR}")
 
-    RECORD_FLAG=""
-    TAG_FLAG=""
+    RECORD_FLAG_ARGS=()
     if [[ -n "${CYPRESS_PROJECT_ID}" && -n "${CYPRESS_RECORD_KEY}" ]]; then
-        RECORD_FLAG="--record"
+        RECORD_FLAG_ARGS+=("--record")
         # add tag to identify which workflow/job type this run is from
         JOB_TAG="${JOB_TYPE:-unknown}"
         [[ -n "${SUITE}" ]] && JOB_TAG="${JOB_TAG}-${SUITE}"
-        TAG_FLAG="--tag ${JOB_TAG}"
+        RECORD_FLAG_ARGS+=("--tag" "${JOB_TAG}")
         echo "Cypress recording enabled with tag: ${JOB_TAG}"
     else
         echo "Cypress recording disabled (missing PROJECT_ID or RECORD_KEY)"
@@ -116,7 +115,7 @@ execute_test() {
 
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} "${COMMIT_ENV_ARGS_ARRAY[@]}" ${TEST_IMAGE} ${RECORD_FLAG} ${TAG_FLAG} --spec ${SPEC_FILE}
+    podman run --network host ${COMMON_SETUP} "${COMMIT_ENV_ARGS_ARRAY[@]}" "${TEST_IMAGE}" "${RECORD_FLAG_ARGS[@]}" --spec "${SPEC_FILE}"
 
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then
