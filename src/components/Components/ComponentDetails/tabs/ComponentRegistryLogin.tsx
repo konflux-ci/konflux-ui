@@ -1,12 +1,11 @@
 import * as React from 'react';
-import { Alert, Skeleton } from '@patternfly/react-core';
+import { Alert, ClipboardCopy, Skeleton, Text, TextContent } from '@patternfly/react-core';
+import { useImageProxy } from '~/hooks/useImageProxy';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { useRegistryLoginUrl } from './useRegistryLoginUrl';
 
 const ComponentRegistryLogin: React.FC = () => {
-  const [registryLoginUrl, loaded, error] = useRegistryLoginUrl();
-
+  const [urlInfo, loaded, error] = useImageProxy();
   // Show skeleton while loading
   if (!loaded) {
     return <Skeleton aria-label="Loading proxy image URL" data-test="registry-login-skeleton" />;
@@ -18,7 +17,7 @@ const ComponentRegistryLogin: React.FC = () => {
   }
 
   // Handle domain not configured
-  if (!registryLoginUrl) {
+  if (!urlInfo) {
     return (
       <Alert
         variant="warning"
@@ -30,7 +29,21 @@ const ComponentRegistryLogin: React.FC = () => {
     );
   }
 
-  return <ExternalLink href={registryLoginUrl}>Copy Login cmd</ExternalLink>;
+  const oauthUrl = urlInfo.buildUrl(urlInfo.oauthPath);
+
+  return (
+    <>
+      <TextContent className="pf-v5-u-mb-sm">
+        <Text>
+          <ExternalLink href={oauthUrl}>Get your authentication token</ExternalLink>
+          {' and use it as the password when prompted'}
+        </Text>
+      </TextContent>
+      <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied" style={{ width: '60%' }}>
+        {`podman login -u unused ${urlInfo.hostname}`}
+      </ClipboardCopy>
+    </>
+  );
 };
 
 export default ComponentRegistryLogin;

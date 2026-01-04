@@ -3,7 +3,7 @@ import { fireEvent, screen } from '@testing-library/dom';
 import { mockPublicImageRepository } from '~/__data__/image-repository-data';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { useComponent } from '~/hooks/useComponents';
-import { useImageProxyHost } from '~/hooks/useImageProxyHost';
+import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import {
   useLatestPushBuildPipelineRunForComponentV2,
@@ -51,8 +51,8 @@ jest.mock('~/hooks/useImageRepository', () => ({
   useImageRepository: jest.fn(),
 }));
 
-jest.mock('~/hooks/useImageProxyHost', () => ({
-  useImageProxyHost: jest.fn(),
+jest.mock('~/hooks/useImageProxy', () => ({
+  useImageProxy: jest.fn(),
 }));
 
 jest.mock('~/image-controller/conditional-checks', () => ({
@@ -71,10 +71,11 @@ const useLatestPushBuildPipelineRunForComponentMock =
   useLatestPushBuildPipelineRunForComponentV2 as jest.Mock;
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 const useTaskRunsV2Mock = useTaskRunsForPipelineRuns as jest.Mock;
-const useImageProxyHostMock = useImageProxyHost as jest.Mock;
+const useImageProxyMock = useImageProxy as jest.Mock;
 const useImageRepositoryMock = useImageRepository as jest.Mock;
 const useIsImageControllerEnabledMock = useIsImageControllerEnabled as jest.Mock;
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
+
 describe('ComponentDetailTab', () => {
   let navigateMock: jest.Mock;
   const showModalMock = jest.fn();
@@ -95,7 +96,7 @@ describe('ComponentDetailTab', () => {
       true,
     ]);
     useTaskRunsV2Mock.mockReturnValue([mockTaskRuns, true]);
-    useImageProxyHostMock.mockReturnValue([null, true, null]);
+    useImageProxyMock.mockReturnValue([null, true, null]);
     useImageRepositoryMock.mockReturnValue([null, true, null]);
     useIsImageControllerEnabledMock.mockReturnValue({ isImageControllerEnabled: true });
     useAccessReviewForModelMock.mockReturnValue([true, true]);

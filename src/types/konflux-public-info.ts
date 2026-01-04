@@ -51,8 +51,14 @@ export const KonfluxInstanceEnvironments = {
 export type KonfluxInstanceEnvironmentType =
   (typeof KonfluxInstanceEnvironments)[keyof typeof KonfluxInstanceEnvironments];
 
+export type ImageProxy = {
+  url: string;
+  oauthPath: string;
+};
+
 export type KonfluxPublicInfo = {
-  imageProxyUrl?: string;
+  imageProxyUrl?: string; // Deprecated: kept for backward compatibility
+  imageProxy?: ImageProxy;
   environment?: KonfluxInstanceEnvironmentType;
   statusPageUrl?: string;
   integrations?: KonfluxPublicInfoIntegrations;
