@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Truncate } from '@patternfly/react-core';
+import { Button, Popover, Stack, StackItem, Truncate } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { Commit, PipelineRunKind } from '../../../types';
-import { createRepoBranchURL, getCommitSha, statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { Commit } from '../../../types';
+import { createRepoBranchURL, statuses } from '../../../utils/commits-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { useCommitActions } from '../commit-actions';
 import CommitLabel from '../commit-label/CommitLabel';
@@ -27,30 +26,16 @@ import './CommitsListRow.scss';
 interface CommitsListRowProps {
   obj: Commit;
   visibleColumns?: Set<CommitColumnKeys>;
-  pipelineRuns: PipelineRunKind[];
+  status: runStatus;
 }
 
 const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = ({
   obj,
   visibleColumns,
-  pipelineRuns,
+  status,
 }) => {
   const actions = useCommitActions(obj);
   const namespace = useNamespace();
-
-  const status = React.useMemo<runStatus>(() => {
-    const plrsForCommit = pipelineRuns
-      ?.filter((plr) => getCommitSha(plr) === obj.sha)
-      ?.sort(
-        (a, b) => new Date(b.status?.startTime).getTime() - new Date(a.status?.startTime).getTime(),
-      );
-
-    const plrStatus = pipelineRunStatus(plrsForCommit?.[0]);
-    if (statuses.includes(plrStatus)) {
-      return plrStatus;
-    }
-    return runStatus.Unknown;
-  }, [obj.sha, pipelineRuns]);
 
   const prNumber = obj.isPullRequest ? `#${obj.pullRequestNumber}` : '';
 
@@ -60,6 +45,32 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
   const columnClasses = visibleColumns
     ? getDynamicCommitsColumnClasses(visibleColumns)
     : commitsTableColumnClasses;
+
+  const getComponentLink = React.useCallback(
+    (component: string) => (
+      <Link
+        key={component}
+        to={COMPONENT_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName: obj.application,
+          componentName: component.trim(),
+        })}
+      >
+        {component.trim()}
+      </Link>
+    ),
+    [namespace, obj.application],
+  );
+
+  const compCount = obj.components.length;
+  const visibleComponents = React.useMemo(() => obj.components.slice(0, 3), [obj.components]);
+  const hiddenComponents = React.useMemo(() => obj.components.slice(3), [obj.components]);
+
+  const popoverBodyContent = React.useMemo(
+    () =>
+      hiddenComponents.map((comp) => <StackItem key={comp}>{getComponentLink(comp)}</StackItem>),
+    [hiddenComponents, getComponentLink],
+  );
 
   const columnComponents = {
     name: (
@@ -94,20 +105,35 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     component: (
       <TableData key="component" className={columnClasses.component}>
         <div className="commits-component-list">
-          {obj.components.length > 0
-            ? obj.components.map((c) => (
-                <Link
-                  key={c}
-                  to={COMPONENT_DETAILS_PATH.createPath({
-                    workspaceName: namespace,
-                    applicationName: obj.application,
-                    componentName: c.trim(),
-                  })}
+          {compCount > 0 ? (
+            <>
+              {visibleComponents.map((comp) => getComponentLink(comp))}
+              {hiddenComponents.length > 0 && (
+                <Popover
+                  data-testid="more-components-popover"
+                  aria-label="More commit components"
+                  headerContent="More commit components"
+                  bodyContent={
+                    <Stack
+                      className="commits-popover-stack"
+                      style={{
+                        maxHeight: '400px',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      {popoverBodyContent}
+                    </Stack>
+                  }
                 >
-                  {c.trim()}
-                </Link>
-              ))
-            : '-'}
+                  <Button variant="link" isInline>
+                    {`${hiddenComponents.length} more`}
+                  </Button>
+                </Popover>
+              )}
+            </>
+          ) : (
+            '-'
+          )}
         </div>
       </TableData>
     ),

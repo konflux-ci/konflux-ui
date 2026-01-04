@@ -10,7 +10,6 @@ import {
 } from '~/components/Filter/utils/monitoredreleases-filter-utils';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Table } from '~/shared';
@@ -226,11 +225,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
   return (
     <PageLayout
-      title={
-        <>
-          Release Monitor <FeatureFlagIndicator flags={['release-monitor']} fullLabel />
-        </>
-      }
+      title="Release Monitor"
       description="The dashboard to monitor the releases you care about"
     >
       {loaded &&
@@ -238,7 +233,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           <ReleasesInNamespace
             key={ns.metadata.name}
             namespace={ns.metadata.name}
-            onReleasesLoaded={(data) => handleReleasesLoaded(ns.metadata.name, data)}
+            onReleasesLoaded={handleReleasesLoaded}
             onError={handleError}
           />
         ))}
