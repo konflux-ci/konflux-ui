@@ -72,6 +72,12 @@ const ReleaseListRow: React.FC<RowFunctionArgs<MonitoredReleaseKind>> = ({ obj }
         {obj.metadata.namespace}
       </TableData>
 
+      <TableData className={releaseTableColumnClasses.product}>{obj.product}</TableData>
+
+      <TableData className={releaseTableColumnClasses.productVersion}>
+        {obj.productVersion}
+      </TableData>
+
       <TableData className={releaseTableColumnClasses.count}>
         {/* Empty cell for count column - count is shown in header only */}
       </TableData>
