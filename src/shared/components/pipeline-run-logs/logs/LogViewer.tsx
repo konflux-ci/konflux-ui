@@ -21,9 +21,9 @@ import {
   OutlinedPlayCircleIcon,
 } from '@patternfly/react-icons/dist/esm/icons';
 import {
-  LogViewer as PatternFlyLogViewer,
-  LogViewerProps,
   LogViewerSearch,
+  LogViewerContext,
+  LogViewerToolbarContext,
 } from '@patternfly/react-log-viewer';
 import classNames from 'classnames';
 import { saveAs } from 'file-saver';
@@ -33,11 +33,17 @@ import { TaskRunKind } from '~/types';
 import { useFullscreen } from '../../../hooks/fullscreen';
 import { useTheme } from '../../../theme';
 import { LoadingInline } from '../../status-box/StatusBox';
+import { VirtualizedLogViewer } from '../../virtualized-log-viewer';
 import LogsTaskDuration from './LogsTaskDuration';
 
 import './LogViewer.scss';
 
-export type Props = LogViewerProps & {
+interface SearchedWord {
+  rowIndex: number;
+  matchIndex: number;
+}
+
+export type Props = {
   showSearch?: boolean;
   data: string;
   allowAutoScroll?: boolean;
@@ -46,6 +52,11 @@ export type Props = LogViewerProps & {
   taskRun: TaskRunKind | null;
   isLoading: boolean;
   errorMessage: string | null;
+  onScroll?: (props: {
+    scrollDirection: 'forward' | 'backward';
+    scrollOffset: number;
+    scrollUpdateWasRequested: boolean;
+  }) => void;
 };
 
 const LogViewer: React.FC<Props> = ({
@@ -57,22 +68,79 @@ const LogViewer: React.FC<Props> = ({
   taskRun,
   isLoading,
   errorMessage,
-  ...props
+  onScroll: onScrollProp,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const { effectiveTheme } = useTheme();
-  const [logTheme, setLogTheme] = React.useState<LogViewerProps['theme']>('dark');
+  const [logTheme, setLogTheme] = React.useState<'light' | 'dark'>('dark');
 
   const [scrollDirection, setScrollDirection] = React.useState<'forward' | 'backward' | null>(null);
   const [autoScroll, setAutoScroll] = React.useState(allowAutoScroll);
 
+  // Search state for LogViewerContext
+  const [searchedWordIndexes, setSearchedWordIndexes] = React.useState<SearchedWord[]>([]);
+  const [searchedInput, setSearchedInput] = React.useState('');
+  const [currentSearchedItemCount, setCurrentSearchedItemCount] = React.useState(0);
+  const [rowInFocus, setRowInFocus] = React.useState<SearchedWord>({
+    rowIndex: -1,
+    matchIndex: -1,
+  });
+
   // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
   data = data.replace(/\r/g, '\n');
 
-  const scrolledRow = React.useMemo(
-    () => (autoScroll ? data.split('\n').length : 0),
-    [autoScroll, data],
+  // Remove ANSI escape codes for plain text display
+  // eslint-disable-next-line no-control-regex
+  data = data.replace(/\x1b\[[0-9;]*m/g, '');
+
+  const lines = React.useMemo(() => data.split('\n'), [data]);
+
+  const handleScrollToRow = React.useCallback((row: SearchedWord) => {
+    setRowInFocus(row);
+  }, []);
+
+  const logViewerContextValue = React.useMemo(
+    () => ({
+      parsedData: lines,
+      searchedInput,
+    }),
+    [lines, searchedInput],
   );
+
+  const toolbarContextValue = React.useMemo(
+    () => ({
+      searchedWordIndexes,
+      scrollToRow: handleScrollToRow,
+      setSearchedInput,
+      setCurrentSearchedItemCount,
+      setRowInFocus,
+      setSearchedWordIndexes,
+      currentSearchedItemCount,
+      searchedInput,
+      itemCount: lines.length,
+      rowInFocus,
+    }),
+    [
+      searchedWordIndexes,
+      handleScrollToRow,
+      currentSearchedItemCount,
+      searchedInput,
+      lines.length,
+      rowInFocus,
+    ],
+  );
+
+  const scrolledRow = React.useMemo(() => {
+    // If searching and have a current match, scroll to it
+    if (rowInFocus.rowIndex >= 0) {
+      return rowInFocus.rowIndex + 1; // +1 because scrollToRow is 1-indexed
+    }
+    // Otherwise, if auto-scroll is enabled, scroll to end
+    if (autoScroll) {
+      return lines.length;
+    }
+    return 0;
+  }, [autoScroll, lines.length, rowInFocus]);
 
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
@@ -108,31 +176,118 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
+  // Use containerRef to measure actual height for VirtualizedLogViewer
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [viewerHeight, setViewerHeight] = React.useState(600);
+
+  React.useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        const measured = containerRef.current.clientHeight;
+        if (measured > 0) {
+          setViewerHeight(measured);
+        }
+      }
+    };
+
+    // Update on mount and fullscreen changes
+    updateHeight();
+
+    // Update on window resize
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, [isFullscreen]);
+
   return (
-    <div
-      ref={fullscreenRef}
-      style={{ height: isFullscreen ? '100vh' : '100%' }}
-      className={classNames('log-viewer__container')}
-    >
-      <PatternFlyLogViewer
-        {...props}
-        hasLineNumbers={false}
-        height={isFullscreen ? '100%' : undefined}
-        data={data}
-        theme={logTheme}
-        scrollToRow={scrolledRow}
-        onScroll={(onScrollProps) => {
-          const { scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested } =
-            onScrollProps;
-          setScrollDirection(logViewerScrollDirection);
+    <LogViewerContext.Provider value={logViewerContextValue}>
+      <LogViewerToolbarContext.Provider value={toolbarContextValue}>
+        <div
+          ref={fullscreenRef}
+          style={{ height: isFullscreen ? '100vh' : '100%' }}
+          className={classNames('log-viewer__container', 'pf-v5-c-log-viewer', {
+            'pf-m-dark': logTheme === 'dark',
+          })}
+        >
+          {/* Toolbar */}
+          <div className="pf-v5-c-log-viewer__header">
+            <Toolbar>
+              <ToolbarContent
+                className={classNames({
+                  'log-viewer--fullscreen': isFullscreen,
+                })}
+                alignItems="center"
+              >
+                <ToolbarGroup>
+                  <ToolbarItem>
+                    <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
+                  </ToolbarItem>
+                </ToolbarGroup>
+                {showSearch && (
+                  <ToolbarGroup>
+                    <ToolbarItem>
+                      <LogViewerSearch placeholder="Search" minSearchChars={0} />
+                    </ToolbarItem>
+                  </ToolbarGroup>
+                )}
+                <ToolbarGroup align={{ default: 'alignRight' }}>
+                  <ToolbarItem>
+                    <Checkbox
+                      id="theme"
+                      label="Dark theme"
+                      // theme toggle should be disabled if global theme is dark
+                      isDisabled={effectiveTheme === 'dark'}
+                      checked={logTheme === 'dark'}
+                      onClick={() => setLogTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                    />
+                  </ToolbarItem>
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
+                  <ToolbarItem>
+                    <Button variant="link" onClick={downloadLogs} isInline>
+                      <DownloadIcon className="log-viewer__icon" />
+                      Download
+                    </Button>
+                  </ToolbarItem>
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
+                  {onDownloadAll && (
+                    <>
+                      <ToolbarItem>
+                        <Button
+                          variant="link"
+                          onClick={startDownloadAll}
+                          isDisabled={downloadAllStatus}
+                          isInline
+                        >
+                          <DownloadIcon className="log-viewer__icon" />
+                          {downloadAllLabel}
+                          {downloadAllStatus && <LoadingInline />}
+                        </Button>
+                      </ToolbarItem>
+                      <ToolbarItem variant="separator" className="log-viewer__divider" />
+                    </>
+                  )}
+                  {fullscreenToggle && isFullscreenSupported && (
+                    <ToolbarItem spacer={{ default: 'spacerMd' }}>
+                      <Button variant="link" onClick={fullscreenToggle} isInline>
+                        {isFullscreen ? (
+                          <>
+                            <CompressIcon className="log-viewer__icon" />
+                            Collapse
+                          </>
+                        ) : (
+                          <>
+                            <ExpandIcon className="log-viewer__icon" />
+                            Expand
+                          </>
+                        )}
+                      </Button>
+                    </ToolbarItem>
+                  )}
+                </ToolbarGroup>
+              </ToolbarContent>
+            </Toolbar>
+          </div>
 
-          if (scrollUpdateWasRequested) {
-            setAutoScroll(false);
-          }
-
-          props.onScroll?.(onScrollProps);
-        }}
-        header={
+          {/* Header */}
           <Banner data-testid="logs-taskName">
             <Flex gap={{ default: 'gapSm' }}>
               {taskName && (
@@ -151,86 +306,31 @@ const LogViewer: React.FC<Props> = ({
             )}
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
-        }
-        toolbar={
-          <Toolbar>
-            <ToolbarContent
-              className={classNames({
-                'log-viewer--fullscreen': isFullscreen,
-              })}
-              alignItems="center"
-            >
-              <ToolbarGroup>
-                <ToolbarItem>
-                  <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
-                </ToolbarItem>
-              </ToolbarGroup>
-              {showSearch && (
-                <ToolbarGroup>
-                  <ToolbarItem>
-                    <LogViewerSearch placeholder="Search" minSearchChars={0} />
-                  </ToolbarItem>
-                </ToolbarGroup>
-              )}
-              <ToolbarGroup align={{ default: 'alignRight' }}>
-                <ToolbarItem>
-                  <Checkbox
-                    id="theme"
-                    label="Dark theme"
-                    // theme toggle should be disabled if global theme is dark
-                    isDisabled={effectiveTheme === 'dark'}
-                    checked={logTheme === 'dark'}
-                    onClick={() => setLogTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-                  />
-                </ToolbarItem>
-                <ToolbarItem variant="separator" className="log-viewer__divider" />
-                <ToolbarItem>
-                  <Button variant="link" onClick={downloadLogs} isInline>
-                    <DownloadIcon className="log-viewer__icon" />
-                    Download
-                  </Button>
-                </ToolbarItem>
-                <ToolbarItem variant="separator" className="log-viewer__divider" />
-                {onDownloadAll && (
-                  <>
-                    <ToolbarItem>
-                      <Button
-                        variant="link"
-                        onClick={startDownloadAll}
-                        isDisabled={downloadAllStatus}
-                        isInline
-                      >
-                        <DownloadIcon className="log-viewer__icon" />
-                        {downloadAllLabel}
-                        {downloadAllStatus && <LoadingInline />}
-                      </Button>
-                    </ToolbarItem>
-                    <ToolbarItem variant="separator" className="log-viewer__divider" />
-                  </>
-                )}
-                {fullscreenToggle && isFullscreenSupported && (
-                  <ToolbarItem spacer={{ default: 'spacerMd' }}>
-                    <Button variant="link" onClick={fullscreenToggle} isInline>
-                      {isFullscreen ? (
-                        <>
-                          <CompressIcon className="log-viewer__icon" />
-                          Collapse
-                        </>
-                      ) : (
-                        <>
-                          <ExpandIcon className="log-viewer__icon" />
-                          Expand
-                        </>
-                      )}
-                    </Button>
-                  </ToolbarItem>
-                )}
-              </ToolbarGroup>
-            </ToolbarContent>
-          </Toolbar>
-        }
-        footer={
-          showResumeStreamButton && (
+
+          {/* Log Viewer */}
+          <div ref={containerRef} style={{ minHeight: 0, flex: 1 }}>
+            <VirtualizedLogViewer
+              data={data}
+              height={viewerHeight}
+              scrollToRow={scrolledRow}
+              onScroll={(onScrollProps) => {
+                const { scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested } =
+                  onScrollProps;
+                setScrollDirection(logViewerScrollDirection);
+
+                // Only disable auto-scroll on user-initiated scrolls (not programmatic scrolls)
+                // scrollUpdateWasRequested=false indicates user manually scrolled
+                if (!scrollUpdateWasRequested) {
+                  setAutoScroll(false);
+                }
+
+                onScrollProp?.(onScrollProps);
+              }}
+            />
+          </div>
+
+          {/* Footer */}
+          {showResumeStreamButton && (
             <div className="log-viewer__resume-stream-button-wrapper">
               <Button
                 data-testid="resume-log-stream"
@@ -241,10 +341,10 @@ const LogViewer: React.FC<Props> = ({
                 <OutlinedPlayCircleIcon /> Resume log stream
               </Button>
             </div>
-          )
-        }
-      />
-    </div>
+          )}
+        </div>
+      </LogViewerToolbarContext.Provider>
+    </LogViewerContext.Provider>
   );
 };
 
