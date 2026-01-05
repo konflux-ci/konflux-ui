@@ -10,8 +10,17 @@ jest.mock('~/hooks/useImageRepository', () => ({
   useImageRepository: jest.fn(),
 }));
 
-jest.mock('~/hooks/useImageProxyHost', () => ({
-  useImageProxyHost: () => ['image-rbac-proxy', true, null],
+jest.mock('~/hooks/useImageProxy', () => ({
+  useImageProxy: () => [
+    {
+      fullUrl: 'https://image-rbac-proxy',
+      hostname: 'image-rbac-proxy',
+      oauthPath: '/oauth',
+      buildUrl: (path: string) => `https://image-rbac-proxy${path}`,
+    },
+    true,
+    null,
+  ],
 }));
 
 const useImageRepositoryMock = useImageRepository as jest.Mock;

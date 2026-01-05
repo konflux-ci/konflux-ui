@@ -36,33 +36,74 @@ export const useCommitWorkflowData = (
     namespace,
     applicationName,
   );
-  const [pipelines, pipelinesLoaded, pipelinesError] = usePipelineRunsForCommitV2(
-    namespace,
-    applicationName,
-    commit.sha,
-  );
 
-  const buildPipelines = React.useMemo(
-    () =>
-      pipelinesLoaded
-        ? pipelines.filter(
-            (plr) => plr.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-          )
-        : [],
-    [pipelines, pipelinesLoaded],
-  );
-  const testPipelines = React.useMemo(
-    () =>
-      pipelinesLoaded
-        ? pipelines.filter(
-            (plr) => plr.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.TEST,
-          )
-        : [],
-    [pipelines, pipelinesLoaded],
-  );
+  // separate pipeline run calls needed for Kubearchive-side commit filtering
+  const [buildPipelines, buildLoaded, buildError, buildGetNextPage, buildNextPageProps] =
+    usePipelineRunsForCommitV2(
+      namespace,
+      applicationName,
+      commit.sha,
+      undefined,
+      undefined,
+      PipelineRunType.BUILD,
+    );
 
-  const allResourcesLoaded: boolean = componentsLoaded && integrationTestsLoaded && pipelinesLoaded;
-  const allErrors = [pipelinesError].filter((e) => !!e);
+  const [testPipelines, testLoaded, testError, testGetNextPage, testNextPageProps] =
+    usePipelineRunsForCommitV2(
+      namespace,
+      applicationName,
+      commit.sha,
+      undefined,
+      undefined,
+      PipelineRunType.TEST,
+    );
+
+  React.useEffect(() => {
+    if (
+      buildNextPageProps.hasNextPage &&
+      !buildNextPageProps.isFetchingNextPage &&
+      buildLoaded &&
+      !buildError &&
+      buildGetNextPage
+    ) {
+      buildGetNextPage();
+    }
+  }, [
+    buildNextPageProps.hasNextPage,
+    buildNextPageProps.isFetchingNextPage,
+    buildLoaded,
+    buildGetNextPage,
+    buildError,
+  ]);
+
+  React.useEffect(() => {
+    if (
+      testNextPageProps.hasNextPage &&
+      !testNextPageProps.isFetchingNextPage &&
+      testLoaded &&
+      !testError &&
+      testGetNextPage
+    ) {
+      testGetNextPage();
+    }
+  }, [
+    testNextPageProps.hasNextPage,
+    testNextPageProps.isFetchingNextPage,
+    testLoaded,
+    testGetNextPage,
+    testError,
+  ]);
+
+  const allResourcesLoaded: boolean =
+    componentsLoaded &&
+    integrationTestsLoaded &&
+    buildLoaded &&
+    !buildNextPageProps.isFetchingNextPage &&
+    !buildNextPageProps.hasNextPage &&
+    testLoaded &&
+    !testNextPageProps.isFetchingNextPage &&
+    !testNextPageProps.hasNextPage;
+  const allErrors = [buildError, testError].filter((e) => !!e);
 
   const commitComponents = React.useMemo(
     () =>

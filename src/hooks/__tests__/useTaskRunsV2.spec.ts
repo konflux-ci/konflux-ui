@@ -2,6 +2,7 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { HttpError } from '~/k8s/error';
 import {
   useKubearchiveGetResourceQuery,
   useKubearchiveListResourceQuery,
@@ -657,6 +658,133 @@ describe('useTaskRunsV2', () => {
     });
   });
 
+  describe('etcdRunsRef logic - preserve removed runs', () => {
+    beforeEach(() => {
+      mockUseIsOnFeatureFlag.mockReturnValue(false);
+    });
+
+    it('should include removed TaskRuns from etcd in results', async () => {
+      // start with initial TaskRuns
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun2, mockTaskRun3], // 2 items initially
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      const { result, rerender } = renderHookWithQueryClient('default');
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      // should have initial 2 TaskRuns
+      expect(result.current[0]).toHaveLength(2);
+      expect(result.current[0]).toContainEqual(mockTaskRun2);
+      expect(result.current[0]).toContainEqual(mockTaskRun3);
+
+      // update to different TaskRuns (mockTaskRun2 and mockTaskRun3 are removed, mockTaskRun1 is added)
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      // should include both new TaskRun and previously removed ones
+      const [taskRuns] = result.current;
+      expect(taskRuns).toHaveLength(3); // mockTaskRun1 + removed mockTaskRun2 + removed mockTaskRun3
+      expect(taskRuns).toContainEqual(mockTaskRun1);
+      expect(taskRuns).toContainEqual(mockTaskRun2);
+      expect(taskRuns).toContainEqual(mockTaskRun3);
+
+      // update to empty array (all TaskRuns removed from etcd)
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [],
+        isLoading: false,
+        error: null,
+      });
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      // should still include all previously seen TaskRuns
+      const [finalTaskRuns] = result.current;
+      expect(finalTaskRuns).toHaveLength(3); // all 3 TaskRuns preserved
+      expect(finalTaskRuns).toContainEqual(mockTaskRun1);
+      expect(finalTaskRuns).toContainEqual(mockTaskRun2);
+      expect(finalTaskRuns).toContainEqual(mockTaskRun3);
+    });
+
+    it('should deduplicate by uid when preserving removed runs', async () => {
+      // create a TaskRun with same uid but different name (should be deduplicated)
+      const taskRunWithSameUid: TaskRunKind = {
+        ...mockTaskRun1,
+        metadata: {
+          ...mockTaskRun1.metadata,
+          name: 'task-run-1-renamed', // different name, same uid
+        },
+      };
+
+      // start with initial TaskRun
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      const { result, rerender } = renderHookWithQueryClient('default');
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      // update with TaskRun that has same uid but different name
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [taskRunWithSameUid], // same uid, different name
+        isLoading: false,
+        error: null,
+      });
+
+      rerender();
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true);
+      });
+
+      // should have only 1 TaskRun (deduplicated by uid), and it should be the new one
+      const [taskRuns] = result.current;
+      expect(taskRuns).toHaveLength(1);
+      expect(taskRuns[0].metadata.name).toBe('task-run-1-renamed'); // should be the updated version
+      expect(taskRuns[0].metadata.uid).toBe('uid-1');
+    });
+  });
+
   describe('useTaskRunsForPipelineRuns', () => {
     beforeEach(() => {
       mockUseIsOnFeatureFlag.mockReturnValue(false); // Default to Tekton Results for this test
@@ -1037,5 +1165,112 @@ describe('useTaskRunV2', () => {
       TaskRunModel,
       { retry: false },
     );
+  });
+
+  describe('404 error handling', () => {
+    beforeEach(() => {
+      useIsOnFeatureFlagMock.mockReturnValue(false);
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: null,
+      });
+    });
+
+    it('should only enable tekton query when cluster returns 404 error', () => {
+      const error404 = HttpError.fromCode(404);
+
+      // cluster returns 404
+      useK8sWatchResourceMock.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: error404,
+        isError: true,
+      });
+
+      useTRTaskRunsMock.mockReturnValue([
+        [mockTaskRun],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      // should call tekton with namespace (enabled because of 404)
+      expect(useTRTaskRunsMock).toHaveBeenCalledWith(
+        'test-ns',
+        expect.objectContaining({
+          name: 'test-taskrun',
+          limit: 1,
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it('should return cluster data when available and no 404 error', () => {
+      useK8sWatchResourceMock.mockReturnValue({
+        data: mockTaskRun,
+        isLoading: false,
+        error: null,
+      });
+
+      useTRTaskRunsMock.mockReturnValue([
+        [mockTaskRun],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      const { result } = renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      // should return cluster data even if tekton/kubearchive have data
+      expect(result.current[0]).toBe(mockTaskRun);
+    });
+
+    it('should enable kubearchive query when cluster returns 404 error and kubearchive is enabled', () => {
+      const error404 = HttpError.fromCode(404);
+      useIsOnFeatureFlagMock.mockReturnValue(true);
+
+      // cluster returns 404
+      useK8sWatchResourceMock.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: error404,
+        isError: true,
+      });
+
+      useKubearchiveGetResourceQueryMock.mockReturnValue({
+        data: mockTaskRun,
+        isLoading: false,
+        error: null,
+      });
+
+      useTRTaskRunsMock.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      renderHook(() => useTaskRunV2('test-ns', 'test-taskrun'));
+
+      // should enable kubearchive query when 404 error
+      expect(useKubearchiveGetResourceQueryMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groupVersionKind: TaskRunGroupVersionKind,
+          namespace: 'test-ns',
+          name: 'test-taskrun',
+        }),
+        TaskRunModel,
+        expect.objectContaining({ enabled: true }),
+      );
+    });
   });
 });
