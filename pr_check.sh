@@ -237,7 +237,7 @@ send_report() {
             MESSAGE="$MESSAGE LOCAL Periodic job"
             ;;
         "periodic-stage")
-            if [ $SUITE == "features" ]; then
+            if [[ $SUITE == "features" ]]; then
                 MESSAGE="$MESSAGE STAGE FEATURES Periodic job"
             else
                 MESSAGE="$MESSAGE STAGE Periodic job"
