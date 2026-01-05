@@ -81,7 +81,13 @@ describe('CommitOverviewTab', () => {
 
   describe('loading state', () => {
     it('should display spinner when data is loading', () => {
-      mockUsePipelineRunsForCommitV2.mockReturnValue([[], false, null]);
+      mockUsePipelineRunsForCommitV2.mockReturnValue([
+        [],
+        false,
+        null,
+        () => {},
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
       mockCreateCommitObjectFromPLR.mockReturnValue(null);
 
       renderCommitOverviewTab();
@@ -93,7 +99,13 @@ describe('CommitOverviewTab', () => {
   describe('error state', () => {
     it('should display error state when there is an error loading data', () => {
       const error = new Error('Failed to load');
-      mockUsePipelineRunsForCommitV2.mockReturnValue([[], true, error]);
+      mockUsePipelineRunsForCommitV2.mockReturnValue([
+        [],
+        true,
+        error,
+        () => {},
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
 
       renderCommitOverviewTab();
 
@@ -105,7 +117,13 @@ describe('CommitOverviewTab', () => {
 
   describe('successful data loading', () => {
     beforeEach(() => {
-      mockUsePipelineRunsForCommitV2.mockReturnValue([[mockPipelineRun], true, null]);
+      mockUsePipelineRunsForCommitV2.mockReturnValue([
+        [mockPipelineRun],
+        true,
+        null,
+        () => {},
+        { hasNextPage: false, isFetchingNextPage: false },
+      ]);
       mockCreateCommitObjectFromPLR.mockReturnValue(mockCommit);
     });
 

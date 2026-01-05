@@ -6,10 +6,10 @@ import {
 import { renderWithQueryClient } from '~/utils/test-utils';
 import { ImageUrlDisplay } from '../ImageUrlDisplay';
 
-// Mock useImageProxyHost hook
-const mockUseImageProxyHost = jest.fn();
-jest.mock('~/hooks/useImageProxyHost', () => ({
-  useImageProxyHost: () => mockUseImageProxyHost(),
+// Mock useImageProxy hook
+const mockUseImageProxy = jest.fn();
+jest.mock('~/hooks/useImageProxy', () => ({
+  useImageProxy: () => mockUseImageProxy(),
 }));
 
 // Mock useImageRepository hook
@@ -41,11 +41,18 @@ const expectCopyableText = (expectedText: string) => {
 };
 
 describe('ImageUrlDisplay', () => {
+  const mockUrlInfo = {
+    fullUrl: 'https://image-rbac-proxy',
+    hostname: 'image-rbac-proxy',
+    oauthPath: '/oauth',
+    buildUrl: (path: string) => `https://image-rbac-proxy${path}`,
+  };
+
   beforeEach(() => {
     mockUseImageRepository.mockClear();
-    mockUseImageProxyHost.mockClear();
-    // Default: proxy host is loaded
-    mockUseImageProxyHost.mockReturnValue(['image-rbac-proxy', true, null]);
+    mockUseImageProxy.mockClear();
+    // Default: image proxy is loaded
+    mockUseImageProxy.mockReturnValue([mockUrlInfo, true, null]);
   });
 
   it('should show loading skeleton while loading image repository', () => {
@@ -62,9 +69,9 @@ describe('ImageUrlDisplay', () => {
     expect(screen.getByLabelText('Loading image URL')).toBeInTheDocument();
   });
 
-  it('should show loading skeleton while loading proxy host for private images', () => {
-    // Mock useImageProxyHost to return loading state
-    mockUseImageProxyHost.mockReturnValue([null, false, null]);
+  it('should show loading skeleton while loading image proxy for private images', () => {
+    // Mock useImageProxy to return loading state
+    mockUseImageProxy.mockReturnValue([null, false, null]);
     mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
 
     renderWithQueryClient(
