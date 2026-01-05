@@ -1,6 +1,79 @@
 // Minimal overrides for virtualized log viewer
 // PatternFly's log-viewer.css provides all other styles including search highlighting
 
+// Define custom properties for selected line colors
+// Using PatternFly primary color with transparency
+:root {
+  --log-viewer--selected-bg--light: color-mix(in srgb, var(--pf-v5-global--primary-color--100) 20%, transparent);
+  --log-viewer--selected-bg--lighter: color-mix(in srgb, var(--pf-v5-global--primary-color--100) 10%, transparent);
+  --log-viewer--selected-bg--dark: color-mix(in srgb, var(--pf-v5-global--primary-color--light-100) 20%, transparent);
+  --log-viewer--selected-bg--darker: color-mix(in srgb, var(--pf-v5-global--primary-color--light-100) 10%, transparent);
+}
+
 .pf-v5-c-log-viewer__text {
   white-space: pre; // Override PatternFly's break-spaces for better virtualization
+}
+
+// Line number gutter
+.log-viewer__gutter {
+  flex-shrink: 0;
+  border-right: 1px solid var(--pf-v5-global--BorderColor--100);
+  background-color: var(--pf-v5-global--BackgroundColor--200);
+  user-select: none;
+}
+
+.log-viewer__line-number {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: var(--pf-v5-global--spacer--sm);
+  padding-left: var(--pf-v5-global--spacer--sm);
+  font-family: var(--pf-v5-global--FontFamily--monospace);
+  font-size: var(--pf-v5-global--FontSize--sm);
+  color: var(--pf-v5-global--Color--200);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--pf-v5-global--BackgroundColor--300);
+    color: var(--pf-v5-global--Color--100);
+  }
+
+  &--selected {
+    background-color: var(--log-viewer--selected-bg--light);
+    color: var(--pf-v5-global--primary-color--100);
+    font-weight: var(--pf-v5-global--FontWeight--bold);
+  }
+}
+
+// Selected line highlighting
+.log-viewer__line--selected {
+  background-color: var(--log-viewer--selected-bg--lighter);
+  border-left: 3px solid var(--pf-v5-global--primary-color--100);
+}
+
+// Dark theme adjustments
+.pf-v5-c-log-viewer.pf-m-dark {
+  .log-viewer__gutter {
+    background-color: var(--pf-v5-global--BackgroundColor--dark-100);
+    border-right-color: var(--pf-v5-global--BorderColor--dark-100);
+  }
+
+  .log-viewer__line-number {
+    color: var(--pf-v5-global--Color--dark-200);
+
+    &:hover {
+      background-color: var(--pf-v5-global--BackgroundColor--dark-200);
+      color: var(--pf-v5-global--Color--dark-100);
+    }
+
+    &--selected {
+      background-color: var(--log-viewer--selected-bg--dark);
+      color: var(--pf-v5-global--primary-color--light-100);
+    }
+  }
+
+  .log-viewer__line--selected {
+    background-color: var(--log-viewer--selected-bg--darker);
+    border-left-color: var(--pf-v5-global--primary-color--light-100);
+  }
 }

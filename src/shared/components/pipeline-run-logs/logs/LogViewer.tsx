@@ -89,13 +89,13 @@ const LogViewer: React.FC<Props> = ({
   });
 
   // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
-  data = data.replace(/\r/g, '\n');
-
   // Remove ANSI escape codes for plain text display
-  // eslint-disable-next-line no-control-regex
-  data = data.replace(/\x1b\[[0-9;]*m/g, '');
+  const sanitizedData = React.useMemo(() => {
+    const ansiEscapePattern = String.raw`\u001b\[[0-9;]*m`;
+    return data.replace(/\r/g, '\n').replace(new RegExp(ansiEscapePattern, 'g'), '');
+  }, [data]);
 
-  const lines = React.useMemo(() => data.split('\n'), [data]);
+  const lines = React.useMemo(() => sanitizedData.split('\n'), [sanitizedData]);
 
   const handleScrollToRow = React.useCallback((row: SearchedWord) => {
     setRowInFocus(row);
@@ -158,8 +158,8 @@ const LogViewer: React.FC<Props> = ({
   }, [data, allowAutoScroll]);
 
   const downloadLogs = () => {
-    if (!data) return;
-    const blob = new Blob([data], {
+    if (!sanitizedData) return;
+    const blob = new Blob([sanitizedData], {
       type: 'text/plain;charset=utf-8',
     });
     saveAs(blob, `${taskName || `task-run-${uuidv4()}`}.log`);
@@ -304,7 +304,7 @@ const LogViewer: React.FC<Props> = ({
           {/* Log Viewer */}
           <StackItem isFilled ref={containerRef} style={{ minHeight: 0 }}>
             <VirtualizedLogViewer
-              data={data}
+              data={sanitizedData}
               height={viewerHeight}
               theme={logTheme}
               scrollToRow={scrolledRow}

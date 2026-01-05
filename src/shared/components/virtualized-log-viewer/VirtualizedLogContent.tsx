@@ -18,6 +18,8 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
+  selectedLines?: { start: number; end: number } | null;
+  onItemSizeMeasured?: (size: number) => void;
 }
 
 interface RowData {
@@ -26,11 +28,16 @@ interface RowData {
   currentSearchMatch?: SearchedWord;
   escapedSearchText?: string;
   searchRegex?: RegExp;
+  selectedLines?: { start: number; end: number } | null;
 }
 
 const Row: React.FC<ListChildComponentProps<RowData>> = ({ index, style, data }) => {
   const line = data.lines[index];
-  const { searchText, currentSearchMatch, escapedSearchText, searchRegex } = data;
+  const { searchText, currentSearchMatch, escapedSearchText, searchRegex, selectedLines } = data;
+  const lineNumber = index + 1;
+
+  const isLineSelected =
+    selectedLines && lineNumber >= selectedLines.start && lineNumber <= selectedLines.end;
 
   // Create test regex once per row (case-insensitive for matching)
   const testRegex = React.useMemo(
@@ -71,7 +78,10 @@ const Row: React.FC<ListChildComponentProps<RowData>> = ({ index, style, data })
   };
 
   return (
-    <div style={style} className="pf-v5-c-log-viewer__list-item">
+    <div
+      style={style}
+      className={`pf-v5-c-log-viewer__list-item ${isLineSelected ? 'log-viewer__line--selected' : ''}`}
+    >
       {renderLine()}
     </div>
   );
@@ -85,6 +95,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onScroll,
   searchText = '',
   currentSearchMatch,
+  selectedLines,
+  onItemSizeMeasured,
 }) => {
   const listRef = React.useRef<FixedSizeList>(null);
   const prevScrollOffset = React.useRef<number>(0);
@@ -111,6 +123,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       const measured = measureRef.current.offsetHeight;
       if (measured > 0 && measured !== itemSize) {
         setItemSize(measured);
+        onItemSizeMeasured?.(measured);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,6 +164,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     currentSearchMatch,
     escapedSearchText,
     searchRegex,
+    selectedLines,
   };
 
   return (
