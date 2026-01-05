@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
-import { useImageProxyHost } from '~/hooks/useImageProxyHost';
+import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '~/routes/paths';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
@@ -23,7 +23,7 @@ const SnapshotComponentsListRow: React.FC<
   React.PropsWithChildren<RowFunctionArgs<SnapshotComponentTableData>>
 > = ({ obj }) => {
   const namespace = useNamespace();
-  const [proxyHost, proxyHostLoaded, proxyHostError] = useImageProxyHost();
+  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
 
   // Fetch ImageRepository to get visibility setting
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
@@ -33,11 +33,11 @@ const SnapshotComponentsListRow: React.FC<
   );
 
   // Get the appropriate image URL based on visibility
-  // When proxyHost has error, fallback to original URL
+  // When proxy has error or urlInfo is null, fallback to original URL
   const displayImageUrl = getImageUrlForVisibility(
     obj.containerImage,
     imageRepository?.spec?.image?.visibility ?? null,
-    proxyHostError ? null : proxyHost,
+    proxyError || !urlInfo ? null : urlInfo.hostname,
   );
 
   const isPrivate = imageRepository?.spec?.image?.visibility === ImageRepositoryVisibility.private;
@@ -55,8 +55,7 @@ const SnapshotComponentsListRow: React.FC<
         </Link>
       </TableData>
       <TableData className={commitsTableColumnClasses.image}>
-        {(!imageRepoLoaded && !imageRepoError) ||
-        (isPrivate && !proxyHostLoaded && !proxyHostError) ? (
+        {(!imageRepoLoaded && !imageRepoError) || (isPrivate && !proxyLoaded && !proxyError) ? (
           <Skeleton aria-label="Loading image URL" />
         ) : (
           <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">

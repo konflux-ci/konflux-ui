@@ -19,3 +19,5 @@ export const LEARN_MORE_ABOUT_COMPONENTS = 'https://konflux-ci.dev/docs/building
 export const SECURITY_ENTERPRISE_CONTRACT_POLICY_URL =
   'https://conforma.dev/docs/policy/release_policy.html';
 export const SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL = `${SECURITY_ENTERPRISE_CONTRACT_POLICY_URL}#_available_rule_collections`;
+export const LEARN_MORE_ABOUT_LOGIN_IMAGE_REPO =
+  'https://konflux-ci.dev/docs/building/accessing-private-images';
