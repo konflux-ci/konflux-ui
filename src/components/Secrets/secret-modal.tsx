@@ -1,7 +1,7 @@
 import { SecretModel } from '~/models';
 import { SecretKind } from '~/types';
+import { unlinkSecretFromServiceAccounts } from '~/utils/service-account-utils';
 import { createDeleteModalLauncher } from '../modal/DeleteResourceModal';
-import { unlinkSecretFromServiceAccounts } from './utils/service-account-utils';
 
 export const secretDeleteModal = (secret: SecretKind) => {
   return createDeleteModalLauncher(secret.kind)({

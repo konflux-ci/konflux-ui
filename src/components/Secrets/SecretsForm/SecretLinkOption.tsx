@@ -2,8 +2,8 @@ import React from 'react';
 import { RadioGroupField } from 'formik-pf';
 import { SECRET_LINK_OPTION_HELP_TEXT } from '~/consts/secrets';
 import { CurrentComponentRef } from '~/types';
+import { SecretForComponentOption } from '~/utils/secret-utils';
 import HelpPopover from '../../HelpPopover';
-import { SecretForComponentOption } from '../utils/secret-utils';
 import { ComponentSelector } from './ComponentSelector';
 
 import './SecretLinkOptionForm.scss';

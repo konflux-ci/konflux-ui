@@ -45,6 +45,9 @@ jobs:
       - name: Lint ✅
         run: yarn lint
 
+      - name: Lint Restricted Imports ✅
+        run: yarn lint:restricted-imports
+
       - name: Type Checking
         run: yarn type-checks
 

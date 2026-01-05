@@ -1,11 +1,11 @@
+import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '~/consts/pipeline';
 import { MAX_ANNOTATION_LENGTH } from '~/consts/secrets';
+import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '~/k8s';
 import { ComponentModel } from '~/models';
 import { SecretModel } from '~/models/secret';
+import { ServiceAccountModel } from '~/models/service-account';
 import { processWithPLimit } from '~/shared/utils/retry-batch-utils';
-import { COMMON_SECRETS_LABEL, PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../../../consts/pipeline';
-import { K8sQueryPatchResource, K8sGetResource, K8sListResourceItems } from '../../../k8s';
-import { ServiceAccountModel } from '../../../models/service-account';
-import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '../../../types';
+import { ComponentKind, LinkableSecretType, SecretKind, ServiceAccountKind } from '~/types';
 import {
   isImagePullSecret,
   SecretForComponentOption,

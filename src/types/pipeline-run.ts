@@ -1,4 +1,4 @@
-import { ObjectMetadata } from '../shared/components/types';
+import { ObjectMetadata } from './common-types';
 import { TektonResultsRun } from './coreTekton';
 import { K8sResourceCommon } from './k8s';
 import { PipelineKind, PipelineSpec, WhenExpression } from './pipeline';

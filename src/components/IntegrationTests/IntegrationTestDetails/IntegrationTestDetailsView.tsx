@@ -11,8 +11,8 @@ import {
 } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import { useModalLauncher } from '../../modal/ModalProvider';
 import { integrationTestDeleteModalAndNavigate } from '../IntegrationTestsListView/useIntegrationTestActions';

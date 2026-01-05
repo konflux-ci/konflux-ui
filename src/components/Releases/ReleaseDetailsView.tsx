@@ -9,7 +9,7 @@ import {
 } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
 
 const ReleaseDetailsView: React.FC = () => {

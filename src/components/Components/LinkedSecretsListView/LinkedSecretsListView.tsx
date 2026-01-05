@@ -28,7 +28,7 @@ import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState'
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { SecretKind } from '../../../types';
-import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';

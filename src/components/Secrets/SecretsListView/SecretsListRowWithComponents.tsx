@@ -7,12 +7,12 @@ import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { HttpError } from '~/k8s/error';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SecretKind } from '~/types';
+import { getSecretRowLabels, getSecretTypetoLabel } from '~/utils/secret-utils';
+import { isLinkableSecret } from '~/utils/service-account-utils';
 import { BackgroundJobStatus, useTaskStore } from '~/utils/task-store';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { useSecretActions } from '../secret-actions';
-import { getSecretRowLabels, getSecretTypetoLabel } from '../utils/secret-utils';
-import { isLinkableSecret } from '../utils/service-account-utils';
 import { SecretLabels } from './SecretLabels';
 import { secretsTableColumnClasses } from './SecretsListHeaderWithComponents';
 

@@ -3,6 +3,12 @@ import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
+import {
+  supportedPartnerTasksSecrets,
+  getSupportedPartnerTaskKeyValuePairs,
+  isPartnerTask,
+  SecretForComponentOption,
+} from '~/utils/secret-utils';
 import { DropdownItemObject } from '../../shared/components/dropdown';
 import KeyValueFileInputField from '../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import SelectInputField from '../../shared/components/formik-fields/SelectInputField';
@@ -19,12 +25,6 @@ import { ImagePullSecretForm } from './SecretsForm/ImagePullSecretForm';
 import { SecretLinkOptions } from './SecretsForm/SecretLinkOption';
 import { SourceSecretForm } from './SecretsForm/SourceSecretForm';
 import SecretTypeSelector from './SecretTypeSelector';
-import {
-  supportedPartnerTasksSecrets,
-  getSupportedPartnerTaskKeyValuePairs,
-  isPartnerTask,
-  SecretForComponentOption,
-} from './utils/secret-utils';
 
 type SecretFormProps = RawComponentProps & {
   existingSecrets: BuildTimeSecret[];

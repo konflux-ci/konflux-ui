@@ -1,5 +1,11 @@
-import * as k8sModule from '../../../k8s';
-import { SecretModel } from '../../../models';
+import { mockSecret } from '../../components/Secrets/__data__/mock-secrets';
+import {
+  sampleImagePullSecret,
+  sampleOpaqueSecret,
+  sampleRemoteSecrets,
+} from '../../components/Secrets/__tests___/secret-data';
+import * as k8sModule from '../../k8s';
+import { SecretModel } from '../../models';
 import {
   AddSecretFormValues,
   ImagePullSecretType,
@@ -9,8 +15,7 @@ import {
   SecretType,
   SecretTypeDropdownLabel,
   SourceSecretType,
-} from '../../../types';
-import { mockSecret } from '../__data__/mock-secrets';
+} from '../../types';
 import {
   createSecretResource,
   getAnnotationForSecret,
@@ -29,12 +34,11 @@ import {
   getSecretRowLabels,
   getSecretTypetoLabel,
   patchCommonSecretLabel,
-} from '../utils/secret-utils';
-import { sampleImagePullSecret, sampleOpaqueSecret, sampleRemoteSecrets } from './secret-data';
+} from '../secret-utils';
 
 // Create a manual mock for K8sQueryPatchResource
-jest.mock('../../../k8s', () => {
-  const actual = jest.requireActual('../../../k8s');
+jest.mock('../../k8s', () => {
+  const actual = jest.requireActual('../../k8s');
   return {
     ...actual,
     K8sQueryPatchResource: jest.fn(),

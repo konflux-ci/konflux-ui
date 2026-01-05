@@ -15,7 +15,7 @@ import {
   TASKRUN_DETAILS_PATH,
 } from '../../routes/paths';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
 import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';

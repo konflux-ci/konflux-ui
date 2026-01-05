@@ -13,11 +13,11 @@ import {
 } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../../../utils/breadcrumb-utils';
 import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
 import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';

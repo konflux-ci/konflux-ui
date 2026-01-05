@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { filterLinkedServiceAccounts } from '~/components/Secrets/utils/service-account-utils';
 import { LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { useK8sWatchResource } from '~/k8s';
 import { ServiceAccountGroupVersionKind, ServiceAccountModel } from '~/models';
 import { SecretKind, ServiceAccountKind } from '~/types';
+import { filterLinkedServiceAccounts } from '~/utils/service-account-utils';
 import { BackgroundJobStatus } from '~/utils/task-store';
 
 export const useLinkedServiceAccounts = (namespace: string, secert: SecretKind, watch: boolean) => {
