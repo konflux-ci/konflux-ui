@@ -308,6 +308,7 @@ const LogViewer: React.FC<Props> = ({
               height={viewerHeight}
               theme={logTheme}
               scrollToRow={scrolledRow}
+              language="log"
               onScroll={(onScrollProps) => {
                 const { scrollDirection: logViewerScrollDirection, scrollUpdateWasRequested } =
                   onScrollProps;

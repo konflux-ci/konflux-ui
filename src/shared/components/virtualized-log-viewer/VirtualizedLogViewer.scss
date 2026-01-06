@@ -12,6 +12,37 @@
 
 .pf-v5-c-log-viewer__text {
   white-space: pre; // Override PatternFly's break-spaces for better virtualization
+
+  // Log syntax highlighting using PatternFly semantic color variables
+  .level-error {
+    color: var(--pf-v5-global--danger-color--100);
+    font-weight: bold;
+  }
+
+  .level-warn {
+    color: var(--pf-v5-global--warning-color--100);
+  }
+
+  .result-success {
+    color: var(--pf-v5-global--success-color--100);
+    font-weight: bold;
+  }
+
+  .result-failure {
+    color: var(--pf-v5-global--danger-color--100);
+    font-weight: bold;
+  }
+
+  .key-value {
+    .key {
+      color: var(--pf-v5-global--link--Color);
+      font-weight: 500;
+    }
+
+    .value {
+      color: var(--pf-v5-global--Color--200);
+    }
+  }
 }
 
 // Line number gutter

@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
+import { Language, themes } from 'prism-react-renderer';
 import { LineNumberGutter } from './LineNumberGutter';
 import { useLineSelection } from './useLineSelection';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
@@ -20,6 +21,7 @@ export interface VirtualizedLogViewerProps {
   theme?: 'light' | 'dark';
   className?: string;
   hasLineNumbers?: boolean; // Show line numbers with hash navigation
+  language?: Language; // Language for syntax highlighting
 }
 
 /**
@@ -27,7 +29,11 @@ export interface VirtualizedLogViewerProps {
  *
  * Features:
  * - Uses react-window for virtualization
- * - Renders plain text (no syntax highlighting yet)
+ * - Syntax highlighting with prism-react-renderer
+ *   - Built-in support for code languages (js, yaml, json, etc.)
+ *   - Custom 'log' language for log files (timestamps, levels, key-value pairs)
+ * - Line numbers with hash navigation (#L10, #L10-L20)
+ * - Search functionality with PatternFly LogViewerSearch
  * - Drop-in replacement for PatternFly LogViewer
  */
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
@@ -39,6 +45,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   theme = 'dark',
   className = '',
   hasLineNumbers = true,
+  language,
 }) => {
   // Get search context from parent
   const toolbarContext = React.useContext(LogViewerToolbarContext);
@@ -53,6 +60,12 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   const [itemSize, setItemSize] = React.useState(20);
 
   const lineCount = React.useMemo(() => data.split('\n').length, [data]);
+
+  // Select Prism theme based on theme prop
+  const prismTheme = React.useMemo(() => {
+    if (!language) return undefined;
+    return theme === 'dark' ? themes.vsDark : themes.vsLight;
+  }, [theme, language]);
 
   // Determine effective scroll row based on hash selection, search, or prop
   const effectiveScrollToRow = React.useMemo(() => {
@@ -115,6 +128,8 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
             currentSearchMatch={rowInFocus}
             selectedLines={selectedLines}
             onItemSizeMeasured={setItemSize}
+            language={language}
+            prismTheme={prismTheme}
           />
         </div>
       </div>

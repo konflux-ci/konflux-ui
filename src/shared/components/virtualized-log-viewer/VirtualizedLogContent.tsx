@@ -1,5 +1,56 @@
 import React from 'react';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { Highlight, Language, PrismTheme, Prism } from 'prism-react-renderer';
+import type { Grammar } from 'prismjs';
+
+// Define custom log language for Prism
+(Prism.languages as Record<string, Grammar>).log = {
+  // Key-value pairs must come first to match before other rules
+  'key-value': {
+    pattern: /(^|[\s])(-{0,2}\w+)=(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s=]+)/,
+    greedy: true,
+    lookbehind: true,
+    inside: {
+      key: {
+        pattern: /^-{0,2}\w+/,
+        alias: 'attr-name',
+      },
+      punctuation: /=/,
+      value: {
+        pattern: /(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^\s=]+)$/,
+        alias: 'string',
+      },
+    },
+  },
+  timestamp: {
+    pattern: /\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/,
+    alias: 'number',
+  },
+  'level-error': {
+    pattern: /\b(?:ERROR|FATAL|CRITICAL|FAIL|Failed|failed)\b/,
+    alias: 'important',
+  },
+  'level-warn': {
+    pattern: /\b(?:WARN|WARNING|CAUTION)\b/,
+    alias: 'warning',
+  },
+  'level-info': {
+    pattern: /\b(?:INFO|INF|INFORMATION)\b/,
+    alias: 'keyword',
+  },
+  'level-debug': {
+    pattern: /\b(?:DEBUG|DBG|TRACE|VERBOSE)\b/,
+    alias: 'comment',
+  },
+  'result-success': {
+    pattern: /\b(?:PASSED|PASS|SUCCESS|SUCCESSFUL|OK)\b/,
+    alias: 'inserted',
+  },
+  'result-failure': {
+    pattern: /\b(?:FAILED|FAILURE)\b/,
+    alias: 'deleted',
+  },
+};
 
 interface SearchedWord {
   rowIndex: number;
@@ -20,6 +71,8 @@ export interface VirtualizedLogContentProps {
   currentSearchMatch?: SearchedWord;
   selectedLines?: { start: number; end: number } | null;
   onItemSizeMeasured?: (size: number) => void;
+  language?: Language; // Language for syntax highlighting
+  prismTheme?: PrismTheme; // Prism theme object for syntax highlighting
 }
 
 interface RowData {
@@ -29,11 +82,21 @@ interface RowData {
   escapedSearchText?: string;
   searchRegex?: RegExp;
   selectedLines?: { start: number; end: number } | null;
+  language?: Language;
+  prismTheme?: PrismTheme;
 }
 
 const Row: React.FC<ListChildComponentProps<RowData>> = ({ index, style, data }) => {
   const line = data.lines[index];
-  const { searchText, currentSearchMatch, escapedSearchText, searchRegex, selectedLines } = data;
+  const {
+    searchText,
+    currentSearchMatch,
+    escapedSearchText,
+    searchRegex,
+    selectedLines,
+    language,
+    prismTheme,
+  } = data;
   const lineNumber = index + 1;
 
   const isLineSelected =
@@ -45,8 +108,66 @@ const Row: React.FC<ListChildComponentProps<RowData>> = ({ index, style, data })
     [escapedSearchText],
   );
 
-  // Highlight search matches
+  // Render line with syntax highlighting and search matches
   const renderLine = () => {
+    // Apply syntax highlighting if language and theme are specified
+    if (language && prismTheme) {
+      return (
+        <Highlight theme={prismTheme} code={line} language={language}>
+          {({ tokens, getTokenProps }) => {
+            // If no search text, just render highlighted tokens
+            if (!searchText || searchText.length < 2 || !escapedSearchText || !searchRegex) {
+              return (
+                <span className="pf-v5-c-log-viewer__text">
+                  {tokens[0]?.map((token, i) => <span key={i} {...getTokenProps({ token })} />)}
+                </span>
+              );
+            }
+
+            // With search: apply search highlighting on top of syntax highlighting
+            let matchIndexInLine = 1;
+
+            return (
+              <span className="pf-v5-c-log-viewer__text">
+                {tokens[0]?.map((token, i) => {
+                  const { style: tokenStyle, ...otherProps } = getTokenProps({ token });
+                  const content = token.content;
+                  const parts: string[] = content.split(searchRegex);
+
+                  if (parts.length === 1) {
+                    return <span key={i} style={tokenStyle} {...otherProps} />;
+                  }
+
+                  return (
+                    <span key={i} style={tokenStyle}>
+                      {parts.map((part: string, j) => {
+                        if (testRegex && testRegex.test(part)) {
+                          const isCurrentMatch =
+                            currentSearchMatch?.rowIndex === index &&
+                            currentSearchMatch?.matchIndex === matchIndexInLine;
+                          matchIndexInLine++;
+                          return (
+                            <mark
+                              key={j}
+                              className={`pf-v5-c-log-viewer__string pf-m-match ${isCurrentMatch ? 'pf-m-current' : ''}`}
+                            >
+                              {part}
+                            </mark>
+                          );
+                        }
+                        return <span key={j}>{part}</span>;
+                      })}
+                    </span>
+                  );
+                })}
+              </span>
+            );
+          }}
+        </Highlight>
+      );
+    }
+
+    // No syntax highlighting: plain text with search highlighting
     if (!searchText || searchText.length < 2 || !escapedSearchText || !searchRegex || !testRegex) {
       return <span className="pf-v5-c-log-viewer__text">{line}</span>;
     }
@@ -97,6 +218,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   currentSearchMatch,
   selectedLines,
   onItemSizeMeasured,
+  language,
+  prismTheme,
 }) => {
   const listRef = React.useRef<FixedSizeList>(null);
   const prevScrollOffset = React.useRef<number>(0);
@@ -165,6 +288,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     escapedSearchText,
     searchRegex,
     selectedLines,
+    language,
+    prismTheme,
   };
 
   return (
