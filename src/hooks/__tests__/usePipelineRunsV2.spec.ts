@@ -2,6 +2,7 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { HttpError } from '~/k8s/error';
 import {
   useKubearchiveGetResourceQuery,
   useKubearchiveListResourceQuery,
@@ -180,10 +181,12 @@ describe('usePipelineRunV2', () => {
   describe('tekton data source fallback', () => {
     beforeEach(() => {
       // No cluster data available and kubearchive disabled
+      const error404 = HttpError.fromCode(404);
       mockUseK8sWatchResource.mockReturnValue({
         data: null,
         isLoading: false,
-        error: null,
+        error: error404,
+        isError: true,
       });
       mockUseIsOnFeatureFlag.mockReturnValue(false);
       mockUseKubearchiveGetResourceQuery.mockReturnValue({
@@ -246,6 +249,112 @@ describe('usePipelineRunV2', () => {
         }),
         PipelineRunModel,
         { enabled: false, staleTime: Infinity }, // queryOptions
+      );
+    });
+  });
+
+  describe('404 error handling', () => {
+    beforeEach(() => {
+      mockUseIsOnFeatureFlag.mockReturnValue(false);
+      mockUseKubearchiveGetResourceQuery.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: null,
+      });
+    });
+
+    it('should only enable tekton query when cluster returns 404 error', () => {
+      const error404 = HttpError.fromCode(404);
+
+      // cluster returns 404
+      mockUseK8sWatchResource.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: error404,
+        isError: true,
+      });
+
+      mockUseTRPipelineRuns.mockReturnValue([
+        [mockPipelineRun],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      renderHook(() => usePipelineRunV2('test-ns', 'test-pipeline-run'));
+
+      // should call tekton with namespace (enabled because of 404)
+      expect(mockUseTRPipelineRuns).toHaveBeenCalledWith(
+        'test-ns',
+        expect.objectContaining({
+          filter: expect.any(String),
+          limit: 1,
+        }),
+        expect.any(Object),
+      );
+    });
+
+    it('should return cluster data when available and no 404 error', () => {
+      mockUseK8sWatchResource.mockReturnValue({
+        data: mockPipelineRun,
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRPipelineRuns.mockReturnValue([
+        [mockPipelineRun],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      const { result } = renderHook(() => usePipelineRunV2('test-ns', 'test-pipeline-run'));
+
+      expect(result.current[0]).toBe(mockPipelineRun);
+    });
+
+    it('should enable kubearchive query when cluster returns 404 error and kubearchive is enabled', () => {
+      const error404 = HttpError.fromCode(404);
+      mockUseIsOnFeatureFlag.mockReturnValue(true);
+
+      // cluster returns 404
+      mockUseK8sWatchResource.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: error404,
+        isError: true,
+      });
+
+      mockUseKubearchiveGetResourceQuery.mockReturnValue({
+        data: mockPipelineRun,
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRPipelineRuns.mockReturnValue([
+        [],
+        true,
+        null,
+        null,
+        { hasNextPage: false, isFetchingNextPage: false },
+        jest.fn(),
+      ]);
+
+      renderHook(() => usePipelineRunV2('test-ns', 'test-pipeline-run'));
+
+      // should enable kubearchive query when 404 error
+      expect(mockUseKubearchiveGetResourceQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          groupVersionKind: expect.any(Object),
+          namespace: 'test-ns',
+          name: 'test-pipeline-run',
+        }),
+        PipelineRunModel,
+        expect.objectContaining({ enabled: true }),
       );
     });
   });

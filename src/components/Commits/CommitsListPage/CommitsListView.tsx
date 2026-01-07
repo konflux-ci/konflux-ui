@@ -12,6 +12,7 @@ import {
   PipelineRunLabel,
   PipelineRunType,
   RUN_STATUS_PRIORITY,
+  runStatus,
 } from '../../../consts/pipelinerun';
 import { useApplication } from '../../../hooks/useApplications';
 import { useComponents } from '../../../hooks/useComponents';
@@ -21,9 +22,9 @@ import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { Commit } from '../../../types';
-import { getCommitsFromPLRs, statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { Commit, PipelineRunKind } from '../../../types';
+import { getCommitsFromPLRs, getCommitSha, statuses } from '../../../utils/commits-utils';
+import { getCommitStatusFromPipelineRuns } from '../commit-status';
 import CommitsEmptyState from '../CommitsEmptyState';
 import {
   CommitColumnKeys,
@@ -34,18 +35,21 @@ import {
 } from './commits-columns-config';
 import { getCommitsListHeaderWithColumns } from './CommitsListHeader';
 import CommitsListRow from './CommitsListRow';
-
 interface CommitsListViewProps {
   applicationName?: string;
   componentName?: string;
 }
 
-const getSortCommitFunction = (key: string, activeSortDirection: SortByDirection) => {
+const getSortCommitFunction = (
+  key: string,
+  activeSortDirection: SortByDirection,
+  commitStatusMap: Record<string, runStatus>,
+) => {
   switch (key) {
     case 'status':
       return (a: Commit, b: Commit) => {
-        const aStatus = pipelineRunStatus(a.pipelineRuns?.[0]);
-        const bStatus = pipelineRunStatus(b.pipelineRuns?.[0]);
+        const aStatus = commitStatusMap[a.sha];
+        const bStatus = commitStatusMap[b.sha];
 
         // Use centralized priority values, default to high number for unknown statuses
         const aValue = RUN_STATUS_PRIORITY[aStatus] || 999;
@@ -85,7 +89,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [SortableHeaders.status]: '', // Status column uses custom priority-based sorting
   };
 
-  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.name);
+  const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.committedAt);
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
     SortByDirection.desc,
   );
@@ -117,17 +121,11 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   // filter to only BUILD type PLRs for the list display
   const buildPipelineRuns = React.useMemo(() => {
     return (
-      pipelineRuns
-        ?.filter((plr) =>
-          componentName
-            ? componentName === plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]
-            : true,
-        )
-        ?.filter(
-          (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
-        ) || []
+      pipelineRuns?.filter(
+        (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+      ) || []
     );
-  }, [componentName, pipelineRuns]);
+  }, [pipelineRuns]);
 
   const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
   const componentNames = React.useMemo(
@@ -149,15 +147,46 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [loaded, buildPipelineRuns],
   );
 
+  const commitPipelineRunMap = React.useMemo<Record<string, PipelineRunKind[]>>(
+    () =>
+      allPipelineRunsFilteredByComponents.reduce(
+        (acc, plr) => {
+          const sha = getCommitSha(plr);
+          if (sha) {
+            if (!acc[sha]) {
+              acc[sha] = [];
+            }
+            acc[sha].push(plr);
+          }
+          return acc;
+        },
+        {} as Record<string, PipelineRunKind[]>,
+      ),
+    [allPipelineRunsFilteredByComponents],
+  );
+
+  const commitStatusMap = React.useMemo<Record<string, runStatus>>(
+    () =>
+      Object.entries(commitPipelineRunMap).reduce(
+        (acc, [sha, commitPipelineRuns]) => {
+          acc[sha] = getCommitStatusFromPipelineRuns(commitPipelineRuns);
+          return acc;
+        },
+        {} as Record<string, runStatus>,
+      ),
+    [commitPipelineRunMap],
+  );
+
   const statusFilterObj = React.useMemo(
-    () => createFilterObj(commits, (c) => pipelineRunStatus(c.pipelineRuns[0]), statuses),
-    [commits],
+    () => createFilterObj(commits, (c) => commitStatusMap[c.sha] || runStatus.Unknown, statuses),
+    [commits, commitStatusMap],
   );
 
   const filteredCommits = React.useMemo(
     () =>
-      commits.filter(
-        (commit) =>
+      commits.filter((commit) => {
+        const commitStatus = commitStatusMap[commit.sha] || runStatus.Unknown;
+        return (
           (!nameFilter ||
             commit.sha.indexOf(nameFilter) !== -1 ||
             commit.components.some(
@@ -167,10 +196,10 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               .toLowerCase()
               .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
             commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
-          (!statusFilter.length ||
-            statusFilter.includes(pipelineRunStatus(commit.pipelineRuns[0]))),
-      ),
-    [commits, nameFilter, statusFilter],
+          (!statusFilter.length || statusFilter.includes(commitStatus))
+        );
+      }),
+    [commits, nameFilter, statusFilter, commitStatusMap],
   );
 
   // Default sorted commits using useSortedResources for standard columns
@@ -185,13 +214,19 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   const sortedCommits = React.useMemo(() => {
     if (activeSortIndex === SortableHeaders.status) {
       // Status column uses custom priority-based sorting
-      const customSortFn = getSortCommitFunction('status', activeSortDirection);
+      const customSortFn = getSortCommitFunction('status', activeSortDirection, commitStatusMap);
       return [...filteredCommits].sort(customSortFn);
     }
 
     // All other columns use standard sorting
     return defaultSortedCommits;
-  }, [filteredCommits, activeSortIndex, activeSortDirection, defaultSortedCommits]);
+  }, [
+    filteredCommits,
+    activeSortIndex,
+    activeSortDirection,
+    defaultSortedCommits,
+    commitStatusMap,
+  ]);
 
   const NoDataEmptyMessage = () => <CommitsEmptyState applicationName={applicationName} />;
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
@@ -263,13 +298,16 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         Toolbar={DataToolbar}
         aria-label="Commit List"
         Header={CommitsListHeaderWithSorting}
-        Row={(props) => (
-          <CommitsListRow
-            obj={props.obj as Commit}
-            visibleColumns={visibleColumns}
-            pipelineRuns={allPipelineRunsFilteredByComponents}
-          />
-        )}
+        Row={(props) => {
+          const commit = props.obj as Commit;
+          return (
+            <CommitsListRow
+              obj={props.obj as Commit}
+              visibleColumns={visibleColumns}
+              status={commitStatusMap[commit.sha] || runStatus.Unknown}
+            />
+          );
+        }}
         loaded={loaded && !(hasNextPage && buildPipelineRuns?.length === 0)}
         getRowProps={(obj: Commit) => ({
           id: obj.sha,

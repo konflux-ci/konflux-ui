@@ -28,6 +28,11 @@ export enum PipelineRunLabel {
   CREATE_SNAPSHOT_STATUS = 'test.appstudio.openshift.io/create-snapshot-status',
   RELEASE_NAMESPACE = 'release.appstudio.openshift.io/namespace',
 
+  TEST_COMMIT_USER_LABEL = 'pac.test.appstudio.openshift.io/sender',
+  TEST_REPOSITORY_NAME = 'pac.test.appstudio.openshift.io/url-repository',
+  TEST_REPO_ORG_LABEL = 'pac.test.appstudio.openshift.io/url-org',
+  TEST_COMMIT_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
+  TEST_COMMIT_PROVIDER_LABEL = 'pac.test.appstudio.openshift.io/git-provider',
   TEST_SERVICE_COMMIT = 'pac.test.appstudio.openshift.io/sha',
   TEST_SERVICE_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
   TEST_SERVICE_SCENARIO = 'test.appstudio.openshift.io/scenario',

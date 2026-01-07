@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { InfiniteData } from '@tanstack/react-query';
-import { uniqBy } from 'lodash-es';
+import { differenceBy, uniqBy } from 'lodash-es';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { TQueryInfiniteOptions } from '~/k8s/query/type';
 import { WatchK8sResource } from '~/types/k8s';
@@ -32,37 +32,68 @@ export const useTaskRunsV2 = (
   queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
   const enableKubearchive = useIsOnFeatureFlag('taskruns-kubearchive');
+  const etcdRunsRef = React.useRef<TaskRunKind[]>([]);
+
+  const watchOptions = React.useMemo<WatchK8sResource | null>(() => {
+    etcdRunsRef.current = [];
+
+    if (!namespace) {
+      return null;
+    }
+
+    return {
+      groupVersionKind: TaskRunGroupVersionKind,
+      namespace,
+      isList: true,
+      selector: options?.selector,
+      fieldSelector: options?.fieldSelector,
+      watch: options?.watch !== false,
+    };
+  }, [namespace, options?.selector, options?.fieldSelector, options?.watch]);
 
   // Live cluster data - always fetched for consistency
   const {
     data: clusterResources,
     isLoading: clusterLoading,
     error: clusterError,
-  } = useK8sWatchResource<TaskRunKind[]>(
-    namespace
-      ? {
-          groupVersionKind: TaskRunGroupVersionKind,
-          namespace,
-          isList: true,
-          selector: options?.selector,
-          fieldSelector: options?.fieldSelector,
-          watch: options?.watch !== false,
-        }
-      : null,
-    TaskRunModel,
-    { retry: false },
-  );
+  } = useK8sWatchResource<TaskRunKind[]>(watchOptions, TaskRunModel, { retry: false });
+
+  const etcdRuns = React.useMemo((): TaskRunKind[] => {
+    if (clusterLoading || clusterError || !clusterResources) {
+      return [];
+    }
+
+    return clusterResources;
+  }, [clusterLoading, clusterError, clusterResources]);
+
+  const runs = React.useMemo((): TaskRunKind[] => {
+    if (!etcdRuns) {
+      return etcdRuns;
+    }
+
+    const combinedRuns =
+      etcdRunsRef.current.length > 0
+        ? [
+            ...etcdRuns,
+            ...differenceBy(etcdRunsRef.current, etcdRuns, (taskRun) => taskRun.metadata?.uid),
+          ]
+        : etcdRuns;
+
+    return combinedRuns;
+  }, [etcdRuns]);
+
+  etcdRunsRef.current = runs;
 
   // Process cluster data with sorting (no limit applied yet)
   const processedClusterData = React.useMemo(() => {
-    if (clusterLoading || clusterError || !clusterResources) return [];
+    if (clusterLoading || clusterError || !runs) return [];
 
-    const sorted = [...clusterResources].sort((a, b) =>
+    const sorted = [...runs].sort((a, b) =>
       (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
     );
 
     return sorted;
-  }, [clusterResources, clusterLoading, clusterError]);
+  }, [runs, clusterLoading, clusterError]);
 
   // should query when there is no limit or no enough data in cluster or cluster meets error
   const needsMoreData =
@@ -287,7 +318,7 @@ export const useTaskRunV2 = (
   );
 
   return React.useMemo(() => {
-    if (k8sQuery.data) {
+    if (k8sQuery.data && !is404Error) {
       return [k8sQuery.data, !k8sQuery.isLoading, k8sQuery.error];
     }
 
@@ -316,6 +347,7 @@ export const useTaskRunV2 = (
     k8sQuery.data,
     k8sQuery.isLoading,
     k8sQuery.error,
+    is404Error,
     isKubeArchiveOn,
     tektonResultsQuery,
     kubearchiveQuery.data,
