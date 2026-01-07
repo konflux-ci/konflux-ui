@@ -255,7 +255,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
       <TextContent>
         <Text component={TextVariants.p}>
           A component is an image built from source code in a repository. One or more components
-          that run together form an application.
+          that run together form an application. This is a test.
         </Text>
       </TextContent>
       {pipelineRunsLoaded && pipelineRunsError ? (
