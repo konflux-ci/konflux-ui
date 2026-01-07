@@ -3,6 +3,7 @@ import type { Monaco } from '@monaco-editor/react';
 import { Language } from '@patternfly/react-code-editor';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { stringify as yamlStringify } from 'yaml';
+import { getErrorState } from '../../utils/error-utils';
 import { CodeEditor, type Props as CodeEditorProps } from './CodeEditor';
 import { useSwaggerDefinitions } from './hooks/useSwaggerDefinitions';
 import { registerYAMLinMonaco } from './monaco';
@@ -12,7 +13,7 @@ type Props = Omit<CodeEditorProps, 'code' | 'onEditorDidMount'> & {
 };
 
 export const YAMLCodeEditor: React.FC<Props> = ({ code, ...props }) => {
-  const { data: swaggerDefinitions, isLoading } = useSwaggerDefinitions();
+  const { data: swaggerDefinitions, isLoading, error } = useSwaggerDefinitions();
 
   const [monacoInstance, setMonacoInstance] = React.useState<Monaco | null>(null);
 
@@ -33,6 +34,10 @@ export const YAMLCodeEditor: React.FC<Props> = ({ code, ...props }) => {
         <Spinner size="lg" />
       </Bullseye>
     );
+  }
+
+  if (error) {
+    return getErrorState(error, !isLoading, 'yaml code editor');
   }
 
   return (
