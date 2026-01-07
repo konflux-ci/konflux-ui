@@ -52,16 +52,22 @@ execute_test() {
     mkdir artifacts
     echo "running tests using image ${TEST_IMAGE}"
 
-    # set COMMIT_INFO_* with fallbacks
+    # set COMMIT_INFO_* environment variables for Cypress Cloud reporting
+    # fallback "logic": explicit env var -> workflow-provided var -> git command
+
+    # SHA: use COMMIT_INFO_SHA if set, otherwise HEAD_SHA (from workflow), otherwise git rev-parse
     COMMIT_INFO_SHA="${COMMIT_INFO_SHA:-${HEAD_SHA}}"
     [[ -z "${COMMIT_INFO_SHA}" ]] && COMMIT_INFO_SHA=$(git rev-parse HEAD 2>/dev/null || echo '')
 
+    # branch: use COMMIT_INFO_BRANCH if set, otherwise SOURCE_BRANCH (PRs) or REF_BRANCH (periodic), otherwise git rev-parse
     COMMIT_INFO_BRANCH="${COMMIT_INFO_BRANCH:-${SOURCE_BRANCH:-${REF_BRANCH}}}"
     [[ -z "${COMMIT_INFO_BRANCH}" ]] && COMMIT_INFO_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')
 
+    # message: use COMMIT_INFO_MESSAGE if set, otherwise fetch from git using SHA
     if [[ -z "${COMMIT_INFO_MESSAGE}" && -n "${COMMIT_INFO_SHA}" ]]; then
         COMMIT_INFO_MESSAGE=$(git log -1 --pretty=format:'%s' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')
     fi
+    # author: use COMMIT_INFO_AUTHOR if set, otherwise fetch from git using SHA
     if [[ -z "${COMMIT_INFO_AUTHOR}" && -n "${COMMIT_INFO_SHA}" ]]; then
         COMMIT_INFO_AUTHOR=$(git log -1 --pretty=format:'%an' "${COMMIT_INFO_SHA}" 2>/dev/null || echo '')
     fi
@@ -85,6 +91,7 @@ execute_test() {
         -e CYPRESS_PROJECT_ID=${CYPRESS_PROJECT_ID} \
         -e CYPRESS_RECORD_KEY=${CYPRESS_RECORD_KEY}"
 
+    # build array of env vars to pass to podman (only include non-empty values)
     COMMIT_ENV_ARGS_ARRAY=()
     [[ -n "${COMMIT_INFO_SHA}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_SHA=${COMMIT_INFO_SHA}")
     [[ -n "${COMMIT_INFO_BRANCH}" ]] && COMMIT_ENV_ARGS_ARRAY+=(-e "COMMIT_INFO_BRANCH=${COMMIT_INFO_BRANCH}")
