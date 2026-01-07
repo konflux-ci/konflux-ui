@@ -7,6 +7,14 @@ import { useSwaggerDefinitions } from '../hooks/useSwaggerDefinitions';
 import { registerYAMLinMonaco } from '../monaco';
 import { YAMLCodeEditor } from '../YAMLCodeEditor';
 
+jest.mock('react-router-dom', () => {
+  const actual = jest.requireActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: jest.fn(() => jest.fn()),
+  };
+});
+
 const mockMonaco: Monaco = {
   languages: {
     getLanguages: () => [{ id: 'yaml' }],
@@ -127,5 +135,83 @@ describe('YAMLCodeEditor', () => {
     const editor = screen.getByTestId('mock-editor');
     expect(editor).toBeInTheDocument();
     expect(registerYAMLinMonaco).not.toHaveBeenCalled();
+  });
+
+  describe('error state handling', () => {
+    it('should display error state when useSwaggerDefinitions returns an error', () => {
+      const errorObject = new Error('Something went wrong');
+      (useSwaggerDefinitions as jest.Mock).mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: errorObject,
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <YAMLCodeEditor code={{ application: 'test-app' }} />
+        </QueryClientProvider>,
+      );
+
+      expect(screen.getByText('Unable to load yaml code editor')).toBeInTheDocument();
+      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+      expect(screen.queryByTestId('mock-editor')).not.toBeInTheDocument();
+      expect(registerYAMLinMonaco).not.toHaveBeenCalled();
+    });
+
+    it('should display error state with 404 error code', () => {
+      const error404 = { code: 404 };
+      (useSwaggerDefinitions as jest.Mock).mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: error404,
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <YAMLCodeEditor code={{ application: 'test-app' }} />
+        </QueryClientProvider>,
+      );
+
+      // 404 errors show NotFoundEmptyState instead
+      expect(screen.getByText('404: Page not found')).toBeInTheDocument();
+      expect(screen.queryByTestId('mock-editor')).not.toBeInTheDocument();
+      expect(registerYAMLinMonaco).not.toHaveBeenCalled();
+    });
+
+    it('should not display error state when loading', () => {
+      const errorWithCode = { code: 500, message: 'Internal Server Error' };
+      (useSwaggerDefinitions as jest.Mock).mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: errorWithCode,
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <YAMLCodeEditor code={{ application: 'test-app' }} />
+        </QueryClientProvider>,
+      );
+
+      // Should show loading spinner, not error state
+      expect(screen.getByRole('progressbar')).toBeVisible();
+      expect(screen.queryByText('Unable to load yaml code editor')).not.toBeInTheDocument();
+    });
+
+    it('should not display error state when there is no error', () => {
+      (useSwaggerDefinitions as jest.Mock).mockReturnValue({
+        data: mockedSwaggerDefinitions,
+        isLoading: false,
+        error: null,
+      });
+
+      render(
+        <QueryClientProvider client={queryClient}>
+          <YAMLCodeEditor code={{ application: 'test-app' }} />
+        </QueryClientProvider>,
+      );
+
+      expect(screen.queryByText('Unable to load yaml code editor')).not.toBeInTheDocument();
+      expect(screen.getByTestId('mock-editor')).toBeInTheDocument();
+    });
   });
 });
