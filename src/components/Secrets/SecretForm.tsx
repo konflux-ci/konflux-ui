@@ -8,7 +8,7 @@ import {
   getSupportedPartnerTaskKeyValuePairs,
   isPartnerTask,
   SecretForComponentOption,
-} from '~/utils/secret-utils';
+} from '~/utils/secrets/secret-utils';
 import { DropdownItemObject } from '../../shared/components/dropdown';
 import KeyValueFileInputField from '../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
 import SelectInputField from '../../shared/components/formik-fields/SelectInputField';

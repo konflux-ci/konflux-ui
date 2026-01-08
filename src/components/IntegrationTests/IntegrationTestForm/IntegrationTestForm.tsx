@@ -6,7 +6,7 @@ import { INTEGRATION_TEST_LIST_PATH } from '@routes/paths';
 import { LEARN_MORE_ABOUT_INTEGRATION_TESTS } from '~/consts/documentation';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ExternalLink, FormFooter } from '../../../shared';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import PageLayout from '../../PageLayout/PageLayout';
 import IntegrationTestSection from './IntegrationTestSection';
 // [TODO]: Refactor form styles from the shared style sheet

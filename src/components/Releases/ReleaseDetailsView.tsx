@@ -14,7 +14,7 @@ import {
 import { RouterParams } from '../../routes/utils';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { releaseRerun } from '../../utils/release-actions';
-import { useApplicationBreadcrumbs } from '../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
 
 const ReleaseDetailsView: React.FC = () => {

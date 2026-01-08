@@ -2,8 +2,8 @@ import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
 import { SECRET_LIST_PATH } from '@routes/paths';
 import { IMAGE_PULL_SECRET_TYPES } from '~/consts/secrets';
-import { K8sQueryCreateResource, K8sQueryPatchResource } from '../k8s';
-import { SecretModel } from '../models';
+import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../k8s';
+import { SecretModel } from '../../models';
 import {
   AddSecretFormValues,
   ImagePullSecretType,
@@ -20,7 +20,7 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   BuildTimeSecret,
-} from '../types';
+} from '../../types';
 
 export { SecretForComponentOption };
 

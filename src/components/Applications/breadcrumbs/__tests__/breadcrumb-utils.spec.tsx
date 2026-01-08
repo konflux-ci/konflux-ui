@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
 import { renderHook } from '@testing-library/react-hooks';
-import { createUseParamsMock } from '../../../utils/test-utils';
+import { createUseParamsMock } from '../../../../utils/test-utils';
 import { useApplicationBreadcrumbs } from '../breadcrumb-utils';
 
 const useParamsMock = createUseParamsMock();

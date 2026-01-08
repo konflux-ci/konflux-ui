@@ -10,7 +10,7 @@ import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
-import { useApplicationBreadcrumbs } from '../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
 

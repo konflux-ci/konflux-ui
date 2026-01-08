@@ -8,24 +8,16 @@ module.exports = {
           // Zone 1: Files in `./src/utils` (excluding test files) may only import from:
           // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`.
           {
-            target: './src/utils/!(__tests__)/**/*',
+            target: ['./src/utils/!(__tests__)/**/*', '!./src/utils/**/__tests__/**/*'],
             from: [
               './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
             ],
             message:
               'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`',
           },
-          // Zone 1b: Non-test files directly in `./src/utils` (like `./src/utils/*.ts`) have the same restrictions.
+          // Zone 1b: Non-test files directly in `./src/utils` (like `./src/utils/*.ts` or `./src/utils/*.tsx`) have the same restrictions.
           {
-            target: './src/utils/*.ts',
-            from: [
-              './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
-            ],
-            message:
-              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`',
-          },
-          {
-            target: './src/utils/*.tsx',
+            target: './src/utils/*.ts?(x)',
             from: [
               './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
             ],

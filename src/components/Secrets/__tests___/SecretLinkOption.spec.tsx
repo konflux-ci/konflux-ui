@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { FormikProvider, useFormik } from 'formik';
 import { SecretLinkOptionLabels } from '~/consts/secrets';
-import { SecretForComponentOption } from '~/utils/secret-utils';
+import { SecretForComponentOption } from '~/utils/secrets/secret-utils';
 import { SecretLinkOptions } from '../SecretsForm/SecretLinkOption';
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {

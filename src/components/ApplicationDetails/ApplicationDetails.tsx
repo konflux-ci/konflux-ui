@@ -13,7 +13,7 @@ import {
 } from '../../routes/paths';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
 import { useAccessReviewForModel } from '../../utils/rbac';
-import { useApplicationBreadcrumbs } from '../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import { useComponentRelationAction } from '../ComponentRelation/useComponentRelationAction';
 import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import DetailsPage from '../DetailsPage/DetailsPage';

@@ -21,8 +21,8 @@ import {
   getSecretObject,
   addSecretWithLinkingComponents,
 } from '../create-utils';
-import { SecretForComponentOption } from '../secret-utils';
-import { linkSecretToServiceAccounts } from '../service-account-utils';
+import { SecretForComponentOption } from '../secrets/secret-utils';
+import { linkSecretToServiceAccounts } from '../service-account/service-account-utils';
 import { mockWindowFetch } from '../test-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
@@ -30,7 +30,7 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   k8sUpdateResource: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('../service-account-utils', () => {
+jest.mock('../service-account/service-account-utils', () => {
   return {
     linkSecretToServiceAccount: jest.fn(),
     linkSecretToBuildServiceAccount: jest.fn(),

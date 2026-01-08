@@ -34,7 +34,7 @@ import {
   getSecretRowLabels,
   getSecretTypetoLabel,
   patchCommonSecretLabel,
-} from '../secret-utils';
+} from '../secrets/secret-utils';
 
 // Create a manual mock for K8sQueryPatchResource
 jest.mock('../../k8s', () => {

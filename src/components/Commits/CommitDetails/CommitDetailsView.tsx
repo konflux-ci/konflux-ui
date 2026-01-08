@@ -11,7 +11,7 @@ import { ACTIVITY_PATH_LATEST_COMMIT, COMMIT_DETAILS_PATH } from '../../../route
 import { RouterParams } from '../../../routes/utils';
 import ErrorEmptyState from '../../../shared/components/empty-state/ErrorEmptyState';
 import { createCommitObjectFromPLR, getCommitShortName } from '../../../utils/commits-utils';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import SidePanelHost from '../../SidePanel/SidePanelHost';
 import { StatusIconWithTextLabel } from '../../topology/StatusIcon';

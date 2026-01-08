@@ -12,7 +12,7 @@ import { COMPONENT_LIST_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/pat
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
 import { createCustomizeComponentPipelineModalLauncher } from '../../CustomizedPipeline/CustomizePipelinesModal';
 import { DetailsPage } from '../../DetailsPage';

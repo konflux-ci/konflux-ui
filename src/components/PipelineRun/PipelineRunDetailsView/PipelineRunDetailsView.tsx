@@ -17,7 +17,7 @@ import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { useApplicationBreadcrumbs } from '../../Applications/breadcrumb-utils';
+import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
 import { StatusIconWithTextLabel } from '../../StatusIcon/StatusIcon';
 import { usePipelinererunAction } from '../PipelineRunListView/pipelinerun-actions';

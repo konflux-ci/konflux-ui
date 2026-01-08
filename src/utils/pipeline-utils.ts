@@ -14,7 +14,7 @@ import {
   TektonResultsRun,
 } from '../types';
 import { GitOpsDeploymentHealthStatus } from '../types/gitops-deployment';
-import { isCVEScanResult, ScanResults } from './scan-utils';
+import { isCVEScanResult, ScanResults } from './scan/scan-utils';
 
 export const COMPONENT_DESC =
   'A component is an image built from code in a source repository. Applications are sets of components that run together on environments.';

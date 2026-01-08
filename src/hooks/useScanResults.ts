@@ -17,7 +17,7 @@ import {
   SCAN_RESULTS,
   CVE_SCAN_RESULT,
   TEKTON_SCAN_RESULTS,
-} from '../utils/scan-utils';
+} from '../utils/scan/scan-utils';
 import { OR } from '../utils/tekton-results';
 import { useTaskRunsForPipelineRuns } from './useTaskRunsV2';
 import { useTRTaskRuns } from './useTektonResults';

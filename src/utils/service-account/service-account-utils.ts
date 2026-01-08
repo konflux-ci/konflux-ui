@@ -10,7 +10,7 @@ import {
   isImagePullSecret,
   SecretForComponentOption,
   patchCommonSecretLabel,
-} from './secret-utils';
+} from '../secrets/secret-utils';
 
 type SecretEntry = { name: string };
 

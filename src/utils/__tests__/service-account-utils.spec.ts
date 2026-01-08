@@ -1,7 +1,7 @@
 import { mockSecret } from '../../components/Secrets/__data__/mock-secrets';
 import { SecretModel, ServiceAccountModel } from '../../models';
 import { SecretKind, SecretType } from '../../types';
-import { SecretForComponentOption } from '../secret-utils';
+import { SecretForComponentOption } from '../secrets/secret-utils';
 import {
   linkCommonSecretsToServiceAccount,
   linkSecretToServiceAccounts,
@@ -9,7 +9,7 @@ import {
   unLinkSecretFromBuildServiceAccount,
   isLinkableSecret,
   updateAnnotateForSecret,
-} from '../service-account-utils';
+} from '../service-account/service-account-utils';
 import { createK8sUtilMock } from '../test-utils';
 
 const imagePullSecret = {

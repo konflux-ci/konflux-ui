@@ -14,8 +14,8 @@ jest.mock('react-router-dom', () => ({
   useNavigate: jest.fn(),
 }));
 
-jest.mock('~/utils/secret-utils', () => {
-  const actual = jest.requireActual('~/utils/secret-utils');
+jest.mock('~/utils/secrets/secret-utils', () => {
+  const actual = jest.requireActual('~/utils/secrets/secret-utils');
   return {
     ...actual,
     getAddSecretBreadcrumbs: jest.fn(undefined),

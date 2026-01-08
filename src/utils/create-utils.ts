@@ -44,13 +44,13 @@ import {
   getLabelsForSecret,
   getSecretFormData,
   SecretForComponentOption,
-} from './secret-utils';
+} from './secrets/secret-utils';
 import {
   addCommonSecretLabelToBuildSecret,
   linkSecretToBuildServiceAccount,
   linkSecretToServiceAccounts,
   updateAnnotateForSecret,
-} from './service-account-utils';
+} from './service-account/service-account-utils';
 import { BackgroundJobStatus, useTaskStore } from './task-store';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();

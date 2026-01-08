@@ -1,4 +1,4 @@
-import { TektonResultsRun } from '../types';
+import { TektonResultsRun } from '../../types';
 
 export const SCAN_RESULT = 'CLAIR_SCAN_RESULT';
 export const SCAN_RESULTS = 'CLAIR_SCAN_RESULTS';
