@@ -8,30 +8,10 @@ import { PipelineRunLabel } from '../consts/pipelinerun';
 import { useNamespace } from '../shared/providers/Namespace';
 import { TektonResourceLabel, TaskRunKind, PipelineRunKind } from '../types';
 import { isTaskV1Beta1 } from '../utils/pipeline-utils';
-import {
-  CVE_SCAN_RESULT_FIELDS,
-  isCVEScanResult,
-  ScanResults,
-  SCAN_OUTPUT,
-  SCAN_RESULT,
-  SCAN_RESULTS,
-  CVE_SCAN_RESULT,
-  TEKTON_SCAN_RESULTS,
-} from '../utils/scan/scan-utils';
+import { CVE_SCAN_RESULT_FIELDS, isCVEScanResult, ScanResults } from '../utils/scan/scan-utils';
 import { OR } from '../utils/tekton-results';
 import { useTaskRunsForPipelineRuns } from './useTaskRunsV2';
 import { useTRTaskRuns } from './useTektonResults';
-
-export {
-  CVE_SCAN_RESULT_FIELDS,
-  isCVEScanResult,
-  SCAN_OUTPUT,
-  SCAN_RESULT,
-  SCAN_RESULTS,
-  CVE_SCAN_RESULT,
-  TEKTON_SCAN_RESULTS,
-};
-export type { ScanResults };
 
 export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKind[]] => {
   const scanResults = taskRuns.reduce(

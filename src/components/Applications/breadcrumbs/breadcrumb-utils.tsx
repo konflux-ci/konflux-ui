@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { BreadcrumbItem } from '@patternfly/react-core';
 import { APPLICATION_DETAILS_PATH, APPLICATION_LIST_PATH } from '@routes/paths';
-import { RouterParams } from '../../../routes/utils';
-import { useNamespace } from '../../../shared/providers/Namespace';
+import { RouterParams } from '@routes/utils';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { ApplicationSwitcher } from '../switcher/ApplicationSwitcher';
 
 export const useApplicationBreadcrumbs = (appDisplayName = null, withLink = true) => {
