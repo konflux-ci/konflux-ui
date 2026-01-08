@@ -3,6 +3,7 @@ const CONDITIONS = {
   KITESERVICE: 'isKiteServiceEnabled',
   STAGING: 'isStagingCluster',
   IMAGE_CONTROLLER: 'isImageControllerEnabled',
+  SYSTEM_NOTIFICATIONS: 'isSystemNotificationsAccessible',
 } as const;
 
 export type ConditionState = Partial<Record<ConditionKey, boolean>>;
