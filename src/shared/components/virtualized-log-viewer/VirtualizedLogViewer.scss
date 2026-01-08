@@ -1,0 +1,6 @@
+// Minimal overrides for virtualized log viewer
+// PatternFly's log-viewer.css provides all other styles including search highlighting
+
+.pf-v5-c-log-viewer__text {
+  white-space: pre; // Override PatternFly's break-spaces for better virtualization
+}
