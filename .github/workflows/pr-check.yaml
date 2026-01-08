@@ -70,6 +70,11 @@ jobs:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
       BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+      # Cypress Cloud commit info
+      COMMIT_INFO_SHA: ${{ github.event.pull_request.head.sha }}
+      COMMIT_INFO_BRANCH: ${{ github.event.pull_request.head.ref }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
+      COMMIT_INFO_AUTHOR: ${{ github.event.pull_request.user.login }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
@@ -80,7 +85,7 @@ jobs:
       SMEE_URL: ${{ secrets.SMEE_URL }}
       CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-      CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      CYPRESS_KONFLUX_BASE_URL: 'https://localhost:9443'
       CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -89,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.repository }}
-          ref: "${{ github.event.pull_request.head.sha }}"
+          ref: '${{ github.event.pull_request.head.sha }}'
 
       - name: Deploy konflux-ci
         id: pr-check-action
