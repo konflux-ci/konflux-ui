@@ -11,7 +11,7 @@ import { global_palette_blue_300 as blueColor } from '@patternfly/react-tokens/d
 import { global_palette_gold_400 as goldColor } from '@patternfly/react-tokens/dist/js/global_palette_gold_400';
 import { global_palette_orange_300 as orangeColor } from '@patternfly/react-tokens/dist/js/global_palette_orange_300';
 import { global_palette_red_200 as redColor } from '@patternfly/react-tokens/dist/js/global_palette_red_200';
-import { ScanResults } from '../../hooks/useScanResults';
+import { ScanResults } from '../../utils/scan/scan-utils';
 
 import './ScanDetailStatus.scss';
 

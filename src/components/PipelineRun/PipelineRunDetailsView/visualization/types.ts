@@ -1,6 +1,6 @@
 import { PipelineNodeModel as PfPipelineNodeModel, WhenStatus } from '@patternfly/react-topology';
 import { runStatus } from '~/consts/pipelinerun';
-import { ScanResults } from '../../../../hooks/useScanResults';
+import { ScanResults } from '~/utils/scan/scan-utils';
 import { PipelineTask, TaskRunKind, TaskRunStatus } from '../../../../types';
 export enum PipelineRunNodeType {
   SPACER_NODE = 'spacer-node',

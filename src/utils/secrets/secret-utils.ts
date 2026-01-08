@@ -2,8 +2,8 @@ import { Base64 } from 'js-base64';
 import { pick } from 'lodash-es';
 import { SECRET_LIST_PATH } from '@routes/paths';
 import { IMAGE_PULL_SECRET_TYPES } from '~/consts/secrets';
-import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../../k8s';
-import { SecretModel } from '../../../models';
+import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../k8s';
+import { SecretModel } from '../../models';
 import {
   AddSecretFormValues,
   ImagePullSecretType,
@@ -12,6 +12,7 @@ import {
   RemoteSecretStatusType,
   SecretByUILabel,
   SecretCondition,
+  SecretForComponentOption,
   SecretKind,
   SecretLabels,
   SecretType,
@@ -19,17 +20,13 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   BuildTimeSecret,
-} from '../../../types';
+} from '../../types';
+
+export { SecretForComponentOption };
 
 export const isImagePullSecret = (secret: SecretKind): boolean => {
   return IMAGE_PULL_SECRET_TYPES.includes(secret.type as (typeof IMAGE_PULL_SECRET_TYPES)[number]);
 };
-
-export enum SecretForComponentOption {
-  none = 'none',
-  all = 'all',
-  partial = 'partial',
-}
 
 export type PartnerTask = {
   type: SecretType;

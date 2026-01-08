@@ -6,38 +6,12 @@ import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { TaskRunGroupVersionKind, TaskRunModel } from '~/models';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { useNamespace } from '../shared/providers/Namespace';
-import { TektonResourceLabel, TaskRunKind, TektonResultsRun, PipelineRunKind } from '../types';
+import { TektonResourceLabel, TaskRunKind, PipelineRunKind } from '../types';
 import { isTaskV1Beta1 } from '../utils/pipeline-utils';
+import { CVE_SCAN_RESULT_FIELDS, isCVEScanResult, ScanResults } from '../utils/scan/scan-utils';
 import { OR } from '../utils/tekton-results';
 import { useTaskRunsForPipelineRuns } from './useTaskRunsV2';
 import { useTRTaskRuns } from './useTektonResults';
-
-export const SCAN_RESULT = 'CLAIR_SCAN_RESULT';
-export const SCAN_RESULTS = 'CLAIR_SCAN_RESULTS';
-export const CVE_SCAN_RESULT = 'CVE_SCAN_RESULT';
-export const TEKTON_SCAN_RESULTS = 'TEKTON_SCAN_RESULTS';
-export const SCAN_OUTPUT = 'SCAN_OUTPUT';
-
-export const CVE_SCAN_RESULT_FIELDS = [
-  SCAN_RESULT,
-  SCAN_RESULTS,
-  CVE_SCAN_RESULT,
-  TEKTON_SCAN_RESULTS,
-  SCAN_OUTPUT,
-];
-
-export const isCVEScanResult = (taskRunResults: TektonResultsRun) =>
-  CVE_SCAN_RESULT_FIELDS.includes(taskRunResults?.name);
-
-export type ScanResults = {
-  vulnerabilities: {
-    critical: number;
-    high: number;
-    medium: number;
-    low: number;
-    unknown: number;
-  };
-};
 
 export const getScanResults = (taskRuns: TaskRunKind[]): [ScanResults, TaskRunKind[]] => {
   const scanResults = taskRuns.reduce(
