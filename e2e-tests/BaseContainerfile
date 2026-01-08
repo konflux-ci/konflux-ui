@@ -1,6 +1,6 @@
-ARG CHROME_VERSION='135.0.7049.52-1'
+ARG CHROME_VERSION='89.0.4389.128-1'
 
-FROM cypress/factory:5.8.0
+FROM cypress/factory:6.5.0
 
 RUN apt update && \
     apt install curl jq python3 python3-venv python3-pip xauth skopeo -y
