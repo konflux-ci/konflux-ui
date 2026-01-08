@@ -53,6 +53,11 @@ const InternalFLAGS = {
     description: 'Enable system notifications badge and notification center',
     defaultEnabled: false,
     status: 'wip',
+    guard: {
+      allOf: ['isSystemNotificationsAccessible'],
+      failureReason: 'You do not have permission to access system notifications',
+      visibleInFeatureFlagPanel: true,
+    },
   },
   'kubearchive-logs': {
     key: 'kubearchive-logs',
