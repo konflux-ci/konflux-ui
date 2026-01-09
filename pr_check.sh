@@ -243,6 +243,9 @@ send_report() {
                 MESSAGE="$MESSAGE STAGE Periodic job"
             fi
             ;;
+        "periodic-cleanup")
+            MESSAGE="$MESSAGE CLEANUP Periodic job"
+            ;;
         *)
             MESSAGE="$MESSAGE Unknown job type: ${JOB_TYPE} ${JOB_URL}"
             ;;
