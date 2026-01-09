@@ -1,5 +1,6 @@
 import { pluralize, Text } from '@patternfly/react-core';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
+import HelpPopover from '~/components/HelpPopover';
 import { ComponentProps } from '~/shared/components/table/Table';
 import { createTableHeaders } from '~/shared/components/table/utils';
 
@@ -10,6 +11,8 @@ export const releaseTableColumnClasses = {
   component: 'pf-m-width-20  pf-m-width-10-on-xl',
   application: 'pf-m-width-20  pf-m-width-10-on-xl',
   releasePlan: 'pf-m-width-20  pf-m-width-10-on-xl',
+  product: 'pf-m-width-20  pf-m-width-10-on-xl',
+  productVersion: 'pf-m-width-20  pf-m-width-10-on-xl',
   namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
   count: 'pf-m-width-10  pf-m-width-5-on-xl',
 } as const;
@@ -52,6 +55,30 @@ const releaseColumns = [
   {
     title: 'Namespace',
     className: releaseTableColumnClasses.namespace,
+  },
+  {
+    title: (
+      <>
+        Product{' '}
+        <HelpPopover
+          headerContent="Product information"
+          bodyContent="If you can't see the values 'Product', it means you don't own the permission to access the release engineering tenant namespace"
+        />
+      </>
+    ),
+    className: releaseTableColumnClasses.product,
+  },
+  {
+    title: (
+      <>
+        Product Version{' '}
+        <HelpPopover
+          headerContent="Product Version information"
+          bodyContent="If you can't see the values 'Product Version', it means you don't own the permission to access the release engineering tenant namespace"
+        />
+      </>
+    ),
+    className: releaseTableColumnClasses.productVersion,
   },
 ] satisfies Parameters<typeof createTableHeaders>[0];
 

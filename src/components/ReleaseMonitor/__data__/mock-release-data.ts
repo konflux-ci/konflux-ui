@@ -15,7 +15,7 @@ export const mockReleases: ReleaseKind[] = [
       namespace: 'namespace-1',
     },
     spec: {
-      releasePlan: 'test-plan',
+      releasePlan: 'test-plan-1',
       snapshot: 'test-snapshot',
     },
     status: {
