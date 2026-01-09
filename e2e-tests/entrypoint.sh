@@ -14,7 +14,7 @@ else
   cd /tmp/e2e
 fi
 
-npx cypress run $args
+npx cypress run --runner-ui $args
 EXIT_CODE=$?
 echo "Tests exited with code $EXIT_CODE. Archiving artifacts."
 
