@@ -1,8 +1,9 @@
+import * as React from 'react';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
 import { HeaderFunc } from './Table';
 
 export type ColumnConfig = {
-  title: string;
+  title: string | React.ReactNode;
   className: string;
   sortable?: boolean;
   style?: React.CSSProperties;

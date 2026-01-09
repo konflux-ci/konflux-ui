@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Alert } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
@@ -422,12 +421,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           productVersionOptions={filterOptions.productVersionOptions}
         />
       )}
-
-      <Alert
-        isInline
-        variant="info"
-        title="If you can't see the values 'Product' and 'Product Version', it means you don't own the permission to access the release engineering tenant namespace"
-      />
 
       <Table
         virtualize
