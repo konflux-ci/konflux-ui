@@ -146,11 +146,15 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     }
   }, [namespaces.length]);
 
-  const handleReleasesLoaded = React.useCallback((ns: string, data: MonitoredReleaseKind[]) => {
-    releasesRef.current[ns] = data;
-    loadedNamespacesRef.current.add(ns);
-    // Don't try to enrich here - wait for ReleasePlans to determine target namespaces first
-  }, []);
+  const handleReleasesLoaded = React.useCallback(
+    (ns: string, data: MonitoredReleaseKind[]) => {
+      releasesRef.current[ns] = data;
+      loadedNamespacesRef.current.add(ns);
+      // Safe to attempt; enrichAndSetReleases() is internally gated on "all loaded"
+      enrichAndSetReleases();
+    },
+    [enrichAndSetReleases],
+  );
 
   const handleError = React.useCallback((err: unknown) => {
     setError(err);
