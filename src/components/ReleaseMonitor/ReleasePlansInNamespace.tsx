@@ -16,14 +16,13 @@ const ReleasePlansInNamespace: React.FC<ReleasePlansInNamespaceProps> = ({
   const [data, loaded, error] = useReleasePlans(namespace);
 
   React.useEffect(() => {
-    if (loaded) {
-      if (error) {
-        onError(error);
-      } else {
-        // Always call the callback when loaded (even if data is falsy)
-        // to prevent parent component from waiting indefinitely
-        onReleasePlansLoaded(namespace, data || []);
-      }
+    if (!loaded) return;
+    if (error) {
+      onError(error);
+    } else {
+      // Always call the callback when loaded (even if data is falsy)
+      // to prevent parent component from waiting indefinitely
+      onReleasePlansLoaded(namespace, data || []);
     }
   }, [data, loaded, error, namespace, onError, onReleasePlansLoaded]);
 

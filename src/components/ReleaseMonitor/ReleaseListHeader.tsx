@@ -1,5 +1,6 @@
 import { pluralize, Text } from '@patternfly/react-core';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
+import HelpPopover from '~/components/HelpPopover';
 import { ComponentProps } from '~/shared/components/table/Table';
 import { createTableHeaders } from '~/shared/components/table/utils';
 
@@ -56,11 +57,27 @@ const releaseColumns = [
     className: releaseTableColumnClasses.namespace,
   },
   {
-    title: 'Product',
+    title: (
+      <>
+        Product{' '}
+        <HelpPopover
+          headerContent="Product information"
+          bodyContent="If you can't see the values 'Product', it means you don't own the permission to access the release engineering tenant namespace"
+        />
+      </>
+    ),
     className: releaseTableColumnClasses.product,
   },
   {
-    title: 'Product Version',
+    title: (
+      <>
+        Product Version{' '}
+        <HelpPopover
+          headerContent="Product Version information"
+          bodyContent="If you can't see the values 'Product Version', it means you don't own the permission to access the release engineering tenant namespace"
+        />
+      </>
+    ),
     className: releaseTableColumnClasses.productVersion,
   },
 ] satisfies Parameters<typeof createTableHeaders>[0];
