@@ -38,22 +38,34 @@ done
 echo "is_authorized: $is_authorized"
 
 if [ "$is_authorized" -eq 1 ]; then
-  REPO_ROOT=$(git rev-parse --show-toplevel)
 
+  REPO_ROOT=$(git rev-parse --show-toplevel)
   check_ai_process_in_repo() {
-    local ai_pattern="$1"
-    for pid in $(pgrep -f "$ai_pattern" || true); do
-      # Only proceed if /proc exists (Linux)
+  local ai_pattern="$1"
+  local os_name=$(uname)
+  local pid
+  local cwd=""
+
+  for pid in $(pgrep -f "$ai_pattern" || true); do
+    if [ "$os_name" == "Linux" ]; then
+      # Linux method: Uses the /proc filesystem
       if [ -d "/proc/$pid" ]; then
         cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null || echo "")
-        if [[ "$cwd" == "$REPO_ROOT"* ]]; then
-          echo "true"
-          return
-        fi
       fi
-    done
-    echo "false"
-  }
+
+    elif [ "$os_name" == "Darwin" ]; then
+      # macOS (Darwin) method: Uses lsof (List Open Files)
+      cwd=$(lsof -a -d cwd -p "$pid" -F n 2>/dev/null | grep '^n' | sed 's/^n//' || echo "")
+    fi
+
+    if [[ -n "$cwd" && "$cwd" == "$REPO_ROOT"* ]]; then
+      echo "true"
+      return
+    fi
+  done
+
+  echo "false"
+}
 
   claude_active=$(check_ai_process_in_repo "claude")
   cursor_active=$(check_ai_process_in_repo "cursor")
