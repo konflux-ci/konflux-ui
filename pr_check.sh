@@ -237,11 +237,14 @@ send_report() {
             MESSAGE="$MESSAGE LOCAL Periodic job"
             ;;
         "periodic-stage")
-            if [ $SUITE == "features" ]; then
+            if [[ $SUITE == "features" ]]; then
                 MESSAGE="$MESSAGE STAGE FEATURES Periodic job"
             else
                 MESSAGE="$MESSAGE STAGE Periodic job"
             fi
+            ;;
+        "periodic-cleanup")
+            MESSAGE="$MESSAGE CLEANUP Periodic job"
             ;;
         *)
             MESSAGE="$MESSAGE Unknown job type: ${JOB_TYPE} ${JOB_URL}"

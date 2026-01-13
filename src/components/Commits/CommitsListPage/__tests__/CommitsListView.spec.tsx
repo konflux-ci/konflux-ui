@@ -1,6 +1,7 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { runStatus } from '~/consts/pipelinerun';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
@@ -25,9 +26,13 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../commit-status', () => ({
-  useCommitStatus: () => ['-', true],
-}));
+jest.mock('../../commit-status', () => {
+  const actual = jest.requireActual('../../commit-status');
+  return {
+    ...actual,
+    useCommitStatus: () => [runStatus.Pending, true, undefined],
+  };
+});
 
 jest.mock('../../../../hooks/useSearchParam', () => ({
   useSearchParamBatch: () => mockUseSearchParamBatch(),
@@ -47,7 +52,7 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         <tbody>
           {props.data.map((d, i) => (
             <tr key={i}>
-              <CommitsListRow obj={d} pipelineRuns={props.pipelineRuns || []} />
+              <CommitsListRow obj={d} status={runStatus.Pending} />
             </tr>
           ))}
         </tbody>
@@ -129,7 +134,7 @@ describe('CommitsListView', () => {
 
   it('renders correct commit data', () => {
     const { getByText, queryByText, container } = renderWithQueryClient(
-      <CommitsListRow obj={commits[0]} pipelineRuns={[]} />,
+      <CommitsListRow obj={commits[0]} status={runStatus.Pending} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
     expect(queryByText('commit1')).toBeInTheDocument();
@@ -233,7 +238,7 @@ describe('CommitsListView', () => {
 
     view.rerender(<CommitsList />);
     expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
-    expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
+    expect(screen.queryByText('#12 test-title-3')).not.toBeInTheDocument();
   });
 
   it('should render skeleton while data is not loaded', () => {

@@ -18,6 +18,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock('../../../Commits/commit-status', () => ({
+  ...jest.requireActual('../../../Commits/commit-status'),
   useCommitStatus: () => ['-', true],
 }));
 
