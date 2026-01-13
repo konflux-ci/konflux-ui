@@ -153,6 +153,7 @@ export type ReleasePlanStatus = {
 export const ReleasePlanLabel = {
   AUTO_RELEASE: 'release.appstudio.openshift.io/auto-release',
   STANDING_ATTRIBUTION: 'release.appstudio.openshift.io/standing-attribution',
+  RELEASE_PLAN_ADMISSION: 'release.appstudio.openshift.io/releasePlanAdmission',
 };
 
 export type ReleaseTarget = {
