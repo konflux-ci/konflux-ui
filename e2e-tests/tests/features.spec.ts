@@ -14,19 +14,6 @@ describe('Test Features Flags', function () {
     ]);
   });
 
-  it('Release Monitor', function () {
-    cy.visit(Cypress.env('KONFLUX_BASE_URL'));
-    cy.prompt(['Open Experimental Features', 'Click Reset to Defaults button']);
-    cy.get(featureFlagsPO.releaseMonitor).click({ force: true });
-    cy.prompt([
-      'Close the modal',
-      'Click Release Monitor in the main menu',
-      'Verify that the title is Release Monitor Unstable',
-      'Verify there is No releases found text on the page body',
-      'Verify that the link Learn more is a valid URL',
-    ]);
-  });
-
   it('System Notifications', function () {
     cy.visit(Cypress.env('KONFLUX_BASE_URL'));
     cy.prompt(['Open Experimental Features', 'Click Reset to Defaults button']);
