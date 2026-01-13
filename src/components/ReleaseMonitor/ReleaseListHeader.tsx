@@ -62,7 +62,7 @@ const releaseColumns = [
         Product{' '}
         <HelpPopover
           headerContent="Product information"
-          bodyContent="If you can't see the values 'Product', it means you don't own the permission to access the release engineering tenant namespace"
+          bodyContent="If you can't see the Product values, it means you don't own the permission to check it or your release data doesn't have this value"
         />
       </>
     ),
@@ -74,7 +74,7 @@ const releaseColumns = [
         Product Version{' '}
         <HelpPopover
           headerContent="Product Version information"
-          bodyContent="If you can't see the values 'Product Version', it means you don't own the permission to access the release engineering tenant namespace"
+          bodyContent="If you can't see the Product Version values, it means you don't own the permission to check it or your release data doesn't have this value"
         />
       </>
     ),
@@ -99,17 +99,17 @@ export const getReleasesListHeader = (
       ...baseHeaders,
       ...(totalCount !== undefined
         ? [
-            {
-              title: (
-                <Text component="small" className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
-                  {pluralize(totalCount, 'release')}
-                </Text>
-              ),
-              props: {
-                className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
-              },
+          {
+            title: (
+              <Text component="small" className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
+                {pluralize(totalCount, 'release')}
+              </Text>
+            ),
+            props: {
+              className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
             },
-          ]
+          },
+        ]
         : []),
     ];
   };
