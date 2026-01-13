@@ -69,9 +69,16 @@ export function useKubearchiveListResourceQuery<
       });
 
       if (!!fullRes?.items?.length && model === PipelineRunModel) {
-        return filterOutStaleRunningPipelineRunsFromArchive(
+        const filteredItems = filterOutStaleRunningPipelineRunsFromArchive(
           fullRes.items as unknown as PipelineRunKind[],
         ) as unknown as T[];
+
+        Object.defineProperty(filteredItems, '_continue', {
+          value: fullRes.metadata?.continue,
+          enumerable: false,
+        });
+
+        return filteredItems;
       }
 
       return fullRes.items;
