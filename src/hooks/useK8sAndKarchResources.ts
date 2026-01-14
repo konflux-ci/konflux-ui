@@ -16,6 +16,10 @@ import {
   WatchK8sResource,
 } from '../types/k8s';
 
+const getResourceId = (resource: K8sResourceCommon): string => {
+  return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
+};
+
 export interface K8sAndKarchResourcesResult<T extends K8sResourceCommon> {
   // Combined data (cluster + archive, deduplicated)
   data: T[];
@@ -50,6 +54,10 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
   model: K8sModelCommon,
   queryOptions?: TQueryOptions<T[]>,
   options?: Partial<RequestInit & { wsPrefix?: string; pathPrefix?: string }>,
+  queryControl?: {
+    enableCluster?: boolean;
+    enableArchive?: boolean;
+  },
 ): K8sAndKarchResourcesResult<T> {
   const listResourceInit = React.useMemo(() => {
     if (!resourceInit) return undefined;
@@ -59,33 +67,56 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
     };
   }, [resourceInit]);
 
-  const clusterQuery = useK8sWatchResource<T[]>(listResourceInit, model, queryOptions, options);
+  const clusterQuery = useK8sWatchResource<T[]>(
+    listResourceInit,
+    model,
+    {
+      ...queryOptions,
+      enabled: queryControl?.enableCluster !== false && queryOptions?.enabled !== false,
+    },
+    options,
+  );
 
-  const archiveQuery = useKubearchiveListResourceQuery(listResourceInit, model);
+  const archiveQuery = useKubearchiveListResourceQuery<T>(listResourceInit, model, {
+    enabled: queryControl?.enableArchive !== false && queryOptions?.enabled !== false,
+  });
 
   // deduplicated data
   const combinedData = React.useMemo(() => {
     const clusterData = clusterQuery.data || [];
     const archivePages = archiveQuery.data?.pages || [];
     const archiveData = archivePages.flat();
+    const shouldIncludeCluster = queryControl?.enableCluster !== false;
+    const shouldIncludeArchive = queryControl?.enableArchive !== false;
 
-    const combined = [...clusterData];
-    const existingIds = new Set(
-      clusterData.map(
-        (item) => item.metadata?.uid || `${item.metadata?.name}-${item.metadata?.namespace}`,
-      ),
-    );
+    const combined: T[] = [];
+    const existingIds = new Set<string>();
 
-    archiveData.forEach((item) => {
-      const id = item.metadata?.uid || `${item.metadata?.name}-${item.metadata?.namespace}`;
-      if (!existingIds.has(id)) {
-        combined.push(item as T);
+    if (shouldIncludeCluster) {
+      clusterData.forEach((item) => {
+        const id = getResourceId(item);
         existingIds.add(id);
-      }
-    });
+        combined.push({ ...item, source: ResourceSource.Cluster });
+      });
+    }
+
+    if (shouldIncludeArchive) {
+      archiveData.forEach((item) => {
+        const id = getResourceId(item);
+        if (!existingIds.has(id)) {
+          existingIds.add(id);
+          combined.push({ ...item, source: ResourceSource.Archive });
+        }
+      });
+    }
 
     return combined;
-  }, [clusterQuery.data, archiveQuery.data?.pages]);
+  }, [
+    clusterQuery.data,
+    archiveQuery.data?.pages,
+    queryControl?.enableCluster,
+    queryControl?.enableArchive,
+  ]);
 
   return React.useMemo(() => {
     const clusterLoading = clusterQuery.isLoading;
@@ -114,7 +145,7 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
 
       // Raw data for advanced use cases
       clusterData: clusterQuery.data,
-      archiveData: archiveQuery.data?.pages as T[][] | undefined,
+      archiveData: archiveQuery.data?.pages,
     };
   }, [
     combinedData,
