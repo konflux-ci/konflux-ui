@@ -2195,7 +2195,7 @@
     victory-voronoi-container "^37.1.1"
     victory-zoom-container "^37.1.1"
 
-"@patternfly/react-core@^5.0.0":
+"@patternfly/react-core@^5.0.0", "@patternfly/react-core@^5.4.14":
   version "5.4.14"
   resolved "https://registry.yarnpkg.com/@patternfly/react-core/-/react-core-5.4.14.tgz#d41d28c81884f6a45dc3c364dc5ae2c933c72e89"
   integrity sha512-oXVMzLs9Pa+xmdc39L2u05zbXfY3mWuOFi4GDv44GPdDexZUFy5W69+Nv5P8cwfMim55Nf5kKYpcqmatD2bBXw==
@@ -2239,27 +2239,22 @@
     "@patternfly/react-styles" "^5.0.0"
     memoize-one "^5.1.0"
 
-"@patternfly/react-styles@^5.0.0", "@patternfly/react-styles@^5.4.1":
+"@patternfly/react-styles@^5.0.0", "@patternfly/react-styles@^5.1.1", "@patternfly/react-styles@^5.3.1", "@patternfly/react-styles@^5.4.1":
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/@patternfly/react-styles/-/react-styles-5.4.1.tgz#c101419917bcf309dfa7469820cd7320dd0c5120"
   integrity sha512-XA8PXksD8uiA3RTwxdUwJXOCf+V6sVd+2HKapWAdRLvtSV+Sdk7NgCvalb4IAQncsddLopjPQD8gAHA298+N8w==
 
-"@patternfly/react-styles@^5.1.1", "@patternfly/react-styles@^5.3.1":
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-styles/-/react-styles-5.3.1.tgz#4bc42f98c48e117df5d956ee3f551d0f57ef1b35"
-  integrity sha512-H6uBoFH3bJjD6PP75qZ4k+2TtF59vxf9sIVerPpwrGJcRgBZbvbMZCniSC3+S2LQ8DgXLnDvieq78jJzHz0hiA==
-
 "@patternfly/react-table@^5.3.4":
-  version "5.3.4"
-  resolved "https://registry.yarnpkg.com/@patternfly/react-table/-/react-table-5.3.4.tgz#f5e0ee5057cce7a54742ea9ca7f038aa9ca5e5ed"
-  integrity sha512-jGaiuo02scaC1HdGNHuYVRjtQCOB+vtvfbgS7nl1Y8ZcJ08wyUGhGSrEpNHfGAQ1XDSSoELAxj0cjOQwAAQw1A==
+  version "5.4.16"
+  resolved "https://registry.yarnpkg.com/@patternfly/react-table/-/react-table-5.4.16.tgz#3197db7cf7cc3a2f721bbb8adb0fb7ca9182f5fc"
+  integrity sha512-K/xNdTvFKFyD6WhuBU/GCq/3LTrSaObdXSTmzefWWcPcN0gcf/J3ouiuapj951JIsP13CMmwJBNtEa3aHR8igg==
   dependencies:
-    "@patternfly/react-core" "^5.3.4"
-    "@patternfly/react-icons" "^5.3.2"
-    "@patternfly/react-styles" "^5.3.1"
-    "@patternfly/react-tokens" "^5.3.1"
-    lodash "^4.17.19"
-    tslib "^2.5.0"
+    "@patternfly/react-core" "^5.4.14"
+    "@patternfly/react-icons" "^5.4.2"
+    "@patternfly/react-styles" "^5.4.1"
+    "@patternfly/react-tokens" "^5.4.1"
+    lodash "^4.17.21"
+    tslib "^2.7.0"
 
 "@patternfly/react-tokens@^5.3.1":
   version "5.3.1"
