@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ResourceSource } from '~/types/k8s';
 import { ReleaseModel } from '../../../models';
 import { RELEASEPLAN_TRIGGER_PATH } from '../../../routes/paths';
 import { Action } from '../../../shared/components/action-menu/types';
@@ -6,7 +7,10 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
-export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
+export const useSnapshotActions = (
+  snapshot: Snapshot,
+  source: ResourceSource | undefined,
+): Action[] => {
   const namespace = useNamespace();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
 
@@ -14,7 +18,8 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
     if (!snapshot) {
       return [];
     }
-    const canTrigger = canCreateRelease;
+    const isArchived = source !== ResourceSource.Cluster;
+    const canTrigger = canCreateRelease && !isArchived;
 
     return [
       {
@@ -27,10 +32,12 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
           : () => Promise.resolve(),
         id: `trigger-release-${snapshot.metadata.name}`,
         label: 'Trigger release',
-        disabled: !canCreateRelease,
+        disabled: !canTrigger,
         disabledTooltip: !canCreateRelease
           ? "You don't have access to trigger releases"
-          : undefined,
+          : isArchived
+            ? 'Cannot trigger release from archived snapshot'
+            : undefined,
         analytics: {
           link_name: 'trigger-release-snapshot',
           link_location: 'snapshot-actions',
@@ -39,7 +46,7 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
         },
       },
     ];
-  }, [snapshot, canCreateRelease, namespace]);
+  }, [snapshot, canCreateRelease, namespace, source]);
 
   return actions;
 };

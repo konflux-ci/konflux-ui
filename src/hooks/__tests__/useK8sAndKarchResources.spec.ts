@@ -111,11 +111,24 @@ describe('useK8sAndKarchResources', () => {
     jest.clearAllMocks();
   });
 
-  const renderHookWithQueryClient = (resourceInit: WatchK8sResource | undefined) => {
-    return renderHook(() => useK8sAndKarchResources<TestResource>(resourceInit, mockModel), {
-      wrapper: ({ children }) =>
-        React.createElement(QueryClientProvider, { client: queryClient }, children),
-    });
+  const renderHookWithQueryClient = (
+    resourceInit: WatchK8sResource | undefined,
+    queryControl?: { enableCluster?: boolean; enableArchive?: boolean },
+  ) => {
+    return renderHook(
+      () =>
+        useK8sAndKarchResources<TestResource>(
+          resourceInit,
+          mockModel,
+          undefined,
+          undefined,
+          queryControl,
+        ),
+      {
+        wrapper: ({ children }) =>
+          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      },
+    );
   };
 
   it('should return loading states correctly', () => {
@@ -456,7 +469,7 @@ describe('useK8sAndKarchResources', () => {
         isList: true,
       }),
       mockModel,
-      undefined,
+      { enabled: true },
       undefined,
     );
   });
@@ -480,6 +493,222 @@ describe('useK8sAndKarchResources', () => {
     });
 
     expect(result.current.data).toEqual([testResource1]); // Should only have cluster data
+  });
+
+  it('should provide getSource function that returns correct ResourceSource', () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1, testResource2],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [[archiveResource]],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient({
+      groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+      namespace: 'test-ns',
+    });
+
+    expect(result.current.getSource).toBeDefined();
+    expect(result.current.getSource(testResource1)).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(testResource2)).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(archiveResource)).toBe(ResourceSource.Archive);
+  });
+
+  it('should return undefined from getSource for resources not in combined data', () => {
+    const unknownResource: TestResource = {
+      apiVersion: 'v1',
+      kind: 'TestResource',
+      metadata: {
+        name: 'unknown-resource',
+        namespace: 'test-ns',
+        uid: 'uid-unknown',
+      },
+    };
+
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient({
+      groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+      namespace: 'test-ns',
+    });
+
+    expect(result.current.getSource(unknownResource)).toBeUndefined();
+  });
+
+  it('should exclude archive data when enableArchive is false', () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1, testResource2],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [[archiveResource]],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient(
+      {
+        groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+        namespace: 'test-ns',
+      },
+      { enableArchive: false },
+    );
+
+    expect(result.current.data).toHaveLength(2);
+    expect(result.current.data).toContainEqual(testResource1);
+    expect(result.current.data).toContainEqual(testResource2);
+    expect(result.current.data).not.toContainEqual(archiveResource);
+    expect(result.current.getSource(archiveResource)).toBeUndefined();
+  });
+
+  it('should exclude cluster data when enableCluster is false', () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1, testResource2],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [[archiveResource]],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient(
+      {
+        groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+        namespace: 'test-ns',
+      },
+      { enableCluster: false },
+    );
+
+    expect(result.current.data).toHaveLength(1);
+    expect(result.current.data).toContainEqual(archiveResource);
+    expect(result.current.data).not.toContainEqual(testResource1);
+    expect(result.current.data).not.toContainEqual(testResource2);
+    expect(result.current.getSource(testResource1)).toBeUndefined();
+    expect(result.current.getSource(archiveResource)).toBe(ResourceSource.Archive);
+  });
+
+  it('should return empty array when both enableCluster and enableArchive are false', () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1, testResource2],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [[archiveResource]],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient(
+      {
+        groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+        namespace: 'test-ns',
+      },
+      { enableCluster: false, enableArchive: false },
+    );
+
+    expect(result.current.data).toEqual([]);
+    expect(result.current.getSource(testResource1)).toBeUndefined();
+    expect(result.current.getSource(archiveResource)).toBeUndefined();
+  });
+
+  it('should exclude cached archive data when enableArchive is false', () => {
+    // First render with archive enabled to populate cache
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [[archiveResource]],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result: result1 } = renderHookWithQueryClient({
+      groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+      namespace: 'test-ns',
+    });
+
+    expect(result1.current.data).toContainEqual(archiveResource);
+
+    // Now disable archive - cached data should be excluded
+    const { result: result2 } = renderHookWithQueryClient(
+      {
+        groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+        namespace: 'test-ns',
+      },
+      { enableArchive: false },
+    );
+
+    expect(result2.current.data).not.toContainEqual(archiveResource);
+    expect(result2.current.data).toContainEqual(testResource1);
+  });
+
+  it('should handle getSource with resources that have no UID (uses name-namespace)', () => {
+    const resourceNoUid: TestResource = {
+      apiVersion: 'v1',
+      kind: 'TestResource',
+      metadata: {
+        name: 'resource-no-uid',
+        namespace: 'test-ns',
+      },
+    };
+
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [resourceNoUid],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient({
+      groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+      namespace: 'test-ns',
+    });
+
+    expect(result.current.getSource(resourceNoUid)).toBe(ResourceSource.Cluster);
   });
 });
 

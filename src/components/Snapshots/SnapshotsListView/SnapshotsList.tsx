@@ -29,6 +29,7 @@ const getLastSuccessfulReleaseTimestamp = (snapshot: Snapshot): string => {
 
 const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
   snapshots,
+  getSource,
   applicationName,
   infiniteLoadingProps,
 }) => {
@@ -85,7 +86,7 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
         Header={SnapshotsListHeaderWithSorting}
         Row={SnapshotsListRow}
         loaded
-        customData={{ applicationName }}
+        customData={{ applicationName, getSource }}
         getRowProps={(obj: Snapshot) => ({
           id: `${obj.metadata.name}-snapshot-list-item`,
           'aria-label': obj.metadata.name,
