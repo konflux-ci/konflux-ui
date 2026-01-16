@@ -1,4 +1,5 @@
 import { RowFunctionArgs } from '~/shared';
+import { ResourceSource } from '~/types/k8s';
 import { Snapshot } from '../../../types/coreBuildService';
 
 export type SnapshotsListViewProps = {
@@ -7,6 +8,7 @@ export type SnapshotsListViewProps = {
 
 export type SnapshotsListProps = {
   snapshots: Snapshot[];
+  getSource: (snapshot: Snapshot) => ResourceSource | undefined;
   applicationName: string;
   infiniteLoadingProps?: {
     hasNextPage: boolean;
@@ -18,5 +20,6 @@ export type SnapshotsListProps = {
 export type SnapshotsListRowProps = RowFunctionArgs<Snapshot> & {
   customData?: {
     applicationName: string;
+    getSource: (snapshot: Snapshot) => ResourceSource | undefined;
   };
 };

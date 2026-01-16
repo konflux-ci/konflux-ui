@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import '@testing-library/jest-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { screen, act } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { ResourceSource } from '~/types/k8s';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
@@ -57,8 +59,8 @@ jest.mock('../../../../shared/components/table', () => {
 
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
-const createWrappedComponent = () => (
-  <FilterContextProvider filterParams={['name']}>
+const createWrappedComponent = (filterParams = ['name', 'releasable']) => (
+  <FilterContextProvider filterParams={filterParams}>
     <SnapshotsListView applicationName="test-app" />
   </FilterContextProvider>
 );
@@ -72,7 +74,13 @@ describe('SnapshotsListView - Column Headers', () => {
   });
 
   it('should display all expected column headers correctly', () => {
-    useMockSnapshots.mockReturnValue({ data: mockSnapshots, isLoading: false, hasError: false });
+    const mockGetSource = jest.fn((_) => ResourceSource.Cluster);
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      isLoading: false,
+      hasError: false,
+      getSource: mockGetSource,
+    });
 
     act(() => {
       renderWithQueryClientAndRouter(createWrappedComponent());
@@ -83,5 +91,67 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();
     expect(screen.getByText('Reference')).toBeInTheDocument();
+  });
+
+  it('should filter out archive snapshots when releasable filter is enabled', () => {
+    const clusterSnapshot = {
+      ...mockSnapshots[0],
+      metadata: { ...mockSnapshots[0].metadata, name: 'cluster-snapshot', uid: 'uid-cluster' },
+    };
+    const archiveSnapshot = {
+      ...mockSnapshots[0],
+      metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
+    };
+
+    const mockGetSource = jest.fn((snapshot) => {
+      if (snapshot.metadata.name === 'cluster-snapshot') return ResourceSource.Cluster;
+      if (snapshot.metadata.name === 'archive-snapshot') return ResourceSource.Archive;
+      return ResourceSource.Cluster;
+    });
+
+    useMockSnapshots.mockImplementation(
+      (_resourceInit, _model, _queryOptions, _options, queryControl) => {
+        const enableArchive = queryControl?.enableArchive !== false;
+
+        return {
+          data: enableArchive ? [clusterSnapshot, archiveSnapshot] : [clusterSnapshot],
+          isLoading: false,
+          hasError: false,
+          getSource: mockGetSource,
+        };
+      },
+    );
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
+    expect(screen.getByText('archive-snapshot')).toBeInTheDocument();
+
+    expect(useMockSnapshots).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      undefined,
+      undefined,
+      expect.objectContaining({ enableArchive: true }),
+    );
+
+    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+    expect(switchElement).not.toBeChecked();
+
+    act(() => {
+      fireEvent.click(switchElement);
+    });
+
+    const callsWithEnableArchiveFalse = useMockSnapshots.mock.calls.filter(
+      (call) => call[4]?.enableArchive === false,
+    );
+    expect(callsWithEnableArchiveFalse.length).toBeGreaterThan(0);
+
+    expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
+    expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
+
+    expect(switchElement).toBeChecked();
   });
 });

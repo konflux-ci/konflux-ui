@@ -11,6 +11,7 @@ import {
   TextVariants,
   Flex,
   FlexItem,
+  Switch,
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -36,9 +37,13 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    releasable: unparsedFilters.releasable
+      ? unparsedFilters.releasable === true || unparsedFilters.releasable === 'true'
+      : false,
   });
 
   const { name: nameFilter } = filters;
+  const releasableFilter = filters.releasable ?? false;
 
   const {
     data: snapshots,
@@ -48,6 +53,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    getSource,
   } = useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
@@ -60,6 +66,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       },
     },
     SnapshotModel,
+    undefined,
+    undefined,
+    {
+      enableArchive: !releasableFilter,
+    },
   );
 
   const filteredSnapshots = React.useMemo(() => {
@@ -127,17 +138,25 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           <BaseTextFilterToolbar
             text={nameFilter}
             label="name"
-            setText={(name) => setFilters({ name })}
+            setText={(name) => setFilters({ ...filters, name })}
             onClearFilters={onClearFilters}
             dataTest="snapshots-list-toolbar"
             totalColumns={snapshotColumns.length}
-          />
+          >
+            <Switch
+              id="releasable"
+              label="Show only releasable snapshots"
+              isChecked={releasableFilter}
+              onChange={(_event, checked) => setFilters({ ...filters, releasable: checked })}
+            />
+          </BaseTextFilterToolbar>
 
           {filteredSnapshots.length === 0 ? (
             <FilteredEmptyState onClearFilters={onClearFilters} />
           ) : (
             <SnapshotsList
               snapshots={filteredSnapshots}
+              getSource={getSource}
               applicationName={applicationName}
               infiniteLoadingProps={{ hasNextPage, isFetchingNextPage, fetchNextPage }}
             />
