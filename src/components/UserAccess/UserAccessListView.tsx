@@ -74,7 +74,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     () =>
       roleBindings.filter(
         (rb) =>
-          !rb.subjects ||
+          (!usernameFilter && !rb.subjects) ||
           rb.subjects?.some((subject) =>
             subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
           ),
