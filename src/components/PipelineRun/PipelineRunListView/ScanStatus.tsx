@@ -1,6 +1,6 @@
 import React from 'react';
 import { Skeleton } from '@patternfly/react-core';
-import { ScanResults } from '../../../hooks/useScanResults';
+import { ScanResults } from '../../../utils/scan/scan-utils';
 import { ScanDetailStatus } from '../ScanDetailStatus';
 
 export const ScanStatus: React.FC<React.PropsWithChildren<{ scanResults?: ScanResults }>> = ({

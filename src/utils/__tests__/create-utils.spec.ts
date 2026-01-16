@@ -1,4 +1,3 @@
-import { SecretForComponentOption } from '~/components/Secrets/utils/secret-utils';
 import {
   addSecretFormValues,
   mockApplicationRequestData,
@@ -10,7 +9,6 @@ import {
   mockComponentWithDevfile,
   secretFormValues,
 } from '../../components/Secrets/__data__/mock-secrets';
-import { linkSecretToServiceAccounts } from '../../components/Secrets/utils/service-account-utils';
 import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
@@ -23,6 +21,8 @@ import {
   getSecretObject,
   addSecretWithLinkingComponents,
 } from '../create-utils';
+import { SecretForComponentOption } from '../secrets/secret-utils';
+import { linkSecretToServiceAccounts } from '../service-account/service-account-utils';
 import { mockWindowFetch } from '../test-utils';
 
 jest.mock('../../k8s/k8s-fetch', () => ({
@@ -30,7 +30,7 @@ jest.mock('../../k8s/k8s-fetch', () => ({
   k8sUpdateResource: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('../../components/Secrets/utils/service-account-utils', () => {
+jest.mock('../service-account/service-account-utils', () => {
   return {
     linkSecretToServiceAccount: jest.fn(),
     linkSecretToBuildServiceAccount: jest.fn(),

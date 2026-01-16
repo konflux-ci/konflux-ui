@@ -5,15 +5,24 @@ module.exports = {
       'error',
       {
         zones: [
-          // Zone 1: Files in `./src/utils` may only import from:
-          // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__` or `./src/kubearchive`.
+          // Zone 1: Files in `./src/utils` (excluding test files) may only import from:
+          // `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`.
           {
-            target: './src/utils/**/*',
+            target: './src/utils/!(__tests__)/**/*',
             from: [
-              './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__)/**/*',
+              './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
             ],
             message:
-              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__` or `./src/kubearchive`',
+              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`',
+          },
+          // Zone 1b: Non-test files directly in `./src/utils` (like `./src/utils/*.ts` or `./src/utils/*.tsx`) have the same restrictions.
+          {
+            target: './src/utils/*.ts?(x)',
+            from: [
+              './src/!(utils|types|k8s|models|consts|kubearchive|unit-test-utils|__data__|auth|shared|routes)/**/*',
+            ],
+            message:
+              'Files in `./src/utils` may only import from `./src/utils`, `./src/types`, `./src/k8s`, `./src/models`, `./src/consts`, `./src/unit-test-utils`, `./src/__data__`, `./src/kubearchive`, `./src/auth`, `./src/shared` or `./src/routes`',
           },
           // Zone 2: Files in `./src/types` may only import from `./src/types`.
           {

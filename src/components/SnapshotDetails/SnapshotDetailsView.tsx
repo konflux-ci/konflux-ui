@@ -9,8 +9,8 @@ import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
 
