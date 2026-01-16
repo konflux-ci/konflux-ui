@@ -13,7 +13,10 @@ import {
   K8sResourceListOptions,
 } from '~/k8s';
 import { TQueryInfiniteOptions, TQueryOptions } from '../k8s/query/type';
+import { PipelineRunModel } from '../models';
+import { PipelineRunKind } from '../types';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
+import { filterOutStaleRunningPipelineRunsFromArchive } from '../utils/resource-utils';
 import { useIsKubeArchiveEnabled } from './conditional-checks';
 import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_RESOURCE_LIMIT } from './const';
 import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from './fetch-utils';
@@ -64,6 +67,20 @@ export function useKubearchiveListResourceQuery<
         value: fullRes.metadata?.continue,
         enumerable: false,
       });
+
+      if (!!fullRes?.items?.length && model === PipelineRunModel) {
+        const filteredItems = filterOutStaleRunningPipelineRunsFromArchive(
+          fullRes.items as unknown as PipelineRunKind[],
+        ) as unknown as T[];
+
+        Object.defineProperty(filteredItems, '_continue', {
+          value: fullRes.metadata?.continue,
+          enumerable: false,
+        });
+
+        return filteredItems;
+      }
+
       return fullRes.items;
     },
     initialPageParam: undefined,
