@@ -12,6 +12,7 @@ type EncodedFileUploadFieldProps = {
   label: string;
   helpText?: string;
   required?: boolean;
+  onValidate?: (decodedContent: string) => void;
 };
 
 const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUploadFieldProps>> = ({
@@ -20,6 +21,7 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
   label,
   helpText,
   required,
+  onValidate,
 }) => {
   const [filename, setFilename] = React.useState<string>();
   const [, { value, error, touched }, { setValue, setTouched }] = useField<string>(name);
@@ -37,8 +39,11 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       );
 
       setTimeout(() => setTouched(true));
+      if (onValidate && data) {
+        onValidate(data);
+      }
     },
-    [setValue, setTouched],
+    [setValue, setTouched, onValidate],
   );
 
   const decodedValue = React.useMemo(() => (value ? Base64.decode(value) : ''), [value]);

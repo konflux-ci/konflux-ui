@@ -51,6 +51,8 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
       <div className="pairs-list__row--name">
         <span className="pairs-list__row--label">Name</span>
         <TextInput
+          id={`pairs-list-name-${index}`}
+          aria-label={`${nameString} ${index + 1}`}
           data-test="pairs-list-name"
           placeholder={nameString}
           value={pair[NameValueEditorPair.Name]}
@@ -61,6 +63,8 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
       <div className="pairs-list__row--value">
         <span className="pairs-list__row--label">Value</span>
         <TextInput
+          id={`pairs-list-value-${index}`}
+          aria-label={`${valueString} ${index + 1}`}
           data-test="pairs-list-value"
           placeholder={valueString}
           value={pair[NameValueEditorPair.Value] || ''}
