@@ -17,10 +17,14 @@ import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptySta
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { MonitoredReleaseKind } from '~/types';
+import { ReleasePlanKind, ReleasePlanLabel } from '~/types/coreBuildService';
+import { ReleasePlanAdmissionKind } from '~/types/release-plan-admission';
 import { statuses } from '~/utils/commits-utils';
 import MonitoredReleaseEmptyState from './ReleaseEmptyState';
 import { getReleasesListHeader, SortableHeaders } from './ReleaseListHeader';
 import ReleaseListRow from './ReleaseListRow';
+import ReleasePlanAdmissionsInNamespace from './ReleasePlanAdmissionsInNamespace';
+import ReleasePlansInNamespace from './ReleasePlansInNamespace';
 import ReleasesInNamespace from './ReleasesInNamespace';
 
 const sortPaths: Record<SortableHeaders, string> = {
@@ -39,6 +43,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       releasePlan: filters?.releasePlan || [],
       namespace: filters?.namespace || [],
       component: filters?.component || [],
+      product: filters?.product || [],
+      productVersion: filters?.productVersion || [],
       showLatest: filters?.showLatest || false,
     } as MonitoredReleasesFilterState;
   };
@@ -52,7 +58,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     SortByDirection.desc,
   );
 
-  const { name, status, application, releasePlan, namespace, component } = filters;
+  const { name, status, application, releasePlan, namespace, component, product, productVersion } =
+    filters;
 
   const { namespaces, namespacesLoaded: loaded } = useNamespaceInfo();
 
@@ -63,19 +70,90 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   const releasesRef = React.useRef<Record<string, MonitoredReleaseKind[]>>({});
   const loadedNamespacesRef = React.useRef<Set<string>>(new Set());
 
+  const releasePlansRef = React.useRef<Record<string, ReleasePlanKind[]>>({});
+  const loadedReleasePlansNamespacesRef = React.useRef<Set<string>>(new Set());
+
+  const releasePlanAdmissionsRef = React.useRef<Record<string, ReleasePlanAdmissionKind[]>>({});
+  const loadedRPAsNamespacesRef = React.useRef<Set<string>>(new Set());
+
+  // Track target namespaces that need RPA fetching
+  const [targetNamespaces, setTargetNamespaces] = React.useState<string[]>([]);
+  const targetNamespacesCountRef = React.useRef<number>(0);
+
+  // Function to enrich releases with product data
+  const enrichAndSetReleases = React.useCallback(() => {
+    const allReleasesLoaded = loadedNamespacesRef.current.size === namespaces.length;
+    const allReleasePlansLoaded =
+      loadedReleasePlansNamespacesRef.current.size === namespaces.length;
+    const allRPAsLoaded =
+      targetNamespacesCountRef.current === 0 ||
+      loadedRPAsNamespacesRef.current.size === targetNamespacesCountRef.current;
+
+    if (allReleasesLoaded && allReleasePlansLoaded && allRPAsLoaded) {
+      const allReleases = Object.values(releasesRef.current).flat();
+      const allReleasePlans = Object.values(releasePlansRef.current).flat();
+      const allRPAs = Object.values(releasePlanAdmissionsRef.current).flat();
+
+      // Build lookup maps for O(1) access instead of O(n) find operations
+      const releasePlansByKey = allReleasePlans.reduce(
+        (acc, rp) => {
+          const key = `${rp.metadata.namespace}:${rp.metadata.name}`;
+          acc[key] = rp;
+          return acc;
+        },
+        {} as Record<string, ReleasePlanKind>,
+      );
+
+      const rpasByKey = allRPAs.reduce(
+        (acc, rpa) => {
+          const key = `${rpa.metadata.namespace}:${rpa.metadata.name}`;
+          acc[key] = rpa;
+          return acc;
+        },
+        {} as Record<string, ReleasePlanAdmissionKind>,
+      );
+
+      // Enrich releases with product data using O(1) lookups
+      const enrichedReleases = allReleases.map((release) => {
+        const releasePlanKey = `${release.metadata.namespace}:${release.spec.releasePlan}`;
+        const foundReleasePlan = releasePlansByKey[releasePlanKey];
+
+        if (!foundReleasePlan) {
+          return { ...release, rpa: '' } as MonitoredReleaseKind;
+        }
+
+        const rpaName =
+          foundReleasePlan.metadata.labels?.[ReleasePlanLabel.RELEASE_PLAN_ADMISSION] || '';
+
+        if (!rpaName) {
+          return { ...release, rpa: '' } as MonitoredReleaseKind;
+        }
+
+        const rpaKey = `${foundReleasePlan.spec?.target}:${rpaName}`;
+        const rpa = rpasByKey[rpaKey];
+
+        return {
+          ...release,
+          product: rpa?.spec?.data?.releaseNotes?.product_name || undefined,
+          productVersion: rpa?.spec?.data?.releaseNotes?.product_version || undefined,
+          rpa: rpaName,
+        } as MonitoredReleaseKind;
+      });
+
+      setReleases(enrichedReleases);
+      setLoading(false);
+      setError(null);
+    }
+  }, [namespaces.length]);
+
   const handleReleasesLoaded = React.useCallback(
     (ns: string, data: MonitoredReleaseKind[]) => {
       releasesRef.current[ns] = data;
       loadedNamespacesRef.current.add(ns);
-
-      if (loadedNamespacesRef.current.size === namespaces.length) {
-        const allReleases = Object.values(releasesRef.current).flat();
-        setReleases(allReleases);
-        setLoading(false);
-        setError(null);
-      }
+      // Safe to attempt; enrichAndSetReleases() is internally gated on "all loaded"
+      enrichAndSetReleases();
     },
-    [namespaces.length],
+    [enrichAndSetReleases],
   );
 
   const handleError = React.useCallback((err: unknown) => {
@@ -83,11 +161,59 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     setLoading(false);
   }, []);
 
+  const handleReleasePlansLoaded = React.useCallback(
+    (ns: string, data: ReleasePlanKind[]) => {
+      releasePlansRef.current[ns] = data;
+      loadedReleasePlansNamespacesRef.current.add(ns);
+
+      // Once all ReleasePlans are loaded, determine target namespaces for RPA fetching
+      if (loadedReleasePlansNamespacesRef.current.size === namespaces.length) {
+        const allReleasePlans = Object.values(releasePlansRef.current).flat();
+
+        const rpaNamespaces = new Set<string>();
+
+        // Add target namespaces from ReleasePlans
+        allReleasePlans.forEach((rp) => {
+          const target = rp.spec?.target;
+          if (target) {
+            rpaNamespaces.add(target);
+          }
+        });
+
+        const targetArray = Array.from(rpaNamespaces);
+        setTargetNamespaces(targetArray);
+        targetNamespacesCountRef.current = targetArray.length;
+
+        // If there are no target namespaces (no RPAs needed), enrich immediately
+        if (targetArray.length === 0) {
+          enrichAndSetReleases();
+        }
+      }
+    },
+    [namespaces, enrichAndSetReleases],
+  );
+
+  const handleReleasePlanAdmissionsLoaded = React.useCallback(
+    (ns: string, data: ReleasePlanAdmissionKind[]) => {
+      releasePlanAdmissionsRef.current[ns] = data;
+      loadedRPAsNamespacesRef.current.add(ns);
+      // Try to enrich if all data is ready
+      enrichAndSetReleases();
+    },
+    [enrichAndSetReleases],
+  );
+
   React.useEffect(() => {
     if (loaded && namespaces.length > 0) {
       setLoading(true);
       releasesRef.current = {};
       loadedNamespacesRef.current = new Set();
+      releasePlansRef.current = {};
+      loadedReleasePlansNamespacesRef.current = new Set();
+      releasePlanAdmissionsRef.current = {};
+      loadedRPAsNamespacesRef.current = new Set();
+      setTargetNamespaces([]);
+      targetNamespacesCountRef.current = 0;
     } else if (loaded) {
       setLoading(false);
     }
@@ -101,6 +227,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         releasePlanOptions: {},
         namespaceOptions: {},
         componentOptions: {},
+        productOptions: {},
+        productVersionOptions: {},
       };
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
@@ -136,12 +264,40 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           }
         : componentOptions;
 
+    const productOptions = createFilterObj(releases, (mr) => mr?.product);
+    const noProduct = productOptions.undefined;
+    delete productOptions.undefined;
+
+    const productFilterOptions =
+      noProduct > 0
+        ? {
+            'No product': noProduct,
+            [MENU_DIVIDER]: 1,
+            ...productOptions,
+          }
+        : productOptions;
+
+    const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
+    const noProductVersion = productVersionOptions.undefined;
+    delete productVersionOptions.undefined;
+
+    const productVersionFilterOptions =
+      noProductVersion > 0
+        ? {
+            'No product version': noProductVersion,
+            [MENU_DIVIDER]: 1,
+            ...productVersionOptions,
+          }
+        : productVersionOptions;
+
     return {
       statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
       applicationOptions: applicationFilterOptions,
       releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
       namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
       componentOptions: componentFilterOptions,
+      productOptions: productFilterOptions,
+      productVersionOptions: productVersionFilterOptions,
     };
   }, [releases, namespaces]);
 
@@ -221,6 +377,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     releasePlan.length > 0 ||
     namespace.length > 0 ||
     component.length > 0 ||
+    product.length > 0 ||
+    productVersion.length > 0 ||
     filters.showLatest;
 
   return (
@@ -228,15 +386,31 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       title="Release Monitor"
       description="The dashboard to monitor the releases you care about"
     >
+      {/* Fetch Releases and ReleasePlans from origin namespaces */}
       {loaded &&
         namespaces.map((ns) => (
-          <ReleasesInNamespace
-            key={ns.metadata.name}
-            namespace={ns.metadata.name}
-            onReleasesLoaded={handleReleasesLoaded}
-            onError={handleError}
-          />
+          <React.Fragment key={`origin-${ns.metadata.name}`}>
+            <ReleasesInNamespace
+              namespace={ns.metadata.name}
+              onReleasesLoaded={handleReleasesLoaded}
+              onError={handleError}
+            />
+            <ReleasePlansInNamespace
+              namespace={ns.metadata.name}
+              onReleasePlansLoaded={handleReleasePlansLoaded}
+              onError={handleError}
+            />
+          </React.Fragment>
         ))}
+      {/* Fetch ReleasePlanAdmissions from target namespaces only */}
+      {targetNamespaces.map((targetNs) => (
+        <ReleasePlanAdmissionsInNamespace
+          key={`rpa-${targetNs}`}
+          namespace={targetNs}
+          onReleasePlanAdmissionsLoaded={handleReleasePlanAdmissionsLoaded}
+          onError={handleError}
+        />
+      ))}
       {(isFiltered || releases.length > 0) && (
         <MonitoredReleasesFilterToolbar
           filters={filters}
@@ -247,6 +421,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           releasePlanOptions={filterOptions.releasePlanOptions}
           namespaceOptions={filterOptions.namespaceOptions}
           componentOptions={filterOptions.componentOptions}
+          productOptions={filterOptions.productOptions}
+          productVersionOptions={filterOptions.productVersionOptions}
         />
       )}
 

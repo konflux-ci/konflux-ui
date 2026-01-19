@@ -1,0 +1,45 @@
+name: "Periodic job: Cleanup GH repos, Quay repos and bots"
+
+# Can be triggered manually 
+on:
+  workflow_dispatch:
+
+  # Every Sunday at 1:00 AM UTC
+  schedule:
+    - cron: '0 1 * * 0'
+
+jobs:
+  periodic-cleanup:
+    runs-on: ubuntu-latest
+    env:
+      JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
+      SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
+      # secrets
+      GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
+      QUAY_TOKEN: ${{ secrets.QUAY_CLEANUP_TOKEN }}
+      QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+      JOB_TYPE: 'periodic-cleanup'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cleanup GitHub repos
+        id: github
+        run: |
+          chmod +x ./scripts/ci_cleanup.sh
+          ./scripts/ci_cleanup.sh github
+          
+      - name: Cleanup Quay repos and bots
+        id: quay
+        run: |
+          ./scripts/ci_cleanup.sh quay
+
+      - name: Report job result to Slack
+        if: ${{ always() }}
+        run: |
+          if [[ "${{ steps.github.outcome }}" == 'success' && "${{ steps.quay.outcome }}" == 'success' ]]; then
+            ./pr_check.sh send-report success
+          else
+            ./pr_check.sh send-report failure
+          fi
