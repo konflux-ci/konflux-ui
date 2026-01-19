@@ -40,7 +40,7 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       );
 
       setTimeout(() => setTouched(true));
-      if (onValidate && data) {
+      if (onValidate) {
         onValidate(data, filenameRef.current);
       }
     },
