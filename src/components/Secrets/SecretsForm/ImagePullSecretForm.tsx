@@ -15,11 +15,28 @@ type RegistryValidation = {
 // Pattern: username:password
 const AUTH_PATTERN = /^[^:]+:.+$/;
 
+// Valid file extensions for docker config files
+const isValidDockerConfigFile = (filename?: string): boolean => {
+  if (!filename) return true; // Allow if no filename (manual text entry)
+  const lowerName = filename.toLowerCase();
+  return (
+    lowerName.endsWith('.json') || lowerName.endsWith('.dockercfg') || lowerName === 'config.json'
+  );
+};
+
 export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = () => {
   const [{ value: type }] = useField<ImagePullSecretType>('image.authType');
   const [registryValidations, setRegistryValidations] = React.useState<RegistryValidation[]>([]);
+  const [fileTypeError, setFileTypeError] = React.useState<string>();
 
-  const validateDockerConfig = React.useCallback((decodedContent: string) => {
+  const validateDockerConfig = React.useCallback((decodedContent: string, filename?: string) => {
+    // Check file extension first
+    if (!isValidDockerConfigFile(filename)) {
+      setFileTypeError(`Invalid file type. Please upload a .json or .dockercfg file.`);
+      setRegistryValidations([]);
+      return;
+    }
+    setFileTypeError(undefined);
     try {
       const config = JSON.parse(decodedContent) as { auths?: Record<string, { auth?: string }> };
       const validations: RegistryValidation[] = [];
@@ -85,7 +102,11 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = (
             required
             onValidate={validateDockerConfig}
           />
-          {registryValidations.length > 0 &&
+          {fileTypeError && (
+            <Alert variant="danger" isInline title={fileTypeError} style={{ marginTop: '1rem' }} />
+          )}
+          {!fileTypeError &&
+            registryValidations.length > 0 &&
             registryValidations.map(({ registry, isValid }) => (
               <Alert
                 key={registry}
