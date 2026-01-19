@@ -70,6 +70,10 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       onClearClick={() => {
         void setValue('');
         setFilename('');
+        filenameRef.current = undefined;
+        if (onValidate) {
+          onValidate('');
+        }
       }}
       allowEditingUploadedText
       required={required}

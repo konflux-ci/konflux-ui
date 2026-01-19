@@ -15,13 +15,11 @@ type RegistryValidation = {
 // Pattern: username:password
 const AUTH_PATTERN = /^[^:]+:.+$/;
 
-// Valid file extensions for docker config files
+// Valid docker config filenames: .dockercfg or any .json file
 const isValidDockerConfigFile = (filename?: string): boolean => {
   if (!filename) return true; // Allow if no filename (manual text entry)
   const lowerName = filename.toLowerCase();
-  return (
-    lowerName.endsWith('.json') || lowerName.endsWith('.dockercfg') || lowerName === 'config.json'
-  );
+  return lowerName.endsWith('.dockercfg') || lowerName.endsWith('.json');
 };
 
 export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = () => {
@@ -30,9 +28,16 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = (
   const [fileTypeError, setFileTypeError] = React.useState<string>();
 
   const validateDockerConfig = React.useCallback((decodedContent: string, filename?: string) => {
+    // Handle empty input (e.g., file cleared)
+    if (!decodedContent || decodedContent.trim() === '') {
+      setRegistryValidations([]);
+      setFileTypeError(undefined);
+      return;
+    }
+
     // Check file extension first
     if (!isValidDockerConfigFile(filename)) {
-      setFileTypeError(`Invalid file type. Please upload a .json or .dockercfg file.`);
+      setFileTypeError(`Invalid file type. Please upload a .dockercfg or .json file.`);
       setRegistryValidations([]);
       return;
     }

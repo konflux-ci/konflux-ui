@@ -11,6 +11,7 @@ type PairElementProps = {
   nameString: string;
   valueString: string;
   index: number;
+  nameValueId: number;
   pair: (string | number)[];
   onChange: (e: React.SyntheticEvent, index: number, type: NameValueEditorPair) => void;
   onRemove: (index: number) => void;
@@ -24,6 +25,7 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
   nameString,
   valueString,
   index,
+  nameValueId,
   pair,
   onChange,
   onRemove,
@@ -51,8 +53,8 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
       <div className="pairs-list__row--name">
         <span className="pairs-list__row--label">Name</span>
         <TextInput
-          id={`pairs-list-name-${index}`}
-          aria-label={`${nameString} ${index + 1}`}
+          id={`${nameValueId}-pairs-list-name-${index}`}
+          aria-label={`${nameString} ${nameValueId}-${index + 1}`}
           data-test="pairs-list-name"
           placeholder={nameString}
           value={pair[NameValueEditorPair.Name]}
@@ -63,8 +65,8 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
       <div className="pairs-list__row--value">
         <span className="pairs-list__row--label">Value</span>
         <TextInput
-          id={`pairs-list-value-${index}`}
-          aria-label={`${valueString} ${index + 1}`}
+          id={`${nameValueId}-pairs-list-value-${index}`}
+          aria-label={`${valueString} ${nameValueId}-${index + 1}`}
           data-test="pairs-list-value"
           placeholder={valueString}
           value={pair[NameValueEditorPair.Value] || ''}
@@ -146,6 +148,7 @@ const BasicNameValueEditor: React.FC<React.PropsWithChildren<NameValueEditorProp
     return (
       <PairElement
         index={i}
+        nameValueId={nameValueId}
         nameString={nameString}
         valueString={valueString}
         readOnly={readOnly}
