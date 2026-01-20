@@ -28,11 +28,17 @@ jobs:
         run: |
           set -euo pipefail
           cutoff="$(date -u -d '1 day ago' +%Y-%m-%dT%H:%M:%SZ)"
-          runs=$(gh api "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&conclusion=failure&per_page=50" \
-            --jq '.workflow_runs[]
-              | select(.event == "pull_request_target" or .event == "merge_group")
+          runs=$(gh api "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&per_page=50" \
+            --jq '[.workflow_runs[]
+              | select(.event == "pull_request_target")
               | select(.created_at >= "'"$cutoff"'")
-              | .id')
+              | select(.conclusion == "failure")
+              | select(.pull_requests | length > 0)
+              | {pr: .pull_requests[0].number, id: .id, created_at: .created_at}]
+              | sort_by(.pr, .created_at)
+              | group_by(.pr)
+              | map(last.id)
+              | .[]')
           if [ -z "${runs}" ]; then
             echo "No failed PR check runs in the last 24h."
             exit 0
