@@ -141,4 +141,38 @@ describe('UserAccessListView', () => {
     expect(rows.length).toBe(2);
     expect(rows[1]).toHaveTextContent('-');
   });
+
+  it('should exclude role bindings with undefined subjects when filtering by username', async () => {
+    useRoleBindingsMock.mockReturnValue([
+      [
+        {
+          ...mockRoleBinding,
+          metadata: { ...mockRoleBinding.metadata, name: 'rb-no-subjects' },
+          subjects: undefined,
+        },
+        {
+          ...mockRoleBinding,
+          metadata: { ...mockRoleBinding.metadata, name: 'rb-user1' },
+          subjects: [{ kind: 'User', name: 'user1' }],
+        },
+      ],
+      true,
+    ]);
+
+    render(UserAccessList);
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
+    act(() => {
+      fireEvent.change(filter, { target: { value: 'user1' } });
+      jest.advanceTimersByTime(700);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('rb-user1')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('user1')).toBeInTheDocument();
+
+    expect(screen.queryByText('rb-no-subjects')).not.toBeInTheDocument();
+  });
 });
