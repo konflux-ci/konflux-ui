@@ -40,28 +40,8 @@ describe('Basic Happy Path', () => {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
   });
 
-  it('Delete the application via UI', () => {
-    Common.navigateTo(NavItem.applications);
-    const appSelector = `[data-id="${applicationName}"]`;
-
-    // Fail the test if the application row is missing
-    cy.get(appSelector, { timeout: 60000 }).should('exist');
-
-    Applications.openKebabMenu(applicationName);
-    cy.get(actions.deleteApp).click();
-    cy.get(actions.deleteModalInput).clear().type(applicationName);
-    cy.get(actions.deleteModalButton).click();
-
-    // Verify the application is removed from the list after deletion
-    cy.get(appSelector, { timeout: 60000 })
-      .should('not.exist')
-      .then(() => {
-        // Delete GitHub repository after UI deletion is confirmed
-        APIHelper.deleteGitHubRepository(repoOwner, repoName);
-      });
-  });
-
   it('Create an Application with a component', () => {
+    Common.navigateTo(NavItem.applications);
     Applications.createApplication(applicationName);
     Applications.createComponent(publicRepo, componentName, pipeline);
     Applications.checkComponentInListView(
@@ -226,5 +206,26 @@ describe('Basic Happy Path', () => {
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
     });
+  });
+
+  it('Delete the application via UI', () => {
+    Common.navigateTo(NavItem.applications);
+    const appSelector = `[data-id="${applicationName}"]`;
+
+    // Fail the test if the application row is missing
+    cy.get(appSelector, { timeout: 60000 }).should('exist');
+
+    Applications.openKebabMenu(applicationName);
+    cy.get(actions.deleteApp).click();
+    cy.get(actions.deleteModalInput).clear().type(applicationName);
+    cy.get(actions.deleteModalButton).click();
+
+    // Verify the application is removed from the list after deletion
+    cy.get(appSelector, { timeout: 60000 })
+      .should('not.exist')
+      .then(() => {
+        // Delete GitHub repository after UI deletion is confirmed
+        APIHelper.deleteGitHubRepository(repoOwner, repoName);
+      });
   });
 });
