@@ -11,6 +11,7 @@ import {
   TextVariants,
   Flex,
   FlexItem,
+  Switch,
 } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
@@ -36,9 +37,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    showMergedOnly: unparsedFilters.showMergedOnly
+      ? (unparsedFilters.showMergedOnly as boolean)
+      : false,
   });
 
-  const { name: nameFilter } = filters;
+  const { name: nameFilter, showMergedOnly } = filters;
 
   const {
     data: snapshots,
@@ -64,10 +68,18 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
   const filteredSnapshots = React.useMemo(() => {
     // apply name filter
-    return nameFilter
+    let filtered = nameFilter
       ? snapshots?.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1) || []
       : snapshots || [];
-  }, [snapshots, nameFilter]);
+
+    if (showMergedOnly) {
+      filtered = filtered.filter(
+        (s) => s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] === 'push',
+      );
+    }
+
+    return filtered;
+  }, [snapshots, nameFilter, showMergedOnly]);
 
   if (isLoading) {
     return (
@@ -127,11 +139,20 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           <BaseTextFilterToolbar
             text={nameFilter}
             label="name"
-            setText={(name) => setFilters({ name })}
+            setText={(name) => setFilters({ ...unparsedFilters, name })}
             onClearFilters={onClearFilters}
             dataTest="snapshots-list-toolbar"
             totalColumns={snapshotColumns.length}
-          />
+          >
+            <Switch
+              id="show-merged-snapshots-only-switch"
+              label="Hide Pull Request Snapshots"
+              isChecked={showMergedOnly}
+              onChange={(_event, checked) =>
+                setFilters({ ...unparsedFilters, showMergedOnly: checked })
+              }
+            />
+          </BaseTextFilterToolbar>
 
           {filteredSnapshots.length === 0 ? (
             <FilteredEmptyState onClearFilters={onClearFilters} />
