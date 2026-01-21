@@ -138,7 +138,6 @@ const ComponentDetails: React.FC<React.PropsWithChildren<ComponentDetailsProps>>
                   imageUrl={componentImageURL}
                   namespace={component.metadata.namespace}
                   componentName={component.metadata.name}
-                  isHighlightable
                 />
               </DescriptionListDescription>
             </DescriptionListGroup>
