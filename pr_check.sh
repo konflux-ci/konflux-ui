@@ -79,9 +79,23 @@ execute_test() {
     echo "COMMIT_INFO_AUTHOR: '${COMMIT_INFO_AUTHOR}'"
     echo "================================="
 
+    CACHE_ROOT=""
+    if [[ -d /mnt && -w /mnt ]]; then
+        CACHE_ROOT="/mnt/konflux-ui-e2e-cache"
+    else
+        CACHE_ROOT="${PWD}/.e2e-cache"
+    fi
+    mkdir -p "${CACHE_ROOT}/cypress" "${CACHE_ROOT}/npm"
+    chmod -R a+rwx "${CACHE_ROOT}"
+
     COMMON_SETUP="-v $PWD/artifacts:/tmp/artifacts:Z,U \
         -v $PWD/e2e-tests:/e2e:Z,U \
+        -v ${CACHE_ROOT}/cypress:/tmp/cypress-cache:Z,U \
+        -v ${CACHE_ROOT}/npm:/tmp/npm-cache:Z,U \
         --timeout=3600 \
+        -e CYPRESS_CACHE_FOLDER=/tmp/cypress-cache \
+        -e NPM_CONFIG_CACHE=/tmp/npm-cache \
+        -e XDG_CACHE_HOME=/tmp/npm-cache \
         -e CYPRESS_LOCAL_CLUSTER=${CYPRESS_LOCAL_CLUSTER} \
         -e CYPRESS_PERIODIC_RUN_STAGE=${CYPRESS_PERIODIC_RUN_STAGE} \
         -e CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} \
