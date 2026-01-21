@@ -14,7 +14,7 @@ export const mockReleasePlanAdmissions = [
       uid: '5f77cca8-8610-4f94-ae74-2b5b0e806d4d',
     },
     spec: {
-      application: 'my-app-1',
+      applications: ['my-app-1'],
       displayName: 'My Release Plan Admission',
       origin: 'sbudhwar-1-tenant',
       releaseStrategy: 'test-rs',
@@ -35,7 +35,7 @@ export const mockReleasePlanAdmissions = [
       uid: '5f77cca8-8610-4f94-ae74-2b5b0e806d4e',
     },
     spec: {
-      application: 'my-app-1',
+      applications: ['my-app-1'],
       displayName: 'My Release Plan Admission',
       origin: 'sbudhwar-1-tenant',
       releaseStrategy: 'test-rs',

@@ -1,27 +1,56 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { capitalize } from '@patternfly/react-core';
-import { ApplicationKind } from '~/types';
-import { RowFunctionArgs, TableData } from '../../../shared';
+import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
+import { TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
+import TruncatedLinkListWithPopover from '../../../shared/components/truncated-link-list-with-popover/TruncatedLinkListWithPopover';
 import { ReleasePlanAdmissionKind } from '../../../types/release-plan-admission';
 import { useReleasePlanAdmissionActions } from './releaseplanadmission-actions';
 import { releasesPlanAdmissionTableColumnClasses } from './ReleasePlanAdmissionListHeader';
 
-export type ReleasePlanAdmissionWithApplicationData = ReleasePlanAdmissionKind & {
-  application?: ApplicationKind;
-};
+export interface ReleasePlanAdmissionRowProps {
+  obj: ReleasePlanAdmissionKind;
+  customData: { namespace: string };
+}
 
-const ReleasePlanAdmissionListRow: React.FC<
-  React.PropsWithChildren<RowFunctionArgs<ReleasePlanAdmissionWithApplicationData>>
-> = ({ obj }) => {
+const ReleasePlanAdmissionListRow: React.FC<ReleasePlanAdmissionRowProps> = ({
+  obj,
+  customData: { namespace },
+}) => {
   const actions = useReleasePlanAdmissionActions(obj);
+
+  const getApplicationLink = React.useCallback(
+    (applicationName: string) => (
+      <Link
+        key={applicationName}
+        to={APPLICATION_DETAILS_PATH.createPath({
+          workspaceName: namespace,
+          applicationName,
+        })}
+      >
+        {applicationName.trim()}
+      </Link>
+    ),
+    [namespace],
+  );
+
   return (
     <>
       <TableData className={releasesPlanAdmissionTableColumnClasses.name}>
         {obj.metadata.name}
       </TableData>
       <TableData className={releasesPlanAdmissionTableColumnClasses.application}>
-        {obj.application?.spec?.displayName ?? obj.spec.application ?? '-'}
+        <TruncatedLinkListWithPopover
+          items={obj.spec.applications ?? []}
+          renderItem={getApplicationLink}
+          popover={{
+            header: 'More applications',
+            ariaLabel: 'More applications',
+            moreText: (count: number) => `${count} more`,
+            dataTestIdPrefix: 'more-applications-popover',
+          }}
+        />
       </TableData>
       <TableData className={releasesPlanAdmissionTableColumnClasses.source}>
         {obj.spec.origin ?? '-'}
