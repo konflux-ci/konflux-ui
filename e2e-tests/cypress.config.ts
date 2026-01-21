@@ -105,16 +105,8 @@ export default defineConfig({
         await afterRunHook();
       });
 
-      const resolvedBaseUrl =
-        config.env.KONFLUX_BASE_URL ||
-        process.env.CYPRESS_KONFLUX_BASE_URL ||
-        process.env.KONFLUX_BASE_URL ||
-        process.env.CYPRESS_BASE_URL ||
-        process.env.BASE_URL ||
-        'https://localhost:8080';
-
       const defaultValues: { [key: string]: string | boolean } = {
-        KONFLUX_BASE_URL: resolvedBaseUrl,
+        KONFLUX_BASE_URL: 'https://localhost:8080',
         USERNAME: 'user2@konflux.dev',
         PASSWORD: 'password',
         GH_USERNAME: 'hac-test',
@@ -137,9 +129,6 @@ export default defineConfig({
           config.env[key] = defaultValues[key];
         }
       }
-
-      // Ensure cy.request can resolve relative URLs (e.g. coverage collection)
-      config.baseUrl = config.env.KONFLUX_BASE_URL as string;
 
       if (config.env.GH_TOKEN == '') {
         throw new Error('GH_TOKEN variable needs to be set to run a test.');

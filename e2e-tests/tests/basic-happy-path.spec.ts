@@ -1,4 +1,4 @@
-import { NavItem } from '../support/constants/PageTitle';
+import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { actions } from '../support/pageObjects/global-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
@@ -209,7 +209,12 @@ describe('Basic Happy Path', () => {
   });
 
   it('Delete the application via UI', () => {
-    Common.navigateTo(NavItem.applications);
+    const applicationsUrl = `${Cypress.env('KONFLUX_BASE_URL')}/ns/${Cypress.env(
+      'HAC_NAMESPACE',
+    )}/applications`;
+    Common.openURL(applicationsUrl);
+    Common.verifyPageTitle(pageTitles.applications);
+    Common.waitForLoad();
     const appSelector = `[data-id="${applicationName}"]`;
 
     // Fail the test if the application row is missing
