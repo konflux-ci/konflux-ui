@@ -1,0 +1,16 @@
+.truncated-link-list {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pf-v5-global--spacer--sm);
+}
+
+.truncated-link-list-popover-stack {
+  > * {
+    margin-bottom: var(--pf-v5-global--spacer--xs);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
