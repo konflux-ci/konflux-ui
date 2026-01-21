@@ -36,14 +36,27 @@ jobs:
           repository: ${{ github.repository }}
           ref: "${{ env.HEAD_SHA }}"
 
+      - name: Disc space stats
+        run: |
+          df -h --total
+
       - name: Deploy konflux-ci
         id: pr-check-action
         uses: ./.github/actions/konflux-ui-deploy-test
         with:
           job-type: ${{ env.JOB_TYPE }}
 
+      - name: Disc space stats after deploy
+        run: |
+          df -h --total
+
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test
+
+      - name: Disc space stats after e2e test
+        if: ${{ always() }}
+        run: |
+          df -h --total
 
       - name: Upload e2e coverage to Codecov
         if: ${{ always() && env.CODECOV_TOKEN != '' }}
@@ -52,3 +65,8 @@ jobs:
       - name: Generate error logs
         if: ${{ always() }}
         uses: ./.github/actions/generate-error-logs
+
+      - name: Disc space stats after generate error logs
+        if: ${{ always() }}
+        run: |
+          df -h --total
