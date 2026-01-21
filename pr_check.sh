@@ -122,7 +122,7 @@ execute_test() {
 
     TEST_RUN=0
     set -e
-    podman run --network host ${COMMON_SETUP} "${COMMIT_ENV_ARGS_ARRAY[@]}" "${TEST_IMAGE}" "${RECORD_FLAG_ARGS[@]}" --spec "${SPEC_FILE}"
+    podman run --network host --shm-size=1g ${COMMON_SETUP} "${COMMIT_ENV_ARGS_ARRAY[@]}" "${TEST_IMAGE}" "${RECORD_FLAG_ARGS[@]}" --spec "${SPEC_FILE}"
 
     PODMAN_RETURN_CODE=$?
     if [[ $PODMAN_RETURN_CODE -ne 0 ]]; then

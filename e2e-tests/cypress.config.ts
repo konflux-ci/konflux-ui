@@ -12,6 +12,7 @@ export default defineConfig({
   responseTimeout: 15000,
   animationDistanceThreshold: 20,
   chromeWebSecurity: false,
+  experimentalMemoryManagement: true,
   viewportWidth: 1920,
   viewportHeight: 1080,
   video: true,
@@ -40,6 +41,14 @@ export default defineConfig({
         ? 'tests/*-private-git-*' // TODO: remove once https://issues.redhat.com/browse/RHTAPBUGS-111 is resolved
         : 'tests/{advanced-happy-path*,private-basic*,*-private-git-*}',
     setupNodeEvents(on, config) {
+      on('before:browser:launch', (browser, launchOptions) => {
+        // Mitigate Chrome renderer crashes in CI containers with constrained /dev/shm
+        // See https://on.cypress.io/renderer-process-crashed
+        if (browser?.family === 'chromium') {
+          launchOptions.args.push('--disable-dev-shm-usage');
+        }
+        return launchOptions;
+      });
       // Code coverage plugin - must be registered first
       if (process.env.CYPRESS_PERIODIC_RUN_STAGE !== 'true') {
         codeCoverageTask(on, config);
