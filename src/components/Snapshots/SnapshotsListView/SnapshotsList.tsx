@@ -33,10 +33,10 @@ const SnapshotsList: React.FC<React.PropsWithChildren<SnapshotsListProps>> = ({
   infiniteLoadingProps,
 }) => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(
-    SortableSnapshotHeaders.name,
+    SortableSnapshotHeaders.createdAt,
   );
   const [activeSortDirection, setActiveSortDirection] = React.useState<SortByDirection>(
-    SortByDirection.asc,
+    SortByDirection.desc,
   );
 
   const SnapshotsListHeaderWithSorting = React.useMemo(
