@@ -32,8 +32,8 @@ clean_github() {
     # The repositories from successful PRs should removed after the test.
     # We want to keep repositories younger then a month.
     # The job should run weekly.
-    # Setting limit to 400 repositories to be safe as we keep ~70 repositories per week.
-    gh_repos_json=$(gh repo list $GH_ORG --json createdAt,owner,name -L 400)
+    # Setting limit to 500 repositories to be safe as we keep ~70 repositories per week.
+    gh_repos_json=$(gh repo list $GH_ORG --json createdAt,owner,name -L 500)
 
     removed_repos=0
     skipped_repos=0

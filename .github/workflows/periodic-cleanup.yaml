@@ -17,7 +17,7 @@ jobs:
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
       # secrets
       GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
-      QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
+      QUAY_TOKEN: ${{ secrets.QUAY_CLEANUP_TOKEN }}
       QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
       JOB_TYPE: 'periodic-cleanup'
     steps:
