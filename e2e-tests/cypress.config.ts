@@ -30,6 +30,7 @@ export default defineConfig({
     },
   },
   e2e: {
+    baseUrl: process.env.CYPRESS_KONFLUX_BASE_URL || process.env.KONFLUX_BASE_URL,
     supportFile: 'support/commands/index.ts',
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,

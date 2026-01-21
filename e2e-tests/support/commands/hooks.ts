@@ -25,6 +25,11 @@ before(() => {
   } else {
     Login.login();
   }
+
+  // Ensure we land on the Konflux UI after login
+  Common.openAppStudioBaseURL();
+  Common.waitForLoad();
+  Common.clickOnConsentButton();
 });
 
 afterEach(function () {
