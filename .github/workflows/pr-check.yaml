@@ -98,7 +98,56 @@ jobs:
 
       - name: Disc space stats
         run: |
+          set -x
           df -h --total
+          free -m 
+
+      # Redirect Cypress Cache to /mnt to free up disk space on /dev/root
+      - name: Redirect Cypress Cache to /mnt
+        run: |
+          sudo mkdir -p /mnt/cypress_cache
+          sudo chown -R runner:docker /mnt/cypress_cache
+          # Create the link so Cypress installs to /mnt instead of /
+          mkdir -p ~/.cache
+          ln -s /mnt/cypress_cache ~/.cache/Cypress
+
+      - name: Force Docker to /mnt
+        run: |
+          # Stop Docker completely
+          sudo systemctl stop docker.socket
+          sudo systemctl stop docker
+          
+          sudo mkdir -p /mnt/docker
+          
+          # Create a Systemd Override (This is more powerful than daemon.json)
+          sudo mkdir -p /etc/systemd/system/docker.service.d
+          printf '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd --data-root=/mnt/docker -H fd://' | sudo tee /etc/systemd/system/docker.service.d/override.conf
+          
+          sudo systemctl daemon-reload
+          sudo systemctl start docker
+
+      - name: Move npm cache to /mnt
+        run: |
+          sudo mkdir -p /mnt/npm_cache
+          sudo chown -R runner:docker /mnt/npm_cache
+          sudo npm config set cache /mnt/npm_cache --global
+
+      - name: Redirect Podman Storage to /mnt
+        run: |
+          # 1. Create the new storage directory
+          sudo mkdir -p /mnt/podman_storage
+          sudo chown -R runner:docker /mnt/podman_storage
+          
+          # 2. Create/Override the Podman storage config
+          mkdir -p ~/.config/containers
+          cat <<EOF > ~/.config/containers/storage.conf
+          [storage]
+          driver = "overlay"
+          graphroot = "/mnt/podman_storage"
+          EOF
+          
+          # 3. Verify the change
+          podman info --format '{{.Store.GraphRoot}}'
 
       - name: Deploy konflux-ci
         id: pr-check-action
@@ -108,14 +157,23 @@ jobs:
 
       - name: Disc space stats after deploy
         run: |
+          set -x
           df -h --total
+          free -m 
+          kubectl describe nodes
 
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test
 
       - name: Disc space stats after e2e test
+        if: ${{ always() }}
         run: |
+          set -x
           df -h --total
+          free -m 
+          kubectl describe nodes
+          # This finds the top 10 largest directories on the root partition
+          du -h / --max-depth=2 2>/dev/null | sort -hr | head -n 10
 
       - name: Upload e2e coverage to Codecov
         if: ${{ always() && env.CODECOV_TOKEN != '' }}
@@ -124,7 +182,3 @@ jobs:
       - name: Generate error logs
         if: ${{ always() }}
         uses: ./.github/actions/generate-error-logs
-
-      - name: Disc space stats after generate error logs
-        run: |
-          df -h --total
