@@ -34,7 +34,7 @@ spec:
   - name: hermetic
     value: "true"
   - name: prefetch-input
-    value: '{"type": "npm", "path": "."}'
+    value: '{"type": "yarn", "path": "."}'
   pipelineSpec:
     description: |
       This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.
