@@ -68,6 +68,12 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
         )}
       </TableData>
       <TableData
+        data-test="snapshot-list-row-commit-message"
+        className={snapshotsTableColumnClasses.commitMessage}
+      >
+        {commit?.shaTitle}
+      </TableData>
+      <TableData
         data-test="snapshot-list-row-reference"
         className={snapshotsTableColumnClasses.reference}
       >
