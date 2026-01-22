@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ed
 
 WORKDIR  /opt/app-root/src
 COPY package.json package.json
-RUN . /cachi2/cachi2.env && npm install yarn
+RUN npm config set fetch-timeout 2000 && npm config set fetch-retries 0 && npm install yarn
 ENV PATH="/opt/app-root/src/node_modules/.bin:$PATH"
 
 COPY @types @types
