@@ -71,7 +71,7 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
         data-test="snapshot-list-row-commit-message"
         className={snapshotsTableColumnClasses.commitMessage}
       >
-        {commit?.shaTitle}
+        {commit?.shaTitle || '-'}
       </TableData>
       <TableData
         data-test="snapshot-list-row-reference"
