@@ -94,7 +94,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     if (commitMessageFilter) {
       filtered = filtered.filter(
         (s) =>
-          s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE].indexOf(
+          s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE] !== undefined &&
+          s.metadata.annotations[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE].indexOf(
             commitMessageFilter,
           ) !== -1,
       );
