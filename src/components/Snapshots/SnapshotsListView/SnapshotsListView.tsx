@@ -12,7 +12,13 @@ import {
   Flex,
   FlexItem,
   Switch,
+  Select,
+  MenuToggle,
+  SelectOption,
+  SelectList,
+  capitalize,
 } from '@patternfly/react-core';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
@@ -35,14 +41,18 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 }) => {
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const filterOptions = ['name', 'commitMessage'];
+  const [activeFilter, setActiveFilter] = React.useState(filterOptions[0]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    commitMessage: unparsedFilters.commitMessage ? (unparsedFilters.commitMessage as string) : '',
     showMergedOnly: unparsedFilters.showMergedOnly
       ? (unparsedFilters.showMergedOnly as boolean)
       : false,
   });
 
-  const { name: nameFilter, showMergedOnly } = filters;
+  const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
 
   const {
     data: snapshots,
@@ -67,10 +77,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   );
 
   const filteredSnapshots = React.useMemo(() => {
-    // apply name filter
-    let filtered = nameFilter
-      ? snapshots?.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1) || []
-      : snapshots || [];
+    let filtered = snapshots || [];
 
     if (showMergedOnly) {
       filtered = filtered.filter(
@@ -78,8 +85,23 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       );
     }
 
+    // apply name filter
+    if (nameFilter) {
+      filtered = filtered.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1);
+    }
+
+    // apply commit message filter
+    if (commitMessageFilter) {
+      filtered = filtered.filter(
+        (s) =>
+          s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE].indexOf(
+            commitMessageFilter,
+          ) !== -1,
+      );
+    }
+
     return filtered;
-  }, [snapshots, nameFilter, showMergedOnly]);
+  }, [snapshots, nameFilter, showMergedOnly, commitMessageFilter]);
 
   if (isLoading) {
     return (
@@ -136,23 +158,56 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         </AppEmptyState>
       ) : (
         <>
-          <BaseTextFilterToolbar
-            text={nameFilter}
-            label="name"
-            setText={(name) => setFilters({ ...unparsedFilters, name })}
-            onClearFilters={onClearFilters}
-            dataTest="snapshots-list-toolbar"
-            totalColumns={snapshotColumns.length}
-          >
-            <Switch
-              id="show-merged-snapshots-only-switch"
-              label="Hide Pull Request Snapshots"
-              isChecked={showMergedOnly}
-              onChange={(_event, checked) =>
-                setFilters({ ...unparsedFilters, showMergedOnly: checked })
-              }
-            />
-          </BaseTextFilterToolbar>
+          <Flex spaceItems={{ default: 'spaceItemsNone' }}>
+            <Select
+              toggle={(toggleRef) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  icon={<FilterIcon />}
+                  isExpanded={isOpen}
+                  onClick={() => setIsOpen(!isOpen)}
+                >
+                  {capitalize(activeFilter)}
+                </MenuToggle>
+              )}
+              onSelect={(_, val) => {
+                setActiveFilter(val as string);
+                setFilters({ ...unparsedFilters, [activeFilter]: '' });
+                setIsOpen(false);
+              }}
+              selected={activeFilter}
+              isOpen={isOpen}
+              onOpenChange={setIsOpen}
+            >
+              <SelectList>
+                {filterOptions.map((ft) => (
+                  <SelectOption key={ft} value={ft}>
+                    {capitalize(ft)}
+                  </SelectOption>
+                ))}
+              </SelectList>
+            </Select>
+
+            <BaseTextFilterToolbar
+              text={activeFilter === 'name' ? nameFilter : commitMessageFilter}
+              label={activeFilter}
+              setText={(value) => {
+                setFilters({ ...unparsedFilters, [activeFilter]: value });
+              }}
+              onClearFilters={onClearFilters}
+              dataTest="snapshots-list-toolbar"
+              totalColumns={snapshotColumns.length}
+            >
+              <Switch
+                id="show-merged-snapshots-only-switch"
+                label="Hide Pull Request Snapshots"
+                isChecked={showMergedOnly}
+                onChange={(_event, checked) =>
+                  setFilters({ ...unparsedFilters, showMergedOnly: checked })
+                }
+              />
+            </BaseTextFilterToolbar>
+          </Flex>
 
           {filteredSnapshots.length === 0 ? (
             <FilteredEmptyState onClearFilters={onClearFilters} />
