@@ -72,13 +72,19 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
     model,
     {
       ...queryOptions,
-      enabled: queryControl?.enableCluster !== false && queryOptions?.enabled !== false,
+      enabled:
+        !!listResourceInit &&
+        queryControl?.enableCluster !== false &&
+        queryOptions?.enabled !== false,
     },
     options,
   );
 
   const archiveQuery = useKubearchiveListResourceQuery<T>(listResourceInit, model, {
-    enabled: queryControl?.enableArchive !== false && queryOptions?.enabled !== false,
+    enabled:
+      !!listResourceInit &&
+      queryControl?.enableArchive !== false &&
+      queryOptions?.enabled !== false,
   });
 
   // deduplicated data
