@@ -13,6 +13,7 @@ type BaseTextFilterToolbarProps = {
   openColumnManagement?: () => void;
   totalColumns?: number;
   showSearchInput?: boolean;
+  noLeftPadding?: boolean;
 };
 
 export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
@@ -25,6 +26,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   openColumnManagement,
   totalColumns = 0,
   showSearchInput = true,
+  noLeftPadding = false,
 }) => {
   const onTextInput = useDebounceCallback((value: string) => {
     setText(value);
@@ -32,7 +34,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
 
   return (
     <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
-      <ToolbarContent>
+      <ToolbarContent style={{ paddingLeft: noLeftPadding ? '0' : undefined }}>
         {showSearchInput && (
           <ToolbarItem className="pf-v5-u-ml-0">
             <SearchInput

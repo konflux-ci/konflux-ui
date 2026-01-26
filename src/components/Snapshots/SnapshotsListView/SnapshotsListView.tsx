@@ -200,6 +200,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               onClearFilters={onClearFilters}
               dataTest="snapshots-list-toolbar"
               totalColumns={snapshotColumns.length}
+              noLeftPadding={true}
             >
               <Switch
                 id="show-merged-snapshots-only-switch"
