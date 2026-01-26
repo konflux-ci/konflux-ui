@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
+import { PipelineRunModel } from '~/models';
+import { PipelineRunKind } from '~/types';
 import { createTestQueryClient, createK8sUtilMock } from '~/unit-test-utils';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
 import { useKubearchiveListResourceQuery } from '../hooks';
@@ -211,5 +213,124 @@ describe('useKubearchiveListResourceQuery', () => {
     expect(result.current).toBeDefined();
     expect(result.current.status).toBeDefined();
     expect(result.current.isError).toBe(false);
+  });
+
+  describe('filtering stale running PipelineRuns from archive data', () => {
+    const pipelineRunResourceInit: WatchK8sResource = {
+      groupVersionKind: {
+        group: 'tekton.dev',
+        version: 'v1',
+        kind: 'PipelineRun',
+      },
+      namespace: 'test-namespace',
+      isList: true,
+    };
+
+    it('should filter out PipelineRuns with Unknown status, Succeeded type, and Running reason', async () => {
+      const runningPipelineRun: PipelineRunKind = {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRun',
+        metadata: {
+          name: 'running-pipeline-run',
+          namespace: 'test-namespace',
+          uid: 'running-uid',
+          creationTimestamp: '2024-01-04T00:00:00Z',
+        },
+        spec: {},
+        status: {
+          conditions: [
+            {
+              type: 'Succeeded',
+              status: 'Unknown',
+              reason: 'Running',
+            },
+          ],
+          pipelineSpec: {
+            tasks: [],
+          },
+        },
+      };
+
+      const completedPipelineRun: PipelineRunKind = {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRun',
+        metadata: {
+          name: 'completed-pipeline-run',
+          namespace: 'test-namespace',
+          uid: 'completed-uid',
+          creationTimestamp: '2024-01-03T00:00:00Z',
+        },
+        spec: {},
+        status: {
+          conditions: [
+            {
+              type: 'Succeeded',
+              status: 'True',
+              reason: 'Succeeded',
+            },
+          ],
+          pipelineSpec: {
+            tasks: [],
+          },
+        },
+      };
+
+      mockK8sListResource.mockResolvedValue({
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRunList',
+        metadata: {},
+        items: [runningPipelineRun, completedPipelineRun],
+      });
+
+      const { result } = renderHook(
+        () => useKubearchiveListResourceQuery(pipelineRunResourceInit, PipelineRunModel),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data?.pages[0]).toHaveLength(1);
+      expect(result.current.data?.pages[0][0].metadata?.name).toBe('completed-pipeline-run');
+    });
+
+    it('should keep PipelineRuns with no conditions', async () => {
+      const pipelineRunNoConditions: PipelineRunKind = {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRun',
+        metadata: {
+          name: 'no-conditions-pipeline-run',
+          namespace: 'test-namespace',
+          uid: 'no-conditions-uid',
+          creationTimestamp: '2024-01-04T00:00:00Z',
+        },
+        spec: {},
+        status: {
+          pipelineSpec: {
+            tasks: [],
+          },
+        },
+      };
+
+      mockK8sListResource.mockResolvedValue({
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRunList',
+        metadata: {},
+        items: [pipelineRunNoConditions],
+      });
+
+      const { result } = renderHook(
+        () => useKubearchiveListResourceQuery(pipelineRunResourceInit, PipelineRunModel),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data?.pages[0]).toHaveLength(1);
+      expect(result.current.data?.pages[0][0].metadata?.name).toBe('no-conditions-pipeline-run');
+    });
   });
 });
