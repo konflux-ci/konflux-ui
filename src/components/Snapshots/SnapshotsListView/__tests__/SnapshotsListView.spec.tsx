@@ -58,7 +58,7 @@ jest.mock('../../../../shared/components/table', () => {
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 const createWrappedComponent = () => (
-  <FilterContextProvider filterParams={['name']}>
+  <FilterContextProvider filterParams={['name', 'commit message', 'showMergedOnly']}>
     <SnapshotsListView applicationName="test-app" />
   </FilterContextProvider>
 );
@@ -79,7 +79,11 @@ describe('SnapshotsListView - Column Headers', () => {
     });
 
     // Check that all required column headers are present
-    expect(screen.getByText('Name')).toBeInTheDocument();
+    // There are 2 elements with the text "Name" (filter dropdown and table header).
+    const name = screen.queryAllByText('Name');
+    expect(name.length).toBe(2);
+    expect(name[1]).toHaveAttribute('class', 'pf-v5-c-table__text');
+
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();
     expect(screen.getByText('Commit Message')).toBeInTheDocument();

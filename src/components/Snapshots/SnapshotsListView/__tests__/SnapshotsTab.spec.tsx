@@ -103,4 +103,40 @@ describe('SnapshotsListViewTab', () => {
 
     expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
   });
+
+  it('should allow filtering by commit message', () => {
+    createUseParamsMock({ applicationName: 'test-app' });
+
+    renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
+
+    fireEvent.click(screen.getAllByRole('button')[0], { name: 'Name' });
+    fireEvent.click(screen.getByRole('option', { name: 'Commit message' }));
+    act(() => {
+      fireEvent.input(screen.getByRole('textbox'), { target: { value: 'Add new feature' } });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    const rows = screen.getAllByRole('row');
+    expect(rows.length).toBe(2);
+    expect(rows[1]).toHaveTextContent('my-app-snapshot-1');
+  });
+
+  it('should display the filtered empty state when no results match the filter', () => {
+    createUseParamsMock({ applicationName: 'test-app' });
+
+    renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
+
+    fireEvent.click(screen.getAllByRole('button')[0], { name: 'Name' });
+    fireEvent.click(screen.getByRole('option', { name: 'Commit message' }));
+    act(() => {
+      fireEvent.input(screen.getByRole('textbox'), { target: { value: 'Invalid commit message' } });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    expect(
+      screen.getByText('No results match this filter criteria. Clear all filters and try again.'),
+    ).toBeInTheDocument();
+  });
 });
