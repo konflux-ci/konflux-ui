@@ -42,17 +42,19 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const [isOpen, setIsOpen] = React.useState(false);
-  const filterOptions = ['name', 'commitMessage'];
+  const filterOptions = ['name', 'commit message'];
   const [activeFilter, setActiveFilter] = React.useState(filterOptions[0]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    commitMessage: unparsedFilters.commitMessage ? (unparsedFilters.commitMessage as string) : '',
+    'commit message': unparsedFilters['commit message']
+      ? (unparsedFilters['commit message'] as string)
+      : '',
     showMergedOnly: unparsedFilters.showMergedOnly
       ? (unparsedFilters.showMergedOnly as boolean)
       : false,
   });
 
-  const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
+  const { name: nameFilter, 'commit message': commitMessageFilter, showMergedOnly } = filters;
 
   const {
     data: snapshots,
