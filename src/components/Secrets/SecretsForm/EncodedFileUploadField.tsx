@@ -12,6 +12,7 @@ type EncodedFileUploadFieldProps = {
   label: string;
   helpText?: string;
   required?: boolean;
+  onValidate?: (decodedContent: string, filename?: string) => void;
 };
 
 const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUploadFieldProps>> = ({
@@ -20,8 +21,10 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
   label,
   helpText,
   required,
+  onValidate,
 }) => {
   const [filename, setFilename] = React.useState<string>();
+  const filenameRef = React.useRef<string>();
   const [, { value, error, touched }, { setValue, setTouched }] = useField<string>(name);
   const isValid = !(touched && error);
 
@@ -37,8 +40,11 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       );
 
       setTimeout(() => setTouched(true));
+      if (onValidate) {
+        onValidate(data, filenameRef.current);
+      }
     },
-    [setValue, setTouched],
+    [setValue, setTouched, onValidate],
   );
 
   const decodedValue = React.useMemo(() => (value ? Base64.decode(value) : ''), [value]);
@@ -54,13 +60,20 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
       value={decodedValue}
       helperText={!isValid ? error : undefined}
       validated={!isValid ? ValidatedOptions.error : ValidatedOptions.default}
-      onReadFinished={(_ev, file) => setFilename(file.name)}
+      onReadFinished={(_ev, file) => {
+        setFilename(file.name);
+        filenameRef.current = file.name;
+      }}
       onBlur={() => setTouched(true)}
       onTextChange={(_ev, updated) => onChange(updated)}
       onDataChange={(_ev, updated) => onChange(updated, true)}
       onClearClick={() => {
         void setValue('');
         setFilename('');
+        filenameRef.current = undefined;
+        if (onValidate) {
+          onValidate('');
+        }
       }}
       allowEditingUploadedText
       required={required}
