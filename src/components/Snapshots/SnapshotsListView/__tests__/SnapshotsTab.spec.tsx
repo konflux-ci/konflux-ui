@@ -61,7 +61,7 @@ describe('SnapshotsListViewTab', () => {
     });
   });
 
-  it('should display the filtered empty state when no results match the filter', () => {
+  it('should display the filtered empty state when no results match the filter by name', () => {
     createUseParamsMock({ applicationName: 'test-app' });
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
@@ -85,7 +85,7 @@ describe('SnapshotsListViewTab', () => {
     ).toBeInTheDocument();
   });
 
-  it('should display the snapshot data when the filter matches a snapshot', () => {
+  it('should display the snapshot data when the filter matches a snapshot by name', () => {
     createUseParamsMock({ applicationName: 'test-app' });
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
@@ -122,7 +122,7 @@ describe('SnapshotsListViewTab', () => {
     expect(rows[1]).toHaveTextContent('my-app-snapshot-1');
   });
 
-  it('should display the filtered empty state when no results match the filter', () => {
+  it('should display the filtered empty state when no results match the filter by commit message', () => {
     createUseParamsMock({ applicationName: 'test-app' });
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);

@@ -79,31 +79,26 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   );
 
   const filteredSnapshots = React.useMemo(() => {
-    let filtered = snapshots || [];
-
-    if (showMergedOnly) {
-      filtered = filtered.filter(
-        (s) => s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] === 'push',
-      );
-    }
-
-    // apply name filter
-    if (nameFilter) {
-      filtered = filtered.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1);
-    }
-
-    // apply commit message filter
-    if (commitMessageFilter) {
-      filtered = filtered.filter(
-        (s) =>
-          s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE] !== undefined &&
-          s.metadata.annotations[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE].indexOf(
-            commitMessageFilter,
-          ) !== -1,
-      );
-    }
-
-    return filtered;
+    return (snapshots || []).filter((s) => {
+      if (
+        showMergedOnly &&
+        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] !== 'push'
+      ) {
+        return false;
+      }
+      if (nameFilter && !s.metadata.name.toLowerCase().includes(nameFilter.toLowerCase())) {
+        return false;
+      }
+      if (
+        commitMessageFilter &&
+        !s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE]
+          ?.toLowerCase()
+          .includes(commitMessageFilter.toLowerCase())
+      ) {
+        return false;
+      }
+      return true;
+    });
   }, [snapshots, nameFilter, showMergedOnly, commitMessageFilter]);
 
   if (isLoading) {
@@ -155,8 +150,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         >
           <EmptyStateBody>
             Snapshots are created automatically by push events or pull request events. Snapshots can
-            also created by manually if needed. Once created, Snapshots will be displayed on this
-            page.
+            also created manually if needed. Once created, Snapshots will be displayed on this page.
           </EmptyStateBody>
         </AppEmptyState>
       ) : (
@@ -174,8 +168,9 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 </MenuToggle>
               )}
               onSelect={(_, val) => {
-                setActiveFilter(val as string);
-                setFilters({ ...unparsedFilters, [activeFilter]: '' });
+                const newFilter = val as string;
+                setActiveFilter(newFilter);
+                setFilters({ ...unparsedFilters, [activeFilter]: '', [newFilter]: '' });
                 setIsOpen(false);
               }}
               selected={activeFilter}
