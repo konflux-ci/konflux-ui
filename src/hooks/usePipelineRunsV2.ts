@@ -16,6 +16,7 @@ import { useDeepCompareMemoize } from '../shared';
 import { PipelineRunKind } from '../types';
 import { WatchK8sResource } from '../types/k8s';
 import { getCommitSha } from '../utils/commits-utils';
+import { has404Error } from '../utils/common-utils';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
 interface UsePipelineRunsV2Options
@@ -86,7 +87,7 @@ export const usePipelineRunsV2 = (
 
   // Preserve removed etcd runs (cache), then sort and apply limit
   const runs = React.useMemo((): PipelineRunKind[] => {
-    if (!etcdRuns.length) {
+    if (!etcdRuns) {
       return etcdRuns;
     }
 
@@ -304,8 +305,10 @@ export const usePipelineRunV2 = (
     retry: false,
   });
 
+  const is404Error = clusterResult.isError && has404Error(clusterResult.error);
+
   const tektonResult = useTRPipelineRuns(
-    enabled && !kubearchiveEnabled ? namespace : undefined,
+    !kubearchiveEnabled && enabled && is404Error ? namespace : undefined,
     React.useMemo(
       () => ({
         filter: EQ('data.metadata.name', pipelineRunName),
@@ -319,7 +322,7 @@ export const usePipelineRunV2 = (
   );
 
   const kubearchiveResult = useKubearchiveGetResourceQuery(resourceInit, PipelineRunModel, {
-    enabled: enabled && kubearchiveEnabled,
+    enabled: kubearchiveEnabled && enabled && is404Error,
     staleTime: Infinity,
   });
 
@@ -328,23 +331,35 @@ export const usePipelineRunV2 = (
       return [undefined, false, undefined];
     }
 
-    if (clusterResult.data) {
+    // if we have cluster data without 404 error, return it
+    if (clusterResult.data && !is404Error) {
       return [clusterResult.data, !clusterResult.isLoading, clusterResult.error];
     }
 
+    // otherwise, prefer kubearchive/tekton data
     if (kubearchiveEnabled) {
-      return [
-        kubearchiveResult.data as PipelineRunKind,
-        !kubearchiveResult.isLoading,
-        kubearchiveResult.error,
-      ];
+      if (kubearchiveResult.data) {
+        return [
+          kubearchiveResult.data as PipelineRunKind,
+          !kubearchiveResult.isLoading,
+          kubearchiveResult.error,
+        ];
+      }
+
+      const isLoading = clusterResult.isLoading || kubearchiveResult.isLoading;
+      return [kubearchiveResult.data as PipelineRunKind, !isLoading, kubearchiveResult.error];
     }
 
-    if (!kubearchiveEnabled && tektonResult[1] && (tektonResult[0]?.[0] || tektonResult[2])) {
-      return [tektonResult[0]?.[0], tektonResult[1], tektonResult[2]];
+    const [trData, trLoaded, trError] = tektonResult;
+    if (trData?.[0]) {
+      return [trData[0], trLoaded, trError];
     }
 
-    return [undefined, false, null];
+    const isLoading = clusterResult.isLoading || !trLoaded;
+    // return tekton error if available, otherwise null
+    // (don't return cluster 404 error when tekton-results is still loading)
+    const error = trError || null;
+    return [undefined, !isLoading, error];
   }, [
     enabled,
     clusterResult.data,
@@ -354,6 +369,7 @@ export const usePipelineRunV2 = (
     kubearchiveResult.data,
     kubearchiveResult.isLoading,
     kubearchiveResult.error,
+    is404Error,
     tektonResult,
   ]);
 };

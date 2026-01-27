@@ -48,12 +48,6 @@ export const AppRoot: React.FC = () => {
             isDrawerExpanded={isDrawerExpanded}
           />
         }
-        notificationDrawer={
-          isSystemNotificationsEnabled ? (
-            <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
-          ) : undefined
-        }
-        isNotificationDrawerExpanded={isSystemNotificationsEnabled && isDrawerExpanded}
       >
         <ActivePageAlert />
         <SidePanelHost>
@@ -66,6 +60,9 @@ export const AppRoot: React.FC = () => {
           <Outlet />
         </SidePanelHost>
       </Page>
+      {isSystemNotificationsEnabled && (
+        <NotificationCenter isDrawerExpanded={isDrawerExpanded} closeDrawer={closeDrawer} />
+      )}
     </>
   );
 };
