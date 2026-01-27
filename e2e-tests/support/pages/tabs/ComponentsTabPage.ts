@@ -15,6 +15,6 @@ export class ComponentsTabPage {
   static openComponent(name: string) {
     this.getComponentListItem(name).click();
     Common.waitForLoad();
-    cy.contains('h2', name).should('be.visible');
+    cy.contains('h2', name).scrollIntoView().should('be.visible');
   }
 }
