@@ -12,7 +12,9 @@ export class AddComponentPage extends AbstractWizardPage {
     cy.contains('div', addComponentPagePO.notValidatedMessage, { timeout: timeoutDuration });
   }
   waitRepoValidated(timeoutDuration: number = 140000) {
-    cy.get(addComponentPagePO.verifiedSource, { timeout: timeoutDuration }).should('be.visible');
+    cy.get(addComponentPagePO.verifiedSource, { timeout: timeoutDuration })
+      .scrollIntoView()
+      .should('be.visible');
   }
 
   openSamplesPage() {
