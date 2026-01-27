@@ -52,7 +52,7 @@ export class ComponentPage extends AbstractWizardPage {
   }
 
   clickMergePullRequest() {
-    cy.contains('button', 'Merge pull request').should('be.visible').click();
+    cy.contains('button', 'Merge pull request').scrollIntoView().should('be.visible').click();
   }
 
   clickSendingPullRequest() {

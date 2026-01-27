@@ -12,8 +12,8 @@ export default defineConfig({
   responseTimeout: 15000,
   animationDistanceThreshold: 20,
   chromeWebSecurity: false,
-  viewportWidth: 1920,
-  viewportHeight: 1080,
+  viewportWidth: 1280,
+  viewportHeight: 720,
   video: true,
   reporter: 'cypress-multi-reporters',
   reporterOptions: {
