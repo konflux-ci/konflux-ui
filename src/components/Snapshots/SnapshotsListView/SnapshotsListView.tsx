@@ -155,8 +155,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         >
           <EmptyStateBody>
             Snapshots are created automatically by push events or pull request events. Snapshots can
-            also created by created by manually if needed. Once created, Snapshots will be displayed
-            on this page.
+            also created by manually if needed. Once created, Snapshots will be displayed on this
+            page.
           </EmptyStateBody>
         </AppEmptyState>
       ) : (
