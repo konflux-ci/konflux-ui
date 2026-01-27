@@ -164,6 +164,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                   icon={<FilterIcon />}
                   isExpanded={isOpen}
                   onClick={() => setIsOpen(!isOpen)}
+                  data-test="snapshots-list-filter-dropdown"
                 >
                   {capitalize(activeFilter)}
                 </MenuToggle>
