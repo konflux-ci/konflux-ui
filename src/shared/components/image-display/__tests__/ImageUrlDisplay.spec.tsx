@@ -188,7 +188,7 @@ describe('ImageUrlDisplay', () => {
     expect(mockUseImageRepository).toHaveBeenCalledWith(testNamespace, testComponentName, false);
   });
 
-  it('should apply isHighlightable prop', () => {
+  it('should ensure the image link can be selected', () => {
     mockUseImageRepository.mockReturnValue([mockPublicImageRepository, true, null]);
 
     renderWithQueryClient(
@@ -196,12 +196,13 @@ describe('ImageUrlDisplay', () => {
         imageUrl={testImageUrl}
         namespace={testNamespace}
         componentName={testComponentName}
-        isHighlightable={true}
       />,
     );
 
     const link = screen.getByRole('link');
     expect(link).toBeInTheDocument();
-    // ExternalLink component applies specific styling when isHighlightable is true
+    expect(link).toHaveStyle({
+      userSelect: 'auto',
+    });
   });
 });

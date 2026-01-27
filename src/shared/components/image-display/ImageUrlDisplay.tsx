@@ -13,8 +13,6 @@ export interface ImageUrlDisplayProps {
   namespace: string;
   /** Component name */
   componentName: string;
-  /** Whether the external link should be selectable as highlighted text */
-  isHighlightable?: boolean;
 }
 
 /**
@@ -37,7 +35,6 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
   imageUrl,
   namespace,
   componentName,
-  isHighlightable = false,
 }) => {
   const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
@@ -73,7 +70,9 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
     <ExternalLink
       href={getContainerImageLink(imageUrl)}
       text={imageUrl}
-      isHighlightable={isHighlightable}
+      /** by default patternfly button disable text selection on Button component
+     this enables it on <a /> tag */
+      style={{ userSelect: 'auto' }}
     />
   );
 };
