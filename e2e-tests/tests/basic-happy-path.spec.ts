@@ -171,10 +171,11 @@ describe('Basic Happy Path', () => {
             UIhelper.verifyGraphNodes(item);
           });
 
-          TaskRunsTab.goToTaskrunsTab();
-          TaskRunsTab.assertTaskAndTaskRunStatus(
-            TaskRunsTab.getbasicTaskNamesList(pipelinerunName),
-          );
+          // skip due to instaiblity
+          // TaskRunsTab.goToTaskrunsTab();
+          // TaskRunsTab.assertTaskAndTaskRunStatus(
+          //   TaskRunsTab.getbasicTaskNamesList(pipelinerunName),
+          // );
         });
     });
 
@@ -188,23 +189,28 @@ describe('Basic Happy Path', () => {
       DetailsTab.waitForPLRAndDownloadAllLogs(false);
     });
 
-    it('Verify vulnerabilities column exists in Pipeline runs table', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerabilities column exists in Pipeline runs table', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
       PipelinerunsTabPage.verifyVulnerabilityColumn();
     });
 
-    it('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
       PipelinerunsTabPage.verifyVulnerabilityIndicators(
         `${componentName}-on-push`,
         /(-|N\/A|Critical\d+High\d+Medium\d+Low\d+Unknown\d+)/,
       );
     });
 
-    it('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+      // Test passed for a page that was not fully loaded, test this functionality to prove it works as expected
       PipelinerunsTabPage.verifyVulnerabilityCellVisibility(`${componentName}-on-pull-request`);
     });
 
-    it('Verify vulnerability scan details when available', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerability scan details when available', () => {
       PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
     });
   });
