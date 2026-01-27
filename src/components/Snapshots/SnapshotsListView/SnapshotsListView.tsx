@@ -101,6 +101,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     return getErrorState(archiveError, !isLoading, 'snapshots');
   }
 
+  const isFiltered = nameFilter || releasableFilter;
+
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
       <Flex
@@ -120,7 +122,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
         </Text>
       </TextContent>
-      {!snapshots || snapshots.length === 0 ? (
+      {(!snapshots || snapshots.length === 0) && !isFiltered ? (
         <AppEmptyState
           emptyStateImg={emptySnapshotImgUrl}
           title="No snapshots found"
