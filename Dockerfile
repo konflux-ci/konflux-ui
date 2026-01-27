@@ -1,12 +1,13 @@
 FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ede5bc00a4dfda5e259ee4a57f67973720a565d1 as builder
 
 WORKDIR  /opt/app-root/src
-RUN npm install yarn --global
+COPY package.json package.json
+RUN npm config set fetch-timeout 2000 && npm config set fetch-retries 0 && npm install yarn
+ENV PATH="/opt/app-root/src/node_modules/.bin:$PATH"
 
 COPY @types @types
 COPY public public
 COPY src src
-COPY package.json package.json
 COPY tsconfig.json tsconfig.json
 COPY webpack.config.js webpack.config.js
 COPY webpack.prod.config.js webpack.prod.config.js 
