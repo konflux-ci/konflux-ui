@@ -74,8 +74,8 @@ export class Login {
     ).click();
     Common.waitForLoad();
     GetAppStartedPage.waitForLoad();
-    Common.verifyPageTitle(pageTitles.applications);
     Common.waitForLoad();
+    Common.verifyPageTitle(pageTitles.applications);
     cy.testA11y(`${pageTitles.applications}`);
   }
 }
