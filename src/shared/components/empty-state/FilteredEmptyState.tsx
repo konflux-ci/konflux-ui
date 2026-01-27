@@ -32,7 +32,7 @@ const FilteredEmptyState: React.FC<
     </EmptyStateBody>
     <EmptyStateFooter>
       <EmptyStateActions>
-        <Button variant="link" onClick={onClearFilters} data-test="commit-clear-filters">
+        <Button variant="link" onClick={() => onClearFilters()} data-test="commit-clear-filters">
           Clear all filters
         </Button>
       </EmptyStateActions>
