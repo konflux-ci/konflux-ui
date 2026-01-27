@@ -14,19 +14,22 @@ declare module '*.png' {
 }
 
 // Global window type augmentation for runtime configuration
-import type { MonitoringConfig } from "~/monitoring/types";
-
 declare global {
   interface Window {
-    /** Konflux UI monitoring configuration injected at runtime */
-    KONFLUX_MONITORING?: {
-      enabled: boolean;
-      dsn: string;
-      environment: string;
-      cluster: string;
-      sampleRates: {
-        errors: number;
-      };
+    /** Konflux UI runtime configuration injected via runtime-config.js */
+    KONFLUX_RUNTIME?: {
+      [key: string]: string | undefined;
+      // Chatbot configuration
+      CHAT_BOT_ENABLED?: string;
+      CHAT_BOT_ASSISTANT_ID?: string;
+      CHAT_BOT_ENVIRONMENT_ID?: string;
+      CHAT_BOT_VERSION?: string;
+      // Monitoring configuration
+      MONITORING_ENABLED?: string;
+      MONITORING_DSN?: string;
+      MONITORING_ENVIRONMENT?: string;
+      MONITORING_CLUSTER?: string;
+      MONITORING_SAMPLE_RATE_ERRORS?: string;
     };
   }
 }

@@ -3,11 +3,13 @@ import type { IMonitoringProvider, MonitoringConfig, LogLevel, UserContext } fro
 
 interface SentryConfig extends MonitoringConfig {
   dsn: string;
+  cluster?: string;
 }
 
 const DEFAULTS: SentryConfig = {
   enabled: false,
   environment: 'development',
+  cluster: 'unknown',
   sampleRates: {
     errors: 1,
   },
@@ -22,11 +24,18 @@ export class SentryProvider implements IMonitoringProvider<SentryConfig> {
     const mergedConfig = { ...DEFAULTS, ...config };
     Sentry.init({
       dsn: mergedConfig.dsn,
+      environment: mergedConfig.environment,
       sendDefaultPii: true,
       integrations: [Sentry.browserTracingIntegration()],
       tracesSampleRate: 0.2,
+      sampleRate: mergedConfig.sampleRates?.errors ?? 1.0,
       // Set `tracePropagationTargets` to control for which URLs trace propagation should be enabled
       tracePropagationTargets: ['localhost'],
+      initialScope: {
+        tags: {
+          cluster: mergedConfig.cluster || 'unknown',
+        },
+      },
     });
     // eslint-disable-next-line no-console
     console.info('Sentry initialized', mergedConfig);

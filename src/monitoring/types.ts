@@ -1,4 +1,4 @@
-import { LogLevelValues } from "./const";
+import { LogLevelValues } from './const';
 
 /** Monitoring provider ID */
 export type MonitoringProviderId = 'sentry' | 'noop';
@@ -9,6 +9,7 @@ export interface MonitoringConfig {
   provider: MonitoringProviderId;
   dsn?: string;
   environment: string;
+  cluster?: string;
   sampleRates?: {
     errors?: number; // error capture sample rate (0..1)
   };
