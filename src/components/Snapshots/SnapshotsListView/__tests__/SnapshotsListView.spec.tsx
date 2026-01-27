@@ -151,4 +151,35 @@ describe('SnapshotsListView - Column Headers', () => {
 
     expect(switchElement).toBeChecked();
   });
+
+  it('should show filter dashboard if no results but filters are applied', () => {
+    const archiveSnapshot = {
+      ...mockSnapshots[0],
+      metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
+      source: ResourceSource.Archive,
+    };
+
+    useMockSnapshots.mockImplementation(
+      (_resourceInit, _model, _queryOptions, _options, queryControl) => {
+        const enableArchive = queryControl?.enableArchive !== false;
+
+        return {
+          data: enableArchive ? [archiveSnapshot] : [],
+          isLoading: false,
+          hasError: false,
+        };
+      },
+    );
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+
+    act(() => {
+      fireEvent.click(switchElement);
+    });
+
+    expect(switchElement).toBeInTheDocument();
+  });
 });
