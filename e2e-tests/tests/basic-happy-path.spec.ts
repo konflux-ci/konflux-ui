@@ -41,7 +41,7 @@ describe('Basic Happy Path', () => {
   });
 
   it('Create an Application with a component', () => {
-    Common.navigateTo(NavItem.applications);
+    // Common.navigateTo(NavItem.applications);
     Applications.createApplication(applicationName);
     Applications.createComponent(publicRepo, componentName, pipeline);
     Applications.checkComponentInListView(
