@@ -8,9 +8,10 @@ import { useSnapshot } from '../../hooks/useSnapshots';
 import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
 import { RouterParams } from '../../routes/utils';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
+import useTriggerReleaseAction from '../../shared/hooks/useTriggerReleaseAction';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { createCommitObjectFromPLR } from '../../utils/commits-utils';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
 
@@ -37,6 +38,8 @@ const SnapshotDetailsView: React.FC = () => {
     () => plrLoaded && !plrLoadError && createCommitObjectFromPLR(buildPipelineRun),
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
+
+  const { cta, isDisabled, disabledTooltip, key, label } = useTriggerReleaseAction(snapshot);
 
   if (!loaded) {
     return (
@@ -111,6 +114,15 @@ const SnapshotDetailsView: React.FC = () => {
           {
             key: 'pipelineruns',
             label: 'Pipeline runs',
+          },
+        ]}
+        actions={[
+          {
+            key,
+            label,
+            isDisabled,
+            disabledTooltip,
+            onClick: cta,
           },
         ]}
       />

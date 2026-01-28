@@ -6,8 +6,8 @@ import { COMMON_SECRETS_LABEL } from '~/consts/pipeline';
 import { useComponent } from '~/hooks/useComponents';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { SecretKind } from '~/types';
+import { unLinkSecretFromBuildServiceAccount } from '../../../utils/service-account/service-account-utils';
 import { ComponentProps, createModalLauncher } from '../../modal/createModalLauncher';
-import { unLinkSecretFromBuildServiceAccount } from '../../Secrets/utils/service-account-utils';
 
 type UnlinkSecretModalProps = ComponentProps & {
   secret: SecretKind;

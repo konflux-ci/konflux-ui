@@ -85,7 +85,7 @@ describe('ImageUrlDisplay', () => {
     expect(screen.getByLabelText('Loading image URL')).toBeInTheDocument();
   });
 
-  it('should show copyable text with proxy URL for private images', () => {
+  it('should show copyable text with user-owned URL for private images', () => {
     mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
 
     renderWithQueryClient(
@@ -96,7 +96,7 @@ describe('ImageUrlDisplay', () => {
       />,
     );
 
-    expectCopyableText('image-rbac-proxy/test-namespace/test-image@sha256:abc123');
+    expectCopyableText('quay.io/test-namespace/test-image@sha256:abc123');
   });
 
   it('should show external link for public images', () => {

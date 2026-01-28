@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
 import { screen } from '@testing-library/react';
+import {
+  mockPrivateImageRepository,
+  mockPublicImageRepository,
+} from '~/__data__/image-repository-data';
 import { testPipelineRuns, DataState } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
@@ -69,6 +73,19 @@ jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
 }));
 
+// Mock useImageProxy hook
+const mockUseImageProxy = jest.fn();
+jest.mock('~/hooks/useImageProxy', () => ({
+  useImageProxy: () => mockUseImageProxy(),
+}));
+
+// Mock useImageRepository hook
+const mockUseImageRepository = jest.fn();
+jest.mock('~/hooks/useImageRepository', () => ({
+  useImageRepository: (namespace: string, name: string, watch: boolean) =>
+    mockUseImageRepository(namespace, name, watch),
+}));
+
 const mockUsePipelineRunV2 = usePipelineRunV2 as jest.Mock;
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 
@@ -79,6 +96,13 @@ const mockTaskRunsStates = createTaskRunsMockStates();
 describe('PipelineRunDetailsTab', () => {
   const mockNamespace = 'test-namespace';
   const mockPipelineRunName = 'test-pipeline-run';
+
+  const mockUrlInfo = {
+    fullUrl: 'https://image-rbac-proxy',
+    hostname: 'image-rbac-proxy',
+    oauthPath: '/oauth',
+    buildUrl: (path: string) => `https://image-rbac-proxy${path}`,
+  };
 
   const useNamespaceMock = mockUseNamespaceHook(mockNamespace);
   const useParamsMock = createUseParamsMock();
@@ -92,6 +116,9 @@ describe('PipelineRunDetailsTab', () => {
     jest.clearAllMocks();
     useNamespaceMock.mockReturnValue(mockNamespace);
     useParamsMock.mockReturnValue({ pipelineRunName: mockPipelineRunName });
+    // Default: image proxy and repository are loaded with public visibility
+    mockUseImageProxy.mockReturnValue([mockUrlInfo, true, null]);
+    mockUseImageRepository.mockReturnValue([mockPublicImageRepository, true, null]);
   });
 
   it('should render spinner when loading pipeline run', () => {
@@ -301,5 +328,206 @@ describe('PipelineRunDetailsTab', () => {
     renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
     expect(screen.queryByTestId('run-params-list')).not.toBeInTheDocument();
+  });
+
+  describe('Proxy URL replacement for private images', () => {
+    const konfluxImageUrl = 'quay.io/redhat-user-workloads/test-ns/test-component@sha256:abc123';
+    const proxyImageUrl =
+      'image-rbac-proxy/redhat-user-workloads/test-ns/test-component@sha256:abc123';
+    const userOwnedImageUrl = 'quay.io/user/my-app@sha256:abc123';
+    const pipelineRunWithImageUrl = {
+      ...mockPipelineRun,
+      status: {
+        ...mockPipelineRun.status,
+        results: [
+          { name: 'IMAGE_URL', value: konfluxImageUrl },
+          { name: 'OTHER_RESULT', value: 'some-value' },
+        ],
+      },
+    } as PipelineRunKind;
+    const pipelineRunWithOutputImage = {
+      ...mockPipelineRun,
+      spec: {
+        ...mockPipelineRun.spec,
+        params: [
+          { name: 'output-image', value: konfluxImageUrl },
+          { name: 'other-param', value: 'other-value' },
+        ],
+      },
+    } as PipelineRunKind;
+    const pipelineRunWithUserImage = {
+      ...mockPipelineRun,
+      status: {
+        ...mockPipelineRun.status,
+        results: [{ name: 'IMAGE_URL', value: userOwnedImageUrl }],
+      },
+    } as PipelineRunKind;
+
+    it('should replace quay.io with proxy hostname in IMAGE_URL result for private Konflux images', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // The IMAGE_URL should be replaced with proxy URL
+      expect(screen.getByText(proxyImageUrl)).toBeInTheDocument();
+      // Other results should remain unchanged
+      expect(screen.getByText('some-value')).toBeInTheDocument();
+    });
+
+    it('should not replace URL in results for public images', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPublicImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // The IMAGE_URL should remain unchanged for public images
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+    });
+
+    it('should replace quay.io with proxy hostname in output-image param for private Konflux images', () => {
+      mockUsePipelineRunV2.mockReturnValue(
+        mockPipelineRunStates.loaded(pipelineRunWithOutputImage),
+      );
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // The output-image param should be replaced with proxy URL
+      expect(screen.getByText(proxyImageUrl)).toBeInTheDocument();
+      // Other params should remain unchanged
+      expect(screen.getByText('other-value')).toBeInTheDocument();
+    });
+
+    it('should not replace URL in params for public images', () => {
+      mockUsePipelineRunV2.mockReturnValue(
+        mockPipelineRunStates.loaded(pipelineRunWithOutputImage),
+      );
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPublicImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // The output-image param should remain unchanged for public images
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+    });
+
+    it('should use proxy URL in SBOM download command for private Konflux images', () => {
+      const pipelineRunWithBuildImage = {
+        ...mockPipelineRun,
+        metadata: {
+          ...mockPipelineRun.metadata,
+          annotations: {
+            [PipelineRunLabel.BUILD_IMAGE_ANNOTATION]: konfluxImageUrl,
+          },
+        },
+      } as PipelineRunKind;
+
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithBuildImage));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // The SBOM download command should use proxy URL
+      expect(screen.getByLabelText('Copyable input')).toHaveValue(
+        `cosign download sbom ${proxyImageUrl}`,
+      );
+    });
+
+    it('should not replace URL in SBOM download command for public images', () => {
+      const pipelineRunWithBuildImage = {
+        ...mockPipelineRun,
+        metadata: {
+          ...mockPipelineRun.metadata,
+          annotations: {
+            [PipelineRunLabel.BUILD_IMAGE_ANNOTATION]: konfluxImageUrl,
+          },
+        },
+      } as PipelineRunKind;
+
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithBuildImage));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPublicImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // The SBOM download command should use original URL for public images.
+
+      expect(screen.getByLabelText('Copyable input')).toHaveValue(
+        `cosign download sbom ${konfluxImageUrl}`,
+      );
+    });
+
+    it('should handle missing proxy URL gracefully', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+      mockUseImageProxy.mockReturnValue([null, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // Should fall back to original URL when proxy info is not available
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+    });
+
+    it('should handle image repository errors gracefully', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([null, true, new Error('Failed to fetch')]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // Should fall back to original URL when image repository fails
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+    });
+
+    it('should wait for all data to load before rendering', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([null, false, null]); // imageRepo still loading
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // Should show spinner while waiting for image repository to load
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    });
+
+    it('should wait for proxy info to load before rendering private images', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+      mockUseImageProxy.mockReturnValue([null, false, null]); // proxy still loading
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // Should show spinner while waiting for proxy to load
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    });
+
+    it('should not use proxy URL for user-owned private repositories', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithUserImage));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // User-owned repo should NOT use proxy URL even if private
+      expect(screen.getByText(userOwnedImageUrl)).toBeInTheDocument();
+    });
+
+    it('should not use proxy URL in params for user-owned private repositories', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithUserImage));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      // User-owned repo should NOT use proxy URL in params even if private
+      expect(screen.getByText(userOwnedImageUrl)).toBeInTheDocument();
+    });
   });
 });

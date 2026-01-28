@@ -6,7 +6,7 @@ import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '../../../consts/pipelinerun';
 import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
-import { ScanResults, useKarchScanResults } from '../../../hooks/useScanResults';
+import { useKarchScanResults } from '../../../hooks/useScanResults';
 import {
   PIPELINE_RUNS_DETAILS_PATH,
   COMPONENT_DETAILS_PATH,
@@ -26,6 +26,7 @@ import {
   pipelineRunStatus,
   taskTestResultStatus,
 } from '../../../utils/pipeline-utils';
+import { ScanResults } from '../../../utils/scan/scan-utils';
 import { StatusIconWithText } from '../../StatusIcon/StatusIcon';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';

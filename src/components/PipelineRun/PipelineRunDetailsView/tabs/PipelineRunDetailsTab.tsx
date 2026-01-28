@@ -21,6 +21,8 @@ import MetadataList from '~/components/MetadataList';
 import { useModalLauncher } from '~/components/modal/ModalProvider';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { useImageProxy } from '~/hooks/useImageProxy';
+import { useImageRepository } from '~/hooks/useImageRepository';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useSbomUrl } from '~/hooks/useUIInstance';
@@ -39,7 +41,9 @@ import { ErrorDetailsWithStaticLog } from '~/shared/components/pipeline-run-logs
 import { getPLRLogSnippet } from '~/shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { ImageRepositoryVisibility } from '~/types/image-repository';
 import { getCommitSha, getCommitShortName } from '~/utils/commits-utils';
+import { getImageUrlForVisibility } from '~/utils/component-utils';
 import {
   calculateDuration,
   getPipelineRunStatusResultForName,
@@ -54,12 +58,31 @@ import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
+function replaceParamValue(results, paramName, visibility, proxyHost) {
+  if (!results) {
+    return results;
+  }
+  return results.map((r) =>
+    r.name === paramName
+      ? {
+          ...r,
+          value: getImageUrlForVisibility(
+            r.value as string,
+            visibility as ImageRepositoryVisibility,
+            proxyHost as string,
+          ),
+        }
+      : r,
+  );
+}
+
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
   const namespace = useNamespace();
   const generateSbomUrl = useSbomUrl();
   const showModal = useModalLauncher();
   const [pipelineRun, loaded, error] = usePipelineRunV2(namespace, pipelineRunName);
+
   const [taskRuns, taskRunsLoaded, taskRunError] = useTaskRunsForPipelineRuns(
     namespace,
     pipelineRunName,
@@ -79,12 +102,20 @@ const PipelineRunDetailsTab: React.FC = () => {
     }
   }, [snapshotStatusAnnotation]);
 
+  const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
+  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
+  const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
+    namespace,
+    componentName,
+    false,
+  );
+
   const sboms = React.useMemo(
     () => (taskRuns ? getSBOMsFromTaskRuns(taskRuns, generateSbomUrl) : []),
     [taskRuns, generateSbomUrl],
   );
 
-  if (!(loaded && taskRunsLoaded)) {
+  if (!(loaded && taskRunsLoaded && imageRepoLoaded && proxyLoaded)) {
     return (
       <Bullseye>
         <Spinner />
@@ -97,7 +128,20 @@ const PipelineRunDetailsTab: React.FC = () => {
   }
 
   const results = getPipelineRunStatusResults(pipelineRun);
-  const specParams = pipelineRun?.spec?.params;
+  const patchedResultsForProxy = replaceParamValue(
+    results,
+    'IMAGE_URL',
+    imageRepository?.spec?.image?.visibility,
+    urlInfo?.hostname,
+  );
+  const specParams = pipelineRun.spec.params;
+  const patchedSpecParamsForProxy = replaceParamValue(
+    specParams,
+    'output-image',
+    imageRepository?.spec?.image?.visibility,
+    urlInfo?.hostname,
+  );
+
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
   const duration = calculateDuration(
@@ -108,9 +152,17 @@ const PipelineRunDetailsTab: React.FC = () => {
   );
   const sha = getCommitSha(pipelineRun);
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
+
   const buildImage =
     pipelineRun.metadata?.annotations?.[PipelineRunLabel.BUILD_IMAGE_ANNOTATION] ||
     getPipelineRunStatusResultForName(`IMAGE_URL`, pipelineRun)?.value;
+
+  const displayImageUrl = getImageUrlForVisibility(
+    buildImage,
+    imageRepository?.spec?.image?.visibility ?? null,
+    proxyError || imageRepoError || !urlInfo ? null : urlInfo.hostname,
+  );
+
   const sourceUrl = getSourceUrl(pipelineRun);
   const pipelineStatus = !error ? pipelineRunStatus(pipelineRun) : null;
   const integrationTestName = pipelineRun.metadata.labels[PipelineRunLabel.TEST_SERVICE_SCENARIO];
@@ -276,12 +328,12 @@ const PipelineRunDetailsTab: React.FC = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}
-                {buildImage && (
+                {displayImageUrl && (
                   <DescriptionListGroup>
                     <DescriptionListTerm>Download SBOM</DescriptionListTerm>
                     <DescriptionListDescription>
                       <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied">
-                        {`cosign download sbom ${buildImage}`}
+                        {`cosign download sbom ${displayImageUrl}`}
                       </ClipboardCopy>
                       <ExternalLink href="https://docs.sigstore.dev/cosign/system_config/installation">
                         Install Cosign
@@ -401,16 +453,16 @@ const PipelineRunDetailsTab: React.FC = () => {
             </FlexItem>
           </Flex>
 
-          {results ? (
+          {patchedResultsForProxy ? (
             <>
               <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
-              <RunResultsList results={results} status={pipelineStatus} />
+              <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />
             </>
           ) : null}
 
-          {specParams?.length && (
+          {patchedSpecParamsForProxy?.length && (
             <div style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
-              <RunParamsList params={specParams} />
+              <RunParamsList params={patchedSpecParamsForProxy} />
             </div>
           )}
         </>

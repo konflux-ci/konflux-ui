@@ -237,12 +237,16 @@ const convertToProxyImageUrl = (imageUrl: string, proxyHost: string): string => 
 };
 
 /**
- * Determines if an image URL should use the proxy based on repository visibility
+ * Determines if an image URL should use the proxy based on repository visibility and repo path
  * @param imageUrl - The image URL to check
  * @param visibility - The ImageRepository visibility setting (null if unknown)
  * @param proxyHost - The proxy host to use for private images (if null, returns original URL)
  * @returns The appropriate URL (proxied for private with valid proxyHost, original otherwise), or null if not provided
  */
+export const KONFLUX_IMAGE_PREFIXES = [
+  'quay.io/redhat-user-workloads/',
+  'quay.io/redhat-user-workloads-stage/',
+];
 export const getImageUrlForVisibility = (
   imageUrl: string | null,
   visibility: ImageRepositoryVisibility | null,
@@ -253,11 +257,13 @@ export const getImageUrlForVisibility = (
     return null;
   }
 
-  // Use proxy URL for private repositories only if proxyHost is available
-  if (visibility === ImageRepositoryVisibility.private && proxyHost) {
+  const isKonfluxHandledRepo = KONFLUX_IMAGE_PREFIXES.some((prefix) => imageUrl.startsWith(prefix));
+
+  // Use proxy URL for konflux-owned private repositories only if proxyHost is available
+  if (visibility === ImageRepositoryVisibility.private && proxyHost && isKonfluxHandledRepo) {
     return convertToProxyImageUrl(imageUrl, proxyHost);
   }
 
-  // Use original URL for public, null visibility, or when proxyHost is not available
+  // Use original URL for public, user-owned, null visibility, or when proxyHost is not available
   return imageUrl;
 };

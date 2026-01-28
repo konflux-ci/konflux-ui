@@ -392,6 +392,48 @@ describe('Logs', () => {
       });
     });
 
+    it('should gracefully handle 404 errors (empty logs) from kubearch', async () => {
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      const error404 = Object.assign(new Error('Not Found'), { code: 404 });
+      (commonFetchText as jest.Mock).mockRejectedValue(error404);
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      expect(commonFetchText as jest.Mock).toHaveBeenCalled();
+
+      // Should NOT show error message for 404 (missing logs) - should remain empty
+      await waitFor(() => {
+        expect(mockLogViewer).toHaveBeenCalledWith(
+          expect.objectContaining({
+            data: expect.not.stringContaining('LOG FETCH ERROR'),
+          }),
+        );
+      });
+    });
+
     it('should use websocket for running containers', async () => {
       const runningContainer: ContainerStatus = {
         name: 'container1',

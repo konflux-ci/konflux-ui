@@ -303,22 +303,52 @@ describe('updateImageRepositoryVisibility', () => {
 
 describe('getImageUrlForVisibility', () => {
   const quayUrl = 'quay.io/namespace/repo@sha256:abc123';
+  const konfluxProdUrl = 'quay.io/redhat-user-workloads/namespace/repo@sha256:abc123';
+  const konfluxStageUrl = 'quay.io/redhat-user-workloads-stage/namespace/repo@sha256:abc123';
   const customProxyHost = 'custom-proxy.example.com';
-  const customProxyUrl = 'custom-proxy.example.com/namespace/repo@sha256:abc123';
+  const konfluxProdProxyUrl =
+    'custom-proxy.example.com/redhat-user-workloads/namespace/repo@sha256:abc123';
+  const konfluxStageProxyUrl =
+    'custom-proxy.example.com/redhat-user-workloads-stage/namespace/repo@sha256:abc123';
 
   it('should return original URL for private visibility when proxyHost is null', () => {
-    expect(getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, null)).toBe(
-      quayUrl,
+    expect(getImageUrlForVisibility(konfluxProdUrl, ImageRepositoryVisibility.private, null)).toBe(
+      konfluxProdUrl,
     );
   });
 
-  it('should return proxy URL for private visibility with custom host', () => {
+  it('should return proxy URL for private Konflux prod URL with custom host', () => {
     expect(
-      getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, customProxyHost),
-    ).toBe(customProxyUrl);
+      getImageUrlForVisibility(konfluxProdUrl, ImageRepositoryVisibility.private, customProxyHost),
+    ).toBe(konfluxProdProxyUrl);
   });
 
-  it('should return original URL for public visibility', () => {
+  it('should return proxy URL for private Konflux stage URL with custom host', () => {
+    expect(
+      getImageUrlForVisibility(konfluxStageUrl, ImageRepositoryVisibility.private, customProxyHost),
+    ).toBe(konfluxStageProxyUrl);
+  });
+
+  it('should return original URL for private user-owned repository (non-Konflux prefix)', () => {
+    expect(
+      getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, customProxyHost),
+    ).toBe(quayUrl);
+  });
+
+  it('should return original URL for private user-owned repository like quay.io/user/repo', () => {
+    const userRepoUrl = 'quay.io/user/repo:latest';
+    expect(
+      getImageUrlForVisibility(userRepoUrl, ImageRepositoryVisibility.private, customProxyHost),
+    ).toBe(userRepoUrl);
+  });
+
+  it('should return original URL for public visibility with Konflux prefix', () => {
+    expect(
+      getImageUrlForVisibility(konfluxProdUrl, ImageRepositoryVisibility.public, customProxyHost),
+    ).toBe(konfluxProdUrl);
+  });
+
+  it('should return original URL for public visibility with non-Konflux prefix', () => {
     expect(
       getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.public, customProxyHost),
     ).toBe(quayUrl);
@@ -343,6 +373,8 @@ describe('getImageUrlForVisibility', () => {
   });
 
   it('should return original URL for private visibility when proxyHost is empty string', () => {
-    expect(getImageUrlForVisibility(quayUrl, ImageRepositoryVisibility.private, '')).toBe(quayUrl);
+    expect(getImageUrlForVisibility(konfluxProdUrl, ImageRepositoryVisibility.private, '')).toBe(
+      konfluxProdUrl,
+    );
   });
 });

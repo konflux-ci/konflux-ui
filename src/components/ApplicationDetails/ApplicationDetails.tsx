@@ -11,9 +11,10 @@ import {
   INTEGRATION_TEST_ADD_PATH,
   IMPORT_PATH,
 } from '../../routes/paths';
+import useTriggerReleaseAction from '../../shared/hooks/useTriggerReleaseAction';
 import { TrackEvents, useTrackEvent } from '../../utils/analytics';
-import { useApplicationBreadcrumbs } from '../../utils/breadcrumb-utils';
 import { useAccessReviewForModel } from '../../utils/rbac';
+import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import { useComponentRelationAction } from '../ComponentRelation/useComponentRelationAction';
 import { createCustomizeAllPipelinesModalLauncher } from '../CustomizedPipeline/CustomizePipelinesModal';
 import DetailsPage from '../DetailsPage/DetailsPage';
@@ -46,6 +47,14 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
   const track = useTrackEvent();
   const appDisplayName = application?.spec?.displayName || application?.metadata?.name || '';
   const applicationBreadcrumbs = useApplicationBreadcrumbs(appDisplayName, false);
+
+  const {
+    cta: triggerReleaseCta,
+    isDisabled: triggerReleaseIsDisabled,
+    disabledTooltip: triggerReleaseDisableTooltip,
+    key: triggerReleaseKey,
+    label: triggerReleaseLabel,
+  } = useTriggerReleaseAction();
 
   if (!applicationLoaded) {
     return (
@@ -126,6 +135,13 @@ export const ApplicationDetails: React.FC<React.PropsWithChildren> = () => {
             disabledTooltip: "You don't have access to add an integration test",
           },
           defineComponentRelationAction(),
+          {
+            key: triggerReleaseKey,
+            label: triggerReleaseLabel,
+            isDisabled: triggerReleaseIsDisabled,
+            disabledTooltip: triggerReleaseDisableTooltip,
+            onClick: triggerReleaseCta,
+          },
           {
             type: 'separator',
             key: 'delete-separator',
