@@ -103,6 +103,15 @@ export default defineConfig({
 
       on('after:run', async () => {
         // cypress-mochawesome-reporter
+        const jsonsDir = `${config.projectRoot}/cypress/.jsons`;
+        const hasJsonReports =
+          fs.existsSync(jsonsDir) &&
+          fs.readdirSync(jsonsDir).some((file) => file.endsWith('.json'));
+        if (!hasJsonReports) {
+          // eslint-disable-next-line no-console
+          console.warn(`Skipping mochawesome merge: no report files in ${jsonsDir}`);
+          return;
+        }
         await afterRunHook();
       });
 
