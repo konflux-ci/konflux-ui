@@ -3,6 +3,13 @@ import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { SecretLinkOptionLabels } from '~/consts/secrets';
+import {
+  getSupportedPartnerTaskKeyValuePairs,
+  getSupportedPartnerTaskSecrets,
+  isPartnerTask,
+  isPartnerTaskAvailable,
+  SecretForComponentOption,
+} from '~/utils/secrets/secret-utils';
 import { DropdownItemObject } from '../../../shared/components/dropdown';
 import KeyValueFileInputField from '../../../shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import SelectInputField from '../../../shared/components/formik-fields/SelectInputField';
@@ -13,13 +20,6 @@ import {
   SourceSecretType,
 } from '../../../types';
 import SecretTypeSelector from '../SecretTypeSelector';
-import {
-  getSupportedPartnerTaskKeyValuePairs,
-  getSupportedPartnerTaskSecrets,
-  isPartnerTask,
-  isPartnerTaskAvailable,
-  SecretForComponentOption,
-} from '../utils/secret-utils';
 import { ImagePullSecretForm } from './ImagePullSecretForm';
 import { KeyValueSecretForm } from './KeyValueSecretForm';
 import { SecretLinkOptions } from './SecretLinkOption';

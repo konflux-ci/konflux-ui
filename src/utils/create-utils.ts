@@ -1,21 +1,9 @@
 import { Base64 } from 'js-base64';
 import { isEqual, isNumber, pick } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  addCommonSecretLabelToBuildSecret,
-  linkSecretToBuildServiceAccount,
-  linkSecretToServiceAccounts,
-  updateAnnotateForSecret,
-} from '~/components/Secrets/utils/service-account-utils';
 import { BackgroundTaskInfo } from '~/consts/backgroundjobs';
 import { LINKING_ERROR_ANNOTATION, LINKING_STATUS_ANNOTATION } from '~/consts/secrets';
 import { HttpError } from '~/k8s/error';
-import {
-  getAnnotationForSecret,
-  getLabelsForSecret,
-  getSecretFormData,
-  SecretForComponentOption,
-} from '../components/Secrets/utils/secret-utils';
 import { k8sCreateResource, K8sGetResource, K8sListResourceItems } from '../k8s/k8s-fetch';
 import { K8sQueryCreateResource, K8sQueryUpdateResource } from '../k8s/query/fetch';
 import {
@@ -51,6 +39,18 @@ import {
   GIT_PROVIDER_ANNOTATION,
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
+import {
+  getAnnotationForSecret,
+  getLabelsForSecret,
+  getSecretFormData,
+  SecretForComponentOption,
+} from './secrets/secret-utils';
+import {
+  addCommonSecretLabelToBuildSecret,
+  linkSecretToBuildServiceAccount,
+  linkSecretToServiceAccounts,
+  updateAnnotateForSecret,
+} from './service-account/service-account-utils';
 import { BackgroundJobStatus, useTaskStore } from './task-store';
 
 export const sanitizeName = (name: string) => name.split(/ |\./).join('-').toLowerCase();

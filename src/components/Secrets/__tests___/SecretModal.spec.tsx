@@ -1,9 +1,9 @@
 import { act } from 'react';
 import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { supportedPartnerTasksSecrets } from '~/utils/secrets/secret-utils';
 import { SecretTypeDropdownLabel, SecretType, SourceSecretType } from '../../../types';
 import { formikRenderer } from '../../../utils/test-utils';
 import SecretModal, { SecretModalValues } from '../SecretModal';
-import { supportedPartnerTasksSecrets } from '../utils/secret-utils';
 
 const initialValues: SecretModalValues = {
   secretName: '',

@@ -1,4 +1,7 @@
+import { ObjectMetadata, OwnerReference } from '../../types/common-types';
 import { K8sResourceCommon } from '../../types/k8s';
+
+export type { ObjectMetadata, OwnerReference };
 
 export type TaintEffect = '' | 'NoSchedule' | 'PreferNoSchedule' | 'NoExecute';
 
@@ -144,15 +147,6 @@ export type K8sResourceCondition = {
   message?: string;
 };
 
-export type OwnerReference = {
-  name: string;
-  kind: string;
-  uid: string;
-  apiVersion: string;
-  controller?: boolean;
-  blockOwnerDeletion?: boolean;
-};
-
 export type ObjectReference = {
   kind?: string;
   namespace?: string;
@@ -161,24 +155,6 @@ export type ObjectReference = {
   apiVersion?: string;
   resourceVersion?: string;
   fieldPath?: string;
-};
-
-export type ObjectMetadata = {
-  annotations?: { [key: string]: string };
-  clusterName?: string;
-  creationTimestamp?: string;
-  deletionGracePeriodSeconds?: number;
-  deletionTimestamp?: string;
-  finalizers?: string[];
-  generateName?: string;
-  generation?: number;
-  labels?: { [key: string]: string };
-  managedFields?: unknown[];
-  name?: string;
-  namespace?: string;
-  ownerReferences?: OwnerReference[];
-  resourceVersion?: string;
-  uid?: string;
 };
 
 export type ContainerSpec = {
