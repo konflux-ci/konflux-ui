@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { ResourceSource } from '~/types/k8s';
 import { ReleaseModel } from '../../models';
 import { RELEASEPLAN_TRIGGER_PATH } from '../../routes/paths';
 import { Snapshot } from '../../types/coreBuildService';
@@ -30,10 +31,17 @@ const useTriggerReleaseAction = (snapshot?: Snapshot): TriggerReleaseActionRetur
   const namespace = useNamespace();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
 
+  const isArchived = snapshot && snapshot.source !== ResourceSource.Cluster;
+  const canTriggerRelease = canCreateRelease && !isArchived;
+
   return {
     cta: () => void navigate(getReleasePlanTriggerUrl(namespace, snapshot?.metadata?.name)),
-    isDisabled: !canCreateRelease,
-    disabledTooltip: canCreateRelease ? null : "You don't have access to trigger releases",
+    isDisabled: !canTriggerRelease,
+    disabledTooltip: !canCreateRelease
+      ? "You don't have access to trigger releases"
+      : isArchived
+        ? 'Cannot trigger release from archived snapshot'
+        : null,
     key: 'trigger-release',
     label: 'Trigger release',
   };
