@@ -2,10 +2,10 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { useReleaseStatus } from '~/hooks/useReleaseStatus';
+import useComponentDetailsPath from '../../routes/hooks/useComponentDetailsPath';
 import {
   APPLICATION_DETAILS_PATH,
   APPLICATION_RELEASE_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
   RELEASEPLAN_PATH,
 } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared/components/table';
@@ -16,6 +16,8 @@ import { releaseTableColumnClasses } from './ReleaseListHeader';
 
 const ReleaseListRow: React.FC<RowFunctionArgs<MonitoredReleaseKind>> = ({ obj }) => {
   const status = useReleaseStatus(obj);
+
+  const { getComponentDetailsPath } = useComponentDetailsPath();
 
   return (
     <>
@@ -41,11 +43,10 @@ const ReleaseListRow: React.FC<RowFunctionArgs<MonitoredReleaseKind>> = ({ obj }
 
       <TableData className={releaseTableColumnClasses.component}>
         <Link
-          to={COMPONENT_DETAILS_PATH.createPath({
-            workspaceName: obj.metadata.namespace,
-            applicationName: obj.metadata.labels?.[PipelineRunLabel.APPLICATION],
-            componentName: obj.metadata.labels?.[PipelineRunLabel.COMPONENT],
-          })}
+          to={getComponentDetailsPath(
+            obj.metadata.labels?.[PipelineRunLabel.APPLICATION],
+            obj.metadata.labels?.[PipelineRunLabel.COMPONENT],
+          )}
         >
           {obj.metadata.labels?.[PipelineRunLabel.COMPONENT]}
         </Link>

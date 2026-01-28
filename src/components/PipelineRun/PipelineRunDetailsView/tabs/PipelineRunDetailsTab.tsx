@@ -30,7 +30,6 @@ import {
   SNAPSHOT_DETAILS_PATH,
   PIPELINE_RUNS_LOG_PATH,
   APPLICATION_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
   COMMIT_DETAILS_PATH,
   INTEGRATION_TEST_DETAILS_PATH,
 } from '~/routes/paths';
@@ -50,6 +49,7 @@ import {
   getPipelineRunStatusResults,
   pipelineRunStatus,
 } from '~/utils/pipeline-utils';
+import useComponentDetailsPath from '../../../../routes/hooks/useComponentDetailsPath';
 import RelatedPipelineRuns from '../RelatedPipelineRuns';
 import { getSourceUrl, getSBOMsFromTaskRuns } from '../utils/pipelinerun-utils';
 import PipelineRunVisualization from '../visualization/PipelineRunVisualization';
@@ -114,6 +114,8 @@ const PipelineRunDetailsTab: React.FC = () => {
     () => (taskRuns ? getSBOMsFromTaskRuns(taskRuns, generateSbomUrl) : []),
     [taskRuns, generateSbomUrl],
   );
+
+  const { getComponentDetailsPath } = useComponentDetailsPath();
 
   if (!(loaded && taskRunsLoaded && imageRepoLoaded && proxyLoaded)) {
     return (
@@ -384,12 +386,10 @@ const PipelineRunDetailsTab: React.FC = () => {
                     {pipelineRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                       pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                         <Link
-                          to={COMPONENT_DETAILS_PATH.createPath({
-                            workspaceName: plrNamespace,
-                            applicationName:
-                              pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-                            componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
-                          })}
+                          to={getComponentDetailsPath(
+                            pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
+                            pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
+                          )}
                         >
                           {pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]}
                         </Link>

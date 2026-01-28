@@ -18,11 +18,8 @@ import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import {
-  COMPONENT_DETAILS_PATH,
-  INTEGRATION_TEST_DETAILS_PATH,
-  PIPELINE_RUNS_LOG_PATH,
-} from '../../../../routes/paths';
+import useComponentDetailsPath from '../../../../routes/hooks/useComponentDetailsPath';
+import { INTEGRATION_TEST_DETAILS_PATH, PIPELINE_RUNS_LOG_PATH } from '../../../../routes/paths';
 import { ErrorDetailsWithStaticLog } from '../../../../shared/components/pipeline-run-logs/logs/log-snippet-types';
 import { getPLRLogSnippet } from '../../../../shared/components/pipeline-run-logs/logs/pipelineRunLogSnippet';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
@@ -63,6 +60,8 @@ const IntegrationTestSidePanel: React.FC<
   const pipelineRunFailed = (getPLRLogSnippet(integrationTestPipeline, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   return (
     <>
       <div className="commit-side-panel__head">
@@ -82,10 +81,10 @@ const IntegrationTestSidePanel: React.FC<
               workflowNode.getLabel()
             )}
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
-            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test{' '}
+            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
@@ -134,13 +133,10 @@ const IntegrationTestSidePanel: React.FC<
                 {integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                   integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                     <Link
-                      to={COMPONENT_DETAILS_PATH.createPath({
-                        applicationName:
-                          integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION],
-                        componentName:
-                          integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT],
-                        workspaceName: namespace,
-                      })}
+                      to={getComponentDetailsPath(
+                        integrationTestPipeline.metadata.labels[PipelineRunLabel.APPLICATION],
+                        integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT],
+                      )}
                     >
                       {integrationTestPipeline.metadata.labels[PipelineRunLabel.COMPONENT]}
                     </Link>

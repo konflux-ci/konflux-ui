@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Flex, FlexItem, Skeleton } from '@patternfly/react-core';
 import { PacStatesForComponents } from '../../../hooks/usePACStatesForComponents';
-import { COMPONENT_DETAILS_PATH, COMMIT_DETAILS_PATH } from '../../../routes/paths';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
+import { COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { ImageUrlDisplay } from '../../../shared/components/image-display';
@@ -40,18 +41,14 @@ const ComponentsListRow: React.FC<
     [component.latestBuildPipelineRun],
   );
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   return (
     <>
       <TableData className={componentsTableColumnClasses.component} data-test="component-list-item">
         <Flex direction={{ default: 'column' }}>
           <FlexItem data-test="component-list-item-name" style={{ minWidth: '30%' }}>
-            <Link
-              to={COMPONENT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName,
-                componentName: name,
-              })}
-            >
+            <Link to={getComponentDetailsPath(applicationName, name)}>
               <b>{name}</b>{' '}
               <ComponentRelationStatusIcon
                 component={component}

@@ -4,7 +4,8 @@ import { Button, Text } from '@patternfly/react-core';
 import { ExternalLinkAltIcon } from '@patternfly/react-icons/dist/esm/icons/external-link-alt-icon';
 import { css } from '@patternfly/react-styles';
 import { useAllComponents } from '../../../hooks/useComponents';
-import { COMPONENT_DETAILS_PATH, APPLICATION_DETAILS_PATH } from '../../../routes/paths';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
+import { APPLICATION_DETAILS_PATH } from '../../../routes/paths';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { ComponentKind } from '../../../types';
 import { ComponentRelationStatusIcon } from './ComponentRelationStatusIcon';
@@ -44,6 +45,8 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
 
   const isNudges = React.useMemo(() => radioChecked === NudgeRadios.NUDGES, [radioChecked]);
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   if (!nudgeComponents || nudgeComponents?.length === 0) {
     return emptyState;
   }
@@ -64,11 +67,7 @@ const ComponentNudgesSVG: React.FC<ComponentNudgesSVGprops> = ({
         {relatedComponents.map((comp, i) => (
           <li key={i} data-test="nudges-connector">
             <Link
-              to={COMPONENT_DETAILS_PATH.createPath({
-                workspaceName: namespace,
-                applicationName: comp.spec?.application,
-                componentName: comp.metadata.name,
-              })}
+              to={getComponentDetailsPath(comp.spec?.application, comp.metadata.name)}
               data-test={isNudges ? 'nudges-cmp-link' : 'nudged-by-cmp-link'}
             >
               {comp.metadata.name}

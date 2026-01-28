@@ -2,7 +2,8 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { Button, Popover, Stack, StackItem, Truncate } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
-import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
+import { COMMIT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
@@ -46,20 +47,15 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     ? getDynamicCommitsColumnClasses(visibleColumns)
     : commitsTableColumnClasses;
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   const getComponentLink = React.useCallback(
     (component: string) => (
-      <Link
-        key={component}
-        to={COMPONENT_DETAILS_PATH.createPath({
-          workspaceName: namespace,
-          applicationName: obj.application,
-          componentName: component.trim(),
-        })}
-      >
+      <Link key={component} to={getComponentDetailsPath(obj.application, component.trim())}>
         {component.trim()}
       </Link>
     ),
-    [namespace, obj.application],
+    [getComponentDetailsPath, obj.application],
   );
 
   const compCount = obj.components.length;
