@@ -13,6 +13,7 @@ export type ResourceRequirements = {
 };
 
 export type ComponentSource = {
+  url?: string;
   git?: {
     url: string;
     devfileUrl?: string;
