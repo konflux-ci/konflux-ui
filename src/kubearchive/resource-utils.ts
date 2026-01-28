@@ -2,7 +2,7 @@ import { k8sQueryGetResource } from '~/k8s';
 import { HttpError } from '~/k8s/error';
 import { K8sResourceReadOptions } from '~/k8s/k8s-fetch';
 import { TQueryOptions } from '~/k8s/query/type';
-import { K8sResourceCommon, ResourceSource, ResourceWithSource } from '~/types/k8s';
+import { K8sResourceCommon, ResourceSource } from '~/types/k8s';
 import { isKubeArchiveEnabled } from './conditional-checks';
 import { kubearchiveQueryGetResource } from './fetch-utils';
 
@@ -23,21 +23,21 @@ import { kubearchiveQueryGetResource } from './fetch-utils';
 export async function fetchResourceWithK8sAndKubeArchive<TResource extends K8sResourceCommon>(
   resourceInit: K8sResourceReadOptions,
   options?: TQueryOptions<TResource>,
-): Promise<ResourceWithSource<TResource>> {
+): Promise<TResource> {
   const isEnabled = isKubeArchiveEnabled();
   try {
     return {
-      resource: await k8sQueryGetResource<TResource>(resourceInit, options),
+      ...(await k8sQueryGetResource<TResource>(resourceInit, options)),
       source: ResourceSource.Cluster,
     };
   } catch (error) {
     if (error instanceof HttpError && error.code === 404 && isEnabled) {
       try {
         return {
-          resource: await kubearchiveQueryGetResource<TResource>(resourceInit, {
+          ...(await kubearchiveQueryGetResource<TResource>(resourceInit, {
             ...options,
             staleTime: Infinity,
-          }),
+          })),
           source: ResourceSource.Archive,
         };
       } catch (archiveError) {

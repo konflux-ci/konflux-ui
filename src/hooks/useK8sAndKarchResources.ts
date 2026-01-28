@@ -8,13 +8,7 @@ import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
 import { TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { useDeepCompareMemoize } from '../shared';
-import {
-  K8sModelCommon,
-  K8sResourceCommon,
-  ResourceSource,
-  ResourceWithSource,
-  WatchK8sResource,
-} from '../types/k8s';
+import { K8sModelCommon, K8sResourceCommon, ResourceSource, WatchK8sResource } from '../types/k8s';
 
 const getResourceId = (resource: K8sResourceCommon): string => {
   return resource.metadata?.uid || `${resource.metadata?.name}-${resource.metadata?.namespace}`;
@@ -169,7 +163,6 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
 
 export interface useK8sAndKarchResourceResult<TResource extends K8sResourceCommon> {
   data: TResource | undefined;
-  source: ResourceSource | undefined;
   isLoading: boolean;
   fetchError: unknown;
   wsError: unknown;
@@ -197,7 +190,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   > = {},
   enabled: boolean = true,
 ): useK8sAndKarchResourceResult<TResource> {
-  const [result, setResult] = React.useState<ResourceWithSource<TResource> | undefined>(undefined);
+  const [resource, setResource] = React.useState<TResource | undefined>(undefined);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [fetchError, setFetchError] = React.useState<unknown>(null);
 
@@ -215,19 +208,20 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
 
     fetchResourceWithK8sAndKubeArchive<TResource>(memoizedResourceInit, memoizedQueryOptions)
       .then((res) => {
-        setResult(res);
+        setResource(res);
         setFetchError(null);
       })
       .catch((err) => {
         setFetchError(err);
-        setResult(undefined);
+        setResource(undefined);
       })
       .finally(() => {
         setIsLoading(false);
       });
   }, [memoizedResourceInit, enabled, memoizedQueryOptions]);
 
-  const shouldWatch = enabled && watch && result?.source === ResourceSource.Cluster && resourceInit;
+  const shouldWatch =
+    enabled && watch && resource?.source === ResourceSource.Cluster && resourceInit;
 
   const wsError = useK8sQueryWatch(
     shouldWatch ? resourceInit : null,
@@ -245,8 +239,7 @@ export function useK8sAndKarchResource<TResource extends K8sResourceCommon>(
   );
 
   return {
-    data: result?.resource,
-    source: result?.source,
+    data: resource,
     isLoading,
     fetchError,
     wsError,

@@ -767,7 +767,7 @@ describe('useK8sAndKarchResource', () => {
 
   it('should fetch resource successfully from cluster', async () => {
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Cluster,
     };
 
@@ -786,15 +786,15 @@ describe('useK8sAndKarchResource', () => {
       mockResourceInit,
       undefined,
     );
-    expect(result.current.data).toBe(testResource1);
-    expect(result.current.source).toBe(ResourceSource.Cluster);
+    expect(result.current.data).toBe(mockResourceWithSource);
+    expect(result.current.data.source).toBe(ResourceSource.Cluster);
     expect(result.current.fetchError).toBeNull();
     expect(result.current.isError).toBe(false);
   });
 
   it('should fetch resource from kubearchive when cluster returns 404', async () => {
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Archive,
     };
 
@@ -806,8 +806,8 @@ describe('useK8sAndKarchResource', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.data).toBe(testResource1);
-    expect(result.current.source).toBe(ResourceSource.Archive);
+    expect(result.current.data).toBe(mockResourceWithSource);
+    expect(result.current.data.source).toBe(ResourceSource.Archive);
   });
 
   it('should handle fetch errors correctly', async () => {
@@ -821,14 +821,14 @@ describe('useK8sAndKarchResource', () => {
     });
 
     expect(result.current.data).toBeUndefined();
-    expect(result.current.source).toBeUndefined();
+    expect(result.current.data?.source).toBeUndefined();
     expect(result.current.fetchError).toBe(fetchError);
     expect(result.current.isError).toBe(true);
   });
 
   it('should enable watching when watch=true and source is cluster', async () => {
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Cluster,
     };
 
@@ -852,7 +852,7 @@ describe('useK8sAndKarchResource', () => {
 
   it('should not enable watching when watch=false', async () => {
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Cluster,
     };
 
@@ -869,7 +869,7 @@ describe('useK8sAndKarchResource', () => {
 
   it('should not enable watching when source is kubearchive', async () => {
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Archive,
     };
 
@@ -886,7 +886,7 @@ describe('useK8sAndKarchResource', () => {
 
   it('should handle websocket errors correctly', async () => {
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Cluster,
     };
     const wsError = { code: 1000, message: 'WebSocket connection failed' };
@@ -902,7 +902,7 @@ describe('useK8sAndKarchResource', () => {
 
     expect(result.current.wsError).toBe(wsError);
     expect(result.current.isError).toBe(true);
-    expect(result.current.data).toBe(testResource1); // data should still be available
+    expect(result.current.data).toBe(mockResourceWithSource); // data should still be available
   });
 
   it('should not fetch when enabled=false', () => {
@@ -924,7 +924,7 @@ describe('useK8sAndKarchResource', () => {
   it('should pass query options to fetch function', async () => {
     const queryOptions = { timeout: 5000 };
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Cluster,
     };
 
@@ -945,7 +945,7 @@ describe('useK8sAndKarchResource', () => {
   it('should pass watch options to useK8sQueryWatch', async () => {
     const watchOptions = { wsPrefix: 'custom-prefix', timeout: 1000 };
     const mockResourceWithSource = {
-      resource: testResource1,
+      ...testResource1,
       source: ResourceSource.Cluster,
     };
 

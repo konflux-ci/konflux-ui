@@ -172,8 +172,3 @@ export enum ResourceSource {
   Cluster = 'cluster',
   Archive = 'archive',
 }
-
-export type ResourceWithSource<TResource extends K8sResourceCommon> = {
-  resource: TResource;
-  source: ResourceSource;
-};
