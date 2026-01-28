@@ -82,7 +82,6 @@ describe('K8sAndKarchLogWrapper', () => {
   ): useK8sAndKarchResourceResult<PodKind> =>
     ({
       data: undefined,
-      source: ResourceSource.Cluster,
       isLoading: false,
       fetchError: null,
       wsError: null,
@@ -98,9 +97,7 @@ describe('K8sAndKarchLogWrapper', () => {
     it('should render spinner when loading', () => {
       mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ isLoading: true }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      )
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
@@ -124,9 +121,7 @@ describe('K8sAndKarchLogWrapper', () => {
         createMockHookResult({ fetchError: mockError, isError: true }),
       );
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       expect(screen.getByTestId('error-state')).toBeInTheDocument();
       expect(screen.getByText('Failed to fetch pod')).toBeInTheDocument();
@@ -138,9 +133,7 @@ describe('K8sAndKarchLogWrapper', () => {
         createMockHookResult({ isLoading: true, fetchError: mockError, isError: true }),
       );
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       // Should still show spinner, not error
       expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -152,9 +145,7 @@ describe('K8sAndKarchLogWrapper', () => {
     it('should render MultiStreamLogs when data is loaded successfully', () => {
       mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPod }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       expect(screen.getByTestId('multi-stream-logs')).toBeInTheDocument();
       expect(screen.getByTestId('task-run')).toHaveTextContent('test-taskrun');
@@ -163,23 +154,19 @@ describe('K8sAndKarchLogWrapper', () => {
     });
 
     it('should pass correct source to MultiStreamLogs from cluster', () => {
-      mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPod }));
+      const mockPodWithSource = { ...mockPod, source: ResourceSource.Cluster };
+      mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPodWithSource }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       expect(screen.getByTestId('source')).toHaveTextContent(ResourceSource.Cluster);
     });
 
     it('should pass correct source to MultiStreamLogs from archive', () => {
-      mockUseK8sAndKarchResource.mockReturnValue(
-        createMockHookResult({ data: mockPod, source: ResourceSource.Archive }),
-      );
+      const mockPodWithSource = { ...mockPod, source: ResourceSource.Archive };
+      mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPodWithSource }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       expect(screen.getByTestId('source')).toHaveTextContent(ResourceSource.Archive);
     });
@@ -213,9 +200,7 @@ describe('K8sAndKarchLogWrapper', () => {
     it('should use default downloadAllLabel when not provided', () => {
       mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPod }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       // Verify MultiStreamLogs was called with default downloadAllLabel
       const { MultiStreamLogs } = jest.requireMock('../MultiStreamLogs');
@@ -253,9 +238,7 @@ describe('K8sAndKarchLogWrapper', () => {
     it('should initialize useK8sAndKarchResource with correct parameters', () => {
       mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPod }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       expect(mockUseK8sAndKarchResource).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -288,9 +271,7 @@ describe('K8sAndKarchLogWrapper', () => {
         namespace: 'new-namespace',
       };
 
-      rerender(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={newResource} />,
-      );
+      rerender(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={newResource} />);
 
       expect(mockUseK8sAndKarchResource).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -302,17 +283,14 @@ describe('K8sAndKarchLogWrapper', () => {
         { retry: false, refetchInterval: false, refetchOnWindowFocus: false },
         true,
       );
-    })
-  })
-
+    });
+  });
 
   describe('edge cases', () => {
     it('should handle undefined pod data gracefully', () => {
       mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult());
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={mockTaskRun} resource={mockResource} />);
 
       // Should render MultiStreamLogs even with undefined data
       expect(screen.getByTestId('multi-stream-logs')).toBeInTheDocument();
@@ -321,11 +299,9 @@ describe('K8sAndKarchLogWrapper', () => {
     it('should handle null taskRun gracefully', () => {
       mockUseK8sAndKarchResource.mockReturnValue(createMockHookResult({ data: mockPod }));
 
-      render(
-        <K8sAndKarchLogWrapper taskRun={null} resource={mockResource} />,
-      );
+      render(<K8sAndKarchLogWrapper taskRun={null} resource={mockResource} />);
 
       expect(screen.getByTestId('multi-stream-logs')).toBeInTheDocument();
     });
-  })
+  });
 });
