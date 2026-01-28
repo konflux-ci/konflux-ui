@@ -183,7 +183,7 @@ describe('CommitsListRow', () => {
         />,
       );
 
-      const componentListDiv = container.querySelector('.commits-component-list');
+      const componentListDiv = container.querySelector('.truncated-link-list');
       expect(componentListDiv).toBeInTheDocument();
       expect(componentListDiv).toHaveTextContent('-');
       expect(screen.queryByTestId('more-components-popover')).not.toBeInTheDocument();

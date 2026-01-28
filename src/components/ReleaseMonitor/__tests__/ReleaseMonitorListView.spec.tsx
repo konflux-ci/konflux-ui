@@ -231,7 +231,7 @@ describe('ReleaseMonitorListView', () => {
           namespace: 'target-namespace-1',
         },
         spec: {
-          application: 'test',
+          applications: ['test'],
           origin: 'namespace-1',
           releaseStrategy: 'test-strategy',
           data: {

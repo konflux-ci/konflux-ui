@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Popover, Stack, StackItem, Truncate } from '@patternfly/react-core';
+import { Truncate } from '@patternfly/react-core';
 import { runStatus } from '~/consts/pipelinerun';
 import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
 import { TableData, Timestamp } from '../../../shared';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import ExternalLink from '../../../shared/components/links/ExternalLink';
+import TruncatedLinkListWithPopover from '../../../shared/components/truncated-link-list-with-popover/TruncatedLinkListWithPopover';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit } from '../../../types';
 import { createRepoBranchURL, statuses } from '../../../utils/commits-utils';
@@ -62,16 +63,6 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     [namespace, obj.application],
   );
 
-  const compCount = obj.components.length;
-  const visibleComponents = React.useMemo(() => obj.components.slice(0, 3), [obj.components]);
-  const hiddenComponents = React.useMemo(() => obj.components.slice(3), [obj.components]);
-
-  const popoverBodyContent = React.useMemo(
-    () =>
-      hiddenComponents.map((comp) => <StackItem key={comp}>{getComponentLink(comp)}</StackItem>),
-    [hiddenComponents, getComponentLink],
-  );
-
   const columnComponents = {
     name: (
       <TableData key="name" className={columnClasses.name}>
@@ -104,37 +95,16 @@ const CommitsListRow: React.FC<React.PropsWithChildren<CommitsListRowProps>> = (
     ),
     component: (
       <TableData key="component" className={columnClasses.component}>
-        <div className="commits-component-list">
-          {compCount > 0 ? (
-            <>
-              {visibleComponents.map((comp) => getComponentLink(comp))}
-              {hiddenComponents.length > 0 && (
-                <Popover
-                  data-testid="more-components-popover"
-                  aria-label="More commit components"
-                  headerContent="More commit components"
-                  bodyContent={
-                    <Stack
-                      className="commits-popover-stack"
-                      style={{
-                        maxHeight: '400px',
-                        overflowY: 'auto',
-                      }}
-                    >
-                      {popoverBodyContent}
-                    </Stack>
-                  }
-                >
-                  <Button variant="link" isInline>
-                    {`${hiddenComponents.length} more`}
-                  </Button>
-                </Popover>
-              )}
-            </>
-          ) : (
-            '-'
-          )}
-        </div>
+        <TruncatedLinkListWithPopover
+          items={obj.components}
+          renderItem={getComponentLink}
+          popover={{
+            header: 'More commit components',
+            ariaLabel: 'More commit components',
+            moreText: (count: number) => `${count} more`,
+            dataTestIdPrefix: 'more-components-popover',
+          }}
+        />
       </TableData>
     ),
     byUser: (

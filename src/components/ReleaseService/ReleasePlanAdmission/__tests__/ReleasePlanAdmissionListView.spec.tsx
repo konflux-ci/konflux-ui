@@ -1,9 +1,7 @@
 import { MemoryRouter } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { mockApplication } from '~/components/ApplicationDetails/__data__/mock-data';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { useApplications } from '../../../../hooks/useApplications';
 import { useReleasePlanAdmissions } from '../../../../hooks/useReleasePlanAdmissions';
 import { mockAccessReviewUtil } from '../../../../unit-test-utils/mock-access-review';
 import { mockReleasePlanAdmissions } from '../__data__/release-plan-admission.mock';
@@ -29,12 +27,7 @@ jest.mock('../../../../hooks/useReleasePlanAdmissions', () => ({
   useReleasePlanAdmissions: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useApplications', () => ({
-  useApplications: jest.fn(),
-}));
-
 const mockReleasePlanHook = useReleasePlanAdmissions as jest.Mock;
-const useApplicationsMock = useApplications as jest.Mock;
 
 const ReleasePlanAdmissionList = (
   <MemoryRouter>
@@ -48,22 +41,10 @@ describe('ReleasePlanAdmissionListView', () => {
   mockUseNamespaceHook('test-ns');
   mockAccessReviewUtil('useAccessReviewForModels', [true, true]);
 
-  beforeEach(() => {
-    useApplicationsMock.mockReturnValue([[mockApplication], true]);
-  });
-
   it('should render progress bar while loading', async () => {
     mockReleasePlanHook.mockReturnValue([[], false]);
     const wrapper = render(ReleasePlanAdmissionList);
     expect(await wrapper.findByRole('progressbar')).toBeTruthy();
-  });
-
-  it('should render the error state if there is an error loading the applications', () => {
-    mockReleasePlanHook.mockReturnValue([[mockReleasePlanAdmissions], true]);
-    useApplicationsMock.mockReturnValue([undefined, true, { code: 403 }]);
-    render(ReleasePlanAdmissionList);
-    expect(screen.getByText('Unable to load release plan admissions')).toBeInTheDocument();
-    expect(screen.getByText('Forbidden')).toBeInTheDocument();
   });
 
   it('should render the error state if there is an error loading the release plans', () => {

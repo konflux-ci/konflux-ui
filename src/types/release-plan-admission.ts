@@ -1,7 +1,7 @@
 import { K8sResourceCommon } from './k8s';
 
 export type ReleasePlanAdmissionSpec = {
-  application: string;
+  applications: string[];
   displayName?: string;
   environment?: string;
   origin: string;
