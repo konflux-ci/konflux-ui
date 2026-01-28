@@ -11,7 +11,7 @@ if [ -d "/e2e" ]; then
   yarn run cypress install
   chmod -R a+rwx ../e2e
 else
-  cd /tmp/e2e
+  cd /tmp/e2e || exit 1
 fi
 
 npx cypress run --runner-ui $args
