@@ -11,7 +11,7 @@ import {
 } from '@patternfly/react-topology';
 import { PipelineNodeModel } from '@patternfly/react-topology/src/pipelines/types';
 import { runStatus } from '~/consts/pipelinerun';
-import { isCVEScanResult } from '../../../../../hooks/useScanResults';
+import { isCVEScanResult } from '~/utils/scan/scan-utils';
 import { formatPrometheusDuration } from '../../../../../shared/components/timestamp/datetime';
 import {
   TaskRunKind,
