@@ -82,7 +82,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     return (snapshots || []).filter((s) => {
       if (
         showMergedOnly &&
-        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] !== 'push'
+        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] === 'pull_request'
       ) {
         return false;
       }
@@ -164,7 +164,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                   icon={<FilterIcon />}
                   isExpanded={isOpen}
                   onClick={() => setIsOpen(!isOpen)}
-                  data-test="snapshots-list-filter-dropdown"
                 >
                   {capitalize(activeFilter)}
                 </MenuToggle>
