@@ -41,9 +41,7 @@ const checkEmptyState = () => {
   expect(
     screen.getByText(/Snapshots are created automatically by push events or pull request events/),
   ).toBeInTheDocument();
-  expect(
-    screen.getByText(/Snapshots can also created by created by manually if needed/),
-  ).toBeInTheDocument();
+  expect(screen.getByText(/Snapshots can also be created manually if needed/)).toBeInTheDocument();
   expect(
     screen.getByText(/Once created, Snapshots will be displayed on this page/),
   ).toBeInTheDocument();
