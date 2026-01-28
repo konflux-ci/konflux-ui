@@ -89,12 +89,10 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       if (nameFilter && !s.metadata.name.toLowerCase().includes(nameFilter.toLowerCase())) {
         return false;
       }
-      if (
-        commitMessageFilter &&
-        !s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE]
-          ?.toLowerCase()
-          .includes(commitMessageFilter.toLowerCase())
-      ) {
+
+      const commitTitle =
+        s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE]?.toLowerCase() ?? '';
+      if (commitMessageFilter && !commitTitle.includes(commitMessageFilter.toLowerCase())) {
         return false;
       }
       return true;
