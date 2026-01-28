@@ -209,8 +209,7 @@ describe('Basic Happy Path', () => {
   });
 
   it('Delete the application via UI', () => {
-    Common.navigateTo(NavItem.applications);
-    Common.verifyPageTitle(pageTitles.applications);
+    Common.openApplicationsPage();
     const appSelector = `[data-id="${applicationName}"]`;
 
     // Fail the test if the application row is missing

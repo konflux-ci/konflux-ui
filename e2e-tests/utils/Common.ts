@@ -1,5 +1,6 @@
-import { NavItem } from '../support/constants/PageTitle';
+import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { consentButton, navigation, waits } from '../support/pageObjects/global-po';
+import { goToApplicationsPagePo } from '../support/pageObjects/pages-po';
 
 export class Common {
   static openAppStudioBaseURL() {
@@ -42,6 +43,15 @@ export class Common {
       Common.verifyPageTitle(applicationName);
       Common.waitForLoad();
     });
+  }
+
+  static openApplicationsPage() {
+    Common.navigateTo(NavItem.namespaces);
+    cy.get(
+      goToApplicationsPagePo(`${Cypress.env('HAC_NAMESPACE')}`).goToApplicationsPagePo,
+    ).click();
+    Common.waitForLoad();
+    Common.verifyPageTitle(pageTitles.applications);
   }
 
   static waitForLoad(timeout = 120000) {
