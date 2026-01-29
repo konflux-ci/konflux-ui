@@ -208,24 +208,24 @@ describe('Basic Happy Path', () => {
     });
   });
 
-  it('Delete the application via UI', () => {
-    Common.openApplicationsPage();
-    const appSelector = `[data-id="${applicationName}"]`;
+  describe('Delete the application via UI', () => {
+    it('Delete the application via UI', () => {
+      Common.openApplicationsPage();
+      Applications.filterApplication(applicationName);
+      UIhelper.getTableRow('Application List', applicationName).should('be.visible');
 
-    // Fail the test if the application row is missing
-    cy.get(appSelector, { timeout: 60000 }).should('exist');
+      Applications.openKebabMenu(applicationName);
+      cy.get(actions.deleteApp).click();
+      cy.get(actions.deleteModalInput).clear().type(applicationName);
+      cy.get(actions.deleteModalButton).click();
 
-    Applications.openKebabMenu(applicationName);
-    cy.get(actions.deleteApp).click();
-    cy.get(actions.deleteModalInput).clear().type(applicationName);
-    cy.get(actions.deleteModalButton).click();
+      // Verify the application is removed from the list after deletion
+      cy.contains('[aria-label="Application List"] tr[role="row"]', applicationName, {
+        timeout: 10000,
+      }).should('not.exist');
 
-    // Verify the application is removed from the list after deletion
-    cy.get(appSelector, { timeout: 60000 })
-      .should('not.exist')
-      .then(() => {
-        // Delete GitHub repository after UI deletion is confirmed
-        APIHelper.deleteGitHubRepository(repoOwner, repoName);
-      });
+      // Delete GitHub repository after UI deletion is confirmed
+      APIHelper.deleteGitHubRepository(repoOwner, repoName);
+    });
   });
 });
