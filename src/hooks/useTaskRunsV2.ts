@@ -250,6 +250,26 @@ export const useTaskRunsForPipelineRuns = (
     { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
   );
 
+  // when filtering by taskName, we want to fetch all pages to ensure we don't miss the task run
+  React.useEffect(() => {
+    if (
+      taskName &&
+      nextPageProps.hasNextPage &&
+      !nextPageProps.isFetchingNextPage &&
+      loaded &&
+      !error
+    ) {
+      getNextPage();
+    }
+  }, [
+    taskName,
+    nextPageProps.hasNextPage,
+    nextPageProps.isFetchingNextPage,
+    loaded,
+    error,
+    getNextPage,
+  ]);
+
   const sortedTaskRuns = React.useMemo(() => {
     if (taskName) {
       // used taskName here instead of api call to filter by task name because we cache all the task runs for a pipeline run,
@@ -354,4 +374,39 @@ export const useTaskRunV2 = (
     kubearchiveQuery.isLoading,
     kubearchiveQuery.error,
   ]);
+};
+
+/**
+ * Hook to check if a specific task exists in a pipeline run.
+ *
+ * @param namespace - Kubernetes namespace (null/undefined disables the hook)
+ * @param pipelineRunName - Name of the pipeline run (null/undefined disables the hook)
+ * @param task - Task name to check for
+ * @param watch - Whether to watch for real-time updates (default: true)
+ * @returns Boolean indicating if the task exists in the pipeline run
+ */
+export const useIsTaskInPipelineRun = (
+  namespace: string | null | undefined,
+  pipelineRunName: string | null | undefined,
+  task: string,
+  watch: boolean = true,
+): boolean => {
+  const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
+    namespace || '',
+    pipelineRunName || '',
+    task,
+    watch,
+  );
+
+  React.useEffect(() => {
+    if (nextPageProps.hasNextPage && !nextPageProps.isFetchingNextPage && loaded && !error) {
+      getNextPage();
+    }
+  }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, loaded, getNextPage, error]);
+
+  if (!namespace || !pipelineRunName || !taskRuns) {
+    return false;
+  }
+
+  return taskRuns.some((tr) => tr.metadata?.labels?.[TektonResourceLabel.pipelineTask] === task);
 };
