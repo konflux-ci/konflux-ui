@@ -44,4 +44,27 @@ describe('useComponentDetailsPath', () => {
       }),
     );
   });
+
+  it('should switch paths when the flag changes', () => {
+    useIsOnFeatureFlagMock.mockReturnValue(false);
+    const { result, rerender } = renderHook(() => useComponentDetailsPath());
+
+    expect(result.current.getComponentDetailsPath('test-app', 'my-component')).toBe(
+      COMPONENT_DETAILS_PATH.createPath({
+        workspaceName: 'test-ns',
+        applicationName: 'test-app',
+        componentName: 'my-component',
+      }),
+    );
+
+    useIsOnFeatureFlagMock.mockReturnValue(true);
+    rerender();
+
+    expect(result.current.getComponentDetailsPath('test-app', 'my-component')).toBe(
+      COMPONENT_DETAILS_V2_PATH.createPath({
+        workspaceName: 'test-ns',
+        componentName: 'my-component',
+      }),
+    );
+  });
 });
