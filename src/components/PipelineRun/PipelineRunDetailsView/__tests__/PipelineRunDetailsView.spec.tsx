@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { screen } from '@testing-library/react';
 import { testPipelineRuns, DataState } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
 import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createPipelineRunMockStates } from '~/unit-test-utils/mock-pipelinerun-test-utils';
@@ -30,7 +31,18 @@ const mockEnterpriseContractPipelineRun: PipelineRunKind = {
     labels: {
       ...mockPipelineRun.metadata.labels,
       [PipelineRunLabel.PIPELINE_NAME]: 'enterprise-contract',
-      'build.appstudio.redhat.com/pipeline': 'enterprise-contract',
+      [ENTERPRISE_CONTRACT_LABEL]: 'enterprise-contract',
+    },
+  },
+};
+
+const mockConformaPipelineRun: PipelineRunKind = {
+  ...mockPipelineRun,
+  status: {
+    ...mockPipelineRun.status,
+    pipelineSpec: {
+      ...mockPipelineRun.status.pipelineSpec,
+      tasks: [{ name: CONFORMA_TASK }],
     },
   },
 };
@@ -144,6 +156,17 @@ describe('PipelineRunDetailsView', () => {
     routerRenderer(<PipelineRunDetailsView />);
 
     // Should have Details, Task runs, Logs, and Security tabs
+    expect(screen.getByRole('tab', { name: /details/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /task runs/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
+  });
+
+  it('should render Security tab when verify-conforma task run exists', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockConformaPipelineRun));
+
+    routerRenderer(<PipelineRunDetailsView />);
+
     expect(screen.getByRole('tab', { name: /details/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /task runs/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument();

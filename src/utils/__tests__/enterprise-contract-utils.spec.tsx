@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
 import {
   ENTERPRISE_CONTRACT_STATUS,
   EnterpriseContractResult,
@@ -10,7 +11,6 @@ import {
   isResourceEnterpriseContract,
   getRuleStatus,
   extractEcResultsFromTaskRunLogs,
-  ENTERPRISE_CONTRACT_LABEL,
 } from '../enterprise-contract-utils';
 
 describe('enterprise-contract-utils', () => {

@@ -790,7 +790,7 @@ describe('useTaskRunsV2', () => {
       mockUseIsOnFeatureFlag.mockReturnValue(false); // Default to Tekton Results for this test
     });
 
-    it('should call useTaskRunsV2 with correct selector', async () => {
+    it('should call useTaskRunsV2 with correct selector including taskName when provided', async () => {
       // Mock the underlying useTaskRunsV2 to return sorted data
       const mockTaskRuns = [mockTaskRun1, mockTaskRun2];
 
@@ -825,12 +825,12 @@ describe('useTaskRunsV2', () => {
       expect(loaded).toBe(true);
       expect(error).toBeNull();
 
-      // Verify that useK8sWatchResource was called with the correct selector
       expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
         expect.objectContaining({
           selector: {
             matchLabels: {
               'tekton.dev/pipelineRun': 'test-pipelinerun',
+              'tekton.dev/pipelineTask': 'test-task',
             },
           },
         }),
@@ -866,7 +866,6 @@ describe('useTaskRunsV2', () => {
         expect(result.current[1]).toBe(true); // loaded
       });
 
-      // Verify that useK8sWatchResource was called with the correct selector (no taskName)
       expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
         expect.objectContaining({
           selector: {
@@ -878,6 +877,10 @@ describe('useTaskRunsV2', () => {
         expect.any(Object),
         expect.any(Object),
       );
+
+      // Verify that pipelineTask label is NOT in the selector when taskName is undefined
+      const callArgs = useK8sWatchResourceMock.mock.calls[0][0];
+      expect(callArgs.selector.matchLabels).not.toHaveProperty('tekton.dev/pipelineTask');
     });
   });
 });
