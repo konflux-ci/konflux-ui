@@ -1,4 +1,5 @@
 export const applicationsPagePO = {
+  filterInput: '[aria-label="name filter"]',
   appStatus: '[data-test="details__status"]',
   formGroup: 'div[class="pf-v5-c-form__group"]',
   secretKey: 'input[label="Key"]',

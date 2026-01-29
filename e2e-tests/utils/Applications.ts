@@ -41,6 +41,11 @@ export class Applications {
     });
   }
 
+  static filterApplication(applicationName: string) {
+    cy.get(applicationsPagePO.filterInput).clear().type(applicationName);
+    UIhelper.getTableRow('Application List', applicationName).should('be.visible');
+  }
+
   static checkPipelineIsCancellingOrCancelled(componentName: string) {
     return this.checkPipelineStatuses(componentName, ['Cancelling', 'Cancelled']);
   }
