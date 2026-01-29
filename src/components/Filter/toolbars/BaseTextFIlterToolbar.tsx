@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import { IfFeature } from '~/feature-flags/hooks';
 import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
 
@@ -51,9 +52,11 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
             {child}
           </ToolbarItem>
         ))}
-        <ToolbarItem>
-          <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
-        </ToolbarItem>
+        <IfFeature flag="column-management">
+          <ToolbarItem>
+            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+          </ToolbarItem>
+        </IfFeature>
       </ToolbarContent>
     </Toolbar>
   );
