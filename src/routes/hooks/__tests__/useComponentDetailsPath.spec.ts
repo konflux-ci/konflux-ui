@@ -67,4 +67,27 @@ describe('useComponentDetailsPath', () => {
       }),
     );
   });
+
+  it('should update paths when namespace changes', () => {
+    useIsOnFeatureFlagMock.mockReturnValue(true);
+    useNamespaceMock.mockReturnValue('test-ns');
+    const { result, rerender } = renderHook(() => useComponentDetailsPath());
+
+    expect(result.current.getComponentDetailsPath('test-app', 'my-component')).toBe(
+      COMPONENT_DETAILS_V2_PATH.createPath({
+        workspaceName: 'test-ns',
+        componentName: 'my-component',
+      }),
+    );
+
+    useNamespaceMock.mockReturnValue('new-ns');
+    rerender();
+
+    expect(result.current.getComponentDetailsPath('test-app', 'my-component')).toBe(
+      COMPONENT_DETAILS_V2_PATH.createPath({
+        workspaceName: 'new-ns',
+        componentName: 'my-component',
+      }),
+    );
+  });
 });
