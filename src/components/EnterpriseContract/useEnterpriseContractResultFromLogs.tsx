@@ -1,4 +1,8 @@
 import * as React from 'react';
+import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { isResourceEnterpriseContract } from '~/utils/enterprise-contract-utils';
+import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
 import { useTaskRunsForPipelineRuns } from '../../hooks/useTaskRunsV2';
 import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
 import { PodModel } from '../../models/pod';
@@ -17,11 +21,35 @@ export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,
 ): [ComponentEnterpriseContractResult[], boolean] => {
   const namespace = useNamespace();
-  const [taskRun, loaded, error] = useTaskRunsForPipelineRuns(namespace, pipelineRunName, 'verify');
+  const [pipelineRun, pipelineRunLoaded, pipelineRunError] = usePipelineRunV2(
+    namespace,
+    pipelineRunName,
+  );
+  const securityTaskRunName = React.useMemo(() => {
+    if (!pipelineRunLoaded || pipelineRunError) {
+      return undefined;
+    }
+
+    if (isResourceEnterpriseContract(pipelineRun)) {
+      return EC_TASK;
+    }
+
+    if (isTaskRunInPipelineRun(pipelineRun, CONFORMA_TASK)) {
+      return CONFORMA_TASK;
+    }
+
+    return undefined;
+  }, [pipelineRun, pipelineRunLoaded, pipelineRunError]);
+  const [taskRuns, taskRunLoaded, taskRunError] = useTaskRunsForPipelineRuns(
+    securityTaskRunName ? namespace : undefined,
+    pipelineRunName,
+    securityTaskRunName,
+  );
   const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
   const [ecJson, setEcJson] = React.useState<EnterpriseContractResult>();
   const [ecLoaded, setEcLoaded] = React.useState<boolean>(false);
-  const podName = loaded && !error ? taskRun?.[0]?.status?.podName : null;
+  const [taskRun] = taskRuns ?? [];
+  const podName = taskRunLoaded && !taskRunError ? taskRun?.status?.podName : null;
   const ecResultOpts = React.useMemo(() => {
     return podName
       ? {
@@ -38,7 +66,7 @@ export const useEnterpriseContractResultFromLogs = (
 
   React.useEffect(() => {
     let unmount = false;
-    if (loaded && !ecResultOpts) {
+    if (taskRunLoaded && securityTaskRunName && !ecResultOpts) {
       setFetchTknLogs(true);
       return;
     }
@@ -63,19 +91,15 @@ export const useEnterpriseContractResultFromLogs = (
     return () => {
       unmount = true;
     };
-  }, [ecResultOpts, loaded]);
+  }, [ecResultOpts, taskRunLoaded, securityTaskRunName]);
 
   React.useEffect(() => {
     let unmount = false;
-    if (fetchTknLogs && !ecLoaded) {
+    if (fetchTknLogs && !ecLoaded && taskRun) {
       const fetch = async () => {
         try {
-          const pid = getPipelineRunFromTaskRunOwnerRef(taskRun[0])?.uid;
-          const logs = await getTaskRunLog(
-            taskRun[0].metadata.namespace,
-            taskRun[0].metadata.uid,
-            pid,
-          );
+          const pid = getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid;
+          const logs = await getTaskRunLog(taskRun.metadata.namespace, taskRun.metadata.uid, pid);
           if (unmount) return;
           const json = extractEcResultsFromTaskRunLogs(logs);
           setEcJson(json);

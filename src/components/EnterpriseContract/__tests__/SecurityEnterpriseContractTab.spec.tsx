@@ -59,7 +59,7 @@ const mockUseEnterpriseContractResults = useEnterpriseContractResults as jest.Mo
 
 const securityEnterpriseContracts = (pipelineRun: string) => (
   <FilterContextProvider filterParams={['rule', 'status', 'component']}>
-    <SecurityEnterpriseContractTab pipelineRun={pipelineRun} />
+    <SecurityEnterpriseContractTab pipelineRunName={pipelineRun} />
   </FilterContextProvider>
 );
 

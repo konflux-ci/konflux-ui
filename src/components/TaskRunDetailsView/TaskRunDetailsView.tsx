@@ -3,9 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { CONFORMA_TASK } from '~/consts/security';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
 import { downloadYaml } from '~/utils/common-utils';
+import { isResourceEnterpriseContract } from '~/utils/enterprise-contract-utils';
 import { taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
 import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
@@ -18,7 +20,6 @@ import {
 import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
-import { isResourceEnterpriseContract } from '../EnterpriseContract/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
 
 export const TaskRunDetailsView: React.FC = () => {
@@ -51,7 +52,9 @@ export const TaskRunDetailsView: React.FC = () => {
     return getErrorState(error, loaded, 'task run');
   }
 
-  if (!loaded) {
+  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+
+  if (!loaded || !plrName) {
     return (
       <Bullseye>
         <Spinner />
@@ -59,8 +62,9 @@ export const TaskRunDetailsView: React.FC = () => {
     );
   }
 
-  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
-  const isEnterpriseContract = isResourceEnterpriseContract(taskRun);
+  const showSecurityTab =
+    isResourceEnterpriseContract(taskRun) ||
+    taskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] === CONFORMA_TASK;
 
   return (
     <DetailsPage
@@ -121,7 +125,7 @@ export const TaskRunDetailsView: React.FC = () => {
           label: 'Logs',
           isFilled: true,
         },
-        ...(isEnterpriseContract
+        ...(showSecurityTab
           ? [
               {
                 key: 'security',
