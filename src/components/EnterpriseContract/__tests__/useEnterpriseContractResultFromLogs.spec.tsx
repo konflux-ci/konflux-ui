@@ -28,6 +28,33 @@ const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 
+const createDefaultMockImplementation = () => {
+  return (_namespace: string, _pipelineRunName: string, taskName?: string) => {
+    if (taskName === 'verify') {
+      return [
+        [
+          {
+            metadata: {
+              namespace: 'test-ns',
+              name: 'test-taskrun',
+              uid: 'test-uid',
+            },
+            status: {
+              podName: 'pod-acdf',
+            },
+          },
+        ],
+        true,
+        undefined,
+        jest.fn(),
+        { hasNextPage: false, isFetchingNextPage: false },
+      ];
+    }
+
+    return [[], true, undefined, jest.fn(), { hasNextPage: false, isFetchingNextPage: false }];
+  };
+};
+
 describe('useEnterpriseContractResultFromLogs', () => {
   let queryClient: QueryClient;
 
@@ -36,17 +63,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
     jest.clearAllMocks();
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
     mockUseNamespaceHook('test-ns');
-    mockUseTaskRunsForPipelineRuns.mockReturnValue([
-      [
-        {
-          status: {
-            podName: 'pod-acdf',
-          },
-        },
-      ],
-      true,
-      undefined,
-    ]);
+    mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
   });
 
   const renderHookWithQueryClient = (pipelineRunName: string) => {
@@ -65,9 +82,31 @@ describe('useEnterpriseContractResultFromLogs', () => {
     expect(result.current[0][0].warnings).toEqual(undefined);
   });
 
-  it('should call tknResults when taskRun is empty array', () => {
-    mockUseTaskRunsForPipelineRuns.mockReturnValueOnce([[], true, undefined]);
-    mockGetTaskRunLogs.mockReturnValue(`
+  it('should call tknResults when taskRun has no podName', async () => {
+    mockUseTaskRunsForPipelineRuns.mockImplementation(
+      (_namespace: string, _pipelineRunName: string, taskName?: string) => {
+        if (taskName === 'verify') {
+          return [
+            [
+              {
+                metadata: {
+                  namespace: 'test-ns',
+                  name: 'test-taskrun',
+                  uid: 'test-uid',
+                },
+                status: {},
+              },
+            ],
+            true,
+            undefined,
+            jest.fn(),
+            { hasNextPage: false, isFetchingNextPage: false },
+          ];
+        }
+        return [[], true, undefined, jest.fn(), { hasNextPage: false, isFetchingNextPage: false }];
+      },
+    );
+    mockGetTaskRunLogs.mockResolvedValue(`
       step-vulnerabilities :-
       Lorem Ipsum some logs
       
@@ -77,13 +116,11 @@ describe('useEnterpriseContractResultFromLogs', () => {
       step-something-else :-
       Some other logs
     `);
-    const { result } = renderHookWithQueryClient('dummy-abcd');
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
+    expect(mockGetTaskRunLogs).toHaveBeenCalled();
     const [, loaded] = result.current;
-    expect(mockCommmonFetchJSON).toHaveBeenCalled();
     expect(loaded).toBe(true);
-    expect(mockCommmonFetchJSON).toHaveBeenLastCalledWith(
-      '/api/v1/namespaces/test-ns/pods/pod-acdf/log?container=step-report-json&follow=true',
-    );
   });
 
   it('should filter out all 404 image url components from EC results', async () => {
@@ -106,24 +143,42 @@ describe('useEnterpriseContractResultFromLogs', () => {
     expect(ecResult).toBeUndefined();
   });
 
+  it('should use verify-conforma when verify task run does not exist', async () => {
+    mockUseTaskRunsForPipelineRuns.mockImplementation(
+      (_namespace: string, _pipelineRunName: string, taskName?: string) => {
+        if (taskName === 'verify-conforma') {
+          return [
+            [
+              {
+                status: {
+                  podName: 'pod-conforma',
+                },
+              },
+            ],
+            true,
+            undefined,
+            jest.fn(),
+            { hasNextPage: false, isFetchingNextPage: false },
+          ];
+        }
+
+        return [[], true, undefined, jest.fn(), { hasNextPage: false, isFetchingNextPage: false }];
+      },
+    );
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
+    expect(mockCommmonFetchJSON).toHaveBeenCalled();
+    expect(mockCommmonFetchJSON).toHaveBeenLastCalledWith(
+      '/api/v1/namespaces/test-ns/pods/pod-conforma/log?container=step-report-json&follow=true',
+    );
+    const [ecResult, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(ecResult).toBeDefined();
+  });
+
   it('should return handle 404 error', async () => {
-    mockUseTaskRunsForPipelineRuns.mockReturnValue([
-      [
-        {
-          metadata: {
-            namespace: 'asd',
-            name: 'asd',
-          },
-          status: {
-            podName: 'pod-acdf',
-          },
-        },
-      ],
-      true,
-      undefined,
-    ]);
     mockCommmonFetchJSON.mockRejectedValue({ code: 404 });
-    mockGetTaskRunLogs.mockReturnValue(`
+    mockGetTaskRunLogs.mockResolvedValue(`
       step-vulnerabilities :-
       Lorem Ipsum some logs
       
@@ -137,7 +192,7 @@ describe('useEnterpriseContractResultFromLogs', () => {
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     const [, loaded] = result.current;
     expect(mockCommmonFetchJSON).toHaveBeenCalled();
-    expect(loaded).toBe(false);
+    expect(loaded).toBe(true);
     await waitForNextUpdate();
     const [ec, ecLoaded] = result.current;
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
@@ -175,17 +230,7 @@ describe('useEnterpriseContractResults', () => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
     mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
-    mockUseTaskRunsForPipelineRuns.mockReturnValue([
-      [
-        {
-          status: {
-            podName: 'pod-acdf',
-          },
-        },
-      ],
-      true,
-      undefined,
-    ]);
+    mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
   });
 
   const renderHookWithQueryClient = (pipelineRunName: string) => {
@@ -198,7 +243,7 @@ describe('useEnterpriseContractResults', () => {
   it('should return enterprise contract results', async () => {
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     expect(result.current[0]).toEqual(undefined);
-    expect(result.current[1]).toEqual(false);
+    expect(result.current[1]).toEqual(true);
     await waitForNextUpdate();
     expect(result.current[0]).toEqual(mockEnterpriseContractUIData);
     expect(result.current[1]).toEqual(true);

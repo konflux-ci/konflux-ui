@@ -38,9 +38,14 @@ const mockEnterpriseContractPipelineRun: PipelineRunKind = {
 const mockUsePipelineRunV2 = jest.fn();
 const mockUsePipelinererunAction = jest.fn();
 const mockUseAccessReviewForModel = jest.fn();
+const mockUseIsTaskInPipelineRun = jest.fn();
 
 jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunV2: (...args: unknown[]) => mockUsePipelineRunV2(...args),
+}));
+
+jest.mock('../../../../hooks/useTaskRunsV2', () => ({
+  useIsTaskInPipelineRun: (...args: unknown[]) => mockUseIsTaskInPipelineRun(...args),
 }));
 
 jest.mock('../../PipelineRunListView/pipelinerun-actions', () => ({
@@ -75,6 +80,7 @@ describe('PipelineRunDetailsView', () => {
       label: 'Rerun',
     });
     mockUseAccessReviewForModel.mockReturnValue([true, true]);
+    mockUseIsTaskInPipelineRun.mockReturnValue(false);
   });
 
   it('should render spinner when loading pipeline run', () => {
@@ -144,6 +150,18 @@ describe('PipelineRunDetailsView', () => {
     routerRenderer(<PipelineRunDetailsView />);
 
     // Should have Details, Task runs, Logs, and Security tabs
+    expect(screen.getByRole('tab', { name: /details/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /task runs/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
+  });
+
+  it('should render Security tab when verify-conforma task run exists', () => {
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+    mockUseIsTaskInPipelineRun.mockReturnValue(true);
+
+    routerRenderer(<PipelineRunDetailsView />);
+
     expect(screen.getByRole('tab', { name: /details/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /task runs/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /logs/i })).toBeInTheDocument();

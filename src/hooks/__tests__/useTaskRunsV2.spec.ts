@@ -879,6 +879,169 @@ describe('useTaskRunsV2', () => {
         expect.any(Object),
       );
     });
+
+    it('should automatically fetch next page when taskName is provided and hasNextPage is true', async () => {
+      const mockGetNextPage = jest.fn();
+      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1],
+        true,
+        null,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+
+      renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'), {
+        wrapper: ({ children }) =>
+          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      });
+
+      await waitFor(() => {
+        expect(mockGetNextPage).toHaveBeenCalled();
+      });
+    });
+
+    it('should not fetch next page when taskName is provided but there is an error', async () => {
+      const mockGetNextPage = jest.fn();
+      const mockError = new Error('Test error');
+      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1],
+        true,
+        mockError,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+
+      renderHook(() => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'), {
+        wrapper: ({ children }) =>
+          React.createElement(QueryClientProvider, { client: queryClient }, children),
+      });
+
+      await waitFor(() => {
+        expect(mockUseTRTaskRuns).toHaveBeenCalled();
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(mockGetNextPage).not.toHaveBeenCalled();
+    });
+
+    it('should not automatically fetch pages when taskName is not provided', async () => {
+      const mockGetNextPage = jest.fn();
+      const mockNextPageProps = { hasNextPage: true, isFetchingNextPage: false };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [mockTaskRun1],
+        isLoading: false,
+        error: null,
+      });
+
+      mockUseTRTaskRuns.mockReturnValue([
+        [mockTaskRun1],
+        true,
+        null,
+        mockGetNextPage,
+        mockNextPageProps,
+      ]);
+
+      renderHook(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun'), // no taskName
+        {
+          wrapper: ({ children }) =>
+            React.createElement(QueryClientProvider, { client: queryClient }, children),
+        },
+      );
+
+      await waitFor(() => {
+        expect(mockUseTRTaskRuns).toHaveBeenCalled();
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      expect(mockGetNextPage).not.toHaveBeenCalled();
+    });
+
+    it('should filter taskRuns by taskName after fetching all pages', async () => {
+      const mockGetNextPage = jest.fn();
+      const taskRunWithLabel: TaskRunKind = {
+        ...mockTaskRun1,
+        metadata: {
+          ...mockTaskRun1.metadata,
+          name: 'task-run-with-label',
+          labels: {
+            'tekton.dev/pipelineTask': 'test-task',
+          },
+        },
+      };
+
+      const taskRunWithoutLabel: TaskRunKind = {
+        ...mockTaskRun2,
+        metadata: {
+          ...mockTaskRun2.metadata,
+          name: 'task-run-without-label',
+          labels: {
+            'tekton.dev/pipelineTask': 'other-task',
+          },
+        },
+      };
+
+      useK8sWatchResourceMock.mockReturnValue({
+        data: [taskRunWithLabel, taskRunWithoutLabel],
+        isLoading: false,
+        error: null,
+      });
+
+      let callCount = 0;
+      mockUseTRTaskRuns.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return [
+            [taskRunWithLabel, taskRunWithoutLabel],
+            true,
+            null,
+            mockGetNextPage,
+            { hasNextPage: true, isFetchingNextPage: false },
+          ];
+        }
+
+        return [
+          [taskRunWithLabel, taskRunWithoutLabel],
+          true,
+          null,
+          mockGetNextPage,
+          { hasNextPage: false, isFetchingNextPage: false },
+        ];
+      });
+
+      const { result } = renderHook(
+        () => useTaskRunsForPipelineRuns('test-ns', 'test-pipelinerun', 'test-task'),
+        {
+          wrapper: ({ children }) =>
+            React.createElement(QueryClientProvider, { client: queryClient }, children),
+        },
+      );
+
+      await waitFor(() => {
+        expect(result.current[1]).toBe(true); // loaded
+      });
+
+      const [taskRuns] = result.current;
+      expect(taskRuns).toHaveLength(1);
+      expect(taskRuns[0].metadata.name).toBe('task-run-with-label');
+    });
   });
 });
 

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { useIsTaskInPipelineRun } from '~/hooks/useTaskRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
@@ -40,6 +41,12 @@ export const PipelineRunDetailsView: React.FC = () => {
     [loaded, pipelineRun],
   );
 
+  const hasConformaTaskRun = useIsTaskInPipelineRun(
+    namespace,
+    pipelineRun?.metadata?.name,
+    'verify-conforma',
+  );
+
   if (!loaded) {
     return (
       <Bullseye>
@@ -52,7 +59,7 @@ export const PipelineRunDetailsView: React.FC = () => {
     return getErrorState(error, loaded, 'pipeline run');
   }
 
-  const isEnterpriseContract = isResourceEnterpriseContract(pipelineRun);
+  const showSecurityTab = isResourceEnterpriseContract(pipelineRun) || hasConformaTaskRun;
 
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
   const integrationTestName = queryParams.get('integrationTestName') || '';
@@ -153,7 +160,7 @@ export const PipelineRunDetailsView: React.FC = () => {
           label: 'Logs',
           isFilled: true,
         },
-        ...(isEnterpriseContract
+        ...(showSecurityTab
           ? [
               {
                 key: 'security',
