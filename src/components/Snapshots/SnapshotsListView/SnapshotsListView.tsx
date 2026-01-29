@@ -25,7 +25,7 @@ import { ExternalLink, useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptySnapshotImgUrl from '../../../assets/Snapshots.svg';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -82,7 +82,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     return (snapshots || []).filter((s) => {
       if (
         showMergedOnly &&
-        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] === 'pull_request'
+        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ===
+          PipelineRunEventType.PULL
       ) {
         return false;
       }
@@ -193,7 +194,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 setFilters({ ...unparsedFilters, [activeFilter]: value });
               }}
               onClearFilters={onClearFilters}
-              // dataTest="snapshots-list-toolbar"
               totalColumns={snapshotColumns.length}
               noLeftPadding={true}
             >
