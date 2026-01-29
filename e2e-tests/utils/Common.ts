@@ -13,7 +13,7 @@ export class Common {
         .contains('a', NavItem[item], { timeout: 30000 })
         .should('be.visible');
     }
-    cy.get(navigation.sideNavigation).contains('a', NavItem[link]).click();
+    cy.get(navigation.sideNavigation).contains('a', link).click();
     Common.waitForLoad();
   }
 
@@ -43,15 +43,6 @@ export class Common {
       Common.verifyPageTitle(applicationName);
       Common.waitForLoad();
     });
-  }
-
-  static openApplicationsPage() {
-    Common.navigateTo(NavItem.namespaces);
-    cy.get(
-      goToApplicationsPagePo(`${Cypress.env('HAC_NAMESPACE')}`).goToApplicationsPagePo,
-    ).click();
-    Common.waitForLoad();
-    Common.verifyPageTitle(pageTitles.applications);
   }
 
   static waitForLoad(timeout = 120000) {

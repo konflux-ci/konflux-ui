@@ -41,7 +41,6 @@ describe('Basic Happy Path', () => {
   });
 
   it('Create an Application with a component', () => {
-    // Common.navigateTo(NavItem.applications);
     Applications.createApplication(applicationName);
     Applications.createComponent(publicRepo, componentName, pipeline);
     Applications.checkComponentInListView(
@@ -210,7 +209,7 @@ describe('Basic Happy Path', () => {
 
   describe('Delete the application via UI', () => {
     it('Delete the application via UI', () => {
-      Common.openApplicationsPage();
+      Common.navigateTo(NavItem.applications);
       Applications.filterApplication(applicationName);
       UIhelper.getTableRow('Application List', applicationName).should('be.visible');
 
