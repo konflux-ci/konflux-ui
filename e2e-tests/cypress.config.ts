@@ -30,7 +30,6 @@ export default defineConfig({
     },
   },
   e2e: {
-    baseUrl: process.env.CYPRESS_KONFLUX_BASE_URL || process.env.KONFLUX_BASE_URL,
     supportFile: 'support/commands/index.ts',
     specPattern: 'tests/*.spec.ts',
     testIsolation: false,
@@ -103,15 +102,6 @@ export default defineConfig({
 
       on('after:run', async () => {
         // cypress-mochawesome-reporter
-        const jsonsDir = `${config.projectRoot}/cypress/.jsons`;
-        const hasJsonReports =
-          fs.existsSync(jsonsDir) &&
-          fs.readdirSync(jsonsDir).some((file) => file.endsWith('.json'));
-        if (!hasJsonReports) {
-          // eslint-disable-next-line no-console
-          console.warn(`Skipping mochawesome merge: no report files in ${jsonsDir}`);
-          return;
-        }
         await afterRunHook();
       });
 
