@@ -28,6 +28,10 @@ jest.mock('../../../Components/ComponentDetails/tabs/ComponentDetailsTab', () =>
 const k8sQueryGetResourceMock = k8sQueryGetResource as jest.Mock;
 
 describe('ComponentDetails index', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should export layout and tab components', () => {
     expect(ComponentDetailsViewLayout).toBeDefined();
     expect(ComponentDetailsTab).toBeDefined();
@@ -51,5 +55,19 @@ describe('ComponentDetails index', () => {
         name: 'my-component',
       },
     });
+  });
+
+  it('should propagate loader errors', async () => {
+    k8sQueryGetResourceMock.mockRejectedValue(new Error('Error'));
+
+    await expect(
+      componentDetailsViewLoader({
+        params: {
+          [RouterParams.workspaceName]: 'test-ns',
+          [RouterParams.componentName]: 'my-component',
+        },
+        request: undefined,
+      }),
+    ).rejects.toThrow('Error');
   });
 });
