@@ -160,6 +160,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 <MenuToggle
                   ref={toggleRef}
                   icon={<FilterIcon />}
+                  data-test="snapshots-list-filter-dropdown"
                   isExpanded={isOpen}
                   onClick={() => setIsOpen(!isOpen)}
                 >
@@ -192,7 +193,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 setFilters({ ...unparsedFilters, [activeFilter]: value });
               }}
               onClearFilters={onClearFilters}
-              dataTest="snapshots-list-toolbar"
+              // dataTest="snapshots-list-toolbar"
               totalColumns={snapshotColumns.length}
               noLeftPadding={true}
             >
