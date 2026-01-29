@@ -16,7 +16,7 @@ export const componentDetailsViewLoader = createLoaderWithAccessCheck(
   },
   {
     model: ComponentModel,
-    verb: 'list',
+    verb: 'get',
   },
 );
 
