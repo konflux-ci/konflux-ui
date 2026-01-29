@@ -9,7 +9,7 @@
 # can be collected by Cypress tests using @cypress/code-coverage plugin.
 ##
 
-FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ede5bc00a4dfda5e259ee4a57f67973720a565d1 as builder
+FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:5a87f3bb059628160dcd3a5e82b5905c1e6b21e9949d2f8939b441cc5cad7f96 as builder
 
 WORKDIR /opt/app-root/src
 RUN npm install yarn --global
