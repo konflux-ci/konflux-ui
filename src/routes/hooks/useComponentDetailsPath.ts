@@ -8,7 +8,7 @@ const useComponentDetailsPath = () => {
   const newComponentsEnabled = useIsOnFeatureFlag('components-page');
 
   const getComponentDetailsPath = useCallback(
-    (applicationName: string, componentName: string) =>
+    (applicationName: string | undefined, componentName: string) =>
       newComponentsEnabled
         ? COMPONENT_DETAILS_V2_PATH.createPath({
             workspaceName: namespace,
