@@ -37,6 +37,21 @@ describe('loadMonitoringConfig', () => {
     });
   });
 
+  it('should use default environment/cluster when disabled and values not provided', () => {
+    window.KONFLUX_RUNTIME = {
+      MONITORING_ENABLED: 'false',
+    };
+
+    const config = loadMonitoringConfig();
+
+    expect(config).toEqual({
+      enabled: false,
+      provider: 'noop',
+      environment: 'development',
+      cluster: 'local',
+    });
+  });
+
   it('should return Sentry config when monitoring is enabled', () => {
     window.KONFLUX_RUNTIME = {
       MONITORING_ENABLED: 'true',

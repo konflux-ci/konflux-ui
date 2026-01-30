@@ -69,6 +69,42 @@ describe('SentryProvider', () => {
     );
   });
 
+  it('should use default sample rate when sampleRates.errors is undefined', async () => {
+    const config: MonitoringConfig & { dsn: string } = {
+      enabled: true,
+      provider: 'sentry',
+      dsn: 'https://test@sentry.io/123',
+      environment: 'production',
+      sampleRates: {},
+    };
+
+    await provider.init(config);
+
+    expect(Sentry.init).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sampleRate: 1.0,
+      }),
+    );
+  });
+
+  it('should use "unknown" cluster when cluster is empty string', async () => {
+    const config: MonitoringConfig & { dsn: string; cluster: string } = {
+      enabled: true,
+      provider: 'sentry',
+      dsn: 'https://test@sentry.io/123',
+      environment: 'production',
+      cluster: '',
+    };
+
+    await provider.init(config);
+
+    expect(Sentry.init).toHaveBeenCalledWith(
+      expect.objectContaining({
+        initialScope: { tags: { cluster: 'unknown' } },
+      }),
+    );
+  });
+
   it('should delegate captureException to Sentry and return event ID', () => {
     const error = new Error('test error');
     const context = { userId: '123' };
