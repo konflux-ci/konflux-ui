@@ -1,4 +1,5 @@
 import * as React from 'react';
+import OutsideClickHandler from 'react-outside-click-handler';
 import {
   Menu,
   MenuContent,
@@ -13,6 +14,7 @@ import {
   SearchInput,
   MenuContainer,
   MenuToggle,
+  MenuToggleElement,
 } from '@patternfly/react-core';
 import { EllipsisHIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-h-icon';
 import '././ContextSwitcher.scss';
@@ -59,7 +61,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState('');
-  const toggleRef = React.useRef();
+  const toggleRef = React.useRef<HTMLElement>();
   const menuRef = React.useRef();
   const [menuDrilledIn, setMenuDrilledIn] = React.useState<string[]>([]);
   const [drilldownPath, setDrilldownPath] = React.useState<string[]>([]);
@@ -175,8 +177,12 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
       // className="context-switcher"
       toggle={
         toggle
-          ? toggle({ innerRef: toggleRef, onClick: () => setIsOpen(!isOpen), isExpanded: isOpen })
-          : defaultToggle(toggleRef)
+          ? toggle({
+              innerRef: toggleRef as React.RefObject<MenuToggleElement>,
+              onClick: () => setIsOpen(!isOpen),
+              isExpanded: isOpen,
+            })
+          : defaultToggle(toggleRef as React.RefObject<HTMLButtonElement>)
       }
       toggleRef={toggleRef}
       isOpen={isOpen}
@@ -197,36 +203,45 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
           containsDrilldown
           isScrollable
         >
-          <MenuSearch>
-            <MenuSearchInput>
-              <SearchInput
-                value={searchText}
-                type="search"
-                aria-label="name filter"
-                placeholder={`Filter ${resourceType} by name`}
-                onChange={(_event, val) => setSearchText(val)}
-              />
-            </MenuSearchInput>
-          </MenuSearch>
-          <MenuContent menuHeight={`${menuHeights[activeMenu]}px`}>
-            <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
-              <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>}>
-                <MenuList>
-                  {filteredRecentItems.map((item) => (
-                    <ContextMenuListItem key={item.key} item={item} />
-                  ))}
-                </MenuList>
-              </Tab>
-              <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>}>
-                <MenuList>
-                  {filteredAllItems.map((item) => (
-                    <ContextMenuListItem key={item.key} item={item} />
-                  ))}
-                </MenuList>
-              </Tab>
-            </Tabs>
-          </MenuContent>
-          {footer && <MenuFooter>{footer}</MenuFooter>}
+          <OutsideClickHandler
+            onOutsideClick={(event: MouseEvent) => {
+              const targetNode = event.target as Node;
+              if (!toggleRef.current?.contains(targetNode)) {
+                setIsOpen(false);
+              }
+            }}
+          >
+            <MenuSearch>
+              <MenuSearchInput>
+                <SearchInput
+                  value={searchText}
+                  type="search"
+                  aria-label="name filter"
+                  placeholder={`Filter ${resourceType} by name`}
+                  onChange={(_event, val) => setSearchText(val)}
+                />
+              </MenuSearchInput>
+            </MenuSearch>
+            <MenuContent menuHeight={`${menuHeights[activeMenu]}px`}>
+              <Tabs activeKey={activeTab} onSelect={onTabChange} isFilled>
+                <Tab eventKey={ContextTab.Recent} title={<TabTitleText>Recent</TabTitleText>}>
+                  <MenuList>
+                    {filteredRecentItems.map((item) => (
+                      <ContextMenuListItem key={item.key} item={item} />
+                    ))}
+                  </MenuList>
+                </Tab>
+                <Tab eventKey={ContextTab.All} title={<TabTitleText>All</TabTitleText>}>
+                  <MenuList>
+                    {filteredAllItems.map((item) => (
+                      <ContextMenuListItem key={item.key} item={item} />
+                    ))}
+                  </MenuList>
+                </Tab>
+              </Tabs>
+            </MenuContent>
+            {footer && <MenuFooter>{footer}</MenuFooter>}
+          </OutsideClickHandler>
         </Menu>
       }
       // isPlain
