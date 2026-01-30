@@ -11,14 +11,21 @@ import {
   TextVariants,
   Flex,
   FlexItem,
+  Switch,
+  Select,
+  MenuToggle,
+  SelectOption,
+  SelectList,
+  capitalize,
 } from '@patternfly/react-core';
+import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
 import emptySnapshotImgUrl from '../../../assets/Snapshots.svg';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
+import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -34,11 +41,20 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 }) => {
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const filterOptions = ['name', 'commit message'];
+  const [activeFilter, setActiveFilter] = React.useState(filterOptions[0]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
+    'commit message': unparsedFilters['commit message']
+      ? (unparsedFilters['commit message'] as string)
+      : '',
+    showMergedOnly: unparsedFilters.showMergedOnly
+      ? (unparsedFilters.showMergedOnly as boolean)
+      : false,
   });
 
-  const { name: nameFilter } = filters;
+  const { name: nameFilter, 'commit message': commitMessageFilter, showMergedOnly } = filters;
 
   const {
     data: snapshots,
@@ -63,11 +79,26 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   );
 
   const filteredSnapshots = React.useMemo(() => {
-    // apply name filter
-    return nameFilter
-      ? snapshots?.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1) || []
-      : snapshots || [];
-  }, [snapshots, nameFilter]);
+    return (snapshots || []).filter((s) => {
+      if (
+        showMergedOnly &&
+        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ===
+          PipelineRunEventType.PULL
+      ) {
+        return false;
+      }
+      if (nameFilter && !s.metadata.name.toLowerCase().includes(nameFilter.toLowerCase())) {
+        return false;
+      }
+
+      const commitTitle =
+        s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE]?.toLowerCase() ?? '';
+      if (commitMessageFilter && !commitTitle.includes(commitMessageFilter.toLowerCase())) {
+        return false;
+      }
+      return true;
+    });
+  }, [snapshots, nameFilter, showMergedOnly, commitMessageFilter]);
 
   if (isLoading) {
     return (
@@ -118,20 +149,64 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
         >
           <EmptyStateBody>
             Snapshots are created automatically by push events or pull request events. Snapshots can
-            also created by created by manually if needed. Once created, Snapshots will be displayed
-            on this page.
+            also be created manually if needed. Once created, Snapshots will be displayed on this
+            page.
           </EmptyStateBody>
         </AppEmptyState>
       ) : (
         <>
-          <BaseTextFilterToolbar
-            text={nameFilter}
-            label="name"
-            setText={(name) => setFilters({ name })}
-            onClearFilters={onClearFilters}
-            dataTest="snapshots-list-toolbar"
-            totalColumns={snapshotColumns.length}
-          />
+          <Flex spaceItems={{ default: 'spaceItemsNone' }}>
+            <Select
+              toggle={(toggleRef) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  icon={<FilterIcon />}
+                  data-test="snapshots-list-filter-dropdown"
+                  isExpanded={isOpen}
+                  onClick={() => setIsOpen(!isOpen)}
+                >
+                  {capitalize(activeFilter)}
+                </MenuToggle>
+              )}
+              onSelect={(_, val) => {
+                const newFilter = val as string;
+                setActiveFilter(newFilter);
+                setFilters({ ...unparsedFilters, [activeFilter]: '', [newFilter]: '' });
+                setIsOpen(false);
+              }}
+              selected={activeFilter}
+              isOpen={isOpen}
+              onOpenChange={setIsOpen}
+            >
+              <SelectList>
+                {filterOptions.map((ft) => (
+                  <SelectOption key={ft} value={ft}>
+                    {capitalize(ft)}
+                  </SelectOption>
+                ))}
+              </SelectList>
+            </Select>
+
+            <BaseTextFilterToolbar
+              text={activeFilter === 'name' ? nameFilter : commitMessageFilter}
+              label={activeFilter}
+              setText={(value) => {
+                setFilters({ ...unparsedFilters, [activeFilter]: value });
+              }}
+              onClearFilters={onClearFilters}
+              totalColumns={snapshotColumns.length}
+              noLeftPadding={true}
+            >
+              <Switch
+                id="show-merged-snapshots-only-switch"
+                label="Hide Pull Request Snapshots"
+                isChecked={showMergedOnly}
+                onChange={(_event, checked) =>
+                  setFilters({ ...unparsedFilters, showMergedOnly: checked })
+                }
+              />
+            </BaseTextFilterToolbar>
+          </Flex>
 
           {filteredSnapshots.length === 0 ? (
             <FilteredEmptyState onClearFilters={onClearFilters} />
