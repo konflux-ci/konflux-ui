@@ -17,9 +17,9 @@ import {
 } from '@patternfly/react-core';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
 import {
   APPLICATION_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
   PIPELINERUN_DETAILS_PATH,
   TASKRUN_LOGS_PATH,
 } from '../../../routes/paths';
@@ -46,6 +46,8 @@ const TaskRunDetailsTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [taskRun, loaded, error] = useTaskRunV2(namespace, taskRunName);
+
+  const { getComponentDetailsPath } = useComponentDetailsPath();
 
   if (!loaded) {
     return (
@@ -235,11 +237,10 @@ const TaskRunDetailsTab: React.FC = () => {
                     {taskRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                       applicationName ? (
                         <Link
-                          to={COMPONENT_DETAILS_PATH.createPath({
-                            workspaceName: namespace,
+                          to={getComponentDetailsPath(
                             applicationName,
-                            componentName: taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT],
-                          })}
+                            taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT],
+                          )}
                         >
                           {taskRun.metadata.labels?.[PipelineRunLabel.COMPONENT]}
                         </Link>

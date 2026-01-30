@@ -7,11 +7,8 @@ import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '../../../consts/pipelinerun';
 import { useIsOnFeatureFlag } from '../../../feature-flags/hooks';
 import { useKarchScanResults } from '../../../hooks/useScanResults';
-import {
-  PIPELINE_RUNS_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
-  SNAPSHOT_DETAILS_PATH,
-} from '../../../routes/paths';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
+import { PIPELINE_RUNS_DETAILS_PATH, SNAPSHOT_DETAILS_PATH } from '../../../routes/paths';
 import ActionMenu from '../../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../../shared/components/table';
 import { Timestamp } from '../../../shared/components/timestamp/Timestamp';
@@ -188,6 +185,8 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       ? `?integrationTestName=${encodeURIComponent(integrationTestName)}`
       : '';
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   return (
     <>
       <TableData className={pipelineRunTableColumnClasses.name}>
@@ -274,11 +273,10 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
           {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
             obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
               <Link
-                to={COMPONENT_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
-                })}
+                to={getComponentDetailsPath(
+                  obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+                  obj.metadata?.labels[PipelineRunLabel.COMPONENT],
+                )}
               >
                 {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
               </Link>
@@ -377,6 +375,8 @@ const DynamicPipelineRunListRow: React.FC<
       ? `?integrationTestName=${encodeURIComponent(integrationTestName)}`
       : '';
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   return (
     <>
       {visibleColumns.has('name') && (
@@ -472,11 +472,10 @@ const DynamicPipelineRunListRow: React.FC<
           {obj.metadata?.labels[PipelineRunLabel.COMPONENT] ? (
             obj.metadata?.labels[PipelineRunLabel.APPLICATION] ? (
               <Link
-                to={COMPONENT_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  applicationName: obj.metadata?.labels[PipelineRunLabel.APPLICATION],
-                  componentName: obj.metadata?.labels[PipelineRunLabel.COMPONENT],
-                })}
+                to={getComponentDetailsPath(
+                  obj.metadata?.labels[PipelineRunLabel.APPLICATION],
+                  obj.metadata?.labels[PipelineRunLabel.COMPONENT],
+                )}
               >
                 {obj.metadata?.labels[PipelineRunLabel.COMPONENT]}
               </Link>

@@ -17,11 +17,8 @@ import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { useNamespace } from '~/shared/providers/Namespace';
 import PipelineIcon from '../../../../assets/pipelineIcon.svg';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import {
-  PIPELINE_RUNS_DETAILS_PATH,
-  COMPONENT_DETAILS_PATH,
-  PIPELINE_RUNS_LOG_PATH,
-} from '../../../../routes/paths';
+import useComponentDetailsPath from '../../../../routes/hooks/useComponentDetailsPath';
+import { PIPELINE_RUNS_DETAILS_PATH, PIPELINE_RUNS_LOG_PATH } from '../../../../routes/paths';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { PipelineRunKind } from '../../../../types';
 import {
@@ -51,6 +48,8 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
     namespace,
     pipelineRun?.metadata?.name ?? '',
   );
+
+  const { getComponentDetailsPath } = useComponentDetailsPath();
 
   if (!pipelineRun) {
     return null;
@@ -136,11 +135,10 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
                 {pipelineRun.metadata?.labels?.[PipelineRunLabel.COMPONENT] ? (
                   pipelineRun.metadata?.labels?.[PipelineRunLabel.APPLICATION] ? (
                     <Link
-                      to={COMPONENT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName: pipelineRun.metadata.labels[PipelineRunLabel.APPLICATION],
-                        componentName: pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT],
-                      })}
+                      to={getComponentDetailsPath(
+                        pipelineRun?.metadata?.labels?.[PipelineRunLabel.APPLICATION],
+                        pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT],
+                      )}
                     >
                       {pipelineRun.metadata.labels[PipelineRunLabel.COMPONENT]}
                     </Link>

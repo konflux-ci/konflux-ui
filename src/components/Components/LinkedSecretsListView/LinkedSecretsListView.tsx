@@ -17,11 +17,8 @@ import emptyStateImgUrl from '../../../assets/secret.svg';
 import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { useSortedResources } from '../../../hooks/useSortedResources';
-import {
-  COMPONENT_DETAILS_PATH,
-  COMPONENT_LIST_PATH,
-  COMPONENT_LINKED_SECRETS_PATH,
-} from '../../../routes/paths';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
+import { COMPONENT_LIST_PATH, COMPONENT_LINKED_SECRETS_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { Table } from '../../../shared/components';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -82,6 +79,8 @@ export const LinkedSecretsListView: React.FC = () => {
     [sortedLinkedSecrets, nameFilter],
   );
 
+  const { getComponentDetailsPath } = useComponentDetailsPath();
+
   if (!linkedSecretsLoaded) {
     return (
       <Bullseye>
@@ -137,11 +136,7 @@ export const LinkedSecretsListView: React.FC = () => {
             name: 'components',
           },
           {
-            path: COMPONENT_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              componentName,
-            }),
+            path: getComponentDetailsPath(applicationName, componentName),
             name: componentName,
           },
           {

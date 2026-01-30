@@ -12,8 +12,7 @@ import {
 } from '@patternfly/react-core';
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
-import { useNamespace } from '~/shared/providers/Namespace';
-import { COMPONENT_DETAILS_PATH } from '../../../../routes/paths';
+import useComponentDetailsPath from '../../../../routes/hooks/useComponentDetailsPath';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
 import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
 import { Commit } from '../../../../types';
@@ -32,9 +31,10 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
   workflowNode,
   onClose,
 }) => {
-  const namespace = useNamespace();
   const workflowData = workflowNode.getData();
   const commit = workflowData.resource as Commit;
+
+  const { getComponentDetailsPath } = useComponentDetailsPath();
 
   if (!commit) {
     return null;
@@ -100,13 +100,7 @@ const CommitSidePanel: React.FC<React.PropsWithChildren<CommitSidePanelBodyProps
               {commit.components.map((component, index) => {
                 return (
                   <React.Fragment key={component}>
-                    <Link
-                      to={COMPONENT_DETAILS_PATH.createPath({
-                        workspaceName: namespace,
-                        applicationName: workflowData.application,
-                        componentName: component,
-                      })}
-                    >
+                    <Link to={getComponentDetailsPath(workflowData.application, component)}>
                       {component}
                     </Link>
                     {index < commit.components.length - 1 && ','}

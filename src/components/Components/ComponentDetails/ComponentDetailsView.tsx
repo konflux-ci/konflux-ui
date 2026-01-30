@@ -8,7 +8,8 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { useComponent } from '../../../hooks/useComponents';
 import { ComponentModel } from '../../../models';
-import { COMPONENT_LIST_PATH, COMPONENT_DETAILS_PATH } from '../../../routes/paths';
+import useComponentDetailsPath from '../../../routes/hooks/useComponentDetailsPath';
+import { COMPONENT_LIST_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { useAccessReviewForModel } from '../../../utils/rbac';
@@ -53,6 +54,8 @@ const ComponentDetailsView: React.FC = () => {
       })),
     [componentActions, navigate],
   );
+
+  const { getComponentDetailsPath } = useComponentDetailsPath();
 
   if (!loaded) {
     return (
@@ -112,11 +115,7 @@ const ComponentDetailsView: React.FC = () => {
             name: 'components',
           },
           {
-            path: COMPONENT_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              applicationName,
-              componentName,
-            }),
+            path: getComponentDetailsPath(applicationName, componentName),
             name: component.spec.componentName,
           },
         ]}
@@ -129,11 +128,7 @@ const ComponentDetailsView: React.FC = () => {
           </Text>
         }
         actions={actions}
-        baseURL={COMPONENT_DETAILS_PATH.createPath({
-          workspaceName: namespace,
-          applicationName,
-          componentName,
-        })}
+        baseURL={getComponentDetailsPath(applicationName, componentName)}
         tabs={[
           {
             key: 'index',
