@@ -33,7 +33,7 @@ export const useSnapshot = (
   return [snapshot, !isLoading, fetchError, wsError, isError];
 };
 
-export const useSnapshotsForApplication = (namespace, applicationName) => {
+export const useSnapshotsForApplication = (namespace, applicationName, releasable = false) => {
   return useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
@@ -46,5 +46,10 @@ export const useSnapshotsForApplication = (namespace, applicationName) => {
       },
     },
     SnapshotModel,
+    undefined,
+    undefined,
+    {
+      enableArchive: !releasable,
+    },
   );
 };
