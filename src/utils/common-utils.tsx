@@ -33,3 +33,27 @@ export const downloadTaskRunYaml = (taskRun: TaskRunKind) => {
   const filename = `${taskRun.metadata?.name || 'taskrun-details'}.yaml`;
   saveAs(blob, filename);
 };
+/**
+ * Parse a string value to boolean
+ * @param value - String value ("true"/"false" or undefined)
+ * @param defaultValue - Default value if undefined
+ */
+export function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
+  if (value === undefined || value === '') {
+    return defaultValue;
+  }
+  return value.toLowerCase() === 'true';
+}
+
+/**
+ * Parse a string value to number
+ * @param value - String value or undefined
+ * @param defaultValue - Default value if undefined or invalid
+ */
+export function parseNumber(value: string | undefined, defaultValue: number): number {
+  if (value === undefined || value === '') {
+    return defaultValue;
+  }
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? defaultValue : parsed;
+}
