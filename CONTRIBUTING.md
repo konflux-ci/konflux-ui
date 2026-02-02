@@ -11,7 +11,18 @@ We welcome contributions of all kinds! Follow these steps to get started:
 
 1. Fork the repository and create your branch from `main`.
 
-2. Install dependencies in the root of your local repository and in the `e2e-tests` directory with `yarn install`.
+2. Enable Corepack and install dependencies:
+   ```bash
+   # Enable Corepack (required for Yarn Berry)
+   corepack enable
+   
+   # Install dependencies in the root directory
+   yarn install
+   
+   # Install e2e-tests dependencies
+   cd e2e-tests && yarn install && cd ..
+   ```
+   > **Note:** This project uses [Yarn Berry (v4.x)](https://yarnpkg.com/). The correct version is automatically managed via Corepack.
 
 3. Make sure your code builds and passes all checks:
 
@@ -79,6 +90,25 @@ Please ensure your PR is complete and clear — this helps reviewers respond fas
 - For detailed instructions on how to build and run the project, refer to the [README](./README.md).
 - We support [Dev Containers](https://containers.dev/) for a simplified setup process.
   If you're using VS Code, the project will automatically configure your environment using the files in [`.devcontainer`](./.devcontainer/). Please, refer to our [Dev Containers README](.devcontainer/README.md) for more information.
+
+### Package Manager
+
+This project uses **Yarn Berry (v4.x)** as the package manager. Key points:
+
+- ✅ Use `yarn` commands (e.g., `yarn lint`, `yarn test`, `yarn tsc`)
+- ❌ Don't use `npm` commands
+- The correct Yarn version is specified in `package.json` via the `packageManager` field
+- [Corepack](https://nodejs.org/api/corepack.html) (included with Node.js 20+) automatically manages the Yarn version
+
+**Common Yarn Berry commands:**
+
+| Command | Description |
+| ------- | ----------- |
+| `yarn install` | Install dependencies |
+| `yarn install --immutable` | Install dependencies (CI mode, fails if lockfile changes) |
+| `yarn add <package>` | Add a dependency |
+| `yarn add -D <package>` | Add a dev dependency |
+| `yarn remove <package>` | Remove a dependency |
 
 ---
 

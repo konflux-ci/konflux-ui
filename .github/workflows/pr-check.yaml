@@ -96,6 +96,9 @@ jobs:
           repository: ${{ github.repository }}
           ref: '${{ github.event.pull_request.head.sha }}'
 
+      - name: Enable Corepack 📦
+        run: corepack enable
+
       - name: Disc space stats
         run: |
           set -x

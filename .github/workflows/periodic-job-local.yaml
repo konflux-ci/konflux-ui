@@ -36,6 +36,9 @@ jobs:
           repository: ${{ github.repository }}
           ref: "${{ env.HEAD_SHA }}"
 
+      - name: Enable Corepack 📦
+        run: corepack enable
+
       - name: Disc space stats
         run: |
           set -x

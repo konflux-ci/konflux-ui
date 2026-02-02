@@ -18,17 +18,27 @@ If you do not want to or cannot use the DevContainer, you can also setup the rep
 **Prerequisites:**
 
 - Node.js version >= 20
-- Yarn version 1.22
+- Corepack enabled (included with Node.js 20+)
+
+> **Note:** This project uses [Yarn Berry (v4.x)](https://yarnpkg.com/) as the package manager. The correct Yarn version is automatically managed via the `packageManager` field in `package.json` and Corepack.
 
 A step by step series of examples that tell you how to get a development environment running:
 
 1. Clone the repository
-2. Install dependencies
+
+2. Enable Corepack (required for Yarn Berry)
+   ```bash
+   corepack enable
    ```
+   > On some systems you may need `sudo corepack enable`
+
+3. Install dependencies
+   ```bash
    yarn install
    ```
-3. Runs the app in development mode
-   ```
+
+4. Run the app in development mode
+   ```bash
    yarn start
    ```
 

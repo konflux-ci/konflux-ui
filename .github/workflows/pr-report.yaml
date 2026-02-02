@@ -16,13 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Enable Corepack 📦
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
-
-      - name: Enable Corepack
-        run: corepack enable
 
       - name: Install dependencies
         run: yarn add @octokit/rest dayjs
