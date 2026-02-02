@@ -8,7 +8,7 @@ RUN wget "https://github.com/sigstore/cosign/releases/download/v2.4.0/cosign-lin
     chmod +x /usr/local/bin/cosign
 
 # Enable Yarn Berry via corepack
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 
 USER node:0
 

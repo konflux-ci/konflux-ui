@@ -1,7 +1,7 @@
 FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ede5bc00a4dfda5e259ee4a57f67973720a565d1 as builder
 
 WORKDIR  /opt/app-root/src
-RUN corepack enable
+RUN npm install -g corepack && corepack enable
 
 COPY @types @types
 COPY public public
