@@ -49,6 +49,7 @@ import ComponentsListRow from './ComponentsListRow';
 import './ComponentListView.scss';
 
 export const COMPONENTS_LIST_GS_LOCAL_STORAGE_KEY = 'components-list-getting-started-modal';
+const PUSH_BUILD_ONLY = true;
 
 type ComponentListViewProps = {
   applicationName: string;
@@ -86,6 +87,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     namespace,
     applicationName,
     componentNames,
+    PUSH_BUILD_ONLY,
   );
   const componentPACStates = usePACStatesForComponents(components);
 
