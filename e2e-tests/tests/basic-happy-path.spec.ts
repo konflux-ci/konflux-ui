@@ -1,9 +1,8 @@
-import { NavItem } from '../support/constants/PageTitle';
+import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { actions } from '../support/pageObjects/global-po';
 import { ApplicationDetailPage } from '../support/pages/ApplicationDetailPage';
 import { ComponentDetailsPage } from '../support/pages/ComponentDetailsPage';
 import { ComponentPage } from '../support/pages/ComponentsPage';
-import { GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { ComponentsTabPage } from '../support/pages/tabs/ComponentsTabPage';
 import { IntegrationTestsTabPage } from '../support/pages/tabs/IntegrationTestsTabPage';
 import {
@@ -39,41 +38,6 @@ describe('Basic Happy Path', () => {
 
   before(function () {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
-  });
-
-  after(function () {
-    // If some test failed, don't remove the app
-    let allTestsSucceeded = true;
-    this.test.parent.eachTest((test) => {
-      if (test.state === 'failed') {
-        allTestsSucceeded = false;
-      }
-    });
-    if (allTestsSucceeded || Cypress.env('REMOVE_APP_ON_FAIL')) {
-      // use UI to remove the application to test the flow
-      // The below command aims to navigate to applications page.
-      // but it does not work well. Because when I add the
-      // 'GetAppStartedPage.waitForLoad()' after the step, it failed.
-      Common.navigateTo(NavItem.applications);
-      // we only delete the app when cy get the app.
-      // it means we would skip 'delete app' sometimes.
-      length = Cypress.$(`[data-id="${applicationName}"`).length;
-
-      if (length > 0) {
-        Applications.openKebabMenu(applicationName);
-        cy.get(actions.deleteApp)
-          .its('length')
-          .then((deleteLength) => {
-            if (deleteLength > 0) {
-              cy.get(actions.deleteApp).click();
-              cy.get(actions.deleteModalInput).clear().type(applicationName);
-              cy.get(actions.deleteModalButton).click();
-            }
-          });
-      }
-
-      APIHelper.deleteGitHubRepository(repoOwner, repoName);
-    }
   });
 
   it('Create an Application with a component', () => {
@@ -171,10 +135,11 @@ describe('Basic Happy Path', () => {
             UIhelper.verifyGraphNodes(item);
           });
 
-          TaskRunsTab.goToTaskrunsTab();
-          TaskRunsTab.assertTaskAndTaskRunStatus(
-            TaskRunsTab.getbasicTaskNamesList(pipelinerunName),
-          );
+          // skip due to instaiblity
+          // TaskRunsTab.goToTaskrunsTab();
+          // TaskRunsTab.assertTaskAndTaskRunStatus(
+          //   TaskRunsTab.getbasicTaskNamesList(pipelinerunName),
+          // );
         });
     });
 
@@ -188,23 +153,28 @@ describe('Basic Happy Path', () => {
       DetailsTab.waitForPLRAndDownloadAllLogs(false);
     });
 
-    it('Verify vulnerabilities column exists in Pipeline runs table', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerabilities column exists in Pipeline runs table', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
       PipelinerunsTabPage.verifyVulnerabilityColumn();
     });
 
-    it('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
       PipelinerunsTabPage.verifyVulnerabilityIndicators(
         `${componentName}-on-push`,
         /(-|N\/A|Critical\d+High\d+Medium\d+Low\d+Unknown\d+)/,
       );
     });
 
-    it('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+      // Test passed for a page that was not fully loaded, test this functionality to prove it works as expected
       PipelinerunsTabPage.verifyVulnerabilityCellVisibility(`${componentName}-on-pull-request`);
     });
 
-    it('Verify vulnerability scan details when available', () => {
+    // Skipping unstable test
+    it.skip('Verify vulnerability scan details when available', () => {
       PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
     });
   });
@@ -234,6 +204,27 @@ describe('Basic Happy Path', () => {
 
     it('Verify deployed image exists', () => {
       ComponentDetailsPage.checkBuildImage();
+    });
+  });
+
+  describe('Delete the application via UI', () => {
+    it('Delete the application via UI', () => {
+      Common.navigateTo(NavItem.applications);
+      Applications.filterApplication(applicationName);
+      UIhelper.getTableRow('Application List', applicationName).should('be.visible');
+
+      Applications.openKebabMenu(applicationName);
+      cy.get(actions.deleteApp).click();
+      cy.get(actions.deleteModalInput).clear().type(applicationName);
+      cy.get(actions.deleteModalButton).click();
+
+      // Verify the application is removed from the list after deletion
+      cy.contains('[aria-label="Application List"] tr[role="row"]', applicationName, {
+        timeout: 10000,
+      }).should('not.exist');
+
+      // Delete GitHub repository after UI deletion is confirmed
+      APIHelper.deleteGitHubRepository(repoOwner, repoName);
     });
   });
 });

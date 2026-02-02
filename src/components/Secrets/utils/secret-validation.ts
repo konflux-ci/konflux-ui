@@ -41,7 +41,36 @@ export const secretFormValidationSchema = yup.object({
             const parsedData = attempt(JSON.parse, value ? Base64.decode(value) : '');
             const hasError = isError(parsedData);
             return !hasError;
-          }),
+          })
+          .test(
+            'auth-format-validation-test',
+            'Invalid credentials format. Expected format: username:password',
+            (value) => {
+              if (!value) return true; // Let required handle empty values
+              try {
+                const config = JSON.parse(Base64.decode(value)) as {
+                  auths?: Record<string, { auth?: string }>;
+                };
+                if (!config.auths) return true; // No auths to validate
+                // Pattern: username:password
+                const authPattern = /^[^:]+:.+$/;
+                return Object.values(config.auths).every((creds) => {
+                  const auth = creds?.auth;
+                  if (!auth) return false;
+                  try {
+                    const decodedAuth = Base64.decode(auth);
+                    // Check for valid printable ASCII and correct format
+                    const isValidAscii = /^[\x20-\x7E]+$/.test(decodedAuth);
+                    return isValidAscii && authPattern.test(decodedAuth);
+                  } catch {
+                    return false;
+                  }
+                });
+              } catch {
+                return false;
+              }
+            },
+          ),
       }),
     }),
   }),

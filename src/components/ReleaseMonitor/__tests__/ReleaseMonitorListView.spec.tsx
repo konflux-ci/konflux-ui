@@ -8,9 +8,13 @@ import {
   mockNamespaces,
 } from '~/components/ReleaseMonitor/__data__/mock-release-data';
 import ReleaseMonitorListView from '~/components/ReleaseMonitor/ReleaseMonitorListView';
+import ReleasePlanAdmissionsInNamespace from '~/components/ReleaseMonitor/ReleasePlanAdmissionsInNamespace';
+import ReleasePlansInNamespace from '~/components/ReleaseMonitor/ReleasePlansInNamespace';
 import ReleasesInNamespace from '~/components/ReleaseMonitor/ReleasesInNamespace';
 import { useNamespaceInfo } from '~/shared/providers/Namespace';
-import { ReleaseKind } from '~/types';
+import { ReleaseKind, ReleaseCondition } from '~/types';
+import { ReleasePlanKind } from '~/types/coreBuildService';
+import { ReleasePlanAdmissionKind } from '~/types/release-plan-admission';
 
 // Mock dependencies
 jest.useFakeTimers();
@@ -20,6 +24,10 @@ jest.mock('~/shared/providers/Namespace', () => ({
 }));
 
 jest.mock('~/components/ReleaseMonitor/ReleasesInNamespace', () => jest.fn(() => null));
+jest.mock('~/components/ReleaseMonitor/ReleasePlansInNamespace', () => jest.fn(() => null));
+jest.mock('~/components/ReleaseMonitor/ReleasePlanAdmissionsInNamespace', () =>
+  jest.fn(() => null),
+);
 
 jest.mock('~/shared/components/table/TableComponent', () => {
   type MockColumn = { title: React.ReactNode; props: ThProps };
@@ -106,6 +114,8 @@ jest.mock('react-i18next', () => ({
 
 const mockUseNamespaceInfo = useNamespaceInfo as jest.Mock;
 const mockReleasesInNamespace = ReleasesInNamespace as jest.Mock;
+const mockReleasePlansInNamespace = ReleasePlansInNamespace as jest.Mock;
+const mockReleasePlanAdmissionsInNamespace = ReleasePlanAdmissionsInNamespace as jest.Mock;
 
 const renderWithProviders = (ui: React.ReactElement) =>
   render(
@@ -118,6 +128,8 @@ const renderWithProviders = (ui: React.ReactElement) =>
           'releasePlan',
           'namespace',
           'component',
+          'product',
+          'productVersion',
           'showLatest',
         ]}
       >
@@ -141,6 +153,8 @@ const toggleFilter = async (buttonName: RegExp, optionLabel: RegExp) => {
 
 describe('ReleaseMonitorListView', () => {
   let releases: ReleaseKind[];
+  let releasePlans: ReleasePlanKind[];
+  let releasePlanAdmissions: ReleasePlanAdmissionKind[];
 
   const mockNamespacesInfo = {
     namespaces: mockNamespaces,
@@ -158,6 +172,122 @@ describe('ReleaseMonitorListView', () => {
       release4.metadata.creationTimestamp = '2023-01-02T10:30:00Z';
     }
 
+    // Mock release plans
+    releasePlans = [
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'ReleasePlan',
+        metadata: {
+          name: 'test-plan-1',
+          namespace: 'namespace-1',
+          labels: {
+            'release.appstudio.openshift.io/releasePlanAdmission': 'rpa-1',
+          },
+        },
+        spec: {
+          application: 'test',
+          target: 'target-namespace-1',
+        },
+      },
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'ReleasePlan',
+        metadata: {
+          name: 'test-plan-2',
+          namespace: 'namespace-1',
+          labels: {
+            'release.appstudio.openshift.io/releasePlanAdmission': 'rpa-2',
+          },
+        },
+        spec: {
+          application: 'test',
+          target: 'target-namespace-1',
+        },
+      },
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'ReleasePlan',
+        metadata: {
+          name: 'test-plan-3',
+          namespace: 'namespace-2',
+          labels: {
+            'release.appstudio.openshift.io/releasePlanAdmission': 'rpa-3',
+          },
+        },
+        spec: {
+          application: 'foo',
+          target: 'target-namespace-2',
+        },
+      },
+    ] as ReleasePlanKind[];
+
+    // Mock release plan admissions with product data
+    releasePlanAdmissions = [
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'ReleasePlanAdmission',
+        metadata: {
+          name: 'rpa-1',
+          namespace: 'target-namespace-1',
+        },
+        spec: {
+          applications: ['test'],
+          origin: 'namespace-1',
+          releaseStrategy: 'test-strategy',
+          data: {
+            releaseNotes: {
+              /* eslint-disable camelcase */
+              product_name: 'Product A',
+              product_version: '1.0.0',
+              /* eslint-enable camelcase */
+            },
+          },
+        },
+      },
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'ReleasePlanAdmission',
+        metadata: {
+          name: 'rpa-2',
+          namespace: 'target-namespace-1',
+        },
+        spec: {
+          application: 'test',
+          origin: 'namespace-1',
+          releaseStrategy: 'test-strategy',
+          data: {
+            releaseNotes: {
+              /* eslint-disable camelcase */
+              product_name: 'Product B',
+              product_version: '2.0.0',
+              /* eslint-enable camelcase */
+            },
+          },
+        },
+      },
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'ReleasePlanAdmission',
+        metadata: {
+          name: 'rpa-3',
+          namespace: 'target-namespace-2',
+        },
+        spec: {
+          application: 'foo',
+          origin: 'namespace-2',
+          releaseStrategy: 'test-strategy',
+          data: {
+            releaseNotes: {
+              /* eslint-disable camelcase */
+              product_name: 'Product A',
+              product_version: '1.5.0',
+              /* eslint-enable camelcase */
+            },
+          },
+        },
+      },
+    ] as ReleasePlanAdmissionKind[];
+
     const triggerReleasesLoaded = (
       namespace: string,
       onReleasesLoaded: (namespace: string, releases: ReleaseKind[]) => void,
@@ -166,6 +296,27 @@ describe('ReleaseMonitorListView', () => {
         (release) => release.metadata.namespace === namespace,
       );
       setTimeout(() => onReleasesLoaded(namespace, namespaceReleases), 0);
+    };
+
+    const triggerReleasePlansLoaded = (
+      namespace: string,
+      onReleasePlansLoaded: (namespace: string, plans: ReleasePlanKind[]) => void,
+    ) => {
+      const namespacePlans = releasePlans.filter((plan) => plan.metadata.namespace === namespace);
+      setTimeout(() => onReleasePlansLoaded(namespace, namespacePlans), 0);
+    };
+
+    const triggerReleasePlanAdmissionsLoaded = (
+      namespace: string,
+      onReleasePlanAdmissionsLoaded: (
+        namespace: string,
+        admissions: ReleasePlanAdmissionKind[],
+      ) => void,
+    ) => {
+      const namespaceAdmissions = releasePlanAdmissions.filter(
+        (admission) => admission.metadata.namespace === namespace,
+      );
+      setTimeout(() => onReleasePlanAdmissionsLoaded(namespace, namespaceAdmissions), 0);
     };
 
     mockReleasesInNamespace.mockImplementation(
@@ -179,6 +330,39 @@ describe('ReleaseMonitorListView', () => {
         React.useEffect(() => {
           triggerReleasesLoaded(namespace, onReleasesLoaded);
         }, [namespace, onReleasesLoaded]);
+        return null;
+      },
+    );
+
+    mockReleasePlansInNamespace.mockImplementation(
+      ({
+        namespace,
+        onReleasePlansLoaded,
+      }: {
+        namespace: string;
+        onReleasePlansLoaded: (namespace: string, plans: ReleasePlanKind[]) => void;
+      }) => {
+        React.useEffect(() => {
+          triggerReleasePlansLoaded(namespace, onReleasePlansLoaded);
+        }, [namespace, onReleasePlansLoaded]);
+        return null;
+      },
+    );
+
+    mockReleasePlanAdmissionsInNamespace.mockImplementation(
+      ({
+        namespace,
+        onReleasePlanAdmissionsLoaded,
+      }: {
+        namespace: string;
+        onReleasePlanAdmissionsLoaded: (
+          namespace: string,
+          admissions: ReleasePlanAdmissionKind[],
+        ) => void;
+      }) => {
+        React.useEffect(() => {
+          triggerReleasePlanAdmissionsLoaded(namespace, onReleasePlanAdmissionsLoaded);
+        }, [namespace, onReleasePlanAdmissionsLoaded]);
         return null;
       },
     );
@@ -198,7 +382,17 @@ describe('ReleaseMonitorListView', () => {
 
   it('renders ReleasesInNamespace for each namespace', () => {
     renderWithProviders(<ReleaseMonitorListView />);
-    expect(mockReleasesInNamespace).toHaveBeenCalledTimes(mockNamespaces.length);
+    // In strict mode, components render twice, so we check it's called at least once per namespace
+    expect(mockReleasesInNamespace.mock.calls.length).toBeGreaterThanOrEqual(mockNamespaces.length);
+    expect(mockReleasePlansInNamespace.mock.calls.length).toBeGreaterThanOrEqual(
+      mockNamespaces.length,
+    );
+
+    // Verify each namespace was rendered
+    const renderedNamespaces = mockReleasesInNamespace.mock.calls.map((call) => call[0].namespace);
+    mockNamespaces.forEach((ns) => {
+      expect(renderedNamespaces).toContain(ns.metadata.name);
+    });
   });
 
   it('renders loading state when namespaces are not loaded', () => {
@@ -442,5 +636,140 @@ describe('ReleaseMonitorListView', () => {
       expect(screen.getByText('test-release-3')).toBeInTheDocument();
       expect(screen.getByText('test-release-4')).toBeInTheDocument();
     });
+  });
+
+  it('filters releases by product', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    const option = await toggleFilter(/product filter menu/i, /Product A/i);
+
+    await waitFor(() => {
+      // Releases with Product A (test-release-1, test-release-3, test-release-4)
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+      // Release with Product B should not be visible
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('filters releases by productVersion', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    const option = await toggleFilter(/product version filter menu/i, /1.0.0/i);
+
+    await waitFor(() => {
+      // Only release with version 1.0.0 should be visible
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      // Others should not be visible
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-3')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-4')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('filters releases with no product', async () => {
+    // Add a release without product data
+    const releaseWithoutProduct: ReleaseKind = {
+      apiVersion: 'appstudio.redhat.com/v1alpha1',
+      kind: 'Release',
+      metadata: {
+        name: 'test-release-no-product',
+        creationTimestamp: '2023-04-01T10:30:00Z',
+        labels: {
+          'appstudio.openshift.io/application': 'test',
+          'appstudio.openshift.io/component': 'no-product-component',
+        },
+        namespace: 'namespace-1',
+      },
+      spec: {
+        releasePlan: 'test-plan-no-rpa',
+        snapshot: 'test-snapshot',
+      },
+      status: {
+        startTime: '2023-04-01T10:30:00Z',
+        completionTime: '2023-04-01T10:30:10Z',
+        target: 'test-target',
+        conditions: [
+          {
+            message: '',
+            reason: 'Succeeded',
+            status: 'True',
+            type: ReleaseCondition.Released,
+          },
+        ],
+      },
+    };
+
+    releases.push(releaseWithoutProduct);
+
+    // Add a release plan without RPA label
+    releasePlans.push({
+      apiVersion: 'appstudio.redhat.com/v1alpha1',
+      kind: 'ReleasePlan',
+      metadata: {
+        name: 'test-plan-no-rpa',
+        namespace: 'namespace-1',
+        labels: {},
+      },
+      spec: {
+        application: 'test',
+        target: 'target-namespace-1',
+      },
+    } as ReleasePlanKind);
+
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded([...mockReleases, releaseWithoutProduct]);
+
+    const option = await toggleFilter(/product filter menu/i, /No product/i);
+
+    await waitFor(() => {
+      // Only release without product should be visible
+      expect(screen.getByText('test-release-no-product')).toBeInTheDocument();
+      // Releases with product should not be visible
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(option);
+    expect(option).not.toBeChecked();
+  });
+
+  it('combines product and productVersion filters', async () => {
+    renderWithProviders(<ReleaseMonitorListView />);
+    await waitForReleasesLoaded();
+
+    // Filter by Product A
+    const productOption = await toggleFilter(/product filter menu/i, /Product A/i);
+
+    await waitFor(() => {
+      expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+    });
+
+    // Further filter by version 1.5.0
+    const versionOption = await toggleFilter(/product version filter menu/i, /1.5.0/i);
+
+    await waitFor(() => {
+      // Only releases with Product A AND version 1.5.0 should be visible
+      expect(screen.getByText('test-release-3')).toBeInTheDocument();
+      expect(screen.getByText('test-release-4')).toBeInTheDocument();
+      // Release with Product A but version 1.0.0 should not be visible
+      expect(screen.queryByText('test-release-1')).not.toBeInTheDocument();
+      // Release with Product B should not be visible
+      expect(screen.queryByText('test-release-2')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(productOption);
+    fireEvent.click(versionOption);
   });
 });

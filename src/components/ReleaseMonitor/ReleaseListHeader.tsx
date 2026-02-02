@@ -1,5 +1,6 @@
 import { pluralize, Text } from '@patternfly/react-core';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
+import HelpPopover from '~/components/HelpPopover';
 import { ComponentProps } from '~/shared/components/table/Table';
 import { createTableHeaders } from '~/shared/components/table/utils';
 
@@ -10,6 +11,8 @@ export const releaseTableColumnClasses = {
   component: 'pf-m-width-20  pf-m-width-10-on-xl',
   application: 'pf-m-width-20  pf-m-width-10-on-xl',
   releasePlan: 'pf-m-width-20  pf-m-width-10-on-xl',
+  product: 'pf-m-width-20  pf-m-width-10-on-xl',
+  productVersion: 'pf-m-width-20  pf-m-width-10-on-xl',
   namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
   count: 'pf-m-width-10  pf-m-width-5-on-xl',
 } as const;
@@ -53,6 +56,30 @@ const releaseColumns = [
     title: 'Namespace',
     className: releaseTableColumnClasses.namespace,
   },
+  {
+    title: (
+      <>
+        Product{' '}
+        <HelpPopover
+          headerContent="Product information"
+          bodyContent="If you can't see the Product values, it means you don't own the permission to check it or your release data doesn't have this value"
+        />
+      </>
+    ),
+    className: releaseTableColumnClasses.product,
+  },
+  {
+    title: (
+      <>
+        Product Version{' '}
+        <HelpPopover
+          headerContent="Product Version information"
+          bodyContent="If you can't see the Product Version values, it means you don't own the permission to check it or your release data doesn't have this value"
+        />
+      </>
+    ),
+    className: releaseTableColumnClasses.productVersion,
+  },
 ] satisfies Parameters<typeof createTableHeaders>[0];
 
 export const getReleasesListHeader = (
@@ -72,17 +99,17 @@ export const getReleasesListHeader = (
       ...baseHeaders,
       ...(totalCount !== undefined
         ? [
-            {
-              title: (
-                <Text component="small" className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
-                  {pluralize(totalCount, 'release')}
-                </Text>
-              ),
-              props: {
-                className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
-              },
+          {
+            title: (
+              <Text component="small" className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
+                {pluralize(totalCount, 'release')}
+              </Text>
+            ),
+            props: {
+              className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
             },
-          ]
+          },
+        ]
         : []),
     ];
   };

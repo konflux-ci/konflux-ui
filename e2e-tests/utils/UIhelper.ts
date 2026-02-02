@@ -95,7 +95,7 @@ export class UIhelper {
   ) {
     UIhelper.getTableRow(tableAriaLabel, uniqueRowText).within(() => {
       rowValues.forEach((val) => {
-        cy.contains(val).should('be.visible');
+        cy.contains(val).scrollIntoView().should('be.visible');
       });
     });
   }

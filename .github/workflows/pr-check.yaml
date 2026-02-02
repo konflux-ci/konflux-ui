@@ -70,6 +70,11 @@ jobs:
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       FORKED_REPO_URL: ${{ github.event.pull_request.head.repo.clone_url }}
       BASE_REPO_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+      # Cypress Cloud commit info
+      COMMIT_INFO_SHA: ${{ github.event.pull_request.head.sha }}
+      COMMIT_INFO_BRANCH: ${{ github.event.pull_request.head.ref }}
+      COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title }}
+      COMMIT_INFO_AUTHOR: ${{ github.event.pull_request.user.login }}
       # secrets
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
@@ -80,7 +85,7 @@ jobs:
       SMEE_URL: ${{ secrets.SMEE_URL }}
       CYPRESS_USERNAME: ${{ secrets.CYPRESS_USERNAME }}
       CYPRESS_PASSWORD: ${{ secrets.CYPRESS_PASSWORD }}
-      CYPRESS_KONFLUX_BASE_URL: "https://localhost:9443"
+      CYPRESS_KONFLUX_BASE_URL: 'https://localhost:9443'
       CYPRESS_PROJECT_ID: ${{ secrets.PROJECT_ID }}
       CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -89,7 +94,60 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: ${{ github.repository }}
-          ref: "${{ github.event.pull_request.head.sha }}"
+          ref: '${{ github.event.pull_request.head.sha }}'
+
+      - name: Disc space stats
+        run: |
+          set -x
+          df -h --total
+          free -m 
+
+      # Redirect Cypress Cache to /mnt to free up disk space on /dev/root
+      - name: Redirect Cypress Cache to /mnt
+        run: |
+          sudo mkdir -p /mnt/cypress_cache
+          sudo chown -R runner:docker /mnt/cypress_cache
+          # Create the link so Cypress installs to /mnt instead of /
+          mkdir -p ~/.cache
+          ln -s /mnt/cypress_cache ~/.cache/Cypress
+
+      - name: Force Docker to /mnt
+        run: |
+          # Stop Docker completely
+          sudo systemctl stop docker.socket
+          sudo systemctl stop docker
+          
+          sudo mkdir -p /mnt/docker
+          
+          # Create a Systemd Override (This is more powerful than daemon.json)
+          sudo mkdir -p /etc/systemd/system/docker.service.d
+          printf '[Service]\nExecStart=\nExecStart=/usr/bin/dockerd --data-root=/mnt/docker -H fd://' | sudo tee /etc/systemd/system/docker.service.d/override.conf
+          
+          sudo systemctl daemon-reload
+          sudo systemctl start docker
+
+      - name: Move npm cache to /mnt
+        run: |
+          sudo mkdir -p /mnt/npm_cache
+          sudo chown -R runner:docker /mnt/npm_cache
+          sudo npm config set cache /mnt/npm_cache --global
+
+      - name: Redirect Podman Storage to /mnt
+        run: |
+          # 1. Create the new storage directory
+          sudo mkdir -p /mnt/podman_storage
+          sudo chown -R runner:docker /mnt/podman_storage
+          
+          # 2. Create/Override the Podman storage config
+          mkdir -p ~/.config/containers
+          cat <<EOF > ~/.config/containers/storage.conf
+          [storage]
+          driver = "overlay"
+          graphroot = "/mnt/podman_storage"
+          EOF
+          
+          # 3. Verify the change
+          podman info --format '{{.Store.GraphRoot}}'
 
       - name: Deploy konflux-ci
         id: pr-check-action
@@ -97,8 +155,25 @@ jobs:
         with:
           job-type: ${{ env.JOB_TYPE }}
 
+      - name: Disc space stats after deploy
+        run: |
+          set -x
+          df -h --total
+          free -m 
+          kubectl describe nodes
+
       - name: Konflux-ui e2e test
         uses: ./.github/actions/konflux-ui-e2e-test
+
+      - name: Disc space stats after e2e test
+        if: ${{ always() }}
+        run: |
+          set -x
+          df -h --total
+          free -m 
+          kubectl describe nodes
+          # This finds the top 10 largest directories on the root partition
+          du -h / --max-depth=2 2>/dev/null | sort -hr | head -n 10
 
       - name: Upload e2e coverage to Codecov
         if: ${{ always() && env.CODECOV_TOKEN != '' }}

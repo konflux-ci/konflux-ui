@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
-import { useImageProxyHost } from '~/hooks/useImageProxyHost';
+import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { ImageRepositoryVisibility } from '~/types';
@@ -13,8 +13,6 @@ export interface ImageUrlDisplayProps {
   namespace: string;
   /** Component name */
   componentName: string;
-  /** Whether the external link should be selectable as highlighted text */
-  isHighlightable?: boolean;
 }
 
 /**
@@ -29,17 +27,16 @@ const getContainerImageLink = (url: string) => {
  * Renders an image URL using:
  * - `ClipboardCopy` for private images (shows proxy URL when available, original URL as fallback)
  * - `ExternalLink` for public or unspecified visibility
- * - `Skeleton` while loading image repository or proxy host information
+ * - `Skeleton` while loading image repository or image proxy information
  *
- * Uses dynamic proxy host and visibility from Konflux public info and image repository.
+ * Uses dynamic image proxy and visibility from Konflux public info and image repository.
  */
 export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
   imageUrl,
   namespace,
   componentName,
-  isHighlightable = false,
 }) => {
-  const [proxyHost, proxyHostLoaded, proxyHostError] = useImageProxyHost();
+  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     componentName,
@@ -51,16 +48,16 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
 
   // Show loading while fetching data (only if no error)
   // Once error occurs, fallback to display the content
-  if ((!imageRepoLoaded && !imageRepoError) || (isPrivate && !proxyHostLoaded && !proxyHostError)) {
+  if ((!imageRepoLoaded && !imageRepoError) || (isPrivate && !proxyLoaded && !proxyError)) {
     return <Skeleton aria-label="Loading image URL" />;
   }
 
   if (isPrivate) {
-    // If proxyHost has error, fallback to original URL
+    // If proxy has error or urlInfo is null, fallback to original URL
     const displayImageUrl = getImageUrlForVisibility(
       imageUrl,
       visibility,
-      proxyHostError ? null : proxyHost,
+      proxyError || !urlInfo ? null : urlInfo.hostname,
     );
     return (
       <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied" variant="inline-compact">
@@ -73,7 +70,9 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
     <ExternalLink
       href={getContainerImageLink(imageUrl)}
       text={imageUrl}
-      isHighlightable={isHighlightable}
+      /** by default patternfly button disable text selection on Button component
+     this enables it on <a /> tag */
+      style={{ userSelect: 'auto' }}
     />
   );
 };

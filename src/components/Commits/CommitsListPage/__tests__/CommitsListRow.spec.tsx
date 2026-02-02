@@ -1,20 +1,25 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { runStatus } from '~/consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
-import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
+import { getCommitsFromPLRs, getCommitSha } from '../../../../utils/commits-utils';
 import { renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
+import { getCommitStatusFromPipelineRuns } from '../../commit-status';
 import CommitsListRow from '../CommitsListRow';
 
 jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../commit-status', () => ({
-  useCommitStatus: () => ['-', true],
-}));
+jest.mock('../../commit-status', () => {
+  const actual = jest.requireActual('../../commit-status');
+  return {
+    ...actual,
+    useCommitStatus: () => [runStatus.Pending, true, undefined],
+  };
+});
 
 jest.mock('../../../../hooks/useComponents', () => ({
   useComponents: jest.fn(),
@@ -39,12 +44,12 @@ describe('CommitsListRow', () => {
     useComponentsMock.mockReturnValue([[{ metadata: { name: 'sample-component' } }], true]);
   });
   it('lists correct Commit details', () => {
+    const commitPipelineRuns = pipelineWithCommits.filter(
+      (plr) => getCommitSha(plr) === commits[1].sha,
+    );
+    const status = getCommitStatusFromPipelineRuns(commitPipelineRuns);
     const { getAllByText, queryByText, container } = renderWithQueryClient(
-      <CommitsListRow
-        visibleColumns={defaultVisibleColumns}
-        obj={commits[1]}
-        pipelineRuns={pipelineWithCommits}
-      />,
+      <CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[1]} status={status} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[1].creationTime));
     expect(queryByText('commit1')).toBeInTheDocument();
@@ -55,12 +60,12 @@ describe('CommitsListRow', () => {
   });
 
   it('lists correct Commit details for manual builds', () => {
+    const commitPipelineRuns = pipelineWithCommits.filter(
+      (plr) => getCommitSha(plr) === commits[0].sha,
+    );
+    const status = getCommitStatusFromPipelineRuns(commitPipelineRuns);
     const { getAllByText, queryByText, container } = renderWithQueryClient(
-      <CommitsListRow
-        visibleColumns={defaultVisibleColumns}
-        obj={commits[0]}
-        pipelineRuns={pipelineWithCommits}
-      />,
+      <CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} status={status} />,
     );
     const expectedDate = dateTime.dateTimeFormatter.format(new Date(commits[0].creationTime));
     expect(queryByText('commit7')).toBeInTheDocument();
@@ -70,15 +75,15 @@ describe('CommitsListRow', () => {
   });
 
   it('should show plr status on the row', () => {
-    const status = pipelineRunStatus(commits[0].pipelineRuns[0]);
-    renderWithQueryClient(
-      <CommitsListRow
-        visibleColumns={defaultVisibleColumns}
-        obj={commits[0]}
-        pipelineRuns={pipelineWithCommits}
-      />,
+    // Get all pipeline runs for this commit (not just the first one)
+    const commitPipelineRuns = pipelineWithCommits.filter(
+      (plr) => getCommitSha(plr) === commits[0].sha,
     );
-    screen.getByText(status);
+    const status = getCommitStatusFromPipelineRuns(commitPipelineRuns);
+    renderWithQueryClient(
+      <CommitsListRow visibleColumns={defaultVisibleColumns} obj={commits[0]} status={status} />,
+    );
+    screen.getByText(String(status));
   });
 
   describe('Component list display', () => {
@@ -92,7 +97,7 @@ describe('CommitsListRow', () => {
         <CommitsListRow
           visibleColumns={defaultVisibleColumns}
           obj={commitWithManyComponents}
-          pipelineRuns={pipelineWithCommits}
+          status={runStatus.Pending}
         />,
       );
 
@@ -113,7 +118,7 @@ describe('CommitsListRow', () => {
         <CommitsListRow
           visibleColumns={defaultVisibleColumns}
           obj={commitWithManyComponents}
-          pipelineRuns={pipelineWithCommits}
+          status={runStatus.Pending}
         />,
       );
 
@@ -131,7 +136,7 @@ describe('CommitsListRow', () => {
         <CommitsListRow
           visibleColumns={defaultVisibleColumns}
           obj={commitWithManyComponents}
-          pipelineRuns={pipelineWithCommits}
+          status={runStatus.Pending}
         />,
       );
 
@@ -154,7 +159,7 @@ describe('CommitsListRow', () => {
         <CommitsListRow
           visibleColumns={defaultVisibleColumns}
           obj={commitWithFewComponents}
-          pipelineRuns={pipelineWithCommits}
+          status={runStatus.Pending}
         />,
       );
 
@@ -174,11 +179,11 @@ describe('CommitsListRow', () => {
         <CommitsListRow
           visibleColumns={defaultVisibleColumns}
           obj={commitWithNoComponents}
-          pipelineRuns={pipelineWithCommits}
+          status={runStatus.Pending}
         />,
       );
 
-      const componentListDiv = container.querySelector('.commits-component-list');
+      const componentListDiv = container.querySelector('.truncated-link-list');
       expect(componentListDiv).toBeInTheDocument();
       expect(componentListDiv).toHaveTextContent('-');
       expect(screen.queryByTestId('more-components-popover')).not.toBeInTheDocument();

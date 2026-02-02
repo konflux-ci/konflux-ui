@@ -29,8 +29,10 @@ const ReleasesInNamespace: React.FC<ReleasesInNamespaceProps> = ({
       const error = clusterError && archiveError;
       if (error) {
         onError(error);
-      } else if (data) {
-        onReleasesLoaded(namespace, data);
+      } else {
+        // Always call the callback when loaded (even if data is falsy)
+        // to prevent parent component from waiting indefinitely
+        onReleasesLoaded(namespace, data || []);
       }
     }
   }, [data, isLoading, clusterError, archiveError, namespace, onError, onReleasesLoaded]);
