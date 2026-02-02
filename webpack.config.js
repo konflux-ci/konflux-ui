@@ -10,6 +10,7 @@ export default {
   entry: './src/main.tsx',
   output: {
     filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
     clean: true,
@@ -60,13 +61,39 @@ export default {
   ],
   optimization: {
     moduleIds: 'deterministic',
+    chunkIds: 'deterministic',
     runtimeChunk: 'single',
     splitChunks: {
       cacheGroups: {
+        react: {
+          // Split React core libraries into their own chunk
+          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          name: 'react',
+          chunks: 'all',
+          priority: 30,
+          enforce: true,
+        },
+        victory: {
+          // Split Victory charting libraries (victory and victory-*) into their own chunk
+          test: /[\\/]node_modules[\\/]victory(?:-[^\\/]+)?[\\/]/,
+          name: 'victory',
+          chunks: 'all',
+          priority: 25,
+          enforce: true,
+        },
+        patternfly: {
+          // Split all @patternfly packages into their own chunk
+          test: /[\\/]node_modules[\\/]@patternfly[\\/]/,
+          name: 'patternfly',
+          chunks: 'all',
+          priority: 20,
+          enforce: true,
+        },
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendor',
           chunks: 'all',
+          priority: 10,
         },
       },
     },
