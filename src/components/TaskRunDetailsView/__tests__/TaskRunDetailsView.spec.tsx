@@ -2,7 +2,7 @@ import * as React from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { downloadTaskRunYaml } from '~/utils/common-utils';
+import { downloadYaml } from '~/utils/common-utils';
 import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
@@ -30,11 +30,11 @@ jest.mock('../../../hooks/useTaskRunsV2', () => ({
 
 jest.mock('~/utils/common-utils', () => ({
   ...jest.requireActual('~/utils/common-utils'),
-  downloadTaskRunYaml: jest.fn(),
+  downloadYaml: jest.fn(),
 }));
 
 const useTaskRunMock = useTaskRunV2 as jest.Mock;
-const downloadTaskRunYamlMock = downloadTaskRunYaml as jest.Mock;
+const downloadYamlMock = downloadYaml as jest.Mock;
 // const sanitizeHtmlMock = sanitizeHtml as jest.Mock;
 
 describe('TaskRunDetailsView', () => {
@@ -62,12 +62,12 @@ describe('TaskRunDetailsView', () => {
     const actionsButton = screen.getByRole('button', { name: /Actions/i });
     await user.click(actionsButton);
 
-    expect(screen.getByText('Download Task Run YAML')).toBeInTheDocument();
+    expect(screen.getByText('Download YAML')).toBeInTheDocument();
 
     // Test the download action
-    const downloadMenuItem = screen.getByText('Download Task Run YAML');
+    const downloadMenuItem = screen.getByText('Download YAML');
     await user.click(downloadMenuItem);
 
-    expect(downloadTaskRunYamlMock).toHaveBeenCalledWith(testTaskRuns[0]);
+    expect(downloadYamlMock).toHaveBeenCalledWith(testTaskRuns[0]);
   });
 });

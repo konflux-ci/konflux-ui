@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
-import { downloadTaskRunYaml } from '~/utils/common-utils';
+import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { TASKRUN_DETAILS_PATH } from '../../routes/paths';
 import { RowFunctionArgs, TableData } from '../../shared/components/table';
@@ -42,8 +42,8 @@ const TaskRunListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<TaskRunKi
           actions={[
             {
               id: 'download-task-run-yaml',
-              label: 'Download Task Run YAML',
-              cta: () => downloadTaskRunYaml(obj),
+              label: 'Download YAML',
+              cta: () => downloadYaml(obj),
             },
           ]}
         />

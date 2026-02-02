@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import { dump } from 'js-yaml';
 import { TaskRunKind } from '~/types';
-import { downloadTaskRunYaml } from '../common-utils';
+import { downloadYaml } from '../common-utils';
 
 // Mock file-saver
 jest.mock('file-saver', () => ({
@@ -16,7 +16,7 @@ jest.mock('js-yaml', () => ({
 const mockSaveAs = saveAs as jest.Mock;
 const mockDump = dump as jest.Mock;
 
-describe('downloadTaskRunYaml', () => {
+describe('downloadYaml', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -36,7 +36,7 @@ describe('downloadTaskRunYaml', () => {
       },
     };
 
-    downloadTaskRunYaml(mockTaskRun);
+    downloadYaml(mockTaskRun);
 
     expect(mockDump).toHaveBeenCalledWith(mockTaskRun);
     expect(mockSaveAs).toHaveBeenCalledTimes(1);
@@ -61,14 +61,14 @@ describe('downloadTaskRunYaml', () => {
       },
     };
 
-    downloadTaskRunYaml(mockTaskRun);
+    downloadYaml(mockTaskRun);
 
     expect(mockDump).toHaveBeenCalledWith(mockTaskRun);
     expect(mockSaveAs).toHaveBeenCalledTimes(1);
 
     const [blob, filename] = mockSaveAs.mock.calls[0];
     expect(blob).toBeInstanceOf(Blob);
-    expect(filename).toBe('taskrun-details.yaml');
+    expect(filename).toBe('resource.yaml');
   });
 
   it('should use fallback filename when taskRun metadata is missing', () => {
@@ -82,25 +82,25 @@ describe('downloadTaskRunYaml', () => {
       },
     } as TaskRunKind;
 
-    downloadTaskRunYaml(mockTaskRun);
+    downloadYaml(mockTaskRun);
 
     expect(mockDump).toHaveBeenCalledWith(mockTaskRun);
     expect(mockSaveAs).toHaveBeenCalledTimes(1);
 
     const [blob, filename] = mockSaveAs.mock.calls[0];
     expect(blob).toBeInstanceOf(Blob);
-    expect(filename).toBe('taskrun-details.yaml');
+    expect(filename).toBe('resource.yaml');
   });
 
   it('should return early and not call saveAs when taskRun is null', () => {
-    downloadTaskRunYaml(null as unknown as TaskRunKind);
+    downloadYaml(null as unknown as TaskRunKind);
 
     expect(mockDump).not.toHaveBeenCalled();
     expect(mockSaveAs).not.toHaveBeenCalled();
   });
 
   it('should return early and not call saveAs when taskRun is undefined', () => {
-    downloadTaskRunYaml(undefined as unknown as TaskRunKind);
+    downloadYaml(undefined as unknown as TaskRunKind);
 
     expect(mockDump).not.toHaveBeenCalled();
     expect(mockSaveAs).not.toHaveBeenCalled();
@@ -124,7 +124,7 @@ describe('downloadTaskRunYaml', () => {
     const mockYamlContent = 'apiVersion: tekton.dev/v1\nkind: TaskRun\n';
     mockDump.mockReturnValue(mockYamlContent);
 
-    downloadTaskRunYaml(mockTaskRun);
+    downloadYaml(mockTaskRun);
 
     const [blob] = mockSaveAs.mock.calls[0];
     expect(blob).toBeInstanceOf(Blob);
