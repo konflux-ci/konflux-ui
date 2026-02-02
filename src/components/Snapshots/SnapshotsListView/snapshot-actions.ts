@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ResourceSource } from '~/types/k8s';
 import { ReleaseModel } from '../../../models';
 import { RELEASEPLAN_TRIGGER_PATH } from '../../../routes/paths';
 import { Action } from '../../../shared/components/action-menu/types';
@@ -14,11 +15,13 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
     if (!snapshot) {
       return [];
     }
-    const canTrigger = canCreateRelease;
+
+    const isArchived = snapshot.source !== ResourceSource.Cluster;
+    const canTriggerRelease = canCreateRelease && !isArchived;
 
     return [
       {
-        cta: canTrigger
+        cta: canTriggerRelease
           ? {
               href: `${RELEASEPLAN_TRIGGER_PATH.createPath({
                 workspaceName: namespace,
@@ -27,10 +30,12 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
           : () => Promise.resolve(),
         id: `trigger-release-${snapshot.metadata.name}`,
         label: 'Trigger release',
-        disabled: !canCreateRelease,
+        disabled: !canTriggerRelease,
         disabledTooltip: !canCreateRelease
           ? "You don't have access to trigger releases"
-          : undefined,
+          : isArchived
+            ? 'Cannot trigger release from archived snapshot'
+            : undefined,
         analytics: {
           link_name: 'trigger-release-snapshot',
           link_location: 'snapshot-actions',

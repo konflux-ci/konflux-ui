@@ -127,4 +127,27 @@ describe('SnapshotDropdown', () => {
       expect(screen.getByText('Select snapshot'));
     });
   });
+
+  it('should only show cluster snapshots when releasable is true', async () => {
+    const clusterSnapshot = {
+      metadata: { name: 'cluster-snapshot', uid: 'uid-cluster' },
+      spec: { application: 'app' },
+    };
+
+    useSnapshotsMock.mockReturnValue({
+      data: [clusterSnapshot],
+      isLoading: false,
+    });
+
+    formikRenderer(<SnapshotDropdown applicationName="app" name="snapshot" />, {
+      targets: { application: 'app' },
+    });
+
+    await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
+
+    await waitFor(() => {
+      expect(screen.getByRole('menuitem', { name: 'cluster-snapshot' })).toBeVisible();
+      expect(screen.queryByRole('menuitem', { name: 'archive-snapshot' })).not.toBeInTheDocument();
+    });
+  });
 });
