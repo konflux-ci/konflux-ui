@@ -4,6 +4,7 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
 import { useSearchParam } from '~/hooks/useSearchParam';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { ResourceSource } from '~/types/k8s';
 import { useReleasePlans } from '../../../../hooks/useReleasePlans';
 import { useSnapshot } from '../../../../hooks/useSnapshots';
 import { APPLICATION_RELEASE_DETAILS_PATH, RELEASE_SERVICE_PATH } from '../../../../routes/paths';
@@ -21,7 +22,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
 
   // Fetch snapshot details to get the application name
-  const [snapshotDetails, snapshotLoaded] = useSnapshot(
+  const [snapshotDetails, snapshotLoaded, , , , source] = useSnapshot(
     snapshotName ? namespace : undefined,
     snapshotName || '',
   );
@@ -34,6 +35,8 @@ export const TriggerReleaseFormPage: React.FC = () => {
       </Bullseye>
     );
   }
+
+  const snapshot = source === ResourceSource.Cluster ? snapshotDetails : null;
 
   if (releasePlansError) {
     return getErrorState(releasePlansError, releasePlansLoaded, 'release plans');
@@ -102,7 +105,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
       validationSchema={triggerReleaseFormSchema}
       initialValues={initialValues}
     >
-      {(props) => <TriggerReleaseForm {...props} snapshotDetails={snapshotDetails} />}
+      {(props) => <TriggerReleaseForm {...props} snapshotDetails={snapshot} />}
     </Formik>
   );
 };

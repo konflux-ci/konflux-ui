@@ -42,19 +42,21 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const [isOpen, setIsOpen] = React.useState(false);
-  const filterOptions = ['name', 'commit message'];
+  const filterOptions = ['name', 'commitMessage'];
   const [activeFilter, setActiveFilter] = React.useState(filterOptions[0]);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    'commit message': unparsedFilters['commit message']
-      ? (unparsedFilters['commit message'] as string)
-      : '',
+    commitMessage: unparsedFilters.commitMessage ? (unparsedFilters.commitMessage as string) : '',
     showMergedOnly: unparsedFilters.showMergedOnly
       ? (unparsedFilters.showMergedOnly as boolean)
       : false,
+    releasable: unparsedFilters.releasable
+      ? unparsedFilters.releasable === true || unparsedFilters.releasable === 'true'
+      : false,
   });
 
-  const { name: nameFilter, 'commit message': commitMessageFilter, showMergedOnly } = filters;
+  const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
+  const releasableFilter = filters.releasable ?? false;
 
   const {
     data: snapshots,
@@ -76,6 +78,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       },
     },
     SnapshotModel,
+    undefined,
+    undefined,
+    {
+      enableArchive: !releasableFilter,
+    },
   );
 
   const filteredSnapshots = React.useMemo(() => {
@@ -204,6 +211,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, showMergedOnly: checked })
                 }
+              />
+              <Switch
+                id="releasable"
+                label="Show only releasable snapshots"
+                isChecked={releasableFilter}
+                onChange={(_event, checked) => setFilters({ ...filters, releasable: checked })}
               />
             </BaseTextFilterToolbar>
           </Flex>
