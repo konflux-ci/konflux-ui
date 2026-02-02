@@ -42,8 +42,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const [isOpen, setIsOpen] = React.useState(false);
-  const filterOptions = ['name', 'commitMessage'];
-  const [activeFilter, setActiveFilter] = React.useState(filterOptions[0]);
+  const [activeFilter, setActiveFilter] = React.useState('name');
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     commitMessage: unparsedFilters.commitMessage ? (unparsedFilters.commitMessage as string) : '',
@@ -188,11 +187,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               onOpenChange={setIsOpen}
             >
               <SelectList>
-                {filterOptions.map((ft) => (
-                  <SelectOption key={ft} value={ft}>
-                    {capitalize(ft)}
-                  </SelectOption>
-                ))}
+                <SelectOption key={'name'} value={'name'}>
+                  Name
+                </SelectOption>
+                <SelectOption key={'commitMessage'} value={'commitMessage'}>
+                  Commit Message
+                </SelectOption>
               </SelectList>
             </Select>
 
