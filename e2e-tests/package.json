@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Konflux UI Cypress tests",
   "private": true,
+  "packageManager": "yarn@4.6.0",
   "scripts": {
     "clean-reports": "rm -rf cypress/",
     "cy:run": "cypress run -b chrome --spec 'tests/basic-happy-path.spec.ts'",

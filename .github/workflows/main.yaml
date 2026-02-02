@@ -35,11 +35,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
+      - name: Enable Corepack 📦
+        run: corepack enable
+
       - name: Install Dependencies 🥁
         run: |
-          yarn install --frozen-lockfile
+          yarn install --immutable
           cd e2e-tests
-          yarn install
+          yarn install --immutable
           cd ..
 
       - name: Lint ✅

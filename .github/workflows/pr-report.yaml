@@ -21,11 +21,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Ensure Yarn is available
-        run: npm install -g yarn
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install dependencies
-        run: yarn add --ignore-scripts --no-lockfile @octokit/rest dayjs
+        run: yarn add @octokit/rest dayjs
 
       - name: Run stale PR checker
         env:

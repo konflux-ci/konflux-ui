@@ -4,7 +4,7 @@ alwaysApply: true
 
 # Package Management
 
-Konflux UI uses **Yarn** as the package manager. Always use `yarn` commands instead of `npm`.
+Konflux UI uses **Yarn Berry (v4.x)** as the package manager. Always use `yarn` commands instead of `npm`.
 
 ## Reference
 
@@ -18,3 +18,23 @@ For detailed development commands and setup instructions, refer to:
 - ❌ Don't use `npm` commands  
 - Use `yarn.lock` (committed to repo)
 - Never commit `package-lock.json`
+
+## Yarn Berry Configuration
+
+- **Configuration file**: `.yarnrc.yml` - Yarn Berry settings
+- **Node linker**: `node-modules` (for compatibility with existing tooling)
+- **Package manager field**: `package.json` contains `"packageManager": "yarn@4.6.0"`
+
+## CI/Docker Commands
+
+| Yarn Classic | Yarn Berry |
+|--------------|------------|
+| `yarn install --frozen-lockfile` | `yarn install --immutable` |
+| `npm install yarn --global` | `corepack enable` |
+
+## Corepack
+
+Yarn Berry is managed via **corepack** (included with Node.js 20+):
+- In Dockerfiles: `RUN corepack enable`
+- In GitHub Actions: Add step `run: corepack enable` before yarn commands
+- Corepack reads the `packageManager` field from `package.json` and downloads the correct Yarn version

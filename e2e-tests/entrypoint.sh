@@ -7,14 +7,14 @@ done
 
 if [ -d "/e2e" ]; then
   cd /e2e
-  npm i
-  npx cypress install
+  yarn install
+  yarn cypress install
   chmod -R a+rwx ../e2e
 else
   cd /tmp/e2e
 fi
 
-npx cypress run --runner-ui $args
+yarn cypress run --runner-ui $args
 EXIT_CODE=$?
 echo "Tests exited with code $EXIT_CODE. Archiving artifacts."
 
