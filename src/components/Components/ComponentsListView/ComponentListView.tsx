@@ -27,7 +27,7 @@ import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useComponents, useURLForComponentPRs } from '../../../hooks/useComponents';
-import { useLatestBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
 import { PACState } from '../../../hooks/usePACState';
 import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents';
 import { ComponentModel } from '../../../models';
@@ -49,7 +49,6 @@ import ComponentsListRow from './ComponentsListRow';
 import './ComponentListView.scss';
 
 export const COMPONENTS_LIST_GS_LOCAL_STORAGE_KEY = 'components-list-getting-started-modal';
-const PUSH_BUILD_ONLY = true;
 
 type ComponentListViewProps = {
   applicationName: string;
@@ -83,11 +82,10 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
   const prURL = useURLForComponentPRs(components);
   const componentNames = React.useMemo(() => components.map((c) => c.metadata.name), [components]);
 
-  const [pipelineRuns, pipelineRunsLoaded, pipelineRunsError] = useLatestBuildPipelines(
+  const [pipelineRuns, pipelineRunsLoaded, pipelineRunsError] = useLatestPushBuildPipelines(
     namespace,
     applicationName,
     componentNames,
-    PUSH_BUILD_ONLY,
   );
   const componentPACStates = usePACStatesForComponents(components);
 

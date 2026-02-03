@@ -1,6 +1,6 @@
 import { useAllComponents, useComponents, useSortedComponents } from '../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
-import { useLatestBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
 import { useLatestIntegrationTestPipelines } from '../../../hooks/useLatestIntegrationTestPipelines';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
 import { useReleases } from '../../../hooks/useReleases';
@@ -22,7 +22,7 @@ jest.mock('../../../hooks/useIntegrationTestScenarios', () => ({
   useIntegrationTestScenarios: jest.fn(),
 }));
 jest.mock('../../../hooks/useLatestBuildPipelines', () => ({
-  useLatestBuildPipelines: jest.fn(),
+  useLatestPushBuildPipelines: jest.fn(),
 }));
 jest.mock('../../../hooks/useReleases', () => ({
   useReleases: jest.fn(),
@@ -40,7 +40,7 @@ export const getMockWorkflows = () => {
     useAllComponentsMock: useAllComponents as jest.Mock,
     useSortedComponentsMock: useSortedComponents as jest.Mock,
     useIntegrationTestScenariosMock: useIntegrationTestScenarios as jest.Mock,
-    useLatestBuildPipelinesMock: useLatestBuildPipelines as jest.Mock,
+    useLatestPushBuildPipelinesMock: useLatestPushBuildPipelines as jest.Mock,
     useReleasesMock: useReleases as jest.Mock,
     useReleasePlansMock: useReleasePlans as jest.Mock,
     useLatestIntegrationTestPipelinesMock: useLatestIntegrationTestPipelines as jest.Mock,
@@ -54,7 +54,7 @@ export const getMockWorkflows = () => {
       mockIntegrationTestScenariosData,
       true,
     ]);
-    mockFns.useLatestBuildPipelinesMock.mockReturnValue([mockBuildPipelinesData, true]);
+    mockFns.useLatestPushBuildPipelinesMock.mockReturnValue([mockBuildPipelinesData, true]);
     mockFns.useReleasePlansMock.mockReturnValue([mockReleasePlansData, true]);
     mockFns.useReleasesMock.mockReturnValue([mockReleasesData, true]);
     mockFns.useLatestIntegrationTestPipelinesMock.mockReturnValue([mockTestPipelinesData, true]);

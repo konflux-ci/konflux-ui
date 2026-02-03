@@ -4,11 +4,10 @@ import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
 import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
-export const useLatestBuildPipelines = (
+export const useLatestPushBuildPipelines = (
   namespace: string,
   applicationName: string,
   componentNames: string[] | undefined,
-  pushBuildOnly: boolean = false,
 ): [PipelineRunKind[], boolean, unknown] => {
   const [foundNames, setFoundNames] = React.useState<string[]>([]);
   const [latestBuilds, setLatestBuilds] = React.useState<PipelineRunKind[]>([]);
@@ -32,13 +31,11 @@ export const useLatestBuildPipelines = (
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            ...(pushBuildOnly
-              ? { [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH }
-              : {}),
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
         },
       }),
-      [applicationName, application, pushBuildOnly],
+      [applicationName, application],
     ),
   );
 

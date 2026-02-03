@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PipelineRunLabel, runStatus } from '../../../../../../consts/pipelinerun';
 import { useComponents } from '../../../../../../hooks/useComponents';
-import { useLatestBuildPipelines } from '../../../../../../hooks/useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../../../../../../hooks/useLatestBuildPipelines';
 import { PipelineRunKind } from '../../../../../../types';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {
@@ -30,7 +30,7 @@ export const useAppBuildNodes = (
     [componentsLoaded, components],
   );
 
-  const [buildPipelines, buildPipelinesLoaded, buildPipelinesError] = useLatestBuildPipelines(
+  const [buildPipelines, buildPipelinesLoaded, buildPipelinesError] = useLatestPushBuildPipelines(
     namespace,
     applicationName,
     componentNames,
