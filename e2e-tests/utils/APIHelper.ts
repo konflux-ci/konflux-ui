@@ -75,6 +75,24 @@ export class APIHelper {
     this.githubRequest('DELETE', githubAPIEndpoints.testRepo(owner, repoName));
   }
 
+  static deleteGitHubRepositoryIfExists(owner: string, repoName: string) {
+    const url = githubAPIEndpoints.testRepo(owner, repoName);
+    return cy
+      .request({
+        method: 'DELETE',
+        url,
+        headers: this.githubHeaders,
+        failOnStatusCode: false,
+      })
+      .then((response) => {
+        if (response.status === 404) {
+          cy.log(`Repo not found during cleanup (already deleted): ${owner}/${repoName}`);
+        } else if (response.status >= 400) {
+          cy.log(`Repo cleanup failed with status ${response.status}: ${owner}/${repoName}`);
+        }
+      });
+  }
+
   static createRepositoryFromTemplate(
     templateOwner: string,
     templateRepoName: string,

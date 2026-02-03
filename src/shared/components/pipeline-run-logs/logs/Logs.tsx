@@ -140,6 +140,14 @@ const Logs: React.FC<LogsProps> = ({
           .then((res) => appendLog(name, res))
           .catch((err) => {
             if (err.name !== 'AbortError') {
+              // Gracefully handle empty logs (404) from kubearch, similar to how Tekton Results handles 404
+              // When logs don't exist, both kubearch and Tekton Results return 404
+              if (err?.code === 404) {
+                // Don't append any error message for missing logs - just leave it empty
+                // This matches the behavior of Tekton Results which returns empty logs for 404
+                return;
+              }
+
               appendLog(
                 name,
                 `\x1b[1;31mLOG FETCH ERROR${err instanceof Error ? `:\n${err.message}` : ''}\x1b[0m\n`,

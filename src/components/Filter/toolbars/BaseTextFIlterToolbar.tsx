@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { SearchInput, Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
+import { IfFeature } from '~/feature-flags/hooks';
 import { useDebounceCallback } from '../../../shared/hooks/useDebounceCallback';
 import ColumnManagementButton from '../components/ColumnManagementButton';
 
@@ -13,6 +14,7 @@ type BaseTextFilterToolbarProps = {
   openColumnManagement?: () => void;
   totalColumns?: number;
   showSearchInput?: boolean;
+  noLeftPadding?: boolean;
 };
 
 export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
@@ -25,6 +27,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   openColumnManagement,
   totalColumns = 0,
   showSearchInput = true,
+  noLeftPadding = false,
 }) => {
   const onTextInput = useDebounceCallback((value: string) => {
     setText(value);
@@ -32,7 +35,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
 
   return (
     <Toolbar data-test={dataTest} usePageInsets clearAllFilters={onClearFilters}>
-      <ToolbarContent>
+      <ToolbarContent style={{ paddingLeft: noLeftPadding ? '0' : undefined }}>
         {showSearchInput && (
           <ToolbarItem className="pf-v5-u-ml-0">
             <SearchInput
@@ -51,9 +54,11 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
             {child}
           </ToolbarItem>
         ))}
-        <ToolbarItem>
-          <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
-        </ToolbarItem>
+        <IfFeature flag="column-management">
+          <ToolbarItem>
+            <ColumnManagementButton onClick={openColumnManagement} totalColumns={totalColumns} />
+          </ToolbarItem>
+        </IfFeature>
       </ToolbarContent>
     </Toolbar>
   );

@@ -2,7 +2,6 @@ import { RunStatus } from '@patternfly/react-topology';
 import { curry, merge } from 'lodash-es';
 import { runStatus, SucceedConditionReason } from '~/consts/pipelinerun';
 import { preferredNameAnnotation } from '../consts/pipeline';
-import { isCVEScanResult, ScanResults } from '../hooks/useScanResults';
 import { PipelineRunModel } from '../models';
 import {
   Condition,
@@ -15,6 +14,7 @@ import {
   TektonResultsRun,
 } from '../types';
 import { GitOpsDeploymentHealthStatus } from '../types/gitops-deployment';
+import { isCVEScanResult, ScanResults } from './scan/scan-utils';
 
 export const COMPONENT_DESC =
   'A component is an image built from code in a source repository. Applications are sets of components that run together on environments.';

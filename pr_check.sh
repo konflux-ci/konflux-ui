@@ -263,33 +263,44 @@ upload_coverage() {
 
 send_report() {
     EXIT_STATUS=$1
-    if [[ $EXIT_STATUS == "success" ]]; then
-        MESSAGE=":tick-green: "
+    MESSAGE_GIVEN=$2
+
+    # If message is not given, generate message based on exit status and job type
+    if [[ -z "$MESSAGE_GIVEN" ]]; then
+        if [[ $EXIT_STATUS == "success" ]]; then
+            MESSAGE=":tick-green: "
+        else
+            MESSAGE=":x: "
+        fi
+
+        # Format date as "MMM D", e.g., "Jun 3"
+        MESSAGE="$MESSAGE Report $(date '+%b %-d'):"
+
+        case "$JOB_TYPE" in
+            "periodic-local")
+                MESSAGE="$MESSAGE LOCAL Periodic job"
+                ;;
+            "periodic-stage")
+                if [[ $SUITE == "features" ]]; then
+                    MESSAGE="$MESSAGE STAGE FEATURES Periodic job"
+                else
+                    MESSAGE="$MESSAGE STAGE Periodic job"
+                fi
+                ;;
+            "periodic-cleanup")
+                MESSAGE="$MESSAGE CLEANUP Periodic job"
+                ;;
+            "periodic-watch")
+                MESSAGE="$MESSAGE WATCH Periodic job failed to investigate changed files"
+                ;;
+            *)
+                MESSAGE="$MESSAGE Unknown job type: ${JOB_TYPE} Please update send_report() in pr_check.sh"
+                ;;
+        esac
+    # If message is given, use it as is
     else
-        MESSAGE=":x: "
+        MESSAGE="$MESSAGE_GIVEN"
     fi
-
-    # Format date as "MMM D", e.g., "Jun 3"
-    MESSAGE="$MESSAGE Report $(date '+%b %-d'):"
-
-    case "$JOB_TYPE" in
-        "periodic-local")
-            MESSAGE="$MESSAGE LOCAL Periodic job"
-            ;;
-        "periodic-stage")
-            if [[ $SUITE == "features" ]]; then
-                MESSAGE="$MESSAGE STAGE FEATURES Periodic job"
-            else
-                MESSAGE="$MESSAGE STAGE Periodic job"
-            fi
-            ;;
-        "periodic-cleanup")
-            MESSAGE="$MESSAGE CLEANUP Periodic job"
-            ;;
-        *)
-            MESSAGE="$MESSAGE Unknown job type: ${JOB_TYPE} ${JOB_URL}"
-            ;;
-    esac
 
     MESSAGE="$MESSAGE $JOB_URL"
     
@@ -302,8 +313,17 @@ send_report() {
 
 }
 
+USAGE_MESSAGE="Usage: $0 [build|test|upload-coverage|send-report]
+
+   send-report <exit_status> <message> 
+       exit_status: mandatory 
+           values: success, failure 
+       message: optional
+           if empty, message is generated 
+           if set, message is used as is and JOB_URL is added after message"
+
 if [ $# -eq 0 ]; then
-    echo "Usage: $0 [build|test|upload-coverage]"
+    echo -e "$USAGE_MESSAGE"
     exit 1
 fi
 
@@ -325,11 +345,11 @@ case "$1" in
         ;;
     send-report)
         echo "Sending Slack report..."
-        send_report "$2"
+        send_report "$2" "$3"
         ;;
     *)
         echo "Invalid argument: $1"
-        echo "Usage: $0 [build|test|upload-coverage]"
+        echo "$USAGE_MESSAGE"
         exit 1
         ;;
 esac
