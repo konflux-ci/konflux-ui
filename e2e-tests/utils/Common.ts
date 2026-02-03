@@ -1,5 +1,6 @@
-import { NavItem } from '../support/constants/PageTitle';
+import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { consentButton, navigation, waits } from '../support/pageObjects/global-po';
+import { goToApplicationsPagePo } from '../support/pageObjects/pages-po';
 
 export class Common {
   static openAppStudioBaseURL() {
@@ -12,7 +13,7 @@ export class Common {
         .contains('a', NavItem[item], { timeout: 30000 })
         .should('be.visible');
     }
-    cy.get(navigation.sideNavigation).contains('a', NavItem[link]).click();
+    cy.get(navigation.sideNavigation).contains('a', link).click();
     Common.waitForLoad();
   }
 

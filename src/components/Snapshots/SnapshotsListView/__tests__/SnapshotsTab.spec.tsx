@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
@@ -61,7 +62,7 @@ describe('SnapshotsListViewTab', () => {
     });
   });
 
-  it('should display the filtered empty state when no results match the filter', () => {
+  it('should display the filtered empty state when no results match the filter by name', () => {
     createUseParamsMock({ applicationName: 'test-app' });
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
@@ -85,7 +86,7 @@ describe('SnapshotsListViewTab', () => {
     ).toBeInTheDocument();
   });
 
-  it('should display the snapshot data when the filter matches a snapshot', () => {
+  it('should display the snapshot data when the filter matches a snapshot by name', () => {
     createUseParamsMock({ applicationName: 'test-app' });
 
     renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
@@ -102,5 +103,53 @@ describe('SnapshotsListViewTab', () => {
     });
 
     expect(screen.getByText('my-app-snapshot-1')).toBeInTheDocument();
+  });
+
+  it('should allow filtering by commit message', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    createUseParamsMock({ applicationName: 'test-app' });
+
+    renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
+
+    const filterDropdown = screen.getByTestId('snapshots-list-filter-dropdown');
+    await user.click(filterDropdown);
+
+    const option = screen.getByRole('option', { name: /commit message/i });
+    await user.click(option);
+
+    const input = screen.getByRole('textbox');
+    await user.type(input, 'Add new feature');
+
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    const rows = screen.getAllByRole('row');
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toHaveTextContent('my-app-snapshot-1');
+  });
+
+  it('should display the filtered empty state when no results match the filter by commit message', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    createUseParamsMock({ applicationName: 'test-app' });
+
+    renderWithQueryClientAndRouter(<SnapshotsListViewTab />);
+
+    const filterDropdown = screen.getByTestId('snapshots-list-filter-dropdown');
+    await user.click(filterDropdown);
+
+    const option = screen.getByRole('option', { name: /commit message/i });
+    await user.click(option);
+
+    const input = screen.getByRole('textbox');
+    await user.type(input, 'Invalid commit message');
+
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+
+    expect(
+      screen.getByText('No results match this filter criteria. Clear all filters and try again.'),
+    ).toBeInTheDocument();
   });
 });
