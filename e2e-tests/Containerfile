@@ -7,18 +7,16 @@ RUN wget "https://github.com/sigstore/cosign/releases/download/v2.4.0/cosign-lin
     mv cosign-linux-amd64 /usr/local/bin/cosign && \
     chmod +x /usr/local/bin/cosign
 
-# Enable Yarn Berry via corepack
-RUN npm install -g corepack && corepack enable
-
 USER node:0
 
 COPY --chown=node:root --chmod=775 . /tmp/e2e
 RUN chmod -R 775 /tmp/e2e
 
+# Run yarn directly via node (uses bundled .yarn/releases - avoids corepack ESM issues)
 RUN cd /tmp/e2e && \
     umask 0002 && \
-    yarn install --immutable && \
-    yarn cypress install && \
+    node .yarn/releases/yarn-4.12.0.cjs install --immutable && \
+    node .yarn/releases/yarn-4.12.0.cjs cypress install && \
     mkdir -p /tmp/artifacts && \
     chmod -R a+rwx /tmp/artifacts ${CYPRESS_CACHE_FOLDER}
 
