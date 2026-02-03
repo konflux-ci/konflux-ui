@@ -38,9 +38,16 @@
   },
   "nyc": {
     "report-dir": "coverage",
-    "reporter": ["text", "html", "lcov", "json"],
+    "reporter": [
+      "text",
+      "html",
+      "lcov",
+      "json"
+    ],
     "all": true,
-    "include": ["../src/**/*.{ts,tsx}"],
+    "include": [
+      "../src/**/*.{ts,tsx}"
+    ],
     "exclude": [
       "**/*.spec.ts",
       "**/*.spec.tsx",

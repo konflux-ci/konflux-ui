@@ -31,7 +31,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
   return (
     <FieldArray
       name={name}
-      render={({ push, remove }) => {
+      render={(arrayHelpers) => {
         return (
           <FormGroup label="Components and packages" data-test="component-field">
             <TextContent>
@@ -52,7 +52,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
 
                         <Button
                           variant={ButtonVariant.plain}
-                          onClick={() => remove(i)}
+                          onClick={() => arrayHelpers.remove(i)}
                           data-test={`remove-component-${i}`}
                           isDisabled={components.length === 1}
                         >
@@ -108,7 +108,7 @@ const ComponentField: React.FC<React.PropsWithChildren<ComponentFieldProps>> = (
               <StackItem>
                 <Button
                   onClick={() => {
-                    push({ name: '', packages: [] });
+                    arrayHelpers.push({ name: '', packages: [] });
                   }}
                   variant={ButtonVariant.link}
                   icon={<PlusCircleIcon />}
