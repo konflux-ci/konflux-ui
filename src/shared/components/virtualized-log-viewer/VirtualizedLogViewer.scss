@@ -93,3 +93,7 @@
     border-left-color: var(--pf-v5-global--primary-color--light-100);
   }
 }
+
+.pf-v5-c-log-viewer__text.pf-m-loading {
+  color: transparent;
+}

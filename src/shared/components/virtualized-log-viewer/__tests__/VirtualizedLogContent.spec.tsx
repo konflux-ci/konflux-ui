@@ -120,11 +120,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(screen.getByText(/line 3/)).toBeInTheDocument();
     });
 
-    it('should not highlight when search text is less than 2 characters', () => {
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} searchText="l" />);
+    it('should highlight even single character search', () => {
+      renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data="line 1\nline 2" searchText="l" />,
+      );
 
-      const marks = document.querySelectorAll('mark');
-      expect(marks.length).toBe(0);
+      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      // Should match all occurrences of "l"
+      expect(marks.length).toBeGreaterThan(0);
     });
 
     it('should highlight search matches in log content', () => {
@@ -159,15 +162,6 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(marks.length).toBe(3);
     });
 
-    it('should escape special regex characters in search', () => {
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} data="[error]" searchText="[error]" />,
-      );
-
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
-      expect(marks.length).toBeGreaterThan(0);
-    });
-
     it('should be case insensitive in search', () => {
       renderWithQueryClientAndRouter(
         <VirtualizedLogContent {...defaultProps} data="ERROR Warning error" searchText="error" />,
@@ -176,6 +170,49 @@ describe('VirtualizedLogContent Integration Tests', () => {
       const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
       // Should match both "ERROR" and "error"
       expect(marks.length).toBe(2);
+    });
+
+    it('should escape special regex characters in search', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent
+          {...defaultProps}
+          data="[error] normal error"
+          searchText="[error]"
+        />,
+      );
+
+      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      // Syntax highlighting may split "[error]" into multiple tokens, creating multiple marks
+      // but the combined text should be "[error]" and should NOT match the standalone "error"
+      expect(marks.length).toBeGreaterThan(0);
+      const combinedText = Array.from(marks)
+        .map((m) => m.textContent)
+        .join('');
+      expect(combinedText).toBe('[error]');
+
+      // Verify standalone "error" is NOT matched
+      const logText = container.querySelector('.pf-v5-c-log-viewer__list')?.textContent || '';
+      expect(logText).toContain('normal error');
+      // The word "error" after "normal" should not be highlighted
+      const allText = Array.from(marks)
+        .map((m) => m.textContent)
+        .join('');
+      expect(allText).not.toContain('normal');
+    });
+
+    it('should search "info" and match "INFO" (syntax highlighted token)', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data="INFO: Server started" searchText="info" />,
+      );
+
+      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      expect(marks.length).toBeGreaterThan(0);
+
+      // Verify the mark is inside a syntax token
+      const infoToken = container.querySelector('.token.log-level-info');
+      expect(infoToken).toBeInTheDocument();
+      const markInsideToken = infoToken?.querySelector('mark.pf-m-match');
+      expect(markInsideToken).toBeInTheDocument();
     });
   });
 
@@ -299,6 +336,96 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
       // Error handler should not be called for other errors
       expect(preventDefaultSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Syntax Highlighting', () => {
+    it('should apply syntax highlighting to log levels', () => {
+      const logData = 'INFO: Server started\nERROR: Connection failed\nWARN: Low memory';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={logData} />,
+      );
+
+      // Check for log level tokens
+      const infoToken = container.querySelector('.token.log-level-info');
+      const errorToken = container.querySelector('.token.log-level-error');
+      const warnToken = container.querySelector('.token.log-level-warn');
+
+      expect(infoToken).toBeInTheDocument();
+      expect(errorToken).toBeInTheDocument();
+      expect(warnToken).toBeInTheDocument();
+    });
+
+    it('should apply syntax highlighting to timestamps', () => {
+      const logData = '2026-02-02T10:52:23Z INFO: Message\n2026/02/02 10:30:45 DEBUG: Debug info';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={logData} />,
+      );
+
+      // Check for timestamp tokens
+      const timestamps = container.querySelectorAll('.token.timestamp');
+      expect(timestamps.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should apply syntax highlighting to key=value pairs', () => {
+      const logData = 'time="2026-02-02T10:52:23Z" level=info msg="test message"';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={logData} />,
+      );
+
+      // Check for key-value tokens
+      const kvTokens = container.querySelectorAll('.token.key-value');
+      expect(kvTokens.length).toBeGreaterThanOrEqual(3);
+
+      // Check for key tokens inside key-value
+      const keys = container.querySelectorAll('.token.key, .token.attr-name');
+      expect(keys.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should apply syntax highlighting to test results', () => {
+      const logData = 'Test PASSED\nBuild FAILED\nValidation SUCCESS';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={logData} />,
+      );
+
+      // Check for result tokens
+      const resultTokens = container.querySelectorAll('.token.result');
+      expect(resultTokens.length).toBeGreaterThanOrEqual(2);
+
+      // FAILED should be marked as error
+      const errorTokens = container.querySelectorAll('.token.log-level-error');
+      expect(errorTokens.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should NOT highlight content inside quoted strings', () => {
+      const logData =
+        'url="https://example.com?searchType=containers" id="+XM+s3niWaEk1U5jnR5DpA=="';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={logData} />,
+      );
+
+      // url and id should be highlighted as keys
+      const keys = container.querySelectorAll('.token.key, .token.attr-name');
+      expect(keys.length).toBe(2);
+
+      // searchType inside URL should NOT be highlighted as a separate key
+      const allKvTokens = container.querySelectorAll('.token.key-value');
+      expect(allKvTokens.length).toBe(2); // Only url= and id=
+    });
+
+    it('should combine syntax highlighting with search highlighting', () => {
+      const logData = 'ERROR: Connection failed host=localhost';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={logData} searchText="ERROR" />,
+      );
+
+      // Should have both syntax highlighting token and search match
+      const errorToken = container.querySelector('.token.log-level-error');
+      expect(errorToken).toBeInTheDocument();
+
+      // Should also have search match marker
+      const searchMatch = container.querySelector('mark.pf-m-match');
+      expect(searchMatch).toBeInTheDocument();
     });
   });
 });

@@ -1,0 +1,60 @@
+/**
+ * Syntax highlighting for log files using PatternFly color system
+ * Automatically adapts to light/dark themes
+ */
+
+.pf-v5-c-log-viewer__text {
+  // Timestamps - use PatternFly cyan/info color for better distinction from keys
+  .token.number,
+  .token.timestamp {
+    color: var(--pf-v5-global--palette--cyan-300);
+  }
+
+  // ERROR/FATAL/FAIL - use PatternFly danger color
+  .token.error,
+  .token.log-level-error {
+    color: var(--pf-v5-global--danger-color--100);
+    font-weight: 700;
+  }
+
+  // WARN - use PatternFly warning color
+  .token.warning,
+  .token.log-level-warn {
+    color: var(--pf-v5-global--warning-color--100);
+    font-weight: 600;
+  }
+
+  // INFO - use PatternFly info color
+  .token.info,
+  .token.log-level-info {
+    color: var(--pf-v5-global--info-color--100);
+  }
+
+  // DEBUG/TRACE - use PatternFly disabled text color
+  .token.comment,
+  .token.log-level-debug {
+    color: var(--pf-v5-global--disabled-color--100);
+    font-style: italic;
+  }
+
+  // PASSED/SUCCESS - use PatternFly success color
+  .token.success,
+  .token.result {
+    color: var(--pf-v5-global--success-color--100);
+    font-weight: 700;
+  }
+
+  // key=value pairs - use PatternFly orange for keys (good contrast in both light/dark modes)
+  .token.key-value {
+    .token.key,
+    .token.attr-name {
+      color: var(--pf-v5-global--palette--orange-400);
+      font-weight: 500;
+    }
+
+    .token.value,
+    .token.attr-value {
+      color: var(--pf-v5-global--Color--200);
+    }
+  }
+}
