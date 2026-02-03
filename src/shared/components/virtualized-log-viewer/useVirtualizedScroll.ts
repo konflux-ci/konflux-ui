@@ -58,14 +58,14 @@ export const useVirtualizedScroll = ({
       const targetIndex = scrollToRow - 1;
       scrollToIndexRef.current = targetIndex;
       virtualizer.scrollToIndex(targetIndex, { align: 'center' });
-      // Typical duration for smooth scroll animation to settle
-      const SCROLL_ANIMATION_DURATION_MS = 300;
-      // Clear the flag after scroll animation completes (300ms is typical for smooth scroll)
-      const timer = setTimeout(() => {
-        scrollToIndexRef.current = undefined;
-      }, SCROLL_ANIMATION_DURATION_MS);
 
-      return () => clearTimeout(timer);
+      // Use requestAnimationFrame to clear flag after browser paint
+      // This ensures the scroll is initiated before we clear the flag
+      const rafId = requestAnimationFrame(() => {
+        scrollToIndexRef.current = undefined;
+      });
+
+      return () => cancelAnimationFrame(rafId);
     }
 
     // Clear the flag immediately when scrollToRow becomes undefined/0

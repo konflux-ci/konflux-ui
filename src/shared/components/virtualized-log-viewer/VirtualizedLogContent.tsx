@@ -1,5 +1,5 @@
 import React from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer, Virtualizer } from '@tanstack/react-virtual';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
 
 export interface SearchedWord {
@@ -21,6 +21,8 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
+  selectedLines?: { start: number; end: number } | null;
+  onVirtualizerReady?: (virtualizer: Virtualizer<HTMLDivElement, Element>) => void;
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -31,6 +33,8 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onScroll,
   searchText = '',
   currentSearchMatch,
+  selectedLines,
+  onVirtualizerReady,
 }) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
   const [itemSize, setItemSize] = React.useState(20);
@@ -86,6 +90,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     overscan: 10,
   });
 
+  // Notify parent of virtualizer instance for line number gutter sync (only once on mount)
+  const isInitialMount = React.useRef(true);
+  React.useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      onVirtualizerReady?.(virtualizer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Handle scroll behavior (direction, programmatic scroll, scrollToRow)
   useVirtualizedScroll({
     virtualizer,
@@ -95,8 +109,17 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   // Render a single line with search highlighting
   const renderLine = (line: string, index: number) => {
+    // Preserve empty lines by using a non-breaking space
+    // This ensures empty lines maintain their height and are visible
+    const displayLine = line || '\u00A0';
+
     if (!searchText || searchText.length < 2 || !escapedSearchText || !searchRegex) {
-      return <span className="pf-v5-c-log-viewer__text">{line}</span>;
+      return <span className="pf-v5-c-log-viewer__text">{displayLine}</span>;
+    }
+
+    // For empty lines, don't run search - just return the non-breaking space
+    if (!line) {
+      return <span className="pf-v5-c-log-viewer__text">{displayLine}</span>;
     }
 
     const parts: string[] = line.split(searchRegex);
@@ -160,12 +183,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           {/* Visible items */}
           {virtualItems.map((virtualItem) => {
             const line = lines[virtualItem.index];
+            const lineNumber = virtualItem.index + 1;
+            const isLineSelected =
+              selectedLines && lineNumber >= selectedLines.start && lineNumber <= selectedLines.end;
+
             return (
               <div
                 key={virtualItem.key}
                 data-index={virtualItem.index}
                 ref={virtualizer.measureElement}
-                className="pf-v5-c-log-viewer__list-item"
+                className={`pf-v5-c-log-viewer__list-item ${isLineSelected ? 'log-viewer__line--selected' : ''}`}
                 style={{
                   position: 'absolute',
                   top: 0,

@@ -1,5 +1,5 @@
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
-import { render } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { VirtualizedLogViewer } from '../VirtualizedLogViewer';
 
@@ -203,6 +203,139 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       // Should mark current match with pf-m-current class
       const currentMark = container.querySelector('mark.pf-m-current');
       expect(currentMark).toBeInTheDocument();
+    });
+  });
+
+  describe('Line Numbers and Hash Navigation', () => {
+    let originalLocation: Location;
+
+    beforeEach(() => {
+      // Save and mock window.location for hash navigation tests
+      originalLocation = window.location;
+      delete (window as unknown as { location: Location }).location;
+      window.location = {
+        ...originalLocation,
+        hash: '',
+      } as Location;
+    });
+
+    afterEach(() => {
+      // Restore original location
+      window.location = originalLocation;
+    });
+
+    it('should render line numbers when hasLineNumbers is true', () => {
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={true} />,
+      );
+
+      const gutter = container.querySelector('.log-viewer__gutter');
+      expect(gutter).toBeInTheDocument();
+
+      const lineNumbers = container.querySelectorAll('.log-viewer__line-number');
+      expect(lineNumbers.length).toBeGreaterThan(0);
+    });
+
+    it('should not render line numbers when hasLineNumbers is false', () => {
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={false} />,
+      );
+
+      const gutter = container.querySelector('.log-viewer__gutter');
+      expect(gutter).not.toBeInTheDocument();
+    });
+
+    it('should highlight selected line from hash #L2', () => {
+      window.location.hash = '#L2';
+
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={true} />,
+      );
+
+      // Line number should be highlighted
+      const lineNumber2 = container.querySelector('.log-viewer__line-number--selected');
+      expect(lineNumber2).toBeInTheDocument();
+      expect(lineNumber2?.textContent).toBe('2');
+
+      // Content line should be highlighted
+      const selectedLine = container.querySelector('.log-viewer__line--selected');
+      expect(selectedLine).toBeInTheDocument();
+    });
+
+    it('should highlight line range from hash #L1-L3', () => {
+      window.location.hash = '#L1-L3';
+
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={true} />,
+      );
+
+      // All three line numbers should be highlighted
+      const selectedLineNumbers = container.querySelectorAll('.log-viewer__line-number--selected');
+      expect(selectedLineNumbers.length).toBe(3);
+
+      // All three content lines should be highlighted
+      const selectedLines = container.querySelectorAll('.log-viewer__line--selected');
+      expect(selectedLines.length).toBe(3);
+    });
+
+    it('should handle hash changes dynamically', async () => {
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={true} />,
+      );
+
+      // Initially no selection
+      let selectedLineNumbers = container.querySelectorAll('.log-viewer__line-number--selected');
+      expect(selectedLineNumbers.length).toBe(0);
+
+      // Change hash
+      window.location.hash = '#L2';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+      // Should now have selection
+      await waitFor(() => {
+        selectedLineNumbers = container.querySelectorAll('.log-viewer__line-number--selected');
+        expect(selectedLineNumbers.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should update hash when clicking line numbers', () => {
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={true} />,
+      );
+
+      const lineNumber2 = Array.from(container.querySelectorAll('.log-viewer__line-number')).find(
+        (el) => el.textContent === '2',
+      );
+      expect(lineNumber2).toBeInTheDocument();
+
+      if (lineNumber2) {
+        fireEvent.click(lineNumber2);
+        expect(window.location.hash).toBe('#L2');
+      }
+    });
+
+    it('should create range selection with shift+click', () => {
+      const { container } = render(
+        <VirtualizedLogViewer {...defaultProps} hasLineNumbers={true} />,
+      );
+
+      // First click on line 1
+      const lineNumber1 = Array.from(container.querySelectorAll('.log-viewer__line-number')).find(
+        (el) => el.textContent === '1',
+      );
+      if (lineNumber1) {
+        fireEvent.click(lineNumber1);
+        expect(window.location.hash).toBe('#L1');
+      }
+
+      // Shift+click on line 3
+      const lineNumber3 = Array.from(container.querySelectorAll('.log-viewer__line-number')).find(
+        (el) => el.textContent === '3',
+      );
+      if (lineNumber3) {
+        fireEvent.click(lineNumber3, { shiftKey: true });
+        expect(window.location.hash).toBe('#L1-L3');
+      }
     });
   });
 
