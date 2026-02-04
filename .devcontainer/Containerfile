@@ -29,8 +29,8 @@ RUN groupadd --gid 1000 vscode \
 RUN echo vscode ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/vscode \
     && chmod 0440 /etc/sudoers.d/vscode
 
-# Install Yarn 1.22 globally
-RUN npm install -g yarn@1.22.22
+# Enable Yarn Berry via corepack
+RUN corepack enable
 
 # Create directories for git configuration
 RUN mkdir -p /home/vscode/.ssh \
@@ -44,7 +44,6 @@ COPY --chown=vscode:vscode container-files /container-files/
 # Verify installations
 RUN node --version && \
     npm --version && \
-    yarn --version && \
     gh --version && \
     git --version
 

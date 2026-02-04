@@ -96,6 +96,9 @@ jobs:
           repository: ${{ github.repository }}
           ref: '${{ github.event.pull_request.head.sha }}'
 
+      - name: Enable Corepack 📦
+        run: corepack enable
+
       - name: Disc space stats
         run: |
           set -x
@@ -126,11 +129,15 @@ jobs:
           sudo systemctl daemon-reload
           sudo systemctl start docker
 
-      - name: Move npm cache to /mnt
+      - name: Move npm/yarn cache to /mnt
         run: |
           sudo mkdir -p /mnt/npm_cache
           sudo chown -R runner:docker /mnt/npm_cache
           sudo npm config set cache /mnt/npm_cache --global
+          # Configure Yarn Berry cache location
+          sudo mkdir -p /mnt/yarn_cache
+          sudo chown -R runner:docker /mnt/yarn_cache
+          export YARN_CACHE_FOLDER=/mnt/yarn_cache
 
       - name: Redirect Podman Storage to /mnt
         run: |
