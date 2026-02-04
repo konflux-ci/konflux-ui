@@ -144,7 +144,7 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                     >
                       Create a secret
                     </ExternalLink>{' '}
-                    for GitLab source code repository.
+                    for GitLab/Forgejo source code repository.
                   </Alert>
                 </>
               ) : null}
