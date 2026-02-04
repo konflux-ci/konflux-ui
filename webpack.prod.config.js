@@ -9,7 +9,19 @@ export default merge(commonConfig, {
     rules: [
       {
         test: /\.s?[ac]ss$/i,
-        use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              api: 'modern-compiler',
+              sassOptions: {
+                silenceDeprecations: ['legacy-js-api', 'import', 'global-builtin', 'if-function'],
+              },
+            },
+          },
+        ],
       },
       {
         test: /\.[jt]sx?$/i,
