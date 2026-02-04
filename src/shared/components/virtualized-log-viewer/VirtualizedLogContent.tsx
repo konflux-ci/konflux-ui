@@ -1,5 +1,7 @@
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { LineNumberGutter } from './LineNumberGutter';
+import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
 
 export interface SearchedWord {
@@ -93,7 +95,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     onScroll,
   });
 
-  // Render a single line with search highlighting
+  // Render a single line with search highlighting (line numbers are in the gutter)
   const renderLine = (line: string, index: number) => {
     // Preserve empty lines by using a non-breaking space
     // This ensures empty lines maintain their height and are visible
@@ -131,6 +133,31 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     );
   };
 
+  // Use line number navigation hook
+  const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
+
+  // Scroll to highlighted lines when hash changes or on initial load
+  React.useEffect(() => {
+    if (highlightedLines && highlightedLines.start > 0) {
+      // Scroll to the start of the highlighted range
+      // Convert 1-based line number to 0-based index
+      const targetIndex = highlightedLines.start - 1;
+
+      // Wait for next frame to ensure virtualizer is ready after state updates
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          virtualizer.scrollToIndex(targetIndex, {
+            align: 'center',
+            behavior: 'smooth',
+          });
+        });
+      });
+    }
+    // Only depend on highlightedLines to avoid infinite loops
+    // virtualizer reference is stable from useVirtualizer
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightedLines]);
+
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
@@ -144,10 +171,10 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         <span className="pf-v5-c-log-viewer__text">M</span>
       </div>
 
-      {/* Scrollable container */}
+      {/* Scrollable container with gutter */}
       <div
         ref={parentRef}
-        className="pf-v5-c-log-viewer__list"
+        className="pf-v5-c-log-viewer__list log-viewer__with-gutter"
         style={{
           height: `${height}px`,
           width: typeof width === 'number' ? `${width}px` : width,
@@ -160,29 +187,42 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
             height: `${virtualizer.getTotalSize()}px`,
             width: '100%',
             position: 'relative',
+            display: 'flex',
           }}
         >
-          {/* Visible items */}
-          {virtualItems.map((virtualItem) => {
-            const line = lines[virtualItem.index];
-            return (
-              <div
-                key={virtualItem.key}
-                data-index={virtualItem.index}
-                ref={virtualizer.measureElement}
-                className="pf-v5-c-log-viewer__list-item"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${virtualItem.start}px)`,
-                }}
-              >
-                {renderLine(line, virtualItem.index)}
-              </div>
-            );
-          })}
+          {/* Line number gutter */}
+          <LineNumberGutter
+            virtualItems={virtualItems}
+            itemSize={itemSize}
+            onLineClick={handleLineClick}
+            isLineHighlighted={isLineHighlighted}
+          />
+
+          {/* Log content */}
+          <div className="log-viewer__content-column">
+            {virtualItems.map((virtualItem) => {
+              const line = lines[virtualItem.index];
+              const lineNumber = virtualItem.index + 1;
+              const isHighlighted = isLineHighlighted(lineNumber);
+              return (
+                <div
+                  key={virtualItem.key}
+                  data-index={virtualItem.index}
+                  ref={virtualizer.measureElement}
+                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-viewer__line--highlighted' : ''}`}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    transform: `translateY(${virtualItem.start}px)`,
+                  }}
+                >
+                  {renderLine(line, virtualItem.index)}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </>

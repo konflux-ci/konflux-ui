@@ -406,4 +406,100 @@ Another short line`;
       expect(preventDefaultSpy).not.toHaveBeenCalled();
     });
   });
+
+  describe('Line Number Gutter Integration', () => {
+    beforeEach(() => {
+      // Reset hash before each test
+      window.location.hash = '';
+    });
+
+    afterEach(() => {
+      window.location.hash = '';
+    });
+
+    it('should render line number gutter', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const gutter = document.querySelector('.log-viewer__gutter');
+      expect(gutter).toBeInTheDocument();
+    });
+
+    it('should render line numbers in the gutter', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const lineNumbers = document.querySelectorAll('.log-viewer__line-number');
+      expect(lineNumbers.length).toBeGreaterThan(0);
+    });
+
+    it('should apply with-gutter class to container', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const container = document.querySelector('.log-viewer__with-gutter');
+      expect(container).toBeInTheDocument();
+    });
+
+    it('should render content in separate column from gutter', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const contentColumn = document.querySelector('.log-viewer__content-column');
+      expect(contentColumn).toBeInTheDocument();
+    });
+
+    it('should highlight single line from URL hash', () => {
+      window.location.hash = '#L2';
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const highlightedCells = document.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      expect(highlightedCells.length).toBeGreaterThan(0);
+    });
+
+    it('should highlight line content from URL hash', () => {
+      window.location.hash = '#L1';
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThan(0);
+    });
+
+    it('should highlight range of lines from URL hash', () => {
+      window.location.hash = '#L1-L3';
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const highlightedCells = document.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      // Should have at least the visible lines in range highlighted
+      expect(highlightedCells.length).toBeGreaterThan(0);
+    });
+
+    it('should have clickable line number links', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const lineNumberLinks = document.querySelectorAll('.log-viewer__line-number');
+      lineNumberLinks.forEach((link) => {
+        expect(link).toHaveAttribute('href');
+        expect(link.getAttribute('href')).toMatch(/^#L\d+$/);
+      });
+    });
+
+    it('should have accessible line number links', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const lineNumberLinks = document.querySelectorAll('.log-viewer__line-number');
+      lineNumberLinks.forEach((link) => {
+        expect(link).toHaveAttribute('aria-label');
+        expect(link.getAttribute('aria-label')).toMatch(/^Jump to line \d+$/);
+      });
+    });
+
+    it('should align gutter cells with content lines', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const gutterCells = document.querySelectorAll('.log-viewer__gutter-cell');
+      const contentItems = document.querySelectorAll(
+        '.log-viewer__content-column .pf-v5-c-log-viewer__list-item',
+      );
+
+      // Should have matching number of visible items
+      expect(gutterCells.length).toBe(contentItems.length);
+    });
+  });
 });
