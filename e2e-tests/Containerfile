@@ -12,11 +12,18 @@ USER node:0
 COPY --chown=node:root --chmod=775 . /tmp/e2e
 RUN chmod -R 775 /tmp/e2e
 
-# Run yarn directly via node (uses bundled .yarn/releases - avoids corepack ESM issues)
+# Create yarn wrapper script to enable 'yarn' command
+# This delegates to the bundled, version-controlled yarn binary
+USER 0
+RUN printf '#!/bin/sh\nexec node /tmp/e2e/.yarn/releases/yarn-4.12.0.cjs "$@"\n' > /usr/local/bin/yarn && \
+    chmod +x /usr/local/bin/yarn
+USER node:0
+
+# Use yarn directly (wrapper delegates to bundled .cjs file)
 RUN cd /tmp/e2e && \
     umask 0002 && \
-    node .yarn/releases/yarn-4.12.0.cjs install --immutable && \
-    node .yarn/releases/yarn-4.12.0.cjs cypress install && \
+    yarn install --immutable && \
+    yarn cypress install && \
     mkdir -p /tmp/artifacts && \
     chmod -R a+rwx /tmp/artifacts ${CYPRESS_CACHE_FOLDER}
 

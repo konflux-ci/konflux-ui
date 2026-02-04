@@ -10,6 +10,11 @@ COPY .yarnrc.yml .yarnrc.yml
 COPY package.json package.json
 COPY yarn.lock yarn.lock
 
+# Create yarn wrapper script to enable 'yarn' command
+# This delegates to the bundled, version-controlled yarn binary
+RUN printf '#!/bin/sh\nexec node /opt/app-root/src/.yarn/releases/yarn-4.12.0.cjs "$@"\n' > /usr/local/bin/yarn && \
+    chmod +x /usr/local/bin/yarn
+
 # Copy source files
 COPY @types @types
 COPY public public
@@ -20,9 +25,9 @@ COPY webpack.prod.config.js webpack.prod.config.js
 COPY .swcrc .swcrc
 COPY aliases.config.js aliases.config.js
 
-# Run yarn directly via node (uses bundled .cjs file)
-RUN node .yarn/releases/yarn-4.12.0.cjs install --immutable
-RUN node .yarn/releases/yarn-4.12.0.cjs build
+# Use yarn directly (wrapper delegates to bundled .cjs file)
+RUN yarn install --immutable
+RUN yarn build
 
 FROM registry.access.redhat.com/ubi9/nginx-120@sha256:c5fdf1b976571cf1f058b8f2dd955a94d80ced7a43756362d7e87d99e9c92337
 
