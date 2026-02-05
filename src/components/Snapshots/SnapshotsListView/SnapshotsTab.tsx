@@ -16,7 +16,7 @@ export const snapshotsTabLoader = createLoaderWithAccessCheck(
 export const SnapshotsListViewTab: React.FC = () => {
   const { applicationName } = useParams<RouterParams>();
   return (
-    <FilterContextProvider filterParams={['name']}>
+    <FilterContextProvider filterParams={['name', 'commit message', 'showMergedOnly']}>
       <SnapshotsListView applicationName={applicationName} />
     </FilterContextProvider>
   );
