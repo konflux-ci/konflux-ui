@@ -10592,7 +10592,7 @@ __metadata:
     jest-environment-jsdom: "npm:^29.7.0"
     js-base64: "npm:^3.7.7"
     lint-staged: "npm:^15.2.7"
-    lodash-es: "npm:^4.17.21"
+    lodash-es: "npm:4.17.23"
     mini-css-extract-plugin: "npm:^2.9.0"
     p-limit: "npm:^6.2.0"
     prettier: "npm:3.3.2"
@@ -10756,7 +10756,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash-es@npm:^4.17.21":
+"lodash-es@npm:4.17.23, lodash-es@npm:^4.17.21":
   version: 4.17.23
   resolution: "lodash-es@npm:4.17.23"
   checksum: 10/1feae200df22eb0bd93ca86d485e77784b8a9fb1d13e91b66e9baa7a7e5e04be088c12a7e20c2250fc0bd3db1bc0ef0affc7d9e3810b6af2455a3c6bf6dde59e
