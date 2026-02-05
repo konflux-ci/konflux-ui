@@ -40,17 +40,20 @@ jobs:
             exit 0
           fi
 
-          if gh api "/orgs/$ORG/members/$PR_AUTHOR"; then
-            echo "PR author is a member of $ORG GitHub organization, skipping further checks"
-            exit 0
-          fi
+          ALLOWED_USERS=("Katka92" "rrosatti" "janaki29" "sahil143" "testcara" "milantaky" "StanislavJochman" "JoaoPedroPP" "rakshett" "abhinandan13jan" "marcin-michal")
+          for author in "${ALLOWED_USERS[@]}"; do
+            if [[ "$author" == "$PR_AUTHOR" ]]; then
+              echo "PR author is in ALLOWED_USERS list. Running E2E tests."
+              exit 0
+            fi
+          done
 
           ERROR_SUMMARY=$(cat <<EOF
 
           ### ❌ Cannot run E2E tests - at least one of the following conditions must be met:
           * PR author is '$WHITELISTED_BOT_NAME'
           * PR has label '$REQUIRED_LABEL_NAME'
-          * PR author is a public member of '$ORG' GitHub organization
+          * PR author is a konflux-ui developer (listed in ALLOWED_USERS in this script)
           EOF
           )
           echo "$ERROR_SUMMARY" >> $GITHUB_STEP_SUMMARY
