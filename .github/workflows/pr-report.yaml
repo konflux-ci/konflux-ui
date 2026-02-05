@@ -16,16 +16,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Enable Corepack 📦
+        run: corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '20'
 
-      - name: Ensure Yarn is available
-        run: npm install -g yarn
-
       - name: Install dependencies
-        run: yarn add --ignore-scripts --no-lockfile @octokit/rest dayjs
+        run: yarn add @octokit/rest dayjs
 
       - name: Run stale PR checker
         env:

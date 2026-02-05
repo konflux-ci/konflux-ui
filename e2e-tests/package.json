@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "Konflux UI Cypress tests",
   "private": true,
+  "packageManager": "yarn@4.12.0",
   "scripts": {
     "clean-reports": "rm -rf cypress/",
     "cy:run": "cypress run -b chrome --spec 'tests/basic-happy-path.spec.ts'",
@@ -37,9 +38,16 @@
   },
   "nyc": {
     "report-dir": "coverage",
-    "reporter": ["text", "html", "lcov", "json"],
+    "reporter": [
+      "text",
+      "html",
+      "lcov",
+      "json"
+    ],
     "all": true,
-    "include": ["../src/**/*.{ts,tsx}"],
+    "include": [
+      "../src/**/*.{ts,tsx}"
+    ],
     "exclude": [
       "**/*.spec.ts",
       "**/*.spec.tsx",

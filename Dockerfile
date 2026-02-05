@@ -1,20 +1,32 @@
-FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ede5bc00a4dfda5e259ee4a57f67973720a565d1 as builder
+FROM registry.access.redhat.com/ubi9/nodejs-20@sha256:938970e0012ddc784adda181ede5bc00a4dfda5e259ee4a57f67973720a565d1 AS builder
 
-WORKDIR  /opt/app-root/src
-RUN npm install yarn --global
+# Run as root in builder stage (final image uses non-root USER 1001)
+USER 0
+WORKDIR /opt/app-root/src
 
+# Copy bundled Yarn Berry (no corepack needed - avoids ESM compatibility issues)
+COPY .yarn/releases .yarn/releases
+COPY .yarnrc.yml .yarnrc.yml
+COPY package.json package.json
+COPY yarn.lock yarn.lock
+
+# Create yarn wrapper script to enable 'yarn' command
+# This delegates to the bundled, version-controlled yarn binary
+RUN printf '#!/bin/sh\nexec node /opt/app-root/src/.yarn/releases/yarn-4.12.0.cjs "$@"\n' > /usr/local/bin/yarn && \
+    chmod +x /usr/local/bin/yarn
+
+# Copy source files
 COPY @types @types
 COPY public public
 COPY src src
-COPY package.json package.json
 COPY tsconfig.json tsconfig.json
 COPY webpack.config.js webpack.config.js
-COPY webpack.prod.config.js webpack.prod.config.js 
-COPY yarn.lock yarn.lock
+COPY webpack.prod.config.js webpack.prod.config.js
 COPY .swcrc .swcrc
 COPY aliases.config.js aliases.config.js
 
-RUN yarn install
+# Use yarn directly (wrapper delegates to bundled .cjs file)
+RUN yarn install --immutable
 RUN yarn build
 
 FROM registry.access.redhat.com/ubi9/nginx-120@sha256:c5fdf1b976571cf1f058b8f2dd955a94d80ced7a43756362d7e87d99e9c92337

@@ -1,0 +1,53 @@
+# Dependencies (rebuilt in container)
+node_modules
+
+# Build outputs
+dist
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment files (may contain secrets)
+.env
+.env.*
+*.local
+
+# Test files
+coverage
+*.spec.ts
+*.spec.tsx
+*.test.ts
+*.test.tsx
+__tests__
+e2e-tests
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Yarn cache (rebuilt in container)
+.yarn/cache
+.yarn/install-state.gz
+
+# CI/CD
+.github
+.gitlab-ci.yml
+Jenkinsfile
+
+# Documentation
+*.md
+docs
+LICENSE

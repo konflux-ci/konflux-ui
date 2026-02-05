@@ -39,7 +39,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeCh
             data-test="secret-source-username"
             label="Username"
             helperText="For Git authentication"
-            isRequired
           />
           <InputField
             name="source.password"
