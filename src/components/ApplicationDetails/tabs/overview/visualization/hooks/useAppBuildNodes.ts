@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PipelineRunLabel, runStatus } from '../../../../../../consts/pipelinerun';
 import { useComponents } from '../../../../../../hooks/useComponents';
-import { useLatestPushBuildPipelines } from '../../../../../../hooks/useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../../../../../../hooks/useLatestPushBuildPipelines';
 import { PipelineRunKind } from '../../../../../../types';
 import { WorkflowNodeModel, WorkflowNodeModelData, WorkflowNodeType } from '../types';
 import {

@@ -3,7 +3,7 @@ import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
-import { useLatestPushBuildPipelines } from '../useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../useLatestPushBuildPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');

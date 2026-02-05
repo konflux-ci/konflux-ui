@@ -1,7 +1,7 @@
 import { useAllComponents, useComponents, useSortedComponents } from '../../../hooks/useComponents';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
-import { useLatestPushBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
 import { useLatestIntegrationTestPipelines } from '../../../hooks/useLatestIntegrationTestPipelines';
+import { useLatestPushBuildPipelines } from '../../../hooks/useLatestPushBuildPipelines';
 import { useReleasePlans } from '../../../hooks/useReleasePlans';
 import { useReleases } from '../../../hooks/useReleases';
 import {
@@ -21,7 +21,7 @@ jest.mock('../../../hooks/useComponents', () => ({
 jest.mock('../../../hooks/useIntegrationTestScenarios', () => ({
   useIntegrationTestScenarios: jest.fn(),
 }));
-jest.mock('../../../hooks/useLatestBuildPipelines', () => ({
+jest.mock('../../../hooks/useLatestPushBuildPipelines', () => ({
   useLatestPushBuildPipelines: jest.fn(),
 }));
 jest.mock('../../../hooks/useReleases', () => ({

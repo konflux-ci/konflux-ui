@@ -27,7 +27,7 @@ import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { useComponents, useURLForComponentPRs } from '../../../hooks/useComponents';
-import { useLatestPushBuildPipelines } from '../../../hooks/useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../../../hooks/useLatestPushBuildPipelines';
 import { PACState } from '../../../hooks/usePACState';
 import usePACStatesForComponents from '../../../hooks/usePACStatesForComponents';
 import { ComponentModel } from '../../../models';
