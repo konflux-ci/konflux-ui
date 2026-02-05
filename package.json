@@ -55,7 +55,7 @@
     "react-router-dom": "6.25.1",
     "sanitize-html": "^2.13.0",
     "showdown": "^2.1.0",
-    "yup": "^0.32.11",
+    "yup": "^1.0.0",
     "zustand": "^5.0.4"
   },
   "devDependencies": {
