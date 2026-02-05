@@ -114,7 +114,7 @@
     "stylelint-config-standard": "^36.0.1",
     "stylelint-scss": "^6.4.0",
     "swc-loader": "^0.2.6",
-    "type-fest": "^4.22.0",
+    "type-fest": "^5.0.0",
     "typescript": "5.5.4",
     "web-vitals": "^4.2.4",
     "webpack": "^5.93.0",
