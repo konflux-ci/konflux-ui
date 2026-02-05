@@ -1,11 +1,15 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import { Bullseye, EmptyStateBody, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
+import emptyStateImgUrl from '../../../assets/Components.svg';
 import { FeatureFlagIndicator } from '../../../feature-flags/FeatureFlagIndicator';
+import { FLAGS } from '../../../feature-flags/flags';
+import { IfFeature } from '../../../feature-flags/hooks';
 import { useComponent } from '../../../hooks/useComponents';
 import { COMPONENTS_PATH, COMPONENT_DETAILS_V2_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
+import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace/useNamespaceInfo';
 import { DetailsPage } from '../../DetailsPage';
 import GitRepoLink from '../../GitLink/GitRepoLink';
@@ -30,7 +34,16 @@ const ComponentDetailsView: React.FC = () => {
   }
 
   return (
-    <>
+    <IfFeature
+      flag="components-page"
+      fallback={
+        <AppEmptyState emptyStateImg={emptyStateImgUrl} title="Feature flag disabled">
+          <EmptyStateBody>
+            {`To view this page, enable the "${FLAGS['components-page'].description}" feature flag.`}
+          </EmptyStateBody>
+        </AppEmptyState>
+      }
+    >
       <DetailsPage
         data-test="component-details-test-id"
         headTitle={component.spec.componentName}
@@ -74,7 +87,7 @@ const ComponentDetailsView: React.FC = () => {
           },
         ]}
       />
-    </>
+    </IfFeature>
   );
 };
 
