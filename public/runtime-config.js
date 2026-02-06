@@ -18,3 +18,14 @@ if (window.KONFLUX_RUNTIME.MONITORING_CLUSTER === undefined) {
 if (window.KONFLUX_RUNTIME.MONITORING_SAMPLE_RATE_ERRORS === undefined) {
   window.KONFLUX_RUNTIME.MONITORING_SAMPLE_RATE_ERRORS = '0.2';
 }
+
+// Analytics defaults (disabled for local development)
+if (window.KONFLUX_RUNTIME.ANALYTICS_ENABLED === undefined) {
+  window.KONFLUX_RUNTIME.ANALYTICS_ENABLED = 'false';
+}
+if (window.KONFLUX_RUNTIME.ANALYTICS_WRITE_KEY === undefined) {
+  window.KONFLUX_RUNTIME.ANALYTICS_WRITE_KEY = '';
+}
+if (window.KONFLUX_RUNTIME.ANALYTICS_API_URL === undefined) {
+  window.KONFLUX_RUNTIME.ANALYTICS_API_URL = '';
+}
