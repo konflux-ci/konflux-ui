@@ -99,7 +99,7 @@ export const ReleasePlanFormPage: React.FC<Props> = ({ releasePlan }) => {
         ? ReleasePipelineLocation.current
         : ReleasePipelineLocation.target
       : undefined,
-    serviceAccount: releasePlan?.spec?.serviceAccount ?? '',
+    serviceAccount: releasePlan?.spec?.tenantPipeline?.serviceAccountName ?? '',
     target: releasePlan?.spec?.target ?? '',
     data: (releasePlan?.spec?.data as string) ?? '',
     params: releasePlanFormParams(releasePlan),
@@ -108,14 +108,17 @@ export const ReleasePlanFormPage: React.FC<Props> = ({ releasePlan }) => {
       : [{ key: '', value: '' }],
     git: {
       url:
-        releasePlan?.spec?.pipelineRef?.params?.find((p) => p.name === ResolverRefParams.URL)
-          ?.value ?? '',
+        releasePlan?.spec?.tenantPipeline?.pipelineRef?.params?.find(
+          (p) => p.name === ResolverRefParams.URL,
+        )?.value ?? '',
       revision:
-        releasePlan?.spec?.pipelineRef?.params?.find((p) => p.name === ResolverRefParams.REVISION)
-          ?.value ?? '',
+        releasePlan?.spec?.tenantPipeline?.pipelineRef?.params?.find(
+          (p) => p.name === ResolverRefParams.REVISION,
+        )?.value ?? '',
       path:
-        releasePlan?.spec?.pipelineRef?.params?.find((p) => p.name === ResolverRefParams.PATH)
-          ?.value ?? '',
+        releasePlan?.spec?.tenantPipeline?.pipelineRef?.params?.find(
+          (p) => p.name === ResolverRefParams.PATH,
+        )?.value ?? '',
     },
   };
 

@@ -61,7 +61,7 @@ export const releasePlanFormSchema = yup.object({
 });
 
 export const releasePlanFormParams = (releasePlan: ReleasePlanKind) =>
-  (releasePlan?.spec?.pipelineRef?.params?.filter(
+  (releasePlan?.spec?.tenantPipeline?.pipelineRef?.params?.filter(
     (p) =>
       p.name !== ResolverRefParams.URL &&
       p.name !== ResolverRefParams.REVISION &&
@@ -107,16 +107,18 @@ export const createReleasePlan = async (
     spec: {
       application,
       ...(data ? { data } : {}),
-      serviceAccount,
       target: `${targetNs}`,
-      pipelineRef: {
-        resolver: ResolverType.GIT,
-        params: [
-          ...params,
-          { name: ResolverRefParams.URL, value: git.url },
-          { name: ResolverRefParams.REVISION, value: git.revision },
-          { name: ResolverRefParams.PATH, value: git.path },
-        ],
+      tenantPipeline: {
+        serviceAccountName: serviceAccount,
+        pipelineRef: {
+          resolver: ResolverType.GIT,
+          params: [
+            ...params,
+            { name: ResolverRefParams.URL, value: git.url },
+            { name: ResolverRefParams.REVISION, value: git.revision },
+            { name: ResolverRefParams.PATH, value: git.path },
+          ],
+        },
       },
     },
   };

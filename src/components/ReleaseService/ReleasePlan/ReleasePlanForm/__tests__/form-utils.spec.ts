@@ -47,24 +47,27 @@ describe('createReleasePlan', () => {
         },
         spec: {
           application: 'test-app',
-          pipelineRef: {
-            params: [
-              {
-                name: 'url',
-                value: 'https://github.com/example/repo',
-              },
-              {
-                name: 'revision',
-                value: 'main',
-              },
-              {
-                name: 'pathInRepo',
-                value: '/',
-              },
-            ],
-            resolver: 'git',
-          },
           target: 'test-ns-tenant',
+          tenantPipeline: {
+            serviceAccountName: undefined,
+            pipelineRef: {
+              params: [
+                {
+                  name: 'url',
+                  value: 'https://github.com/example/repo',
+                },
+                {
+                  name: 'revision',
+                  value: 'main',
+                },
+                {
+                  name: 'pathInRepo',
+                  value: '/',
+                },
+              ],
+              resolver: 'git',
+            },
+          },
         },
       }),
     );
@@ -91,24 +94,27 @@ describe('createReleasePlan', () => {
       expect.objectContaining({
         spec: {
           application: 'test-app',
-          pipelineRef: {
-            params: [
-              {
-                name: 'url',
-                value: 'https://github.com/example/repo',
-              },
-              {
-                name: 'revision',
-                value: 'main',
-              },
-              {
-                name: 'pathInRepo',
-                value: '/',
-              },
-            ],
-            resolver: 'git',
-          },
           target: 'target-ws-tenant',
+          tenantPipeline: {
+            serviceAccountName: undefined,
+            pipelineRef: {
+              params: [
+                {
+                  name: 'url',
+                  value: 'https://github.com/example/repo',
+                },
+                {
+                  name: 'revision',
+                  value: 'main',
+                },
+                {
+                  name: 'pathInRepo',
+                  value: '/',
+                },
+              ],
+              resolver: 'git',
+            },
+          },
         },
       }),
     );
@@ -191,13 +197,15 @@ describe('releasePlanFormParams', () => {
   it('should omit git fields from params', () => {
     const result = releasePlanFormParams({
       spec: {
-        pipelineRef: {
-          params: [
-            { name: 'url', value: 'https://github.com/example/repo' },
-            { name: 'revision', value: 'main' },
-            { name: 'pathInRepo', value: '/test' },
-            { name: 'test-key', value: 'test-val' },
-          ],
+        tenantPipeline: {
+          pipelineRef: {
+            params: [
+              { name: 'url', value: 'https://github.com/example/repo' },
+              { name: 'revision', value: 'main' },
+              { name: 'pathInRepo', value: '/test' },
+              { name: 'test-key', value: 'test-val' },
+            ],
+          },
         },
       },
     } as ReleasePlanKind);
