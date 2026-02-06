@@ -68,7 +68,7 @@ describe('ComponentImageRepositoryVisibility', () => {
       expect(screen.getByText(/Unable to load image repository/i)).toBeInTheDocument();
     });
 
-    it('should display "public" label with blue color for public visibility', () => {
+    it('should display "Public" label with blue color for public visibility', () => {
       useImageRepositoryMock.mockReturnValue([mockPublicImageRepository, true, null]);
 
       renderWithQueryClientAndRouter(
@@ -77,11 +77,11 @@ describe('ComponentImageRepositoryVisibility', () => {
 
       const label = screen.getByTestId('visibility-label-public');
       expect(label).toBeInTheDocument();
-      expect(label.textContent).toBe('public');
+      expect(label.textContent).toBe('Public');
       expect(label).toHaveClass('pf-m-blue');
     });
 
-    it('should display "private" label with orange color for private visibility', () => {
+    it('should display "Private" label with orange color for private visibility', () => {
       useImageRepositoryMock.mockReturnValue([mockPrivateImageRepository, true, null]);
 
       renderWithQueryClientAndRouter(
@@ -90,7 +90,7 @@ describe('ComponentImageRepositoryVisibility', () => {
 
       const label = screen.getByTestId('visibility-label-private');
       expect(label).toBeInTheDocument();
-      expect(label.textContent).toBe('private');
+      expect(label.textContent).toBe('Private');
       expect(label).toHaveClass('pf-m-orange');
     });
 

@@ -1,5 +1,7 @@
+import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { useIsOnFeatureFlag, useFeatureFlags } from '../../../../feature-flags/hooks';
 import { useComponent } from '../../../../hooks/useComponents';
 import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
@@ -14,8 +16,23 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
+jest.mock('../../../../feature-flags/hooks', () => {
+  const useIsOnFeatureFlagMock = jest.fn();
+  const useFeatureFlagsMock = jest.fn();
+  return {
+    useIsOnFeatureFlag: useIsOnFeatureFlagMock,
+    useFeatureFlags: useFeatureFlagsMock,
+    IfFeature: ({ flag, children }: { flag: string; children: React.ReactNode }) => {
+      const isEnabled = useIsOnFeatureFlagMock(flag);
+      return isEnabled ? children : null;
+    },
+  };
+});
+
 const useComponentMock = useComponent as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+const mockUseFeatureFlags = useFeatureFlags as jest.Mock;
 
 const mockComponent = {
   metadata: {
@@ -35,6 +52,8 @@ describe('ComponentDetailsView', () => {
 
   beforeEach(() => {
     useParamsMock.mockReturnValue({ componentName: 'my-component' });
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockUseFeatureFlags.mockReturnValue([{ 'components-page': true }, jest.fn()]);
   });
 
   it('should render spinner while loading', () => {
@@ -55,7 +74,15 @@ describe('ComponentDetailsView', () => {
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
     renderWithQueryClientAndRouter(<ComponentDetailsView />);
 
-    expect(screen.findByText('my-component')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: /my-component/ })).toBeInTheDocument();
     expect(screen.getByText('Overview')).toBeInTheDocument();
+  });
+
+  it('should render nothing when feature flag is disabled', () => {
+    useComponentMock.mockReturnValue([mockComponent, true, undefined]);
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
+    const { container } = renderWithQueryClientAndRouter(<ComponentDetailsView />);
+
+    expect(container.firstChild).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { FeatureFlagIndicator } from '../../../feature-flags/FeatureFlagIndicator';
+import { IfFeature } from '../../../feature-flags/hooks';
 import { useComponent } from '../../../hooks/useComponents';
 import { COMPONENTS_PATH, COMPONENT_DETAILS_V2_PATH } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
@@ -30,7 +31,7 @@ const ComponentDetailsView: React.FC = () => {
   }
 
   return (
-    <>
+    <IfFeature flag="components-page">
       <DetailsPage
         data-test="component-details-test-id"
         headTitle={component.spec.componentName}
@@ -74,7 +75,7 @@ const ComponentDetailsView: React.FC = () => {
           },
         ]}
       />
-    </>
+    </IfFeature>
   );
 };
 
