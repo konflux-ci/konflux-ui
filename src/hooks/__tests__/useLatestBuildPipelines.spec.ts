@@ -3,7 +3,7 @@ import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
-import { useLatestBuildPipelines } from '../useLatestBuildPipelines';
+import { useLatestPushBuildPipelines } from '../useLatestPushBuildPipelines';
 import { useTRPipelineRuns } from '../useTektonResults';
 
 jest.mock('../useTektonResults');
@@ -23,7 +23,7 @@ const mockUseKubearchiveListResourceQuery = useKubearchiveListResourceQuery as j
 const componentNames = ['devfile-sample-node'];
 const componentNames2 = ['devfile-sample-node', 'devfile-sample-node-2'];
 
-describe('useLatestBuildPipelines', () => {
+describe('useLatestPushBuildPipelines', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseIsOnFeatureFlag.mockReturnValue(false);
@@ -40,21 +40,27 @@ describe('useLatestBuildPipelines', () => {
   it('should return empty array', () => {
     useK8sWatchResourceMock.mockReturnValue([[], false, undefined]);
     const { result } = renderHook(() =>
-      useLatestBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
     );
 
     expect(result.current).toEqual([[], false, undefined]);
   });
 
   it('should return build pipelines', () => {
-    useK8sWatchResourceMock.mockReturnValue([
-      [testPipelineRuns[DataState.RUNNING]],
-      true,
-      undefined,
-    ]);
+    const mockPushPipelineRun = {
+      ...testPipelineRuns[DataState.RUNNING],
+      metadata: {
+        ...testPipelineRuns[DataState.RUNNING]?.metadata,
+        labels: {
+          ...testPipelineRuns[DataState.RUNNING]?.metadata?.labels,
+          'pipelinesascode.tekton.dev/event-type': 'push',
+        },
+      },
+    };
+    useK8sWatchResourceMock.mockReturnValue([[mockPushPipelineRun], true, undefined]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, undefined]);
     const { result } = renderHook(() =>
-      useLatestBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames),
     );
 
     const [pipelineRuns, loaded] = result.current;
@@ -71,7 +77,7 @@ describe('useLatestBuildPipelines', () => {
     ]);
     useTRPipelineRunsMock.mockReturnValue([[], true, undefined, getNextPageMock]);
     const { result } = renderHook(() =>
-      useLatestBuildPipelines('test-ns', 'test-pipelinerun', componentNames2),
+      useLatestPushBuildPipelines('test-ns', 'test-pipelinerun', componentNames2),
     );
 
     const [pipelineRuns, loaded] = result.current;

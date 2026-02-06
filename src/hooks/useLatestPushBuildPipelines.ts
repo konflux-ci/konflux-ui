@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
+import { PipelineRunEventType, PipelineRunLabel, PipelineRunType } from '../consts/pipelinerun';
 import { PipelineRunKind } from '../types';
 import { useApplication } from './useApplications';
 import { usePipelineRunsV2 } from './usePipelineRunsV2';
 
-export const useLatestBuildPipelines = (
+export const useLatestPushBuildPipelines = (
   namespace: string,
   applicationName: string,
   componentNames: string[] | undefined,
@@ -31,6 +31,7 @@ export const useLatestBuildPipelines = (
           matchLabels: {
             [PipelineRunLabel.APPLICATION]: applicationName,
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: PipelineRunEventType.PUSH,
           },
         },
       }),
