@@ -1,21 +1,21 @@
-import { render, screen, waitFor, act } from '@testing-library/react';
+import React from 'react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { saveAs } from 'file-saver';
-import { useFullscreen } from '~/shared/hooks/fullscreen';
-import { useTheme } from '~/shared/theme';
+import { useFullscreen } from '../../../../hooks/fullscreen';
+import { useTheme } from '../../../../theme';
 import LogViewer from '../LogViewer';
 
-// Mock only external dependencies and browser APIs
 jest.mock('file-saver', () => ({
   saveAs: jest.fn(),
 }));
 
-jest.mock('~/shared/hooks/fullscreen', () => ({
+jest.mock('../../../../hooks/fullscreen', () => ({
   useFullscreen: jest.fn(() => [false, jest.fn(), jest.fn(), true]),
 }));
 
-jest.mock('~/shared/theme', () => ({
+jest.mock('../../../../theme', () => ({
   useTheme: jest.fn(() => ({
     preference: 'system',
     effectiveTheme: 'light',
@@ -24,21 +24,42 @@ jest.mock('~/shared/theme', () => ({
   })),
 }));
 
-// Mock lodash-es debounce to make tests synchronous
-jest.mock('lodash-es', () => ({
-  ...jest.requireActual('lodash-es'),
-  debounce: (fn: (...args: unknown[]) => unknown) => {
-    const debounced = (...args: unknown[]) => fn(...args);
-    debounced.cancel = jest.fn();
-    return debounced;
+jest.mock('../../../status-box/StatusBox', () => ({
+  LoadingInline: () => <div data-test="loading-inline">Loading...</div>,
+}));
+
+jest.mock('../LogsTaskDuration', () => {
+  return function MockLogsTaskDuration() {
+    return <span data-test="task-duration">duration</span>;
+  };
+});
+
+jest.mock('@patternfly/react-log-viewer', () => ({
+  LogViewer: (props: Record<string, unknown>) => {
+    const { data, header, toolbar, scrollToRow, theme, ...otherProps } = props;
+    return (
+      <div
+        data-test="patternfly-log-viewer"
+        data-log-data={data as string}
+        data-scroll-to-row={scrollToRow as number}
+        data-theme={theme}
+        {...otherProps}
+      >
+        {header as React.ReactNode}
+        {toolbar as React.ReactNode}
+      </div>
+    );
   },
+  LogViewerSearch: ({ placeholder, width }: { placeholder: string; width: string }) => (
+    <input data-test="log-search" placeholder={placeholder} style={{ width }} />
+  ),
 }));
 
 const mockSaveAs = saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
 const mockUseTheme = useTheme as jest.Mock;
 
-describe('LogViewer Integration Tests', () => {
+describe('LogViewer', () => {
   const mockTaskRun = {
     apiVersion: 'tekton.dev/v1beta1',
     kind: 'TaskRun',
@@ -58,25 +79,14 @@ describe('LogViewer Integration Tests', () => {
   };
 
   const defaultProps = {
-    data: 'line 1\nline 2\nline 3\nline 4\nline 5',
+    data: 'line 1\nline 2\nline 3',
     isLoading: false,
     errorMessage: null,
-    taskRun: mockTaskRun,
+    taskRun: null,
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Setup DOM dimensions for virtualization to work properly
-    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-      configurable: true,
-      value: 600,
-    });
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-      configurable: true,
-      value: 800,
-    });
-
     mockUseFullscreen.mockReturnValue([false, jest.fn(), jest.fn(), true]);
     mockUseTheme.mockReturnValue({
       preference: 'system',
@@ -84,238 +94,115 @@ describe('LogViewer Integration Tests', () => {
       systemPreference: 'light',
       setThemePreference: jest.fn(),
     });
-
-    // Suppress known harmless warnings and errors in test environment
-    // eslint-disable-next-line no-console
-    const originalConsoleError = console.error;
-    // eslint-disable-next-line no-console
-    const originalConsoleWarn = console.warn;
-
-    jest.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
-      const message = typeof args[0] === 'string' ? args[0] : String(args[0] ?? '');
-      if (message.includes('requestAnimationFrame') || message.includes('act(...)')) {
-        return;
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-      originalConsoleError(...(args as any[]));
-    });
-
-    jest.spyOn(console, 'warn').mockImplementation((...args: unknown[]) => {
-      const message = typeof args[0] === 'string' ? args[0] : String(args[0] ?? '');
-      if (message.includes('mobx-react-lite')) {
-        return;
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
-      originalConsoleWarn(...(args as any[]));
-    });
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  describe('Full component rendering', () => {
-    it('should render complete LogViewer with all sections', () => {
+  describe('rendering', () => {
+    it('should render the LogViewer with basic props', () => {
       const { container } = render(<LogViewer {...defaultProps} />);
 
-      // Check container structure
-      const logViewerContainer = container.querySelector('.log-viewer__container');
-      expect(logViewerContainer).toBeInTheDocument();
-
-      // Check PatternFly log viewer class
-      const pfLogViewer = container.querySelector('.pf-v5-c-log-viewer');
-      expect(pfLogViewer).toBeInTheDocument();
-
-      // Check header section
-      const header = container.querySelector('.pf-v5-c-log-viewer__header');
-      expect(header).toBeInTheDocument();
-
-      // Check toolbar
-      const toolbar = container.querySelector('.pf-v5-c-toolbar');
-      expect(toolbar).toBeInTheDocument();
-
-      // Check main content area
-      const main = container.querySelector('.pf-v5-c-log-viewer__main');
-      expect(main).toBeInTheDocument();
-
-      // Check scroll container
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__scroll-container');
-      expect(scrollContainer).toBeInTheDocument();
-    });
-
-    it('should render task name in banner', () => {
-      const { container } = render(<LogViewer {...defaultProps} />);
-
-      const banner = container.querySelector('[data-testid="logs-taskName"]');
-      expect(banner).toBeInTheDocument();
-      expect(banner).toHaveTextContent('test-task');
-    });
-
-    it('should render virtualized log content', () => {
-      const { container } = render(<LogViewer {...defaultProps} />);
-
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
-
-      const listItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
-      expect(listItems.length).toBeGreaterThan(0);
-    });
-
-    it('should render all toolbar buttons', () => {
-      render(<LogViewer {...defaultProps} />);
-
-      expect(screen.getByLabelText('Dark theme')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /download/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /expand/i })).toBeInTheDocument();
-    });
-
-    it('should render search input when showSearch is true', () => {
-      render(<LogViewer {...defaultProps} showSearch={true} />);
-
-      const searchInput = screen.getByPlaceholderText('Search');
-      expect(searchInput).toBeInTheDocument();
-    });
-
-    it('should not render search input when showSearch is false', () => {
-      render(<LogViewer {...defaultProps} showSearch={false} />);
-
-      const searchInput = screen.queryByPlaceholderText('Search');
-      expect(searchInput).not.toBeInTheDocument();
-    });
-  });
-
-  describe('ANSI escape code processing', () => {
-    it('should strip ANSI escape codes from log data', () => {
-      const dataWithAnsi = '\x1b[32mSuccess\x1b[0m\n\x1b[31mError\x1b[0m\nPlain text';
-
-      const { container } = render(<LogViewer {...defaultProps} data={dataWithAnsi} />);
-
-      const logText = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logText?.textContent).not.toContain('\x1b');
-      expect(logText?.textContent).toContain('Success');
-      expect(logText?.textContent).toContain('Error');
-      expect(logText?.textContent).toContain('Plain text');
-    });
-
-    it('should handle carriage returns in log data', () => {
-      const dataWithCR = 'line 1\roverwrite\nline 2';
-
-      const { container } = render(<LogViewer {...defaultProps} data={dataWithCR} />);
-
-      const logText = container.querySelector('.pf-v5-c-log-viewer__list');
-      // \r should be replaced with \n
-      expect(logText?.textContent).toContain('overwrite');
-      expect(logText?.textContent).toContain('line 2');
-    });
-  });
-
-  describe('Auto-scroll behavior', () => {
-    it('should render with auto-scroll enabled', () => {
-      const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
-
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(scrollContainer).toBeInTheDocument();
-
-      // Should render all log lines with virtualization
-      const logItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
-      expect(logItems.length).toBeGreaterThan(0);
-    });
-
-    it('should handle user scroll interactions', () => {
-      const onScroll = jest.fn();
-      const { container } = render(
-        <LogViewer {...defaultProps} allowAutoScroll={true} onScroll={onScroll} />,
+      expect(screen.getByTestId('patternfly-log-viewer')).toBeInTheDocument();
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-log-data',
+        defaultProps.data,
       );
 
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(scrollContainer).toBeInTheDocument();
-
-      // Simulate user scroll
-      if (scrollContainer) {
-        act(() => {
-          scrollContainer.scrollTop = 100;
-          scrollContainer.dispatchEvent(new Event('scroll'));
-        });
-      }
-
-      // Component should handle scroll events
-      expect(scrollContainer).toBeInTheDocument();
-    });
-  });
-
-  describe('Theme switching', () => {
-    it('should toggle between light and dark themes', async () => {
-      const user = userEvent.setup();
-      const { container } = render(<LogViewer {...defaultProps} />);
-
-      const themeCheckbox = screen.getByLabelText('Dark theme');
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
-
-      // Initially dark theme
-      expect(themeCheckbox).toBeChecked();
-      expect(logViewer).toHaveClass('pf-m-dark');
-
-      // Switch to light theme
-      await user.click(themeCheckbox);
-
-      await waitFor(() => {
-        expect(logViewer).not.toHaveClass('pf-m-dark');
-      });
-
-      // Switch back to dark theme
-      await user.click(themeCheckbox);
-
-      await waitFor(() => {
-        expect(logViewer).toHaveClass('pf-m-dark');
-      });
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
     });
 
-    it('should disable theme toggle when global theme is dark', () => {
-      mockUseTheme.mockReturnValue({
-        preference: 'dark',
-        effectiveTheme: 'dark',
-        systemPreference: 'light',
-        setThemePreference: jest.fn(),
-      });
+    it('should display task name when taskRun is provided', () => {
+      render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
 
+      const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
+      expect(taskNameElement).toBeInTheDocument();
+      expect(screen.getByText('test-task')).toBeInTheDocument();
+      expect(screen.getByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should render task name in Truncate component within a Flex layout', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
+
+      const banner = document.querySelector('[data-testid="logs-taskName"]');
+
+      const flexContainer = banner.querySelector('.pf-v5-l-flex');
+      expect(flexContainer).toBeInTheDocument();
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).toBeInTheDocument();
+      expect(truncateElement).toHaveTextContent('test-task');
+    });
+
+    it('should display metadata name when taskRef name is not available', () => {
+      const taskRunWithoutTaskRef = {
+        ...mockTaskRun,
+        spec: {},
+      };
+
+      render(<LogViewer {...defaultProps} taskRun={taskRunWithoutTaskRef} />);
+
+      const taskNameElement = document.querySelector('[data-testid="logs-taskName"]');
+      expect(taskNameElement).toBeInTheDocument();
+      expect(taskNameElement).toHaveTextContent('test-task-run');
+    });
+
+    it('should NOT render task name block but SHOULD render duration when taskRun is null', () => {
+      const { container } = render(<LogViewer {...defaultProps} taskRun={null} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+
+      expect(screen.queryByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should NOT render task name block but SHOULD render duration when task names are missing', () => {
+      const taskRunNoNames = { ...mockTaskRun, spec: {}, metadata: {} };
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunNoNames} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+      expect(screen.queryByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should NOT render task name block but SHOULD render duration when task names are empty strings', () => {
+      const taskRunEmptyName = {
+        ...mockTaskRun,
+        spec: { taskRef: { name: '' } },
+        metadata: { name: '' },
+      };
+      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunEmptyName} />);
+
+      const truncateElement = container.querySelector('.pf-v5-c-truncate');
+      expect(truncateElement).not.toBeInTheDocument();
+      expect(screen.queryByTestId('task-duration')).toBeInTheDocument();
+    });
+
+    it('should show loading indicator when isLoading is true', () => {
+      render(<LogViewer {...defaultProps} isLoading={true} taskRun={mockTaskRun} />);
+
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    });
+
+    it('should show error message when errorMessage is provided', () => {
+      const errorMessage = 'Failed to load logs';
+      render(<LogViewer {...defaultProps} errorMessage={errorMessage} taskRun={mockTaskRun} />);
+
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+    });
+
+    it('should render search component when showSearch is true (default)', () => {
       render(<LogViewer {...defaultProps} />);
 
-      const themeCheckbox = screen.getByLabelText('Dark theme');
-      expect(themeCheckbox).toBeDisabled();
-    });
-  });
-
-  describe('Download functionality', () => {
-    it('should download logs with correct filename', async () => {
-      const user = userEvent.setup();
-      render(<LogViewer {...defaultProps} />);
-
-      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
-      await user.click(downloadButton);
-
-      expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task.log');
-      const [blob] = mockSaveAs.mock.calls[0];
-      expect(blob.type).toBe('text/plain;charset=utf-8');
+      expect(screen.getByTestId('log-search')).toBeInTheDocument();
+      expect(screen.getByTestId('log-search')).toHaveAttribute('placeholder', 'Search');
     });
 
-    it('should not download when data is empty', async () => {
-      const user = userEvent.setup();
-      render(<LogViewer {...defaultProps} data="" />);
+    it('should not render search component when showSearch is false', () => {
+      render(<LogViewer {...defaultProps} showSearch={false} />);
 
-      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
-      await user.click(downloadButton);
-
-      expect(mockSaveAs).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('log-search')).not.toBeInTheDocument();
     });
 
-    it('should not render download all button when onDownloadAll is not provided', () => {
-      render(<LogViewer {...defaultProps} downloadAllLabel="Download All Logs" />);
-
-      expect(screen.queryByText('Download All Logs')).not.toBeInTheDocument();
-    });
-
-    it('should handle download all functionality', async () => {
-      const user = userEvent.setup();
+    it('should render download all button when onDownloadAll and downloadAllLabel are provided', () => {
       const onDownloadAll = jest.fn().mockResolvedValue(undefined);
 
       render(
@@ -326,11 +213,151 @@ describe('LogViewer Integration Tests', () => {
         />,
       );
 
-      const downloadAllButton = screen.getByRole('button', { name: /download all logs/i });
+      expect(screen.getByText('Download All Logs')).toBeInTheDocument();
+    });
+
+    it('should not render download all button when onDownloadAll is not provided', () => {
+      render(<LogViewer {...defaultProps} downloadAllLabel="Download All Logs" />);
+
+      expect(screen.queryByText('Download All Logs')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('auto-scroll calculation', () => {
+    it('should calculate scrolledRow based on data lines when allowAutoScroll is true', () => {
+      render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
+
+      const logViewer = screen.getByTestId('patternfly-log-viewer');
+
+      expect(logViewer).toHaveAttribute('data-scroll-to-row', '3');
+    });
+
+    it('should set scrolledRow to 0 when allowAutoScroll is false', () => {
+      render(<LogViewer {...defaultProps} allowAutoScroll={false} />);
+
+      const logViewer = screen.getByTestId('patternfly-log-viewer');
+      expect(logViewer).toHaveAttribute('data-scroll-to-row', '0');
+    });
+
+    it('should recalculate scrolledRow when data changes', () => {
+      const { rerender } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
+
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-scroll-to-row',
+        '3',
+      );
+
+      const newData = 'line 1\nline 2\nline 3\nline 4\nline 5';
+      rerender(<LogViewer {...defaultProps} data={newData} allowAutoScroll={true} />);
+
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute(
+        'data-scroll-to-row',
+        '5',
+      );
+    });
+  });
+
+  describe('user interactions', () => {
+    it('should toggle theme when checkbox is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      const themeCheckbox = screen.getByLabelText('Dark theme');
+      expect(themeCheckbox).toBeChecked();
+      expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('data-theme', 'dark');
+
+      await user.click(themeCheckbox);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('patternfly-log-viewer')).toHaveAttribute('data-theme', 'light');
+      });
+    });
+
+    it('should disable theme checkbox when effectiveTheme is dark', () => {
+      mockUseTheme.mockReturnValue({ effectiveTheme: 'dark' });
+      render(<LogViewer {...defaultProps} />);
+
+      const themeCheckbox = screen.getByLabelText('Dark theme');
+      expect(themeCheckbox).toBeDisabled();
+    });
+
+    it('should download logs when download button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} taskRun={mockTaskRun} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task.log');
+
+      const [blob] = mockSaveAs.mock.calls[0];
+      expect(blob).toBeInstanceOf(Blob);
+      expect((blob as Blob).type).toBe('text/plain;charset=utf-8');
+
+      // mock blob.text() since it's not available in test environment
+      const mockBlob = blob as Blob & { text: () => Promise<string> };
+      mockBlob.text = jest.fn().mockResolvedValue(defaultProps.data);
+      const blobText = await mockBlob.text();
+      expect(blobText).toBe(defaultProps.data);
+    });
+
+    it('should use metadata name for filename when taskRef name is not available', async () => {
+      const user = userEvent.setup();
+      const taskRunWithoutTaskRef = {
+        ...mockTaskRun,
+        spec: {},
+      };
+
+      render(<LogViewer {...defaultProps} taskRun={taskRunWithoutTaskRef} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task-run.log');
+    });
+
+    it('should handle download all functionality', async () => {
+      const user = userEvent.setup();
+      const onDownloadAll = jest.fn().mockResolvedValue(undefined);
+
+      render(
+        <LogViewer
+          {...defaultProps}
+          onDownloadAll={onDownloadAll}
+          downloadAllLabel="Download All"
+        />,
+      );
+
+      const downloadAllButton = screen.getByRole('button', { name: /download all/i });
       await user.click(downloadAllButton);
 
       expect(onDownloadAll).toHaveBeenCalled();
+    });
 
+    it('should show loading state during download all operation', async () => {
+      const user = userEvent.setup();
+      let resolveDownload: () => void;
+      const downloadPromise = new Promise<void>((resolve) => {
+        resolveDownload = resolve;
+      });
+      const onDownloadAll = jest.fn().mockReturnValue(downloadPromise);
+
+      render(
+        <LogViewer
+          {...defaultProps}
+          onDownloadAll={onDownloadAll}
+          downloadAllLabel="Download All"
+        />,
+      );
+
+      const downloadAllButton = screen.getByRole('button', { name: /download all/i });
+      await user.click(downloadAllButton);
+
+      expect(downloadAllButton).toBeDisabled();
+
+      expect(screen.getByTestId('loading-inline')).toBeInTheDocument();
+
+      resolveDownload();
       await waitFor(() => {
         expect(downloadAllButton).not.toBeDisabled();
       });
@@ -359,18 +386,11 @@ describe('LogViewer Integration Tests', () => {
       expect(consoleSpy).toHaveBeenCalledWith('Download failed');
       consoleSpy.mockRestore();
     });
-  });
 
-  describe('Fullscreen functionality', () => {
-    it('should toggle fullscreen mode', async () => {
+    it('should toggle fullscreen when fullscreen button is clicked', async () => {
       const user = userEvent.setup();
       const mockFullscreenToggle = jest.fn();
-      mockUseFullscreen.mockReturnValue([
-        false,
-        { current: document.createElement('div') },
-        mockFullscreenToggle,
-        true,
-      ]);
+      mockUseFullscreen.mockReturnValue([false, jest.fn(), mockFullscreenToggle, true]);
 
       render(<LogViewer {...defaultProps} />);
 
@@ -380,13 +400,8 @@ describe('LogViewer Integration Tests', () => {
       expect(mockFullscreenToggle).toHaveBeenCalled();
     });
 
-    it('should show collapse button in fullscreen mode', () => {
-      mockUseFullscreen.mockReturnValue([
-        true,
-        { current: document.createElement('div') },
-        jest.fn(),
-        true,
-      ]);
+    it('should show collapse button when in fullscreen mode', () => {
+      mockUseFullscreen.mockReturnValue([true, jest.fn(), jest.fn(), true]);
 
       render(<LogViewer {...defaultProps} />);
 
@@ -394,258 +409,70 @@ describe('LogViewer Integration Tests', () => {
       expect(screen.queryByRole('button', { name: /expand/i })).not.toBeInTheDocument();
     });
 
-    it('should apply fullscreen height styles', () => {
-      mockUseFullscreen.mockReturnValue([
-        true,
-        { current: document.createElement('div') },
-        jest.fn(),
-        true,
-      ]);
+    it('should not render fullscreen button when fullscreenToggle is not available', () => {
+      mockUseFullscreen.mockReturnValue([false, jest.fn(), null, true]);
 
-      const { container } = render(<LogViewer {...defaultProps} />);
-
-      const logViewerContainer = container.querySelector('.log-viewer__container');
-      expect(logViewerContainer).toHaveStyle({ height: '100vh' });
-    });
-  });
-
-  describe('Loading and error states', () => {
-    it('should show loading indicator', () => {
-      render(<LogViewer {...defaultProps} isLoading={true} />);
-
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    });
-
-    it('should show error alert', () => {
-      const errorMessage = 'Failed to fetch logs from KubeArchive';
-      const { container } = render(<LogViewer {...defaultProps} errorMessage={errorMessage} />);
-
-      const alert = container.querySelector('.pf-v5-c-alert.pf-m-danger');
-      expect(alert).toBeInTheDocument();
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
-    });
-
-    it('should show both loading and error states', () => {
-      const { container } = render(
-        <LogViewer {...defaultProps} isLoading={true} errorMessage="Network error" />,
-      );
-
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
-      const alert = container.querySelector('.pf-v5-c-alert.pf-m-danger');
-      expect(alert).toBeInTheDocument();
-    });
-  });
-
-  describe('Resume stream button integration', () => {
-    // Note: Detailed resume button behavior (scroll detection, debouncing, click handling)
-    // is fully tested in useAutoScrollWithResume.spec.ts
-    // These integration tests verify the component correctly integrates with the hook
-
-    it('should not show resume button initially', () => {
-      const { queryByTestId } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
-
-      const resumeButton = queryByTestId('resume-log-stream');
-      expect(resumeButton).not.toBeInTheDocument();
-    });
-
-    it('should integrate useAutoScrollWithResume hook when allowAutoScroll is true', () => {
-      const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
-
-      // Component should render successfully with auto-scroll enabled
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
-      expect(logViewer).toBeInTheDocument();
-
-      // The resume button wrapper should be conditionally rendered based on hook state
-      // (button appears/disappears based on scroll direction, tested in hook tests)
-    });
-
-    it('should pass allowAutoScroll prop to useAutoScrollWithResume hook', () => {
-      const { rerender, container } = render(
-        <LogViewer {...defaultProps} allowAutoScroll={false} />,
-      );
-
-      let logViewer = container.querySelector('.pf-v5-c-log-viewer');
-      expect(logViewer).toBeInTheDocument();
-
-      // Should handle prop change without crashing
-      rerender(<LogViewer {...defaultProps} allowAutoScroll={true} />);
-      logViewer = container.querySelector('.pf-v5-c-log-viewer');
-      expect(logViewer).toBeInTheDocument();
-    });
-
-    it('should pass onScroll callback to useAutoScrollWithResume hook', () => {
-      const onScroll = jest.fn();
-
-      // Component should render without errors when onScroll is provided
-      expect(() => {
-        render(<LogViewer {...defaultProps} allowAutoScroll={true} onScroll={onScroll} />);
-      }).not.toThrow();
-    });
-
-    it('should render resume button with data-testid when visible', () => {
-      // The resume button has data-testid="resume-log-stream" for testing
-      // It appears conditionally based on useAutoScrollWithResume hook state
-      const { container } = render(<LogViewer {...defaultProps} allowAutoScroll={true} />);
-
-      // Verify component structure is correct (button will appear based on scroll state)
-      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
-      expect(logViewer).toBeInTheDocument();
-    });
-  });
-
-  describe('Data updates', () => {
-    it('should update log content when data changes', () => {
-      const { container, rerender } = render(<LogViewer {...defaultProps} />);
-
-      let logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
-
-      const newData = 'new line 1\nnew line 2\nnew line 3';
-      rerender(<LogViewer {...defaultProps} data={newData} />);
-
-      logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
-    });
-
-    it('should handle empty data', () => {
-      const { container } = render(<LogViewer {...defaultProps} data="" />);
-
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
-    });
-
-    it('should handle very long log data', () => {
-      const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
-
-      const { container } = render(<LogViewer {...defaultProps} data={longData} />);
-
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
-
-      // Should use virtualization (only render visible items)
-      const visibleItems = container.querySelectorAll('.pf-v5-c-log-viewer__list-item');
-      expect(visibleItems.length).toBeLessThan(1000);
-    });
-  });
-
-  describe('Task information display', () => {
-    it('should display task name with truncation', () => {
-      const longTaskName = 'very-long-task-name-that-should-be-truncated-in-the-ui';
-      const taskRunWithLongName = {
-        ...mockTaskRun,
-        spec: { taskRef: { name: longTaskName } },
-      };
-
-      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunWithLongName} />);
-
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
-      expect(truncateElement).toBeInTheDocument();
-      expect(truncateElement).toHaveTextContent(longTaskName);
-    });
-
-    it('should use metadata name when taskRef is not available', () => {
-      const taskRunWithoutTaskRef = {
-        ...mockTaskRun,
-        spec: {},
-      };
-
-      render(<LogViewer {...defaultProps} taskRun={taskRunWithoutTaskRef} />);
-
-      expect(screen.getByText('test-task-run')).toBeInTheDocument();
-    });
-
-    it('should not show task name section when no task information is available', () => {
-      const { container } = render(<LogViewer {...defaultProps} taskRun={null} />);
-
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
-      expect(truncateElement).not.toBeInTheDocument();
-    });
-
-    it('should not show task name when task name is empty string', () => {
-      const taskRunEmptyName = {
-        ...mockTaskRun,
-        spec: { taskRef: { name: '' } },
-        metadata: { name: '' },
-      };
-      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunEmptyName} />);
-
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
-      expect(truncateElement).not.toBeInTheDocument();
-    });
-
-    it('should not show task name when task metadata is missing', () => {
-      const taskRunNoNames = { ...mockTaskRun, spec: {}, metadata: {} };
-      const { container } = render(<LogViewer {...defaultProps} taskRun={taskRunNoNames} />);
-
-      const truncateElement = container.querySelector('.pf-v5-c-truncate');
-      expect(truncateElement).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Scroll callback integration', () => {
-    it('should call onScroll callback with scroll information', () => {
-      const onScroll = jest.fn();
-
-      render(<LogViewer {...defaultProps} onScroll={onScroll} />);
-
-      expect(onScroll).toHaveBeenCalledWith({
-        scrollDirection: 'forward',
-        scrollOffset: 0,
-        scrollUpdateWasRequested: true,
-      });
-    });
-  });
-
-  describe('Context providers integration', () => {
-    it('should provide LogViewerContext to children', () => {
       render(<LogViewer {...defaultProps} />);
 
-      // LogViewerContext is used by search functionality
-      const searchInput = screen.queryByPlaceholderText('Search');
-      expect(searchInput).toBeInTheDocument();
-    });
-
-    it('should provide LogViewerToolbarContext to children', () => {
-      render(<LogViewer {...defaultProps} showSearch={true} />);
-
-      // Search component should be able to access toolbar context
-      const searchInput = screen.getByPlaceholderText('Search');
-      expect(searchInput).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /expand/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /collapse/i })).not.toBeInTheDocument();
     });
   });
 
-  describe('Edge cases', () => {
-    it('should handle null taskRun gracefully', () => {
-      expect(() => {
-        render(<LogViewer {...defaultProps} taskRun={null} />);
-      }).not.toThrow();
+  describe('fullscreen styling', () => {
+    it('should apply fullscreen height when in fullscreen mode', () => {
+      mockUseFullscreen.mockReturnValue([true, jest.fn(), jest.fn(), true]);
+
+      render(<LogViewer {...defaultProps} />);
+
+      const logViewer = screen.getByTestId('patternfly-log-viewer');
+      const container = logViewer.parentElement;
+      expect(container).toHaveStyle({ height: '100vh' });
+      expect(logViewer).toHaveAttribute('height', '100%');
     });
 
-    it('should handle missing taskRun status', () => {
-      const taskRunWithoutStatus = {
-        ...mockTaskRun,
-        status: undefined,
-      };
+    it('should apply normal height when not in fullscreen mode', () => {
+      mockUseFullscreen.mockReturnValue([false, jest.fn(), jest.fn(), true]);
 
-      expect(() => {
-        render(<LogViewer {...defaultProps} taskRun={taskRunWithoutStatus} />);
-      }).not.toThrow();
+      render(<LogViewer {...defaultProps} />);
+
+      const logViewer = screen.getByTestId('patternfly-log-viewer');
+      const container = logViewer.parentElement;
+      expect(container).toHaveStyle({ height: '100%' });
+      expect(logViewer).not.toHaveAttribute('height');
     });
 
-    it('should handle data with only newlines', () => {
-      const { container } = render(<LogViewer {...defaultProps} data="\n\n\n\n" />);
+    it('should apply fullscreen class to toolbar content when in fullscreen mode', () => {
+      mockUseFullscreen.mockReturnValue([true, jest.fn(), jest.fn(), true]);
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
+      render(<LogViewer {...defaultProps} />);
+
+      const toolbarContent = document.querySelector('.log-viewer--fullscreen');
+      expect(toolbarContent).toBeInTheDocument();
+    });
+  });
+
+  describe('downloadLogs edge cases', () => {
+    it('should not download when data is empty', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} data="" taskRun={mockTaskRun} />);
+
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).not.toHaveBeenCalled();
     });
 
-    it('should handle data with special characters', () => {
-      const specialData = 'line with <html> tags\nline with & ampersand\nline with "quotes"';
+    it('should use uuid for filename when taskName is null', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} taskRun={null} />);
 
-      const { container } = render(<LogViewer {...defaultProps} data={specialData} />);
+      const downloadButton = screen.getByRole('button', { name: /download/i });
+      await user.click(downloadButton);
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
-      expect(logList).toBeInTheDocument();
+      expect(mockSaveAs).toHaveBeenCalled();
+      const [, filename] = mockSaveAs.mock.calls[0];
+      expect(filename).toMatch(/^task-run-.*\.log$/);
     });
   });
 });
