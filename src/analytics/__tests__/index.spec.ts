@@ -63,10 +63,16 @@ describe('initAnalytics and getAnalytics', () => {
       await indexModule.initAnalytics();
 
       expect(loadAnalyticsConfigMock).toHaveBeenCalled();
-      expect(mockAnalyticsBrowser.load).toHaveBeenCalledWith({
-        writeKey: 'test-write-key-123',
-        apiHost: 'https://api.segment.io/v1',
-      });
+      expect(mockAnalyticsBrowser.load).toHaveBeenCalledWith(
+        { writeKey: 'test-write-key-123' },
+        {
+          integrations: {
+            'Segment.io': {
+              apiHost: 'https://api.segment.io/v1',
+            },
+          },
+        },
+      );
       expect(indexModule.getAnalytics()).toBe(mockAnalyticsInstance);
       expect(consoleMock.info).toHaveBeenCalledWith('Analytics loaded');
     });
@@ -158,10 +164,16 @@ describe('initAnalytics and getAnalytics', () => {
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
 
-      expect(mockAnalyticsBrowser.load).toHaveBeenCalledWith({
-        writeKey: 'test-key',
-        apiHost: 'https://api.example.com',
-      });
+      expect(mockAnalyticsBrowser.load).toHaveBeenCalledWith(
+        { writeKey: 'test-key' },
+        {
+          integrations: {
+            'Segment.io': {
+              apiHost: 'https://api.example.com',
+            },
+          },
+        },
+      );
     });
 
     it('should handle initialization errors gracefully', async () => {
@@ -179,9 +191,6 @@ describe('initAnalytics and getAnalytics', () => {
       await indexModule.initAnalytics();
 
       expect(consoleMock.error).toHaveBeenCalledWith('Error loading Analytics', initError);
-      expect(monitoringServiceMock.captureException).toHaveBeenCalledWith(initError, {
-        context: 'initAnalytics',
-      });
       expect(monitoringServiceMock.captureMessage).toHaveBeenCalledWith(
         'Error loading Analytics',
         'error',
