@@ -4,7 +4,8 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
-import { initMonitoring } from '~/monitoring';
+import { initAnalytics } from '~/analytics';
+import { initMonitoring, monitoringService } from '~/monitoring';
 import { AuthProvider } from './auth/AuthContext';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
@@ -47,22 +48,27 @@ const App = () => {
 };
 
 void (async () => {
-  try {
-    await initMonitoring();
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Failed to initialize monitoring', error);
-  } finally {
-    ReactDOM.createRoot(document.getElementById('root')).render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </React.StrictMode>,
-    );
-  }
+  const results = await Promise.allSettled([initMonitoring(), initAnalytics()]);
+  results.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      const name = i === 0 ? 'monitoring' : 'analytics';
+      // eslint-disable-next-line no-console
+      console.error(`Failed to initialize ${name}`, result.reason);
+      monitoringService?.captureException(result.reason, {
+        context: i === 0 ? 'initMonitoring' : 'initAnalytics',
+      });
+    }
+  });
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>,
+  );
 })();
