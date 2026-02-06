@@ -87,7 +87,7 @@ export const COMMON_COLUMN_CONFIGS: Record<string, ColumnConfig> = {
   namespace: createColumnConfig(12, 10, 4),
   component: createColumnConfig(15, 12, 2),
   snapshot: createColumnConfig(15, 12, 3),
-  reference: createColumnConfig(15, 12, 4),
+  reference: createColumnConfig(10, 8, 4),
   vulnerabilities: createColumnConfig(15, 12, 3),
   branch: createColumnConfig(15, 10, 2),
   byUser: createColumnConfig(12, 10, 4),
