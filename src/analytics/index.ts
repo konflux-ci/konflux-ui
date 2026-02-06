@@ -21,7 +21,8 @@ export async function initAnalytics(): Promise<void> {
   const config = loadAnalyticsConfig();
 
   const writeKey = config.writeKey?.trim();
-  if (!config.enabled || !writeKey) {
+  const apiHost = config.apiUrl?.trim();
+  if (!config.enabled || !writeKey || !apiHost) {
     return;
   }
 
@@ -29,12 +30,12 @@ export async function initAnalytics(): Promise<void> {
     const { AnalyticsBrowser } = await import(
       '@segment/analytics-next' /* webpackChunkName: "segment-analytics" */
     );
+
     const loadOptions: { writeKey: string; apiHost?: string } = {
       writeKey,
+      apiHost,
     };
-    if (config.apiUrl?.trim()) {
-      loadOptions.apiHost = config.apiUrl.trim();
-    }
+
     const [analytics] = await AnalyticsBrowser.load(loadOptions);
     analyticsInstance = analytics;
     // eslint-disable-next-line no-console
