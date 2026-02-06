@@ -13,6 +13,7 @@ const tipText = {
   [GitProvider.GITHUB]: 'Open in GitHub',
   [GitProvider.GITLAB]: 'Open in GitLab',
   [GitProvider.BITBUCKET]: 'Open in BitBucket',
+  [GitProvider.FORGEJO]: 'Open in Forgejo',
 };
 const providerIcon = {
   [GitProvider.GITHUB]: <GithubIcon data-test="git-hub-icon" />,
