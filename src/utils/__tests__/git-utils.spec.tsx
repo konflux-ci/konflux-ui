@@ -41,6 +41,11 @@ describe('git-utils', () => {
       expect(result).toBe('/-/tree/org/test');
     });
 
+    it('should return Forgejo path for forgejo.org domains', () => {
+      const result = getGitPath('v14.next.forgejo.org', 'main', 'docs');
+      expect(result).toBe('/src/branch/main/docs');
+    });
+
     it('should return empty Git path for unknown source', () => {
       const result = getGitPath('customrepo.com', 'org', 'test');
       expect(result).toBe('');

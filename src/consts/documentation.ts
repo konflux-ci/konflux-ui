@@ -1,7 +1,7 @@
 export const LEARN_MORE_ABOUT_NUDGING =
   'https://konflux-ci.dev/docs/building/component-nudges/#customizing-nudging-prs';
-export const LEARN_MORE_GITLAB_URL =
-  'https://konflux-ci.dev/docs/building/creating-gitlab/';
+export const LEARN_MORE_GITLAB_OR_FORGEJO_URL =
+  'https://konflux-ci.dev/docs/building/secrets/creating-scm-secrets/';
 export const LEARN_MORE_SNAPSHOTS = 'https://konflux-ci.dev/docs/testing/integration/snapshots/';
 export const CREATING_SOURCE_CONTROL_SECRETS =
   'https://konflux-ci.dev/docs/building/creating-scm-secrets/';
