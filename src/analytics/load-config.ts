@@ -2,7 +2,7 @@ import { parseBoolean } from '~/utils/common-utils';
 import { AnalyticsConfig } from './types';
 
 /**
- * Default monitoring configuration (disabled by default)
+ * Default analytics configuration (disabled by default)
  */
 const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   enabled: false,

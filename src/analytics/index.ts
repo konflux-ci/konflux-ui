@@ -31,19 +31,25 @@ export async function initAnalytics(): Promise<void> {
       '@segment/analytics-next' /* webpackChunkName: "segment-analytics" */
     );
 
-    const loadOptions: { writeKey: string; apiHost?: string } = {
-      writeKey,
-      apiHost,
-    };
+    const [analytics] = await AnalyticsBrowser.load(
+      {
+        writeKey,
+      },
+      {
+        integrations: {
+          'Segment.io': {
+            apiHost,
+          },
+        },
+      },
+    );
 
-    const [analytics] = await AnalyticsBrowser.load(loadOptions);
     analyticsInstance = analytics;
     // eslint-disable-next-line no-console
     console.info('Analytics loaded');
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error loading Analytics', error);
-    monitoringService?.captureException(error, { context: 'initAnalytics' });
     monitoringService?.captureMessage('Error loading Analytics', 'error', { error });
   }
 }
