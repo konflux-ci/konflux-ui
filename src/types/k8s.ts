@@ -58,6 +58,7 @@ export type K8sResourceCommon = K8sResourceIdentifier &
     };
     status: { [key: string]: unknown };
     data: { [key: string]: unknown };
+    source: ResourceSource;
   }>;
 
 export type OwnerReference = {
@@ -171,8 +172,3 @@ export enum ResourceSource {
   Cluster = 'cluster',
   Archive = 'archive',
 }
-
-export type ResourceWithSource<TResource extends K8sResourceCommon> = {
-  resource: TResource;
-  source: ResourceSource;
-};

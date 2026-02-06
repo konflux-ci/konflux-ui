@@ -24,7 +24,7 @@ export const SnapshotDropdown: React.FC<React.PropsWithChildren<SnapshotDropdown
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useSnapshotsForApplication(namespace, props.applicationName);
+  } = useSnapshotsForApplication(namespace, props.applicationName, true);
   const error = archiveError ?? clusterError;
   const [, , { setValue }] = useField<string>(props.name);
   const { values } = useFormikContext<TriggerReleaseFormValues>();

@@ -51,7 +51,7 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
 
   it('should return resource from cluster when cluster request succeeds', async () => {
     const mockResult = {
-      resource: mockResource,
+      ...mockResource,
       source: ResourceSource.Cluster,
     };
     mockK8sQueryGetResource.mockResolvedValue(mockResource);
@@ -66,7 +66,7 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
 
   it('should return resource from kubearchive when cluster returns 404', async () => {
     const mockResult = {
-      resource: mockResource,
+      ...mockResource,
       source: ResourceSource.Archive,
     };
     mockK8sQueryGetResource.mockRejectedValue(HttpError.fromCode(404));
@@ -157,7 +157,7 @@ describe('fetchResourceWithK8sAndKubeArchive', () => {
     mockIsKubeArchiveEnabled.mockReturnValue(false);
     mockK8sQueryGetResource.mockResolvedValue(mockResource);
     const mockResult = {
-      resource: mockResource,
+      ...mockResource,
       source: ResourceSource.Cluster,
     };
 

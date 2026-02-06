@@ -42,19 +42,20 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const [isOpen, setIsOpen] = React.useState(false);
-  const filterOptions = ['name', 'commit message'];
-  const [activeFilter, setActiveFilter] = React.useState(filterOptions[0]);
+  const [activeFilter, setActiveFilter] = React.useState('name');
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
-    'commit message': unparsedFilters['commit message']
-      ? (unparsedFilters['commit message'] as string)
-      : '',
+    commitMessage: unparsedFilters.commitMessage ? (unparsedFilters.commitMessage as string) : '',
     showMergedOnly: unparsedFilters.showMergedOnly
       ? (unparsedFilters.showMergedOnly as boolean)
       : false,
+    releasable: unparsedFilters.releasable
+      ? unparsedFilters.releasable === true || unparsedFilters.releasable === 'true'
+      : false,
   });
 
-  const { name: nameFilter, 'commit message': commitMessageFilter, showMergedOnly } = filters;
+  const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
+  const releasableFilter = filters.releasable ?? false;
 
   const {
     data: snapshots,
@@ -76,6 +77,11 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       },
     },
     SnapshotModel,
+    undefined,
+    undefined,
+    {
+      enableArchive: !releasableFilter,
+    },
   );
 
   const filteredSnapshots = React.useMemo(() => {
@@ -122,6 +128,8 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     return getErrorState(archiveError, !isLoading, 'snapshots');
   }
 
+  const isFiltered = nameFilter || releasableFilter;
+
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
       <Flex
@@ -141,7 +149,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
           <ExternalLink href={LEARN_MORE_SNAPSHOTS}>Learn more</ExternalLink>
         </Text>
       </TextContent>
-      {!snapshots || snapshots.length === 0 ? (
+      {(!snapshots || snapshots.length === 0) && !isFiltered ? (
         <AppEmptyState
           emptyStateImg={emptySnapshotImgUrl}
           title="No snapshots found"
@@ -179,11 +187,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
               onOpenChange={setIsOpen}
             >
               <SelectList>
-                {filterOptions.map((ft) => (
-                  <SelectOption key={ft} value={ft}>
-                    {capitalize(ft)}
-                  </SelectOption>
-                ))}
+                <SelectOption key={'name'} value={'name'}>
+                  Name
+                </SelectOption>
+                <SelectOption key={'commitMessage'} value={'commitMessage'}>
+                  Commit Message
+                </SelectOption>
               </SelectList>
             </Select>
 
@@ -204,6 +213,12 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 onChange={(_event, checked) =>
                   setFilters({ ...unparsedFilters, showMergedOnly: checked })
                 }
+              />
+              <Switch
+                id="releasable"
+                label="Show only releasable snapshots"
+                isChecked={releasableFilter}
+                onChange={(_event, checked) => setFilters({ ...filters, releasable: checked })}
               />
             </BaseTextFilterToolbar>
           </Flex>
