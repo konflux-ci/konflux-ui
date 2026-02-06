@@ -24,22 +24,14 @@
     position: relative;
     font-family: Menlo, Monaco, 'Courier New', monospace;
     max-height: 100% !important;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
   }
 
-  &__task-name {
-    min-width: 0;
-  }
-
-  &__content {
-    min-height: 0;
-    flex: 1;
-  }
-
   &__resume-stream-button-wrapper {
     position: absolute;
-    bottom: 0;
+    bottom: var(--pf-v5-global--spacer--md);
     left: 0;
     right: 0;
     z-index: 1000;
