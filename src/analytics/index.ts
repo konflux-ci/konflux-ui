@@ -39,6 +39,7 @@ export async function initAnalytics(): Promise<void> {
         integrations: {
           'Segment.io': {
             apiHost,
+            protocol: 'https',
           },
         },
       },
@@ -50,6 +51,6 @@ export async function initAnalytics(): Promise<void> {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error loading Analytics', error);
-    monitoringService?.captureMessage('Error loading Analytics', 'error', { error });
+    monitoringService?.captureException(error, { context: 'initAnalytics' });
   }
 }

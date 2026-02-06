@@ -25,7 +25,6 @@ jest.mock('../load-config', () => ({
 jest.mock('~/monitoring', () => ({
   monitoringService: {
     captureException: jest.fn(),
-    captureMessage: jest.fn(),
   },
 }));
 
@@ -34,7 +33,6 @@ describe('initAnalytics and getAnalytics', () => {
   let loadAnalyticsConfigMock: jest.Mock;
   let monitoringServiceMock: {
     captureException: jest.Mock;
-    captureMessage: jest.Mock;
   };
 
   beforeEach(() => {
@@ -69,6 +67,7 @@ describe('initAnalytics and getAnalytics', () => {
           integrations: {
             'Segment.io': {
               apiHost: 'https://api.segment.io/v1',
+              protocol: 'https',
             },
           },
         },
@@ -170,6 +169,7 @@ describe('initAnalytics and getAnalytics', () => {
           integrations: {
             'Segment.io': {
               apiHost: 'https://api.example.com',
+              protocol: 'https',
             },
           },
         },
@@ -191,11 +191,9 @@ describe('initAnalytics and getAnalytics', () => {
       await indexModule.initAnalytics();
 
       expect(consoleMock.error).toHaveBeenCalledWith('Error loading Analytics', initError);
-      expect(monitoringServiceMock.captureMessage).toHaveBeenCalledWith(
-        'Error loading Analytics',
-        'error',
-        { error: initError },
-      );
+      expect(monitoringServiceMock.captureException).toHaveBeenCalledWith(initError, {
+        context: 'initAnalytics',
+      });
       expect(indexModule.getAnalytics()).toBeUndefined();
     });
   });
