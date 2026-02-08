@@ -98,7 +98,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     if (!canPatchComponent || !canPatchSnapshot) {
       return {
         ...defaultEmptyAction,
-        disabledTooltip: "You don't have access to rerun",
+        disabledTooltip: "You don't have access to rerun !!",
       };
     }
 
