@@ -33,9 +33,7 @@ describe('useSnapshotActions', () => {
     expect(action.disabled).toBe(false);
     expect(action.disabledTooltip).toBeUndefined();
     expect(action.cta).toHaveProperty('href');
-    expect(typeof action.cta === 'object' && action.cta?.href).toContain(
-      mockSnapshot.metadata.name,
-    );
+    expect((action.cta as { href: string }).href).toContain(mockSnapshot.metadata.name);
   });
 
   it('should disable trigger release action for archived snapshot even when user has permissions', () => {

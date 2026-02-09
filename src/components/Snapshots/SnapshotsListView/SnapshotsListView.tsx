@@ -219,7 +219,9 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
                 id="releasable"
                 label="Show only releasable snapshots"
                 isChecked={releasableFilter}
-                onChange={(_event, checked) => setFilters({ ...filters, releasable: checked })}
+                onChange={(_event, checked) =>
+                  setFilters({ ...unparsedFilters, releasable: checked })
+                }
               />
             </BaseTextFilterToolbar>
           </Flex>
