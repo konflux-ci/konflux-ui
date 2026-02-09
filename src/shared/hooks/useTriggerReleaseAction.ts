@@ -26,12 +26,15 @@ const getReleasePlanTriggerUrl = (workspaceName: string, snapshotName?: string):
   })}?snapshot=${snapshotName}`;
 };
 
-const useTriggerReleaseAction = (snapshot?: Snapshot): TriggerReleaseActionReturnType => {
+const useTriggerReleaseAction = (
+  snapshot?: Snapshot,
+  source?: ResourceSource,
+): TriggerReleaseActionReturnType => {
   const navigate = useNavigate();
   const namespace = useNamespace();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
 
-  const isArchived = snapshot && snapshot.source !== ResourceSource.Cluster;
+  const isArchived = snapshot && source !== ResourceSource.Cluster;
   const canTriggerRelease = canCreateRelease && !isArchived;
 
   return {

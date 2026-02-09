@@ -50,7 +50,6 @@ interface TestResource extends K8sResourceCommon {
     uid?: string;
   };
   spec?: any;
-  source?: ResourceSource;
 }
 
 const mockModel: K8sModelCommon = {
@@ -210,17 +209,17 @@ describe('useK8sAndKarchResources', () => {
 
     expect(result.current.data).toHaveLength(3); // testResource1, testResource2, archiveResource (duplicateResource excluded)
 
-    // Check that cluster resources have Cluster source
+    // Check that cluster resources have Cluster source via getSource
     const resource1 = result.current.data.find((r) => r.metadata.name === 'resource-1');
     const resource2 = result.current.data.find((r) => r.metadata.name === 'resource-2');
     const archiveRes = result.current.data.find((r) => r.metadata.name === 'archive-resource');
 
     expect(resource1).toBeDefined();
-    expect(resource1?.source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(resource1)).toBe(ResourceSource.Cluster);
     expect(resource2).toBeDefined();
-    expect(resource2?.source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(resource2)).toBe(ResourceSource.Cluster);
     expect(archiveRes).toBeDefined();
-    expect(archiveRes?.source).toBe(ResourceSource.Archive);
+    expect(result.current.getSource(archiveRes)).toBe(ResourceSource.Archive);
 
     // Verify duplicateResource is not included
     expect(
@@ -269,7 +268,7 @@ describe('useK8sAndKarchResources', () => {
 
     expect(result.current.data).toHaveLength(1); // Only one resource should remain
     expect(result.current.data[0].metadata.name).toBe('resource-no-uid');
-    expect(result.current.data[0].source).toBe(ResourceSource.Cluster); // Cluster resource should take precedence
+    expect(result.current.getSource(result.current.data[0])).toBe(ResourceSource.Cluster); // Cluster resource should take precedence
   });
 
   it('should handle error states correctly', () => {
@@ -325,7 +324,7 @@ describe('useK8sAndKarchResources', () => {
     expect(result.current.hasError).toBe(true);
     expect(result.current.data).toHaveLength(1);
     expect(result.current.data[0].metadata.name).toBe('archive-resource');
-    expect(result.current.data[0].source).toBe(ResourceSource.Archive);
+    expect(result.current.getSource(result.current.data[0])).toBe(ResourceSource.Archive);
   });
 
   it('should pass through archive infinite query utilities', () => {
@@ -385,11 +384,11 @@ describe('useK8sAndKarchResources', () => {
     const archiveRes = result.current.data.find((r) => r.metadata.name === 'archive-resource');
 
     expect(resource1).toBeDefined();
-    expect(resource1?.source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(resource1)).toBe(ResourceSource.Cluster);
     expect(resource2).toBeDefined();
-    expect(resource2?.source).toBe(ResourceSource.Archive);
+    expect(result.current.getSource(resource2)).toBe(ResourceSource.Archive);
     expect(archiveRes).toBeDefined();
-    expect(archiveRes?.source).toBe(ResourceSource.Archive);
+    expect(result.current.getSource(archiveRes)).toBe(ResourceSource.Archive);
   });
 
   it('should return raw data for advanced use cases', () => {
@@ -519,10 +518,10 @@ describe('useK8sAndKarchResources', () => {
 
     expect(result.current.data).toHaveLength(1);
     expect(result.current.data[0].metadata.name).toBe('resource-1');
-    expect(result.current.data[0].source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(result.current.data[0])).toBe(ResourceSource.Cluster);
   });
 
-  it('should set source field correctly on resources', () => {
+  it('should return correct source via getSource for resources', () => {
     mockUseK8sWatchResource.mockReturnValue({
       data: [testResource1, testResource2],
       isLoading: false,
@@ -546,9 +545,9 @@ describe('useK8sAndKarchResources', () => {
     const resource2 = result.current.data.find((r) => r.metadata.name === 'resource-2');
     const archiveRes = result.current.data.find((r) => r.metadata.name === 'archive-resource');
 
-    expect(resource1?.source).toBe(ResourceSource.Cluster);
-    expect(resource2?.source).toBe(ResourceSource.Cluster);
-    expect(archiveRes?.source).toBe(ResourceSource.Archive);
+    expect(result.current.getSource(resource1)).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(resource2)).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(archiveRes)).toBe(ResourceSource.Archive);
   });
 
   it('should exclude archive data when enableArchive is false', () => {
@@ -580,9 +579,9 @@ describe('useK8sAndKarchResources', () => {
     const archiveRes = result.current.data.find((r) => r.metadata.name === 'archive-resource');
 
     expect(resource1).toBeDefined();
-    expect(resource1?.source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(resource1)).toBe(ResourceSource.Cluster);
     expect(resource2).toBeDefined();
-    expect(resource2?.source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(resource2)).toBe(ResourceSource.Cluster);
     expect(archiveRes).toBeUndefined();
   });
 
@@ -617,7 +616,7 @@ describe('useK8sAndKarchResources', () => {
     expect(resource1).toBeUndefined();
     expect(resource2).toBeUndefined();
     expect(archiveRes).toBeDefined();
-    expect(archiveRes?.source).toBe(ResourceSource.Archive);
+    expect(result.current.getSource(archiveRes)).toBe(ResourceSource.Archive);
   });
 
   it('should return empty array when both enableCluster and enableArchive are false', () => {
@@ -667,10 +666,9 @@ describe('useK8sAndKarchResources', () => {
       namespace: 'test-ns',
     });
 
-    expect(result1.current.data.find((r) => r.metadata.name === 'archive-resource')).toBeDefined();
-    expect(result1.current.data.find((r) => r.metadata.name === 'archive-resource')?.source).toBe(
-      ResourceSource.Archive,
-    );
+    const archiveRes1 = result1.current.data.find((r) => r.metadata.name === 'archive-resource');
+    expect(archiveRes1).toBeDefined();
+    expect(result1.current.getSource(archiveRes1)).toBe(ResourceSource.Archive);
 
     // Now disable archive - cached data should be excluded
     const { result: result2 } = renderHookWithQueryClient(
@@ -684,9 +682,72 @@ describe('useK8sAndKarchResources', () => {
     expect(
       result2.current.data.find((r) => r.metadata.name === 'archive-resource'),
     ).toBeUndefined();
-    expect(result2.current.data.find((r) => r.metadata.name === 'resource-1')).toBeDefined();
-    expect(result2.current.data.find((r) => r.metadata.name === 'resource-1')?.source).toBe(
-      ResourceSource.Cluster,
+    const clusterRes2 = result2.current.data.find((r) => r.metadata.name === 'resource-1');
+    expect(clusterRes2).toBeDefined();
+    expect(result2.current.getSource(clusterRes2)).toBe(ResourceSource.Cluster);
+  });
+
+  it('should return undefined from getSource for an unknown resource', () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [testResource1],
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: {
+        pages: [[archiveResource]],
+      },
+      isLoading: false,
+      error: null,
+    } as any);
+
+    const { result } = renderHookWithQueryClient({
+      groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+      namespace: 'test-ns',
+    });
+
+    const unknownResource: TestResource = {
+      apiVersion: 'v1',
+      kind: 'TestResource',
+      metadata: {
+        name: 'unknown-resource',
+        namespace: 'test-ns',
+        uid: 'uid-unknown',
+      },
+    };
+
+    expect(result.current.getSource(unknownResource)).toBeUndefined();
+  });
+
+  it('should pass enabled: false to underlying hooks when resourceInit is undefined', () => {
+    mockUseK8sWatchResource.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    renderHookWithQueryClient(undefined);
+
+    // Verify cluster query was called with enabled: false due to !!listResourceInit guard
+    expect(mockUseK8sWatchResource).toHaveBeenCalledWith(
+      undefined,
+      mockModel,
+      expect.objectContaining({ enabled: false }),
+      undefined,
+    );
+
+    // Verify archive query was called with enabled: false due to !!listResourceInit guard
+    expect(mockUseKubearchiveListResourceQuery).toHaveBeenCalledWith(
+      undefined,
+      mockModel,
+      expect.objectContaining({ enabled: false }),
     );
   });
 
@@ -721,7 +782,7 @@ describe('useK8sAndKarchResources', () => {
 
     const foundResource = result.current.data.find((r) => r.metadata.name === 'resource-no-uid');
     expect(foundResource).toBeDefined();
-    expect(foundResource?.source).toBe(ResourceSource.Cluster);
+    expect(result.current.getSource(foundResource)).toBe(ResourceSource.Cluster);
   });
 });
 

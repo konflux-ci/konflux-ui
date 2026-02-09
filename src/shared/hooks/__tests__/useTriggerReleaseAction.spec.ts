@@ -56,8 +56,9 @@ describe('useTriggerReleaseAction', () => {
   });
 
   it('returns enabled action when access is allowed and snapshot is not archived', () => {
-    const mockClusterSnapshot = { ...mockSnapshot, source: ResourceSource.Cluster };
-    const { result } = renderHook(() => useTriggerReleaseAction(mockClusterSnapshot));
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Cluster),
+    );
 
     expect(result.current).toEqual(
       expect.objectContaining({
@@ -83,10 +84,11 @@ describe('useTriggerReleaseAction', () => {
   });
 
   it('returns disabled action when access is denied and snapshot is not archived', () => {
-    const mockClusterSnapshot = { ...mockSnapshot, source: ResourceSource.Cluster };
     useAccessReviewForModelMock.mockReturnValue([false]);
 
-    const { result } = renderHook(() => useTriggerReleaseAction(mockClusterSnapshot));
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Cluster),
+    );
 
     expect(result.current).toEqual(
       expect.objectContaining({
@@ -97,10 +99,11 @@ describe('useTriggerReleaseAction', () => {
   });
 
   it('returns disabled action when access is allowed and snapshot is archived', () => {
-    const mockArchiveSnapshot = { ...mockSnapshot, source: ResourceSource.Archive };
     useAccessReviewForModelMock.mockReturnValue([true]);
 
-    const { result } = renderHook(() => useTriggerReleaseAction(mockArchiveSnapshot));
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Archive),
+    );
 
     expect(result.current).toEqual(
       expect.objectContaining({
@@ -111,15 +114,27 @@ describe('useTriggerReleaseAction', () => {
   });
 
   it('returns disabled action when access is denied and snapshot is archived', () => {
-    const mockArchiveSnapshot = { ...mockSnapshot, source: ResourceSource.Archive };
     useAccessReviewForModelMock.mockReturnValue([false]);
 
-    const { result } = renderHook(() => useTriggerReleaseAction(mockArchiveSnapshot));
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Archive),
+    );
 
     expect(result.current).toEqual(
       expect.objectContaining({
         isDisabled: true,
         disabledTooltip: "You don't have access to trigger releases",
+      }),
+    );
+  });
+
+  it('returns disabled action when access is allowed and snapshot is provided but source is undefined', () => {
+    const { result } = renderHook(() => useTriggerReleaseAction(mockSnapshot, undefined));
+
+    expect(result.current).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot trigger release from archived snapshot',
       }),
     );
   });

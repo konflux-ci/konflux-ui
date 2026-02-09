@@ -75,6 +75,7 @@ describe('SnapshotsListView - Column Headers', () => {
   it('should display all expected column headers correctly', () => {
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
       isLoading: false,
       hasError: false,
     });
@@ -99,12 +100,16 @@ describe('SnapshotsListView - Column Headers', () => {
     const clusterSnapshot = {
       ...mockSnapshots[0],
       metadata: { ...mockSnapshots[0].metadata, name: 'cluster-snapshot', uid: 'uid-cluster' },
-      source: ResourceSource.Cluster,
     };
     const archiveSnapshot = {
       ...mockSnapshots[0],
       metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
-      source: ResourceSource.Archive,
+    };
+
+    const mockGetSource = (resource) => {
+      if (resource.metadata?.uid === 'uid-cluster') return ResourceSource.Cluster;
+      if (resource.metadata?.uid === 'uid-archive') return ResourceSource.Archive;
+      return undefined;
     };
 
     useMockSnapshots.mockImplementation(
@@ -113,6 +118,7 @@ describe('SnapshotsListView - Column Headers', () => {
 
         return {
           data: enableArchive ? [clusterSnapshot, archiveSnapshot] : [clusterSnapshot],
+          getSource: mockGetSource,
           isLoading: false,
           hasError: false,
         };
@@ -156,7 +162,6 @@ describe('SnapshotsListView - Column Headers', () => {
     const archiveSnapshot = {
       ...mockSnapshots[0],
       metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
-      source: ResourceSource.Archive,
     };
 
     useMockSnapshots.mockImplementation(
@@ -165,6 +170,7 @@ describe('SnapshotsListView - Column Headers', () => {
 
         return {
           data: enableArchive ? [archiveSnapshot] : [],
+          getSource: () => ResourceSource.Archive,
           isLoading: false,
           hasError: false,
         };

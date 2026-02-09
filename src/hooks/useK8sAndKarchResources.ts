@@ -24,6 +24,9 @@ export interface K8sAndKarchResourcesResult<T extends K8sResourceCommon> {
   // Combined data (cluster + archive, deduplicated)
   data: T[];
 
+  // Source lookup
+  getSource: (resource: K8sResourceCommon) => ResourceSource | undefined;
+
   // Separate loading states
   clusterLoading: boolean;
   archiveLoading: boolean;
@@ -87,8 +90,7 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
       queryOptions?.enabled !== false,
   });
 
-  // deduplicated data
-  const combinedData = React.useMemo(() => {
+  const { combinedData, getSource } = React.useMemo(() => {
     const clusterData = clusterQuery.data || [];
     const archivePages = archiveQuery.data?.pages || [];
     const archiveData = archivePages.flat();
@@ -96,27 +98,32 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
     const shouldIncludeArchive = queryControl?.enableArchive !== false;
 
     const combined: T[] = [];
-    const existingIds = new Set<string>();
+    const sourceMap = new Map<string, ResourceSource>();
 
     if (shouldIncludeCluster) {
       clusterData.forEach((item) => {
         const id = getResourceId(item);
-        existingIds.add(id);
-        combined.push({ ...item, source: ResourceSource.Cluster });
+        sourceMap.set(id, ResourceSource.Cluster);
+        combined.push(item);
       });
     }
 
     if (shouldIncludeArchive) {
       archiveData.forEach((item) => {
         const id = getResourceId(item);
-        if (!existingIds.has(id)) {
-          existingIds.add(id);
-          combined.push({ ...item, source: ResourceSource.Archive });
+        if (!sourceMap.has(id)) {
+          sourceMap.set(id, ResourceSource.Archive);
+          combined.push(item);
         }
       });
     }
 
-    return combined;
+    const getSourceFn = (resource: K8sResourceCommon): ResourceSource | undefined => {
+      const id = getResourceId(resource);
+      return sourceMap.get(id);
+    };
+
+    return { combinedData: combined, getSource: getSourceFn };
   }, [
     clusterQuery.data,
     archiveQuery.data?.pages,
@@ -133,6 +140,9 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
     return {
       // Combined data
       data: combinedData,
+
+      // Source lookup
+      getSource,
 
       // Separate loading states
       clusterLoading,
@@ -155,6 +165,7 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
     };
   }, [
     combinedData,
+    getSource,
     clusterQuery.isLoading,
     clusterQuery.error,
     clusterQuery.data,

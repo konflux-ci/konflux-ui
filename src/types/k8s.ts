@@ -58,7 +58,6 @@ export type K8sResourceCommon = K8sResourceIdentifier &
     };
     status: { [key: string]: unknown };
     data: { [key: string]: unknown };
-    source: ResourceSource;
   }>;
 
 export type OwnerReference = {

@@ -143,6 +143,9 @@ describe('SnapshotDropdown', () => {
       targets: { application: 'app' },
     });
 
+    // Verify useSnapshotsForApplication is called with releasable=true
+    expect(useSnapshotsMock).toHaveBeenCalledWith(expect.anything(), 'app', true);
+
     await act(() => fireEvent.click(screen.getByTestId('dropdown-toggle')));
 
     await waitFor(() => {

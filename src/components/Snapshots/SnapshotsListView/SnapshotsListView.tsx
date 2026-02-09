@@ -59,6 +59,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
   const {
     data: snapshots,
+    getSource,
     isLoading,
     clusterError,
     archiveError,
@@ -128,7 +129,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
     return getErrorState(archiveError, !isLoading, 'snapshots');
   }
 
-  const isFiltered = nameFilter || releasableFilter;
+  const isFiltered = nameFilter || releasableFilter || commitMessageFilter || showMergedOnly;
 
   return (
     <PageSection padding={{ default: 'noPadding' }} variant={PageSectionVariants.light} isFilled>
@@ -229,6 +230,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
             <SnapshotsList
               snapshots={filteredSnapshots}
               applicationName={applicationName}
+              getSource={getSource}
               infiniteLoadingProps={{ hasNextPage, isFetchingNextPage, fetchNextPage }}
             />
           )}

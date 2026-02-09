@@ -15,8 +15,6 @@ jest.mock('~/shared/providers/Namespace', () => ({
 
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const useNamespaceMock = useNamespace as jest.Mock;
-const mockClusterSnapshot = { ...mockSnapshot, source: ResourceSource.Cluster };
-const mockArchiveSnapshot = { ...mockSnapshot, source: ResourceSource.Archive };
 
 describe('useSnapshotActions', () => {
   beforeEach(() => {
@@ -26,7 +24,7 @@ describe('useSnapshotActions', () => {
   });
 
   it('should enable trigger release action for cluster snapshot when user has permissions', () => {
-    const { result } = renderHook(() => useSnapshotActions(mockClusterSnapshot));
+    const { result } = renderHook(() => useSnapshotActions(mockSnapshot, ResourceSource.Cluster));
 
     expect(result.current).toHaveLength(1);
     const action = result.current[0];
@@ -41,7 +39,7 @@ describe('useSnapshotActions', () => {
   });
 
   it('should disable trigger release action for archived snapshot even when user has permissions', () => {
-    const { result } = renderHook(() => useSnapshotActions(mockArchiveSnapshot));
+    const { result } = renderHook(() => useSnapshotActions(mockSnapshot, ResourceSource.Archive));
 
     expect(result.current).toHaveLength(1);
     const action = result.current[0];
@@ -55,7 +53,7 @@ describe('useSnapshotActions', () => {
   it('should disable trigger release action when user lacks permissions', () => {
     useAccessReviewForModelMock.mockReturnValue([false, false]);
 
-    const { result } = renderHook(() => useSnapshotActions(mockClusterSnapshot));
+    const { result } = renderHook(() => useSnapshotActions(mockSnapshot, ResourceSource.Cluster));
 
     expect(result.current).toHaveLength(1);
     const action = result.current[0];
@@ -64,15 +62,30 @@ describe('useSnapshotActions', () => {
   });
 
   it('should not set href for archived snapshots', () => {
-    const { result } = renderHook(() => useSnapshotActions(mockArchiveSnapshot));
+    const { result } = renderHook(() => useSnapshotActions(mockSnapshot, ResourceSource.Archive));
 
     const action = result.current[0];
     expect(typeof action.cta).toBe('function');
     expect(action.cta).not.toHaveProperty('href');
   });
 
+  it('should disable trigger release action when source is undefined (defensive)', () => {
+    const { result } = renderHook(() => useSnapshotActions(mockSnapshot, undefined));
+
+    expect(result.current).toHaveLength(1);
+    const action = result.current[0];
+    expect(action.disabled).toBe(true);
+    expect(action.disabledTooltip).toBe('Cannot trigger release from archived snapshot');
+  });
+
+  it('should return empty actions when snapshot is null', () => {
+    const { result } = renderHook(() => useSnapshotActions(null, ResourceSource.Cluster));
+
+    expect(result.current).toEqual([]);
+  });
+
   it('should include correct analytics data', () => {
-    const { result } = renderHook(() => useSnapshotActions(mockClusterSnapshot));
+    const { result } = renderHook(() => useSnapshotActions(mockSnapshot, ResourceSource.Cluster));
 
     const action = result.current[0];
     expect(action.analytics).toEqual({

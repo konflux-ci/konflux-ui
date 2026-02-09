@@ -7,7 +7,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
-export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
+export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource): Action[] => {
   const namespace = useNamespace();
   const [canCreateRelease] = useAccessReviewForModel(ReleaseModel, 'create');
 
@@ -16,7 +16,7 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
       return [];
     }
 
-    const isArchived = snapshot.source !== ResourceSource.Cluster;
+    const isArchived = source !== ResourceSource.Cluster;
     const canTriggerRelease = canCreateRelease && !isArchived;
 
     return [
@@ -44,7 +44,7 @@ export const useSnapshotActions = (snapshot: Snapshot): Action[] => {
         },
       },
     ];
-  }, [snapshot, canCreateRelease, namespace]);
+  }, [snapshot, canCreateRelease, namespace, source]);
 
   return actions;
 };
