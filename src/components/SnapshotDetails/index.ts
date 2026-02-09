@@ -13,7 +13,7 @@ export const snapshotDetailsViewLoader = createLoaderWithAccessCheck(
         ns,
         name: params[RouterParams.snapshotName],
       },
-    }).then((resource) => resource);
+    }).then((result) => result.resource);
   },
   { model: SnapshotModel, verb: 'get' },
 );

@@ -65,7 +65,7 @@ const getOrderedStepsFromPod = (ns: string, name?: string): Promise<OrderedSteps
     .then((res) => {
       const isKubearchiveEnabled = FeatureFlagsStore.isOn('kubearchive-logs');
       // Legacy option to support getting logs from Tekton
-      if (res?.source === ResourceSource.Archive && !isKubearchiveEnabled) {
+      if (res.source === ResourceSource.Archive && !isKubearchiveEnabled) {
         return {
           stepsList: [],
           source: ResourceSource.Archive,
@@ -74,8 +74,8 @@ const getOrderedStepsFromPod = (ns: string, name?: string): Promise<OrderedSteps
 
       return {
         stepsList: getSortedContainerStatus(
-          res.spec.containers ?? [],
-          res.status?.containerStatuses ?? [],
+          res.resource.spec.containers ?? [],
+          res.resource.status?.containerStatuses ?? [],
         ),
         source: res.source,
       };

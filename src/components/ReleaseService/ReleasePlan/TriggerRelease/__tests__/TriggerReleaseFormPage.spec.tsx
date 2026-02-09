@@ -1,6 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react';
 import * as yup from 'yup';
-import { ResourceSource } from '~/types/k8s';
 import { createK8sWatchResourceMock, namespaceRenderer } from '../../../../../utils/test-utils';
 import { createRelease } from '../form-utils';
 import { TriggerReleaseFormPage } from '../TriggerReleaseFormPage';
@@ -52,11 +51,7 @@ describe('TriggerReleaseFormPage', () => {
       [{ metadata: { name: 'rp1' }, spec: { application: 'app1' } }],
       true,
     ]);
-    triggerReleasePlanMock.mockResolvedValue({
-      metadata: { name: 'newRelease' },
-      spec: {},
-      source: ResourceSource.Cluster,
-    });
+    triggerReleasePlanMock.mockResolvedValue({ metadata: { name: 'newRelease' }, spec: {} });
     namespaceRenderer(<TriggerReleaseFormPage />, 'test-ns');
 
     await act(() => fireEvent.click(screen.getByRole('button', { name: 'Submit' })));

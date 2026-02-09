@@ -322,14 +322,16 @@ describe('logs-utils', () => {
       const taskRuns = [mockTaskRun];
 
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [{ name: 'step-test' }],
-        },
-        status: {
-          containerStatuses: [mockContainerStatus],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [{ name: 'step-test' }],
+          },
+          status: {
+            containerStatuses: [mockContainerStatus],
+          },
         },
         source: ResourceSource.Cluster,
       });
@@ -380,14 +382,16 @@ describe('logs-utils', () => {
       };
 
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [{ name: 'step-waiting' }, { name: 'step-terminated' }],
-        },
-        status: {
-          containerStatuses: [mockWaitingContainer, mockTerminatedContainer],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [{ name: 'step-waiting' }, { name: 'step-terminated' }],
+          },
+          status: {
+            containerStatuses: [mockWaitingContainer, mockTerminatedContainer],
+          },
         },
         source: ResourceSource.Cluster,
       });
@@ -422,14 +426,16 @@ describe('logs-utils', () => {
       const taskRuns = [mockTaskRun];
 
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [{ name: 'step-test' }],
-        },
-        status: {
-          containerStatuses: [mockContainerStatus],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [{ name: 'step-test' }],
+          },
+          status: {
+            containerStatuses: [mockContainerStatus],
+          },
         },
         source: ResourceSource.Cluster,
       });
@@ -468,14 +474,16 @@ describe('logs-utils', () => {
 
       // When kubearchive is disabled and source is Archive, stepsList should be empty
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [],
-        },
-        status: {
-          containerStatuses: [],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [],
+          },
+          status: {
+            containerStatuses: [],
+          },
         },
         source: ResourceSource.Archive,
       });
@@ -528,14 +536,16 @@ describe('logs-utils', () => {
 
       // When kubearchive is enabled and source is Archive, should have steps and use kubearchive prefix
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [{ name: 'step-test' }],
-        },
-        status: {
-          containerStatuses: [mockContainerStatus],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [{ name: 'step-test' }],
+          },
+          status: {
+            containerStatuses: [mockContainerStatus],
+          },
         },
         source: ResourceSource.Archive,
       });
@@ -568,14 +578,16 @@ describe('logs-utils', () => {
 
       // Pod with no containers should result in empty steps, triggering tekton path
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [], // No containers
-        },
-        status: {
-          containerStatuses: [],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [], // No containers
+          },
+          status: {
+            containerStatuses: [],
+          },
         },
         source: ResourceSource.Cluster,
       });
@@ -603,14 +615,16 @@ describe('logs-utils', () => {
       const taskRuns = [mockTaskRun];
 
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [],
-        },
-        status: {
-          containerStatuses: [],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [],
+          },
+          status: {
+            containerStatuses: [],
+          },
         },
         source: ResourceSource.Archive,
       });
@@ -638,14 +652,16 @@ describe('logs-utils', () => {
       const taskRuns = [mockTaskRun];
 
       mockFetchResourceWithK8sAndKubeArchive.mockResolvedValue({
-        apiVersion: 'v1',
-        kind: 'Pod',
-        metadata: { name: 'test-pod' },
-        spec: {
-          containers: [{ name: 'step-test' }],
-        },
-        status: {
-          containerStatuses: [mockContainerStatus],
+        resource: {
+          apiVersion: 'v1',
+          kind: 'Pod',
+          metadata: { name: 'test-pod' },
+          spec: {
+            containers: [{ name: 'step-test' }],
+          },
+          status: {
+            containerStatuses: [mockContainerStatus],
+          },
         },
         source: ResourceSource.Cluster,
       });

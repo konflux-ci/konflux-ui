@@ -67,11 +67,11 @@ const QueryRunWithKubearchive = curry(
     namespace: string,
     name: string,
   ): Promise<TResource> => {
-    const resource = await fetchResourceWithK8sAndKubeArchive<TResource>(
+    const result = await fetchResourceWithK8sAndKubeArchive<TResource>(
       { model, queryOptions: { ns: namespace, name } },
       { retry: false },
     );
-    return resource;
+    return result.resource;
   },
 );
 

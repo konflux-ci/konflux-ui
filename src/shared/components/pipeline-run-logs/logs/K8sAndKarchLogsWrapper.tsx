@@ -35,6 +35,7 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
 
   const {
     data: obj,
+    source,
     isLoading,
     fetchError,
   } = useK8sAndKarchResource<PodKind>(resourceInit, LOGS_QUERY_OPTIONS, true);
@@ -58,7 +59,7 @@ const K8sAndKarchLogWrapper: React.FC<React.PropsWithChildren<K8sAndKarchLogWrap
       resource={obj}
       onDownloadAll={onDownloadAll}
       downloadAllLabel={downloadAllLabel}
-      source={obj?.source}
+      source={source}
     />
   );
 };

@@ -22,7 +22,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
   const [releasePlans, releasePlansLoaded, releasePlansError] = useReleasePlans(namespace);
 
   // Fetch snapshot details to get the application name
-  const [snapshotDetails, snapshotLoaded] = useSnapshot(
+  const [snapshotDetails, snapshotLoaded, , , , source] = useSnapshot(
     snapshotName ? namespace : undefined,
     snapshotName || '',
   );
@@ -36,7 +36,7 @@ export const TriggerReleaseFormPage: React.FC = () => {
     );
   }
 
-  const snapshot = snapshotDetails?.source === ResourceSource.Cluster ? snapshotDetails : null;
+  const snapshot = source === ResourceSource.Cluster ? snapshotDetails : null;
 
   if (releasePlansError) {
     return getErrorState(releasePlansError, releasePlansLoaded, 'release plans');

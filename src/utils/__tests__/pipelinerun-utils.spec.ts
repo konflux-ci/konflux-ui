@@ -17,11 +17,11 @@ describe('pipelinerun-utils', () => {
 
   describe('QueryPipelineRunWithKubearchive', () => {
     it('should return pipeline run from cluster when available', async () => {
-      const mockPipelineRun = {
-        metadata: { name: 'test-pipeline-run' },
+      const mockPipelineRun = { metadata: { name: 'test-pipeline-run' } } as PipelineRunKind;
+      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue({
+        resource: mockPipelineRun,
         source: ResourceSource.Cluster,
-      } as PipelineRunKind;
-      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue(mockPipelineRun);
+      });
 
       const result = await QueryPipelineRunWithKubearchive('test-ns', 'test-pipeline-run');
 
@@ -33,11 +33,11 @@ describe('pipelinerun-utils', () => {
     });
 
     it('should return pipeline run from archive when cluster returns 404', async () => {
-      const mockPipelineRun = {
-        metadata: { name: 'test-pipeline-run' },
+      const mockPipelineRun = { metadata: { name: 'test-pipeline-run' } } as PipelineRunKind;
+      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue({
+        resource: mockPipelineRun,
         source: ResourceSource.Archive,
-      } as PipelineRunKind;
-      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue(mockPipelineRun);
+      });
 
       const result = await QueryPipelineRunWithKubearchive('test-ns', 'test-pipeline-run');
 
@@ -79,11 +79,11 @@ describe('pipelinerun-utils', () => {
 
   describe('QueryTaskRunWithKubearchive', () => {
     it('should return task run from cluster when available', async () => {
-      const mockTaskRun = {
-        metadata: { name: 'test-task-run' },
+      const mockTaskRun = { metadata: { name: 'test-task-run' } } as TaskRunKind;
+      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue({
+        resource: mockTaskRun,
         source: ResourceSource.Cluster,
-      } as TaskRunKind;
-      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue(mockTaskRun);
+      });
 
       const result = await QueryTaskRunWithKubearchive('test-ns', 'test-task-run');
 
@@ -95,11 +95,11 @@ describe('pipelinerun-utils', () => {
     });
 
     it('should return task run from archive when cluster returns 404', async () => {
-      const mockTaskRun = {
-        metadata: { name: 'test-task-run' },
+      const mockTaskRun = { metadata: { name: 'test-task-run' } } as TaskRunKind;
+      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue({
+        resource: mockTaskRun,
         source: ResourceSource.Archive,
-      } as TaskRunKind;
-      fetchResourceWithK8sAndKubeArchiveMock.mockResolvedValue(mockTaskRun);
+      });
 
       const result = await QueryTaskRunWithKubearchive('test-ns', 'test-task-run');
 
