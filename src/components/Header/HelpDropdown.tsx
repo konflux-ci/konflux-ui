@@ -14,6 +14,7 @@ import {
 } from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
+import { createFeedbackModal } from '../FeedbackSection/FeedbackModal';
 import { useModalLauncher } from '../modal/ModalProvider';
 import { createAboutModal } from './AboutModal';
 
@@ -29,6 +30,11 @@ export const HelpDropdown: React.FC = () => {
   const handleAboutClick = () => {
     setIsOpen(false);
     showModal(createAboutModal());
+  };
+
+  const handleFeedbackClick = () => {
+    setIsOpen(false);
+    showModal(createFeedbackModal());
   };
 
   return (
@@ -57,6 +63,13 @@ export const HelpDropdown: React.FC = () => {
             </DropdownItem>
             <DropdownItem key="documentation" data-test="help-dropdown-documentation">
               <ExternalLink href={documentationLink} text={'Documentation'} />
+            </DropdownItem>
+            <DropdownItem
+              key="about"
+              onClick={handleFeedbackClick}
+              data-test="help-dropdown-feedback"
+            >
+              Share feedback
             </DropdownItem>
           </DropdownList>
         </DropdownGroup>
