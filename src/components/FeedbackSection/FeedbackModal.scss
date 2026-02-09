@@ -1,0 +1,38 @@
+.feedback-modal {
+  border-radius: 5px;
+  & > .pf-v5-c-modal-box__body {
+    padding: 0;
+    margin: 0;
+  }
+  &__content {
+    border-right: '1px solid red';
+    height: 100%;
+    width: 100%;
+    padding: var(--pf-v5-global--spacer--lg);
+    min-height: 500px;
+  }
+  &__card-container {
+    padding-top: var(--pf-v5-global--spacer--lg);
+    &-card {
+      background-color: var(--pf-v5-global--BackgroundColor--200);
+      border-radius: 5px;
+      &:hover {
+        cursor: pointer;
+        background-color: var(--pf-v5-global--BackgroundColor--100);
+        border: 1px solid var(--pf-v5-global--link--Color--light);
+      }
+    }
+  }
+  &__side-art {
+    overflow: hidden;
+    height: auto;
+    background-image: linear-gradient(
+      30deg,
+      var(--pf-v5-global--BackgroundColor--dark-100),
+      var(--pf-v5-global--palette--red-100)
+    );
+  }
+  &__input-field {
+    padding-top: var(--pf-v5-global--spacer--md);
+  }
+}
