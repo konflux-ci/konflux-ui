@@ -1,6 +1,6 @@
 export const componentsTableColumnClasses = {
   component: 'pf-m-width-40 wrap-column',
-  latestBuild: 'pf-m-width-40',
+  latestPushBuild: 'pf-m-width-40',
   kebab: 'pf-m-width-20 component-list-view__actions',
 };
 
@@ -11,8 +11,8 @@ const ComponentsListHeader = () => {
       props: { className: componentsTableColumnClasses.component },
     },
     {
-      title: 'Latest build',
-      props: { className: componentsTableColumnClasses.latestBuild },
+      title: 'Latest push build',
+      props: { className: componentsTableColumnClasses.latestPushBuild },
     },
     {
       title: ' ',

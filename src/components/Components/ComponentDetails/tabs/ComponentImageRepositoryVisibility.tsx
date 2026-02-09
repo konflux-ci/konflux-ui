@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   Button,
   ButtonVariant,
+  capitalize,
   Flex,
   FlexItem,
   Label,
@@ -91,7 +92,7 @@ const ComponentImageRepositoryVisibility: React.FC<
             icon={isPrivate ? <EyeSlashIcon /> : <EyeIcon />}
             data-test={`visibility-label-${visibility}`}
           >
-            {visibility}
+            {capitalize(visibility)}
           </Label>
         ) : (
           '-'

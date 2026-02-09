@@ -79,7 +79,7 @@ const ComponentsListRow: React.FC<
           )}
         </Flex>
       </TableData>
-      <TableData className={componentsTableColumnClasses.latestBuild}>
+      <TableData className={componentsTableColumnClasses.latestPushBuild}>
         <div className="component-list-view__build-completion">
           {component.latestBuildPipelineRun || customData.pipelineRunsLoaded ? (
             <PipelineRunStatus pipelineRun={component.latestBuildPipelineRun} />
