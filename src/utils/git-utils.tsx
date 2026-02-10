@@ -26,6 +26,10 @@ export const getGitPath = (
       prefix = '/-/tree';
       break;
     default:
+      if (gitSource.endsWith('forgejo.org')) {
+        prefix = '/src/branch';
+        break;
+      }
       if (domain === 'gitlab.cee.redhat.com') {
         prefix = '/-/tree';
         break;

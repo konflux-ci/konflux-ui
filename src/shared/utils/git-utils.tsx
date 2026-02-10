@@ -9,6 +9,7 @@ export enum GitProvider {
   GITHUB = 'github',
   BITBUCKET = 'bitbucket',
   GITLAB = 'gitlab',
+  FORGEJO = 'forgejo',
   UNSURE = 'other',
   INVALID = '',
 }
@@ -34,6 +35,9 @@ export const detectGitType = (url: string): GitProvider => {
   }
   if (hasDomain(url, 'gitlab.com')) {
     return GitProvider.GITLAB;
+  }
+  if (hasDomain(url, 'forgejo.org')) {
+    return GitProvider.FORGEJO;
   }
   // Not a known URL
   return GitProvider.UNSURE;
