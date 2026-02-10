@@ -48,15 +48,19 @@ const App = () => {
 };
 
 void (async () => {
-  const results = await Promise.allSettled([initMonitoring(), initAnalytics()]);
+  const initializers = [
+    { name: 'monitoring', context: 'initMonitoring', init: initMonitoring },
+    { name: 'analytics', context: 'initAnalytics', init: initAnalytics },
+  ] as const;
+
+  const results = await Promise.allSettled(initializers.map(({ init }) => init()));
+
   results.forEach((result, i) => {
     if (result.status === 'rejected') {
-      const name = i === 0 ? 'monitoring' : 'analytics';
+      const { name, context } = initializers[i];
       // eslint-disable-next-line no-console
       console.error(`Failed to initialize ${name}`, result.reason);
-      monitoringService?.captureException(result.reason, {
-        context: i === 0 ? 'initMonitoring' : 'initAnalytics',
-      });
+      monitoringService?.captureException(result.reason, { context });
     }
   });
 
