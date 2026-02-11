@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Tab, Tabs, TabTitleText } from '@patternfly/react-core';
+import { Bullseye, Spinner, Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { COMPONENT_ACTIVITY_V2_CHILD_TAB_PATH } from '../../../../routes/paths';
@@ -20,8 +21,7 @@ export const ComponentActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
   const { activityTab, componentName } = params;
   const namespace = useNamespace();
-  const [component] = useComponent(namespace, componentName);
-  const applicationName = component.spec.application;
+  const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
     `${component ? `${component.spec.componentName}_` : ''}${ACTIVITY_SECONDARY_TAB_KEY}`,
   );
@@ -59,6 +59,20 @@ export const ComponentActivityTab: React.FC = () => {
     }
   }, [activityTab, getActivityTabRoute, lastSelectedTab, navigate]);
 
+  if (!loaded) {
+    return (
+      <Bullseye>
+        <Spinner data-test="spinner" />
+      </Bullseye>
+    );
+  }
+
+  if (componentError) {
+    return getErrorState(componentError, loaded, 'component');
+  }
+
+  const applicationName = component?.spec?.application;
+
   // We will not include any test pipelines that were run against the snapshot that contained the image.
   // If there is such a test pipeline directly run on the image itself, and not on the snapshot, then we want to include it
   const nonTestSnapShotFilter = (plr: PipelineRunKind) =>
@@ -69,7 +83,9 @@ export const ComponentActivityTab: React.FC = () => {
     <div>
       <DetailsSection
         title="Activity"
-        featureFlag={<FeatureFlagIndicator flags={['pipelineruns-kubearchive']} />}
+        featureFlag={
+          <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
+        }
         description="Monitor your commits and their pipeline progression across all components."
       >
         <Tabs
@@ -94,7 +110,7 @@ export const ComponentActivityTab: React.FC = () => {
             <FilterContextProvider filterParams={['name', 'status']}>
               <CommitsListView
                 applicationName={applicationName}
-                componentName={component.spec.componentName}
+                componentName={component?.spec?.componentName}
               />
             </FilterContextProvider>
           </Tab>
@@ -107,7 +123,7 @@ export const ComponentActivityTab: React.FC = () => {
           >
             <PipelineRunsTab
               applicationName={applicationName}
-              componentName={component.spec.componentName}
+              componentName={component?.spec?.componentName}
               customFilter={nonTestSnapShotFilter}
             />
           </Tab>

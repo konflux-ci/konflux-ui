@@ -96,4 +96,10 @@ describe('ComponentActivityTab (V2)', () => {
       ),
     ).toBeInTheDocument();
   });
+
+  it('should show spinner when component is loading', () => {
+    componentMock.mockReturnValue([null, false, undefined]);
+    renderWithQueryClientAndRouter(<ComponentActivityTab />);
+    expect(screen.getByTestId('spinner')).toBeInTheDocument();
+  });
 });
