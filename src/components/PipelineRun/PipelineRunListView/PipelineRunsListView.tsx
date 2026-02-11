@@ -34,12 +34,14 @@ import { PipelineRunListRowWithColumns } from './PipelineRunListRow';
 type PipelineRunsListViewProps = {
   applicationName: string;
   componentName?: string;
+  branchName?: string;
   customFilter?: (plr: PipelineRunKind) => boolean;
 };
 
 const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListViewProps>> = ({
   applicationName,
   componentName,
+  branchName,
   customFilter,
 }) => {
   const namespace = useNamespace();
@@ -53,7 +55,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
 
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
   const [persistedColumns, setPersistedColumns] = useLocalStorage<string[]>(
-    `pipeline-runs-columns-${applicationName}${componentName ? `-${componentName}` : ''}`,
+    `pipeline-runs-columns-${applicationName}${componentName ? `-${componentName}` : ''}${branchName ? `-${branchName}` : ''}`,
   );
 
   const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
@@ -79,9 +81,10 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
                 [PipelineRunLabel.COMPONENT]: componentName,
               }),
             },
+            ...(branchName ? { filterByTargetBranch: branchName } : {}),
           },
         }),
-        [applicationName, componentName, application, name],
+        [applicationName, componentName, application, name, branchName],
       ),
     );
 

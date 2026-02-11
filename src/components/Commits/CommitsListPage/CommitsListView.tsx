@@ -38,6 +38,7 @@ import CommitsListRow from './CommitsListRow';
 interface CommitsListViewProps {
   applicationName?: string;
   componentName?: string;
+  branchName?: string;
 }
 
 const getSortCommitFunction = (
@@ -71,6 +72,7 @@ const getSortCommitFunction = (
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,
+  branchName,
 }) => {
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
@@ -112,9 +114,10 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               [PipelineRunLabel.APPLICATION]: applicationName,
               ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
             },
+            ...(branchName ? { filterByTargetBranch: branchName } : {}),
           },
         }),
-        [application?.metadata?.creationTimestamp, applicationName, componentName],
+        [application?.metadata?.creationTimestamp, applicationName, componentName, branchName],
       ),
     );
 

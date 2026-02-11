@@ -31,9 +31,20 @@ jest.mock('../../RouteErrorBoundary', () => ({
 }));
 
 jest.mock('~/components/ComponentsPage/ComponentDetails', () => ({
+  ComponentActivityTab: () => <div>Activity</div>,
   ComponentDetailsTab: () => <div data-testid="component-details-tab">Details tab</div>,
   ComponentDetailsViewLayout: () => <div data-testid="component-details-layout">Layout</div>,
+  ComponentVersionsTab: () => <div data-testid="component-versions-tab">Versions tab</div>,
   componentDetailsViewLoader: jest.fn(() => ({ data: 'test-data' })),
+}));
+
+jest.mock('~/components/ComponentsPage/ComponentVersionDetails', () => ({
+  ComponentVersionDetailsViewLayout: () => (
+    <div data-testid="component-version-details-layout">Version layout</div>
+  ),
+  ComponentVersionOverviewTab: () => <div>Overview</div>,
+  ComponentVersionActivityTab: () => <div>Activity</div>,
+  componentVersionDetailsViewLoader: jest.fn(() => ({ data: 'test-data' })),
 }));
 
 describe('Components page routes configuration', () => {
@@ -55,20 +66,21 @@ describe('Components page routes configuration', () => {
     expect(detailsRoute.children).toBeDefined();
   });
 
-  it('should include index and placeholder child routes', () => {
+  it('should include index, activity, versions and version details child routes', () => {
     const [, detailsRoute] = componentsPageRoutes as [{ path: string }, PathRoute];
-    const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute] = detailsRoute.children;
+    const children = detailsRoute.children ?? [];
+    const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute, versionDetailsRoute] =
+      children;
 
     expect(indexRoute.index).toBe(true);
     expect(indexRoute.element).toEqual(<ComponentDetailsTab />);
 
     expect(activityWithTabRoute.path).toBe('activity/:activityTab');
-    expect(activityWithTabRoute.element).toBeDefined();
-
     expect(activityRoute.path).toBe('activity');
-    expect(activityRoute.element).toBeDefined();
-
     expect(versionsRoute.path).toBe('versions');
-    expect(versionsRoute.element).toBeNull();
+    expect(versionsRoute.element).toBeDefined();
+
+    expect(versionDetailsRoute.path).toBe(`vers/:verName`);
+    expect(versionDetailsRoute.children).toBeDefined();
   });
 });
