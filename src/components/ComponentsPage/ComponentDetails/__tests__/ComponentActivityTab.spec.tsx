@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
@@ -29,6 +30,12 @@ jest.mock('../../../../hooks/useComponents', () => ({
 
 jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
+}));
+
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(() => true),
+  IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);

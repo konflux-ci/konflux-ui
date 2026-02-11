@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Tab, Tabs, TabTitleText } from '@patternfly/react-core';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { IfFeature } from '~/feature-flags/hooks';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
@@ -23,7 +24,7 @@ export const ComponentActivityTab: React.FC = () => {
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
-    `${component ? `${component.spec.componentName}_` : ''}${ACTIVITY_SECONDARY_TAB_KEY}`,
+    `${componentName ?? ''}_${ACTIVITY_SECONDARY_TAB_KEY}`,
   );
   const currentTab = activityTab || lastSelectedTab || 'latest-commits';
 
@@ -80,56 +81,58 @@ export const ComponentActivityTab: React.FC = () => {
     !plr.spec.params?.find((p) => p.name === 'SNAPSHOT');
 
   return (
-    <div>
-      <DetailsSection
-        title="Activity"
-        featureFlag={
-          <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
-        }
-        description="Monitor your commits and their pipeline progression across all components."
-      >
-        <Tabs
-          style={{
-            width: 'fit-content',
-            marginBottom: 'var(--pf-v5-global--spacer--md)',
-          }}
-          activeKey={currentTab}
-          onSelect={(_, k: string) => {
-            setActiveTab(k);
-          }}
-          data-test="activities-tabs-id"
-          unmountOnExit
+    <IfFeature flag="components-page" fallback={null}>
+      <div>
+        <DetailsSection
+          title="Activity"
+          featureFlag={
+            <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
+          }
+          description="Monitor your commits and their pipeline progression across all components."
         >
-          <Tab
-            data-test={`comp__activity__tabItem commits`}
-            title={<TabTitleText>Commits</TabTitleText>}
-            key="commits"
-            eventKey="latest-commits"
-            className="activity-tab"
+          <Tabs
+            style={{
+              width: 'fit-content',
+              marginBottom: 'var(--pf-v5-global--spacer--md)',
+            }}
+            activeKey={currentTab}
+            onSelect={(_, k: string) => {
+              setActiveTab(k);
+            }}
+            data-test="activities-tabs-id"
+            unmountOnExit
           >
-            <FilterContextProvider filterParams={['name', 'status']}>
-              <CommitsListView
+            <Tab
+              data-test={`comp__activity__tabItem commits`}
+              title={<TabTitleText>Commits</TabTitleText>}
+              key="commits"
+              eventKey="latest-commits"
+              className="activity-tab"
+            >
+              <FilterContextProvider filterParams={['name', 'status']}>
+                <CommitsListView
+                  applicationName={applicationName}
+                  componentName={component?.spec?.componentName}
+                />
+              </FilterContextProvider>
+            </Tab>
+            <Tab
+              data-test={`comp__activity__tabItem pipelineruns`}
+              title={<TabTitleText>Pipeline runs</TabTitleText>}
+              key="pipelineruns"
+              eventKey="pipelineruns"
+              className="activity-tab"
+            >
+              <PipelineRunsTab
                 applicationName={applicationName}
                 componentName={component?.spec?.componentName}
+                customFilter={nonTestSnapShotFilter}
               />
-            </FilterContextProvider>
-          </Tab>
-          <Tab
-            data-test={`comp__activity__tabItem pipelineruns`}
-            title={<TabTitleText>Pipeline runs</TabTitleText>}
-            key="pipelineruns"
-            eventKey="pipelineruns"
-            className="activity-tab"
-          >
-            <PipelineRunsTab
-              applicationName={applicationName}
-              componentName={component?.spec?.componentName}
-              customFilter={nonTestSnapShotFilter}
-            />
-          </Tab>
-        </Tabs>
-      </DetailsSection>
-    </div>
+            </Tab>
+          </Tabs>
+        </DetailsSection>
+      </div>
+    </IfFeature>
   );
 };
 
