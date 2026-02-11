@@ -82,56 +82,54 @@ export const ComponentActivityTab: React.FC = () => {
 
   return (
     <IfFeature flag="components-page" fallback={null}>
-      <div>
-        <DetailsSection
-          title="Activity"
-          featureFlag={
-            <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
-          }
-          description="Monitor your commits and their pipeline progression across all components."
+      <DetailsSection
+        title="Activity"
+        featureFlag={
+          <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
+        }
+        description="Monitor your commits and their pipeline progression across all components."
+      >
+        <Tabs
+          style={{
+            width: 'fit-content',
+            marginBottom: 'var(--pf-v5-global--spacer--md)',
+          }}
+          activeKey={currentTab}
+          onSelect={(_, k: string) => {
+            setActiveTab(k);
+          }}
+          data-test="activities-tabs-id"
+          unmountOnExit
         >
-          <Tabs
-            style={{
-              width: 'fit-content',
-              marginBottom: 'var(--pf-v5-global--spacer--md)',
-            }}
-            activeKey={currentTab}
-            onSelect={(_, k: string) => {
-              setActiveTab(k);
-            }}
-            data-test="activities-tabs-id"
-            unmountOnExit
+          <Tab
+            data-test={`comp__activity__tabItem commits`}
+            title={<TabTitleText>Commits</TabTitleText>}
+            key="commits"
+            eventKey="latest-commits"
+            className="activity-tab"
           >
-            <Tab
-              data-test={`comp__activity__tabItem commits`}
-              title={<TabTitleText>Commits</TabTitleText>}
-              key="commits"
-              eventKey="latest-commits"
-              className="activity-tab"
-            >
-              <FilterContextProvider filterParams={['name', 'status']}>
-                <CommitsListView
-                  applicationName={applicationName}
-                  componentName={component?.spec?.componentName}
-                />
-              </FilterContextProvider>
-            </Tab>
-            <Tab
-              data-test={`comp__activity__tabItem pipelineruns`}
-              title={<TabTitleText>Pipeline runs</TabTitleText>}
-              key="pipelineruns"
-              eventKey="pipelineruns"
-              className="activity-tab"
-            >
-              <PipelineRunsTab
+            <FilterContextProvider filterParams={['name', 'status']}>
+              <CommitsListView
                 applicationName={applicationName}
                 componentName={component?.spec?.componentName}
-                customFilter={nonTestSnapShotFilter}
               />
-            </Tab>
-          </Tabs>
-        </DetailsSection>
-      </div>
+            </FilterContextProvider>
+          </Tab>
+          <Tab
+            data-test={`comp__activity__tabItem pipelineruns`}
+            title={<TabTitleText>Pipeline runs</TabTitleText>}
+            key="pipelineruns"
+            eventKey="pipelineruns"
+            className="activity-tab"
+          >
+            <PipelineRunsTab
+              applicationName={applicationName}
+              componentName={component?.spec?.componentName}
+              customFilter={nonTestSnapShotFilter}
+            />
+          </Tab>
+        </Tabs>
+      </DetailsSection>
     </IfFeature>
   );
 };
