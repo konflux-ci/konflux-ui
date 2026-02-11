@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { NamespaceKind } from '~/types';
 import { mockAccessReviewUtil } from '../../../unit-test-utils/mock-access-review';
 import { useNamespaceActions } from '../useNamespaceActions';
@@ -75,10 +75,10 @@ describe('useNamespaceActions', () => {
     // Trigger permission check
     result.current[2](true);
 
-    // Wait for the permission check to complete
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(result.current[0][0].disabled).toBe(true);
+    // Wait for the async permission check to complete and hook to re-render
+    await waitFor(() => {
+      expect(result.current[0][0].disabled).toBe(true);
+    });
     expect(result.current[0][0].disabledTooltip).toBe(
       "You don't have permission to manage namespace visibility",
     );

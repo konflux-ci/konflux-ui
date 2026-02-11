@@ -38,6 +38,10 @@ const ComponentVersionDetailsView: React.FC = () => {
     return getErrorState(componentError, loaded, 'component');
   }
 
+  if (!component) {
+    return null;
+  }
+
   return (
     <IfFeature
       flag="components-page"

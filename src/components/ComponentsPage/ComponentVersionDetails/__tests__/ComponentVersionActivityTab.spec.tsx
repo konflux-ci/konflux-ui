@@ -8,7 +8,7 @@ import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace
 import { createUseApplicationMock } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
 import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
-import { ComponentActivityTab } from '../tabs/ComponentActivityTab';
+import ComponentVersionActivityTab from '../tabs/ComponentVersionActivityTab';
 
 jest.mock('../../../../hooks/useTektonResults');
 
@@ -46,7 +46,7 @@ const useNavigateMock = useNavigate as jest.Mock;
 const useParamsMock = useParams as jest.Mock;
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
 
-describe('ComponentActivityTab (V2)', () => {
+describe('ComponentVersionActivityTab', () => {
   let navigateMock: jest.Mock;
 
   mockUseNamespaceHook('test-ns');
@@ -66,6 +66,7 @@ describe('ComponentActivityTab (V2)', () => {
     useParamsMock.mockReturnValue({
       activityTab: 'latest-commits',
       componentName: 'test-component',
+      verName: 'main',
     });
   });
 
@@ -73,46 +74,43 @@ describe('ComponentActivityTab (V2)', () => {
     jest.clearAllMocks();
   });
 
-  it('should render the component activity', () => {
+  it('should render the component version activity', () => {
     componentMock.mockReturnValue([MockComponents[0], true]);
-    renderWithQueryClientAndRouter(<ComponentActivityTab />);
-    screen.getByTestId('comp__activity__tabItem commits');
-    screen.getByTestId('comp__activity__tabItem pipelineruns');
+    renderWithQueryClientAndRouter(<ComponentVersionActivityTab />);
+    screen.getByTestId('comp-version-activity-tab-commits');
+    screen.getByTestId('comp-version-activity-tab-pipelineruns');
   });
 
-  it('should render two tabs under component activity', async () => {
+  it('should navigate to version activity path when Pipeline runs tab is clicked', async () => {
     componentMock.mockReturnValue([MockComponents[0], true]);
-    renderWithQueryClientAndRouter(<ComponentActivityTab />);
-    screen.getByTestId('comp__activity__tabItem commits');
-    const plrTab = screen.getByTestId('comp__activity__tabItem pipelineruns');
+    renderWithQueryClientAndRouter(<ComponentVersionActivityTab />);
+    screen.getByTestId('comp-version-activity-tab-commits');
+    const plrTab = screen.getByTestId('comp-version-activity-tab-pipelineruns');
 
     await act(() => fireEvent.click(plrTab));
-    // V2 route uses /ns/:workspaceName/components/:componentName/activity/:activityTab
     expect(navigateMock).toHaveBeenCalledWith(
-      '/ns/test-ns/components/test-component/activity/pipelineruns',
+      '/ns/test-ns/components/test-component/vers/main/activity/pipelineruns',
     );
   });
 
   it('should display Activity section with correct title and description', () => {
     componentMock.mockReturnValue([MockComponents[0], true]);
-    renderWithQueryClientAndRouter(<ComponentActivityTab />);
+    renderWithQueryClientAndRouter(<ComponentVersionActivityTab />);
     expect(screen.getByText('Activity')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Monitor your commits and their pipeline progression across all components.',
-      ),
+      screen.getByText('Monitor your commits and their pipeline progression for this branch.'),
     ).toBeInTheDocument();
   });
 
   it('should show spinner when component is loading', () => {
     componentMock.mockReturnValue([null, false, undefined]);
-    renderWithQueryClientAndRouter(<ComponentActivityTab />);
+    renderWithQueryClientAndRouter(<ComponentVersionActivityTab />);
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
   it('should show error state when component fails to load', () => {
     componentMock.mockReturnValue([null, true, new Error('Failed to load')]);
-    renderWithQueryClientAndRouter(<ComponentActivityTab />);
+    renderWithQueryClientAndRouter(<ComponentVersionActivityTab />);
     expect(screen.getByText('Unable to load component')).toBeInTheDocument();
   });
 });

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Bullseye, Spinner, List, ListItem, Title } from '@patternfly/react-core';
 import { DetailsSection } from '~/components/DetailsPage';
+import { IfFeature } from '~/feature-flags/hooks';
 import { useComponentBranches } from '~/hooks/useComponentBranches';
 import { useComponent } from '~/hooks/useComponents';
 import { COMPONENT_VERSION_DETAILS_PATH } from '~/routes/paths';
@@ -47,37 +48,39 @@ const ComponentVersionsTab: React.FC = () => {
   }
 
   if (branchesError) {
-    return getErrorState(branchesError, branchesLoaded, 'branches', true);
+    return getErrorState(branchesError, branchesLoaded, 'branches');
   }
 
   return (
-    <DetailsSection
-      title="Versions"
-      description="Branches that have pipeline runs for this component. Select a branch to view its overview and activity."
-    >
-      {branches.length === 0 ? (
-        <p>No branches with pipeline runs found for this component.</p>
-      ) : (
-        <List isPlain isBordered data-test="component-versions-list">
-          {branches.map((branch) => (
-            <ListItem key={branch}>
-              <Link
-                to={COMPONENT_VERSION_DETAILS_PATH.createPath({
-                  workspaceName: namespace,
-                  componentName,
-                  verName: branch,
-                })}
-                data-test={`version-link-${branch}`}
-              >
-                <Title headingLevel="h4" size="md">
-                  {branch}
-                </Title>
-              </Link>
-            </ListItem>
-          ))}
-        </List>
-      )}
-    </DetailsSection>
+    <IfFeature flag="components-page" fallback={null}>
+      <DetailsSection
+        title="Versions"
+        description="Branches that have pipeline runs for this component. Select a branch to view its overview and activity."
+      >
+        {branches.length === 0 ? (
+          <p>No branches with pipeline runs found for this component.</p>
+        ) : (
+          <List isPlain isBordered data-test="component-versions-list">
+            {branches.map((branch) => (
+              <ListItem key={branch}>
+                <Link
+                  to={COMPONENT_VERSION_DETAILS_PATH.createPath({
+                    workspaceName: namespace,
+                    componentName,
+                    verName: branch,
+                  })}
+                  data-test={`version-link-${branch}`}
+                >
+                  <Title headingLevel="h4" size="md">
+                    {branch}
+                  </Title>
+                </Link>
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </DetailsSection>
+    </IfFeature>
   );
 };
 

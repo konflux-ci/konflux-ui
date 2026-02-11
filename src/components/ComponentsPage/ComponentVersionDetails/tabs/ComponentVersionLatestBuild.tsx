@@ -12,21 +12,21 @@ import {
   Spinner,
   Button,
 } from '@patternfly/react-core';
+import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
+import { useBuildLogViewerModal } from '~/components/LogViewer/BuildLogViewer';
+import ScanDescriptionListGroup from '~/components/PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
 import { useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { COMMIT_DETAILS_PATH } from '~/routes/paths';
+import { Timestamp } from '~/shared/components/timestamp/Timestamp';
+import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { COMMIT_DETAILS_PATH } from '../../../../routes/paths';
-import { Timestamp } from '../../../../shared/components/timestamp/Timestamp';
-import { useNamespace } from '../../../../shared/providers/Namespace/useNamespaceInfo';
-import { ComponentKind, ImageRepositoryVisibility } from '../../../../types';
-import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
-import { getImageUrlForVisibility } from '../../../../utils/component-utils';
-import { getPipelineRunStatusResults } from '../../../../utils/pipeline-utils';
-import CommitLabel from '../../../Commits/commit-label/CommitLabel';
-import { useBuildLogViewerModal } from '../../../LogViewer/BuildLogViewer';
-import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
+import { ComponentKind, ImageRepositoryVisibility } from '~/types';
+import { getCommitsFromPLRs } from '~/utils/commits-utils';
+import { getImageUrlForVisibility } from '~/utils/component-utils';
+import { getPipelineRunStatusResults } from '~/utils/pipeline-utils';
 
 type ComponentVersionLatestBuildProps = {
   component: ComponentKind;
@@ -62,7 +62,7 @@ const ComponentVersionLatestBuild: React.FC<
 
   const imageUrlFromPlr =
     pipelineRun?.status &&
-    getPipelineRunStatusResults(pipelineRun).find((r) => r.name === 'IMAGE_URL')?.value;
+    getPipelineRunStatusResults(pipelineRun)?.find((r) => r.name === 'IMAGE_URL')?.value;
   const displayImageUrl =
     imageUrlFromPlr &&
     getImageUrlForVisibility(
