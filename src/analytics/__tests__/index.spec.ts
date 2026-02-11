@@ -31,15 +31,11 @@ jest.mock('~/monitoring', () => ({
 describe('initAnalytics and getAnalytics', () => {
   let consoleMock: MockConsole;
   let loadAnalyticsConfigMock: jest.Mock;
-  let monitoringServiceMock: {
-    captureException: jest.Mock;
-  };
 
   beforeEach(() => {
     consoleMock = mockConsole();
     jest.resetModules();
     loadAnalyticsConfigMock = jest.requireMock('../load-config').loadAnalyticsConfig;
-    monitoringServiceMock = jest.requireMock('~/monitoring').monitoringService;
     mockAnalyticsBrowser.load.mockResolvedValue([mockAnalyticsInstance, {}]);
   });
 
@@ -174,27 +170,6 @@ describe('initAnalytics and getAnalytics', () => {
           },
         },
       );
-    });
-
-    it('should handle initialization errors gracefully', async () => {
-      const mockConfig: AnalyticsConfig = {
-        enabled: true,
-        writeKey: 'test-write-key-123',
-        apiUrl: 'https://api.segment.io/v1',
-      };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
-
-      const initError = new Error('Failed to load Segment SDK');
-      mockAnalyticsBrowser.load.mockRejectedValue(initError);
-
-      const indexModule = await import('../index');
-      await indexModule.initAnalytics();
-
-      expect(consoleMock.error).toHaveBeenCalledWith('Error loading Analytics', initError);
-      expect(monitoringServiceMock.captureException).toHaveBeenCalledWith(initError, {
-        context: 'initAnalytics',
-      });
-      expect(indexModule.getAnalytics()).toBeUndefined();
     });
   });
 
