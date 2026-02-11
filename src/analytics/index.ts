@@ -1,5 +1,4 @@
 import type { Analytics } from '@segment/analytics-next';
-import { monitoringService } from '~/monitoring';
 import { loadAnalyticsConfig } from './load-config';
 
 let analyticsInstance: Analytics | undefined;
@@ -51,6 +50,5 @@ export async function initAnalytics(): Promise<void> {
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('Error loading Analytics', error);
-    monitoringService?.captureException(error, { context: 'initAnalytics' });
   }
 }
