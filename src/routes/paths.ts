@@ -39,7 +39,7 @@ export const COMPONENT_ACTIVITY_V2_CHILD_TAB_PATH = COMPONENT_ACTIVITY_V2_PATH.e
   `:${RouterParams.activityTab}`,
 );
 
-export const COMPONENT_VERSION_DETAILS_PATH = COMPONENT_DETAILS_V2_PATH.extend('vers').extend(
+export const COMPONENT_VERSION_DETAILS_PATH = COMPONENT_DETAILS_V2_PATH.extend('versions').extend(
   `:${RouterParams.verName}`,
 );
 

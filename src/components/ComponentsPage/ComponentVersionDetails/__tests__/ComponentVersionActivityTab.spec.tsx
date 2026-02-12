@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { useComponent, useComponents } from '../../../../hooks/useComponents';
@@ -89,7 +88,7 @@ describe('ComponentVersionActivityTab', () => {
 
     await act(() => fireEvent.click(plrTab));
     expect(navigateMock).toHaveBeenCalledWith(
-      '/ns/test-ns/components/test-component/vers/main/activity/pipelineruns',
+      '/ns/test-ns/components/test-component/versions/main/activity/pipelineruns',
     );
   });
 

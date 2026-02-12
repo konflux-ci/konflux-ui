@@ -80,7 +80,7 @@ describe('Components page routes configuration', () => {
     expect(versionsRoute.path).toBe('versions');
     expect(versionsRoute.element).toBeDefined();
 
-    expect(versionDetailsRoute.path).toBe(`vers/:verName`);
+    expect(versionDetailsRoute.path).toBe(`versions/:verName`);
     expect(versionDetailsRoute.children).toBeDefined();
   });
 });

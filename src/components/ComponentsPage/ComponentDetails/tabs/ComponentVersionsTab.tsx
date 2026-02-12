@@ -27,7 +27,7 @@ const ComponentVersionsTab: React.FC = () => {
     return null;
   }
 
-  if (!componentLoaded) {
+  if (!componentLoaded || !branchesLoaded) {
     return (
       <Bullseye>
         <Spinner data-test="spinner" />
@@ -39,20 +39,12 @@ const ComponentVersionsTab: React.FC = () => {
     return getErrorState(componentError, componentLoaded, 'component');
   }
 
-  if (!branchesLoaded) {
-    return (
-      <Bullseye>
-        <Spinner data-test="spinner" />
-      </Bullseye>
-    );
-  }
-
   if (branchesError) {
     return getErrorState(branchesError, branchesLoaded, 'branches');
   }
 
   return (
-    <IfFeature flag="components-page" fallback={null}>
+    <IfFeature flag="components-page">
       <DetailsSection
         title="Versions"
         description="Branches that have pipeline runs for this component. Select a branch to view its overview and activity."

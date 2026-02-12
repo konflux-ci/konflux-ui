@@ -7,11 +7,7 @@ import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '~/feature-flags/flags';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useComponent } from '~/hooks/useComponents';
-import {
-  COMPONENT_DETAILS_V2_PATH,
-  COMPONENTS_PATH,
-  COMPONENT_VERSION_DETAILS_PATH,
-} from '~/routes/paths';
+import { COMPONENT_VERSION_DETAILS_PATH } from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
 import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
@@ -61,27 +57,6 @@ const ComponentVersionDetailsView: React.FC = () => {
             {verName} <FeatureFlagIndicator flags={['components-page']} fullLabel />
           </Text>
         }
-        breadcrumbs={[
-          {
-            path: COMPONENTS_PATH.createPath({ workspaceName: namespace }),
-            name: 'Components',
-          },
-          {
-            path: COMPONENT_DETAILS_V2_PATH.createPath({
-              workspaceName: namespace,
-              componentName,
-            }),
-            name: component.spec.componentName,
-          },
-          {
-            path: COMPONENT_VERSION_DETAILS_PATH.createPath({
-              workspaceName: namespace,
-              componentName,
-              verName,
-            }),
-            name: verName,
-          },
-        ]}
         baseURL={COMPONENT_VERSION_DETAILS_PATH.createPath({
           workspaceName: namespace,
           componentName,

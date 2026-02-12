@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { FLAGS } from '../../../../feature-flags/flags';
@@ -26,8 +26,8 @@ jest.mock('../../../../feature-flags/hooks', () => ({
     fallback,
   }: {
     flag: string;
-    children: React.ReactNode;
-    fallback?: React.ReactNode;
+    children: ReactNode;
+    fallback?: ReactNode;
   }) => {
     const isEnabled = (useIsOnFeatureFlag as jest.Mock)(flag);
     return isEnabled ? children : fallback ?? null;

@@ -81,7 +81,7 @@ export const ComponentActivityTab: React.FC = () => {
     !plr.spec.params?.find((p) => p.name === 'SNAPSHOT');
 
   return (
-    <IfFeature flag="components-page" fallback={null}>
+    <IfFeature flag="components-page">
       <DetailsSection
         title="Activity"
         featureFlag={
