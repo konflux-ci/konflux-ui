@@ -65,11 +65,15 @@ const securityEnterpriseContracts = (pipelineRun: string) => (
 
 describe('SecurityEnterpriseContractTab', () => {
   beforeEach(() => {
-    mockUseEnterpriseContractResults.mockReturnValue([mockEnterpriseContractUIData, true]);
+    mockUseEnterpriseContractResults.mockReturnValue([
+      mockEnterpriseContractUIData,
+      true,
+      undefined,
+    ]);
   });
 
   it('should render empty state for security tab when pods are missing', () => {
-    mockUseEnterpriseContractResults.mockReturnValue([undefined, true]);
+    mockUseEnterpriseContractResults.mockReturnValue([undefined, true, undefined]);
 
     routerRenderer(securityEnterpriseContracts('dummy'));
     screen.getByTestId('security-tab-empty-state');

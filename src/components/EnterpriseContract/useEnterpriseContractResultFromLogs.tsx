@@ -19,7 +19,7 @@ import { extractEcResultsFromTaskRunLogs } from './utils';
 
 export const useEnterpriseContractResultFromLogs = (
   pipelineRunName: string,
-): [ComponentEnterpriseContractResult[], boolean] => {
+): [ComponentEnterpriseContractResult[], boolean, unknown] => {
   const namespace = useNamespace();
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] = usePipelineRunV2(
     namespace,
@@ -136,7 +136,9 @@ export const useEnterpriseContractResultFromLogs = (
       : undefined;
   }, [ecJson, ecLoaded]);
 
-  return [ecResult, ecLoaded];
+  const error = pipelineRunError ?? taskRunError;
+
+  return [ecResult, error ? true : ecLoaded, error];
 };
 
 export const mapEnterpriseContractResultData = (
@@ -185,11 +187,11 @@ export const mapEnterpriseContractResultData = (
 
 export const useEnterpriseContractResults = (
   pipelineRunName: string,
-): [UIEnterpriseContractData[], boolean] => {
-  const [ec, ecLoaded] = useEnterpriseContractResultFromLogs(pipelineRunName);
+): [UIEnterpriseContractData[], boolean, unknown] => {
+  const [ec, ecLoaded, ecError] = useEnterpriseContractResultFromLogs(pipelineRunName);
   const ecResult = React.useMemo(() => {
-    return ecLoaded && ec ? mapEnterpriseContractResultData(ec) : undefined;
-  }, [ec, ecLoaded]);
+    return ecLoaded && ec && !ecError ? mapEnterpriseContractResultData(ec) : undefined;
+  }, [ec, ecLoaded, ecError]);
 
-  return [ecResult, ecLoaded];
+  return [ecResult, ecLoaded, ecError];
 };

@@ -49,7 +49,7 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
     mockUseTaskRunV2.mockReturnValue([mockTaskRun, true]);
 
-    mockUseEnterpriseContractResults.mockReturnValue([null, false]);
+    mockUseEnterpriseContractResults.mockReturnValue([null, false, undefined]);
 
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
