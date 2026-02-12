@@ -15,7 +15,7 @@ import { Formik, Form } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
-import OverviewBannerSvg from '../../assets/overview/overview-banner.svg';
+import RHSupportLightSvg from '../../assets/RHsupportLight.svg';
 import BeginningSection from './components/BeginningSection';
 import { FeedbackSections } from './consts';
 import { BugInfo, FeatureInfo, getBugURL, getFeatureURL } from './feedback-utils';
@@ -165,7 +165,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
               </Flex>
               <Flex flex={{ default: 'flex_1' }} className="feedback-modal__side-art">
                 <FlexItem className="pf-m-align-self-stretch">
-                  <OverviewBannerSvg />
+                  <RHSupportLightSvg style={{ height: '100%', width: '100%' }} />
                 </FlexItem>
               </Flex>
             </Flex>
