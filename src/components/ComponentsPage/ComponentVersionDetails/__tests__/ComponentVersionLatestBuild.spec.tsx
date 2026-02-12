@@ -1,4 +1,3 @@
-import React from 'react';
 import { screen } from '@testing-library/react';
 import { PipelineRunLabel } from '../../../../consts/pipelinerun';
 import { useImageProxy } from '../../../../hooks/useImageProxy';
@@ -31,8 +30,10 @@ const mockUseImageProxy = useImageProxy as jest.Mock;
 const mockUseImageRepository = useImageRepository as jest.Mock;
 
 const mockComponent = {
+  apiVersion: 'appstudio.redhat.com/v1alpha1',
+  kind: 'Component',
   metadata: { name: 'my-component', namespace: 'test-ns' },
-  spec: { componentName: 'my-component' },
+  spec: { componentName: 'my-component', application: 'my-app' },
 };
 
 const mockPipelineRun = {

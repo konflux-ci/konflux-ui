@@ -19,7 +19,10 @@ const mockPipelineRun: PipelineRunKind = {
   kind: 'PipelineRun',
   metadata: { name: 'build-1', namespace: 'test-ns', creationTimestamp: '2025-01-01T00:00:00Z' },
   spec: {},
-  status: { conditions: [{ type: 'Succeeded', status: 'True' }] },
+  status: {
+    conditions: [{ type: 'Succeeded', status: 'True' }],
+    pipelineSpec: { tasks: [] },
+  },
 };
 
 describe('useLatestBuildPipelineRunForComponentV2', () => {
