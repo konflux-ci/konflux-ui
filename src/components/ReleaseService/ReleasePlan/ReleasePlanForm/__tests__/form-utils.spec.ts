@@ -32,6 +32,7 @@ describe('createReleasePlan', () => {
           revision: 'main',
           path: '/',
         },
+        serviceAccount: 'appstudio-pipeline',
       },
       'test-ns-tenant',
     );
@@ -49,7 +50,7 @@ describe('createReleasePlan', () => {
           application: 'test-app',
           target: 'test-ns-tenant',
           tenantPipeline: {
-            serviceAccountName: undefined,
+            serviceAccountName: 'appstudio-pipeline',
             pipelineRef: {
               params: [
                 {
@@ -87,6 +88,7 @@ describe('createReleasePlan', () => {
           revision: 'main',
           path: '/',
         },
+        serviceAccount: 'appstudio-pipeline',
       },
       'test-ns-tenant',
     );
@@ -96,7 +98,7 @@ describe('createReleasePlan', () => {
           application: 'test-app',
           target: 'target-ws-tenant',
           tenantPipeline: {
-            serviceAccountName: undefined,
+            serviceAccountName: 'appstudio-pipeline',
             pipelineRef: {
               params: [
                 {
@@ -198,6 +200,7 @@ describe('releasePlanFormParams', () => {
     const result = releasePlanFormParams({
       spec: {
         tenantPipeline: {
+          serviceAccountName: 'appstudio-pipeline',
           pipelineRef: {
             params: [
               { name: 'url', value: 'https://github.com/example/repo' },
