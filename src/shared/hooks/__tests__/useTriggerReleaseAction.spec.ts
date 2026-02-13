@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { renderHook } from '@testing-library/react-hooks';
+import { mockSnapshot } from '~/__data__/mock-snapshots';
+import { ResourceSource } from '~/types/k8s';
 import { RELEASEPLAN_TRIGGER_PATH } from '../../../routes/paths';
 import { Snapshot } from '../../../types/coreBuildService';
 import { useAccessReviewForModel } from '../../../utils/rbac';
@@ -40,7 +42,7 @@ describe('useTriggerReleaseAction', () => {
     jest.clearAllMocks();
   });
 
-  it('returns enabled action when access is allowed', () => {
+  it('returns enabled action when access is allowed and no snapshot is provided', () => {
     const { result } = renderHook(() => useTriggerReleaseAction());
 
     expect(result.current).toEqual(
@@ -53,7 +55,22 @@ describe('useTriggerReleaseAction', () => {
     );
   });
 
-  it('returns disabled action when access is denied', () => {
+  it('returns enabled action when access is allowed and snapshot is not archived', () => {
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Cluster),
+    );
+
+    expect(result.current).toEqual(
+      expect.objectContaining({
+        isDisabled: false,
+        disabledTooltip: null,
+        key: 'trigger-release',
+        label: 'Trigger release',
+      }),
+    );
+  });
+
+  it('returns disabled action when access is denied and no snapshot is provided', () => {
     useAccessReviewForModelMock.mockReturnValue([false]);
 
     const { result } = renderHook(() => useTriggerReleaseAction());
@@ -62,6 +79,62 @@ describe('useTriggerReleaseAction', () => {
       expect.objectContaining({
         isDisabled: true,
         disabledTooltip: "You don't have access to trigger releases",
+      }),
+    );
+  });
+
+  it('returns disabled action when access is denied and snapshot is not archived', () => {
+    useAccessReviewForModelMock.mockReturnValue([false]);
+
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Cluster),
+    );
+
+    expect(result.current).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: "You don't have access to trigger releases",
+      }),
+    );
+  });
+
+  it('returns disabled action when access is allowed and snapshot is archived', () => {
+    useAccessReviewForModelMock.mockReturnValue([true]);
+
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Archive),
+    );
+
+    expect(result.current).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot trigger release from archived snapshot',
+      }),
+    );
+  });
+
+  it('returns disabled action when access is denied and snapshot is archived', () => {
+    useAccessReviewForModelMock.mockReturnValue([false]);
+
+    const { result } = renderHook(() =>
+      useTriggerReleaseAction(mockSnapshot, ResourceSource.Archive),
+    );
+
+    expect(result.current).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: "You don't have access to trigger releases",
+      }),
+    );
+  });
+
+  it('returns disabled action when access is allowed and snapshot is provided but source is undefined', () => {
+    const { result } = renderHook(() => useTriggerReleaseAction(mockSnapshot, undefined));
+
+    expect(result.current).toEqual(
+      expect.objectContaining({
+        isDisabled: true,
+        disabledTooltip: 'Cannot trigger release from archived snapshot',
       }),
     );
   });

@@ -21,7 +21,10 @@ const SnapshotDetailsView: React.FC = () => {
 
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
 
-  const [snapshot, loaded, snapshotError] = useSnapshot(namespace, snapshotName);
+  const [snapshot, loaded, snapshotError, , , snapshotSource] = useSnapshot(
+    namespace,
+    snapshotName,
+  );
 
   const buildPipelineName = React.useMemo(
     () =>
@@ -39,7 +42,10 @@ const SnapshotDetailsView: React.FC = () => {
     [plrLoaded, plrLoadError, buildPipelineRun],
   );
 
-  const { cta, isDisabled, disabledTooltip, key, label } = useTriggerReleaseAction(snapshot);
+  const { cta, isDisabled, disabledTooltip, key, label } = useTriggerReleaseAction(
+    snapshot,
+    snapshotSource,
+  );
 
   if (!loaded) {
     return (
