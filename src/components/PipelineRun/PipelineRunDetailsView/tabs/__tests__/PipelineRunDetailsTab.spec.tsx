@@ -471,7 +471,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // Should fall back to original URL when proxy info is not available
-      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(konfluxImageUrl).length).toBeGreaterThan(0);
     });
 
     it('should handle image repository errors gracefully', () => {
@@ -482,7 +482,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // Should fall back to original URL when image repository fails
-      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(konfluxImageUrl).length).toBeGreaterThan(0);
     });
 
     it('should wait for all data to load before rendering', () => {
@@ -516,7 +516,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // User-owned repo should NOT use proxy URL even if private
-      expect(screen.getByText(userOwnedImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(userOwnedImageUrl).length).toBeGreaterThan(0);
     });
 
     it('should not use proxy URL in params for user-owned private repositories', () => {
@@ -527,7 +527,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // User-owned repo should NOT use proxy URL in params even if private
-      expect(screen.getByText(userOwnedImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(userOwnedImageUrl).length).toBeGreaterThan(0);
     });
   });
 });

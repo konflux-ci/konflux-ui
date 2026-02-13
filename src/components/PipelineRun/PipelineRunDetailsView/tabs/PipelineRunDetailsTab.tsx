@@ -58,23 +58,26 @@ import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
-function replaceParamValue(results, paramName, visibility, proxyHost) {
-  if (!results) {
-    return results;
+const addProxyUrlParamValue = <T extends { name: string; value: string | string[] }>(
+  items: T[] | undefined | null,
+  paramName: string,
+  visibility: ImageRepositoryVisibility | undefined,
+  proxyHost: string | null | undefined,
+): T[] | null | undefined => {
+  if (!items || visibility !== ImageRepositoryVisibility.private) {
+    return items;
   }
-  return results.map((r) =>
-    r.name === paramName
-      ? {
-          ...r,
-          value: getImageUrlForVisibility(
-            r.value as string,
-            visibility as ImageRepositoryVisibility,
-            proxyHost as string,
-          ),
-        }
-      : r,
-  );
-}
+  return items.flatMap((r) => {
+    if (r.name !== paramName || typeof r.value !== 'string') {
+      return r;
+    }
+    const proxyUrl = getImageUrlForVisibility(r.value, visibility, proxyHost ?? null);
+    if (proxyUrl == null || proxyUrl === r.value) {
+      return [r];
+    }
+    return [r, { ...r, name: `${paramName} (via access proxy)`, value: proxyUrl }];
+  });
+};
 
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
@@ -128,14 +131,14 @@ const PipelineRunDetailsTab: React.FC = () => {
   }
 
   const results = getPipelineRunStatusResults(pipelineRun);
-  const patchedResultsForProxy = replaceParamValue(
+  const patchedResultsForProxy = addProxyUrlParamValue(
     results,
     'IMAGE_URL',
     imageRepository?.spec?.image?.visibility,
     urlInfo?.hostname,
   );
   const specParams = pipelineRun.spec.params;
-  const patchedSpecParamsForProxy = replaceParamValue(
+  const patchedSpecParamsForProxy = addProxyUrlParamValue(
     specParams,
     'output-image',
     imageRepository?.spec?.image?.visibility,
@@ -453,7 +456,7 @@ const PipelineRunDetailsTab: React.FC = () => {
             </FlexItem>
           </Flex>
 
-          {patchedResultsForProxy ? (
+          {patchedResultsForProxy?.length ? (
             <>
               <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
               <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />
