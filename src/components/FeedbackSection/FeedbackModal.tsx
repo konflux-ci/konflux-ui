@@ -6,16 +6,16 @@ import {
   Bullseye,
   Spinner,
   Button,
-  StackItem,
-  Stack,
   ButtonType,
+  Panel,
+  PanelFooter,
 } from '@patternfly/react-core';
 import { ErrorBoundary } from '@sentry/react';
 import { Formik, Form } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
-import RHSupportLightSvg from '../../assets/RHsupportLight.svg';
+import RHsupportLight from '../../assets/rh_feedback.svg';
 import BeginningSection from './components/BeginningSection';
 import { FeedbackSections } from './consts';
 import { BugInfo, FeatureInfo, getBugURL, getFeatureURL } from './feedback-utils';
@@ -93,81 +93,75 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
       {({ isSubmitting, errors, touched }) => {
         return (
           <Form>
-            <Flex direction={{ default: 'row' }} alignItems={{ default: 'alignItemsStretch' }}>
-              <Flex flex={{ default: 'flex_3' }}>
-                <FlexItem className="feedback-modal__content">
-                  <Stack hasGutter>
-                    <StackItem>
-                      <ErrorBoundary>
-                        <React.Suspense
-                          fallback={
-                            <Bullseye>
-                              <Spinner size="xl" />
-                            </Bullseye>
-                          }
-                        >
-                          {currentSection === FeedbackSections.BeginningSection && (
-                            <BeginningSection setCurrentSection={setCurrentSection} />
-                          )}
-                          {currentSection === FeedbackSections.FeedbackSection && (
-                            <FeedbackSection />
-                          )}
-                          {currentSection === FeedbackSections.BugSection && (
-                            <BugRFESection currentSection={FeedbackSections.BugSection} />
-                          )}
-                          {currentSection === FeedbackSections.FeatureSection && (
-                            <BugRFESection currentSection={FeedbackSections.FeatureSection} />
-                          )}
-                        </React.Suspense>
-                      </ErrorBoundary>
-                    </StackItem>
-                    <StackItem isFilled />
-                    <StackItem>
-                      {(currentSection === FeedbackSections.BugSection ||
-                        currentSection === FeedbackSections.FeatureSection) && (
-                        <Button
-                          variant="primary"
-                          type={ButtonType.submit}
-                          className="pf-v5-u-mr-sm"
-                          isDisabled={isEmpty(touched) || !isEmpty(errors) || isSubmitting}
-                        >
-                          Preview on Github
-                        </Button>
+            <Flex
+              className="feedback-modal__feedback-flex"
+              direction={{ default: 'row' }}
+              alignItems={{ default: 'alignItemsStretch' }}
+            >
+              <FlexItem
+                className="feedback-modal__feedback-description"
+                flex={{ default: 'flex_2' }}
+              >
+                <Panel isScrollable className="feedback-modal__panel-content">
+                  <ErrorBoundary>
+                    <React.Suspense
+                      fallback={
+                        <Bullseye>
+                          <Spinner size="xl" />
+                        </Bullseye>
+                      }
+                    >
+                      {currentSection === FeedbackSections.BeginningSection && (
+                        <BeginningSection setCurrentSection={setCurrentSection} />
                       )}
-                      {currentSection === FeedbackSections.FeedbackSection && (
-                        <Button
-                          variant="primary"
-                          type={ButtonType.submit}
-                          className="pf-v5-u-mr-sm"
-                          isDisabled={isEmpty(touched) || !isEmpty(errors) || isSubmitting}
-                        >
-                          Submit feedback
-                        </Button>
+                      {currentSection === FeedbackSections.FeedbackSection && <FeedbackSection />}
+                      {currentSection === FeedbackSections.BugSection && (
+                        <BugRFESection currentSection={FeedbackSections.BugSection} />
                       )}
-                      {currentSection !== FeedbackSections.BeginningSection && (
-                        <Button
-                          variant="secondary"
-                          onClick={() => setCurrentSection(FeedbackSections.BeginningSection)}
-                          className="pf-v5-u-mr-sm"
-                        >
-                          Back
-                        </Button>
+                      {currentSection === FeedbackSections.FeatureSection && (
+                        <BugRFESection currentSection={FeedbackSections.FeatureSection} />
                       )}
+                    </React.Suspense>
+                  </ErrorBoundary>
+
+                  <PanelFooter className="feedback-modal__panel-footer">
+                    {(currentSection === FeedbackSections.BugSection ||
+                      currentSection === FeedbackSections.FeatureSection) && (
                       <Button
-                        variant="link"
-                        onClick={() => onClose(null, { submitClicked: false })}
+                        variant="primary"
+                        type={ButtonType.submit}
+                        isDisabled={isEmpty(touched) || !isEmpty(errors) || isSubmitting}
                       >
-                        Cancel
+                        Preview on Github
                       </Button>
-                    </StackItem>
-                  </Stack>
-                </FlexItem>
-              </Flex>
-              <Flex flex={{ default: 'flex_1' }} className="feedback-modal__side-art">
-                <FlexItem className="pf-m-align-self-stretch">
-                  <RHSupportLightSvg style={{ height: '100%', width: '100%' }} />
-                </FlexItem>
-              </Flex>
+                    )}
+                    {currentSection === FeedbackSections.FeedbackSection && (
+                      <Button
+                        variant="primary"
+                        type={ButtonType.submit}
+                        isDisabled={isEmpty(touched) || !isEmpty(errors) || isSubmitting}
+                      >
+                        Submit feedback
+                      </Button>
+                    )}
+                    {currentSection !== FeedbackSections.BeginningSection && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => setCurrentSection(FeedbackSections.BeginningSection)}
+                      >
+                        Back
+                      </Button>
+                    )}
+                    <Button variant="link" onClick={() => onClose(null, { submitClicked: false })}>
+                      Cancel
+                    </Button>
+                  </PanelFooter>
+                </Panel>
+              </FlexItem>
+
+              <FlexItem className="feedback-modal__image-flex" flex={{ default: 'flex_1' }}>
+                <RHsupportLight className="feedback-modal__feedback-image" />
+              </FlexItem>
             </Flex>
           </Form>
         );

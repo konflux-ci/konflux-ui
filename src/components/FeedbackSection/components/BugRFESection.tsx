@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, StackItem, Text, TextContent, TextVariants, Tooltip } from '@patternfly/react-core';
+import { Text, TextContent, TextVariants, Tooltip } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { CheckboxField, InputField } from 'formik-pf';
 import { FeedbackSections } from '../consts';
@@ -10,8 +10,8 @@ interface BugRFESectionProps {
 
 const BugRFESection: React.FC<BugRFESectionProps> = ({ currentSection }) => {
   return (
-    <Stack>
-      <StackItem>
+    <>
+      <div className="feedback-modal__panel-header">
         <TextContent>
           <Text component={TextVariants.h1}>
             {currentSection === FeedbackSections.BugSection
@@ -19,8 +19,6 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({ currentSection }) => {
               : 'Request a new feature'}
           </Text>
         </TextContent>
-      </StackItem>
-      <StackItem>
         <TextContent className="feedback-modal__spacer-bottom">
           <Text component={TextVariants.small}>
             {currentSection === FeedbackSections.BugSection
@@ -28,9 +26,9 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({ currentSection }) => {
               : 'Please provide detailed description of the feature'}
           </Text>
         </TextContent>
-      </StackItem>
-      <StackItem>
-        <TextContent className="feedback-modal__input-field">
+      </div>
+      <div className="feedback-modal__content-main">
+        <div className="feedback-modal__input-field">
           <InputField
             name={currentSection === FeedbackSections.BugSection ? 'bug.title' : 'feature.title'}
             label="Title"
@@ -39,10 +37,8 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({ currentSection }) => {
             }
             required
           />
-        </TextContent>
-      </StackItem>
-      <StackItem>
-        <TextContent className="feedback-modal__input-field feedback-modal__spacer-bottom">
+        </div>
+        <div className="feedback-modal__input-field">
           <InputField
             name={
               currentSection === FeedbackSections.BugSection
@@ -64,18 +60,16 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({ currentSection }) => {
             }
             required
           />
-        </TextContent>
-      </StackItem>
-      {currentSection === FeedbackSections.BugSection && (
-        <StackItem>
+        </div>
+        {currentSection === FeedbackSections.BugSection && (
           <CheckboxField
             name="bug.getAdditionalInfo"
             aria-label="get system info"
             label="Include system information (os, architecture, etc)"
           />
-        </StackItem>
-      )}
-    </Stack>
+        )}
+      </div>
+    </>
   );
 };
 
