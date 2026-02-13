@@ -59,17 +59,21 @@ const mockUseEnterpriseContractResults = useEnterpriseContractResults as jest.Mo
 
 const securityEnterpriseContracts = (pipelineRun: string) => (
   <FilterContextProvider filterParams={['rule', 'status', 'component']}>
-    <SecurityEnterpriseContractTab pipelineRun={pipelineRun} />
+    <SecurityEnterpriseContractTab pipelineRunName={pipelineRun} />
   </FilterContextProvider>
 );
 
 describe('SecurityEnterpriseContractTab', () => {
   beforeEach(() => {
-    mockUseEnterpriseContractResults.mockReturnValue([mockEnterpriseContractUIData, true]);
+    mockUseEnterpriseContractResults.mockReturnValue([
+      mockEnterpriseContractUIData,
+      true,
+      undefined,
+    ]);
   });
 
   it('should render empty state for security tab when pods are missing', () => {
-    mockUseEnterpriseContractResults.mockReturnValue([undefined, true]);
+    mockUseEnterpriseContractResults.mockReturnValue([undefined, true, undefined]);
 
     routerRenderer(securityEnterpriseContracts('dummy'));
     screen.getByTestId('security-tab-empty-state');

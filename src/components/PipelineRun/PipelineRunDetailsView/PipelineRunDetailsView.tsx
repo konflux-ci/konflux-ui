@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { CONFORMA_TASK } from '~/consts/security';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
@@ -15,7 +16,7 @@ import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
+import { isTaskRunInPipelineRun, pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../../DetailsPage';
@@ -40,6 +41,11 @@ export const PipelineRunDetailsView: React.FC = () => {
     [loaded, pipelineRun],
   );
 
+  const hasConformaTaskRun = React.useMemo(
+    () => isTaskRunInPipelineRun(pipelineRun, CONFORMA_TASK),
+    [pipelineRun],
+  );
+
   if (!loaded) {
     return (
       <Bullseye>
@@ -52,7 +58,7 @@ export const PipelineRunDetailsView: React.FC = () => {
     return getErrorState(error, loaded, 'pipeline run');
   }
 
-  const isEnterpriseContract = isResourceEnterpriseContract(pipelineRun);
+  const showSecurityTab = isResourceEnterpriseContract(pipelineRun) || hasConformaTaskRun;
 
   const applicationName = pipelineRun.metadata?.labels[PipelineRunLabel.APPLICATION];
   const integrationTestName = queryParams.get('integrationTestName') || '';
@@ -153,7 +159,7 @@ export const PipelineRunDetailsView: React.FC = () => {
           label: 'Logs',
           isFilled: true,
         },
-        ...(isEnterpriseContract
+        ...(showSecurityTab
           ? [
               {
                 key: 'security',

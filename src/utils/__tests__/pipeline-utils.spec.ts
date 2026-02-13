@@ -1,3 +1,4 @@
+import { mockPipelineRuns } from '~/components/ApplicationDetails/__data__/mock-pipeline-run';
 import { runStatus } from '~/consts/pipelinerun';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
@@ -13,6 +14,7 @@ import {
   isPipelineV1Beta1,
   isTaskV1Beta1,
   taskTestResultStatus,
+  isTaskRunInPipelineRun,
 } from '../pipeline-utils';
 
 const samplePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
@@ -291,5 +293,23 @@ describe('taskTestResultStatus', () => {
     expect(
       taskTestResultStatus(resultsWithInvalidTestOutputJsonValue as TektonResultsRun[]),
     ).toBeUndefined();
+  });
+});
+
+describe('isTaskRunInPipelineRun', () => {
+  it('should return false if pipeline run is undefined', () => {
+    expect(isTaskRunInPipelineRun(undefined, 'taskrun')).toBe(false);
+  });
+
+  it('should return false if task run is not in pipeline run', () => {
+    expect(isTaskRunInPipelineRun(mockPipelineRuns[0] as PipelineRunKind, 'missing-taskrun')).toBe(
+      false,
+    );
+  });
+
+  it('should return true if task run is in pipeline run', () => {
+    expect(isTaskRunInPipelineRun(mockPipelineRuns[0] as PipelineRunKind, 'clone-repository')).toBe(
+      true,
+    );
   });
 });
