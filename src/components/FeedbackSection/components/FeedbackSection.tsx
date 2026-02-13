@@ -1,24 +1,23 @@
 import * as React from 'react';
-import { Stack, StackItem, Text, TextContent, TextVariants } from '@patternfly/react-core';
+import { Text, TextContent, TextVariants } from '@patternfly/react-core';
 import { InputField, RadioGroupField } from 'formik-pf';
 import HelpPopover from '../../HelpPopover';
 
 const FeedbackSection: React.FC = () => {
   return (
-    <Stack hasGutter>
-      <StackItem>
+    <>
+      <div className="feedback-modal__panel-header">
         <TextContent>
           <Text component={TextVariants.h1}>Share feedback</Text>
         </TextContent>
-      </StackItem>
-      <StackItem>
+
         <TextContent className="feedback-modal__spacer-bottom">
           <Text component={TextVariants.small}>
             Please share your experience using Konflux directly to the product team
           </Text>
         </TextContent>
-      </StackItem>
-      <StackItem>
+      </div>
+      <div className="feedback-modal__content-main">
         <RadioGroupField
           name="feedback.feedbackScale"
           label={
@@ -58,8 +57,7 @@ const FeedbackSection: React.FC = () => {
             },
           ]}
         />
-      </StackItem>
-      <StackItem>
+
         <TextContent className="feedback-modal__input-field">
           <InputField
             name="feedback.description"
@@ -68,9 +66,8 @@ const FeedbackSection: React.FC = () => {
             required
           />
         </TextContent>
-      </StackItem>
-      <StackItem>
-        <TextContent className="feedback-modal__input-field feedback-modal__spacer-bottom">
+
+        <TextContent className="feedback-modal__input-field">
           <InputField
             name="feedback.email"
             label={<b>Email</b>}
@@ -78,8 +75,8 @@ const FeedbackSection: React.FC = () => {
             helperText="This is optional"
           />
         </TextContent>
-      </StackItem>
-    </Stack>
+      </div>
+    </>
   );
 };
 
