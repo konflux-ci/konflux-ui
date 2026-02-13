@@ -57,13 +57,16 @@ describe('Components page routes configuration', () => {
 
   it('should include index and placeholder child routes', () => {
     const [, detailsRoute] = componentsPageRoutes as [{ path: string }, PathRoute];
-    const [indexRoute, activityRoute, versionsRoute] = detailsRoute.children;
+    const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute] = detailsRoute.children;
 
     expect(indexRoute.index).toBe(true);
     expect(indexRoute.element).toEqual(<ComponentDetailsTab />);
 
+    expect(activityWithTabRoute.path).toBe('activity/:activityTab');
+    expect(activityWithTabRoute.element).toBeDefined();
+
     expect(activityRoute.path).toBe('activity');
-    expect(activityRoute.element).toBeNull();
+    expect(activityRoute.element).toBeDefined();
 
     expect(versionsRoute.path).toBe('versions');
     expect(versionsRoute.element).toBeNull();

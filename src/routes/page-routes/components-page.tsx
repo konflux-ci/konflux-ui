@@ -1,10 +1,12 @@
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import {
+  ComponentActivityTab,
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
   componentDetailsViewLoader,
 } from '../../components/ComponentsPage/ComponentDetails';
 import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../paths';
+import { RouterParams } from '../utils';
 
 const componentsPageRoutes = [
   {
@@ -26,8 +28,12 @@ const componentsPageRoutes = [
         element: <ComponentDetailsTab />,
       },
       {
+        path: `activity/:${RouterParams.activityTab}`,
+        element: <ComponentActivityTab />,
+      },
+      {
         path: 'activity',
-        element: null, // TODO: implement Activity tab https://issues.redhat.com/browse/KFLUXUI-1006
+        element: <ComponentActivityTab />,
       },
       {
         path: `versions`,
