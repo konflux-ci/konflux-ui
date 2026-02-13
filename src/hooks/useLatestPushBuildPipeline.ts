@@ -68,6 +68,44 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   return [latestSuccess, loaded, error];
 };
 
+export const useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 = (
+  namespace: string,
+  componentName: string,
+  branchName: string | undefined,
+): [PipelineRunKind | undefined, boolean, unknown] => {
+  const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
+    namespace,
+    React.useMemo(
+      () => ({
+        selector: {
+          matchLabels: {
+            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+            [PipelineRunLabel.COMPONENT]: componentName,
+          },
+          ...(branchName ? { filterByTargetBranch: branchName } : {}),
+        },
+      }),
+      [componentName, branchName],
+    ),
+  );
+
+  const latestSuccess = React.useMemo(
+    () =>
+      loaded &&
+      !error &&
+      pipelines?.find((pipeline) => pipelineRunStatus(pipeline) === runStatus.Succeeded),
+    [error, loaded, pipelines],
+  );
+
+  React.useEffect(() => {
+    if (loaded && !error && !latestSuccess && getNextPage) {
+      getNextPage();
+    }
+  }, [loaded, error, getNextPage, latestSuccess]);
+
+  return [latestSuccess, loaded, error];
+};
+
 export const useLatestPushBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,

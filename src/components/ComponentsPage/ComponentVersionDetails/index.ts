@@ -3,7 +3,7 @@ import { ComponentModel } from '../../../models';
 import { RouterParams } from '../../../routes/utils';
 import { createLoaderWithAccessCheck } from '../../../utils/rbac';
 
-export const componentDetailsViewLoader = createLoaderWithAccessCheck(
+export const componentVersionDetailsViewLoader = createLoaderWithAccessCheck(
   async ({ params }) => {
     const ns = params[RouterParams.workspaceName];
     return k8sQueryGetResource({
@@ -20,7 +20,6 @@ export const componentDetailsViewLoader = createLoaderWithAccessCheck(
   },
 );
 
-export { default as ComponentDetailsViewLayout } from './ComponentDetailsView';
-export { default as ComponentDetailsTab } from '../../Components/ComponentDetails/tabs/ComponentDetailsTab';
-export { default as ComponentActivityTab } from './tabs/ComponentActivityTab';
-export { default as ComponentVersionsTab } from './tabs/ComponentVersionsTab';
+export { default as ComponentVersionDetailsViewLayout } from './ComponentVersionDetailsView';
+export { default as ComponentVersionOverviewTab } from './tabs/ComponentVersionOverviewTab';
+export { default as ComponentVersionActivityTab } from './tabs/ComponentVersionActivityTab';

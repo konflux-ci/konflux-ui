@@ -6,12 +6,14 @@ import PipelineRunsListView from '../PipelineRun/PipelineRunListView/PipelineRun
 type PipelineRunsTabProps = {
   applicationName: string;
   componentName?: string;
+  branchName?: string;
   customFilter?: (plr: PipelineRunKind) => boolean;
 };
 
 const PipelineRunsTab: React.FC<React.PropsWithChildren<PipelineRunsTabProps>> = ({
   applicationName,
   componentName,
+  branchName,
   customFilter,
 }) => {
   return (
@@ -19,6 +21,7 @@ const PipelineRunsTab: React.FC<React.PropsWithChildren<PipelineRunsTabProps>> =
       <PipelineRunsListView
         applicationName={applicationName}
         componentName={componentName}
+        branchName={branchName}
         customFilter={customFilter}
       />
     </FilterContextProvider>
