@@ -50,6 +50,15 @@ describe('SnapshotComponentsListRow', () => {
     expect(queryByText('test-go')).toBeInTheDocument();
   });
 
+  it('should link component name to component details page', () => {
+    renderWithQueryClientAndRouter(<SnapshotComponentsListRow columns={null} obj={rowData} />);
+    const componentNameLink = screen.getByRole('link', { name: 'test-go' });
+    expect(componentNameLink).toHaveAttribute(
+      'href',
+      '/ns//applications/test-app/components/test-go',
+    );
+  });
+
   it('should list Git URL as a link ', () => {
     renderWithQueryClientAndRouter(<SnapshotComponentsListRow columns={null} obj={rowData} />);
     const githubLink = screen.queryByTestId('snapshot-component-git-url');

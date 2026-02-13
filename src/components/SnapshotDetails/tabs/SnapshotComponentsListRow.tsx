@@ -4,7 +4,7 @@ import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
 import GitRepoLink from '~/components/GitLink/GitRepoLink';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
-import { COMMIT_DETAILS_PATH, COMPONENT_LIST_PATH } from '~/routes/paths';
+import { COMMIT_DETAILS_PATH, COMPONENT_DETAILS_PATH } from '~/routes/paths';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ImageRepositoryVisibility } from '~/types';
@@ -46,9 +46,10 @@ const SnapshotComponentsListRow: React.FC<
     <>
       <TableData data-test="snapshot-component-list-row" className={commitsTableColumnClasses.name}>
         <Link
-          to={COMPONENT_LIST_PATH.createPath({
+          to={COMPONENT_DETAILS_PATH.createPath({
             workspaceName: namespace,
             applicationName: obj.application,
+            componentName: obj.name,
           })}
         >
           {obj.name}
