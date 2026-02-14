@@ -7672,12 +7672,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react-refresh@npm:^0.4.7":
-  version: 0.4.26
-  resolution: "eslint-plugin-react-refresh@npm:0.4.26"
+"eslint-plugin-react-refresh@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "eslint-plugin-react-refresh@npm:0.5.0"
   peerDependencies:
-    eslint: ">=8.40"
-  checksum: 10/068da7edcd39d802dda4c03b7ea8923891145eb95f4dfd4cfce82a53a5eb55f5cbe66b33cf8e57b71f1525a684517bda4bfca1bc5c6b12c82ba03c9e8197764d
+    eslint: ">=9"
+  checksum: 10/4808dee9ac4e34eff8e28cc314e132f19cd479ac47067ebbd5cabe820848f16abadf759fc7360938e2f3fc851eb85357def1d139a8bcc1eec64ac2d9e2b4d499
   languageName: node
   linkType: hard
 
@@ -10579,7 +10579,7 @@ __metadata:
     eslint-plugin-prettier: "npm:^5.2.1"
     eslint-plugin-react: "npm:^7.34.3"
     eslint-plugin-react-hooks: "npm:^4.6.2"
-    eslint-plugin-react-refresh: "npm:^0.4.7"
+    eslint-plugin-react-refresh: "npm:^0.5.0"
     file-saver: "npm:^2.0.5"
     fork-ts-checker-webpack-plugin: "npm:^9.0.2"
     formik: "npm:^2.4.6"
