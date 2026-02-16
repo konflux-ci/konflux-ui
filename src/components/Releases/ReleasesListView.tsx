@@ -21,6 +21,7 @@ import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmpt
 import ColumnManagement from '../../shared/components/table/ColumnManagement';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { ReleaseKind } from '../../types';
+import { filterDeletedResources } from '../../utils/resource-utils';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { ReleasesFilterToolbar } from '../Filter/toolbars/ReleasesFilterToolbar';
 import ReleasesEmptyState from './ReleasesEmptyState';
@@ -76,6 +77,12 @@ const ReleasesListView: React.FC = () => {
         : undefined,
     },
     ReleaseModel,
+    undefined,
+    undefined,
+    undefined,
+    {
+      filterData: filterDeletedResources as (resource: ReleaseKind[]) => ReleaseKind[],
+    },
   );
 
   const [filterType, setFilterType] = React.useState<FilterTypes>(FilterTypes.name);
