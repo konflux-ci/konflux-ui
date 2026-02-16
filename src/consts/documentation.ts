@@ -11,8 +11,7 @@ export const LEARN_MORE_ABOUT_INTEGRATION_TESTS =
   'https://konflux-ci.dev/docs/testing/integration/';
 export const INTERNAL_DOCUMENTATION_BASE_URL = 'https://konflux.pages.redhat.com/docs/users/';
 export const EXTERNAL_DOCUMENTATION_BASE_URL = 'https://konflux-ci.dev/docs/';
-export const LEARN_MORE_ABOUT_SECRETS_CREATION =
-  'https://konflux-ci.dev/docs/building/creating-secrets/';
+export const LEARN_MORE_ABOUT_SECRETS_CREATION = 'https://konflux-ci.dev/docs/building/secrets/';
 export const LEARN_MORE_ABOUT_CREATING_APPLICATIONS =
   'https://konflux-ci.dev/docs/building/creating/';
 export const LEARN_MORE_ABOUT_COMPONENTS = 'https://konflux-ci.dev/docs/building/creating/'; // Duplicate for readability

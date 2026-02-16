@@ -9,7 +9,7 @@ export const PipelineRunSecurityEnterpriseContractTab: React.FC = () => {
 
   return (
     <FilterContextProvider filterParams={['rule', 'status', 'component']}>
-      <SecurityEnterpriseContractTab pipelineRun={pipelineRunName} />
+      <SecurityEnterpriseContractTab pipelineRunName={pipelineRunName} />
     </FilterContextProvider>
   );
 };

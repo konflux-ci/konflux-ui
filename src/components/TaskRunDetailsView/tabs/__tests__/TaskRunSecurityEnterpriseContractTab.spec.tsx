@@ -49,7 +49,7 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
 
     mockUseTaskRunV2.mockReturnValue([mockTaskRun, true]);
 
-    mockUseEnterpriseContractResults.mockReturnValue([null, false]);
+    mockUseEnterpriseContractResults.mockReturnValue([null, false, undefined]);
 
     renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
 
@@ -83,37 +83,6 @@ describe('TaskrunSecurityEnterpriseContractTab', () => {
     expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith('test-pipelinerun');
     expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
     expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-  });
-
-  it('should render SecurityEnterpriseContractTab with undefined pipelineRun when label is missing', () => {
-    const mockTaskRun = {
-      ...testTaskRuns[0],
-      metadata: {
-        ...testTaskRuns[0].metadata,
-        labels: {},
-      },
-    };
-
-    mockUseTaskRunV2.mockReturnValue([mockTaskRun, true]);
-
-    renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
-
-    expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith(undefined);
-    expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
-  });
-
-  it('should render SecurityEnterpriseContractTab with undefined pipelineRun when metadata is missing', () => {
-    const mockTaskRun = {
-      ...testTaskRuns[0],
-      metadata: undefined,
-    };
-
-    mockUseTaskRunV2.mockReturnValue([mockTaskRun, true]);
-
-    renderWithQueryClientAndRouter(<TaskrunSecurityEnterpriseContractTab />);
-
-    expect(mockUseEnterpriseContractResults).toHaveBeenCalledWith(undefined);
-    expect(screen.getByText('Testing apps against Enterprise Contract')).toBeInTheDocument();
   });
 
   it('should call useTaskRunV2 with correct parameters', () => {

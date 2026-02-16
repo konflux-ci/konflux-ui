@@ -24,7 +24,7 @@ export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
 
   return (
     <FilterContextProvider filterParams={['rule', 'status', 'component']}>
-      <SecurityEnterpriseContractTab pipelineRun={plrName} />
+      <SecurityEnterpriseContractTab pipelineRunName={plrName} />
     </FilterContextProvider>
   );
 };

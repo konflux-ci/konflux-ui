@@ -236,9 +236,10 @@ export const useTaskRunsForPipelineRuns = (
     () => ({
       matchLabels: {
         [TektonResourceLabel.pipelinerun]: pipelineRunName,
+        ...(taskName && { [TektonResourceLabel.pipelineTask]: taskName }),
       },
     }),
-    [pipelineRunName],
+    [pipelineRunName, taskName],
   );
 
   const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsV2(
@@ -250,16 +251,7 @@ export const useTaskRunsForPipelineRuns = (
     { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
   );
 
-  const sortedTaskRuns = React.useMemo(() => {
-    if (taskName) {
-      // used taskName here instead of api call to filter by task name because we cache all the task runs for a pipeline run,
-      // it's better we filter here instead of in the api call to avoid unnecessary api calls
-      return taskRuns.filter(
-        (tr) => tr.metadata?.labels?.[TektonResourceLabel.pipelineTask] === taskName,
-      );
-    }
-    return sortTaskRunsByTime(taskRuns);
-  }, [taskRuns, taskName]);
+  const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
 
   return [sortedTaskRuns, loaded, error, getNextPage, nextPageProps];
 };
