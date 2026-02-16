@@ -22,7 +22,7 @@ export const SecretLabels = ({
   ) : (
     <>
       {labels.map((l, i) => {
-        if (expanded || i <= maxLabels) {
+        if (expanded || i < maxLabels) {
           return (
             <Label key={l} className="secret-label">
               {l}
