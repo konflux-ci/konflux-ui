@@ -18,7 +18,7 @@ import { SecretTypeSubForm } from './SecretTypeSubForm';
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  //   const { secretName } = useLocation().state as { secretName: string };
+  //   const { secretData } = useLocation().state as { secretData: SecretKind };
 
   const initialValues: AddSecretFormValues = {
     type: SecretTypeDropdownLabel.opaque,
