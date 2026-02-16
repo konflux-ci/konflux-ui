@@ -11,6 +11,7 @@ import {
 } from '@patternfly/react-core';
 import { SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
+import { getErrorState } from '~/shared/utils/error-utils';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
@@ -43,9 +44,9 @@ const getResultsSummary = (ECs, ecLoaded) => {
 };
 
 export const SecurityEnterpriseContractTab: React.FC<
-  React.PropsWithChildren<{ pipelineRun: string }>
-> = ({ pipelineRun }) => {
-  const [ecResult, ecResultLoaded] = useEnterpriseContractResults(pipelineRun);
+  React.PropsWithChildren<{ pipelineRunName: string }>
+> = ({ pipelineRunName }) => {
+  const [ecResult, ecResultLoaded, ecError] = useEnterpriseContractResults(pipelineRunName);
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -110,6 +111,10 @@ export const SecurityEnterpriseContractTab: React.FC<
       />
     </BaseTextFilterToolbar>
   );
+
+  if (ecError) {
+    return getErrorState(ecError, ecResultLoaded, 'Conforma results');
+  }
 
   if (!ecResultLoaded && !filteredECResult) {
     return (
