@@ -1,26 +1,26 @@
 import { screen } from '@testing-library/react';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { useImageProxy } from '../../../../hooks/useImageProxy';
-import { useImageRepository } from '../../../../hooks/useImageRepository';
-import { useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 } from '../../../../hooks/useLatestPushBuildPipeline';
-import { useTaskRunsForPipelineRuns } from '../../../../hooks/useTaskRunsV2';
-import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { useImageProxy } from '~/hooks/useImageProxy';
+import { useImageRepository } from '~/hooks/useImageRepository';
+import { useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 } from '~/hooks/useLatestPushBuildPipeline';
+import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import ComponentVersionLatestBuild from '../tabs/ComponentVersionLatestBuild';
 
-jest.mock('../../../../hooks/useLatestPushBuildPipeline', () => ({
+jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
   useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2: jest.fn(),
 }));
-jest.mock('../../../../hooks/useTaskRunsV2', () => ({
+jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
 }));
-jest.mock('../../../../hooks/useImageProxy', () => ({
+jest.mock('~/hooks/useImageProxy', () => ({
   useImageProxy: jest.fn(),
 }));
-jest.mock('../../../../hooks/useImageRepository', () => ({
+jest.mock('~/hooks/useImageRepository', () => ({
   useImageRepository: jest.fn(),
 }));
-jest.mock('../../../LogViewer/BuildLogViewer', () => ({
+jest.mock('~/components/LogViewer/BuildLogViewer', () => ({
   useBuildLogViewerModal: () => jest.fn(),
 }));
 
@@ -79,7 +79,7 @@ describe('ComponentVersionLatestBuild', () => {
     renderWithQueryClientAndRouter(
       <ComponentVersionLatestBuild component={mockComponent} branchName="main" />,
     );
-    expect(document.querySelector('.pf-v5-c-spinner')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('should show alert when no successful build pipeline exists', () => {

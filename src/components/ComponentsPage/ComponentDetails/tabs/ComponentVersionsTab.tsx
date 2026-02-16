@@ -59,7 +59,7 @@ const ComponentVersionsTab: React.FC = () => {
                   to={COMPONENT_VERSION_DETAILS_PATH.createPath({
                     workspaceName: namespace,
                     componentName,
-                    verName: branch,
+                    versionName: branch,
                   })}
                   data-test={`version-link-${branch}`}
                 >

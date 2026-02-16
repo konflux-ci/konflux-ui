@@ -5,8 +5,6 @@ import { usePipelineRunsV2 } from './usePipelineRunsV2';
 /**
  * Returns distinct branch names (target_branch annotation) from pipeline runs
  * for the given component. Used to populate the Versions tab.
- * Note: Uses a limit of 100 pipeline runs; branches whose runs fall outside
- * the first 100 (by creation time) will not appear in the list.
  */
 export const useComponentBranches = (
   namespace: string | null,

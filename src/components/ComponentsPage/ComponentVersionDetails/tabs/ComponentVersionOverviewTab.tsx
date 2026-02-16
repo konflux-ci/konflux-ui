@@ -17,11 +17,11 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import ComponentVersionLatestBuild from './ComponentVersionLatestBuild';
 
 const ComponentVersionOverviewTab: React.FC = () => {
-  const { componentName, verName } = useParams<RouterParams>();
+  const { componentName, versionName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponent(namespace, componentName ?? '');
 
-  if (!componentName || !verName) return null;
+  if (!componentName || !versionName) return null;
   if (!loaded) {
     return (
       <Bullseye>
@@ -48,7 +48,7 @@ const ComponentVersionOverviewTab: React.FC = () => {
         >
           <DescriptionListGroup>
             <DescriptionListTerm>Branch</DescriptionListTerm>
-            <DescriptionListDescription>{verName ?? '-'}</DescriptionListDescription>
+            <DescriptionListDescription>{versionName ?? '-'}</DescriptionListDescription>
           </DescriptionListGroup>
           <DescriptionListGroup>
             <DescriptionListTerm>Repository</DescriptionListTerm>
@@ -62,7 +62,7 @@ const ComponentVersionOverviewTab: React.FC = () => {
         title="Latest build"
         description="All information is based on the latest successful build of this component for this branch."
       >
-        <ComponentVersionLatestBuild component={component} branchName={verName ?? ''} />
+        <ComponentVersionLatestBuild component={component} branchName={versionName ?? ''} />
       </DetailsSection>
     </div>
   );

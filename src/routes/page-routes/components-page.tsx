@@ -47,7 +47,7 @@ const componentsPageRoutes = [
         element: <ComponentVersionsTab />,
       },
       {
-        path: `versions/:${RouterParams.verName}`,
+        path: `versions/:${RouterParams.versionName}`,
         errorElement: <RouteErrorBoundry />,
         loader: componentVersionDetailsViewLoader,
         element: <ComponentVersionDetailsViewLayout />,

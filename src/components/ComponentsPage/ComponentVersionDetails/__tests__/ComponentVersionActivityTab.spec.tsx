@@ -1,15 +1,15 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
-import { useComponent, useComponents } from '../../../../hooks/useComponents';
-import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
-import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import { createUseApplicationMock } from '../../../../utils/test-utils';
-import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
-import { MockComponents } from '../../../Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
+import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with-commits';
+import { MockComponents } from '~/components/Commits/CommitDetails/visualization/__data__/MockCommitWorkflowData';
+import { useComponent, useComponents } from '~/hooks/useComponents';
+import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { createUseApplicationMock } from '~/utils/test-utils';
 import ComponentVersionActivityTab from '../tabs/ComponentVersionActivityTab';
 
-jest.mock('../../../../hooks/useTektonResults');
+jest.mock('~/hooks/useTektonResults');
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -17,17 +17,17 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('../../../Commits/commit-status', () => ({
-  ...jest.requireActual('../../../Commits/commit-status'),
+jest.mock('~/components/Commits/commit-status', () => ({
+  ...jest.requireActual('~/components/Commits/commit-status'),
   useCommitStatus: () => ['-', true],
 }));
 
-jest.mock('../../../../hooks/useComponents', () => ({
+jest.mock('~/hooks/useComponents', () => ({
   useComponents: jest.fn(),
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
+jest.mock('~/hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
@@ -65,7 +65,7 @@ describe('ComponentVersionActivityTab', () => {
     useParamsMock.mockReturnValue({
       activityTab: 'latest-commits',
       componentName: 'test-component',
-      verName: 'main',
+      versionName: 'main',
     });
   });
 

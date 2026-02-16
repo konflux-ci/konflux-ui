@@ -35,43 +35,7 @@ export const useLatestBuildPipelineRunForComponentV2 = (
 export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
-): [PipelineRunKind, boolean, unknown] => {
-  const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
-    namespace,
-    React.useMemo(
-      () => ({
-        selector: {
-          matchLabels: {
-            [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
-            [PipelineRunLabel.COMPONENT]: componentName,
-          },
-        },
-      }),
-      [componentName],
-    ),
-  );
-
-  const latestSuccess = React.useMemo(
-    () =>
-      loaded &&
-      !error &&
-      pipelines?.find((pipeline) => pipelineRunStatus(pipeline) === runStatus.Succeeded),
-    [error, loaded, pipelines],
-  );
-
-  React.useEffect(() => {
-    if (loaded && !error && !latestSuccess && getNextPage) {
-      getNextPage();
-    }
-  }, [loaded, error, getNextPage, latestSuccess]);
-
-  return [latestSuccess, loaded, error];
-};
-
-export const useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 = (
-  namespace: string,
-  componentName: string,
-  branchName: string | undefined,
+  branchName?: string,
 ): [PipelineRunKind | undefined, boolean, unknown] => {
   const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
     namespace,
@@ -105,6 +69,13 @@ export const useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 = (
 
   return [latestSuccess, loaded, error];
 };
+
+export const useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 = (
+  namespace: string,
+  componentName: string,
+  branchName: string | undefined,
+): [PipelineRunKind | undefined, boolean, unknown] =>
+  useLatestSuccessfulBuildPipelineRunForComponentV2(namespace, componentName, branchName);
 
 export const useLatestPushBuildPipelineRunForComponentV2 = (
   namespace: string,

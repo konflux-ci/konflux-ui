@@ -20,11 +20,11 @@ export const COMPONENT_VERSION_ACTIVITY_SECONDARY_TAB_KEY = 'component-version-a
 
 const ComponentVersionActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
-  const { activityTab, componentName, verName } = params;
+  const { activityTab, componentName, versionName } = params;
   const namespace = useNamespace();
-  const [component, loaded, componentError] = useComponent(namespace, componentName);
+  const [component, loaded, componentError] = useComponent(namespace, componentName ?? '');
   const [lastSelectedTab, setLocalStorageItem] = useLocalStorage<string>(
-    `${componentName ?? ''}_${verName ?? ''}_${COMPONENT_VERSION_ACTIVITY_SECONDARY_TAB_KEY}`,
+    `${componentName ?? ''}_${versionName ?? ''}_${COMPONENT_VERSION_ACTIVITY_SECONDARY_TAB_KEY}`,
   );
   const currentTab = activityTab || lastSelectedTab || 'latest-commits';
 
@@ -33,10 +33,10 @@ const ComponentVersionActivityTab: React.FC = () => {
       COMPONENT_VERSION_ACTIVITY_CHILD_TAB_PATH.createPath({
         workspaceName: namespace,
         componentName,
-        verName,
+        versionName,
         activityTab: tab,
       }),
-    [componentName, namespace, verName],
+    [componentName, namespace, versionName],
   );
 
   const navigate = useNavigate();
@@ -112,7 +112,7 @@ const ComponentVersionActivityTab: React.FC = () => {
                 <CommitsListView
                   applicationName={applicationName}
                   componentName={component?.spec?.componentName}
-                  branchName={verName}
+                  branchName={versionName}
                 />
               </FilterContextProvider>
             </Tab>
@@ -126,7 +126,7 @@ const ComponentVersionActivityTab: React.FC = () => {
               <PipelineRunsTab
                 applicationName={applicationName}
                 componentName={component?.spec?.componentName}
-                branchName={verName}
+                branchName={versionName}
                 customFilter={nonTestSnapShotFilter}
               />
             </Tab>

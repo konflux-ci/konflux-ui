@@ -35,17 +35,15 @@ export const convertFilterToKubearchiveSelectors = (
   const matchExpressions: MatchExpression[] = [...(filterBy.matchExpressions ?? [])];
 
   // Build the final selector (excluding custom filter fields)
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const {
-    filterByName: _fn,
-    filterByCreationTimestampAfter: _ft,
-    filterByCommit: _fc,
-    filterByTargetBranch: _fb,
+    filterByName,
+    filterByCreationTimestampAfter,
+    filterByCommit,
+    filterByTargetBranch,
     ...rest
   } = filterBy;
-  void _fn;
-  void _ft;
-  void _fc;
-  void _fb;
+  /* eslint-enable @typescript-eslint/no-unused-vars */
   const selector: Selector = {
     ...rest,
     matchLabels: filterBy.matchLabels,

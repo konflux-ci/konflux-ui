@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { useComponent } from '../../../../hooks/useComponents';
-import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import { useComponent } from '~/hooks/useComponents';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import ComponentVersionOverviewTab from '../tabs/ComponentVersionOverviewTab';
 
 jest.mock('react-router-dom', () => ({
@@ -10,7 +10,7 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useComponents', () => ({
+jest.mock('~/hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
@@ -31,17 +31,17 @@ describe('ComponentVersionOverviewTab', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
-    useParamsMock.mockReturnValue({ componentName: 'my-component', verName: 'main' });
+    useParamsMock.mockReturnValue({ componentName: 'my-component', versionName: 'main' });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
   });
 
   it('should not render overview when componentName is missing', () => {
-    useParamsMock.mockReturnValue({ verName: 'main' });
+    useParamsMock.mockReturnValue({ versionName: 'main' });
     renderWithQueryClientAndRouter(<ComponentVersionOverviewTab />);
     expect(screen.queryByText('Git branch and pipeline')).not.toBeInTheDocument();
   });
 
-  it('should not render overview when verName is missing', () => {
+  it('should not render overview when versionName is missing', () => {
     useParamsMock.mockReturnValue({ componentName: 'my-component' });
     renderWithQueryClientAndRouter(<ComponentVersionOverviewTab />);
     expect(screen.queryByText('Git branch and pipeline')).not.toBeInTheDocument();

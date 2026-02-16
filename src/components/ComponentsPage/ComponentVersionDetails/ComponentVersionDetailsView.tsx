@@ -14,11 +14,11 @@ import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { getErrorState } from '~/shared/utils/error-utils';
 
 const ComponentVersionDetailsView: React.FC = () => {
-  const { componentName, verName } = useParams<RouterParams>();
+  const { componentName, versionName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [component, loaded, componentError] = useComponent(namespace, componentName ?? '');
 
-  if (!componentName || !verName) {
+  if (!componentName || !versionName) {
     return null;
   }
 
@@ -51,16 +51,16 @@ const ComponentVersionDetailsView: React.FC = () => {
     >
       <DetailsPage
         data-test="component-version-details-test-id"
-        headTitle={`${component.spec.componentName} - ${verName}`}
+        headTitle={`${component.spec.componentName} - ${versionName}`}
         title={
           <Text component={TextVariants.h2}>
-            {verName} <FeatureFlagIndicator flags={['components-page']} fullLabel />
+            {versionName} <FeatureFlagIndicator flags={['components-page']} fullLabel />
           </Text>
         }
         baseURL={COMPONENT_VERSION_DETAILS_PATH.createPath({
           workspaceName: namespace,
           componentName,
-          verName,
+          versionName,
         })}
         tabs={[
           {

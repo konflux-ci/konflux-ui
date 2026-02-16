@@ -1,14 +1,15 @@
 import { renderHook } from '@testing-library/react';
-import { PipelineRunKind } from '../../types';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
 import {
   useLatestBuildPipelineRunForComponentV2,
   useLatestSuccessfulBuildPipelineRunForComponentV2,
   useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2,
   useLatestPushBuildPipelineRunForComponentV2,
-} from '../useLatestPushBuildPipeline';
-import { usePipelineRunsV2 } from '../usePipelineRunsV2';
+} from '~/hooks/useLatestPushBuildPipeline';
+import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { PipelineRunKind } from '~/types';
 
-jest.mock('../usePipelineRunsV2', () => ({
+jest.mock('~/hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
@@ -137,8 +138,9 @@ describe('useLatestPushBuildPipelineRunForComponentV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            'pipelines.appstudio.openshift.io/type': 'build',
-            'appstudio.openshift.io/component': 'my-component',
+            [PipelineRunLabel.PIPELINE_TYPE]: 'build',
+            [PipelineRunLabel.COMPONENT]: 'my-component',
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: 'push',
           }),
         }),
         limit: 1,

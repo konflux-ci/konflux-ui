@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { FLAGS } from '../../../../feature-flags/flags';
-import { useIsOnFeatureFlag } from '../../../../feature-flags/hooks';
-import { useComponent } from '../../../../hooks/useComponents';
-import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
+import { FLAGS } from '~/feature-flags/flags';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { useComponent } from '~/hooks/useComponents';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import ComponentVersionDetailsView from '../ComponentVersionDetailsView';
 
 jest.mock('react-router-dom', () => ({
@@ -13,11 +13,11 @@ jest.mock('react-router-dom', () => ({
   useParams: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useComponents', () => ({
+jest.mock('~/hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../feature-flags/hooks', () => ({
+jest.mock('~/feature-flags/hooks', () => ({
   ...jest.requireActual('../../../../feature-flags/hooks'),
   useIsOnFeatureFlag: jest.fn(),
   IfFeature: ({
@@ -47,18 +47,18 @@ describe('ComponentVersionDetailsView', () => {
   mockUseNamespaceHook('test-ns');
 
   beforeEach(() => {
-    useParamsMock.mockReturnValue({ componentName: 'my-component', verName: 'main' });
+    useParamsMock.mockReturnValue({ componentName: 'my-component', versionName: 'main' });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
     mockUseIsOnFeatureFlag.mockReturnValue(true);
   });
 
   it('should not render details page when componentName is missing', () => {
-    useParamsMock.mockReturnValue({ verName: 'main' });
+    useParamsMock.mockReturnValue({ versionName: 'main' });
     renderWithQueryClientAndRouter(<ComponentVersionDetailsView />);
     expect(screen.queryByText('Overview')).not.toBeInTheDocument();
   });
 
-  it('should not render details page when verName is missing', () => {
+  it('should not render details page when versionName is missing', () => {
     useParamsMock.mockReturnValue({ componentName: 'my-component' });
     renderWithQueryClientAndRouter(<ComponentVersionDetailsView />);
     expect(screen.queryByText('Overview')).not.toBeInTheDocument();
