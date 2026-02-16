@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { hashKey } from '@tanstack/query-core';
+import { hashKey, InfiniteData } from '@tanstack/query-core';
 import { useK8sQueryWatch } from '~/k8s/hooks/useK8sQueryWatch';
 import { WebSocketOptions } from '~/k8s/web-socket/types';
 import { fetchResourceWithK8sAndKubeArchive } from '~/kubearchive/resource-utils';
 import { createQueryKeys, useK8sWatchResource } from '../k8s';
 import { K8sResourceReadOptions } from '../k8s/k8s-fetch';
-import { TQueryOptions } from '../k8s/query/type';
+import { TQueryInfiniteOptions, TQueryOptions } from '../k8s/query/type';
 import { useKubearchiveListResourceQuery } from '../kubearchive/hooks';
 import { useDeepCompareMemoize } from '../shared';
 import {
@@ -61,6 +61,7 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
     enableCluster?: boolean;
     enableArchive?: boolean;
   },
+  archiveQueryOptions?: TQueryInfiniteOptions<T[], Error, InfiniteData<T[], unknown>, T[]>,
 ): K8sAndKarchResourcesResult<T> {
   const listResourceInit = React.useMemo(() => {
     if (!resourceInit) return undefined;
@@ -84,6 +85,7 @@ export function useK8sAndKarchResources<T extends K8sResourceCommon>(
   );
 
   const archiveQuery = useKubearchiveListResourceQuery<T>(listResourceInit, model, {
+    ...archiveQueryOptions,
     enabled:
       !!listResourceInit &&
       queryControl?.enableArchive !== false &&

@@ -114,6 +114,7 @@ describe('useK8sAndKarchResources', () => {
   const renderHookWithQueryClient = (
     resourceInit: WatchK8sResource | undefined,
     queryControl?: { enableCluster?: boolean; enableArchive?: boolean },
+    archiveQueryOptions?: Parameters<typeof useK8sAndKarchResources<TestResource>>[5],
   ) => {
     return renderHook(
       () =>
@@ -123,6 +124,7 @@ describe('useK8sAndKarchResources', () => {
           undefined,
           undefined,
           queryControl,
+          archiveQueryOptions,
         ),
       {
         wrapper: ({ children }) =>
@@ -748,6 +750,37 @@ describe('useK8sAndKarchResources', () => {
       undefined,
       mockModel,
       expect.objectContaining({ enabled: false }),
+    );
+  });
+
+  it('should pass archiveQueryOptions to useKubearchiveListResourceQuery', () => {
+    const mockFilterData = jest.fn((items: TestResource[]) => items);
+    mockUseK8sWatchResource.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as any);
+    mockUseKubearchiveListResourceQuery.mockReturnValue({
+      data: { pages: [], pageParams: [undefined] },
+      isLoading: false,
+      error: null,
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    } as any);
+
+    const resourceInit: WatchK8sResource = {
+      groupVersionKind: { group: '', version: 'v1', kind: 'TestResource' },
+      namespace: 'test-ns',
+    };
+    renderHookWithQueryClient(resourceInit, undefined, {
+      filterData: mockFilterData,
+    });
+
+    expect(mockUseKubearchiveListResourceQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ ...resourceInit, isList: true }),
+      mockModel,
+      expect.objectContaining({ filterData: mockFilterData }),
     );
   });
 
