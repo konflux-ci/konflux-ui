@@ -9,44 +9,44 @@ import {
   TextContent,
   TextVariants,
 } from '@patternfly/react-core';
-import { SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
+import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '../Filter/utils/filter-utils';
-import { EnterpriseContractTable } from './EnterpriseContractTable/EnterpriseContractTable';
+import { ConformaTable } from './ConformaTable/ConformaTable';
 import SecurityTabEmptyState from './SecurityTabEmptyState';
-import { ENTERPRISE_CONTRACT_STATUS } from './types';
-import { useEnterpriseContractResults } from './useEnterpriseContractResultFromLogs';
+import { useConformaResult } from './useConformaResult';
 import { getRuleStatus } from './utils';
 
 const statuses = [
-  ENTERPRISE_CONTRACT_STATUS.violations,
-  ENTERPRISE_CONTRACT_STATUS.warnings,
-  ENTERPRISE_CONTRACT_STATUS.successes,
+  CONFORMA_RESULT_STATUS.violations,
+  CONFORMA_RESULT_STATUS.warnings,
+  CONFORMA_RESULT_STATUS.successes,
 ];
 
-const getResultsSummary = (ECs, ecLoaded) => {
+const getResultsSummary = (CRs, crLoaded) => {
   const statusFilter = Object.fromEntries(statuses.map((status) => [status, 0]));
-  return ecLoaded && ECs
-    ? ECs?.reduce((acc, ec) => {
-        if (acc[ec.status]) {
-          acc[ec.status] += 1;
+  return crLoaded && CRs
+    ? CRs?.reduce((acc, cr) => {
+        if (acc[cr.status]) {
+          acc[cr.status] += 1;
         } else {
-          acc[ec.status] = 1;
+          acc[cr.status] = 1;
         }
         return acc;
       }, statusFilter)
     : statusFilter;
 };
 
-export const SecurityEnterpriseContractTab: React.FC<
+export const SecurityConformaTab: React.FC<
   React.PropsWithChildren<{ pipelineRunName: string }>
 > = ({ pipelineRunName }) => {
-  const [ecResult, ecResultLoaded, ecError] = useEnterpriseContractResults(pipelineRunName);
+  const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName);
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -59,19 +59,21 @@ export const SecurityEnterpriseContractTab: React.FC<
 
   const statusFilterObj = React.useMemo(
     () =>
-      ecResultLoaded && ecResult ? createFilterObj(ecResult, (ec) => ec.status, statuses) : {},
-    [ecResult, ecResultLoaded],
+      crLoaded && conformaResult
+        ? createFilterObj(conformaResult, (cr) => cr.status, statuses)
+        : {},
+    [conformaResult, crLoaded],
   );
 
   const componentFilterObj = React.useMemo(
-    () => (ecResultLoaded && ecResult ? createFilterObj(ecResult, (ec) => ec.component) : {}),
-    [ecResult, ecResultLoaded],
+    () => (crLoaded && conformaResult ? createFilterObj(conformaResult, (cr) => cr.component) : {}),
+    [conformaResult, crLoaded],
   );
 
   // filter data in table
-  const filteredECResult = React.useMemo(() => {
-    return ecResultLoaded && ecResult
-      ? ecResult?.filter((rule) => {
+  const filteredCRResult = React.useMemo(() => {
+    return crLoaded && conformaResult
+      ? conformaResult?.filter((rule: UIConformaData) => {
           return (
             (!ruleFilter || rule.title.toLowerCase().indexOf(ruleFilter.toLowerCase()) !== -1) &&
             (!statusFilter.length || statusFilter.includes(rule.status)) &&
@@ -79,12 +81,12 @@ export const SecurityEnterpriseContractTab: React.FC<
           );
         })
       : undefined;
-  }, [componentFilter, ecResult, ecResultLoaded, ruleFilter, statusFilter]);
+  }, [componentFilter, conformaResult, crLoaded, ruleFilter, statusFilter]);
 
   // result summary
   const resultSummary = React.useMemo(
-    () => getResultsSummary(filteredECResult, ecResultLoaded),
-    [filteredECResult, ecResultLoaded],
+    () => getResultsSummary(filteredCRResult, crLoaded),
+    [filteredCRResult, crLoaded],
   );
 
   const toolbar = (
@@ -93,7 +95,7 @@ export const SecurityEnterpriseContractTab: React.FC<
       label="rule"
       setText={(rule) => setFilters({ ...filters, rule })}
       onClearFilters={onClearFilters}
-      dataTest="security-enterprise-contract-list-toolbar"
+      dataTest="security-conforma-list-toolbar"
     >
       <MultiSelect
         label="Component"
@@ -112,29 +114,29 @@ export const SecurityEnterpriseContractTab: React.FC<
     </BaseTextFilterToolbar>
   );
 
-  if (ecError) {
-    return getErrorState(ecError, ecResultLoaded, 'Conforma results');
+  if (crError) {
+    return getErrorState(crError, crLoaded, 'Conforma results');
   }
 
-  if (!ecResultLoaded && !filteredECResult) {
+  if (!crLoaded && !filteredCRResult) {
     return (
       <Bullseye>
         <Spinner />
       </Bullseye>
     );
-  } else if (ecResultLoaded && !filteredECResult) {
+  } else if (crLoaded && !filteredCRResult) {
     return <SecurityTabEmptyState />;
   }
 
   return (
     <>
       <TextContent style={{ marginTop: 'var(--pf-v5-global--spacer--lg)' }}>
-        <Text component={TextVariants.h3}>Testing apps against Enterprise Contract</Text>
+        <Text component={TextVariants.h3}>Testing apps against Conforma</Text>
         <Text component={TextVariants.p}>
-          Enterprise Contract is a set of tools for verifying the provenance of application
-          snapshots and validating them against a clearly defined policy.
+          Conforma is a set of tools for verifying the provenance of application snapshots and
+          validating them against a clearly defined policy.
           <br />
-          The Enterprise Contract policy is defined using the{' '}
+          The Conforma policy is defined using the{' '}
           <Button
             variant="link"
             isInline
@@ -156,13 +158,13 @@ export const SecurityEnterpriseContractTab: React.FC<
             component={(props) => (
               <a
                 {...props}
-                href={SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}
+                href={CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}
                 target="_blank"
                 rel="noreferrer"
               />
             )}
           >
-            Enterprise Contract Policies
+            Conforma Policies
           </Button>
           .
         </Text>
@@ -183,27 +185,27 @@ export const SecurityEnterpriseContractTab: React.FC<
           <Flex data-test="result-summary" spaceItems={{ default: 'spaceItemsXl' }}>
             <FlexItem spacer={{ default: 'spacerXl' }}>
               <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
-                {getRuleStatus(ENTERPRISE_CONTRACT_STATUS.violations)}
+                {getRuleStatus(CONFORMA_RESULT_STATUS.violations)}
               </span>
-              <b>{resultSummary[ENTERPRISE_CONTRACT_STATUS.violations]}</b>
+              <b>{resultSummary[CONFORMA_RESULT_STATUS.violations]}</b>
             </FlexItem>
             <FlexItem>
               <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
-                {getRuleStatus(ENTERPRISE_CONTRACT_STATUS.warnings)}
+                {getRuleStatus(CONFORMA_RESULT_STATUS.warnings)}
               </span>
-              <b>{resultSummary[ENTERPRISE_CONTRACT_STATUS.warnings]}</b>
+              <b>{resultSummary[CONFORMA_RESULT_STATUS.warnings]}</b>
             </FlexItem>
             <FlexItem>
               <span style={{ marginRight: 'var(--pf-v5-global--spacer--sm)' }}>
-                {getRuleStatus(ENTERPRISE_CONTRACT_STATUS.successes)}
+                {getRuleStatus(CONFORMA_RESULT_STATUS.successes)}
               </span>
-              <b>{resultSummary[ENTERPRISE_CONTRACT_STATUS.successes]}</b>
+              <b>{resultSummary[CONFORMA_RESULT_STATUS.successes]}</b>
             </FlexItem>
           </Flex>
         </Flex>
       </Flex>
-      {ecResultLoaded && filteredECResult.length > 0 ? (
-        <EnterpriseContractTable ecResult={filteredECResult} />
+      {crLoaded && filteredCRResult.length > 0 ? (
+        <ConformaTable crResult={filteredCRResult} />
       ) : (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}

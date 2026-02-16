@@ -2,21 +2,18 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react-hooks';
 import { CONFORMA_TASK, EC_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
+import { ComponentConformaResult } from '~/types/conforma';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '../../../hooks/useTaskRunsV2';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { getTaskRunLog } from '../../../utils/tekton-results';
 import { createK8sUtilMock, createTestQueryClient } from '../../../utils/test-utils';
+import { mockConformaJSON, mockConformaUIData } from '../__data__/mockConformaLogsJson';
 import {
-  mockEnterpriseContractJSON,
-  mockEnterpriseContractUIData,
-} from '../__data__/mockEnterpriseContractLogsJson';
-import { ComponentEnterpriseContractResult } from '../types';
-import {
-  mapEnterpriseContractResultData,
-  useEnterpriseContractResultFromLogs,
-  useEnterpriseContractResults,
-} from '../useEnterpriseContractResultFromLogs';
+  mapConformaResultData,
+  useConformaResultFromLogs,
+  useConformaResult,
+} from '../useConformaResult';
 
 jest.mock('../../../hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
@@ -62,7 +59,7 @@ const createDefaultMockImplementation = () => {
   };
 };
 
-describe('useEnterpriseContractResultFromLogs', () => {
+describe('useConformaResult', () => {
   let queryClient: QueryClient;
 
   const mockEnterpriseContractPipelineRun = {
@@ -104,14 +101,14 @@ describe('useEnterpriseContractResultFromLogs', () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
-    mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
+    mockCommmonFetchJSON.mockResolvedValue(mockConformaJSON);
     mockUseNamespaceHook('test-ns');
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);
     mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
   });
 
   const renderHookWithQueryClient = (pipelineRunName: string) => {
-    return renderHook(() => useEnterpriseContractResultFromLogs(pipelineRunName), {
+    return renderHook(() => useConformaResultFromLogs(pipelineRunName), {
       wrapper: ({ children }: { children: React.ReactNode }) =>
         React.createElement(QueryClientProvider, { client: queryClient }, children),
     });
@@ -306,11 +303,11 @@ describe('useEnterpriseContractResultFromLogs', () => {
   });
 });
 
-describe('mapEnterpriseContractResultData', () => {
+describe('mapConformaResultData', () => {
   it('should map to data consumable by UI', () => {
-    const uiData = mapEnterpriseContractResultData([
-      mockEnterpriseContractJSON.components[2],
-    ] as ComponentEnterpriseContractResult[]);
+    const uiData = mapConformaResultData([
+      mockConformaJSON.components[2],
+    ] as ComponentConformaResult[]);
 
     expect(uiData.length).toEqual(2);
     expect(uiData[0].status).toEqual('Failed');
@@ -319,16 +316,16 @@ describe('mapEnterpriseContractResultData', () => {
   });
 
   it('should map solution data to failed results', () => {
-    const uiData = mapEnterpriseContractResultData([
-      mockEnterpriseContractJSON.components[2],
-    ] as ComponentEnterpriseContractResult[]);
+    const uiData = mapConformaResultData([
+      mockConformaJSON.components[2],
+    ] as ComponentConformaResult[]);
     expect(uiData[0].status).toEqual('Failed');
     expect(uiData[0].solution).toEqual('solution for failure');
-    expect(uiData).toEqual(mockEnterpriseContractUIData);
+    expect(uiData).toEqual(mockConformaUIData);
   });
 });
 
-describe('useEnterpriseContractResults', () => {
+describe('useConformaResult', () => {
   let queryClient: QueryClient;
 
   const mockEnterpriseContractPipelineRun = {
@@ -348,24 +345,24 @@ describe('useEnterpriseContractResults', () => {
   beforeEach(() => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
-    mockCommmonFetchJSON.mockResolvedValue(mockEnterpriseContractJSON);
+    mockCommmonFetchJSON.mockResolvedValue(mockConformaJSON);
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);
     mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
   });
 
   const renderHookWithQueryClient = (pipelineRunName: string) => {
-    return renderHook(() => useEnterpriseContractResults(pipelineRunName), {
+    return renderHook(() => useConformaResult(pipelineRunName), {
       wrapper: ({ children }: { children: React.ReactNode }) =>
         React.createElement(QueryClientProvider, { client: queryClient }, children),
     });
   };
 
-  it('should return enterprise contract results', async () => {
+  it('should return conforma results', async () => {
     const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
     expect(result.current[0]).toEqual(undefined);
     expect(result.current[1]).toEqual(false);
     await waitForNextUpdate();
-    expect(result.current[0]).toEqual(mockEnterpriseContractUIData);
+    expect(result.current[0]).toEqual(mockConformaUIData);
     expect(result.current[1]).toEqual(true);
   });
 });

@@ -7,7 +7,7 @@ import { CONFORMA_TASK } from '~/consts/security';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
 import { downloadYaml } from '~/utils/common-utils';
-import { isResourceEnterpriseContract } from '~/utils/enterprise-contract-utils';
+import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
 import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';

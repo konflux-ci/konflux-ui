@@ -1,7 +1,13 @@
 import * as React from 'react';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
-import { isResourceEnterpriseContract } from '~/utils/enterprise-contract-utils';
+import {
+  ComponentConformaResult,
+  CONFORMA_RESULT_STATUS,
+  ConformaResult,
+  UIConformaData,
+} from '~/types/conforma';
+import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { isTaskRunInPipelineRun } from '~/utils/pipeline-utils';
 import { useTaskRunsForPipelineRuns } from '../../hooks/useTaskRunsV2';
 import { commonFetchJSON, getK8sResourceURL } from '../../k8s';
@@ -9,17 +15,11 @@ import { PodModel } from '../../models/pod';
 import { useNamespace } from '../../shared/providers/Namespace';
 import { getPipelineRunFromTaskRunOwnerRef } from '../../utils/common-utils';
 import { getTaskRunLog } from '../../utils/tekton-results';
-import {
-  ComponentEnterpriseContractResult,
-  EnterpriseContractResult,
-  ENTERPRISE_CONTRACT_STATUS,
-  UIEnterpriseContractData,
-} from './types';
-import { extractEcResultsFromTaskRunLogs } from './utils';
+import { extractConformaResultsFromTaskRunLogs } from './utils';
 
-export const useEnterpriseContractResultFromLogs = (
+export const useConformaResultFromLogs = (
   pipelineRunName: string,
-): [ComponentEnterpriseContractResult[], boolean, unknown] => {
+): [ComponentConformaResult[], boolean, unknown] => {
   const namespace = useNamespace();
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] = usePipelineRunV2(
     namespace,
@@ -46,11 +46,11 @@ export const useEnterpriseContractResultFromLogs = (
     securityTaskRunName,
   );
   const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
-  const [ecJson, setEcJson] = React.useState<EnterpriseContractResult>();
-  const [ecLoaded, setEcLoaded] = React.useState<boolean>(false);
+  const [crJson, setCrJson] = React.useState<ConformaResult>();
+  const [crLoaded, setCrLoaded] = React.useState<boolean>(false);
   const [taskRun] = taskRuns ?? [];
   const podName = taskRunLoaded && !taskRunError ? taskRun?.status?.podName : null;
-  const ecResultOpts = React.useMemo(() => {
+  const crResultOpts = React.useMemo(() => {
     return podName
       ? {
           ns: namespace,
@@ -66,52 +66,49 @@ export const useEnterpriseContractResultFromLogs = (
 
   React.useEffect(() => {
     let unmount = false;
-    if (taskRunLoaded && securityTaskRunName && !ecResultOpts) {
+    if (taskRunLoaded && securityTaskRunName && !crResultOpts) {
       setFetchTknLogs(true);
       return;
     }
-    if (ecResultOpts) {
-      commonFetchJSON(getK8sResourceURL(PodModel, undefined, ecResultOpts))
-        .then((res: EnterpriseContractResult) => {
+    if (crResultOpts) {
+      commonFetchJSON(getK8sResourceURL(PodModel, undefined, crResultOpts))
+        .then((res: ConformaResult) => {
           if (unmount) return;
-          setEcJson(res);
-          setEcLoaded(true);
+          setCrJson(res);
+          setCrLoaded(true);
         })
         .catch((err) => {
           if (unmount) return;
           if (err.code === 404) {
             setFetchTknLogs(true);
           } else {
-            setEcLoaded(true);
+            setCrLoaded(true);
           }
           // eslint-disable-next-line no-console
-          console.warn('Error while fetching Enterprise Contract result from logs', err);
+          console.warn('Error while fetching Conforma result from logs', err);
         });
     }
     return () => {
       unmount = true;
     };
-  }, [ecResultOpts, taskRunLoaded, securityTaskRunName]);
+  }, [crResultOpts, taskRunLoaded, securityTaskRunName]);
 
   React.useEffect(() => {
     let unmount = false;
-    if (fetchTknLogs && !ecLoaded && taskRun) {
+    if (fetchTknLogs && !crLoaded && taskRun) {
       const fetch = async () => {
         try {
           const pid = getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid;
           const logs = await getTaskRunLog(taskRun.metadata.namespace, taskRun.metadata.uid, pid);
           if (unmount) return;
-          const json = extractEcResultsFromTaskRunLogs(logs);
-          setEcJson(json);
-          setEcLoaded(true);
+          const json = extractConformaResultsFromTaskRunLogs(logs);
+          setCrJson(json);
+          setCrLoaded(true);
         } catch (e) {
           if (unmount) return;
-          setEcLoaded(true);
+          setCrLoaded(true);
           // eslint-disable-next-line no-console
-          console.warn(
-            'Error while fetching Enterprise Contract result from tekton results logs',
-            e,
-          );
+          console.warn('Error while fetching Conforma result from tekton results logs', e);
         }
       };
 
@@ -120,12 +117,12 @@ export const useEnterpriseContractResultFromLogs = (
     return () => {
       unmount = true;
     };
-  }, [ecLoaded, fetchTknLogs, taskRun]);
+  }, [crLoaded, fetchTknLogs, taskRun]);
 
-  const ecResult = React.useMemo(() => {
-    // filter out components for which ec didn't execute because invalid image URL
-    return ecLoaded && ecJson
-      ? ecJson.components?.filter((comp: ComponentEnterpriseContractResult) => {
+  const conformaResult = React.useMemo(() => {
+    // filter out components for which Conforma didn't execute because invalid image URL
+    return crLoaded && crJson
+      ? crJson.components?.filter((comp: ComponentConformaResult) => {
           return !(
             comp.violations &&
             comp.violations?.length === 1 &&
@@ -134,22 +131,20 @@ export const useEnterpriseContractResultFromLogs = (
           );
         })
       : undefined;
-  }, [ecJson, ecLoaded]);
+  }, [crJson, crLoaded]);
 
   const error = pipelineRunError ?? taskRunError;
 
-  return [ecResult, error ? true : ecLoaded, error];
+  return [conformaResult, error ? true : crLoaded, error];
 };
 
-export const mapEnterpriseContractResultData = (
-  ecResult: ComponentEnterpriseContractResult[],
-): UIEnterpriseContractData[] => {
+export const mapConformaResultData = (ecResult: ComponentConformaResult[]): UIConformaData[] => {
   return ecResult.reduce((acc, compResult) => {
     compResult?.violations?.forEach((v) => {
-      const rule: UIEnterpriseContractData = {
+      const rule: UIConformaData = {
         title: v.metadata?.title,
         description: v.metadata?.description,
-        status: ENTERPRISE_CONTRACT_STATUS.violations,
+        status: CONFORMA_RESULT_STATUS.violations,
         timestamp: v.metadata?.effective_on,
         component: compResult.name,
         msg: v.msg,
@@ -159,10 +154,10 @@ export const mapEnterpriseContractResultData = (
       acc.push(rule);
     });
     compResult?.warnings?.forEach((v) => {
-      const rule: UIEnterpriseContractData = {
+      const rule: UIConformaData = {
         title: v.metadata?.title,
         description: v.metadata?.description,
-        status: ENTERPRISE_CONTRACT_STATUS.warnings,
+        status: CONFORMA_RESULT_STATUS.warnings,
         timestamp: v.metadata?.effective_on,
         component: compResult.name,
         msg: v.msg,
@@ -171,10 +166,10 @@ export const mapEnterpriseContractResultData = (
       acc.push(rule);
     });
     compResult?.successes?.forEach((v) => {
-      const rule: UIEnterpriseContractData = {
+      const rule: UIConformaData = {
         title: v.metadata?.title,
         description: v.metadata?.description,
-        status: ENTERPRISE_CONTRACT_STATUS.successes,
+        status: CONFORMA_RESULT_STATUS.successes,
         component: compResult.name,
         collection: v.metadata?.collections,
       };
@@ -185,13 +180,13 @@ export const mapEnterpriseContractResultData = (
   }, []);
 };
 
-export const useEnterpriseContractResults = (
+export const useConformaResult = (
   pipelineRunName: string,
-): [UIEnterpriseContractData[], boolean, unknown] => {
-  const [ec, ecLoaded, ecError] = useEnterpriseContractResultFromLogs(pipelineRunName);
-  const ecResult = React.useMemo(() => {
-    return ecLoaded && ec && !ecError ? mapEnterpriseContractResultData(ec) : undefined;
-  }, [ec, ecLoaded, ecError]);
+): [UIConformaData[], boolean, unknown] => {
+  const [cr, crLoaded, crError] = useConformaResultFromLogs(pipelineRunName);
+  const conformaResult = React.useMemo(() => {
+    return crLoaded && cr && !crError ? mapConformaResultData(cr) : undefined;
+  }, [cr, crLoaded, crError]);
 
-  return [ecResult, ecLoaded, ecError];
+  return [conformaResult, crLoaded, crError];
 };

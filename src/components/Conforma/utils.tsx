@@ -5,27 +5,26 @@ import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/
 import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as yellowColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
-import { ENTERPRISE_CONTRACT_STATUS, EnterpriseContractResult } from './types';
+import { CONFORMA_RESULT_STATUS, ConformaResult } from '~/types/conforma';
 
-export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
+export const getRuleStatus = (type: CONFORMA_RESULT_STATUS) => {
   switch (type) {
-    case ENTERPRISE_CONTRACT_STATUS.successes:
+    case CONFORMA_RESULT_STATUS.successes:
       return (
         <>
-          <CheckCircleIcon color={greenColor.value} /> {ENTERPRISE_CONTRACT_STATUS.successes}
+          <CheckCircleIcon color={greenColor.value} /> {CONFORMA_RESULT_STATUS.successes}
         </>
       );
-    case ENTERPRISE_CONTRACT_STATUS.violations:
+    case CONFORMA_RESULT_STATUS.violations:
       return (
         <>
-          <ExclamationCircleIcon color={redColor.value} /> {ENTERPRISE_CONTRACT_STATUS.violations}
+          <ExclamationCircleIcon color={redColor.value} /> {CONFORMA_RESULT_STATUS.violations}
         </>
       );
-    case ENTERPRISE_CONTRACT_STATUS.warnings:
+    case CONFORMA_RESULT_STATUS.warnings:
       return (
         <>
-          <ExclamationTriangleIcon color={yellowColor.value} />{' '}
-          {ENTERPRISE_CONTRACT_STATUS.warnings}
+          <ExclamationTriangleIcon color={yellowColor.value} /> {CONFORMA_RESULT_STATUS.warnings}
         </>
       );
     default:
@@ -45,17 +44,17 @@ export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
  * Lorem Ipsum some logs
  *
  * step-report-json :-
- * {"success":true,"components":[{"name":"devfile-sample-code-with-quarkus-1",<... ec report in JSON ...>,}]}
+ * {"success":true,"components":[{"name":"devfile-sample-code-with-quarkus-1",<... Conforma report in JSON ...>,}]}
  *
  * ```
  *
  */
-const EC_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-|$))/gs;
+const CONFORMA_REPORT_JSON_REGEX = /((?<=step-report-json\s*:-\s*)(\{.*?\})(?=\s*step-|$))/gs;
 
-export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
-  const extractedLogs = logs.match(EC_REPORT_JSON_REGEX);
+export const extractConformaResultsFromTaskRunLogs = (logs: string): ConformaResult => {
+  const extractedLogs = logs.match(CONFORMA_REPORT_JSON_REGEX);
   if (!extractedLogs || !extractedLogs[0]) {
-    throw new Error('No valid EC report JSON found in logs');
+    throw new Error('No valid Conforma report JSON found in logs');
   }
   return JSON.parse(extractedLogs[0]);
 };
