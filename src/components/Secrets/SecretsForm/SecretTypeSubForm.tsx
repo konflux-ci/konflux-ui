@@ -57,6 +57,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
       type: secretType,
       secretFor,
       opaque: { keyValues },
+      labels,
     },
     setFieldValue,
     validateForm,
@@ -195,7 +196,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
       <KeyValueFileInputField
         name="labels"
         label="Labels"
-        entries={[{ key: '', value: '' }]}
+        entries={labels?.length ? labels : [{ key: '', value: '' }]}
         description="You can add labels to provide more context or tag your secret."
       />
     </>

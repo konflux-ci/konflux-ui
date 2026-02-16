@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
@@ -9,23 +9,25 @@ import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '~/types';
+import { AddSecretFormValues, KeyValueEntry, SecretFor, SecretKind } from '~/types';
 import { addSecretWithLinkingComponents } from '~/utils/create-utils';
-import { getSecretBreadcrumbs } from '~/utils/secrets/secret-utils';
+import { getSecretBreadcrumbs, typeToDropdownLabel } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  //   const { secretData } = useLocation().state as { secretData: SecretKind };
-
+  const { secretData } = useLocation().state as { secretData: SecretKind };
+  const readLabels = secretData.metadata.labels
+    ? Object.entries(secretData.metadata.labels).map(([key, value]) => ({ key, value }))
+    : [];
   const initialValues: AddSecretFormValues = {
-    type: SecretTypeDropdownLabel.opaque,
-    name: '',
+    type: typeToDropdownLabel(secretData.type), //
+    name: secretData.metadata.name, //
     secretFor: SecretFor.Build,
     opaque: {
-      keyValues: [{ key: '', value: '' }],
+      keyValues: Object.entries(secretData.data).map(([key, value]) => ({ key, value })), //
     },
     image: {
       authType: 'Image registry credentials',
@@ -40,9 +42,10 @@ const EditSecretForm: React.FC = () => {
     },
     source: {
       authType: 'Basic authentication',
-    },
-    relatedComponents: [],
-    secretForComponentOption: null,
+    }, // TODO: get source from secretData
+    labels: [...readLabels] as KeyValueEntry[], // TODO: get labels from secretData
+    relatedComponents: [], // TODO: get related components from secretData
+    secretForComponentOption: null, // TODO: get secretForComponentOption from secretData
   };
 
   return (
