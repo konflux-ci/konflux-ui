@@ -78,7 +78,15 @@ export function useKubearchiveListResourceQuery<
           enumerable: false,
         });
 
+        if (queryOptions?.filterData) {
+          return queryOptions?.filterData(filteredItems);
+        }
+
         return filteredItems;
+      }
+
+      if (queryOptions?.filterData) {
+        return queryOptions?.filterData(fullRes.items ?? []);
       }
 
       return fullRes.items;
