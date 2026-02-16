@@ -278,10 +278,10 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (namespace) => {
+export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
   return [
     { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
-    { path: '#', name: 'Add secret' },
+    { path: '#', name: `${operation} secret` },
   ];
 };
 

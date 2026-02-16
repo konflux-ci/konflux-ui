@@ -15,9 +15,11 @@ import { getSecretBreadcrumbs } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
-const AddSecretForm: React.FC = () => {
+const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
+  //   const { secretName } = useLocation().state as { secretName: string };
+
   const initialValues: AddSecretFormValues = {
     type: SecretTypeDropdownLabel.opaque,
     name: '',
@@ -42,6 +44,7 @@ const AddSecretForm: React.FC = () => {
     relatedComponents: [],
     secretForComponentOption: null,
   };
+
   return (
     <Formik
       initialValues={initialValues}
@@ -64,17 +67,17 @@ const AddSecretForm: React.FC = () => {
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
-          breadcrumbs={getSecretBreadcrumbs(namespace, 'Add')}
-          title="Add secret"
+          breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
+          title="Edit secret"
           description={
             <>
-              Add a secret that will be stored using AWS Secret Manager to keep your data private.{' '}
+              Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}
               <ExternalLink href={LEARN_MORE_ABOUT_SECRETS_CREATION}>Learn more</ExternalLink>
             </>
           }
           footer={
             <FormFooter
-              submitLabel="Add secret"
+              submitLabel="Edit secret"
               handleSubmit={handleSubmit}
               errorMessage={status && status.submitError}
               handleCancel={handleReset}
@@ -93,4 +96,4 @@ const AddSecretForm: React.FC = () => {
     </Formik>
   );
 };
-export default AddSecretForm;
+export default EditSecretForm;

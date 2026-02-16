@@ -15,4 +15,5 @@ export const secretListViewLoader = createLoaderWithAccessCheck(
 );
 
 export { default as AddSecretForm } from './SecretsForm/AddSecretForm';
+export { default as EditSecretForm } from './SecretsForm/EditSecretForm';
 export { default as SecretsListPage } from './SecretsListPage';
