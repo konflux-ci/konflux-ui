@@ -135,11 +135,13 @@ export type ReleasePlanSpec = {
   application: string;
   target: string;
   data?: unknown;
-  pipelineRef?: {
-    resolver: ResolverType;
-    params: Param[];
+  tenantPipeline?: {
+    serviceAccountName?: string;
+    pipelineRef?: {
+      resolver: ResolverType;
+      params: Param[];
+    };
   };
-  serviceAccount?: string;
 };
 
 export type ReleasePlanStatus = {
