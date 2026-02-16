@@ -12,6 +12,15 @@ export type ResourceRequirements = {
   };
 };
 
+export type ComponentSourceVersion = {
+  name: string;
+  revision: string;
+  context?: string;
+  dockerfileUri?: string;
+  'skip-builds'?: boolean;
+  'build-pipeline'?: Record<string, unknown>;
+};
+
 export type ComponentSource = {
   url?: string;
   git?: {
@@ -21,6 +30,7 @@ export type ComponentSource = {
     revision?: string;
     context?: string;
   };
+  versions?: ComponentSourceVersion[];
 };
 
 export enum NudgeStats {
