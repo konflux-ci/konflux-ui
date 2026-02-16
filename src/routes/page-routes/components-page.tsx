@@ -1,4 +1,5 @@
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
+import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
 import {
   ComponentDetailsTab,
@@ -10,11 +11,14 @@ import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../paths';
 const componentsPageRoutes = [
   {
     path: COMPONENTS_PATH.path,
-    lazy: async () => {
-      const { default: Component } = await import('~/components/ComponentsPage/ComponentsPage');
+    errorElement: <RouteErrorBoundry />,
+    async lazy() {
+      ensureFeatureFlagOnLoader('components-page');
+      const { default: Component } = await import(
+        '~/components/ComponentList/ComponentsListView' /* webpackChunkName: "components-list" */
+      );
       return { Component };
     },
-    errorElement: <RouteErrorBoundry />,
   },
   {
     path: COMPONENT_DETAILS_V2_PATH.path,
