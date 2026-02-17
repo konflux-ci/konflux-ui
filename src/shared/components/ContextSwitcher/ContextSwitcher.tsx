@@ -13,7 +13,6 @@ import {
   SearchInput,
   MenuContainer,
   MenuToggle,
-  MenuToggleElement,
 } from '@patternfly/react-core';
 import { EllipsisHIcon } from '@patternfly/react-icons/dist/esm/icons/ellipsis-h-icon';
 import '././ContextSwitcher.scss';
@@ -61,9 +60,8 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState('');
-  const toggleRef = React.useRef();
-  const menuRef = React.useRef();
-  const bodyRef = React.useRef<HTMLElement>(document.body);
+  const toggleRef = React.useRef<HTMLButtonElement>();
+  const menuRef = React.useRef<HTMLDivElement>();
   const [menuDrilledIn, setMenuDrilledIn] = React.useState<string[]>([]);
   const [drilldownPath, setDrilldownPath] = React.useState<string[]>([]);
   const [menuHeights, setMenuHeights] = React.useState<{ [key: string]: number }>({});
@@ -165,8 +163,8 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
       const targetNode = event.target as Node;
       if (
         isOpen &&
-        !(toggleRef as React.RefObject<MenuToggleElement>).current?.contains(targetNode) &&
-        !(menuRef as React.RefObject<MenuToggleElement>).current?.contains(targetNode)
+        !toggleRef?.current?.contains(targetNode) &&
+        !menuRef?.current?.contains(targetNode)
       ) {
         setIsOpen(false);
       }
@@ -174,7 +172,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     [toggleRef, menuRef, isOpen, setIsOpen],
   );
 
-  useEventListener('click', onClickOutside, bodyRef);
+  useEventListener('click', onClickOutside, document.body);
 
   const defaultToggle = (defaultToggleRef: React.RefObject<HTMLButtonElement>) => (
     <MenuToggle
@@ -195,7 +193,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
       toggle={
         toggle
           ? toggle({
-              innerRef: toggleRef as React.RefObject<MenuToggleElement>,
+              innerRef: toggleRef,
               onClick: () => setIsOpen(!isOpen),
               isExpanded: isOpen,
             })
