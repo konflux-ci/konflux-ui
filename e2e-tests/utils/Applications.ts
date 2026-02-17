@@ -27,17 +27,17 @@ export class Applications {
 
     UIhelper.getTableRow('Pipeline run List', pipelineRunName).should(($row) => {
       const rowText = $row.text();
-      if (!rowText.includes(pipelineRunName)) {
-        return false;
-      }
+      expect(rowText, `Pipeline run row should contain "${pipelineRunName}"`).to.include(
+        pipelineRunName,
+      );
 
       const $statusElement = $row.find('[data-test="status"]');
-      if ($statusElement.length > 0) {
-        const statusText = $statusElement.text();
-        return statuses.some((status) => statusText.includes(status));
-      }
-
-      return statuses.some((status) => rowText.includes(status));
+      const statusText = $statusElement.length > 0 ? $statusElement.text() : rowText;
+      const hasExpectedStatus = statuses.some((status) => statusText.includes(status));
+      expect(
+        hasExpectedStatus,
+        `Pipeline run status "${statusText.trim()}" should be one of: ${statuses.join(', ')}`,
+      ).to.be.true;
     });
   }
 
