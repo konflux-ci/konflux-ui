@@ -62,15 +62,21 @@ export function useKubearchiveListResourceQuery<
       const fullRes = await k8sListResource<T>(
         withKubearchivePathPrefix<K8sResourceListOptions>(pagedOptions),
       );
+
+      let filteredData = fullRes?.items ?? [];
+      if (queryOptions?.filterData) {
+        filteredData = queryOptions?.filterData(filteredData);
+      }
+
       // Attach the continue token to the result via a custom property
-      Object.defineProperty(fullRes.items, '_continue', {
+      Object.defineProperty(filteredData, '_continue', {
         value: fullRes.metadata?.continue,
         enumerable: false,
       });
 
-      if (!!fullRes?.items?.length && model === PipelineRunModel) {
+      if (!!filteredData?.length && model === PipelineRunModel) {
         const filteredItems = filterOutStaleRunningPipelineRunsFromArchive(
-          fullRes.items as unknown as PipelineRunKind[],
+          filteredData as unknown as PipelineRunKind[],
         ) as unknown as T[];
 
         Object.defineProperty(filteredItems, '_continue', {
@@ -78,18 +84,10 @@ export function useKubearchiveListResourceQuery<
           enumerable: false,
         });
 
-        if (queryOptions?.filterData) {
-          return queryOptions?.filterData(filteredItems);
-        }
-
         return filteredItems;
       }
 
-      if (queryOptions?.filterData) {
-        return queryOptions?.filterData(fullRes.items ?? []);
-      }
-
-      return fullRes.items;
+      return filteredData;
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage: T[] & { _continue?: string }) => lastPage?._continue || undefined,
