@@ -413,17 +413,6 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       ))}
       {(isFiltered || releases.length > 0) && (
         <>
-          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v5-u-mr-lg">
-            <FlexItem>
-              <Label
-                color="blue"
-                className="pf-v5-u-font-weight-bold"
-                data-test="release-count-label"
-              >
-                {pluralize(sortedFilteredData.length, 'release')}
-              </Label>
-            </FlexItem>
-          </Flex>
           <MonitoredReleasesFilterToolbar
             filters={filters}
             setFilters={setFilters}
@@ -436,6 +425,17 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
             productOptions={filterOptions.productOptions}
             productVersionOptions={filterOptions.productVersionOptions}
           />
+          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }}>
+            <FlexItem>
+              <Label
+                color="blue"
+                className="pf-v5-u-font-weight-bold"
+                data-test="release-count-label"
+              >
+                {pluralize(sortedFilteredData.length, 'release')}
+              </Label>
+            </FlexItem>
+          </Flex>
         </>
       )}
 
