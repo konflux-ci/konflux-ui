@@ -13,6 +13,7 @@ Guidelines for effective collaboration between developers and AI assistants on K
 ## Task Planning & Management
 
 ### Always Use Todo Lists
+
 For any non-trivial task (3+ steps), AI assistants should create and maintain a todo list:
 
 ```markdown
@@ -24,6 +25,7 @@ For any non-trivial task (3+ steps), AI assistants should create and maintain a 
 ```
 
 ### Task Breakdown Patterns
+
 - **Feature Addition**: Research → Design → Implement → Test → Lint/Typecheck
 - **Bug Fix**: Reproduce → Identify → Fix → Test → Verify
 - **Refactoring**: Analyze → Plan → Execute → Test → Validate
@@ -31,11 +33,13 @@ For any non-trivial task (3+ steps), AI assistants should create and maintain a 
 ## Code Understanding Workflow
 
 ### Before Making Changes
+
 1. **Search and understand** - Use search tools to understand existing patterns
 2. **Read related files** - Check imports, types, and similar components
 3. **Follow project conventions** - Match existing code style and architecture
 
 ### Research Commands
+
 ```bash
 # Find component patterns
 find src/components -name "*.tsx" | head -10
@@ -50,20 +54,39 @@ find . -name "*.spec.tsx" -path "*/components/*"
 ## Development Best Practices
 
 ### Component Development
+
 - **Check existing patterns** first (see `project-structure.mdc` for directory organization)
 - **Follow project conventions** and existing code style
 
 ### Testing Requirements
+
 - **Create unit tests** using patterns from `testing.mdc`
 - **Test both success and error scenarios**
 
+### Logger Usage
+
+- **Never use `console.*` directly** — use the `logger` service from `src/monitoring/logger` instead.
+  ```ts
+  import { logger } from '~/monitoring/logger';
+  logger.debug('message', { context }); // instead of console.log
+  logger.info('message', { context }); // instead of console.info
+  logger.warn('message', { context }); // instead of console.warn
+  logger.error('message', error, { context }); // instead of console.error
+  ```
+- When **modifying existing files** that contain `console.*` statements, replace them with the appropriate `logger` method.
+- When **creating new files**, always use `logger` for any logging needs.
+- **Do not** proactively search the codebase for `console.*` to replace — only update files you are already modifying as part of the current task.
+
 ### Code Quality Checks
+
 Always run lint and typecheck commands after code changes (see `package-management.mdc` for yarn commands).
 
 ## File Navigation & References
 
 ### Provide Line References
+
 When discussing code, always include file paths with line numbers:
+
 ```
 The error handling is in src/hooks/useApplications.ts:45
 ```
@@ -71,21 +94,25 @@ The error handling is in src/hooks/useApplications.ts:45
 ## Communication Patterns
 
 ### Progress Updates
+
 - Mark todos as `in_progress` when starting work
 - Mark todos as `completed` immediately after finishing
 - Update user on significant discoveries or blockers
 
 ### Code Explanations
+
 - Focus on **why** rather than **what**
 - Explain architectural decisions and trade-offs
 - Reference existing patterns and conventions
 
 ### Error Handling
+
 - Reproduce errors when possible
 - Check common issues: imports, types, missing dependencies
 - Provide specific file paths and line numbers for fixes
 
 ## Pull Request Checklist
+
 See [CONTRIBUTING.md#pull-request-checklist](../../CONTRIBUTING.md) for the full, up-to-date list.
 
 ## Common Commands
