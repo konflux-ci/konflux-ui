@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react';
+import { SECRET_MAX_LABELS } from '~/consts/secrets';
 import { SecretLabels } from '../SecretsListView/SecretLabels';
 
 describe('SecretLabels', () => {
@@ -25,10 +26,23 @@ describe('SecretLabels', () => {
         handleToggle={() => {}}
       />,
     );
-    r.debug();
     expect(r.getByText('label1')).toBeInTheDocument();
     expect(r.getByText('label2')).toBeInTheDocument();
-    expect(r.queryByText('label5')).not.toBeInTheDocument();
+    expect(r.getByText('label3')).toBeInTheDocument();
+    expect(r.queryByText('label4')).not.toBeInTheDocument();
+    expect(r.getByText('Show more')).toBeInTheDocument();
+  });
+
+  it('should hide the label at maxLabels index when collapsed', () => {
+    const labels = Array.from({ length: SECRET_MAX_LABELS + 1 }, (_, i) => `label${i + 1}`);
+    const r = render(
+      <SecretLabels labels={labels} index={0} expanded={false} handleToggle={() => {}} />,
+    );
+
+    labels.slice(0, SECRET_MAX_LABELS).forEach((label) => {
+      expect(r.getByText(label)).toBeInTheDocument();
+    });
+    expect(r.queryByText(labels[SECRET_MAX_LABELS])).not.toBeInTheDocument();
     expect(r.getByText('Show more')).toBeInTheDocument();
   });
 
