@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
 import { useComponent } from '~/hooks/useComponents';
+import { useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import ComponentVersionOverviewTab from '../tabs/ComponentVersionOverviewTab';
@@ -14,6 +15,10 @@ jest.mock('~/hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
+jest.mock('~/hooks/useLatestPushBuildPipeline', () => ({
+  useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2: jest.fn(),
+}));
+
 jest.mock('../tabs/ComponentVersionLatestBuild', () => {
   const MockLatestBuild = () => <div data-test="mock-latest-build">Latest build</div>;
   return { __esModule: true, default: MockLatestBuild };
@@ -21,6 +26,7 @@ jest.mock('../tabs/ComponentVersionLatestBuild', () => {
 
 const useParamsMock = useParams as jest.Mock;
 const useComponentMock = useComponent as jest.Mock;
+const mockUseLatestBuild = useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 as jest.Mock;
 
 const mockComponent = {
   metadata: { name: 'my-component', namespace: 'test-ns' },
@@ -33,18 +39,19 @@ describe('ComponentVersionOverviewTab', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({ componentName: 'my-component', versionName: 'main' });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
+    mockUseLatestBuild.mockReturnValue([null, true, undefined]);
   });
 
   it('should not render overview when componentName is missing', () => {
     useParamsMock.mockReturnValue({ versionName: 'main' });
     renderWithQueryClientAndRouter(<ComponentVersionOverviewTab />);
-    expect(screen.queryByText('Git branch and pipeline')).not.toBeInTheDocument();
+    expect(screen.queryByText('Version details')).not.toBeInTheDocument();
   });
 
   it('should not render overview when versionName is missing', () => {
     useParamsMock.mockReturnValue({ componentName: 'my-component' });
     renderWithQueryClientAndRouter(<ComponentVersionOverviewTab />);
-    expect(screen.queryByText('Git branch and pipeline')).not.toBeInTheDocument();
+    expect(screen.queryByText('Version details')).not.toBeInTheDocument();
   });
 
   it('should show spinner while loading', () => {
@@ -65,12 +72,15 @@ describe('ComponentVersionOverviewTab', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('should render overview with branch, repository and latest build when loaded', () => {
+  it('should render overview with version details and latest build when loaded', () => {
     renderWithQueryClientAndRouter(<ComponentVersionOverviewTab />);
-    expect(screen.getByText('Git branch and pipeline')).toBeInTheDocument();
-    expect(screen.getByText('Branch')).toBeInTheDocument();
+    expect(screen.getByText('Version details')).toBeInTheDocument();
+    expect(screen.getByText('Name')).toBeInTheDocument();
+    expect(screen.getByText('Git branch')).toBeInTheDocument();
+    expect(screen.getByText('Pipeline')).toBeInTheDocument();
+    expect(screen.getByText('Latest commit')).toBeInTheDocument();
+    expect(screen.getByText('Latest pipelinerun')).toBeInTheDocument();
     expect(screen.getByText('main')).toBeInTheDocument();
-    expect(screen.getByText('Repository')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Latest build' })).toBeInTheDocument();
     expect(
       screen.getByText(
