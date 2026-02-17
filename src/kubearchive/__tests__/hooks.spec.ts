@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { PipelineRunModel } from '~/models';
 import { PipelineRunKind } from '~/types';
 import { createTestQueryClient, createK8sUtilMock } from '~/unit-test-utils';
+import { filterDeletedResources } from '~/utils/resource-utils';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
 import { useKubearchiveListResourceQuery } from '../hooks';
 
@@ -331,6 +332,41 @@ describe('useKubearchiveListResourceQuery', () => {
 
       expect(result.current.data?.pages[0]).toHaveLength(1);
       expect(result.current.data?.pages[0][0].metadata?.name).toBe('no-conditions-pipeline-run');
+    });
+  });
+
+  describe('filterData option', () => {
+    it('should apply filterData when provided', async () => {
+      mockK8sListResource.mockResolvedValue({
+        ...mockListResponse,
+        items: [
+          mockReleaseList[0],
+          {
+            ...mockReleaseList[1],
+            metadata: {
+              ...mockReleaseList[1].metadata,
+              deletionTimestamp: '2024-01-01T00:00:00Z',
+            },
+          },
+        ],
+      });
+
+      const { result } = renderHook(
+        () =>
+          useKubearchiveListResourceQuery(mockResourceInit, mockModel, {
+            filterData: filterDeletedResources as (
+              resource: K8sResourceCommon[],
+            ) => K8sResourceCommon[],
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data?.pages[0]).toHaveLength(1);
+      expect(result.current.data?.pages[0][0].metadata?.name).toBe('test-release-1');
     });
   });
 });

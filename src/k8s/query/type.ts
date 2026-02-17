@@ -14,4 +14,6 @@ export type TQueryInfiniteOptions<
 > = Omit<
   UseInfiniteQueryOptions<TQueryFnData, TError, TData, TQueryData, TQueryKey, TPageParam>,
   'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'
->;
+> & {
+  filterData?: (resource: TQueryFnData) => TQueryFnData;
+};
