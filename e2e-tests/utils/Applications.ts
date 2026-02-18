@@ -1,6 +1,6 @@
 import { pageTitles, FULL_APPLICATION_TITLE } from '../support/constants/PageTitle';
 import { addComponentPagePO } from '../support/pageObjects/createApplication-po';
-import { actions, breadcrumb } from '../support/pageObjects/global-po';
+import { actions, breadcrumb, UIhelperPO } from '../support/pageObjects/global-po';
 import {
   actionsDropdown,
   componentsTabPO,
@@ -229,5 +229,15 @@ export class Applications {
     APIHelper.requestHACAPI({ url: hacAPIEndpoints.secrets(secretName) })
       .its(`body.data.${key}`)
       .should('eq', Buffer.from(value, 'utf8').toString('base64'));
+  }
+
+  static verifyPipelineRunIsVisible(applicationName: string, plrName: string) {
+    this.clickBreadcrumbLink(applicationName);
+    this.goToPipelinerunsTab();
+    cy.contains(UIhelperPO.tableRow('Pipeline run List'), plrName, {
+      // extended timeout: GitHub synchronization can occasionally take some time,
+      // which causes PR creation to take longer.
+      timeout: 1200000, // 20min
+    }).scrollIntoView();
   }
 }
