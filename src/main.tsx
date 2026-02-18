@@ -53,16 +53,16 @@ void (async () => {
     { name: 'analytics', context: 'initAnalytics', init: initAnalytics },
   ] as const;
 
-  const results = await Promise.allSettled(initializers.map(({ init }) => init()));
-
-  results.forEach((result, i) => {
-    if (result.status === 'rejected') {
-      const { name, context } = initializers[i];
-      // eslint-disable-next-line no-console
-      console.error(`Failed to initialize ${name}`, result.reason);
-      monitoringService?.captureException(result.reason, { context });
-    }
-  });
+  void (await Promise.allSettled(initializers.map(({ init }) => init())).then((results) => {
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        const { name, context } = initializers[i];
+        // eslint-disable-next-line no-console
+        console.error(`Failed to initialize ${name}`, result.reason);
+        monitoringService?.captureException(result.reason, { context });
+      }
+    });
+  }));
 
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>

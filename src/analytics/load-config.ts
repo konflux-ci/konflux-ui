@@ -6,8 +6,8 @@ import { AnalyticsConfig } from './types';
  */
 const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   enabled: false,
-  writeKey: '',
-  apiUrl: '',
+  writeKey: undefined,
+  apiUrl: undefined,
 };
 
 /**
