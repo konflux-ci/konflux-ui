@@ -5,13 +5,25 @@ import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
+// import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { AddSecretFormValues, KeyValueEntry, SecretFor, SecretKind } from '~/types';
+import {
+  AddSecretFormValues,
+  KeyValueEntry,
+  SecretFor,
+  SecretKind,
+  SecretType,
+  SecretTypeDropdownLabel,
+} from '~/types';
 import { addSecretWithLinkingComponents } from '~/utils/create-utils';
-import { getSecretBreadcrumbs, typeToDropdownLabel } from '~/utils/secrets/secret-utils';
+import {
+  getAuthType,
+  getSecretBreadcrumbs,
+  typeToDropdownLabel,
+} from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
@@ -19,33 +31,68 @@ const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
   const { secretData } = useLocation().state as { secretData: SecretKind };
+
+  const typeFromLabels = secretData.type as SecretType;
+  const secretType = typeToDropdownLabel(typeFromLabels) as SecretTypeDropdownLabel;
+  const authTypeFromLabels = getAuthType(typeFromLabels);
+
   const readLabels = secretData.metadata.labels
     ? Object.entries(secretData.metadata.labels).map(([key, value]) => ({ key, value }))
     : [];
-  const initialValues: AddSecretFormValues = {
-    type: typeToDropdownLabel(secretData.type), //
-    name: secretData.metadata.name, //
-    secretFor: SecretFor.Build,
-    opaque: {
-      keyValues: Object.entries(secretData.data).map(([key, value]) => ({ key, value })), //
-    },
-    image: {
-      authType: 'Image registry credentials',
-      registryCreds: [
-        {
-          registry: '',
+
+  // console.log('secretData', secretData);
+
+  // const { linkedServiceAccounts, isLoading, error } = useLinkedServiceAccounts(
+  //   namespace,
+  //   secretData,
+  //   false,
+  // );
+  // console.log("linkedServiceAccounts", linkedServiceAccounts);
+
+  const opaqueSecret = Object.entries(secretData.data).map(([key, value]) => ({ key, value }));
+
+  const imageSecret =
+    secretType === SecretTypeDropdownLabel.image
+      ? {
+          authType: authTypeFromLabels, //
+          registryCreds: [
+            // TODO: get registryCreds from secretData
+            {
+              registry: '',
+              username: '',
+              password: '',
+              email: '',
+            },
+          ],
+          dockerconfig: secretData.data['.dockercfg'], //
+        }
+      : undefined;
+
+  const sourceSecret =
+    secretType === SecretTypeDropdownLabel.source
+      ? {
+          authType: authTypeFromLabels, //
+          // username: secretData.data['username'] || '', hashed
+          // password: secretData.data['password'] || '', hashed
           username: '',
           password: '',
-          email: '',
-        },
-      ],
+          host: secretData.metadata.labels['appstudio.redhat.com/scm.host'] || '',
+          repo: secretData.metadata.annotations['appstudio.redhat.com/scm.repository'] || '',
+        }
+      : undefined;
+
+  const initialValues: AddSecretFormValues = {
+    type: secretType, //
+    name: secretData.metadata.name, //
+    secretFor: SecretFor.Build, // TODO: get secretFor from secretData
+    opaque: {
+      keyValues: opaqueSecret, //
     },
-    source: {
-      authType: 'Basic authentication',
-    }, // TODO: get source from secretData
-    labels: [...readLabels] as KeyValueEntry[], // TODO: get labels from secretData
+    image: imageSecret,
+    source: { ...sourceSecret }, // asi ?
+    labels: [...readLabels] as KeyValueEntry[], //
     relatedComponents: [], // TODO: get related components from secretData
-    secretForComponentOption: null, // TODO: get secretForComponentOption from secretData
+    secretForComponentOption: null, // TODO: get secretForComponentOption from secretData - all, partial, none
   };
 
   return (
