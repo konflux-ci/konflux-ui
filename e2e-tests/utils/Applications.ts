@@ -1,6 +1,6 @@
 import { pageTitles, FULL_APPLICATION_TITLE } from '../support/constants/PageTitle';
 import { addComponentPagePO } from '../support/pageObjects/createApplication-po';
-import { actions, breadcrumb } from '../support/pageObjects/global-po';
+import { actions, breadcrumb, UIhelperPO } from '../support/pageObjects/global-po';
 import {
   actionsDropdown,
   componentsTabPO,
