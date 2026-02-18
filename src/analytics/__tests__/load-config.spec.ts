@@ -14,8 +14,8 @@ describe('loadAnalyticsConfig', () => {
 
     expect(config).toEqual({
       enabled: false,
-      writeKey: '',
-      apiUrl: '',
+      writeKey: undefined,
+      apiUrl: undefined,
     });
   });
 
@@ -30,8 +30,8 @@ describe('loadAnalyticsConfig', () => {
 
     expect(config).toEqual({
       enabled: false,
-      writeKey: '',
-      apiUrl: '',
+      writeKey: undefined,
+      apiUrl: undefined,
     });
   });
 
@@ -44,8 +44,8 @@ describe('loadAnalyticsConfig', () => {
 
     expect(config).toEqual({
       enabled: false,
-      writeKey: '',
-      apiUrl: '',
+      writeKey: undefined,
+      apiUrl: undefined,
     });
   });
 
