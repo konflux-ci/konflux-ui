@@ -71,6 +71,23 @@ export const isPartnerTask = (
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
+export const getAuthType = (type: SecretType) => {
+  switch (type) {
+    case SecretType.dockerconfigjson:
+      return 'Image registry credentials';
+    case SecretType.dockercfg:
+      return 'Upload config file';
+    case SecretType.basicAuth:
+      return 'Basic authentication';
+    case SecretType.sshAuth:
+      return 'SSH authentication';
+    case SecretType.opaque:
+      return 'Opaque';
+    default:
+      return 'Unknown';
+  }
+};
+
 export const getSupportedPartnerTaskKeyValuePairs = (
   secretName?: string,
   arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
