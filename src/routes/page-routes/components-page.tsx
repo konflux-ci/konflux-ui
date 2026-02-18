@@ -11,7 +11,7 @@ import {
   ComponentVersionDetailsViewLayout,
   componentVersionDetailsViewLoader,
   ComponentVersionOverviewTab,
-} from '../../components/ComponentsPage/ComponentVersionDetails';
+} from '../../components/ComponentsPage/Versions/ComponentVersionDetails';
 import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../paths';
 import { RouterParams } from '../utils';
 

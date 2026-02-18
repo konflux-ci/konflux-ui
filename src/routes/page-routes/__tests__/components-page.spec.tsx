@@ -38,7 +38,7 @@ jest.mock('~/components/ComponentsPage/ComponentDetails', () => ({
   componentDetailsViewLoader: jest.fn(() => ({ data: 'test-data' })),
 }));
 
-jest.mock('~/components/ComponentsPage/ComponentVersionDetails', () => ({
+jest.mock('~/components/ComponentsPage/Versions/ComponentVersionDetails', () => ({
   ComponentVersionDetailsViewLayout: () => (
     <div data-testid="component-version-details-layout">Version layout</div>
   ),
