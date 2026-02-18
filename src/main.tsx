@@ -4,7 +4,8 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
-import { initMonitoring } from '~/monitoring';
+import { initAnalytics } from '~/analytics';
+import { initMonitoring, monitoringService } from '~/monitoring';
 import { AuthProvider } from './auth/AuthContext';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
@@ -47,22 +48,31 @@ const App = () => {
 };
 
 void (async () => {
-  try {
-    await initMonitoring();
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Failed to initialize monitoring', error);
-  } finally {
-    ReactDOM.createRoot(document.getElementById('root')).render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </React.StrictMode>,
-    );
-  }
+  const initializers = [
+    { name: 'monitoring', context: 'initMonitoring', init: initMonitoring },
+    { name: 'analytics', context: 'initAnalytics', init: initAnalytics },
+  ] as const;
+
+  void (await Promise.allSettled(initializers.map(({ init }) => init())).then((results) => {
+    results.forEach((result, i) => {
+      if (result.status === 'rejected') {
+        const { name, context } = initializers[i];
+        // eslint-disable-next-line no-console
+        console.error(`Failed to initialize ${name}`, result.reason);
+        monitoringService?.captureException(result.reason, { context });
+      }
+    });
+  }));
+
+  ReactDOM.createRoot(document.getElementById('root')).render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </React.StrictMode>,
+  );
 })();
