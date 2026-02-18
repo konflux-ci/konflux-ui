@@ -7,6 +7,7 @@ import {
   DescriptionListTerm,
   DescriptionListDescription,
   Spinner,
+  Stack,
 } from '@patternfly/react-core';
 import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
 import { DetailsSection } from '~/components/DetailsPage';
@@ -57,7 +58,7 @@ const ComponentVersionOverviewTab: React.FC = () => {
   const pipelineRunName = pipelineRun?.metadata?.name;
 
   return (
-    <div className="component-version-details">
+    <Stack hasGutter>
       <DetailsSection title="Version details">
         <DescriptionList
           columnModifier={{
@@ -135,7 +136,7 @@ const ComponentVersionOverviewTab: React.FC = () => {
       >
         <ComponentVersionLatestBuild component={component} branchName={versionName ?? ''} />
       </DetailsSection>
-    </div>
+    </Stack>
   );
 };
 

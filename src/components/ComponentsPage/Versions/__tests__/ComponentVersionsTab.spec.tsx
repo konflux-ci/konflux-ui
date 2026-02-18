@@ -1,21 +1,21 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { useComponent } from '../../../../hooks/useComponents';
-import { useComponentVersions } from '../../../../hooks/useComponentVersions';
-import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
-import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
-import ComponentVersionsTab from '../tabs/ComponentVersionsTab';
+import { useComponent } from '~/hooks/useComponents';
+import { useComponentVersions } from '~/hooks/useComponentVersions';
+import { renderWithQueryClientAndRouter } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import ComponentVersionsTab from '../ComponentVersionsTab';
 
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useParams: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useComponents', () => ({
+jest.mock('~/hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useComponentVersions', () => ({
+jest.mock('~/hooks/useComponentVersions', () => ({
   useComponentVersions: jest.fn(),
 }));
 

@@ -18,7 +18,7 @@ jest.mock('~/hooks/useComponents', () => ({
 }));
 
 jest.mock('~/feature-flags/hooks', () => ({
-  ...jest.requireActual('../../../../feature-flags/hooks'),
+  ...jest.requireActual('~/feature-flags/hooks'),
   useIsOnFeatureFlag: jest.fn(),
   IfFeature: ({
     flag,
