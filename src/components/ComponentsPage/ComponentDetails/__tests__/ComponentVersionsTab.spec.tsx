@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
-import { useComponentBranches } from '../../../../hooks/useComponentBranches';
 import { useComponent } from '../../../../hooks/useComponents';
+import { useComponentVersions } from '../../../../hooks/useComponentVersions';
 import { renderWithQueryClientAndRouter } from '../../../../unit-test-utils';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import ComponentVersionsTab from '../tabs/ComponentVersionsTab';
@@ -15,8 +15,8 @@ jest.mock('../../../../hooks/useComponents', () => ({
   useComponent: jest.fn(),
 }));
 
-jest.mock('../../../../hooks/useComponentBranches', () => ({
-  useComponentBranches: jest.fn(),
+jest.mock('../../../../hooks/useComponentVersions', () => ({
+  useComponentVersions: jest.fn(),
 }));
 
 jest.mock('~/feature-flags/hooks', () => ({
@@ -27,12 +27,21 @@ jest.mock('~/feature-flags/hooks', () => ({
 
 const useParamsMock = useParams as jest.Mock;
 const useComponentMock = useComponent as jest.Mock;
-const useComponentBranchesMock = useComponentBranches as jest.Mock;
+const useComponentVersionsMock = useComponentVersions as jest.Mock;
 
 const mockComponent = {
   metadata: { name: 'my-component', namespace: 'test-ns' },
-  spec: { componentName: 'my-component' },
+  spec: {
+    componentName: 'my-component',
+    application: 'my-app',
+    source: { url: 'https://github.com/org/repo' },
+  },
 };
+
+const mockVersions = [
+  { name: 'main', description: '', pipelineName: 'pipeline-a', pipelineRunName: 'plr-1' },
+  { name: 'develop', description: '', pipelineName: 'pipeline-b', pipelineRunName: 'plr-2' },
+];
 
 describe('ComponentVersionsTab', () => {
   mockUseNamespaceHook('test-ns');
@@ -40,7 +49,7 @@ describe('ComponentVersionsTab', () => {
   beforeEach(() => {
     useParamsMock.mockReturnValue({ componentName: 'my-component' });
     useComponentMock.mockReturnValue([mockComponent, true, undefined]);
-    useComponentBranchesMock.mockReturnValue([['main', 'develop'], true, undefined]);
+    useComponentVersionsMock.mockReturnValue([mockVersions, true, undefined]);
   });
 
   it('should return null when componentName is missing', () => {
@@ -61,20 +70,20 @@ describe('ComponentVersionsTab', () => {
     expect(screen.getByText('Unable to load component')).toBeInTheDocument();
   });
 
-  it('should show spinner when branches are loading', () => {
-    useComponentBranchesMock.mockReturnValue([[], false, undefined]);
+  it('should show spinner when versions are loading', () => {
+    useComponentVersionsMock.mockReturnValue([[], false, undefined]);
     renderWithQueryClientAndRouter(<ComponentVersionsTab />);
     expect(screen.getByTestId('spinner')).toBeInTheDocument();
   });
 
-  it('should show error state when branches fail to load', () => {
-    useComponentBranchesMock.mockReturnValue([[], true, new Error('Failed')]);
+  it('should show error state when versions fail to load', () => {
+    useComponentVersionsMock.mockReturnValue([[], true, new Error('Failed')]);
     renderWithQueryClientAndRouter(<ComponentVersionsTab />);
-    expect(screen.getByText('Unable to load branches')).toBeInTheDocument();
+    expect(screen.getByText('Unable to load versions')).toBeInTheDocument();
   });
 
-  it('should display Versions section with empty message when no branches', () => {
-    useComponentBranchesMock.mockReturnValue([[], true, undefined]);
+  it('should display Versions section with empty message when no versions', () => {
+    useComponentVersionsMock.mockReturnValue([[], true, undefined]);
     renderWithQueryClientAndRouter(<ComponentVersionsTab />);
     expect(screen.getByText('Versions')).toBeInTheDocument();
     expect(
@@ -82,16 +91,20 @@ describe('ComponentVersionsTab', () => {
     ).toBeInTheDocument();
   });
 
-  it('should display list of version links when branches exist', () => {
+  it('should display versions table with columns and Find by name search when versions exist', () => {
     renderWithQueryClientAndRouter(<ComponentVersionsTab />);
     expect(screen.getByText('Versions')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Branches that have pipeline runs for this component. Select a branch to view its overview and activity.',
+        'Branches that have pipeline runs for this component. Select a version to view its overview and activity.',
       ),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('component-versions-list')).toBeInTheDocument();
-    expect(screen.getByTestId('version-link-main')).toBeInTheDocument();
-    expect(screen.getByTestId('version-link-develop')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Find by name')).toBeInTheDocument();
+    expect(screen.getByText('Version name')).toBeInTheDocument();
+    expect(screen.getByText('Description')).toBeInTheDocument();
+    expect(screen.getByText('Git branch or tag')).toBeInTheDocument();
+    expect(screen.getByText('Pipeline')).toBeInTheDocument();
+    expect(screen.getByTestId('version-name-main')).toBeInTheDocument();
+    expect(screen.getByTestId('version-name-develop')).toBeInTheDocument();
   });
 });
