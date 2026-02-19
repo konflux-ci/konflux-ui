@@ -32,8 +32,8 @@ const ComponentVersionActivityTab: React.FC = () => {
     (tab: string) =>
       COMPONENT_VERSION_ACTIVITY_CHILD_TAB_PATH.createPath({
         workspaceName: namespace,
-        componentName,
-        versionName,
+        componentName: componentName ?? '',
+        versionName: versionName ?? '',
         activityTab: tab,
       }),
     [componentName, namespace, versionName],
@@ -61,6 +61,10 @@ const ComponentVersionActivityTab: React.FC = () => {
     }
   }, [activityTab, getActivityTabRoute, lastSelectedTab, navigate]);
 
+  if (!componentName) {
+    return null;
+  }
+
   if (!loaded) {
     return (
       <Bullseye>
@@ -81,58 +85,56 @@ const ComponentVersionActivityTab: React.FC = () => {
 
   return (
     <IfFeature flag="components-page">
-      <div>
-        <DetailsSection
-          title="Activity"
-          featureFlag={
-            <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
-          }
-          description="Monitor your commits and their pipeline progression for this branch."
+      <DetailsSection
+        title="Activity"
+        featureFlag={
+          <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
+        }
+        description="Monitor your commits and their pipeline progression for this branch."
+      >
+        <Tabs
+          style={{
+            width: 'fit-content',
+            marginBottom: 'var(--pf-v5-global--spacer--md)',
+          }}
+          activeKey={currentTab}
+          onSelect={(_, k: string) => {
+            setActiveTab(k);
+          }}
+          data-test="component-version-activities-tabs-id"
+          unmountOnExit
         >
-          <Tabs
-            style={{
-              width: 'fit-content',
-              marginBottom: 'var(--pf-v5-global--spacer--md)',
-            }}
-            activeKey={currentTab}
-            onSelect={(_, k: string) => {
-              setActiveTab(k);
-            }}
-            data-test="component-version-activities-tabs-id"
-            unmountOnExit
+          <Tab
+            data-test="comp-version-activity-tab-commits"
+            title={<TabTitleText>Commits</TabTitleText>}
+            key="commits"
+            eventKey="latest-commits"
+            className="activity-tab"
           >
-            <Tab
-              data-test="comp-version-activity-tab-commits"
-              title={<TabTitleText>Commits</TabTitleText>}
-              key="commits"
-              eventKey="latest-commits"
-              className="activity-tab"
-            >
-              <FilterContextProvider filterParams={['name', 'status']}>
-                <CommitsListView
-                  applicationName={applicationName}
-                  componentName={component?.spec?.componentName}
-                  branchName={versionName}
-                />
-              </FilterContextProvider>
-            </Tab>
-            <Tab
-              data-test="comp-version-activity-tab-pipelineruns"
-              title={<TabTitleText>Pipeline runs</TabTitleText>}
-              key="pipelineruns"
-              eventKey="pipelineruns"
-              className="activity-tab"
-            >
-              <PipelineRunsTab
+            <FilterContextProvider filterParams={['name', 'status']}>
+              <CommitsListView
                 applicationName={applicationName}
                 componentName={component?.spec?.componentName}
                 branchName={versionName}
-                customFilter={nonTestSnapShotFilter}
               />
-            </Tab>
-          </Tabs>
-        </DetailsSection>
-      </div>
+            </FilterContextProvider>
+          </Tab>
+          <Tab
+            data-test="comp-version-activity-tab-pipelineruns"
+            title={<TabTitleText>Pipeline runs</TabTitleText>}
+            key="pipelineruns"
+            eventKey="pipelineruns"
+            className="activity-tab"
+          >
+            <PipelineRunsTab
+              applicationName={applicationName}
+              componentName={component?.spec?.componentName}
+              branchName={versionName}
+              customFilter={nonTestSnapShotFilter}
+            />
+          </Tab>
+        </Tabs>
+      </DetailsSection>
     </IfFeature>
   );
 };

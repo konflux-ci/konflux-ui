@@ -2,7 +2,9 @@ import React from 'react';
 import {
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
+  ComponentVersionsTab,
 } from '../../../components/ComponentsPage/ComponentDetails';
+import { ComponentVersionDetailsViewLayout } from '../../../components/ComponentsPage/Versions/ComponentVersionDetails';
 import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../../paths';
 import componentsPageRoutes from '../components-page';
 
@@ -69,6 +71,8 @@ describe('Components page routes configuration', () => {
   it('should include index, activity, versions and version details child routes', () => {
     const [, detailsRoute] = componentsPageRoutes as [{ path: string }, PathRoute];
     const children = detailsRoute.children ?? [];
+    expect(children).toHaveLength(5);
+
     const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute, versionDetailsRoute] =
       children;
 
@@ -78,9 +82,10 @@ describe('Components page routes configuration', () => {
     expect(activityWithTabRoute.path).toBe('activity/:activityTab');
     expect(activityRoute.path).toBe('activity');
     expect(versionsRoute.path).toBe('versions');
-    expect(versionsRoute.element).toBeDefined();
+    expect(versionsRoute.element).toEqual(<ComponentVersionsTab />);
 
     expect(versionDetailsRoute.path).toBe(`versions/:versionName`);
-    expect(versionDetailsRoute.children).toBeDefined();
+    expect(versionDetailsRoute.element).toEqual(<ComponentVersionDetailsViewLayout />);
+    expect(versionDetailsRoute.children).toHaveLength(3);
   });
 });

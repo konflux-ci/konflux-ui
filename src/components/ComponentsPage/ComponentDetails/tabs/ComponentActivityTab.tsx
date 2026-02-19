@@ -65,7 +65,7 @@ export const ComponentActivityTab: React.FC = () => {
         featureFlag={
           <FeatureFlagIndicator flags={['pipelineruns-kubearchive', 'components-page']} />
         }
-        description="Monitor your commits and their pipeline progression across all components."
+        description="Monitor your commits and their pipeline progression for this component."
       >
         <Tabs
           style={{

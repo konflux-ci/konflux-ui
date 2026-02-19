@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { screen, fireEvent, act } from '@testing-library/react';
 import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with-commits';
@@ -34,7 +35,7 @@ jest.mock('~/hooks/usePipelineRunsV2', () => ({
 jest.mock('~/feature-flags/hooks', () => ({
   ...jest.requireActual('~/feature-flags/hooks'),
   useIsOnFeatureFlag: jest.fn(() => true),
-  IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  IfFeature: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
 createUseApplicationMock([{ metadata: { name: 'test' } }, true]);

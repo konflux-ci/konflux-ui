@@ -9,6 +9,9 @@ export type ComponentVersionRow = {
   pipelineRunName?: string;
 };
 
+/** Max pipeline runs to fetch when deriving component versions (branches). Branches beyond this are omitted. */
+const PIPELINE_RUNS_LIMIT = 500;
+
 /**
  * Returns a list of component versions (branches) with pipeline info for the Versions tab table.
  * Each version has name, description (empty for now), pipeline name and optional pipeline run name
@@ -29,7 +32,7 @@ export const useComponentVersions = (
                   [PipelineRunLabel.COMPONENT]: componentName,
                 },
               },
-              limit: 100,
+              limit: PIPELINE_RUNS_LIMIT,
             }
           : undefined,
       [componentName],

@@ -28,8 +28,8 @@ const ComponentVersionOverviewTab: React.FC = () => {
   const [pipelineRun, pipelineRunLoaded] =
     useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2(
       namespace,
-      component?.metadata?.name ?? '',
-      versionName ?? undefined,
+      component?.metadata?.name ?? componentName ?? '',
+      versionName,
     );
   const commit = React.useMemo(
     () => (pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1))?.[0] ?? null,

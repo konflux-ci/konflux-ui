@@ -38,6 +38,7 @@ const ComponentVersionsTab: React.FC = () => {
     component?.metadata?.name ?? componentName ?? undefined,
   );
 
+  const [nameFilterInput, setNameFilterInput] = React.useState('');
   const [nameFilter, setNameFilter] = React.useState('');
   const [page, setPage] = React.useState(1);
   const [perPage, setPerPage] = React.useState(DEFAULT_PER_PAGE);
@@ -67,10 +68,6 @@ const ComponentVersionsTab: React.FC = () => {
     }),
     [component, namespace, componentName],
   );
-
-  React.useEffect(() => {
-    setPage(1);
-  }, [nameFilter]);
 
   if (!componentName) {
     return null;
@@ -110,11 +107,14 @@ const ComponentVersionsTab: React.FC = () => {
             type="search"
             aria-label="Find by name"
             placeholder="Find by name"
-            onChange={(_event, value) => onNameFilter(value)}
-            value={nameFilter}
+            onChange={(_event, value) => {
+              setNameFilterInput(value);
+              onNameFilter(value);
+            }}
+            value={nameFilterInput}
           />
         </ToolbarItem>
-        <ToolbarItem alignSelf="center" style={{ marginLeft: 'auto' }}>
+        <ToolbarItem align={{ default: 'alignRight' }}>
           <Pagination
             isCompact
             itemCount={totalCount}
