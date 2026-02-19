@@ -216,7 +216,7 @@ describe('task-run-filter-transforms', () => {
       expect(result.fieldSelector).toBe('name=*test-app.v1*');
     });
 
-    it('should preserve additional properties in selector', () => {
+    it('should build selector with only matchLabels and matchExpressions (custom filter fields excluded)', () => {
       const filterBy: KubearchiveFilterTransformSelector = {
         filterByName: 'test',
         matchLabels: {
@@ -231,8 +231,9 @@ describe('task-run-filter-transforms', () => {
         matchLabels: {
           app: 'myapp',
         },
-        someOtherProp: 'value',
+        matchExpressions: undefined,
       });
+      expect(result.selector).not.toHaveProperty('someOtherProp');
     });
 
     it('should handle undefined matchExpressions', () => {
