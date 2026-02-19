@@ -18,7 +18,7 @@ export type ReleaseAnnotation = {
   warningOrFailure: 'warning' | 'failure';
 };
 
-export type EnterpriseContractPolicies = {
+export type ConformaPolicies = {
   releaseAnnotations: {
     [key: string]: ReleaseAnnotation[];
   };
@@ -27,15 +27,13 @@ export type EnterpriseContractPolicies = {
   };
 };
 
-export type EnterpriseContractResultType = 'violations' | 'successes' | 'warnings';
-
-export enum ENTERPRISE_CONTRACT_STATUS {
+export enum CONFORMA_RESULT_STATUS {
   violations = 'Failed',
   successes = 'Success',
   warnings = 'Warning',
 }
 
-export type EnterpriseContractRule = {
+export type ConformaRule = {
   metadata: {
     title: string;
     description: string;
@@ -48,23 +46,23 @@ export type EnterpriseContractRule = {
   msg: string;
 };
 
-export type ComponentEnterpriseContractResult = {
+export type ComponentConformaResult = {
   containerImage: string;
   name: string;
   success: boolean;
-  violations?: EnterpriseContractRule[];
-  successes?: EnterpriseContractRule[];
-  warnings?: EnterpriseContractRule[];
+  violations?: ConformaRule[];
+  successes?: ConformaRule[];
+  warnings?: ConformaRule[];
 };
 
-export type EnterpriseContractResult = {
-  components: ComponentEnterpriseContractResult[];
+export type ConformaResult = {
+  components: ComponentConformaResult[];
 };
 
-export type UIEnterpriseContractData = {
+export type UIConformaData = {
   title: string;
   description: string;
-  status: ENTERPRISE_CONTRACT_STATUS;
+  status: CONFORMA_RESULT_STATUS;
   timestamp?: string;
   component: string;
   msg?: string;

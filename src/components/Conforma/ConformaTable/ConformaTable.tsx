@@ -1,27 +1,27 @@
 import * as React from 'react';
 import { SortByDirection } from '@patternfly/react-table';
 import { Table } from '~/shared';
-import { ENTERPRISE_CONTRACT_STATUS, UIEnterpriseContractData } from '../types';
-import { EnterpriseContractExpandedRowContent } from './EnterpriseContractExpandedRowContent';
-import getEnterpriseContractHeader from './EnterpriseContractHeader';
-import { WrappedEnterpriseContractRow } from './EnterpriseContractRow';
-import './EnterpriceContractTable.scss';
+import { CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
+import { ConformaExpandedRowContent } from './ConformaExpandedRowContent';
+import getConformaHeader from './ConformaHeader';
+import { WrappedConformaRow } from './ConformaRow';
+import './ConformaTable.scss';
 
-type EnterpriseContractTableProps = {
-  ecResult: UIEnterpriseContractData[];
+type ConformaTableProps = {
+  conformaResult: UIConformaData[];
 };
 
 const STATUS_SORT_ORDER = [
-  ENTERPRISE_CONTRACT_STATUS.violations,
-  ENTERPRISE_CONTRACT_STATUS.warnings,
-  ENTERPRISE_CONTRACT_STATUS.successes,
+  CONFORMA_RESULT_STATUS.violations,
+  CONFORMA_RESULT_STATUS.warnings,
+  CONFORMA_RESULT_STATUS.successes,
 ];
 const COLUMN_ORDER = [undefined, 'title', 'status', 'msg', 'component'];
 
 export const getSortColumnFuntion = (key: string, activeSortDirection: string) => {
   switch (key) {
     case 'status':
-      return (a: UIEnterpriseContractData, b: UIEnterpriseContractData) => {
+      return (a: UIConformaData, b: UIConformaData) => {
         const aValue = STATUS_SORT_ORDER.indexOf(a[key]);
         const bValue = STATUS_SORT_ORDER.indexOf(b[key]);
         if (aValue < bValue) {
@@ -33,7 +33,7 @@ export const getSortColumnFuntion = (key: string, activeSortDirection: string) =
       };
 
     default:
-      return (a: UIEnterpriseContractData, b: UIEnterpriseContractData) => {
+      return (a: UIConformaData, b: UIConformaData) => {
         const aValue = a[key];
         const bValue = b[key];
         if (typeof aValue === 'string' && typeof bValue === 'string') {
@@ -47,49 +47,53 @@ export const getSortColumnFuntion = (key: string, activeSortDirection: string) =
   }
 };
 
-export const EnterpriseContractTable: React.FC<
-  React.PropsWithChildren<EnterpriseContractTableProps>
-> = ({ ecResult }) => {
+export const ConformaTable: React.FC<React.PropsWithChildren<ConformaTableProps>> = ({
+  conformaResult: crResult,
+}) => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | null>(2);
   const [activeSortDirection, setActiveSortDirection] = React.useState<
     SortByDirection.asc | SortByDirection.desc | null
   >(SortByDirection.asc);
 
-  const EnterpriseContractHeader = React.useMemo(
+  const ConformaHeader = React.useMemo(
     () =>
-      getEnterpriseContractHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
+      getConformaHeader(activeSortIndex, activeSortDirection, (_, index, direction) => {
         setActiveSortIndex(index);
         setActiveSortDirection(direction);
       }),
     [activeSortDirection, activeSortIndex],
   );
 
-  const sortedECResult = React.useMemo(() => {
-    return ecResult
-      ? ecResult.sort(getSortColumnFuntion(COLUMN_ORDER[activeSortIndex], activeSortDirection))
+  const sortedCRResult = React.useMemo(() => {
+    return crResult
+      ? [...crResult].sort(getSortColumnFuntion(COLUMN_ORDER[activeSortIndex], activeSortDirection))
       : undefined;
-  }, [activeSortDirection, activeSortIndex, ecResult]);
+  }, [activeSortDirection, activeSortIndex, crResult]);
 
-  return sortedECResult ? (
+  return sortedCRResult ? (
     <div className="pf-v5-c-table pf-m-compact pf-m-grid-md">
       <Table
         virtualize
-        data={sortedECResult}
-        aria-label="ec table"
-        Header={EnterpriseContractHeader}
+        data={sortedCRResult}
+        aria-label="conforma-table"
+        Header={ConformaHeader}
         ExpandedContent={(props) => {
-          const obj = props.obj as UIEnterpriseContractData;
-          return <EnterpriseContractExpandedRowContent {...props} obj={obj} />;
+          const obj = props.obj as UIConformaData;
+          return <ConformaExpandedRowContent {...props} obj={obj} />;
         }}
         Row={(props) => {
-          const obj = props.obj as UIEnterpriseContractData;
+          const obj = props.obj as UIConformaData;
 
           return (
-            <WrappedEnterpriseContractRow {...props} obj={obj} customData={{ sortedECResult }} />
+            <WrappedConformaRow
+              {...props}
+              obj={obj}
+              customData={{ sortedConformaResult: sortedCRResult }}
+            />
           );
         }}
         loaded
-        customData={{ sortedECResult }}
+        customData={{ sortedCRResult }}
         expand
       />
     </div>

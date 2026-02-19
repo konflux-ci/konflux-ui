@@ -5,22 +5,22 @@ import {
   DescriptionListTerm,
 } from '@patternfly/react-core';
 import { ExpandableRowContent, Tr } from '@patternfly/react-table';
-import { SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
+import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documentation';
+import { UIConformaData } from '~/types/conforma';
 import { ExternalLink, Timestamp } from '../../../shared';
-import { UIEnterpriseContractData } from '../types';
-import './EnterpriceContractTable.scss';
+import './ConformaTable.scss';
 
 interface Props {
-  obj: UIEnterpriseContractData;
+  obj: UIConformaData;
 }
 
-export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj }) => {
+export const ConformaExpandedRowContent: React.FC<Props> = ({ obj }) => {
   if (!obj.description && !obj.collection?.length && !obj.solution && !obj.timestamp) return null;
 
   return (
-    <Tr className="ex-expanded-row" data-test="ec-expand-content">
+    <Tr className="conforma-expanded-row" data-test="conforma-expand-content">
       <ExpandableRowContent>
-        <DescriptionList className="ec-description-list">
+        <DescriptionList className="conforma-description-list">
           <DescriptionListGroup>
             <DescriptionListTerm>Rule Description</DescriptionListTerm>
             <DescriptionListDescription>{obj.description ?? '-'}</DescriptionListDescription>
@@ -30,9 +30,7 @@ export const EnterpriseContractExpandedRowContent: React.FC<Props> = ({ obj }) =
             <DescriptionListGroup>
               <DescriptionListTerm>Collection</DescriptionListTerm>
               <DescriptionListDescription>
-                <ExternalLink
-                  href={SECURITY_ENTERPRISE_CONTRACT_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}
-                >
+                <ExternalLink href={CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL}>
                   {obj.collection.join(', ')}
                 </ExternalLink>
               </DescriptionListDescription>

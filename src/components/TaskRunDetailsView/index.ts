@@ -21,4 +21,4 @@ export const taskRunDetailsViewLoader = createLoaderWithAccessCheck(
 export { default as TaskRunDetailsViewLayout } from './TaskRunDetailsView';
 export { default as TaskRunDetailsTab } from './tabs/TaskRunDetailsTab';
 export { default as TaskRunLogsTab } from './tabs/TaskRunLogsTab';
-export { TaskrunSecurityEnterpriseContractTab } from './tabs/TaskRunSecurityEnterpriseContractTab';
+export { TaskRunSecurityTab } from './tabs/TaskRunSecurityTab';

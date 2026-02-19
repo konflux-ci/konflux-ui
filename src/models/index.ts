@@ -1,7 +1,6 @@
 export * from './application';
 export * from './component';
 export * from './gitops-deployment';
-export * from './enterprise-contract-policy';
 export * from './environment';
 export * from './integration-test-scenario';
 export * from './pipelineruns';
