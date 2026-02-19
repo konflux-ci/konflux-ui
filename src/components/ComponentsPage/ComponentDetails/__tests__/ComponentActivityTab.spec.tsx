@@ -97,9 +97,7 @@ describe('ComponentActivityTab (V2)', () => {
     renderWithQueryClientAndRouter(<ComponentActivityTab />);
     expect(screen.getByText('Activity')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Monitor your commits and their pipeline progression across all components.',
-      ),
+      screen.getByText('Monitor your commits and their pipeline progression for this component.'),
     ).toBeInTheDocument();
   });
 
