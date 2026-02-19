@@ -3,6 +3,7 @@ import { BitbucketIcon } from '@patternfly/react-icons/dist/esm/icons/bitbucket-
 import { GitAltIcon } from '@patternfly/react-icons/dist/esm/icons/git-alt-icon';
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
+import ForgejoLogo from '../shared/assets/forgejo-logo.svg';
 
 export const getGitPath = (
   gitSource: string,
@@ -49,6 +50,9 @@ export const getGitIcon = (gitSource: string): React.ReactElement => {
     case 'gitlab.com':
       return <GitlabIcon alt="Gitlab" />;
     default:
+      if (gitSource.endsWith('forgejo.org')) {
+        return <ForgejoLogo alt="Forgejo" style={{ width: '1em', height: '1em' }} />;
+      }
       return <GitAltIcon alt="Git" />;
   }
 };
