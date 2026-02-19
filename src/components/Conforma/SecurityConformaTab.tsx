@@ -205,7 +205,7 @@ export const SecurityConformaTab: React.FC<
         </Flex>
       </Flex>
       {crLoaded && filteredCRResult.length > 0 ? (
-        <ConformaTable crResult={filteredCRResult} />
+        <ConformaTable conformaResult={filteredCRResult} />
       ) : (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}

@@ -8,7 +8,7 @@ import { WrappedConformaRow } from './ConformaRow';
 import './ConformaTable.scss';
 
 type ConformaTableProps = {
-  crResult: UIConformaData[];
+  conformaResult: UIConformaData[];
 };
 
 const STATUS_SORT_ORDER = [
@@ -48,7 +48,7 @@ export const getSortColumnFuntion = (key: string, activeSortDirection: string) =
 };
 
 export const ConformaTable: React.FC<React.PropsWithChildren<ConformaTableProps>> = ({
-  crResult,
+  conformaResult: crResult,
 }) => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | null>(2);
   const [activeSortDirection, setActiveSortDirection] = React.useState<
