@@ -56,7 +56,14 @@ export const routeDecoratorIcon = (routeURL: string): React.ReactElement => {
     case GitProvider.GITLAB:
       return <GitlabIcon title="Source code" />;
     case GitProvider.FORGEJO:
-      return <ForgejoLogo title="Source code" style={{ width: '1em', height: '1em' }} />;
+      return (
+        <ForgejoLogo
+          title="Source code"
+          role="img"
+          aria-label="Source code"
+          style={{ width: '1em', height: '1em' }}
+        />
+      );
     default:
       return <GitAltIcon title="Source code" />;
   }

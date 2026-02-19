@@ -5,7 +5,7 @@ import { getGitIcon, getGitPath } from '../git-utils';
 
 jest.mock(
   '../../shared/assets/forgejo-logo.svg',
-  () => (props: { alt?: string }) => React.createElement('svg', props),
+  () => (props: { 'aria-label'?: string }) => React.createElement('svg', props),
 );
 
 describe('git-utils', () => {
@@ -27,12 +27,14 @@ describe('git-utils', () => {
 
     it('should return Forgejo icon', () => {
       const result = render(getGitIcon('forgejo.org'));
-      expect(result.baseElement.querySelector('svg').getAttribute('alt')).toBe('Forgejo');
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('aria-label', 'Forgejo');
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('role', 'img');
     });
 
     it('should return Forgejo icon for subdomain', () => {
       const result = render(getGitIcon('code.forgejo.org'));
-      expect(result.baseElement.querySelector('svg').getAttribute('alt')).toBe('Forgejo');
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('aria-label', 'Forgejo');
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('role', 'img');
     });
 
     it('should return Git icon', () => {

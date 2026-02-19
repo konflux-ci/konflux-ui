@@ -51,7 +51,9 @@ export const getGitIcon = (gitSource: string): React.ReactElement => {
       return <GitlabIcon alt="Gitlab" />;
     default:
       if (gitSource.endsWith('forgejo.org')) {
-        return <ForgejoLogo alt="Forgejo" style={{ width: '1em', height: '1em' }} />;
+        return (
+          <ForgejoLogo role="img" aria-label="Forgejo" style={{ width: '1em', height: '1em' }} />
+        );
       }
       return <GitAltIcon alt="Git" />;
   }
