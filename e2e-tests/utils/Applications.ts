@@ -232,12 +232,11 @@ export class Applications {
   }
 
   static verifyPipelineRunIsVisible(applicationName: string, plrName: string) {
-    this.clickBreadcrumbLink(applicationName);
     this.goToPipelinerunsTab();
     cy.contains(UIhelperPO.tableRow('Pipeline run List'), plrName, {
       // extended timeout: GitHub synchronization can occasionally take some time,
       // which causes PR creation to take longer.
       timeout: 1200000, // 20min
-    }).scrollIntoView();
+    });
   }
 }
