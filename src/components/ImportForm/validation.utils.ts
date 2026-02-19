@@ -10,7 +10,7 @@ const componentSchema = yup.object({
         .trim()
         .max(2000, 'Please enter a URL that is less than 2000 characters.')
         .matches(GIT_URL.PROTOCOL_REGEX, 'Must include a protocol (https://)')
-        .matches(GIT_URL.DOMAIN_REGEX, 'Must include a domain (e.g. github)')
+        .matches(GIT_URL.DOMAIN_REGEX, 'Must include a domain of provider (e.g. github)')
         .matches(GIT_URL.USER_OR_REPO_REGEX, 'User or repository name is missing')
         .required('Required'),
       revision: yup.string(),
