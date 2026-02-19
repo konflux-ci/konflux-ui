@@ -35,7 +35,8 @@ export const useLatestBuildPipelineRunForComponentV2 = (
 export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
-): [PipelineRunKind, boolean, unknown] => {
+  branchName?: string,
+): [PipelineRunKind | undefined, boolean, unknown] => {
   const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
     namespace,
     React.useMemo(
@@ -45,9 +46,10 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
           },
+          ...(branchName ? { filterByTargetBranch: branchName } : {}),
         },
       }),
-      [componentName],
+      [componentName, branchName],
     ),
   );
 
@@ -67,6 +69,13 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
 
   return [latestSuccess, loaded, error];
 };
+
+export const useLatestSuccessfulBuildPipelineRunForComponentAndBranchV2 = (
+  namespace: string,
+  componentName: string,
+  branchName: string | undefined,
+): [PipelineRunKind | undefined, boolean, unknown] =>
+  useLatestSuccessfulBuildPipelineRunForComponentV2(namespace, componentName, branchName);
 
 export const useLatestPushBuildPipelineRunForComponentV2 = (
   namespace: string,

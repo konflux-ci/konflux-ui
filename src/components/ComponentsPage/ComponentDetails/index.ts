@@ -22,3 +22,5 @@ export const componentDetailsViewLoader = createLoaderWithAccessCheck(
 
 export { default as ComponentDetailsViewLayout } from './ComponentDetailsView';
 export { default as ComponentDetailsTab } from '../../Components/ComponentDetails/tabs/ComponentDetailsTab';
+export { default as ComponentActivityTab } from './tabs/ComponentActivityTab';
+export { ComponentVersionsTab } from '../Versions';

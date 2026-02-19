@@ -10,6 +10,7 @@ import {
   KubearchiveFilterTransformSelector,
 } from '~/utils/kubearchive-filter-transform';
 import { EQ } from '~/utils/tekton-results';
+import { PipelineRunLabel } from '../consts/pipelinerun';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
@@ -72,18 +73,35 @@ export const usePipelineRunsV2 = (
     isLoading,
     error,
   } = useK8sWatchResource<PipelineRunKind[]>(watchOptions, PipelineRunModel, { retry: false });
-  // Cluster results with optional commit filtering
+  // Cluster results with optional commit and branch filtering
   const etcdRuns = React.useMemo((): PipelineRunKind[] => {
     if (isLoading || error || !resources) {
       return [];
     }
 
-    if (!optionsMemo?.selector?.filterByCommit) {
-      return resources;
+    let filtered = resources;
+
+    if (optionsMemo?.selector?.filterByCommit) {
+      filtered = filtered.filter(
+        (plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit,
+      );
     }
 
-    return resources.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
-  }, [optionsMemo?.selector?.filterByCommit, resources, isLoading, error]);
+    if (optionsMemo?.selector?.filterByTargetBranch) {
+      const branch = optionsMemo.selector.filterByTargetBranch;
+      filtered = filtered.filter(
+        (plr) => plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_BRANCH_ANNOTATION] === branch,
+      );
+    }
+
+    return filtered;
+  }, [
+    optionsMemo?.selector?.filterByCommit,
+    optionsMemo?.selector?.filterByTargetBranch,
+    resources,
+    isLoading,
+    error,
+  ]);
 
   // Preserve removed etcd runs (cache), then sort and apply limit
   const runs = React.useMemo((): PipelineRunKind[] => {
@@ -164,7 +182,7 @@ export const usePipelineRunsV2 = (
     enabled: shouldQueryKubearchive,
   });
 
-  // KubeArchive results with commit filter, sorted and limited
+  // KubeArchive results with commit and branch filter, sorted and limited
   const kubearchiveData = React.useMemo((): PipelineRunKind[] => {
     if (!shouldQueryKubearchive) return [];
 
@@ -174,6 +192,13 @@ export const usePipelineRunsV2 = (
 
     if (optionsMemo?.selector?.filterByCommit) {
       data = data.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
+    }
+
+    if (optionsMemo?.selector?.filterByTargetBranch) {
+      const branch = optionsMemo.selector.filterByTargetBranch;
+      data = data.filter(
+        (plr) => plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_BRANCH_ANNOTATION] === branch,
+      );
     }
 
     const creationTimestamp = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
@@ -187,14 +212,22 @@ export const usePipelineRunsV2 = (
     shouldQueryKubearchive,
     optionsMemo?.limit,
     optionsMemo?.selector?.filterByCommit,
+    optionsMemo?.selector?.filterByTargetBranch,
   ]);
 
-  // Merge cluster with external source, dedupe by UID, sort, and limit
+  // Merge cluster with external source, dedupe by UID, filter by branch (TR has no server-side branch filter), sort, and limit
   const combinedData = React.useMemo((): PipelineRunKind[] => {
-    const mergedData = uniqBy(
+    let mergedData = uniqBy(
       [...processedClusterData, ...(shouldQueryKubearchive ? kubearchiveData : trResources || [])],
       (r) => r.metadata?.uid,
     );
+
+    if (optionsMemo?.selector?.filterByTargetBranch) {
+      const branch = optionsMemo.selector.filterByTargetBranch;
+      mergedData = mergedData.filter(
+        (plr) => plr.metadata?.annotations?.[PipelineRunLabel.COMMIT_BRANCH_ANNOTATION] === branch,
+      );
+    }
 
     const sortedData = mergedData.sort((a, b) =>
       (b.metadata?.creationTimestamp || '').localeCompare(a.metadata?.creationTimestamp || ''),
@@ -209,6 +242,7 @@ export const usePipelineRunsV2 = (
     kubearchiveData,
     trResources,
     optionsMemo?.limit,
+    optionsMemo?.selector?.filterByTargetBranch,
   ]);
 
   const isLoadingCluster = React.useMemo(() => {

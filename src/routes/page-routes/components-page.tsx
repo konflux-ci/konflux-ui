@@ -1,10 +1,19 @@
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import {
+  ComponentActivityTab,
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
   componentDetailsViewLoader,
+  ComponentVersionsTab,
 } from '../../components/ComponentsPage/ComponentDetails';
+import {
+  ComponentVersionActivityTab,
+  ComponentVersionDetailsViewLayout,
+  componentVersionDetailsViewLoader,
+  ComponentVersionOverviewTab,
+} from '../../components/ComponentsPage/Versions/ComponentVersionDetails';
 import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../paths';
+import { RouterParams } from '../utils';
 
 const componentsPageRoutes = [
   {
@@ -26,12 +35,36 @@ const componentsPageRoutes = [
         element: <ComponentDetailsTab />,
       },
       {
-        path: 'activity',
-        element: null, // TODO: implement Activity tab https://issues.redhat.com/browse/KFLUXUI-1006
+        path: `activity/:${RouterParams.activityTab}`,
+        element: <ComponentActivityTab />,
       },
       {
-        path: `versions`,
-        element: null, // TODO: implement Versions tab https://issues.redhat.com/browse/KFLUXUI-1007
+        path: 'activity',
+        element: <ComponentActivityTab />,
+      },
+      {
+        path: 'versions',
+        element: <ComponentVersionsTab />,
+      },
+      {
+        path: `versions/:${RouterParams.versionName}`,
+        errorElement: <RouteErrorBoundry />,
+        loader: componentVersionDetailsViewLoader,
+        element: <ComponentVersionDetailsViewLayout />,
+        children: [
+          {
+            index: true,
+            element: <ComponentVersionOverviewTab />,
+          },
+          {
+            path: 'activity',
+            element: <ComponentVersionActivityTab />,
+          },
+          {
+            path: `activity/:${RouterParams.activityTab}`,
+            element: <ComponentVersionActivityTab />,
+          },
+        ],
       },
     ],
   },

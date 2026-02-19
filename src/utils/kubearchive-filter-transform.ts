@@ -5,6 +5,7 @@ export type KubearchiveFilterTransformSelector = Selector &
     filterByName: string;
     filterByCreationTimestampAfter: string;
     filterByCommit: string;
+    filterByTargetBranch: string;
   }>;
 
 export const convertFilterToKubearchiveSelectors = (
@@ -33,14 +34,11 @@ export const convertFilterToKubearchiveSelectors = (
 
   const matchExpressions: MatchExpression[] = [...(filterBy.matchExpressions ?? [])];
 
-  // Build the final selector (excluding custom filter fields)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { filterByName, filterByCreationTimestampAfter, filterByCommit, ...rest } = filterBy;
+  // Build the final selector (excluding custom filter fields filterByName, filterByCreationTimestampAfter, filterByCommit, filterByTargetBranch)
   const selector: Selector = {
-    ...rest,
     matchLabels: filterBy.matchLabels,
     matchExpressions: matchExpressions.length ? matchExpressions : undefined,
-  }; // matchExpressions is optional only include if it has any expressions and to maintain tanstack query stable hash
+  };
 
   return { selector, fieldSelector };
 };
