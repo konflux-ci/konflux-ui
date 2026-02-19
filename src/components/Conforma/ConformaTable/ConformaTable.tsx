@@ -66,7 +66,7 @@ export const ConformaTable: React.FC<React.PropsWithChildren<ConformaTableProps>
 
   const sortedCRResult = React.useMemo(() => {
     return crResult
-      ? crResult.sort(getSortColumnFuntion(COLUMN_ORDER[activeSortIndex], activeSortDirection))
+      ? [...crResult].sort(getSortColumnFuntion(COLUMN_ORDER[activeSortIndex], activeSortDirection))
       : undefined;
   }, [activeSortDirection, activeSortIndex, crResult]);
 

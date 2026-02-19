@@ -138,8 +138,10 @@ export const useConformaResultFromLogs = (
   return [conformaResult, error ? true : crLoaded, error];
 };
 
-export const mapConformaResultData = (ecResult: ComponentConformaResult[]): UIConformaData[] => {
-  return ecResult.reduce((acc, compResult) => {
+export const mapConformaResultData = (
+  conformaResult: ComponentConformaResult[],
+): UIConformaData[] => {
+  return conformaResult.reduce((acc, compResult) => {
     compResult?.violations?.forEach((v) => {
       const rule: UIConformaData = {
         title: v.metadata?.title,

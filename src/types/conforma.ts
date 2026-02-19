@@ -27,8 +27,6 @@ export type ConformaPolicies = {
   };
 };
 
-export type ConformaResultType = 'violations' | 'successes' | 'warnings';
-
 export enum CONFORMA_RESULT_STATUS {
   violations = 'Failed',
   successes = 'Success',

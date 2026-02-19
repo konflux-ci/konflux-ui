@@ -346,6 +346,7 @@ describe('useConformaResult', () => {
     queryClient = createTestQueryClient();
     jest.clearAllMocks();
     mockCommmonFetchJSON.mockResolvedValue(mockConformaJSON);
+    mockUseNamespaceHook('test-ns');
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);
     mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
   });
