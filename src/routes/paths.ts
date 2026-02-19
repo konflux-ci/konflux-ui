@@ -33,6 +33,12 @@ export const COMPONENTS_PATH = WORKSPACE_PATH.extend('components');
 
 export const COMPONENT_DETAILS_V2_PATH = COMPONENTS_PATH.extend(`:${RouterParams.componentName}`);
 
+export const COMPONENT_VERSIONS_PATH = COMPONENT_DETAILS_V2_PATH.extend('versions');
+
+export const COMPONENT_VERSION_DETAILS_PATH = COMPONENT_VERSIONS_PATH.extend(
+  `:${RouterParams.versionRevision}`,
+);
+
 /**
  * @deprecated Use COMPONENTS_PATH instead
  */
