@@ -93,6 +93,7 @@ describe('Basic Happy Path', () => {
     });
 
     it('Merge the auto-generated PR, and verify the event status on modal', () => {
+      Applications.verifyPipelineRunIsVisible(applicationName, `${componentName}-on-pull`);
       Applications.goToComponentsTab();
       // Pipeline build plan was removed from the Pipeline runs Tab
       // See https://issues.redhat.com/browse/KFLUXBUGS-603

@@ -1,6 +1,6 @@
 import { pageTitles, FULL_APPLICATION_TITLE } from '../support/constants/PageTitle';
 import { addComponentPagePO } from '../support/pageObjects/createApplication-po';
-import { actions, breadcrumb } from '../support/pageObjects/global-po';
+import { actions, breadcrumb, UIhelperPO } from '../support/pageObjects/global-po';
 import {
   actionsDropdown,
   componentsTabPO,
@@ -24,21 +24,17 @@ import { UIhelper } from './UIhelper';
 export class Applications {
   static checkPipelineStatuses(componentName: string, statuses: string[]) {
     const pipelineRunName = `${componentName}-on-pull-request`;
-
-    UIhelper.getTableRow('Pipeline run List', pipelineRunName).should(($row) => {
-      const rowText = $row.text();
-      if (!rowText.includes(pipelineRunName)) {
-        return false;
-      }
-
-      const $statusElement = $row.find('[data-test="status"]');
-      if ($statusElement.length > 0) {
-        const statusText = $statusElement.text();
-        return statuses.some((status) => statusText.includes(status));
-      }
-
-      return statuses.some((status) => rowText.includes(status));
-    });
+    cy.get(pipelinerunsTabPO.pipelineRunRow(pipelineRunName), { timeout: 90000 }).should(
+      ($row) => {
+        const text = $row.text();
+        const hasExpected = statuses.some((s) => text.includes(s));
+        expect(
+          hasExpected,
+          `Pipeline run row should show one of [${statuses.join(', ')}]; got: "${text.trim().slice(0, 100)}..."`,
+        ).to.be.true;
+      },
+      { timeout: 80000 } as { timeout: number },
+    );
   }
 
   static filterApplication(applicationName: string) {
@@ -229,5 +225,14 @@ export class Applications {
     APIHelper.requestHACAPI({ url: hacAPIEndpoints.secrets(secretName) })
       .its(`body.data.${key}`)
       .should('eq', Buffer.from(value, 'utf8').toString('base64'));
+  }
+
+  static verifyPipelineRunIsVisible(applicationName: string, plrName: string) {
+    this.goToPipelinerunsTab();
+    cy.contains(UIhelperPO.tableRow('Pipeline run List'), plrName, {
+      // extended timeout: GitHub synchronization can occasionally take some time,
+      // which causes PR creation to take longer.
+      timeout: 1200000, // 20min
+    });
   }
 }
