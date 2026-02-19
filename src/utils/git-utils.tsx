@@ -52,3 +52,23 @@ export const getGitIcon = (gitSource: string): React.ReactElement => {
       return <GitAltIcon alt="Git" />;
   }
 };
+
+type BranchPathBuilder = (branch: string) => string;
+
+const providerBranchPaths: [string, BranchPathBuilder][] = [
+  ['github.com', (branch) => `/tree/${branch}`],
+  ['gitlab.com', (branch) => `/-/tree/${branch}`],
+  ['forgejo.org', (branch) => `/src/branch/${branch}`],
+  ['codeberg.org', (branch) => `/src/branch/${branch}`],
+];
+
+export const createBranchUrl = (repoUrl?: string, branch?: string): string | undefined => {
+  if (!repoUrl || !branch) {
+    return undefined;
+  }
+
+  const cleanUrl = repoUrl.replace(/\.git$/, '');
+  const match = providerBranchPaths.find(([host]) => cleanUrl.includes(host));
+
+  return match ? `${cleanUrl}${match[1](branch)}` : undefined;
+};
