@@ -455,12 +455,10 @@ export const enqueueLinkingTask = async (
   });
 };
 
-export const createSecretResourceWithLinkingComponents = async (
+export const createK8sSecretResource = (
   values: AddSecretFormValues,
-  namespace: string,
-  dryRun: boolean,
-) => {
-  const secretResource: SecretKind = getSecretFormData(values, namespace);
+  secretResource: SecretKind,
+): SecretKind => {
   const labels = {
     secret: getLabelsForSecret(values),
   };
@@ -476,6 +474,19 @@ export const createSecretResourceWithLinkingComponents = async (
       annotations,
     },
   };
+
+  return k8sSecretResource;
+};
+
+export const createSecretResourceWithLinkingComponents = async (
+  values: AddSecretFormValues,
+  namespace: string,
+  dryRun: boolean,
+) => {
+  const secretResource: SecretKind = getSecretFormData(values, namespace);
+  const k8sSecretResource = createK8sSecretResource(values, secretResource);
+
+  // console.log('k8sSecretResource', k8sSecretResource);
 
   const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
