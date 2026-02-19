@@ -27,7 +27,7 @@ const componentsPageRoutes = [
       },
       {
         path: 'activity',
-        element: null, // TODO: implement Activity tab https://issues.redhat.com/browse/KFLUXUI-1006
+        element: null, // TODO: implement Versions tab https://issues.redhat.com/browse/KFLUXUI-1006
       },
       {
         path: `versions`,
