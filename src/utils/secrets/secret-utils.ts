@@ -21,6 +21,7 @@ import {
   SourceSecretType,
   BuildTimeSecret,
 } from '../../types';
+// import { createK8sSecretResource } from '../create-utils';
 
 export { SecretForComponentOption };
 
@@ -294,6 +295,36 @@ export const createSecretResource = async (
     },
     resource: secretResource,
   });
+
+// export const editSecretResource = (originalSecret: SecretKind, updatedSecret: AddSecretFormValues) => {
+//   const secretResource: SecretKind = getSecretFormData(updatedSecret, originalSecret.metadata.namespace);
+//   // const newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+//   // console.log('newK8sSecretResource', newK8sSecretResource);
+
+//   // TODO: vsude update labels, name
+//   // TODO: u opaque keyValues
+//   // TODO: Source-SSH - dat stary klic, prepsat labels, annotations
+//   // TODO: Source-basic - prepsat labels, annotations, check jestli se vyplnilo username a password
+//   // TODO: Image-creds - zjistit
+//   // TODO: Image-config - config
+
+//   // const decode = (str: string) => JSON.parse(atob(str));
+
+//   // console.log("blbl",decode(newK8sSecretResource.data['.dockerconfigjson']));
+
+//   return true;
+// }
+
+// export const editSecretResource = async (secretResource: SecretKind, namespace: string, dryRun: boolean): Promise<SecretKind> =>
+//   K8sQueryPatchResource({
+//     model: SecretModel,
+//     queryOptions: {
+//       name: secretResource.metadata.name,
+//       ns: secretResource.metadata.namespace,
+//       ...(dryRun && { queryParams: { dryRun: 'All' } }),
+//     },
+//     resource: secretResource,
+//   });
 
 export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
   return [

@@ -20,8 +20,10 @@ import {
 } from '~/types';
 import { addSecretWithLinkingComponents } from '~/utils/create-utils';
 import {
+  // editSecretResource,
   getAuthType,
   getSecretBreadcrumbs,
+  // getSecretFormData,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
@@ -42,28 +44,45 @@ const EditSecretForm: React.FC = () => {
 
   // console.log('secretData', secretData);
 
-  // const { linkedServiceAccounts, isLoading, error } = useLinkedServiceAccounts(
-  //   namespace,
-  //   secretData,
-  //   false,
-  // );
-  // console.log("linkedServiceAccounts", linkedServiceAccounts);
-
   const opaqueSecret = Object.entries(secretData.data).map(([key, value]) => ({ key, value }));
+
+  const credentials =
+    secretType === SecretTypeDropdownLabel.image &&
+    typeFromLabels === SecretType.dockerconfigjson &&
+    secretData.data['.dockerconfigjson']
+      ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
+      : null;
+
+  // console.log('credentials', credentials);
 
   const imageSecret =
     secretType === SecretTypeDropdownLabel.image
       ? {
           authType: authTypeFromLabels, //
-          registryCreds: [
-            // TODO: get registryCreds from secretData
-            {
-              registry: '',
-              username: '',
-              password: '',
-              email: '',
-            },
-          ],
+          registryCreds: credentials?.auths
+            ? Object.entries(
+                credentials.auths as {
+                  [key: string]: { username: string; password: string; email: string };
+                },
+              ).map(
+                ([registryName, authData]: [
+                  string,
+                  { username: string; password: string; email: string },
+                ]) => ({
+                  registry: registryName,
+                  username: authData.username,
+                  password: authData.password,
+                  email: authData.email || '',
+                }),
+              )
+            : [
+                {
+                  registry: '',
+                  username: '',
+                  password: '',
+                  email: '',
+                },
+              ],
           dockerconfig: secretData.data['.dockercfg'], //
         }
       : undefined;
@@ -72,10 +91,8 @@ const EditSecretForm: React.FC = () => {
     secretType === SecretTypeDropdownLabel.source
       ? {
           authType: authTypeFromLabels, //
-          // username: secretData.data['username'] || '', hashed
-          // password: secretData.data['password'] || '', hashed
-          username: '',
-          password: '',
+          username: atob(secretData.data.username),
+          password: '', // Intentionally not decoded, password is sensitive
           host: secretData.metadata.labels['appstudio.redhat.com/scm.host'] || '',
           repo: secretData.metadata.annotations['appstudio.redhat.com/scm.repository'] || '',
         }
@@ -102,6 +119,7 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
+        // console.log('updatedSecret', editSecretResource(secretData, values));
         addSecretWithLinkingComponents(values, namespace)
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
@@ -121,6 +139,7 @@ const EditSecretForm: React.FC = () => {
           title="Edit secret"
           description={
             <>
+              {/* {console.log(!dirty , !isEmpty(errors) , isSubmitting)} */}
               Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}
               <ExternalLink href={LEARN_MORE_ABOUT_SECRETS_CREATION}>Learn more</ExternalLink>
             </>
