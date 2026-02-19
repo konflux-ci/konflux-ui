@@ -50,6 +50,8 @@ export const pipelinerunsTabPO = {
 
   pipelineRunsListTable: 'Pipeline run List',
   ariaLabelPipelineRunsListTable: '[aria-label="Pipeline run List"]',
+  pipelineRunRow: (runNamePrefix: string) =>
+    `[aria-label="Pipeline run List"] [data-test^="${runNamePrefix}"]`,
   vulnerabilityColumn: '[data-test="vulnerabilities"]',
   vulnerabilityScanStatus: '[data-test*="scan-status"]',
 };
