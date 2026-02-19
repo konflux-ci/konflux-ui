@@ -1,6 +1,12 @@
+import * as React from 'react';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
 import { getGitIcon, getGitPath } from '../git-utils';
+
+jest.mock(
+  '../../shared/assets/forgejo-logo.svg',
+  () => (props: { alt?: string }) => React.createElement('svg', props),
+);
 
 describe('git-utils', () => {
   describe('getGitIcon', () => {
@@ -17,6 +23,16 @@ describe('git-utils', () => {
     it('should return Gitlab icon', () => {
       const result = render(getGitIcon('gitlab.com'));
       expect(result.baseElement.querySelector('svg').getAttribute('alt')).toBe('Gitlab');
+    });
+
+    it('should return Forgejo icon', () => {
+      const result = render(getGitIcon('forgejo.org'));
+      expect(result.baseElement.querySelector('svg').getAttribute('alt')).toBe('Forgejo');
+    });
+
+    it('should return Forgejo icon for subdomain', () => {
+      const result = render(getGitIcon('code.forgejo.org'));
+      expect(result.baseElement.querySelector('svg').getAttribute('alt')).toBe('Forgejo');
     });
 
     it('should return Git icon', () => {
