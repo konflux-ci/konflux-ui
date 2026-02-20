@@ -58,7 +58,6 @@ export const ComponentVersionListRow: React.FC<ComponentVersionListRowProps> = (
           {obj.name}
         </Link>
       </TableData>
-      <TableData className={versionTableColumnClasses.description}>{obj.context || '-'}</TableData>
       <TableData className={versionTableColumnClasses.revision}>
         {branchUrl ? <ExternalLink href={branchUrl} text={obj.revision} /> : obj.revision || '-'}
       </TableData>

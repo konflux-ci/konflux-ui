@@ -47,20 +47,6 @@ describe('ComponentVersionListRow', () => {
     expect(link.closest('a')).toHaveAttribute('href', expect.stringContaining('ver-1.0'));
   });
 
-  it('should render description from context field', () => {
-    renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersion} customData={defaultCustomData} />,
-    );
-    expect(screen.getByText('./frontend')).toBeInTheDocument();
-  });
-
-  it('should render "-" when context is not set', () => {
-    renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersionNoPipeline} customData={defaultCustomData} />,
-    );
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(1);
-  });
-
   it('should render revision as an external link for GitHub repos', () => {
     renderWithQueryClient(
       <ComponentVersionListRow obj={mockVersion} customData={defaultCustomData} />,
@@ -119,9 +105,7 @@ describe('ComponentVersionListRow', () => {
     renderWithQueryClient(
       <ComponentVersionListRow obj={mockVersionNoPipeline} customData={defaultCustomData} />,
     );
-    // "-" for pipeline and "-" for context
-    const dashes = screen.getAllByText('-');
-    expect(dashes.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('-')).toBeInTheDocument();
   });
 
   it('should prefer version pipeline over default pipeline', () => {

@@ -19,7 +19,6 @@ type ComponentVersionListViewProps = {
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'name',
   [SortableHeaders.revision]: 'revision',
-  [SortableHeaders.pipeline]: 'build-pipeline',
 };
 
 const ComponentVersionListView: React.FC<
