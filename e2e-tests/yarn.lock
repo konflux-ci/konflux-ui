@@ -332,7 +332,7 @@ __metadata:
     cypress-axe: "npm:^1.6.0"
     cypress-high-resolution: "npm:^1.0.0"
     cypress-mochawesome-reporter: "npm:^3.4.0"
-    cypress-multi-reporters: "npm:^1.6.0"
+    cypress-multi-reporters: "npm:^2.0.0"
     cypress-terminal-report: "npm:^7.1.0"
     deepmerge: "npm:^4.3.1"
     eslint-config-prettier: "npm:^9.1.0"
@@ -1094,15 +1094,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cypress-multi-reporters@npm:^1.6.0":
-  version: 1.6.4
-  resolution: "cypress-multi-reporters@npm:1.6.4"
+"cypress-multi-reporters@npm:^2.0.0":
+  version: 2.0.5
+  resolution: "cypress-multi-reporters@npm:2.0.5"
   dependencies:
-    debug: "npm:^4.3.4"
+    debug: "npm:^4.4.0"
     lodash: "npm:^4.17.21"
+    semver: "npm:^7.6.3"
   peerDependencies:
     mocha: ">=3.1.2"
-  checksum: 10/194554ac7d5720cbd3a9175f94393bbc37c60ccd258027a57b87353d7f33c86210b6280922dfa80ba9686ed195091b45191827e40487f26ea8b0a5d1b0f3b575
+  checksum: 10/f0af22ef415cd065964b6ccd72cdafe8753da3fbeb94dbbb347f2935cd3ee919c6040f8228252c29328e1c8479bdf042af200e32e2af9ed9e7cb1a7a7c89ef53
   languageName: node
   linkType: hard
 
@@ -1255,7 +1256,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4":
+"debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.4, debug@npm:^4.4.0":
   version: 4.4.3
   resolution: "debug@npm:4.4.3"
   dependencies:
@@ -3550,7 +3551,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:^7.3.2, semver@npm:^7.5.3":
+"semver@npm:^7.3.2, semver@npm:^7.5.3, semver@npm:^7.6.3":
   version: 7.7.3
   resolution: "semver@npm:7.7.3"
   bin:
