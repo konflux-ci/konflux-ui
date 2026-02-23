@@ -5,7 +5,6 @@ import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
-// import { useLinkedServiceAccounts } from '~/hooks/useLinkedServiceAccounts';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -18,12 +17,10 @@ import {
   SecretType,
   SecretTypeDropdownLabel,
 } from '~/types';
-import { addSecretWithLinkingComponents } from '~/utils/create-utils';
 import {
-  // editSecretResource,
+  editSecretResource,
   getAuthType,
   getSecretBreadcrumbs,
-  // getSecretFormData,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
@@ -53,8 +50,6 @@ const EditSecretForm: React.FC = () => {
       ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
       : null;
 
-  // console.log('credentials', credentials);
-
   const imageSecret =
     secretType === SecretTypeDropdownLabel.image
       ? {
@@ -71,7 +66,7 @@ const EditSecretForm: React.FC = () => {
                 ]) => ({
                   registry: registryName,
                   username: authData.username,
-                  password: authData.password,
+                  password: '', // Intentionally not displayed, password is sensitive
                   email: authData.email || '',
                 }),
               )
@@ -90,9 +85,9 @@ const EditSecretForm: React.FC = () => {
   const sourceSecret =
     secretType === SecretTypeDropdownLabel.source
       ? {
-          authType: authTypeFromLabels, //
-          username: atob(secretData.data.username),
-          password: '', // Intentionally not decoded, password is sensitive
+          authType: authTypeFromLabels,
+          username: typeFromLabels === SecretType.basicAuth ? atob(secretData.data.username) : '',
+          password: '', // Intentionally not displayed, password is sensitive
           host: secretData.metadata.labels['appstudio.redhat.com/scm.host'] || '',
           repo: secretData.metadata.annotations['appstudio.redhat.com/scm.repository'] || '',
         }
@@ -105,8 +100,8 @@ const EditSecretForm: React.FC = () => {
     opaque: {
       keyValues: opaqueSecret, //
     },
-    image: imageSecret,
-    source: { ...sourceSecret }, // asi ?
+    image: imageSecret, //
+    source: { ...sourceSecret }, //
     labels: [...readLabels] as KeyValueEntry[], //
     relatedComponents: [], // TODO: get related components from secretData
     secretForComponentOption: null, // TODO: get secretForComponentOption from secretData - all, partial, none
@@ -120,8 +115,11 @@ const EditSecretForm: React.FC = () => {
       }}
       onSubmit={(values, actions) => {
         // console.log('updatedSecret', editSecretResource(secretData, values));
-        addSecretWithLinkingComponents(values, namespace)
+
+        editSecretResource(secretData, values)
           .then(() => {
+            // .then((newSecretResource) => {
+            // console.log('newSecretResource', newSecretResource);
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((error) => {
