@@ -303,7 +303,7 @@ const getUpdatedSecretResource = async (newK8sSecretResource: SecretKind) => {
     queryOptions: {
       name: newK8sSecretResource.metadata.name,
       ns: newK8sSecretResource.metadata.namespace,
-      ...(true && { queryParams: { dryRun: 'All' } }),
+      // ...(true && { queryParams: { dryRun: 'All' } }),
     },
     patches: [
       {
@@ -321,6 +321,11 @@ const getUpdatedSecretResource = async (newK8sSecretResource: SecretKind) => {
         path: '/data',
         value: newK8sSecretResource.data,
       },
+      // {
+      //   op: 'replace',
+      //   path: '/type',
+      //   value: newK8sSecretResource.type,
+      // },
     ],
   });
 };
@@ -337,12 +342,13 @@ export const editSecretResource = (
   const originalTypeFromLabels = originalSecret.type as SecretType;
 
   if (originalTypeFromLabels === SecretType.sshAuth) {
-    newK8sSecretResource.data['ssh-privatekey'] = originalSecret.data['ssh-privatekey'];
+    newK8sSecretResource.data['ssh-privatekey'] =
+      updatedSecret.source['ssh-privatekey'] === undefined
+        ? originalSecret.data['ssh-privatekey']
+        : updatedSecret.source['ssh-privatekey'];
   }
 
-  // TODO: po otestovani zavolat jenom
-  const newSecretResource = getUpdatedSecretResource(newK8sSecretResource);
-  return newSecretResource;
+  return getUpdatedSecretResource(newK8sSecretResource);
 };
 
 export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
