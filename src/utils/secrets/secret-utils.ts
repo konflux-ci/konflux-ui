@@ -193,6 +193,39 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
+export const getRegistryCreds = (secretData: SecretKind) => {
+  const credentials =
+    (secretData.type as SecretType) === SecretType.dockerconfigjson &&
+    secretData.data['.dockerconfigjson']
+      ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
+      : undefined;
+
+  return credentials?.auths
+    ? Object.entries(
+        credentials.auths as {
+          [key: string]: { username: string; password: string; email: string };
+        },
+      ).map(
+        ([registryName, authData]: [
+          string,
+          { username: string; password: string; email: string },
+        ]) => ({
+          registry: registryName,
+          username: authData.username,
+          password: '', // Intentionally not displayed, password is sensitive
+          email: authData.email || '',
+        }),
+      )
+    : [
+        {
+          registry: '',
+          username: '',
+          password: '',
+          email: '',
+        },
+      ];
+};
+
 export const getTargetLabelsForRemoteSecret = (
   values: AddSecretFormValues,
 ): { [key: string]: string } => {
@@ -321,11 +354,6 @@ const getUpdatedSecretResource = async (newK8sSecretResource: SecretKind) => {
         path: '/data',
         value: newK8sSecretResource.data,
       },
-      // {
-      //   op: 'replace',
-      //   path: '/type',
-      //   value: newK8sSecretResource.type,
-      // },
     ],
   });
 };

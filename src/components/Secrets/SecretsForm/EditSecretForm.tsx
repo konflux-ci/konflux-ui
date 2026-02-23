@@ -20,6 +20,7 @@ import {
 import {
   editSecretResource,
   getAuthType,
+  getRegistryCreds,
   getSecretBreadcrumbs,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
@@ -39,46 +40,14 @@ const EditSecretForm: React.FC = () => {
     ? Object.entries(secretData.metadata.labels).map(([key, value]) => ({ key, value }))
     : [];
 
-  // console.log('secretData', secretData);
-
   const opaqueSecret = Object.entries(secretData.data).map(([key, value]) => ({ key, value }));
-
-  const credentials =
-    secretType === SecretTypeDropdownLabel.image &&
-    typeFromLabels === SecretType.dockerconfigjson &&
-    secretData.data['.dockerconfigjson']
-      ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
-      : null;
 
   const imageSecret =
     secretType === SecretTypeDropdownLabel.image
       ? {
-          authType: authTypeFromLabels, //
-          registryCreds: credentials?.auths
-            ? Object.entries(
-                credentials.auths as {
-                  [key: string]: { username: string; password: string; email: string };
-                },
-              ).map(
-                ([registryName, authData]: [
-                  string,
-                  { username: string; password: string; email: string },
-                ]) => ({
-                  registry: registryName,
-                  username: authData.username,
-                  password: '', // Intentionally not displayed, password is sensitive
-                  email: authData.email || '',
-                }),
-              )
-            : [
-                {
-                  registry: '',
-                  username: '',
-                  password: '',
-                  email: '',
-                },
-              ],
-          dockerconfig: secretData.data['.dockercfg'], //
+          authType: authTypeFromLabels,
+          registryCreds: getRegistryCreds(secretData),
+          dockerconfig: secretData.data['.dockercfg'],
         }
       : undefined;
 
@@ -94,17 +63,15 @@ const EditSecretForm: React.FC = () => {
       : undefined;
 
   const initialValues: AddSecretFormValues = {
-    type: secretType, //
-    name: secretData.metadata.name, //
-    secretFor: SecretFor.Build, // TODO: get secretFor from secretData
+    type: secretType,
+    name: secretData.metadata.name,
+    secretFor: SecretFor.Build,
     opaque: {
-      keyValues: opaqueSecret, //
+      keyValues: opaqueSecret,
     },
-    image: imageSecret, //
-    source: { ...sourceSecret }, //
-    labels: [...readLabels] as KeyValueEntry[], //
-    relatedComponents: [], // TODO: get related components from secretData
-    secretForComponentOption: null, // TODO: get secretForComponentOption from secretData - all, partial, none
+    image: imageSecret,
+    source: { ...sourceSecret },
+    labels: [...readLabels] as KeyValueEntry[],
   };
 
   return (
@@ -114,12 +81,8 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        // console.log('updatedSecret', editSecretResource(secretData, values));
-
         editSecretResource(secretData, values)
           .then(() => {
-            // .then((newSecretResource) => {
-            // console.log('newSecretResource', newSecretResource);
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((error) => {
@@ -137,7 +100,6 @@ const EditSecretForm: React.FC = () => {
           title="Edit secret"
           description={
             <>
-              {/* {console.log(!dirty , !isEmpty(errors) , isSubmitting)} */}
               Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}
               <ExternalLink href={LEARN_MORE_ABOUT_SECRETS_CREATION}>Learn more</ExternalLink>
             </>
