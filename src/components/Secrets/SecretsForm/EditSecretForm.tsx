@@ -155,7 +155,7 @@ const EditSecretForm: React.FC = () => {
         >
           <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
             <Form style={{ maxWidth: '70%' }}>
-              <SecretTypeSubForm />
+              <SecretTypeSubForm isEditMode={true} />
             </Form>
           </PageSection>
         </PageLayout>

@@ -9,12 +9,14 @@ type SecretTypeSelectorProps = {
   onChange: (type: string) => void;
   isDisabled?: boolean;
   dropdownItems: DropdownItemObject[];
+  isEditMode?: boolean;
 };
 
 const SecretTypeSelector: React.FC<React.PropsWithChildren<SecretTypeSelectorProps>> = ({
   onChange,
   isDisabled,
   dropdownItems,
+  isEditMode = false,
 }) => {
   const { values, setFieldValue, setFieldTouched } = useFormikContext<SecretFormValues>();
 
@@ -35,7 +37,11 @@ const SecretTypeSelector: React.FC<React.PropsWithChildren<SecretTypeSelectorPro
       label="Secret type"
       className="secret-type-selector__dropdown"
       data-test="secret-type-selector"
-      helpText="Tell us the secret type you want to add"
+      helpText={
+        isEditMode
+          ? 'You cannot edit the secret type in edit mode'
+          : 'Tell us the secret type you want to add'
+      }
       items={dropdownItems}
       title={title}
       onChange={(type: SecretTypeDropdownLabel) => setValues(type)}
