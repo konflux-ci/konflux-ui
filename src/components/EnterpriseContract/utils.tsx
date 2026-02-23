@@ -5,14 +5,7 @@ import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/
 import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/dist/js/global_danger_color_100';
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as yellowColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
-import { K8sResourceCommon } from '../../types/k8s';
 import { ENTERPRISE_CONTRACT_STATUS, EnterpriseContractResult } from './types';
-
-const ENTERPRISE_CONTRACT_LABEL = 'build.appstudio.redhat.com/pipeline';
-
-export const isResourceEnterpriseContract = (resource: K8sResourceCommon): boolean => {
-  return resource?.metadata?.labels[ENTERPRISE_CONTRACT_LABEL] === 'enterprise-contract';
-};
 
 export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
   switch (type) {

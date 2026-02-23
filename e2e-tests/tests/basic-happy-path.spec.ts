@@ -36,8 +36,17 @@ describe('Basic Happy Path', () => {
   ];
   const pipeline = 'docker-build-oci-ta';
 
+  // Track if any test has failed - used to skip deletion on failure
+  let hasTestFailed = false;
+
   before(function () {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
+  });
+
+  afterEach(function () {
+    if (this.currentTest?.state === 'failed') {
+      hasTestFailed = true;
+    }
   });
 
   it('Create an Application with a component', () => {
@@ -208,6 +217,15 @@ describe('Basic Happy Path', () => {
   });
 
   describe('Delete the application via UI', () => {
+    before(function () {
+      // Skip deletion if any previous test has failed on stage - preserve app for debugging
+      if (hasTestFailed && Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
+        cy.log('⚠️ Skipping application deletion - previous tests failed');
+        cy.log(`Application "${applicationName}" will be preserved for debugging`);
+        this.skip();
+      }
+    });
+
     it('Delete the application via UI', () => {
       Common.navigateTo(NavItem.applications);
       Applications.filterApplication(applicationName);
