@@ -122,6 +122,10 @@ describe('git-utils', () => {
       expect(createBranchUrl('https://bitbucket.org/org/repo', 'main')).toBeUndefined();
     });
 
+    it('should return undefined for a non-parseable URL', () => {
+      expect(createBranchUrl('not-a-url', 'main')).toBeUndefined();
+    });
+
     it('should not match hostnames that contain a provider name as a substring', () => {
       expect(createBranchUrl('https://notgithub.com/org/repo', 'main')).toBeUndefined();
       expect(createBranchUrl('https://mygitlab.com/org/repo', 'main')).toBeUndefined();
