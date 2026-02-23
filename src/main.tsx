@@ -47,13 +47,13 @@ const App = () => {
   );
 };
 
-void (async () => {
+void (() => {
   const initializers = [
     { name: 'monitoring', context: 'initMonitoring', init: initMonitoring },
     { name: 'analytics', context: 'initAnalytics', init: initAnalytics },
   ] as const;
 
-  void (await Promise.allSettled(initializers.map(({ init }) => init())).then((results) => {
+  void Promise.allSettled(initializers.map(({ init }) => init())).then((results) => {
     results.forEach((result, i) => {
       if (result.status === 'rejected') {
         const { name, context } = initializers[i];
@@ -62,7 +62,7 @@ void (async () => {
         monitoringService?.captureException(result.reason, { context });
       }
     });
-  }));
+  });
 
   ReactDOM.createRoot(document.getElementById('root')).render(
     <React.StrictMode>
