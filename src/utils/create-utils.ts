@@ -486,8 +486,6 @@ export const createSecretResourceWithLinkingComponents = async (
   const secretResource: SecretKind = getSecretFormData(values, namespace);
   const k8sSecretResource = createK8sSecretResource(values, secretResource);
 
-  // console.log('k8sSecretResource', k8sSecretResource);
-
   const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
     resource: k8sSecretResource,
