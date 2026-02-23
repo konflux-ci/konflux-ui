@@ -68,7 +68,17 @@ export const createBranchUrl = (repoUrl?: string, branch?: string): string | und
   }
 
   const cleanUrl = repoUrl.replace(/\.git$/, '');
-  const match = providerBranchPaths.find(([host]) => cleanUrl.includes(host));
+
+  let hostname: string;
+  try {
+    hostname = new URL(cleanUrl).hostname;
+  } catch {
+    return undefined;
+  }
+
+  const match = providerBranchPaths.find(
+    ([host]) => hostname === host || hostname.endsWith(`.${host}`),
+  );
 
   return match ? `${cleanUrl}${match[1](branch)}` : undefined;
 };

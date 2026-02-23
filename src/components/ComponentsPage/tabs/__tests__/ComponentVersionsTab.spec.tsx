@@ -1,12 +1,7 @@
-import { useParams } from 'react-router-dom';
 import { screen } from '@testing-library/react';
+import { createUseParamsMock } from '~/unit-test-utils/mock-react-router';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
 import { ComponentVersionsTab } from '../ComponentVersionsTab';
-
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useParams: jest.fn(),
-}));
 
 jest.mock(
   '~/components/ComponentVersion/ComponentVersionListView/ComponentVersionListView',
@@ -18,11 +13,9 @@ jest.mock(
   }),
 );
 
-const useParamsMock = useParams as jest.Mock;
-
 describe('ComponentVersionsTab', () => {
   beforeEach(() => {
-    useParamsMock.mockReturnValue({ componentName: 'my-component' });
+    createUseParamsMock({ componentName: 'my-component' });
   });
 
   it('should render the Versions title', () => {

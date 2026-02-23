@@ -1,4 +1,4 @@
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { Table as PfTable, Tbody, Tr } from '@patternfly/react-table';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useComponent } from '~/hooks/useComponents';
@@ -21,16 +21,11 @@ jest.mock('~/hooks/useComponents', () => ({
 
 jest.mock('~/shared/components/table/TableComponent', () => {
   return (props) => {
-    const { data, filters, selected, match, kindObj } = props;
-    const cProps = { data, filters, selected, match, kindObj };
-    const columns = props.Header(cProps);
-
     return (
-      <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-        <TableHeader role="rowgroup" />
-        <tbody>
+      <PfTable role="table" aria-label="table" variant="compact" borders={false}>
+        <Tbody>
           {props.data.map((d, i) => (
-            <tr key={i}>
+            <Tr key={i}>
               <ComponentVersionListRow
                 obj={d}
                 customData={{
@@ -38,9 +33,9 @@ jest.mock('~/shared/components/table/TableComponent', () => {
                   componentName: 'my-component',
                 }}
               />
-            </tr>
+            </Tr>
           ))}
-        </tbody>
+        </Tbody>
       </PfTable>
     );
   };

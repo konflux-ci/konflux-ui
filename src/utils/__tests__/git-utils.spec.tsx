@@ -122,6 +122,17 @@ describe('git-utils', () => {
       expect(createBranchUrl('https://bitbucket.org/org/repo', 'main')).toBeUndefined();
     });
 
+    it('should not match hostnames that contain a provider name as a substring', () => {
+      expect(createBranchUrl('https://notgithub.com/org/repo', 'main')).toBeUndefined();
+      expect(createBranchUrl('https://mygitlab.com/org/repo', 'main')).toBeUndefined();
+    });
+
+    it('should match subdomains of known providers', () => {
+      expect(createBranchUrl('https://v14.next.forgejo.org/org/repo', 'main')).toBe(
+        'https://v14.next.forgejo.org/org/repo/src/branch/main',
+      );
+    });
+
     it('should handle branches with dots', () => {
       expect(createBranchUrl('https://github.com/org/repo', 'ver-1.0')).toBe(
         'https://github.com/org/repo/tree/ver-1.0',

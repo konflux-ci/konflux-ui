@@ -69,7 +69,10 @@ const ComponentVersionListView: React.FC<
     [activeSortIndex, activeSortDirection],
   );
 
-  const EmptyMsg = () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />;
+  const EmptyMsg = React.useCallback(
+    () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />,
+    [onClearFilters],
+  );
 
   if (compError) {
     return getErrorState(compError, compLoaded, 'Component versions');
@@ -85,7 +88,7 @@ const ComponentVersionListView: React.FC<
           label="name"
           setText={(newName) => setFilters({ name: newName })}
           onClearFilters={onClearFilters}
-          data-test="version-list-toolbar"
+          dataTest="version-list-toolbar"
         />
       )}
       <Table
