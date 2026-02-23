@@ -24,17 +24,14 @@ import { UIhelper } from './UIhelper';
 export class Applications {
   static checkPipelineStatuses(componentName: string, statuses: string[]) {
     const pipelineRunName = `${componentName}-on-pull-request`;
-    cy.get(pipelinerunsTabPO.pipelineRunRow(pipelineRunName), { timeout: 90000 }).should(
-      ($row) => {
-        const text = $row.text();
-        const hasExpected = statuses.some((s) => text.includes(s));
-        expect(
-          hasExpected,
-          `Pipeline run row should show one of [${statuses.join(', ')}]; got: "${text.trim().slice(0, 100)}..."`,
-        ).to.be.true;
-      },
-      { timeout: 80000 } as { timeout: number },
-    );
+    cy.get(pipelinerunsTabPO.pipelineRunRow(pipelineRunName), { timeout: 90000 }).should(($row) => {
+      const text = $row.text();
+      const hasExpected = statuses.some((s) => text.includes(s));
+      expect(
+        hasExpected,
+        `Pipeline run row should show one of [${statuses.join(', ')}]; got: "${text.trim().slice(0, 100)}..."`,
+      ).to.be.true;
+    });
   }
 
   static filterApplication(applicationName: string) {
