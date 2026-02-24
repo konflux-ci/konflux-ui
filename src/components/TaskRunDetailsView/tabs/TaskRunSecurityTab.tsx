@@ -6,9 +6,9 @@ import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { TektonResourceLabel } from '../../../types';
-import { SecurityEnterpriseContractTab } from '../../EnterpriseContract/SecurityEnterpriseContractTab';
+import { SecurityConformaTab } from '../../Conforma/SecurityConformaTab';
 
-export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
+export const TaskRunSecurityTab: React.FC = () => {
   const { taskRunName } = useParams<RouterParams>();
   const namespace = useNamespace();
   const [taskRun, loaded] = useTaskRunV2(namespace, taskRunName);
@@ -24,7 +24,7 @@ export const TaskrunSecurityEnterpriseContractTab: React.FC = () => {
 
   return (
     <FilterContextProvider filterParams={['rule', 'status', 'component']}>
-      <SecurityEnterpriseContractTab pipelineRunName={plrName} />
+      <SecurityConformaTab pipelineRunName={plrName} />
     </FilterContextProvider>
   );
 };

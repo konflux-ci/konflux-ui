@@ -1,11 +1,11 @@
 import { render, screen } from '@testing-library/react';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
-import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
+import { ConformaExpandedRowContent } from '../ConformaExpandedRowContent';
 
 const rowContent = {
   title: 'dummyTitle',
-  status: ENTERPRISE_CONTRACT_STATUS.violations,
+  status: CONFORMA_RESULT_STATUS.violations,
   component: 'component-1',
   description: 'dummy description',
   msg: 'Fail',
@@ -23,11 +23,11 @@ const invalidContent = {
   collection: null,
 };
 
-describe('EnterpriseContractExpandedRowContent', () => {
+describe('ConformaExpandedRowContent', () => {
   mockUseNamespaceHook('test-ns');
 
   it('should render the component', () => {
-    render(<EnterpriseContractExpandedRowContent obj={rowContent} />);
+    render(<ConformaExpandedRowContent obj={rowContent} />);
     screen.getByText('Effective from');
     screen.getByText('Collection');
     screen.getByText('abcd, efg');
@@ -36,7 +36,7 @@ describe('EnterpriseContractExpandedRowContent', () => {
   });
 
   it('should not render the component', () => {
-    render(<EnterpriseContractExpandedRowContent obj={invalidContent} />);
+    render(<ConformaExpandedRowContent obj={invalidContent} />);
     expect(screen.queryByText('Effective from')).not.toBeInTheDocument();
     expect(screen.queryByText('Collection')).not.toBeInTheDocument();
   });

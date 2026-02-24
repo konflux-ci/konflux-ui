@@ -1,6 +1,6 @@
-import { extractEcResultsFromTaskRunLogs } from '../utils';
+import { extractConformaResultsFromTaskRunLogs } from '../utils';
 
-describe('extractEcResultsFromTaskRunLogs', () => {
+describe('extractConformaResultsFromTaskRunLogs', () => {
   it('should extract and parse JSON from logs correctly', () => {
     const logs = `
       step-vulnerabilities :-
@@ -22,7 +22,7 @@ describe('extractEcResultsFromTaskRunLogs', () => {
         },
       ],
     };
-    expect(extractEcResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
+    expect(extractConformaResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
   });
 
   it('should handle multi-line JSON strings', () => {
@@ -34,7 +34,7 @@ step-report-json :-
 step-something-else :-
 Some other logs`;
 
-    const result = extractEcResultsFromTaskRunLogs(logs);
+    const result = extractConformaResultsFromTaskRunLogs(logs);
 
     expect(result).toBeDefined();
     expect(result.components).toHaveLength(1);
@@ -84,7 +84,7 @@ Some other logs`;
         },
       ],
     };
-    expect(extractEcResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
+    expect(extractConformaResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
   });
 
   it('should throw error if JSON parsing fails', () => {
@@ -92,7 +92,7 @@ Some other logs`;
       step-report-json :-
       {invalid JSON}
     `;
-    expect(() => extractEcResultsFromTaskRunLogs(logs)).toThrow();
+    expect(() => extractConformaResultsFromTaskRunLogs(logs)).toThrow();
   });
 
   it('should throw error if step-report-json is missing', () => {
@@ -101,7 +101,7 @@ Some other logs`;
       Lorem Ipsum some logs
     `;
 
-    expect(() => extractEcResultsFromTaskRunLogs(logs)).toThrow();
+    expect(() => extractConformaResultsFromTaskRunLogs(logs)).toThrow();
   });
 
   it('should handle multiple step-report-json blocks and extract the first one', () => {
@@ -122,10 +122,10 @@ Some other logs`;
         },
       ],
     };
-    expect(extractEcResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
+    expect(extractConformaResultsFromTaskRunLogs(logs)).toEqual(expectedResult);
   });
 
   it('should handle empty logs and throw error', () => {
-    expect(() => extractEcResultsFromTaskRunLogs(``)).toThrow();
+    expect(() => extractConformaResultsFromTaskRunLogs(``)).toThrow();
   });
 });

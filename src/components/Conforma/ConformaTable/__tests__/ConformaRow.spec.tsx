@@ -1,9 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import { UIEnterpriseContractData } from '~/types';
+import { UIConformaData, CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { ENTERPRISE_CONTRACT_STATUS } from '../../types';
-import { EnterpriseContractExpandedRowContent } from '../EnterpriseContractExpandedRowContent';
-import { WrappedEnterpriseContractRow } from '../EnterpriseContractRow';
+import { ConformaExpandedRowContent } from '../ConformaExpandedRowContent';
+import { WrappedConformaRow } from '../ConformaRow';
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -20,14 +19,14 @@ jest.mock('react-router-dom', () => {
 
 const dummySuccessRowData = {
   title: 'dummyTitle',
-  status: ENTERPRISE_CONTRACT_STATUS.successes,
+  status: CONFORMA_RESULT_STATUS.successes,
   component: 'component-1',
   description: 'dummy description',
-} as UIEnterpriseContractData;
+} as UIConformaData;
 
 const dumpFailRowData = {
   title: 'dummyTitle',
-  status: ENTERPRISE_CONTRACT_STATUS.violations,
+  status: CONFORMA_RESULT_STATUS.violations,
   component: 'component-1',
   description: 'dummy description',
   msg: 'Fail',
@@ -36,13 +35,13 @@ const dumpFailRowData = {
 };
 
 const customDummyData = {
-  sortedECResult: [dummySuccessRowData, dumpFailRowData],
+  sortedConformaResult: [dummySuccessRowData, dumpFailRowData],
 };
-describe('EnterpriseContractRow', () => {
+describe('ConformaRow', () => {
   mockUseNamespaceHook('test-ns');
 
   it('should render the component', () => {
-    render(<WrappedEnterpriseContractRow customData={customDummyData} obj={dummySuccessRowData} />);
+    render(<WrappedConformaRow customData={customDummyData} obj={dummySuccessRowData} />);
     screen.getByText('dummyTitle');
     screen.getByText('component-1');
     screen.getByText('Success');
@@ -52,8 +51,8 @@ describe('EnterpriseContractRow', () => {
   it('should render Failed rule and failure message in table', () => {
     render(
       <>
-        <WrappedEnterpriseContractRow customData={customDummyData} obj={dumpFailRowData} />
-        <EnterpriseContractExpandedRowContent obj={dumpFailRowData} />
+        <WrappedConformaRow customData={customDummyData} obj={dumpFailRowData} />
+        <ConformaExpandedRowContent obj={dumpFailRowData} />
       </>,
     );
     screen.getByText('dummyTitle');

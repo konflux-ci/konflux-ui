@@ -6,32 +6,31 @@ import { global_danger_color_100 as redColor } from '@patternfly/react-tokens/di
 import { global_success_color_100 as greenColor } from '@patternfly/react-tokens/dist/js/global_success_color_100';
 import { global_warning_color_100 as yellowColor } from '@patternfly/react-tokens/dist/js/global_warning_color_100';
 import { ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
-import { ENTERPRISE_CONTRACT_STATUS, EnterpriseContractResult } from '~/types';
+import { CONFORMA_RESULT_STATUS } from '~/types/conforma';
 import { K8sResourceCommon } from '~/types/k8s';
 
 export const isResourceEnterpriseContract = (resource: K8sResourceCommon): boolean => {
   return resource?.metadata?.labels?.[ENTERPRISE_CONTRACT_LABEL] === 'enterprise-contract';
 };
 
-export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
+export const getRuleStatus = (type: CONFORMA_RESULT_STATUS) => {
   switch (type) {
-    case ENTERPRISE_CONTRACT_STATUS.successes:
+    case CONFORMA_RESULT_STATUS.successes:
       return (
         <>
-          <CheckCircleIcon color={greenColor.value} /> {ENTERPRISE_CONTRACT_STATUS.successes}
+          <CheckCircleIcon color={greenColor.value} /> {CONFORMA_RESULT_STATUS.successes}
         </>
       );
-    case ENTERPRISE_CONTRACT_STATUS.violations:
+    case CONFORMA_RESULT_STATUS.violations:
       return (
         <>
-          <ExclamationCircleIcon color={redColor.value} /> {ENTERPRISE_CONTRACT_STATUS.violations}
+          <ExclamationCircleIcon color={redColor.value} /> {CONFORMA_RESULT_STATUS.violations}
         </>
       );
-    case ENTERPRISE_CONTRACT_STATUS.warnings:
+    case CONFORMA_RESULT_STATUS.warnings:
       return (
         <>
-          <ExclamationTriangleIcon color={yellowColor.value} />{' '}
-          {ENTERPRISE_CONTRACT_STATUS.warnings}
+          <ExclamationTriangleIcon color={yellowColor.value} /> {CONFORMA_RESULT_STATUS.warnings}
         </>
       );
     default:
@@ -40,20 +39,5 @@ export const getRuleStatus = (type: ENTERPRISE_CONTRACT_STATUS) => {
           <DotCircleIcon /> Missing
         </>
       );
-  }
-};
-
-export const extractEcResultsFromTaskRunLogs = (logs: string): EnterpriseContractResult => {
-  const extractedLogs = logs.match(/(\[report-json\] ).+/g);
-
-  if (!extractedLogs) {
-    throw new Error('No [report-json] lines found');
-  }
-
-  try {
-    const json = JSON.parse(extractedLogs.map((l) => l.replace('[report-json] ', '')).join(''));
-    return json;
-  } catch (error) {
-    throw new Error(`Failed to parse EC results: ${error.message}`);
   }
 };
