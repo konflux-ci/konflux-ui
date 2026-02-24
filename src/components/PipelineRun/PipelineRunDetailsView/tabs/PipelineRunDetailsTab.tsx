@@ -106,8 +106,12 @@ const PipelineRunDetailsTab: React.FC = () => {
   }, [snapshotStatusAnnotation]);
 
   const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-  const [urlInfo, , proxyError] = useImageProxy();
-  const [imageRepository, , imageRepoError] = useImageRepository(namespace, componentName, false);
+  const [urlInfo, imageProxyLoaded, proxyError] = useImageProxy();
+  const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
+    namespace,
+    componentName,
+    false,
+  );
 
   const sboms = React.useMemo(
     () => (taskRuns ? getSBOMsFromTaskRuns(taskRuns, generateSbomUrl) : []),
@@ -117,24 +121,40 @@ const PipelineRunDetailsTab: React.FC = () => {
   const results = getPipelineRunStatusResults(pipelineRun);
   const patchedResultsForProxy = React.useMemo(
     () =>
-      addProxyUrlParamValue(
-        results,
-        'IMAGE_URL',
-        imageRepository?.spec?.image?.visibility,
-        urlInfo?.hostname,
-      ),
-    [imageRepository?.spec?.image?.visibility, results, urlInfo?.hostname],
+      imageProxyLoaded && imageRepoLoaded
+        ? addProxyUrlParamValue(
+            results,
+            'IMAGE_URL',
+            imageRepository?.spec?.image?.visibility,
+            urlInfo?.hostname,
+          )
+        : results,
+    [
+      imageProxyLoaded,
+      imageRepoLoaded,
+      imageRepository?.spec?.image?.visibility,
+      results,
+      urlInfo?.hostname,
+    ],
   );
   const specParams = pipelineRun?.spec?.params;
   const patchedSpecParamsForProxy = React.useMemo(
     () =>
-      addProxyUrlParamValue(
-        specParams,
-        'output-image',
-        imageRepository?.spec?.image?.visibility,
-        urlInfo?.hostname,
-      ),
-    [imageRepository?.spec?.image?.visibility, specParams, urlInfo?.hostname],
+      imageProxyLoaded && imageRepoLoaded
+        ? addProxyUrlParamValue(
+            specParams,
+            'output-image',
+            imageRepository?.spec?.image?.visibility,
+            urlInfo?.hostname,
+          )
+        : specParams,
+    [
+      imageProxyLoaded,
+      imageRepoLoaded,
+      imageRepository?.spec?.image?.visibility,
+      specParams,
+      urlInfo?.hostname,
+    ],
   );
 
   if (!(loaded && taskRunsLoaded)) {
