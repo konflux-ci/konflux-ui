@@ -3,7 +3,7 @@ import {
   PipelineRunDetailsLogsTab,
   PipelineRunDetailsTab,
   pipelineRunDetailsViewLoader,
-  PipelineRunSecurityEnterpriseContractTab,
+  PipelineRunSecurityTab,
   PipelineRunTaskRunsTab,
 } from '../../components/PipelineRun/PipelineRunDetailsView';
 import { PIPELINE_RUNS_DETAILS_PATH } from '../paths';
@@ -20,7 +20,7 @@ const pipelineRoutes = [
       { index: true, element: <PipelineRunDetailsTab /> },
       { path: 'taskruns', element: <PipelineRunTaskRunsTab /> },
       { path: 'logs', element: <PipelineRunDetailsLogsTab /> },
-      { path: 'security', element: <PipelineRunSecurityEnterpriseContractTab /> },
+      { path: 'security', element: <PipelineRunSecurityTab /> },
     ],
   },
 ];
