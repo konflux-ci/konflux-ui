@@ -6,7 +6,6 @@ import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { useLinkedServiceAccounts } from '../useLinkedServiceAccounts';
 
 jest.mock('~/utils/service-account/service-account-utils', () => ({
-  ...jest.requireActual('~/utils/service-account/service-account-utils'),
   filterLinkedServiceAccounts: jest.fn(),
 }));
 
