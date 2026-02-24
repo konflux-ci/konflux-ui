@@ -1,6 +1,6 @@
+import { formikRenderer } from '~/unit-test-utils';
 import BugRFESection from '../components/BugRFESection';
 import { FeedbackSections } from '../consts';
-import { formikRenderer } from '~/unit-test-utils';
 
 describe('BugRFESection', () => {
   it('should show BugForm when current Section is BugSection', () => {
