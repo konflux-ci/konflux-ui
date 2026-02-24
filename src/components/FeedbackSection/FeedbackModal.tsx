@@ -15,6 +15,8 @@ import { Formik, Form } from 'formik';
 import { isEmpty } from 'lodash-es';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { THEME_DARK, useTheme } from '~/shared';
+import RHsupportDark from '../../assets/rh_feedback--dark.svg';
 import RHsupportLight from '../../assets/rh_feedback.svg';
 import BeginningSection from './components/BeginningSection';
 import { FeedbackSections } from './consts';
@@ -40,7 +42,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
   const [currentSection, setCurrentSection] = React.useState<FeedbackSections>(
     FeedbackSections.BeginningSection,
   );
-
+  const { effectiveTheme } = useTheme();
   const [konfluxInfo] = useKonfluxPublicInfo();
 
   const handleSubmit = (values: { bug?: BugInfo; feature?: FeatureInfo }) => {
@@ -160,7 +162,11 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
               </FlexItem>
 
               <FlexItem className="feedback-modal__image-flex" flex={{ default: 'flex_1' }}>
-                <RHsupportLight className="feedback-modal__feedback-image" />
+                {effectiveTheme === THEME_DARK ? (
+                  <RHsupportDark className="feedback-modal__feedback-image" />
+                ) : (
+                  <RHsupportLight className="feedback-modal__feedback-image" />
+                )}
               </FlexItem>
             </Flex>
           </Form>
