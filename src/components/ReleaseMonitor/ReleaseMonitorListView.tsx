@@ -425,7 +425,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
             productOptions={filterOptions.productOptions}
             productVersionOptions={filterOptions.productVersionOptions}
           />
-          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }}>
+          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v5-u-mr-xl">
             <FlexItem>
               <Label
                 color="blue"
