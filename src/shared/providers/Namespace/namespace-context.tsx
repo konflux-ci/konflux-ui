@@ -25,7 +25,11 @@ export const NamespaceContext = React.createContext<NamespaceContextData>({
 });
 
 export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const { data: namespaces, isLoading: namespaceLoading } = useQuery(createNamespaceQueryOptions());
+  const {
+    data: namespaces,
+    isLoading: namespaceLoading,
+    error: namespacesError,
+  } = useQuery(createNamespaceQueryOptions());
   const params = useParams<RouterParams>();
   const navigate = useNavigate();
 
@@ -76,12 +80,15 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
     );
   }
 
+  // If namespaces failed to load but we have an active namespace, use fallback with empty list
+  const namespacesData = namespacesError ? [] : namespaces || [];
+
   return (
     <NamespaceContext.Provider
       value={{
         namespace: activeNamespaceName,
         namespaceResource,
-        namespaces,
+        namespaces: namespacesData,
         namespacesLoaded: !(namespaceLoading && activeNamespaceLoading),
         lastUsedNamespace: getLastUsedNamespace(),
       }}
