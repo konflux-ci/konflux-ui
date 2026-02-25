@@ -32,6 +32,14 @@ describe('useSecretActions', () => {
     );
     const actions = result.current;
 
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        label: 'Edit',
+        disabledTooltip: "You don't have access to edit this secret",
+        id: 'edit-test-secret',
+        disabled: false,
+      }),
+    );
     expect(actions[1]).toEqual(
       expect.objectContaining({
         label: 'Delete',
