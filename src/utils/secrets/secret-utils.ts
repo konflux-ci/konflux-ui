@@ -329,14 +329,12 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-// TODO: oddelat dryrun PO TESTECH
 const getUpdatedSecretResource = async (newK8sSecretResource: SecretKind) => {
   return await K8sQueryPatchResource({
     model: SecretModel,
     queryOptions: {
       name: newK8sSecretResource.metadata.name,
       ns: newK8sSecretResource.metadata.namespace,
-      // ...(true && { queryParams: { dryRun: 'All' } }),
     },
     patches: [
       {
