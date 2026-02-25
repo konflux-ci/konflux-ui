@@ -14,6 +14,7 @@ import {
   KeyValueEntry,
   SecretFor,
   SecretKind,
+  SecretLabels,
   SecretType,
   SecretTypeDropdownLabel,
 } from '~/types';
@@ -57,8 +58,8 @@ const EditSecretForm: React.FC = () => {
           authType: authTypeFromLabels,
           username: typeFromLabels === SecretType.basicAuth ? atob(secretData.data.username) : '',
           password: '', // Intentionally not displayed, password is sensitive
-          host: secretData.metadata.labels['appstudio.redhat.com/scm.host'] || '',
-          repo: secretData.metadata.annotations['appstudio.redhat.com/scm.repository'] || '',
+          host: secretData.metadata.labels[SecretLabels.HOST_LABEL] || '',
+          repo: secretData.metadata.annotations[SecretLabels.REPO_ANNOTATION] || '',
         }
       : undefined;
 
