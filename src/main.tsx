@@ -5,7 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics } from '~/analytics';
-import { initMonitoring, monitoringService } from '~/monitoring';
+import { initMonitoring } from '~/monitoring';
 import { AuthProvider } from './auth/AuthContext';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
@@ -58,8 +58,7 @@ void (() => {
       if (result.status === 'rejected') {
         const { name, context } = initializers[i];
         // eslint-disable-next-line no-console
-        console.error(`Failed to initialize ${name}`, result.reason);
- 
+        console.error(`Failed to initialize ${name} ${context}`, result.reason);
       }
     });
   });
