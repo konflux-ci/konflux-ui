@@ -1,8 +1,7 @@
 import { LOG_LEVELS, type LogLevel } from '../consts/log-levels';
 import { monitoringService } from './index';
 
-const currentLevel: LogLevel =
-  (process.env.LOG_LEVEL as LogLevel) || (process.env.NODE_ENV === 'production' ? 'warn' : 'debug');
+const currentLevel: LogLevel = process.env.NODE_ENV === 'production' ? 'warn' : 'debug';
 
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];
