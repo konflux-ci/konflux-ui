@@ -6,6 +6,7 @@ import ExternalLink from '~/shared/components/links/ExternalLink';
 import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentBuildPipeline, ComponentVersion } from '~/types/component';
+import { getPipelineName } from '~/utils/component-utils';
 import { createBranchUrl } from '~/utils/git-utils';
 import { versionTableColumnClasses } from './ComponentVersionListHeader';
 
