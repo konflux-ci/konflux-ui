@@ -3,6 +3,7 @@ import { BitbucketIcon } from '@patternfly/react-icons/dist/esm/icons/bitbucket-
 import { GitAltIcon } from '@patternfly/react-icons/dist/esm/icons/git-alt-icon';
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
+import gitUrlParse from 'git-url-parse';
 
 export const getGitPath = (
   gitSource: string,
@@ -53,32 +54,67 @@ export const getGitIcon = (gitSource: string): React.ReactElement => {
   }
 };
 
-type BranchPathBuilder = (branch: string) => string;
+type ProviderConfig = {
+  source: string;
+  branchPath: (branch: string) => string;
+  commitPath: (sha: string) => string;
+  selfHostedKeywords?: string[]; // hostname segments that identify self hosted instances
+};
 
-const providerBranchPaths: [string, BranchPathBuilder][] = [
-  ['github.com', (branch) => `/tree/${branch}`],
-  ['gitlab.com', (branch) => `/-/tree/${branch}`],
-  ['forgejo.org', (branch) => `/src/branch/${branch}`],
-  ['codeberg.org', (branch) => `/src/branch/${branch}`],
+const providers: ProviderConfig[] = [
+  {
+    source: 'github.com',
+    branchPath: (branch) => `/tree/${branch}`,
+    commitPath: (sha) => `/commit/${sha}`,
+  },
+  {
+    source: 'gitlab.com',
+    branchPath: (branch) => `/-/tree/${branch}`,
+    commitPath: (sha) => `/-/commit/${sha}`,
+    selfHostedKeywords: ['gitlab'],
+  },
+  {
+    source: 'forgejo.org',
+    branchPath: (branch) => `/src/branch/${branch}`,
+    commitPath: (sha) => `/commit/${sha}`,
+    selfHostedKeywords: ['forgejo', 'gitea'],
+  },
+  {
+    source: 'codeberg.org',
+    branchPath: (branch) => `/src/branch/${branch}`,
+    commitPath: (sha) => `/commit/${sha}`,
+  },
 ];
+
+const findProvider = (parsed: gitUrlParse.GitUrl): ProviderConfig | undefined => {
+  const hostSegments: string[] = parsed.resource.split('.');
+  return providers.find((p) => {
+    if (parsed.source === p.source) {
+      return true;
+    }
+
+    const keywords = p.selfHostedKeywords;
+    return keywords && hostSegments.some((seg) => keywords.includes(seg));
+  });
+};
 
 export const createBranchUrl = (repoUrl?: string, branch?: string): string | undefined => {
   if (!repoUrl || !branch) {
     return undefined;
   }
 
-  const cleanUrl = repoUrl.replace(/\.git$/, '');
-
-  let hostname: string;
+  let parsed: gitUrlParse.GitUrl;
   try {
-    hostname = new URL(cleanUrl).hostname;
+    parsed = gitUrlParse(repoUrl);
   } catch {
     return undefined;
   }
 
-  const match = providerBranchPaths.find(
-    ([host]) => hostname === host || hostname.endsWith(`.${host}`),
-  );
+  const provider = findProvider(parsed);
+  if (!provider) {
+    return undefined;
+  }
 
-  return match ? `${cleanUrl}${match[1](branch)}` : undefined;
+  const cleanUrl = repoUrl.replace(/\.git$/, '');
+  return `${cleanUrl}${provider.branchPath(branch)}`;
 };

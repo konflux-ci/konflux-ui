@@ -137,6 +137,18 @@ describe('git-utils', () => {
       );
     });
 
+    it('should match self-hosted GitLab instances', () => {
+      expect(createBranchUrl('https://gitlab.cee.redhat.com/org/repo', 'main')).toBe(
+        'https://gitlab.cee.redhat.com/org/repo/-/tree/main',
+      );
+    });
+
+    it('should match self-hosted Gitea instances', () => {
+      expect(createBranchUrl('https://gitea.mycompany.com/org/repo', 'main')).toBe(
+        'https://gitea.mycompany.com/org/repo/src/branch/main',
+      );
+    });
+
     it('should handle branches with dots', () => {
       expect(createBranchUrl('https://github.com/org/repo', 'ver-1.0')).toBe(
         'https://github.com/org/repo/tree/ver-1.0',
