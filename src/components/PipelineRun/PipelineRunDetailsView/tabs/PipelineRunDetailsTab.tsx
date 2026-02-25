@@ -61,7 +61,7 @@ import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 const addProxyUrlParamValue = <T extends { name: string; value: string | string[] }>(
   items: T[] | undefined | null,
   paramName: string,
-  visibility: ImageRepositoryVisibility | undefined,
+  visibility: ImageRepositoryVisibility,
   proxyHost: string | null | undefined,
 ): T[] | null | undefined => {
   if (!items || visibility !== ImageRepositoryVisibility.private) {
@@ -121,18 +121,18 @@ const PipelineRunDetailsTab: React.FC = () => {
   const results = getPipelineRunStatusResults(pipelineRun);
   const patchedResultsForProxy = React.useMemo(
     () =>
-      imageProxyLoaded && imageRepoLoaded
+      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
         ? addProxyUrlParamValue(
             results,
             'IMAGE_URL',
-            imageRepository?.spec?.image?.visibility,
+            imageRepository.spec.image.visibility,
             urlInfo?.hostname,
           )
         : results,
     [
       imageProxyLoaded,
       imageRepoLoaded,
-      imageRepository?.spec?.image?.visibility,
+      imageRepository?.spec.image?.visibility,
       results,
       urlInfo?.hostname,
     ],
@@ -140,18 +140,18 @@ const PipelineRunDetailsTab: React.FC = () => {
   const specParams = pipelineRun?.spec?.params;
   const patchedSpecParamsForProxy = React.useMemo(
     () =>
-      imageProxyLoaded && imageRepoLoaded
+      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
         ? addProxyUrlParamValue(
             specParams,
             'output-image',
-            imageRepository?.spec?.image?.visibility,
+            imageRepository.spec.image.visibility,
             urlInfo?.hostname,
           )
         : specParams,
     [
       imageProxyLoaded,
       imageRepoLoaded,
-      imageRepository?.spec?.image?.visibility,
+      imageRepository?.spec.image?.visibility,
       specParams,
       urlInfo?.hostname,
     ],
