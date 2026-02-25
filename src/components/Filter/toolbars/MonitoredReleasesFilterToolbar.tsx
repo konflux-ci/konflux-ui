@@ -82,6 +82,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         values={namespace}
         setValues={(newValues) => setFilters({ ...filters, namespace: newValues })}
         options={namespaceOptions}
+        hasInlineFilter={true}
       />
       <MultiSelect
         label="Product"
@@ -107,4 +108,4 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   );
 };
 
-export default React.memo(MonitoredReleasesFilterToolbar);
+export default MonitoredReleasesFilterToolbar;
