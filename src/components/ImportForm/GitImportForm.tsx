@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AlertVariant, Form, PageSection } from '@patternfly/react-core';
 import { Formik, FormikHelpers } from 'formik';
-import { CREATING_SOURCE_CONTROL_SECRETS } from '~/consts/documentation';
+import { LEARN_MORE_FORGEJO_URL, LEARN_MORE_GITLAB_URL } from '~/consts/documentation';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { CurrentComponentRef } from '~/types';
 import { useNotifications } from '../../hooks/useUIInstance';
@@ -137,14 +137,21 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                     ) : (
                       'Konflux GitHub App'
                     )}{' '}
+                    or Create a secret for{' '}
+                    <ExternalLink
+                      href={LEARN_MORE_GITLAB_URL}
+                      dataTestID="git-import-form-konflux-create-secret-gitlab-external-link"
+                    >
+                      GitLab
+                    </ExternalLink>{' '}
                     or{' '}
                     <ExternalLink
-                      href={CREATING_SOURCE_CONTROL_SECRETS}
-                      dataTestID="git-import-form-konflux-create-secret-external-link"
+                      href={LEARN_MORE_FORGEJO_URL}
+                      dataTestID="git-import-form-konflux-create-secret-forgejo-external-link"
                     >
-                      Create a secret
+                      Forgejo
                     </ExternalLink>{' '}
-                    for GitLab or Forgejo source code repository.
+                    source code repository.
                   </Alert>
                 </>
               ) : null}

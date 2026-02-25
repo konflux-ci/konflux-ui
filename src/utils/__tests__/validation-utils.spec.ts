@@ -21,10 +21,22 @@ describe('validation-utils', () => {
       expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
     });
 
-    it('rejects unsupported domains', () => {
+    it('accepts codeberg.org URLs', () => {
+      const url = 'https://codeberg.org/owner/repo';
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    });
+
+    it('accepts forge.fedoraproject.org URLs', () => {
+      const url = 'https://forge.fedoraproject.org/owner/repo';
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    });
+
+    it('accepts custom/self-hosted domain URLs', () => {
       const url = 'https://example.com/konflux-ci/konflux-ui';
-      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(false);
-      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(false);
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
     });
   });
   it('should return error for incorrect secret name', async () => {

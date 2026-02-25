@@ -23,7 +23,6 @@ export const GIT_PROVIDER_ANNOTATION_VALUE = {
   GITHUB: 'github',
   GITLAB: 'gitlab',
   FORGEJO: 'forgejo',
-  OTHERS: 'others',
 };
 export const GITLAB_PROVIDER_URL_ANNOTATION = 'git-provider-url';
 
