@@ -59,7 +59,7 @@ void (() => {
         const { name, context } = initializers[i];
         // eslint-disable-next-line no-console
         console.error(`Failed to initialize ${name}`, result.reason);
-        monitoringService?.captureException(result.reason, { context });
+ 
       }
     });
   });
