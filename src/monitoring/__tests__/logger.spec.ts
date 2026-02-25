@@ -104,66 +104,21 @@ describe('logger', () => {
     });
   });
 
-  describe('log level filtering', () => {
+  describe('log level filtering in production', () => {
     it('should not log debug messages in production environment', () => {
       jest.isolateModules(() => {
         process.env.NODE_ENV = 'production';
-        process.env.LOG_LEVEL = 'debug';
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const prodLogger = require('../logger').logger;
         prodLogger.debug('should not appear');
 
         expect(consoleMock.log).not.toHaveBeenCalled();
         process.env.NODE_ENV = 'test';
-        delete process.env.LOG_LEVEL;
       });
     });
 
-    it('should suppress debug and info when LOG_LEVEL is warn', () => {
+    it('should suppress debug and info in production', () => {
       jest.isolateModules(() => {
-        process.env.LOG_LEVEL = 'warn';
-        delete process.env.NODE_ENV;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const filteredLogger = require('../logger').logger;
-
-        filteredLogger.debug('should not appear');
-        filteredLogger.info('should not appear');
-        filteredLogger.warn('should appear');
-
-        expect(consoleMock.log).not.toHaveBeenCalled();
-        expect(consoleMock.info).not.toHaveBeenCalled();
-        expect(consoleMock.warn).toHaveBeenCalledWith('[WARN] should appear', '');
-
-        process.env.NODE_ENV = 'test';
-        delete process.env.LOG_LEVEL;
-      });
-    });
-
-    it('should only allow error when LOG_LEVEL is error', () => {
-      jest.isolateModules(() => {
-        process.env.LOG_LEVEL = 'error';
-        delete process.env.NODE_ENV;
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const filteredLogger = require('../logger').logger;
-
-        filteredLogger.debug('no');
-        filteredLogger.info('no');
-        filteredLogger.warn('no');
-        filteredLogger.error('yes');
-
-        expect(consoleMock.log).not.toHaveBeenCalled();
-        expect(consoleMock.info).not.toHaveBeenCalled();
-        expect(consoleMock.warn).not.toHaveBeenCalled();
-        expect(consoleMock.error).toHaveBeenCalledWith('[ERROR] yes', undefined, '');
-
-        process.env.NODE_ENV = 'test';
-        delete process.env.LOG_LEVEL;
-      });
-    });
-
-    it('should default to warn level in production when LOG_LEVEL is not set', () => {
-      jest.isolateModules(() => {
-        delete process.env.LOG_LEVEL;
         process.env.NODE_ENV = 'production';
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const prodLogger = require('../logger').logger;
@@ -180,24 +135,37 @@ describe('logger', () => {
       });
     });
 
-    it('should allow all levels when LOG_LEVEL is debug', () => {
+    it('should allow warn and error in production', () => {
       jest.isolateModules(() => {
-        process.env.LOG_LEVEL = 'debug';
+        process.env.NODE_ENV = 'production';
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const prodLogger = require('../logger').logger;
+
+        prodLogger.warn('warning');
+        prodLogger.error('error');
+
+        expect(consoleMock.warn).toHaveBeenCalledWith('[WARN] warning', '');
+        expect(consoleMock.error).toHaveBeenCalledWith('[ERROR] error', undefined, '');
+
+        process.env.NODE_ENV = 'test';
+      });
+    });
+
+    it('should allow all levels in non-production', () => {
+      jest.isolateModules(() => {
         process.env.NODE_ENV = 'test';
         // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const debugLogger = require('../logger').logger;
+        const testLogger = require('../logger').logger;
 
-        debugLogger.debug('d');
-        debugLogger.info('i');
-        debugLogger.warn('w');
-        debugLogger.error('e');
+        testLogger.debug('d');
+        testLogger.info('i');
+        testLogger.warn('w');
+        testLogger.error('e');
 
         expect(consoleMock.log).toHaveBeenCalledTimes(1);
         expect(consoleMock.info).toHaveBeenCalledTimes(1);
         expect(consoleMock.warn).toHaveBeenCalledTimes(1);
         expect(consoleMock.error).toHaveBeenCalledTimes(1);
-
-        delete process.env.LOG_LEVEL;
       });
     });
   });
@@ -217,11 +185,8 @@ describe('logger', () => {
   });
 
   describe('monitoringService integration', () => {
-    it('should not call monitoringService when error level is suppressed', () => {
+    it('should call monitoringService.captureException on error', () => {
       jest.isolateModules(() => {
-        // There's no level higher than error that would suppress it,
-        // but we can verify it IS called when error level is active
-        process.env.LOG_LEVEL = 'error';
         process.env.NODE_ENV = 'test';
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const errorLogger = require('../logger').logger;
@@ -229,8 +194,6 @@ describe('logger', () => {
         errorLogger.error('critical', new Error('fail'));
 
         expect(mockCaptureException).toHaveBeenCalledWith(new Error('fail'), undefined);
-
-        delete process.env.LOG_LEVEL;
       });
     });
   });
