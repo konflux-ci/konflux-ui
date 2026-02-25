@@ -8,7 +8,6 @@ import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { ComponentVersion } from '~/types/component';
 import getVersionListHeader, { SortableHeaders } from './ComponentVersionListHeader';
 import { ComponentVersionListRow, VersionListRowCustomData } from './ComponentVersionListRow';
 
@@ -97,9 +96,8 @@ const ComponentVersionListView: React.FC<
         EmptyMsg={EmptyMsg}
         aria-label="Component Version List"
         Header={Header}
-        Row={(props) => (
-          <ComponentVersionListRow obj={props.obj as ComponentVersion} customData={customData} />
-        )}
+        Row={ComponentVersionListRow}
+        customData={customData}
         loaded={compLoaded}
       />
     </>

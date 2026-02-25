@@ -40,7 +40,7 @@ describe('ComponentVersionListRow', () => {
 
   it('should render version name as a link', () => {
     renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersion} customData={defaultCustomData} />,
+      <ComponentVersionListRow obj={mockVersion} columns={[]} customData={defaultCustomData} />,
     );
     const link = screen.getByText('Version 1.0');
     expect(link).toBeInTheDocument();
@@ -49,7 +49,7 @@ describe('ComponentVersionListRow', () => {
 
   it('should render revision as an external link for GitHub repos', () => {
     renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersion} customData={defaultCustomData} />,
+      <ComponentVersionListRow obj={mockVersion} columns={[]} customData={defaultCustomData} />,
     );
     const externalLink = screen.getByText('ver-1.0');
     expect(externalLink.closest('a')).toHaveAttribute(
@@ -63,7 +63,9 @@ describe('ComponentVersionListRow', () => {
       repoUrl: 'https://unknown-git.example.com/org/repo',
       componentName: 'my-component',
     };
-    renderWithQueryClient(<ComponentVersionListRow obj={mockVersion} customData={customData} />);
+    renderWithQueryClient(
+      <ComponentVersionListRow obj={mockVersion} columns={[]} customData={customData} />,
+    );
     expect(screen.getByText('ver-1.0')).toBeInTheDocument();
   });
 
@@ -71,13 +73,19 @@ describe('ComponentVersionListRow', () => {
     const customData: VersionListRowCustomData = {
       componentName: 'my-component',
     };
-    renderWithQueryClient(<ComponentVersionListRow obj={mockVersion} customData={customData} />);
+    renderWithQueryClient(
+      <ComponentVersionListRow obj={mockVersion} columns={[]} customData={customData} />,
+    );
     expect(screen.getByText('ver-1.0')).toBeInTheDocument();
   });
 
   it('should render pipeline name from version build-pipeline', () => {
     renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersionWithPipeline} customData={defaultCustomData} />,
+      <ComponentVersionListRow
+        obj={mockVersionWithPipeline}
+        columns={[]}
+        customData={defaultCustomData}
+      />,
     );
     expect(screen.getByText('my-custom-pipeline')).toBeInTheDocument();
   });
@@ -96,14 +104,18 @@ describe('ComponentVersionListRow', () => {
       },
     };
     renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersionNoPipeline} customData={customData} />,
+      <ComponentVersionListRow obj={mockVersionNoPipeline} columns={[]} customData={customData} />,
     );
     expect(screen.getByText('docker-build-oci-ta')).toBeInTheDocument();
   });
 
   it('should render "-" when no pipeline is configured', () => {
     renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersionNoPipeline} customData={defaultCustomData} />,
+      <ComponentVersionListRow
+        obj={mockVersionNoPipeline}
+        columns={[]}
+        customData={defaultCustomData}
+      />,
     );
     expect(screen.getByText('-')).toBeInTheDocument();
   });
@@ -122,7 +134,11 @@ describe('ComponentVersionListRow', () => {
       },
     };
     renderWithQueryClient(
-      <ComponentVersionListRow obj={mockVersionWithPipeline} customData={customData} />,
+      <ComponentVersionListRow
+        obj={mockVersionWithPipeline}
+        columns={[]}
+        customData={customData}
+      />,
     );
     expect(screen.getByText('my-custom-pipeline')).toBeInTheDocument();
     expect(screen.queryByText('default-pipeline')).not.toBeInTheDocument();

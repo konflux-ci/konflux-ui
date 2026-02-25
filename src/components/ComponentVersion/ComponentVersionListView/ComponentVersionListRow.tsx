@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { COMPONENT_VERSION_DETAILS_PATH } from '~/routes/paths';
 import { TableData } from '~/shared';
 import ExternalLink from '~/shared/components/links/ExternalLink';
+import { RowFunctionArgs } from '~/shared/components/table/VirtualBody';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { ComponentBuildPipeline, ComponentVersion } from '~/types/component';
 import { createBranchUrl } from '~/utils/git-utils';
@@ -14,32 +15,9 @@ export type VersionListRowCustomData = {
   componentName: string;
 };
 
-const getPipelineName = (
-  versionPipeline?: ComponentBuildPipeline,
-  defaultPipeline?: ComponentBuildPipeline,
-): string => {
-  const pipeline = versionPipeline ?? defaultPipeline;
-  if (!pipeline) {
-    return '-';
-  }
-
-  const def = pipeline['pull-and-push'] ?? pipeline.push ?? pipeline.pull;
-  if (!def) {
-    return '-';
-  }
-
-  return def['pipelineref-by-name'] ?? def['pipelinespec-from-bundle']?.name ?? '-';
-};
-
-interface ComponentVersionListRowProps {
-  obj: ComponentVersion;
-  customData: VersionListRowCustomData;
-}
-
-export const ComponentVersionListRow: React.FC<ComponentVersionListRowProps> = ({
-  obj,
-  customData,
-}) => {
+export const ComponentVersionListRow: React.FC<
+  RowFunctionArgs<ComponentVersion, VersionListRowCustomData>
+> = ({ obj, customData }) => {
   const namespace = useNamespace();
   const { repoUrl, defaultPipeline, componentName } = customData;
   const branchUrl = createBranchUrl(repoUrl, obj.revision);
