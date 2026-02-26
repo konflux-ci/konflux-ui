@@ -69,7 +69,7 @@ const ComponentVersionListView: React.FC<
   );
 
   const EmptyMsg = React.useCallback(
-    () => <FilteredEmptyState onClearFilters={() => onClearFilters()} />,
+    () => <FilteredEmptyState onClearFilters={onClearFilters} />,
     [onClearFilters],
   );
 
