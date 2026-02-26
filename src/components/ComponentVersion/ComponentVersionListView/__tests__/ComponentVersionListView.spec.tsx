@@ -27,6 +27,7 @@ jest.mock('~/shared/components/table/TableComponent', () => {
           {props.data.map((d, i) => (
             <Tr key={i}>
               <ComponentVersionListRow
+                columns={[]}
                 obj={d}
                 customData={{
                   repoUrl: 'https://github.com/org/repo',
