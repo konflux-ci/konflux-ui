@@ -15,15 +15,16 @@ export class ComponentDetailsPage {
   }
 
   static verifyPipelineRunIsVisible(plrName: string) {
-    cy.get(activityTabPO.clickTab, { timeout: 30000 }).click();
-    Common.waitForLoad();
-    cy.get(compActivityPipelinerunsTabPO.clickTab, { timeout: 30000 }).click();
+    cy.get(activityTabPO.clickTab).click();
+    cy.get(compActivityPipelinerunsTabPO.clickTab).click();
     Common.waitForLoad();
     cy.contains(UIhelperPO.tableRow('Pipeline run List'), plrName, {
       // extended timeout: GitHub synchronization can occasionally take some time,
       // which causes PR creation to take longer.
-      timeout: 1200000, // 20min
-    }).should('be.visible');
+      timeout: 300000, // 5min
+    })
+      .scrollIntoView()
+      .should('be.visible');
     ComponentDetailsPage.openTab(ComponentPageTabs.detail);
     Common.waitForLoad();
   }
