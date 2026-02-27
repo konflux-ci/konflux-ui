@@ -13,6 +13,8 @@ export type ThemeContextValue = {
   preference: ThemePreference;
   effectiveTheme: Theme;
   systemPreference: Theme;
+  logTheme: Theme;
+  setLogTheme: (newLogTheme: Theme) => void;
   setThemePreference: (newPreference: ThemePreference) => void;
 };
 
@@ -20,10 +22,13 @@ export const ThemeContext = React.createContext<ThemeContextValue>({
   preference: 'system',
   effectiveTheme: 'light',
   systemPreference: 'light',
+  logTheme: 'dark',
+  setLogTheme: () => {},
   setThemePreference: () => {},
 });
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
+const LOG_THEME_STORAGE_KEY = 'konflux-logs-theme-preference';
 const DARK_THEME_CLASS = 'pf-v5-theme-dark';
 
 const getSystemPreference = (): Theme => {
@@ -38,6 +43,14 @@ const getStoredPreference = (): ThemePreference => {
   return THEME_SYSTEM;
 };
 
+const getStoredLogTheme = (): Theme => {
+  const stored = localStorage.getItem(LOG_THEME_STORAGE_KEY);
+  if (stored && THEME_PREFERENCES.includes(stored as Theme)) {
+    return stored as Theme;
+  }
+  return THEME_DARK;
+};
+
 const applyTheme = (theme: Theme) => {
   const htmlElement = document.documentElement;
   if (theme === THEME_DARK) {
@@ -50,6 +63,7 @@ const applyTheme = (theme: Theme) => {
 export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [preference, setPreference] = React.useState<ThemePreference>(getStoredPreference);
   const [systemPreference, setSystemPreference] = React.useState<Theme>(getSystemPreference);
+  const [logTheme, setLogTheme] = React.useState<Theme>(getStoredLogTheme);
 
   // Calculate the effective theme based on preference
   const effectiveTheme = preference === THEME_SYSTEM ? systemPreference : preference;
@@ -71,12 +85,19 @@ export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     localStorage.setItem(THEME_STORAGE_KEY, newPreference);
   };
 
+  const handleSetLogTheme = (newLogTheme: Theme) => {
+    setLogTheme(newLogTheme);
+    localStorage.setItem(LOG_THEME_STORAGE_KEY, newLogTheme);
+  };
+
   return (
     <ThemeContext.Provider
       value={{
         preference,
         effectiveTheme,
         systemPreference,
+        logTheme,
+        setLogTheme: handleSetLogTheme,
         setThemePreference,
       }}
     >
