@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -20,6 +21,8 @@ jest.mock('~/shared/theme', () => ({
     preference: 'system',
     effectiveTheme: 'light',
     systemPreference: 'light',
+    logTheme: 'dark',
+    setLogTheme: jest.fn(),
     setThemePreference: jest.fn(),
   })),
 }));
@@ -82,6 +85,8 @@ describe('LogViewer Integration Tests', () => {
       preference: 'system',
       effectiveTheme: 'light',
       systemPreference: 'light',
+      logTheme: 'dark',
+      setLogTheme: jest.fn(),
       setThemePreference: jest.fn(),
     });
 
@@ -246,7 +251,20 @@ describe('LogViewer Integration Tests', () => {
   describe('Theme switching', () => {
     it('should toggle between light and dark themes', async () => {
       const user = userEvent.setup();
-      const { container } = render(<LogViewer {...defaultProps} />);
+      const ThemeToggleTestWrapper: React.FC = () => {
+        const [logTheme, setLogThemeState] = React.useState<'light' | 'dark'>('dark');
+        mockUseTheme.mockReturnValue({
+          preference: 'system',
+          effectiveTheme: 'light',
+          systemPreference: 'light',
+          logTheme,
+          setLogTheme: setLogThemeState,
+          setThemePreference: jest.fn(),
+        });
+        return <LogViewer {...defaultProps} />;
+      };
+
+      const { container } = render(<ThemeToggleTestWrapper />);
 
       const themeCheckbox = screen.getByLabelText('Dark theme');
       const logViewer = container.querySelector('.pf-v5-c-log-viewer');
@@ -275,6 +293,8 @@ describe('LogViewer Integration Tests', () => {
         preference: 'dark',
         effectiveTheme: 'dark',
         systemPreference: 'light',
+        logTheme: 'dark',
+        setLogTheme: jest.fn(),
         setThemePreference: jest.fn(),
       });
 
