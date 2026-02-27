@@ -74,8 +74,7 @@ const LogViewer: React.FC<Props> = ({
   onScroll: onScrollProp,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
-  const { effectiveTheme } = useTheme();
-  const [logTheme, setLogTheme] = React.useState<'light' | 'dark'>('dark');
+  const { effectiveTheme, logTheme, setLogTheme } = useTheme();
   const themeCheckboxId = React.useId();
 
   // Auto-scroll and resume button logic
@@ -199,7 +198,7 @@ const LogViewer: React.FC<Props> = ({
                       // theme toggle should be disabled if global theme is dark
                       isDisabled={effectiveTheme === 'dark'}
                       checked={logTheme === 'dark'}
-                      onClick={() => setLogTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                      onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
                     />
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />
