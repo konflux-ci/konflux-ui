@@ -63,7 +63,7 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
               ? 'If you want to keep the same SSH private key, leave this field blank'
               : 'For Git authentication'
           }
-          required
+          required={!isEditMode}
         />
       )}
     </>

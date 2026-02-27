@@ -18,11 +18,6 @@ jest.mock('react-router-dom', () => ({
   useLocation: jest.fn(),
 }));
 
-// Mock create-utils first to avoid circular dependency when loading secret-utils
-jest.mock('~/utils/create-utils', () => ({
-  createK8sSecretResource: jest.fn((_values: unknown, secretResource: unknown) => secretResource),
-}));
-
 jest.mock('~/utils/secrets/secret-utils', () => {
   const actual = jest.requireActual('~/utils/secrets/secret-utils');
   return {

@@ -23,7 +23,6 @@ import {
   Source,
   KeyValueEntry,
 } from '../../types';
-import { createK8sSecretResource } from '../create-utils';
 
 export { SecretForComponentOption };
 
@@ -286,6 +285,29 @@ export const getAnnotationForSecret = (values: SecretLabelInput): { [key: string
   return { [SecretLabels.REPO_ANNOTATION]: values.source.repo };
 };
 
+export const createK8sSecretResource = (
+  values: AddSecretFormValues,
+  secretResource: SecretKind,
+): SecretKind => {
+  const labels = {
+    secret: getLabelsForSecret(values),
+  };
+
+  const annotations = getAnnotationForSecret(values);
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels?.secret,
+      },
+      annotations,
+    },
+  };
+
+  return k8sSecretResource;
+};
+
 export const statusFromConditions = (
   conditions: SecretCondition[],
 ): RemoteSecretStatusReason | string => {
@@ -337,7 +359,7 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-const getUpdatedSecretResource = async (newK8sSecretResource: SecretKind) => {
+const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
   return await K8sQueryPatchResource({
     model: SecretModel,
     queryOptions: {
@@ -382,7 +404,7 @@ export const editSecretResource = (
         : updatedSecret.source['ssh-privatekey'];
   }
 
-  return getUpdatedSecretResource(newK8sSecretResource);
+  return updateSecretResource(newK8sSecretResource);
 };
 
 export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
