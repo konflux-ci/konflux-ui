@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Flex, FlexItem, Label, pluralize } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
@@ -356,9 +357,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           setActiveSortIndex(index);
           setActiveSortDirection(direction);
         },
-        sortedFilteredData.length,
       ),
-    [activeSortDirection, activeSortIndex, sortedFilteredData.length],
+    [activeSortDirection, activeSortIndex],
   );
 
   const EmptyMsg = React.useCallback(
@@ -412,18 +412,31 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         />
       ))}
       {(isFiltered || releases.length > 0) && (
-        <MonitoredReleasesFilterToolbar
-          filters={filters}
-          setFilters={setFilters}
-          onClearFilters={onClearFilters}
-          statusOptions={filterOptions.statusOptions}
-          applicationOptions={filterOptions.applicationOptions}
-          releasePlanOptions={filterOptions.releasePlanOptions}
-          namespaceOptions={filterOptions.namespaceOptions}
-          componentOptions={filterOptions.componentOptions}
-          productOptions={filterOptions.productOptions}
-          productVersionOptions={filterOptions.productVersionOptions}
-        />
+        <>
+          <MonitoredReleasesFilterToolbar
+            filters={filters}
+            setFilters={setFilters}
+            onClearFilters={onClearFilters}
+            statusOptions={filterOptions.statusOptions}
+            applicationOptions={filterOptions.applicationOptions}
+            releasePlanOptions={filterOptions.releasePlanOptions}
+            namespaceOptions={filterOptions.namespaceOptions}
+            componentOptions={filterOptions.componentOptions}
+            productOptions={filterOptions.productOptions}
+            productVersionOptions={filterOptions.productVersionOptions}
+          />
+          <Flex justifyContent={{ default: 'justifyContentFlexEnd' }} className="pf-v5-u-mr-xl">
+            <FlexItem>
+              <Label
+                color="blue"
+                className="pf-v5-u-font-weight-bold"
+                data-test="release-count-label"
+              >
+                {pluralize(sortedFilteredData.length, 'release')}
+              </Label>
+            </FlexItem>
+          </Flex>
+        </>
       )}
 
       <Table
