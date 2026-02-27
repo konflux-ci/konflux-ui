@@ -43,7 +43,10 @@ const PairElement: React.FC<React.PropsWithChildren<PairElementProps>> = ({
 
   const deleteIcon = (
     <>
-      <MinusCircleIcon className="pairs-list__side-btn" />
+      <MinusCircleIcon
+        className="pairs-list__side-btn"
+        style={{ marginRight: 'var(--pf-v5-global--spacer--xs)' }}
+      />
       <span className="sr-only">Delete</span>
     </>
   );
