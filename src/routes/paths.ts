@@ -33,6 +33,12 @@ export const COMPONENTS_PATH = WORKSPACE_PATH.extend('components');
 
 export const COMPONENT_DETAILS_V2_PATH = COMPONENTS_PATH.extend(`:${RouterParams.componentName}`);
 
+export const COMPONENT_ACTIVITY_V2_PATH = COMPONENT_DETAILS_V2_PATH.extend('activity');
+
+export const COMPONENT_ACTIVITY_V2_CHILD_TAB_PATH = COMPONENT_ACTIVITY_V2_PATH.extend(
+  `:${RouterParams.activityTab}`,
+);
+
 /**
  * @deprecated Use COMPONENTS_PATH instead
  */
