@@ -10,14 +10,17 @@ import {
   PanelMain,
   PanelMainBody,
   FlexItem,
+  PanelFooter,
+  Button,
 } from '@patternfly/react-core';
 import { FeedbackSections } from '../consts';
 
 interface BeginningSectionProps {
   setCurrentSection: (section: FeedbackSections) => void;
+  onClose: any;
 }
 
-const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection }) => {
+const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, onClose }) => {
   return (
     <>
       <PanelHeader className="feedback-modal__panel-header">
@@ -96,6 +99,11 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection }
           </Card>
         </PanelMainBody>
       </PanelMain>
+      <PanelFooter className="feedback-modal__panel-footer">
+        <Button variant="link" onClick={() => onClose(null, { submitClicked: false })}>
+          Cancel
+        </Button>
+      </PanelFooter>
     </>
   );
 };
