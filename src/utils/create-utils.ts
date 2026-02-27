@@ -40,8 +40,7 @@ import {
   GITLAB_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
 import {
-  getAnnotationForSecret,
-  getLabelsForSecret,
+  createK8sSecretResource,
   getSecretFormData,
   SecretForComponentOption,
 } from './secrets/secret-utils';
@@ -453,29 +452,6 @@ export const enqueueLinkingTask = async (
       }
     }
   });
-};
-
-export const createK8sSecretResource = (
-  values: AddSecretFormValues,
-  secretResource: SecretKind,
-): SecretKind => {
-  const labels = {
-    secret: getLabelsForSecret(values),
-  };
-
-  const annotations = getAnnotationForSecret(values);
-  const k8sSecretResource = {
-    ...secretResource,
-    metadata: {
-      ...secretResource.metadata,
-      labels: {
-        ...labels?.secret,
-      },
-      annotations,
-    },
-  };
-
-  return k8sSecretResource;
 };
 
 export const createSecretResourceWithLinkingComponents = async (
