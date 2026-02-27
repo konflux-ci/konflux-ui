@@ -26,6 +26,10 @@ export const latestCommitsTabPO = {
   clickTab: '[data-test="activity__tabItem latest-commits"]',
 };
 
+export const compActivityPipelinerunsTabPO = {
+  clickTab: '[data-test="comp__activity__tabItem pipelineruns"]',
+};
+
 export const pipelinerunsTabPO = {
   clickTab: '[data-test="activity__tabItem pipelineruns"]',
 
@@ -50,6 +54,8 @@ export const pipelinerunsTabPO = {
 
   pipelineRunsListTable: 'Pipeline run List',
   ariaLabelPipelineRunsListTable: '[aria-label="Pipeline run List"]',
+  pipelineRunRow: (runNamePrefix: string) =>
+    `[aria-label="Pipeline run List"] [data-test^="${runNamePrefix}"]`,
   vulnerabilityColumn: '[data-test="vulnerabilities"]',
   vulnerabilityScanStatus: '[data-test*="scan-status"]',
 };
