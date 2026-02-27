@@ -31,7 +31,14 @@ import { SecretTypeSubForm } from './SecretTypeSubForm';
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  const { secretData } = useLocation().state as { secretData: SecretKind };
+  const location = useLocation();
+  const secretData = (location.state as { secretData?: SecretKind } | undefined)?.secretData;
+
+  React.useEffect(() => {
+    if (!secretData) {
+      navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
+    }
+  }, [secretData, navigate, namespace]);
 
   const typeFromLabels = secretData.type as SecretType;
   const secretType = typeToDropdownLabel(typeFromLabels) as SecretTypeDropdownLabel;
@@ -41,14 +48,17 @@ const EditSecretForm: React.FC = () => {
     ? Object.entries(secretData.metadata.labels).map(([key, value]) => ({ key, value }))
     : [];
 
-  const opaqueSecret = Object.entries(secretData.data).map(([key, value]) => ({ key, value }));
+  const opaqueSecret = Object.entries(secretData.data ?? {}).map(([key, value]) => ({
+    key,
+    value,
+  }));
 
   const imageSecret =
     secretType === SecretTypeDropdownLabel.image
       ? {
           authType: authTypeFromLabels,
           registryCreds: getRegistryCreds(secretData),
-          dockerconfig: secretData.data['.dockercfg'],
+          dockerconfig: secretData.data?.['.dockercfg'],
         }
       : undefined;
 
@@ -58,8 +68,8 @@ const EditSecretForm: React.FC = () => {
           authType: authTypeFromLabels,
           username: typeFromLabels === SecretType.basicAuth ? atob(secretData.data.username) : '',
           password: '', // Intentionally not displayed, password is sensitive
-          host: secretData.metadata.labels[SecretLabels.HOST_LABEL] || '',
-          repo: secretData.metadata.annotations[SecretLabels.REPO_ANNOTATION] || '',
+          host: secretData.metadata.labels?.[SecretLabels.HOST_LABEL] || '',
+          repo: secretData.metadata.annotations?.[SecretLabels.REPO_ANNOTATION] || '',
         }
       : undefined;
 
