@@ -23,7 +23,7 @@ export default {
   },
   roots: ['<rootDir>/src/'],
   transformIgnorePatterns: [
-    '/node_modules/(?!@patternfly|uuid|lodash-es|@popperjs|i18next|d3|d3-array|delaunator|robust-predicates|internmap|react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd|p-limit|yocto-queue)',
+    '/node_modules/(?!@patternfly|uuid|lodash-es|@popperjs|i18next|d3|d3-array|delaunator|robust-predicates|internmap|react-dnd|react-dnd-html5-backend|dnd-core|@react-dnd|p-limit|yocto-queue|yaml|monaco-)',
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',

@@ -2,6 +2,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { getWebpackAliases } from './aliases.config.js';
+import MonacoWebpackPlugin from 'monaco-editor-webpack-plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +59,21 @@ export default {
   },
   plugins: [
     new HtmlWebpackPlugin({ template: './public/index.html', favicon: './public/favicon.ico' }),
+    new MonacoWebpackPlugin({
+      languages: ['yaml'], // add only 'yaml' language, since that's the only one we're going to support for now
+      features: ['find', 'quickCommand', 'hover'], // only basic features we might need for now
+      globalAPI: true,
+      customLanguages: [
+        {
+          label: 'yaml',
+          entry: 'monaco-yaml',
+          worker: {
+            id: 'monaco-yaml/yamlWorker',
+            entry: 'monaco-yaml/yaml.worker',
+          },
+        },
+      ],
+    }),
   ],
   optimization: {
     moduleIds: 'deterministic',
@@ -94,6 +110,14 @@ export default {
           name: 'vendor',
           chunks: 'all',
           priority: 10,
+        },
+        // isolate 'monaco' dependencies in a separate chunk, it'll decrease the 'vendor' size
+        monaco: {
+          test: /[\\/]node_modules[\\/](monaco-editor|monaco-yaml)/,
+          name: 'monaco',
+          chunks: 'async',
+          priority: 20,
+          enforce: true,
         },
       },
     },
