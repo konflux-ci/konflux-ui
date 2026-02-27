@@ -45,7 +45,7 @@ const getStoredPreference = (): ThemePreference => {
 
 const getStoredLogTheme = (): Theme => {
   const stored = localStorage.getItem(LOG_THEME_STORAGE_KEY);
-  if (stored && THEME_PREFERENCES.includes(stored as Theme)) {
+  if (stored === THEME_DARK || stored === THEME_LIGHT) {
     return stored as Theme;
   }
   return THEME_DARK;
