@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
+import Prism from '../prism-log-language';
 import { VirtualizedLogContent } from '../VirtualizedLogContent';
 
 // Mock lodash-es debounce to make tests synchronous
@@ -119,6 +120,37 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(screen.getByText(/line 2/)).toBeInTheDocument();
       expect(screen.getByText(/line 3/)).toBeInTheDocument();
     });
+
+    it('should preserve raw text when tokenization fails', () => {
+      // Mock Prism.tokenize to simulate tokenization failure
+      const tokenizeSpy = jest.spyOn(Prism, 'tokenize').mockImplementation(() => {
+        throw new Error('Tokenization failed');
+      });
+
+      const testData = 'This line should still be visible even when tokenization fails';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={testData} />,
+      );
+
+      // Verify the raw text is displayed
+      const logContent = container.querySelector('.pf-v5-c-log-viewer__list');
+      expect(logContent?.textContent).toContain(testData);
+
+      // Restore original tokenize function
+      tokenizeSpy.mockRestore();
+    });
+
+    it('should display non-breaking space for truly empty lines', () => {
+      const dataWithEmptyLine = 'line 1\n\nline 3';
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data={dataWithEmptyLine} />,
+      );
+
+      const textElements = container.querySelectorAll('.pf-v5-c-log-viewer__text');
+      // Find the empty line element (should contain only non-breaking space)
+      const emptyLineElement = Array.from(textElements).find((el) => el.textContent === '\u00A0');
+      expect(emptyLineElement).toBeInTheDocument();
+    });
   });
 
   describe('Search Highlighting', () => {
@@ -162,12 +194,31 @@ describe('VirtualizedLogContent Integration Tests', () => {
     });
 
     it('should escape special regex characters in search', () => {
-      renderWithQueryClientAndRouter(
-        <VirtualizedLogContent {...defaultProps} data="[error]" searchText="[error]" />,
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent
+          {...defaultProps}
+          data="[error] normal error"
+          searchText="[error]"
+        />,
       );
 
-      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      // Syntax highlighting may split "[error]" into multiple tokens, creating multiple marks
+      // but the combined text should be "[error]" and should NOT match the standalone "error"
       expect(marks.length).toBeGreaterThan(0);
+      const combinedText = Array.from(marks)
+        .map((m) => m.textContent)
+        .join('');
+      expect(combinedText).toBe('[error]');
+
+      // Verify standalone "error" is NOT matched
+      const logText = container.querySelector('.pf-v5-c-log-viewer__list')?.textContent || '';
+      expect(logText).toContain('normal error');
+      // The word "error" after "normal" should not be highlighted
+      const allText = Array.from(marks)
+        .map((m) => m.textContent)
+        .join('');
+      expect(allText).not.toContain('normal');
     });
 
     it('should be case insensitive in search', () => {
