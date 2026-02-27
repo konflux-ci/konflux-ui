@@ -35,6 +35,7 @@ export const useLatestBuildPipelineRunForComponentV2 = (
 export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
+  version?: string, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): [PipelineRunKind, boolean, unknown] => {
   const [pipelines, loaded, error, getNextPage] = usePipelineRunsV2(
     namespace,
@@ -44,6 +45,8 @@ export const useLatestSuccessfulBuildPipelineRunForComponentV2 = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
+            // TODO: use when version label is added to pipeline run
+            // ...(version && {[PipelineRunLabel.COMPONENT_VERSION]: version})
           },
         },
       }),
