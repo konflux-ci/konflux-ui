@@ -193,11 +193,24 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
 };
 
 export const getRegistryCreds = (secretData: SecretKind) => {
-  const credentials =
-    (secretData.type as SecretType) === SecretType.dockerconfigjson &&
-    secretData.data['.dockerconfigjson']
-      ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
-      : undefined;
+  // const credentials =
+  //   (secretData.type as SecretType) === SecretType.dockerconfigjson &&
+  //   secretData.data['.dockerconfigjson']
+  //     ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
+  //     : undefined;
+
+  let credentials:
+    | { auths?: { [key: string]: { username: string; password: string; email: string } } }
+    | undefined;
+  try {
+    const encoded =
+      (secretData.type as SecretType) === SecretType.dockerconfigjson
+        ? secretData.data?.['.dockerconfigjson']
+        : undefined;
+    credentials = encoded ? JSON.parse(Base64.decode(encoded)) : undefined;
+  } catch {
+    credentials = undefined;
+  }
 
   return credentials?.auths
     ? Object.entries(
@@ -360,12 +373,12 @@ const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
     },
     patches: [
       {
-        op: 'replace',
+        op: 'add',
         path: '/metadata/labels',
         value: newK8sSecretResource.metadata.labels,
       },
       {
-        op: 'replace',
+        op: 'add',
         path: '/metadata/annotations',
         value: newK8sSecretResource.metadata.annotations,
       },
