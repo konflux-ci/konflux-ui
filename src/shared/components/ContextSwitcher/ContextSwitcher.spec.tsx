@@ -1,9 +1,11 @@
 import { LockIcon } from '@patternfly/react-icons/dist/esm/icons/lock-icon';
 import { LockOpenIcon } from '@patternfly/react-icons/dist/esm/icons/lock-open-icon';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, configure } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { ContextSwitcher } from './ContextSwitcher';
+
+configure({ testIdAttribute: 'data-test' });
 
 jest.mock('../../hooks/useLocalStorage', () => ({
   useLocalStorage: jest.fn(() => [{}, jest.fn()]),
@@ -163,5 +165,59 @@ describe('ContextSwitcher', () => {
     expect(screen.getByText('Public Test')).toBeInTheDocument();
     expect(screen.getByText('Private Test')).toBeInTheDocument();
     expect(screen.queryByText('Other Item')).not.toBeInTheDocument();
+  });
+});
+
+describe('ContextSwitcher Click outside hook', () => {
+  const items = [
+    { name: 'Public Item', key: 'public', icon: LockOpenIcon },
+    { name: 'Private Item', key: 'private', icon: LockIcon },
+    { name: 'No Visibility Item', key: 'none' },
+  ];
+
+  it('should close Menu items on outside click', () => {
+    render(
+      <div data-test="container-div">
+        <ContextSwitcher menuItems={items} resourceType="application" footer={<>footer text</>} />
+        <div data-test="outside-item">This is a div outside the switcher</div>
+      </div>,
+    );
+    act(() => screen.getByRole('button').click());
+
+    expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
+    expect(screen.getByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getByText('footer text')).toBeInTheDocument();
+
+    const outsideDiv = screen.getByTestId('outside-item');
+
+    act(() => outsideDiv.click());
+
+    // Should not be in the document
+    expect(screen.queryByText('Recent')).not.toBeInTheDocument();
+    expect(screen.queryByText('All')).not.toBeInTheDocument();
+    expect(screen.queryByText('footer text')).not.toBeInTheDocument();
+  });
+
+  it('should not close Menu on inside click', () => {
+render(
+      <div data-test="container-div">
+        <ContextSwitcher menuItems={items} resourceType="application" footer={<>footer text</>} />
+        <div data-test="outside-item">This is a div outside the switcher</div>
+      </div>,
+    );
+    act(() => screen.getByRole('button').click());
+
+    expect(screen.getByPlaceholderText('Filter application by name')).toBeInTheDocument();
+    expect(screen.getByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getByText('footer text')).toBeInTheDocument();
+
+    act(() => screen.getByText('Recent').click());
+
+    // Should be in the document
+    expect(screen.queryByText('Recent')).toBeInTheDocument();
+    expect(screen.queryByText('All')).toBeInTheDocument();
+    expect(screen.queryByText('footer text')).toBeInTheDocument();
   });
 });
