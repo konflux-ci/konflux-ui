@@ -1,4 +1,5 @@
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
+import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
 import {
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
@@ -31,7 +32,7 @@ const componentsPageRoutes = [
       },
       {
         path: `versions`,
-        element: null, // TODO: implement Versions tab https://issues.redhat.com/browse/KFLUXUI-1007
+        element: <ComponentVersionsTab />,
       },
     ],
   },
