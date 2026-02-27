@@ -5,6 +5,7 @@ import { ThemeProvider } from '../ThemeContext';
 import { useTheme } from '../useTheme';
 
 const THEME_STORAGE_KEY = 'konflux-theme-preference';
+const LOG_THEME_STORAGE_KEY = 'konflux-logs-theme-preference';
 const DARK_THEME_CLASS = 'pf-v5-theme-dark';
 
 // Mock localStorage
@@ -62,6 +63,7 @@ describe('useTheme', () => {
     expect(result.current.preference).toBe(THEME_SYSTEM);
     expect(result.current.systemPreference).toBe(THEME_LIGHT);
     expect(result.current.effectiveTheme).toBe(THEME_LIGHT);
+    expect(result.current.logTheme).toBe(THEME_DARK);
   });
 
   it('should load stored preference from localStorage', () => {
@@ -134,6 +136,40 @@ describe('useTheme', () => {
 
     expect(mockLocalStorage.setItem).toHaveBeenCalledWith(THEME_STORAGE_KEY, THEME_DARK);
     expect(result.current.preference).toBe(THEME_DARK);
+  });
+
+  it('should load stored log theme from localStorage', () => {
+    mockLocalStorage.getItem.mockImplementation((key: string) => {
+      if (key === LOG_THEME_STORAGE_KEY) return THEME_LIGHT;
+      return null;
+    });
+    mockMatchMedia.mockReturnValue({
+      matches: false,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    expect(result.current.logTheme).toBe(THEME_LIGHT);
+  });
+
+  it('should save log theme to localStorage when setLogTheme is called', () => {
+    mockLocalStorage.getItem.mockReturnValue(null);
+    mockMatchMedia.mockReturnValue({
+      matches: false,
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    });
+
+    const { result } = renderHook(() => useTheme(), { wrapper: TestWrapper });
+
+    act(() => {
+      result.current.setLogTheme(THEME_LIGHT);
+    });
+
+    expect(mockLocalStorage.setItem).toHaveBeenCalledWith(LOG_THEME_STORAGE_KEY, THEME_LIGHT);
+    expect(result.current.logTheme).toBe(THEME_LIGHT);
   });
 
   it('should listen for system preference changes', () => {
