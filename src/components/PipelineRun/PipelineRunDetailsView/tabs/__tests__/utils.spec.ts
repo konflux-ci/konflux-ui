@@ -30,6 +30,13 @@ describe('normalizeValueToString', () => {
     expect(normalizeValueToString({ a: { b: 2 } })).toBe('{"a":{"b":2}}');
   });
 
+  it('should return placeholder for non-serializable object without throwing', () => {
+    const circular: Record<string, unknown> = { a: 1 };
+    circular.self = circular;
+    expect(() => normalizeValueToString(circular)).not.toThrow();
+    expect(normalizeValueToString(circular)).toBe('[Unserializable]');
+  });
+
   it('should return string as-is via String()', () => {
     expect(normalizeValueToString('hello')).toBe('hello');
     expect(normalizeValueToString('')).toBe('');

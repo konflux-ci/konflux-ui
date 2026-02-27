@@ -8,7 +8,12 @@ export const normalizeValueToString = (value: unknown): string => {
   }
 
   if (typeof value === 'object') {
-    return JSON.stringify(value);
+    try {
+      return JSON.stringify(value);
+    } catch {
+      // JSON.stringify throws for circular references
+      return '[Unserializable]';
+    }
   }
 
   return String(value);
