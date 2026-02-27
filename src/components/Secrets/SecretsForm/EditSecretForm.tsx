@@ -5,6 +5,7 @@ import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
+import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -108,7 +109,13 @@ const EditSecretForm: React.FC = () => {
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
           breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
-          title="Edit secret"
+          // title="Edit secret"
+          title={
+            <>
+              Edit secret
+              <FeatureFlagIndicator flags={['edit-secret-page']} />
+            </>
+          }
           description={
             <>
               Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}
