@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { PipelineRunModel } from '~/models';
-import { PipelineRunKind } from '~/types';
+import { PipelineRunModel, ReleaseModel } from '~/models';
+import { PipelineRunKind, ReleaseCondition } from '~/types';
+import type { ReleaseKind } from '~/types/release';
 import { createTestQueryClient, createK8sUtilMock } from '~/unit-test-utils';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../../types/k8s';
 import { useKubearchiveListResourceQuery } from '../hooks';
@@ -226,7 +227,7 @@ describe('useKubearchiveListResourceQuery', () => {
       isList: true,
     };
 
-    it('should filter out PipelineRuns with Unknown status, Succeeded type, and Running reason', async () => {
+    it('should filter out PipelineRuns with Unknown status, Succeeded type, and Running reason only when they have deletionTimestamp', async () => {
       const runningPipelineRun: PipelineRunKind = {
         apiVersion: 'tekton.dev/v1',
         kind: 'PipelineRun',
@@ -291,8 +292,9 @@ describe('useKubearchiveListResourceQuery', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data?.pages[0]).toHaveLength(1);
-      expect(result.current.data?.pages[0][0].metadata?.name).toBe('completed-pipeline-run');
+      expect(result.current.data?.pages[0]).toHaveLength(2);
+      expect(result.current.data?.pages[0][0].metadata?.name).toBe('running-pipeline-run');
+      expect(result.current.data?.pages[0][1].metadata?.name).toBe('completed-pipeline-run');
     });
 
     it('should keep PipelineRuns with no conditions', async () => {
@@ -331,6 +333,168 @@ describe('useKubearchiveListResourceQuery', () => {
 
       expect(result.current.data?.pages[0]).toHaveLength(1);
       expect(result.current.data?.pages[0][0].metadata?.name).toBe('no-conditions-pipeline-run');
+    });
+  });
+
+  describe('filtering deleted resources', () => {
+    it('should filter out resources with deletionTimestamp when using a generic model', async () => {
+      mockK8sListResource.mockResolvedValue({
+        ...mockListResponse,
+        items: [
+          mockReleaseList[0],
+          {
+            ...mockReleaseList[1],
+            metadata: {
+              ...mockReleaseList[1].metadata,
+              deletionTimestamp: '2024-01-01T00:00:00Z',
+            },
+          },
+        ],
+      });
+
+      const { result } = renderHook(
+        () => useKubearchiveListResourceQuery(mockResourceInit, mockModel),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data?.pages[0]).toHaveLength(1);
+      expect(result.current.data?.pages[0][0].metadata?.name).toBe('test-release-1');
+    });
+
+    it('should keep PipelineRuns with deletionTimestamp when not in stale running state', async () => {
+      const completedWithDeletion: PipelineRunKind = {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRun',
+        metadata: {
+          name: 'completed-deleted-pipeline-run',
+          namespace: 'test-namespace',
+          uid: 'completed-deleted-uid',
+          creationTimestamp: '2024-01-02T00:00:00Z',
+          deletionTimestamp: '2024-01-05T00:00:00Z',
+        },
+        spec: {},
+        status: {
+          conditions: [{ type: 'Succeeded', status: 'True', reason: 'Succeeded' }],
+          pipelineSpec: { tasks: [] },
+        },
+      };
+
+      const completedWithoutDeletion: PipelineRunKind = {
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRun',
+        metadata: {
+          name: 'completed-pipeline-run',
+          namespace: 'test-namespace',
+          uid: 'completed-uid',
+          creationTimestamp: '2024-01-03T00:00:00Z',
+        },
+        spec: {},
+        status: {
+          conditions: [{ type: 'Succeeded', status: 'True', reason: 'Succeeded' }],
+          pipelineSpec: { tasks: [] },
+        },
+      };
+
+      mockK8sListResource.mockResolvedValue({
+        apiVersion: 'tekton.dev/v1',
+        kind: 'PipelineRunList',
+        metadata: {},
+        items: [completedWithDeletion, completedWithoutDeletion],
+      });
+
+      const pipelineRunResourceInit: WatchK8sResource = {
+        groupVersionKind: { group: 'tekton.dev', version: 'v1', kind: 'PipelineRun' },
+        namespace: 'test-namespace',
+        isList: true,
+      };
+
+      const { result } = renderHook(
+        () => useKubearchiveListResourceQuery(pipelineRunResourceInit, PipelineRunModel),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // PipelineRun model: deletionTimestamp is only considered when resource is stale running; non-stale are kept
+      expect(result.current.data?.pages[0]).toHaveLength(2);
+      expect(result.current.data?.pages[0].map((r) => r.metadata?.name)).toContain(
+        'completed-deleted-pipeline-run',
+      );
+      expect(result.current.data?.pages[0].map((r) => r.metadata?.name)).toContain(
+        'completed-pipeline-run',
+      );
+    });
+
+    it('should keep Releases with deletionTimestamp when not in stale running state', async () => {
+      const releaseWithDeletion: ReleaseKind = {
+        apiVersion: 'v1alpha1',
+        kind: 'Release',
+        metadata: {
+          name: 'release-with-deletion',
+          namespace: 'test-namespace',
+          uid: 'release-deleted-uid',
+          deletionTimestamp: '2024-01-05T00:00:00Z',
+        },
+        spec: { releasePlan: 'plan', snapshot: 'snap' },
+        status: {
+          conditions: [{ type: ReleaseCondition.Released, status: 'True', reason: 'Succeeded' }],
+        },
+      };
+
+      const releaseWithoutDeletion: ReleaseKind = {
+        apiVersion: 'v1alpha1',
+        kind: 'Release',
+        metadata: {
+          name: 'release-without-deletion',
+          namespace: 'test-namespace',
+          uid: 'release-uid',
+        },
+        spec: { releasePlan: 'plan', snapshot: 'snap' },
+        status: {
+          conditions: [{ type: ReleaseCondition.Released, status: 'True', reason: 'Succeeded' }],
+        },
+      };
+
+      mockK8sListResource.mockResolvedValue({
+        apiVersion: 'v1alpha1',
+        kind: 'ReleaseList',
+        metadata: {},
+        items: [releaseWithDeletion, releaseWithoutDeletion],
+      });
+
+      const releaseResourceInit: WatchK8sResource = {
+        groupVersionKind: {
+          group: 'appstudio.redhat.com',
+          version: 'v1alpha1',
+          kind: 'Release',
+        },
+        namespace: 'test-namespace',
+        isList: true,
+      };
+
+      const { result } = renderHook(
+        () => useKubearchiveListResourceQuery(releaseResourceInit, ReleaseModel),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      // Release model: deletionTimestamp is only considered when resource is stale running; non-stale are kept
+      expect(result.current.data?.pages[0]).toHaveLength(2);
+      expect(result.current.data?.pages[0].map((r) => r.metadata?.name)).toContain(
+        'release-with-deletion',
+      );
+      expect(result.current.data?.pages[0].map((r) => r.metadata?.name)).toContain(
+        'release-without-deletion',
+      );
     });
   });
 });
