@@ -6,6 +6,7 @@
 export enum PipelineRunLabel {
   APPLICATION = 'appstudio.openshift.io/application',
   COMPONENT = 'appstudio.openshift.io/component',
+  COMPONENT_VERSION = '', //TODO KFLUXUI-1009: add component version label
   PIPELINE_USED_BY = 'pipelines.openshift.io/used-by',
   PIPELINE_TYPE = 'pipelines.appstudio.openshift.io/type',
   PIPELINE_NAME = 'tekton.dev/pipeline',
