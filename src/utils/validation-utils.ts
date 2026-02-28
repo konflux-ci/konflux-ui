@@ -13,11 +13,16 @@ export const konfluxUsernameYupValidation = yup
 export const GIT_URL_REGEX =
   /^((((ssh|git|https?:?)\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%.]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%.]*?:?))$/;
 
+// Known git provider domains + codeberg + any other host (custom/self-hosted)
+const GIT_DOMAIN_PATTERN =
+  '([\\w-]+\\.)*(github|gitlab|bitbucket|forgejo)\\.[\\w.-]+|codeberg\\.org|forge\\.fedoraproject\\.org|[\\w.-]+(\\.[\\w.-]+)+';
+
 export const GIT_URL = {
   PROTOCOL_REGEX: /^https?:\/\//,
-  DOMAIN_REGEX: /^(https?:\/\/)?([\w-]+\.)*(github|gitlab|bitbucket|forgejo)\.[\w.-]+/,
-  USER_OR_REPO_REGEX:
-    /^https?:\/\/([\w-]+\.)*(github|gitlab|bitbucket|forgejo)\.[\w.-]+\/[\w.-]+\/[\w.-]+/,
+  // Protocol optional; known providers, codeberg, or any domain; optional port and path
+  DOMAIN_REGEX: new RegExp(`^(https?:\\/\\/)?(${GIT_DOMAIN_PATTERN})(:\\d+)?(\\/.*)?$`),
+  // Full URL: protocol + any host + optional port + /owner/repo
+  USER_OR_REPO_REGEX: /^https?:\/\/[\w.-]+(\.[\w.-]+)*(:\d+)?\/[\w.-]+\/[\w.-]+/,
 };
 
 export const RESOURCE_NAME_REGEX = /^[a-z]([-a-z0-9]*[a-z0-9])?$/;
