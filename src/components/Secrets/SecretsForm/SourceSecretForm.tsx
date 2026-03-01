@@ -8,9 +8,13 @@ import EncodedFileUploadField from './EncodedFileUploadField';
 
 type SourceSecretFormProps = {
   onAuthTypeChange?: (type: SourceSecretType) => void;
+  isEditMode?: boolean;
 };
 
-export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeChange }) => {
+export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
+  onAuthTypeChange,
+  isEditMode = false,
+}) => {
   const [{ value: type }] = useField<SourceSecretType>('source.authType');
 
   React.useEffect(() => {
@@ -54,8 +58,12 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeCh
           name="source.ssh-privatekey"
           id="text-file-ssh"
           label="SSH private key"
-          helpText="For Git authentication"
-          required
+          helpText={
+            isEditMode
+              ? 'If you want to keep the same SSH private key, leave this field blank'
+              : 'For Git authentication'
+          }
+          required={!isEditMode}
         />
       )}
     </>

@@ -1,5 +1,10 @@
-import { AddSecretForm, SecretsListPage, secretListViewLoader } from '../../components/Secrets';
-import { SECRET_LIST_PATH, SECRET_CREATE_PATH } from '../paths';
+import {
+  AddSecretForm,
+  EditSecretForm,
+  SecretsListPage,
+  secretListViewLoader,
+} from '../../components/Secrets';
+import { SECRET_LIST_PATH, SECRET_CREATE_PATH, SECRET_EDIT_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 const secretRoutes = [
@@ -7,6 +12,12 @@ const secretRoutes = [
   {
     path: SECRET_CREATE_PATH.path,
     element: <AddSecretForm />,
+    errorElement: <RouteErrorBoundry />,
+  },
+  /* Secrets edit form */
+  {
+    path: SECRET_EDIT_PATH.path,
+    element: <EditSecretForm />,
     errorElement: <RouteErrorBoundry />,
   },
   /* Secrets list view */

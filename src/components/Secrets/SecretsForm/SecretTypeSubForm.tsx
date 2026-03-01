@@ -50,13 +50,16 @@ const secretTypes = [
 const supportedPartnerTaskSecrets = getSupportedPartnerTaskSecrets();
 const defaultKeyValues = [{ key: '', value: '' }];
 
-export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () => {
+export const SecretTypeSubForm: React.FC<
+  React.PropsWithChildren<unknown & { isEditMode?: boolean }>
+> = ({ isEditMode = false }) => {
   const {
     values: {
       name,
       type: secretType,
       secretFor,
       opaque: { keyValues },
+      labels,
     },
     setFieldValue,
     validateForm,
@@ -80,10 +83,12 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
   const selectedForm = React.useMemo(() => {
     const form = secretTypes.find((t) => t.label === currentType);
     if (form?.key === 'source') {
-      form.component = <SourceSecretForm onAuthTypeChange={setCurrentAuthType} />;
+      form.component = (
+        <SourceSecretForm isEditMode={isEditMode} onAuthTypeChange={setCurrentAuthType} />
+      );
     }
     return form;
-  }, [currentType]);
+  }, [currentType, isEditMode]);
 
   const clearKeyValues = React.useCallback(() => {
     const newKeyValues = keyValues.filter((kv) => !kv.readOnlyKey);
@@ -115,12 +120,17 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
   const shouldShowSecretLinkOptions =
     currentType === SecretTypeDropdownLabel.image || currentAuthType === SourceSecretType.basic;
 
+  const secretNameHelperText = isEditMode
+    ? 'You cannot edit the secret name in edit mode'
+    : 'Unique name of the new secret';
+
   return (
     <>
       <SecretTypeSelector
         key={secretFor}
         dropdownItems={dropdownItems}
-        isDisabled={secretFor === SecretFor.Deployment}
+        isDisabled={secretFor === SecretFor.Deployment || isEditMode}
+        isEditMode={isEditMode}
         onChange={(type) => {
           setTimeout(() => validateForm());
           setCurrentType(type);
@@ -147,7 +157,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
             data-test="secret-name"
             label="Select or enter secret name"
             toggleAriaLabel="Select or enter secret name"
-            helpText="Unique name of the new secret"
+            helpText={secretNameHelperText}
             toggleId="secret-name-toggle"
             variant={SelectVariant.typeahead}
             options={options}
@@ -155,6 +165,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
             className="secret-type-subform__dropdown"
             isInputValuePersisted
             hasOnCreateOption
+            isDisabled={isEditMode}
             required
             onSelect={(_e, value: string) => {
               if (isPartnerTask(value)) {
@@ -176,14 +187,15 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
           name="name"
           data-test="secret-name"
           label="Secret name"
-          helperText="Unique name of the new secret"
+          helperText={secretNameHelperText}
           placeholder="Enter name"
+          isDisabled={isEditMode}
           required
         />
       )}
 
       {/* Just for image pull secret and basic auth */}
-      {shouldShowSecretLinkOptions && (
+      {shouldShowSecretLinkOptions && !isEditMode && (
         <SecretLinkOptions
           secretForComponentOption={currentSecretForComponentOption}
           radioLabels={SecretLinkOptionLabels.default}
@@ -195,8 +207,8 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<unknown>> = () 
       <KeyValueFileInputField
         name="labels"
         label="Labels"
-        entries={[{ key: '', value: '' }]}
-        description="You can add labels to provide more context or tag your secret."
+        entries={labels?.length ? labels : [{ key: '', value: '' }]}
+        description={`You can ${isEditMode ? 'edit' : 'add'} labels to provide more context or tag your secret.`}
       />
     </>
   );

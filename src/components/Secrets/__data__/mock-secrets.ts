@@ -1,3 +1,4 @@
+import { Base64 } from 'js-base64';
 import { omit } from 'lodash-es';
 import { ApplicationModel, ComponentModel, ServiceAccountModel } from '../../../models';
 import {
@@ -9,6 +10,7 @@ import {
   SecretFor,
   SecretFormValues,
   SecretKind,
+  SecretLabels,
   SecretType,
   SecretTypeDropdownLabel,
   SourceSecretType,
@@ -195,4 +197,108 @@ export const secretFormValuesForSourceSecret: SecretFormValues = {
   relatedComponents: [],
   secretForComponentOption: null,
   existingSecrets,
+};
+
+// Mock secrets for EditSecretForm tests (all secret types and auth variants)
+
+export const mockOpaqueSecretForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'opaque-secret',
+    namespace: 'test-ns',
+    labels: { app: 'value' },
+  },
+  type: SecretType.opaque,
+  data: {
+    key1: Base64.encode('value1'),
+    key2: Base64.encode('value2'),
+  },
+};
+
+const dockerconfigjsonPayload = {
+  auths: {
+    'registry.example.com': {
+      username: 'reguser',
+      password: 'regpass',
+      email: 'reg@example.com',
+      auth: Base64.encode('reguser:regpass'),
+    },
+  },
+};
+
+export const mockImageSecretDockerconfigjsonForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'image-secret-dockerconfigjson',
+    namespace: 'test-ns',
+  },
+  type: SecretType.dockerconfigjson,
+  data: {
+    '.dockerconfigjson': Base64.encode(JSON.stringify(dockerconfigjsonPayload)),
+  },
+};
+
+const dockercfgPayload = {
+  'registry.example.com': {
+    username: 'cfguser',
+    password: 'cfgpass',
+    email: 'cfg@example.com',
+    auth: Base64.encode('cfguser:cfgpass'),
+  },
+};
+
+export const mockImageSecretDockercfgForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'image-secret-dockercfg',
+    namespace: 'test-ns',
+  },
+  type: SecretType.dockercfg,
+  data: {
+    '.dockercfg': Base64.encode(JSON.stringify(dockercfgPayload)),
+  },
+};
+
+export const mockSourceSecretBasicAuthForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'source-secret-basic',
+    namespace: 'test-ns',
+    labels: {
+      [SecretLabels.HOST_LABEL]: 'github.com',
+    },
+    annotations: {
+      [SecretLabels.REPO_ANNOTATION]: 'org/repo',
+    },
+  },
+  type: SecretType.basicAuth,
+  data: {
+    username: Base64.encode('gituser'),
+    password: Base64.encode('gitpass'),
+  },
+};
+
+export const mockSourceSecretSSHForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'source-secret-ssh',
+    namespace: 'test-ns',
+    labels: {
+      [SecretLabels.HOST_LABEL]: 'gitlab.com',
+    },
+    annotations: {
+      [SecretLabels.REPO_ANNOTATION]: 'group/project',
+    },
+  },
+  type: SecretType.sshAuth,
+  data: {
+    'ssh-privatekey': Base64.encode(
+      '-----BEGIN OPENSSH PRIVATE KEY-----\nfake-key\n-----END OPENSSH PRIVATE KEY-----',
+    ),
+  },
 };

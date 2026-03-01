@@ -71,6 +71,23 @@ export const isPartnerTask = (
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
+export const getAuthType = (type: SecretType) => {
+  switch (type) {
+    case SecretType.dockerconfigjson:
+      return 'Image registry credentials';
+    case SecretType.dockercfg:
+      return 'Upload config file';
+    case SecretType.basicAuth:
+      return 'Basic authentication';
+    case SecretType.sshAuth:
+      return 'SSH authentication';
+    case SecretType.opaque:
+      return 'Opaque';
+    default:
+      return 'Unknown';
+  }
+};
+
 export const getSupportedPartnerTaskKeyValuePairs = (
   secretName?: string,
   arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
@@ -175,6 +192,52 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
+export const getRegistryCreds = (secretData: SecretKind) => {
+  // const credentials =
+  //   (secretData.type as SecretType) === SecretType.dockerconfigjson &&
+  //   secretData.data['.dockerconfigjson']
+  //     ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
+  //     : undefined;
+
+  let credentials:
+    | { auths?: { [key: string]: { username: string; password: string; email: string } } }
+    | undefined;
+  try {
+    const encoded =
+      (secretData.type as SecretType) === SecretType.dockerconfigjson
+        ? secretData.data?.['.dockerconfigjson']
+        : undefined;
+    credentials = encoded ? JSON.parse(Base64.decode(encoded)) : undefined;
+  } catch {
+    credentials = undefined;
+  }
+
+  return credentials?.auths
+    ? Object.entries(
+        credentials.auths as {
+          [key: string]: { username: string; password: string; email: string };
+        },
+      ).map(
+        ([registryName, authData]: [
+          string,
+          { username: string; password: string; email: string },
+        ]) => ({
+          registry: registryName,
+          username: authData.username,
+          password: '', // Intentionally not displayed, password is sensitive
+          email: authData.email || '',
+        }),
+      )
+    : [
+        {
+          registry: '',
+          username: '',
+          password: '',
+          email: '',
+        },
+      ];
+};
+
 export const getTargetLabelsForRemoteSecret = (
   values: AddSecretFormValues,
 ): { [key: string]: string } => {
@@ -225,6 +288,29 @@ export const getAnnotationForSecret = (values: AddSecretFormValues): { [key: str
     return null;
   }
   return { [SecretLabels.REPO_ANNOTATION]: values.source.repo };
+};
+
+export const createK8sSecretResource = (
+  values: AddSecretFormValues,
+  secretResource: SecretKind,
+): SecretKind => {
+  const labels = {
+    secret: getLabelsForSecret(values),
+  };
+
+  const annotations = getAnnotationForSecret(values);
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels?.secret,
+      },
+      annotations,
+    },
+  };
+
+  return k8sSecretResource;
 };
 
 export const statusFromConditions = (
@@ -278,10 +364,58 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (namespace) => {
+const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
+  return await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: newK8sSecretResource.metadata.name,
+      ns: newK8sSecretResource.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'add',
+        path: '/metadata/labels',
+        value: newK8sSecretResource.metadata.labels,
+      },
+      {
+        op: 'add',
+        path: '/metadata/annotations',
+        value: newK8sSecretResource.metadata.annotations,
+      },
+      {
+        op: 'replace',
+        path: '/data',
+        value: newK8sSecretResource.data,
+      },
+    ],
+  });
+};
+
+export const editSecretResource = (
+  originalSecret: SecretKind,
+  updatedSecret: AddSecretFormValues,
+) => {
+  const secretResource: SecretKind = getSecretFormData(
+    updatedSecret,
+    originalSecret.metadata.namespace,
+  );
+  const newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+  const originalTypeFromLabels = originalSecret.type as SecretType;
+
+  if (originalTypeFromLabels === SecretType.sshAuth) {
+    newK8sSecretResource.data['ssh-privatekey'] =
+      updatedSecret.source['ssh-privatekey'] === undefined
+        ? originalSecret.data['ssh-privatekey']
+        : updatedSecret.source['ssh-privatekey'];
+  }
+
+  return updateSecretResource(newK8sSecretResource);
+};
+
+export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
   return [
     { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
-    { path: '#', name: 'Add secret' },
+    { path: '#', name: `${operation} secret` },
   ];
 };
 

@@ -11,7 +11,7 @@ import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '~/types';
 import { addSecretWithLinkingComponents } from '~/utils/create-utils';
-import { getAddSecretBreadcrumbs } from '~/utils/secrets/secret-utils';
+import { getSecretBreadcrumbs } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
@@ -64,7 +64,7 @@ const AddSecretForm: React.FC = () => {
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
-          breadcrumbs={getAddSecretBreadcrumbs(namespace)}
+          breadcrumbs={getSecretBreadcrumbs(namespace, 'Add')}
           title="Add secret"
           description={
             <>
