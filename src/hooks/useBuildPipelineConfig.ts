@@ -46,6 +46,12 @@ export const PIPELINE_DATA = {
         'quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-oci-ta@sha256:9002db310cd002ddc7ccf94e08f8cd9b02c1bdd5dce36b59173fbc6cd4799f97',
     },
     {
+      name: 'docker-build-oci-ta-min',
+      bundle:
+	'quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-oci-ta-min@sha256:3b35c91fb1f69976586f01a859531c0e77651f678023f33a8ac27a6b256f08be',
+
+    },
+    {
       name: 'docker-build-multi-platform-oci-ta',
       bundle:
         'quay.io/konflux-ci/tekton-catalog/pipeline-docker-build-multi-platform-oci-ta@sha256:269480b2037478c1c8509c5f562b65f0b7f4e8675d5fda68b6bf3d28357962d7',
