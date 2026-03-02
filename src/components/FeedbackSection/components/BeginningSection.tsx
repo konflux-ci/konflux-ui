@@ -14,10 +14,11 @@ import {
   Button,
 } from '@patternfly/react-core';
 import { FeedbackSections } from '../consts';
+import { SubmitClicked } from './FeedbackForm';
 
 interface BeginningSectionProps {
   setCurrentSection: (section: FeedbackSections) => void;
-  onClose: any;
+  onClose: (event?: KeyboardEvent | React.MouseEvent, submitClicked?: SubmitClicked) => void;
 }
 
 const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, onClose }) => {

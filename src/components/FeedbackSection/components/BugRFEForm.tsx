@@ -1,8 +1,11 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Button,
   ButtonType,
   Checkbox,
+  Form,
+  FormHelperText,
   FormGroup,
   PanelFooter,
   Text,
@@ -10,20 +13,19 @@ import {
   TextContent,
   TextVariants,
   Tooltip,
-  FormHelperText,
   HelperTextItem,
   HelperText,
 } from '@patternfly/react-core';
-import { FeedbackSections } from '../consts';
-import { Form, Link } from 'react-router-dom';
-import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
+import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
+import { FeedbackSections } from '../consts';
 import { getBugURL, getFeatureURL } from '../feedback-utils';
+import { SubmitClicked } from './FeedbackForm';
 
 interface BugRFESectionProps {
   currentSection: FeedbackSections;
   setCurrentSection: (FeedbackSections) => void;
-  onClose: any;
+  onClose: (event?: KeyboardEvent | React.MouseEvent, submitClicked?: SubmitClicked) => void;
 }
 
 const BugRFESection: React.FC<BugRFESectionProps> = ({
@@ -73,7 +75,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
                 Describe the bug you encountered. For urgent issues, use{' '}
                 <Link to="#" target="blank">
                   #konflux-user-forum
-                </Link>
+                </Link>{' '}
                 instead
               </>
             ) : (
@@ -88,6 +90,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
             <TextInput
               id="title"
               name="title"
+              aria-label="Title"
               label="Title"
               data-test={
                 currentSection === FeedbackSections.BugSection ? 'bug-title' : 'feature-title'
@@ -124,6 +127,8 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
             <TextInput
               id="description"
               name="description"
+              aria-label="Description"
+              label="Description"
               data-test={
                 currentSection === FeedbackSections.BugSection
                   ? 'bug-description'
