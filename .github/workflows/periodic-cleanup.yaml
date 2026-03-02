@@ -1,8 +1,17 @@
-name: "Periodic job: Cleanup GH repos, Quay repos and bots"
+name: 'Periodic job: Cleanup GH repos, Quay repos, Konflux resources and bots'
 
-# Can be triggered manually 
+# Can be triggered manually with dryrun and specific branch
 on:
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Dry run mode
+        type: boolean
+        default: false
+      ref:
+        description: Git ref
+        required: true
+        default: main
 
   # Every Sunday at 1:00 AM UTC
   schedule:
@@ -13,32 +22,60 @@ jobs:
     runs-on: ubuntu-latest
     env:
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Dry run mode (only applies to Konflux cleanup)
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || github.event.inputs.dry_run }}
       SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
       # secrets
       GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       QUAY_TOKEN: ${{ secrets.QUAY_CLEANUP_TOKEN }}
       QUAY_TEST_ORG: ${{ secrets.QUAY_TEST_ORG }}
+      # Konflux staging credentials
+      KONFLUX_API_SERVER: ${{ secrets.KONFLUX_PUBLIC_STAGE_API_SERVER }}
+      KONFLUX_TOKEN: ${{ secrets.KONFLUX_INTEGRATION_CLEANER }}
+      KONFLUX_NAMESPACE: ${{ secrets.KONFLUX_INTEGRATION_NAMESPACE }}
       JOB_TYPE: 'periodic-cleanup'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        # Checkout specific branch
+        with:
+          ref: ${{ github.event.inputs.ref }}
 
       - name: Cleanup GitHub repos
         id: github
         run: |
           chmod +x ./scripts/ci_cleanup.sh
           ./scripts/ci_cleanup.sh github
-          
+
       - name: Cleanup Quay repos and bots
         id: quay
         run: |
           ./scripts/ci_cleanup.sh quay
 
+      # We have to install oc, kubectl does not support login cmds
+      - name: Install OpenShift CLI
+        id: install-oc
+        run: |
+          OC_VERSION="stable"
+          curl -sL \
+            https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz \
+            -o oc.tar.gz
+          tar -xzf oc.tar.gz oc
+          chmod +x oc
+          sudo mv oc /usr/local/bin/
+          oc version --client
+
+      # Use the oc cmds with sa token to delete resources
+      - name: Cleanup Konflux staging resources
+        id: konflux
+        run: |
+          ./scripts/ci_cleanup.sh konflux
+
       - name: Report job result to Slack
         if: ${{ always() }}
         run: |
-          if [[ "${{ steps.github.outcome }}" == 'success' && "${{ steps.quay.outcome }}" == 'success' ]]; then
+          if [[ "${{ steps.github.outcome }}" == 'success' && "${{ steps.quay.outcome }}" == 'success' && "${{ steps.konflux.outcome }}" == 'success' ]]; then
             ./pr_check.sh send-report success
           else
             ./pr_check.sh send-report failure
