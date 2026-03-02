@@ -2,8 +2,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { Base64 } from 'js-base64';
 import { SECRET_LIST_PATH } from '@routes/paths';
+import { SecretKind, SecretTypeDropdownLabel, SourceSecretType } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { SecretTypeDropdownLabel, SourceSecretType } from '../../../types';
 import {
   mockImageSecretDockerconfigjsonForEdit,
   mockImageSecretDockercfgForEdit,
@@ -18,6 +18,10 @@ jest.mock('react-router-dom', () => ({
   useLocation: jest.fn(),
 }));
 
+jest.mock('~/hooks/useSecrets', () => ({
+  useSecret: jest.fn(),
+}));
+
 jest.mock('~/utils/secrets/secret-utils', () => {
   const actual = jest.requireActual('~/utils/secrets/secret-utils');
   return {
@@ -29,6 +33,7 @@ jest.mock('~/utils/secrets/secret-utils', () => {
 
 const useNavigateMock = useNavigate as jest.Mock;
 const useLocationMock = useLocation as jest.Mock;
+const useSecretMock = jest.requireMock('~/hooks/useSecrets').useSecret as jest.Mock;
 const { editSecretResource } = jest.requireMock('~/utils/secrets/secret-utils');
 
 describe('EditSecretForm', () => {
@@ -42,14 +47,39 @@ describe('EditSecretForm', () => {
     (editSecretResource as jest.Mock).mockReset();
   });
 
-  const renderWithSecret = (secretData: ReturnType<typeof useLocation>['state']) => {
-    useLocationMock.mockReturnValue({ state: secretData });
+  const renderWithSecret = (secretData: SecretKind) => {
+    useLocationMock.mockReturnValue({
+      search: `?secretName=${secretData.metadata.name}`,
+    });
+    useSecretMock.mockReturnValue([secretData, false, null]);
     return render(<EditSecretForm />);
   };
 
+  describe('loading and error states', () => {
+    it('shows spinner while secret is loading', () => {
+      useLocationMock.mockReturnValue({ search: '?secretName=opaque-secret' });
+      useSecretMock.mockReturnValue([undefined, true, null]);
+
+      render(<EditSecretForm />);
+
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Edit secret' })).not.toBeInTheDocument();
+    });
+
+    it('does not render edit form when useSecret returns error', () => {
+      const mockError = new Error('Secret not found');
+      useLocationMock.mockReturnValue({ search: '?secretName=missing-secret' });
+      useSecretMock.mockReturnValue([undefined, false, mockError]);
+
+      render(<EditSecretForm />);
+
+      expect(screen.queryByRole('heading', { name: 'Edit secret' })).not.toBeInTheDocument();
+    });
+  });
+
   describe('rendering for each secret type', () => {
     it('renders edit form with opaque (key/value) secret', async () => {
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
@@ -65,7 +95,7 @@ describe('EditSecretForm', () => {
     });
 
     it('renders edit form with image pull secret (Image registry credentials)', async () => {
-      renderWithSecret({ secretData: mockImageSecretDockerconfigjsonForEdit });
+      renderWithSecret(mockImageSecretDockerconfigjsonForEdit);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
@@ -83,7 +113,7 @@ describe('EditSecretForm', () => {
     });
 
     it('renders edit form with image pull secret (Upload configuration file)', async () => {
-      renderWithSecret({ secretData: mockImageSecretDockercfgForEdit });
+      renderWithSecret(mockImageSecretDockercfgForEdit);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
@@ -106,7 +136,7 @@ describe('EditSecretForm', () => {
     });
 
     it('renders edit form with source secret (Basic authentication)', async () => {
-      renderWithSecret({ secretData: mockSourceSecretBasicAuthForEdit });
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
@@ -124,7 +154,7 @@ describe('EditSecretForm', () => {
     });
 
     it('renders edit form with source secret (SSH Key)', async () => {
-      renderWithSecret({ secretData: mockSourceSecretSSHForEdit });
+      renderWithSecret(mockSourceSecretSSHForEdit);
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
@@ -146,7 +176,7 @@ describe('EditSecretForm', () => {
 
   describe('edit mode behavior', () => {
     it('shows edit-mode helper text for secret name', async () => {
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(
@@ -156,7 +186,7 @@ describe('EditSecretForm', () => {
     });
 
     it('disables name input in edit mode', async () => {
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('opaque-secret')).toBeInTheDocument();
@@ -166,7 +196,7 @@ describe('EditSecretForm', () => {
     });
 
     it('disables secret type dropdown in edit mode', async () => {
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(screen.getByTestId('dropdown-toggle')).toBeInTheDocument();
@@ -178,7 +208,7 @@ describe('EditSecretForm', () => {
 
   describe('cancel and submit', () => {
     it('navigates back when Cancel is clicked', async () => {
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
@@ -196,7 +226,7 @@ describe('EditSecretForm', () => {
     it('calls editSecretResource and navigates to list on successful submit (opaque)', async () => {
       (editSecretResource as jest.Mock).mockResolvedValue(undefined);
 
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('key1')).toBeInTheDocument();
@@ -217,7 +247,6 @@ describe('EditSecretForm', () => {
 
       await waitFor(() => {
         expect(editSecretResource).toHaveBeenCalledWith(
-          mockOpaqueSecretForEdit,
           expect.objectContaining({
             type: SecretTypeDropdownLabel.opaque,
             name: 'opaque-secret',
@@ -228,6 +257,7 @@ describe('EditSecretForm', () => {
               ]),
             }),
           }),
+          'test-ns',
         );
       });
 
@@ -241,7 +271,7 @@ describe('EditSecretForm', () => {
     it('calls editSecretResource and navigates on successful submit (image dockerconfigjson)', async () => {
       (editSecretResource as jest.Mock).mockResolvedValue(undefined);
 
-      renderWithSecret({ secretData: mockImageSecretDockerconfigjsonForEdit });
+      renderWithSecret(mockImageSecretDockerconfigjsonForEdit);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('registry.example.com')).toBeInTheDocument();
@@ -261,7 +291,6 @@ describe('EditSecretForm', () => {
 
       await waitFor(() => {
         expect(editSecretResource).toHaveBeenCalledWith(
-          mockImageSecretDockerconfigjsonForEdit,
           expect.objectContaining({
             type: SecretTypeDropdownLabel.image,
             name: 'image-secret-dockerconfigjson',
@@ -277,6 +306,7 @@ describe('EditSecretForm', () => {
               ]),
             }),
           }),
+          'test-ns',
         );
       });
 
@@ -290,7 +320,7 @@ describe('EditSecretForm', () => {
     it('calls editSecretResource and navigates on successful submit (source basic auth) after entering password', async () => {
       (editSecretResource as jest.Mock).mockResolvedValue(undefined);
 
-      renderWithSecret({ secretData: mockSourceSecretBasicAuthForEdit });
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
 
       await waitFor(() => {
         expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
@@ -306,7 +336,6 @@ describe('EditSecretForm', () => {
 
       await waitFor(() => {
         expect(editSecretResource).toHaveBeenCalledWith(
-          mockSourceSecretBasicAuthForEdit,
           expect.objectContaining({
             type: SecretTypeDropdownLabel.source,
             name: 'source-secret-basic',
@@ -318,6 +347,7 @@ describe('EditSecretForm', () => {
               repo: 'org/repo',
             }),
           }),
+          'test-ns',
         );
       });
 
@@ -329,7 +359,7 @@ describe('EditSecretForm', () => {
     });
 
     it('shows validation error when source basic auth password is empty on submit', async () => {
-      renderWithSecret({ secretData: mockSourceSecretBasicAuthForEdit });
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
 
       await waitFor(() => {
         expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
@@ -350,7 +380,7 @@ describe('EditSecretForm', () => {
     it('sets submit error and does not navigate when editSecretResource rejects', async () => {
       (editSecretResource as jest.Mock).mockRejectedValue(new Error('Patch failed'));
 
-      renderWithSecret({ secretData: mockOpaqueSecretForEdit });
+      renderWithSecret(mockOpaqueSecretForEdit);
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('key1')).toBeInTheDocument();
