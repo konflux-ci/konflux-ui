@@ -1,22 +1,22 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, EmptyStateBody, Spinner, Text, TextVariants } from '@patternfly/react-core';
+import emptyStateImgUrl from '~/assets/Components.svg';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { FLAGS } from '~/feature-flags/flags';
 import { IfFeature } from '~/feature-flags/hooks';
-import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { getComponentVersion } from '~/utils/version-utils';
-import emptyStateImgUrl from '../../assets/Components.svg';
-import { useComponent } from '../../hooks/useComponents';
+import { useComponent } from '~/hooks/useComponents';
 import {
   COMPONENTS_PATH,
   COMPONENT_DETAILS_V2_PATH,
   COMPONENT_VERSIONS_PATH,
   COMPONENT_VERSION_DETAILS_PATH,
-} from '../../routes/paths';
-import { RouterParams } from '../../routes/utils';
-import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
+} from '~/routes/paths';
+import { RouterParams } from '~/routes/utils';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { getComponentVersion } from '~/utils/version-utils';
 import { DetailsPage } from '../DetailsPage';
 
 const ComponentVersionDetailsView: React.FC = () => {
