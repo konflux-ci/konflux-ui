@@ -194,44 +194,34 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
+const DEFAULT_REGISTRY_CREDS = [{ registry: '', username: '', password: '', email: '' }];
+
 export const getRegistryCreds = (secretData: SecretKind) => {
-  let credentials:
-    | { auths?: { [key: string]: { username: string; password: string; email: string } } }
-    | undefined;
-  try {
-    const encoded =
-      (secretData.type as SecretType) === SecretType.dockerconfigjson
-        ? secretData.data?.['.dockerconfigjson']
-        : undefined;
-    credentials = encoded ? JSON.parse(Base64.decode(encoded)) : undefined;
-  } catch {
-    credentials = undefined;
+  if ((secretData.type as SecretType) !== SecretType.dockerconfigjson) {
+    return DEFAULT_REGISTRY_CREDS;
   }
 
-  return credentials?.auths
-    ? Object.entries(
-        credentials.auths as {
-          [key: string]: { username: string; password: string; email: string };
-        },
-      ).map(
-        ([registryName, authData]: [
-          string,
-          { username: string; password: string; email: string },
-        ]) => ({
-          registry: registryName,
-          username: authData.username,
-          password: '', // Intentionally not displayed, password is sensitive
-          email: authData.email || '',
-        }),
-      )
-    : [
-        {
-          registry: '',
-          username: '',
-          password: '',
-          email: '',
-        },
-      ];
+  const encoded = secretData.data?.['.dockerconfigjson'];
+  if (!encoded) {
+    return DEFAULT_REGISTRY_CREDS;
+  }
+
+  try {
+    const parsed = JSON.parse(Base64.decode(encoded)) as {
+      auths?: { [key: string]: { username: string; password: string; email: string } };
+    };
+    if (parsed?.auths && typeof parsed.auths === 'object') {
+      return Object.entries(parsed.auths).map(([registryName, authData]) => ({
+        registry: registryName,
+        username: authData.username,
+        password: '', // Intentionally not displayed, password is sensitive
+        email: authData.email ?? '',
+      }));
+    }
+  } catch {
+    return DEFAULT_REGISTRY_CREDS;
+  }
+  return DEFAULT_REGISTRY_CREDS;
 };
 
 export const getTargetLabelsForRemoteSecret = (
@@ -393,21 +383,9 @@ const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
   });
 };
 
-export const editSecretResource = (
-  updatedSecret: AddSecretFormValues,
-  namespace: string,
-  sshKey: string | undefined,
-) => {
+export const editSecretResource = (updatedSecret: AddSecretFormValues, namespace: string) => {
   const secretResource: SecretKind = getSecretFormData(updatedSecret, namespace);
   const newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
-  const secretType = newK8sSecretResource.type as SecretType;
-
-  if (sshKey && secretType === SecretType.sshAuth) {
-    newK8sSecretResource.data['ssh-privatekey'] = sshKey;
-    // updatedSecret.source['ssh-privatekey'] === undefined
-    //   ? originalSshKey
-    //   : updatedSecret.source['ssh-privatekey'];
-  }
 
   return updateSecretResource(newK8sSecretResource);
 };
