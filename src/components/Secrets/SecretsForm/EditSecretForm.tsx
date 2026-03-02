@@ -26,7 +26,7 @@ import {
   getSecretBreadcrumbs,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
-import { secretFormValidationSchema } from '../utils/secret-validation';
+import { getSecretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
 const EditSecretForm: React.FC = () => {
@@ -71,6 +71,7 @@ const EditSecretForm: React.FC = () => {
           password: '', // Intentionally not displayed, password is sensitive
           host: secretData.metadata.labels?.[SecretLabels.HOST_LABEL] || '',
           repo: secretData.metadata.annotations?.[SecretLabels.REPO_ANNOTATION] || '',
+          ...(typeFromLabels === SecretType.sshAuth && { 'ssh-privatekey': '' }),
         }
       : undefined;
 
@@ -93,8 +94,11 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        // SSH field is empty, so we need to use the original SSH key
-        if (typeFromLabels === SecretType.sshAuth && values.source['ssh-privatekey'] === '') {
+        // SSH field left blank in edit: keep existing key
+        if (
+          typeFromLabels === SecretType.sshAuth &&
+          (values.source['ssh-privatekey'] === '' || values.source['ssh-privatekey'] === undefined)
+        ) {
           values.source['ssh-privatekey'] = secretData.data['ssh-privatekey'];
         }
 
@@ -109,7 +113,7 @@ const EditSecretForm: React.FC = () => {
             actions.setStatus({ submitError: error.message });
           });
       }}
-      validationSchema={secretFormValidationSchema}
+      validationSchema={getSecretFormValidationSchema({ isEditMode: true })}
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
