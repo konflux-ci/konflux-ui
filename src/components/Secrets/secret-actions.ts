@@ -20,8 +20,7 @@ export const useSecretActions = (secret: SecretKind): Action[] => {
           {
             cta: () =>
               navigate(
-                `${SECRET_EDIT_PATH.createPath({ workspaceName: secret.metadata.namespace })}?secret=${secret.metadata.name}`,
-                { state: { secretData: secret } },
+                `${SECRET_EDIT_PATH.createPath({ workspaceName: secret.metadata.namespace })}?secretName=${secret.metadata.name}`,
               ),
             id: `edit-${secret.metadata.name.toLowerCase()}`,
             label: 'Edit',

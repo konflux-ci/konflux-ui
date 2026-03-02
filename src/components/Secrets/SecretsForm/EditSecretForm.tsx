@@ -1,20 +1,21 @@
 import * as React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { Bullseye, Form, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useSecret } from '~/hooks/useSecrets';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
 import {
   AddSecretFormValues,
   KeyValueEntry,
   SecretFor,
-  SecretKind,
   SecretLabels,
   SecretType,
   SecretTypeDropdownLabel,
@@ -33,13 +34,21 @@ const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
   const location = useLocation();
-  const secretData = (location.state as { secretData?: SecretKind } | undefined)?.secretData;
+  const secretName = new URLSearchParams(location.search).get('secretName');
 
-  React.useEffect(() => {
-    if (!secretData) {
-      navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
-    }
-  }, [secretData, navigate, namespace]);
+  const [secretData, isLoading, error] = useSecret(namespace, secretName);
+
+  if (isLoading) {
+    return (
+      <Bullseye>
+        <Spinner />
+      </Bullseye>
+    );
+  }
+
+  if (error) {
+    return getErrorState(error, isLoading, 'secret');
+  }
 
   const typeFromLabels = secretData.type as SecretType;
   const secretType = typeToDropdownLabel(typeFromLabels) as SecretTypeDropdownLabel;
@@ -106,11 +115,11 @@ const EditSecretForm: React.FC = () => {
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
-          .catch((error) => {
+          .catch((editError) => {
             // eslint-disable-next-line no-console
-            console.warn('Error while submitting secret form:', error);
+            console.warn('Error while submitting secret form:', editError);
             actions.setSubmitting(false);
-            actions.setStatus({ submitError: error.message });
+            actions.setStatus({ submitError: editError.message });
           });
       }}
       validationSchema={getSecretFormValidationSchema({ isEditMode: true })}
