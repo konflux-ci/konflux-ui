@@ -47,6 +47,7 @@ $drag-column-width: 28px;
 
 .pairs-list__side-btn {
   cursor: pointer;
+  margin-right: var(--pf-v5-global--spacer--xs);
 }
 
 .pairs-list__add-icon {

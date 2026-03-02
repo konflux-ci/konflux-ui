@@ -195,12 +195,6 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
 };
 
 export const getRegistryCreds = (secretData: SecretKind) => {
-  // const credentials =
-  //   (secretData.type as SecretType) === SecretType.dockerconfigjson &&
-  //   secretData.data['.dockerconfigjson']
-  //     ? JSON.parse(atob(secretData.data['.dockerconfigjson']))
-  //     : undefined;
-
   let credentials:
     | { auths?: { [key: string]: { username: string; password: string; email: string } } }
     | undefined;
@@ -400,21 +394,19 @@ const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
 };
 
 export const editSecretResource = (
-  originalSecret: SecretKind,
   updatedSecret: AddSecretFormValues,
+  namespace: string,
+  sshKey: string | undefined,
 ) => {
-  const secretResource: SecretKind = getSecretFormData(
-    updatedSecret,
-    originalSecret.metadata.namespace,
-  );
+  const secretResource: SecretKind = getSecretFormData(updatedSecret, namespace);
   const newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
-  const originalTypeFromLabels = originalSecret.type as SecretType;
+  const secretType = newK8sSecretResource.type as SecretType;
 
-  if (originalTypeFromLabels === SecretType.sshAuth) {
-    newK8sSecretResource.data['ssh-privatekey'] =
-      updatedSecret.source['ssh-privatekey'] === undefined
-        ? originalSecret.data['ssh-privatekey']
-        : updatedSecret.source['ssh-privatekey'];
+  if (sshKey && secretType === SecretType.sshAuth) {
+    newK8sSecretResource.data['ssh-privatekey'] = sshKey;
+    // updatedSecret.source['ssh-privatekey'] === undefined
+    //   ? originalSshKey
+    //   : updatedSecret.source['ssh-privatekey'];
   }
 
   return updateSecretResource(newK8sSecretResource);
