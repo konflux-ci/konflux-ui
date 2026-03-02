@@ -219,7 +219,7 @@ describe('Basic Happy Path', () => {
   describe('Delete the application via UI', () => {
     before(function () {
       // Skip deletion if any previous test has failed on stage - preserve app for debugging
-      if (hasTestFailed && Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
+      if (hasTestFailed && Cypress.env('PERIODIC_RUN_STAGE')) {
         cy.log('⚠️ Skipping application deletion - previous tests failed');
         cy.log(`Application "${applicationName}" will be preserved for debugging`);
         this.skip();
