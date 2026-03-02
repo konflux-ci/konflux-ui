@@ -93,7 +93,16 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        editSecretResource(secretData, values)
+        let sshKey: string | undefined = undefined;
+
+        if (typeFromLabels === SecretType.sshAuth) {
+          sshKey =
+            values.source['ssh-privatekey'] === ''
+              ? secretData.data['ssh-privatekey']
+              : values.source['ssh-privatekey'];
+        }
+
+        editSecretResource(values, secretData.metadata.namespace, sshKey)
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
@@ -109,7 +118,6 @@ const EditSecretForm: React.FC = () => {
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
           breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
-          // title="Edit secret"
           title={
             <>
               Edit secret

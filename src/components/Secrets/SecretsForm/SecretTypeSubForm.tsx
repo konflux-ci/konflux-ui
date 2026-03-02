@@ -50,9 +50,9 @@ const secretTypes = [
 const supportedPartnerTaskSecrets = getSupportedPartnerTaskSecrets();
 const defaultKeyValues = [{ key: '', value: '' }];
 
-export const SecretTypeSubForm: React.FC<
-  React.PropsWithChildren<unknown & { isEditMode?: boolean }>
-> = ({ isEditMode = false }) => {
+export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: boolean }>> = ({
+  isEditMode = false,
+}) => {
   const {
     values: {
       name,
@@ -208,7 +208,7 @@ export const SecretTypeSubForm: React.FC<
         name="labels"
         label="Labels"
         entries={labels?.length ? labels : [{ key: '', value: '' }]}
-        description={`You can ${isEditMode ? 'edit' : 'add'} labels to provide more context or tag your secret.`}
+        description={`You can ${isEditMode ? 'edit, add or delete' : 'add'} labels to provide more context or tag your secret.`}
       />
     </>
   );
