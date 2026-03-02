@@ -93,16 +93,12 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        let sshKey: string | undefined = undefined;
-
-        if (typeFromLabels === SecretType.sshAuth) {
-          sshKey =
-            values.source['ssh-privatekey'] === ''
-              ? secretData.data['ssh-privatekey']
-              : values.source['ssh-privatekey'];
+        // SSH field is empty, so we need to use the original SSH key
+        if (typeFromLabels === SecretType.sshAuth && values.source['ssh-privatekey'] === '') {
+          values.source['ssh-privatekey'] = secretData.data['ssh-privatekey'];
         }
 
-        editSecretResource(values, secretData.metadata.namespace, sshKey)
+        editSecretResource(values, secretData.metadata.namespace)
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
