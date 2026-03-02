@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   Button,
   ButtonType,
+  Form,
   FormGroup,
   PanelFooter,
   Text,
@@ -15,11 +16,14 @@ import {
 } from '@patternfly/react-core';
 import HelpPopover from '../../HelpPopover';
 import { FeedbackSections } from '../consts';
-import { Form } from 'react-router-dom';
+
+export interface SubmitClicked {
+  submitClicked: boolean;
+}
 
 interface FeedbackSectionProps {
   setCurrentSection: (FeedbackSections) => void;
-  onClose: any;
+  onClose: (event?: KeyboardEvent | React.MouseEvent, submitClicked?: SubmitClicked) => void;
 }
 
 const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSection }) => {
@@ -29,7 +33,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSe
   const [email, setEmail] = React.useState<string>('');
 
   const handleSubmit = () => {
-    console.log('data to be posted to Segment API', { radioRating, feedback, email });
+    // Todo: segment integration goes in here
     onClose(null, { submitClicked: true });
   };
   return (
@@ -51,12 +55,12 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSe
             label={
               <>
                 <b>
-                  How haapy are you with recent experience using Konflux{' '}
+                  How happy are you with recent experience using Konflux{' '}
                   <HelpPopover headerContent="More info" bodyContent="more info" />
                 </b>
                 <TextContent>
                   <Text component={TextVariants.p}>
-                    Please rate using the following scale, 5 - very sattisfied to 1 - very
+                    Please rate using the following scale, 5 - very satisfied to 1 - very
                     dissatisfied.
                   </Text>
                 </TextContent>
