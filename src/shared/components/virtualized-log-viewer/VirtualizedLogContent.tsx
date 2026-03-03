@@ -95,11 +95,20 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       // This provides better UX by showing the user where the log ends
       const scrollIndex = targetIndex < lines.length ? targetIndex : lines.length - 1;
 
-      // Wait for next frame to ensure virtualizer is ready after state updates
+      // Track if component is still mounted to prevent RAF calls after unmount
+      let isMounted = true;
       let rafId2: number | undefined;
 
+      // Check if window is available (handles SSR and edge cases)
+      if (typeof window === 'undefined' || !window.requestAnimationFrame) {
+        return;
+      }
+
+      // Wait for next frame to ensure virtualizer is ready after state updates
       const rafId1 = requestAnimationFrame(() => {
+        if (!isMounted) return;
         rafId2 = requestAnimationFrame(() => {
+          if (!isMounted) return;
           virtualizer.scrollToIndex(scrollIndex, {
             align: 'center',
             behavior: 'smooth',
@@ -109,6 +118,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
       // Cleanup: cancel pending animation frames on unmount or dependency change
       return () => {
+        isMounted = false;
         cancelAnimationFrame(rafId1);
         if (rafId2 !== undefined) cancelAnimationFrame(rafId2);
       };
