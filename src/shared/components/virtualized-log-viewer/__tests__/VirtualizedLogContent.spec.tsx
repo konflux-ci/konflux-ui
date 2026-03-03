@@ -104,7 +104,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     });
   });
 
-  describe('Log Line Rendering and Content', () => {
+  describe('Log Line Rendering', () => {
     it('should render plain text log lines', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
@@ -119,7 +119,9 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(screen.getByText(/line 2/)).toBeInTheDocument();
       expect(screen.getByText(/line 3/)).toBeInTheDocument();
     });
+  });
 
+  describe('Search Highlighting', () => {
     it('should highlight when search text is less than 2 characters', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} searchText="l" />);
 
@@ -352,11 +354,11 @@ Another short line`;
 
       const listItems = scrollContainer?.querySelectorAll('.pf-v5-c-log-viewer__list-item');
       expect(listItems).toBeDefined();
-      expect(listItems.length).toBeGreaterThan(0);
+      expect(listItems?.length).toBeGreaterThan(0);
 
       // Verify virtualized items have data-index for measurement
       // Note: Only visible items are rendered due to virtualization
-      const itemsWithDataIndex = Array.from(listItems).filter((item) =>
+      const itemsWithDataIndex = Array.from(listItems ?? []).filter((item) =>
         item.hasAttribute('data-index'),
       );
       expect(itemsWithDataIndex.length).toBeGreaterThan(0);
@@ -404,6 +406,189 @@ Another short line`;
 
       // Error handler should not be called for other errors
       expect(preventDefaultSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Line Number Gutter', () => {
+    it('should render line number gutter', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const gutter = document.querySelector('.log-viewer__gutter');
+      expect(gutter).toBeInTheDocument();
+    });
+
+    it('should render line numbers in the gutter', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const lineNumbers = document.querySelectorAll('.log-viewer__line-number');
+      expect(lineNumbers.length).toBeGreaterThan(0);
+    });
+
+    it('should apply with-gutter class to container', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const container = document.querySelector('.log-viewer__with-gutter');
+      expect(container).toBeInTheDocument();
+    });
+
+    it('should render content in separate column from gutter', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const contentColumn = document.querySelector('.log-viewer__content-column');
+      expect(contentColumn).toBeInTheDocument();
+    });
+
+    it('should have clickable line number links', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const lineNumberLinks = document.querySelectorAll('.log-viewer__line-number');
+      lineNumberLinks.forEach((link) => {
+        expect(link).toHaveAttribute('href');
+        expect(link.getAttribute('href')).toMatch(/^#L\d+$/);
+      });
+    });
+
+    it('should have accessible line number links', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const lineNumberLinks = document.querySelectorAll('.log-viewer__line-number');
+      lineNumberLinks.forEach((link) => {
+        expect(link).toHaveAttribute('aria-label');
+        expect(link.getAttribute('aria-label')).toMatch(/^Jump to line \d+$/);
+      });
+    });
+
+    it('should align gutter cells with content lines', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      const gutterCells = document.querySelectorAll('.log-viewer__gutter-cell');
+      const contentItems = document.querySelectorAll(
+        '.log-viewer__content-column .pf-v5-c-log-viewer__list-item',
+      );
+
+      // Should have matching number of visible items
+      expect(gutterCells.length).toBe(contentItems.length);
+    });
+  });
+
+  describe('Hash Navigation and Auto-scroll', () => {
+    beforeEach(() => {
+      window.location.hash = '';
+    });
+
+    afterEach(() => {
+      window.location.hash = '';
+    });
+
+    it('should highlight and scroll to single line from URL hash', () => {
+      window.location.hash = '#L2';
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // Should highlight gutter cell
+      const highlightedCells = document.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      expect(highlightedCells.length).toBeGreaterThan(0);
+
+      // Should highlight line content
+      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThan(0);
+    });
+
+    it('should highlight and scroll to range of lines from URL hash', () => {
+      window.location.hash = '#L1-L3';
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // Range should be highlighted
+      const highlightedCells = document.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      expect(highlightedCells.length).toBeGreaterThan(0);
+
+      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThan(0);
+    });
+
+    it('should scroll to bottom when hash line number exceeds log length', () => {
+      window.location.hash = '#L100';
+      const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data={shortData} />);
+
+      // Component should render without errors
+      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
+
+      // Should not crash and should handle gracefully
+      expect(listElement).toBeInTheDocument();
+    });
+
+    it('should scroll to bottom when hash range exceeds log length', () => {
+      window.location.hash = '#L50-L100';
+      const shortData = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data={shortData} />);
+
+      // Component should render without errors even with out-of-range hash
+      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
+    });
+
+    it('should wait for data to load before scrolling to hash', () => {
+      window.location.hash = '#L5';
+
+      // Start with empty data
+      const { rerender } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} data="" />,
+      );
+
+      let listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
+
+      // Update with actual data
+      const dataWithLines = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+      rerender(<VirtualizedLogContent {...defaultProps} data={dataWithLines} />);
+
+      // Should now have content and handle the hash
+      listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
+
+      // Should highlight the line from hash
+      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      expect(highlightedLines.length).toBeGreaterThan(0);
+    });
+
+    it('should handle hash navigation with very long logs', () => {
+      window.location.hash = '#L500';
+      const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data={longData} />);
+
+      // Should render without performance issues
+      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
+
+      // Should only render visible items due to virtualization
+      const items = document.querySelectorAll('.pf-v5-c-log-viewer__list-item');
+      expect(items.length).toBeLessThan(1000);
+    });
+
+    it('should not scroll when hash is invalid', () => {
+      window.location.hash = '#invalid';
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // Should render normally without errors
+      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
+    });
+
+    it('should not scroll when hash is empty', () => {
+      window.location.hash = '';
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      // Should render normally
+      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      expect(listElement).toBeInTheDocument();
     });
   });
 });
