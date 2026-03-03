@@ -224,6 +224,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   React.useEffect(() => {
     if (loaded && namespaces.length > 0) {
       setLoading(true);
+      namespaceFilterInitializedRef.current = false;
+      setNamespacesToFetch([]);
       releasesRef.current = {};
       loadedNamespacesRef.current = new Set();
       releasePlansRef.current = {};
@@ -233,6 +235,8 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       setTargetNamespaces([]);
       targetNamespacesCountRef.current = 0;
     } else if (loaded) {
+      namespaceFilterInitializedRef.current = false;
+      setNamespacesToFetch([]);
       setLoading(false);
     }
   }, [loaded, namespaces]);
@@ -304,10 +308,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const applicationFilterOptions =
       noApplication > 0
         ? {
-            'No application': noApplication,
-            [MENU_DIVIDER]: 1,
-            ...applicationOptions,
-          }
+          'No application': noApplication,
+          [MENU_DIVIDER]: 1,
+          ...applicationOptions,
+        }
         : applicationOptions;
 
     const componentOptions = createFilterObj(
@@ -320,10 +324,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const componentFilterOptions =
       noComponent > 0
         ? {
-            'No component': noComponent,
-            [MENU_DIVIDER]: 1,
-            ...componentOptions,
-          }
+          'No component': noComponent,
+          [MENU_DIVIDER]: 1,
+          ...componentOptions,
+        }
         : componentOptions;
 
     const productOptions = createFilterObj(releases, (mr) => mr?.product);
@@ -333,10 +337,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const productFilterOptions =
       noProduct > 0
         ? {
-            'No product': noProduct,
-            [MENU_DIVIDER]: 1,
-            ...productOptions,
-          }
+          'No product': noProduct,
+          [MENU_DIVIDER]: 1,
+          ...productOptions,
+        }
         : productOptions;
 
     const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
@@ -346,10 +350,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const productVersionFilterOptions =
       noProductVersion > 0
         ? {
-            'No product version': noProductVersion,
-            [MENU_DIVIDER]: 1,
-            ...productVersionOptions,
-          }
+          'No product version': noProductVersion,
+          [MENU_DIVIDER]: 1,
+          ...productVersionOptions,
+        }
         : productVersionOptions;
 
     // For namespace options, ensure ALL namespaces are available, not just loaded ones
@@ -393,7 +397,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
             if (
               !existing ||
               new Date(existing.metadata.creationTimestamp) <
-                new Date(release.metadata.creationTimestamp)
+              new Date(release.metadata.creationTimestamp)
             ) {
               acc.latestReleasesByComponent[componentName] = release;
             }
@@ -499,19 +503,19 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         releases.length > 0 ||
         namespacesToFetch.length > 0 ||
         (loaded && namespaces.length > NAMESPACE_THRESHOLD)) && (
-        <MonitoredReleasesFilterToolbar
-          filters={filters}
-          setFilters={setFilters}
-          onClearFilters={onClearFilters}
-          statusOptions={filterOptions.statusOptions}
-          applicationOptions={filterOptions.applicationOptions}
-          releasePlanOptions={filterOptions.releasePlanOptions}
-          namespaceOptions={filterOptions.namespaceOptions}
-          componentOptions={filterOptions.componentOptions}
-          productOptions={filterOptions.productOptions}
-          productVersionOptions={filterOptions.productVersionOptions}
-        />
-      )}
+          <MonitoredReleasesFilterToolbar
+            filters={filters}
+            setFilters={setFilters}
+            onClearFilters={onClearFilters}
+            statusOptions={filterOptions.statusOptions}
+            applicationOptions={filterOptions.applicationOptions}
+            releasePlanOptions={filterOptions.releasePlanOptions}
+            namespaceOptions={filterOptions.namespaceOptions}
+            componentOptions={filterOptions.componentOptions}
+            productOptions={filterOptions.productOptions}
+            productVersionOptions={filterOptions.productVersionOptions}
+          />
+        )}
 
       <Table
         virtualize
