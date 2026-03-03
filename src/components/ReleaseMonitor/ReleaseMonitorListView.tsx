@@ -446,12 +446,9 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   );
 
   const pageDescription = React.useMemo(() => {
-    const baseDescription = "The dashboard to monitor the releases you care about";
-    if (loaded && namespaces.length > NAMESPACE_THRESHOLD && namespace.length > 0) {
-      return `${baseDescription} (Viewing: ${namespace.join(', ')})`;
-    }
+    const baseDescription = 'The dashboard to monitor the releases you care about';
     return baseDescription;
-  }, [loaded, namespaces.length, namespace]);
+  }, []);
 
   if (error) {
     return getErrorState(error, loaded, 'applications');
@@ -472,10 +469,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     loaded && namespaces.length > NAMESPACE_THRESHOLD && namespacesToFetch.length === 0;
 
   return (
-    <PageLayout
-      title="Release Monitor"
-      description={pageDescription}
-    >
+    <PageLayout title="Release Monitor" description={pageDescription}>
       {/* Fetch Releases and ReleasePlans from origin namespaces */}
       {loaded &&
         namespacesToFetch.map((nsName) => (

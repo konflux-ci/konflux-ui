@@ -19,7 +19,8 @@ type MultiSelectProps = {
   values: string[];
   setValues: (filters: string[]) => void;
   options: { [key: string]: number };
-  allowCustomValues?: boolean;
+  hasInlineFilter?: boolean;
+  inlineFilterPlaceholderText?: string;
 };
 
 const MultiSelectComponent = ({
@@ -31,50 +32,60 @@ const MultiSelectComponent = ({
   values,
   setValues,
   options,
+  hasInlineFilter = false,
+  inlineFilterPlaceholderText,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded ?? false);
   const [filterValue, setFilterValue] = React.useState('');
 
-  // Function to create options based on filter text
-  const createFilteredOptions = React.useCallback(
-    (filterText: string) => {
+  // Memoize the options to prevent re-creating them on every render
+  const selectOptions = React.useMemo(() => {
+    const keys = Object.keys(options);
+    const lowerFilter = filterValue?.toLowerCase();
+
+    return keys
+      .filter((key) => {
+        // If inline filter is disabled, show all options
+        if (!hasInlineFilter) return true;
+        // If filter is empty, show all options
+        if (!filterValue?.trim()) return true;
+        // Otherwise, filter based on the filter value
+        return !key.startsWith(MENU_DIVIDER) && key.toLowerCase().includes(lowerFilter);
+      })
+      .map((filter) =>
+        filter.startsWith(MENU_DIVIDER) ? (
+          <Divider key={filter} />
+        ) : (
+          <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
+            {filter}
+          </SelectOption>
+        ),
+      );
+  }, [filterValue, options, hasInlineFilter]);
+
+  const onFilter = React.useCallback(
+    (_event: React.ChangeEvent<HTMLInputElement> | null, value: string) => {
+      setFilterValue(value);
+      // Return freshly calculated options based on the new filter value
       const keys = Object.keys(options);
-      const lowerFilter = filterText.toLowerCase();
+      const lowerFilter = value?.toLowerCase();
 
       return keys
         .filter((key) => {
-          if (!filterText.trim()) return true;
+          if (!value?.trim()) return true;
           return !key.startsWith(MENU_DIVIDER) && key.toLowerCase().includes(lowerFilter);
         })
         .map((filter) =>
           filter.startsWith(MENU_DIVIDER) ? (
             <Divider key={filter} />
           ) : (
-            <SelectOption
-              key={filter}
-              value={filter}
-              itemCount={options[filter] ?? 0}
-            >
+            <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
               {filter}
             </SelectOption>
           ),
         );
     },
     [options],
-  );
-
-  // Memoize the options to prevent re-creating them on every render
-  const selectOptions = React.useMemo(() => {
-    return createFilteredOptions(filterValue);
-  }, [createFilteredOptions, filterValue]);
-
-  const onFilter = React.useCallback(
-    (_event: React.ChangeEvent<HTMLInputElement> | null, value: string) => {
-      setFilterValue(value);
-      // Return freshly calculated options based on the new filter value
-      return createFilteredOptions(value);
-    },
-    [createFilteredOptions],
   );
 
   return (
@@ -97,7 +108,9 @@ const MultiSelectComponent = ({
         onToggle={(_, exp: boolean) => {
           setExpanded(exp);
           // Reset filter when opening or closing to ensure fresh state
-          setFilterValue('');
+          if (hasInlineFilter) {
+            setFilterValue('');
+          }
         }}
         onSelect={(event, selection) => {
           const checked = (event.target as HTMLInputElement).checked;
@@ -109,9 +122,12 @@ const MultiSelectComponent = ({
         }}
         selections={values}
         isGrouped
-        hasInlineFilter
-        onFilter={onFilter}
-        inlineFilterPlaceholderText={`Filter ${label.toLowerCase()}`}
+        {...(hasInlineFilter && {
+          hasInlineFilter: true,
+          onFilter,
+          inlineFilterPlaceholderText:
+            inlineFilterPlaceholderText ?? `Filter ${label.toLowerCase()}`,
+        })}
         maxHeight="400px"
       >
         {[
