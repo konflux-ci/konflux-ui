@@ -3,9 +3,12 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
 import type { SearchedWord } from './types';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
+import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
+import { useTokenization } from './useTokenization';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
+import './prism-log-theme.scss';
 
 export type { SearchedWord };
 
@@ -44,6 +47,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   // Create search regex from search text
   const searchRegex = useSearchRegex(searchText);
 
+  // Use tokenization hook for lazy tokenization with caching
+  const { tokenizeLine } = useTokenization(lines);
+
+  // Use line renderer hook for rendering individual lines
+  const renderLine = useLineRenderer({
+    tokenizeLine,
+    searchRegex,
+    currentSearchMatch,
+  });
+
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
     if (node) {
       const measured = node.offsetHeight;
@@ -67,44 +80,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     scrollToRow,
     onScroll,
   });
-
-  // Render a single line with search highlighting (line numbers are in the gutter)
-  const renderLine = (line: string, index: number) => {
-    // Preserve empty lines by using a non-breaking space
-    // This ensures empty lines maintain their height and are visible
-    const displayLine = line || '\u00A0';
-
-    // Skip search highlighting if no search text, empty line, or regex unavailable
-    if (!line || !searchText || !searchRegex) {
-      return <span className="pf-v5-c-log-viewer__text">{displayLine}</span>;
-    }
-
-    const parts: string[] = line.split(searchRegex);
-    let matchIndexInLine = 1; // PatternFly uses 1-based indexing
-
-    return (
-      <span className="pf-v5-c-log-viewer__text">
-        {parts.map((part: string, i: number) => {
-          // When using split() with a capturing group, matched parts are at odd indices
-          if (i % 2 === 1 && part) {
-            const isCurrentMatch =
-              currentSearchMatch?.rowIndex === index &&
-              currentSearchMatch?.matchIndex === matchIndexInLine;
-            matchIndexInLine++;
-            return (
-              <mark
-                key={i}
-                className={`pf-v5-c-log-viewer__string pf-m-match ${isCurrentMatch ? 'pf-m-current' : ''}`}
-              >
-                {part}
-              </mark>
-            );
-          }
-          return <span key={i}>{part}</span>;
-        })}
-      </span>
-    );
-  };
 
   // Use line number navigation hook
   const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
@@ -186,7 +161,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           {/* Log content */}
           <div className="log-viewer__content-column">
             {virtualItems.map((virtualItem) => {
-              const line = lines[virtualItem.index];
               const lineNumber: number = virtualItem.index + 1;
               const isHighlighted = isLineHighlighted(lineNumber);
               return (
@@ -203,7 +177,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                     transform: `translateY(${virtualItem.start}px)`,
                   }}
                 >
-                  {renderLine(line, lineNumber - 1)}
+                  {renderLine(virtualItem.index)}
                 </div>
               );
             })}
