@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { CONFORMA_TASK, EC_TASK } from '~/consts/security';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { logger } from '~/monitoring/logger';
 import {
   ComponentConformaResult,
   CONFORMA_RESULT_STATUS,
@@ -21,6 +24,7 @@ export const useConformaResultFromLogs = (
   pipelineRunName: string,
 ): [ComponentConformaResult[], boolean, unknown] => {
   const namespace = useNamespace();
+  const isKubearchiveEnabled = useIsOnFeatureFlag('kubearchive-logs');
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] = usePipelineRunV2(
     namespace,
     pipelineRunName,
@@ -45,11 +49,18 @@ export const useConformaResultFromLogs = (
     pipelineRunName,
     securityTaskRunName,
   );
-  const [fetchTknLogs, setFetchTknLogs] = React.useState<boolean>(false);
+  const [fetchArchive, setFetchArchive] = React.useState<boolean>(false);
   const [crJson, setCrJson] = React.useState<ConformaResult>();
   const [crLoaded, setCrLoaded] = React.useState<boolean>(false);
   const [taskRun] = taskRuns ?? [];
   const podName = taskRunLoaded && !taskRunError ? taskRun?.status?.podName : null;
+
+  const taskRunUid = taskRun?.metadata?.uid;
+  const taskRunNs = taskRun?.metadata?.namespace;
+  const pipelineRunUid = taskRun?.metadata
+    ? getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid
+    : undefined;
+
   const crResultOpts = React.useMemo(() => {
     return podName
       ? {
@@ -67,7 +78,7 @@ export const useConformaResultFromLogs = (
   React.useEffect(() => {
     let unmount = false;
     if (taskRunLoaded && securityTaskRunName && !crResultOpts) {
-      setFetchTknLogs(true);
+      setFetchArchive(true);
       return;
     }
     if (crResultOpts) {
@@ -80,12 +91,11 @@ export const useConformaResultFromLogs = (
         .catch((err) => {
           if (unmount) return;
           if (err.code === 404) {
-            setFetchTknLogs(true);
+            setFetchArchive(true);
           } else {
             setCrLoaded(true);
           }
-          // eslint-disable-next-line no-console
-          console.warn('Error while fetching Conforma result from logs', err);
+          logger.warn('Error while fetching Conforma result from logs', { error: err });
         });
     }
     return () => {
@@ -95,11 +105,30 @@ export const useConformaResultFromLogs = (
 
   React.useEffect(() => {
     let unmount = false;
-    if (fetchTknLogs && !crLoaded && taskRun) {
-      const fetch = async () => {
+    if (!fetchArchive || crLoaded) {
+      return;
+    }
+
+    if (isKubearchiveEnabled && crResultOpts) {
+      commonFetchJSON(getK8sResourceURL(PodModel, undefined, crResultOpts), {
+        pathPrefix: KUBEARCHIVE_PATH_PREFIX,
+      })
+        .then((res: ConformaResult) => {
+          if (unmount) return;
+          setCrJson(res);
+          setCrLoaded(true);
+        })
+        .catch((karchErr) => {
+          if (unmount) return;
+          setCrLoaded(true);
+          logger.warn('Error while fetching Conforma result from KubeArchive', {
+            error: karchErr,
+          });
+        });
+    } else if (taskRunUid && taskRunNs && pipelineRunUid) {
+      const fetchLogs = async () => {
         try {
-          const pid = getPipelineRunFromTaskRunOwnerRef(taskRun)?.uid;
-          const logs = await getTaskRunLog(taskRun.metadata.namespace, taskRun.metadata.uid, pid);
+          const logs = await getTaskRunLog(taskRunNs, taskRunUid, pipelineRunUid);
           if (unmount) return;
           const json = extractConformaResultsFromTaskRunLogs(logs);
           setCrJson(json);
@@ -107,17 +136,26 @@ export const useConformaResultFromLogs = (
         } catch (e) {
           if (unmount) return;
           setCrLoaded(true);
-          // eslint-disable-next-line no-console
-          console.warn('Error while fetching Conforma result from tekton results logs', e);
+          logger.warn('Error while fetching Conforma result from tekton results logs', {
+            error: e,
+          });
         }
       };
-
-      void fetch();
+      void fetchLogs();
     }
+
     return () => {
       unmount = true;
     };
-  }, [crLoaded, fetchTknLogs, taskRun]);
+  }, [
+    fetchArchive,
+    crLoaded,
+    isKubearchiveEnabled,
+    crResultOpts,
+    taskRunUid,
+    taskRunNs,
+    pipelineRunUid,
+  ]);
 
   const conformaResult = React.useMemo(() => {
     // filter out components for which Conforma didn't execute because invalid image URL
