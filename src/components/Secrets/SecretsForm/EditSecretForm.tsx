@@ -76,7 +76,10 @@ const EditSecretForm: React.FC = () => {
     secretType === SecretTypeDropdownLabel.source
       ? {
           authType: authTypeFromLabels,
-          username: typeFromLabels === SecretType.basicAuth ? atob(secretData.data.username) : '',
+          username:
+            typeFromLabels === SecretType.basicAuth && secretData.data?.username
+              ? atob(secretData.data.username)
+              : '',
           password: '', // Intentionally not displayed, password is sensitive
           host: secretData.metadata.labels?.[SecretLabels.HOST_LABEL] || '',
           repo: secretData.metadata.annotations?.[SecretLabels.REPO_ANNOTATION] || '',
