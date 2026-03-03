@@ -1,4 +1,5 @@
 import React from 'react';
+import { logger } from '~/monitoring/logger';
 import { flattenTokenText } from './log-viewer-utils';
 import Prism from './prism-log-language';
 import type { TokenizedLine } from './types';
@@ -41,12 +42,11 @@ export function useTokenization(lines: string[]) {
         const result = { tokens, text };
         tokenizationCache.current.set(lineIndex, result);
 
-        // Log performance warning for slow tokenization in non-production
+        // Log performance warning for slow tokenization
         if (process.env.NODE_ENV !== 'production') {
           const duration = performance.now() - startTime;
           if (duration > 50) {
-            // eslint-disable-next-line no-console
-            console.warn(
+            logger.warn(
               `Slow tokenization: ${duration.toFixed(2)}ms for line ${lineIndex} (${line.length} chars)`,
             );
           }
@@ -54,10 +54,10 @@ export function useTokenization(lines: string[]) {
 
         return result;
       } catch (error) {
-        if (process.env.NODE_ENV !== 'production') {
-          // eslint-disable-next-line no-console
-          console.warn('Prism tokenization failed for line', lineIndex, error);
-        }
+        logger.error('Prism tokenization failed', error as Error, {
+          lineIndex,
+          lineLength: line.length,
+        });
         const result = { tokens: [], text: line };
         tokenizationCache.current.set(lineIndex, result);
         return result;
