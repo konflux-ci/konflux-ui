@@ -83,7 +83,7 @@ describe('GitImportForm', () => {
     screen.getByText('Create application');
     fireEvent.click(componentButton);
     expect(screen.queryByText('Add a component')).not.toBeInTheDocument();
-    screen.getByPlaceholderText('Enter a GitHub or GitLab repository URL');
+    screen.getByPlaceholderText('Enter a Git repository URL');
     screen.getByTestId('component-name');
   });
 
@@ -155,10 +155,13 @@ describe('GitImportForm', () => {
       expect(screen.getByText(/Konflux GitHub App/)).toBeInTheDocument();
     });
 
-    it('should render ExternalLink to #creating-source-control-secrets doc', () => {
+    it('should render ExternalLinks to GitLab and Forgejo create-secret docs', () => {
       routerRenderer(<GitImportForm applicationName="test-app" />);
       expect(
-        screen.getByTestId('git-import-form-konflux-create-secret-external-link'),
+        screen.getByTestId('git-import-form-konflux-create-secret-gitlab-external-link'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('git-import-form-konflux-create-secret-forgejo-external-link'),
       ).toBeInTheDocument();
     });
   });
