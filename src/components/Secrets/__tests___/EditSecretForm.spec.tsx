@@ -51,14 +51,14 @@ describe('EditSecretForm', () => {
     useLocationMock.mockReturnValue({
       search: `?secretName=${secretData.metadata.name}`,
     });
-    useSecretMock.mockReturnValue([secretData, false, null]);
+    useSecretMock.mockReturnValue([secretData, true, null]);
     return render(<EditSecretForm />);
   };
 
   describe('loading and error states', () => {
     it('shows spinner while secret is loading', () => {
       useLocationMock.mockReturnValue({ search: '?secretName=opaque-secret' });
-      useSecretMock.mockReturnValue([undefined, true, null]);
+      useSecretMock.mockReturnValue([undefined, false, null]);
 
       render(<EditSecretForm />);
 
@@ -69,7 +69,7 @@ describe('EditSecretForm', () => {
     it('does not render edit form when useSecret returns error', () => {
       const mockError = new Error('Secret not found');
       useLocationMock.mockReturnValue({ search: '?secretName=missing-secret' });
-      useSecretMock.mockReturnValue([undefined, false, mockError]);
+      useSecretMock.mockReturnValue([undefined, true, mockError]);
 
       render(<EditSecretForm />);
 
