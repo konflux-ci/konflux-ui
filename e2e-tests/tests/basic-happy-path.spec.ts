@@ -202,7 +202,7 @@ describe('Basic Happy Path', () => {
       applicationDetailPage.openBuildLog(componentName);
       applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
       applicationDetailPage.verifyFailedLogTasksNotExists();
-      applicationDetailPage.checkBuildLog('push-dockerfile', 'Selecting auth for quay.io');
+      applicationDetailPage.checkBuildLog('push-dockerfile', 'Using token for quay.io');
       applicationDetailPage.closeBuildLog();
     });
   });
