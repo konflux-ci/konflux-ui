@@ -47,5 +47,5 @@ export const useSecret = (
     },
     SecretModel,
   );
-  return [secret, isLoading, error];
+  return [secret, !isLoading, error];
 };
