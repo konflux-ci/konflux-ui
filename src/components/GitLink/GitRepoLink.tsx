@@ -24,13 +24,14 @@ const GitRepoLink: React.FC<React.PropsWithChildren<Props>> = ({
   } catch {
     return null;
   }
-  const icon = getGitIcon(parsed.source as string);
+  const host = parsed.resource as string;
+  const icon = getGitIcon(host);
   const path = context?.replace(/^(\.?\/)?/g, '');
   const fullUrl = `https://${parsed.resource}/${parsed.owner}/${parsed.name}${getGitPath(
-    parsed.source as string,
+    host,
     revision,
     path,
-    parsed.resource as string,
+    host,
   )}`;
 
   return (
