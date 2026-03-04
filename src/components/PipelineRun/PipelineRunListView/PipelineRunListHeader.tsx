@@ -153,7 +153,7 @@ export const PipelineRunListHeader = createPipelineRunListHeader(
 export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHeader(
   true,
   false,
-  false,
+  true,
   false,
   false,
   true,
