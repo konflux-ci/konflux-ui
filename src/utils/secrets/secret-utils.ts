@@ -211,12 +211,13 @@ export const getRegistryCreds = (secretData: SecretKind) => {
       auths?: { [key: string]: { username: string; password: string; email: string } };
     };
     if (parsed?.auths && typeof parsed.auths === 'object') {
-      return Object.entries(parsed.auths).map(([registryName, authData]) => ({
+      const creds = Object.entries(parsed.auths).map(([registryName, authData]) => ({
         registry: registryName,
         username: authData.username,
         password: '', // Intentionally not displayed, password is sensitive
         email: authData.email ?? '',
       }));
+      return creds.length > 0 ? creds : DEFAULT_REGISTRY_CREDS;
     }
   } catch {
     return DEFAULT_REGISTRY_CREDS;
