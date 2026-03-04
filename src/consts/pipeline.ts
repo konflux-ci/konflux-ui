@@ -51,6 +51,7 @@ export const PIPELINE_RUN_COLUMNS_DEFINITIONS: readonly ColumnDefinition<Pipelin
     { key: 'vulnerabilities', title: 'Fixable vulnerabilities', sortable: false },
     { key: 'duration', title: 'Duration', sortable: true },
     { key: 'status', title: 'Status', sortable: true },
+    { key: 'testResult', title: 'Test result', sortable: false },
     { key: 'type', title: 'Type', sortable: true },
     { key: 'trigger', title: 'Trigger', sortable: false },
     { key: 'reference', title: 'Reference', sortable: false },
