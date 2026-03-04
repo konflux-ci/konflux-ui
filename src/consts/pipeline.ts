@@ -76,6 +76,7 @@ export const DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS: Set<PipelineRunColumnKeys> = 
   'vulnerabilities',
   'duration',
   'status',
+  'testResult',
   'type',
   'trigger',
   'reference',
