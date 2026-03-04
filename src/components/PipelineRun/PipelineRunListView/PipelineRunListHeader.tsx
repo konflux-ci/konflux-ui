@@ -83,7 +83,7 @@ const createPipelineRunListHeader =
                 className: pipelineRunTableColumnClasses.testResultStatus,
                 info: {
                   popover:
-                    'The test result is the TEST_OUTPUT of the pipeline run integration test.',
+                    'Pipeline run TEST_OUTPUT when available; otherwise the worst TEST_OUTPUT among task runs.',
                 },
               },
             },
@@ -218,7 +218,8 @@ export const getPipelineRunListHeader = (visibleColumns: Set<PipelineRunColumnKe
       props: {
         className: dynamicClasses.testResultStatus,
         info: {
-          popover: 'The test result is the TEST_OUTPUT of the pipeline run integration test.',
+          popover:
+            'Pipeline run TEST_OUTPUT when available; otherwise the worst TEST_OUTPUT among task runs.',
         },
       },
     });
