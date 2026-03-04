@@ -1,5 +1,6 @@
-import { fireEvent, render, waitFor } from '@testing-library/react';
+import { fireEvent, waitFor } from '@testing-library/react';
 import { PipelineRunColumnKeys } from '~/consts/pipeline';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { DataState, testPipelineRuns } from '../../../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import {
@@ -39,7 +40,7 @@ describe('Pipeline run Row', () => {
   });
   it('should return - when pipelinerun is in running state ', () => {
     const runningPipelineRun = testPipelineRuns[DataState.RUNNING];
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithVulnerabilities obj={runningPipelineRun} columns={[]} />,
     );
 
@@ -50,7 +51,7 @@ describe('Pipeline run Row', () => {
   it('should return - when vulnerabilities is not available ', () => {
     const succeededPlr = testPipelineRuns[DataState.SUCCEEDED];
     const plrName = succeededPlr.metadata.name;
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithVulnerabilities
         obj={succeededPlr}
         customData={{
@@ -68,7 +69,7 @@ describe('Pipeline run Row', () => {
   it('should return N/A when vulnerabilities API errors out ', () => {
     const succeededPlr = testPipelineRuns[DataState.SUCCEEDED];
     const plrName = succeededPlr.metadata.name;
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithVulnerabilities
         obj={succeededPlr}
         customData={{
@@ -86,7 +87,7 @@ describe('Pipeline run Row', () => {
   it('should show vulnerabilities when it is available ', () => {
     const succeededPlr = testPipelineRuns[DataState.SUCCEEDED];
     const plrName = succeededPlr.metadata.name;
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithVulnerabilities
         obj={succeededPlr}
         customData={{
@@ -116,7 +117,7 @@ describe('Pipeline run Row', () => {
   it('should display correct PLR actions', async () => {
     const succeededPlr = testPipelineRuns[DataState.SUCCEEDED];
     const plrName = succeededPlr.metadata.name;
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithVulnerabilities
         obj={succeededPlr}
         customData={{
@@ -140,7 +141,7 @@ describe('Pipeline run Row', () => {
     const runningPlr = testPipelineRuns[DataState.RUNNING];
     const plrName = runningPlr.metadata.name;
 
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithColumns
         obj={runningPlr}
         customData={{
@@ -170,7 +171,7 @@ describe('Pipeline run Row', () => {
     };
     const plrName = signedPlr.metadata.name;
 
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithColumns
         obj={signedPlr}
         customData={{
@@ -189,7 +190,7 @@ describe('Pipeline run Row', () => {
     const succeededPlr = testPipelineRuns[DataState.SUCCEEDED];
     const plrName = succeededPlr.metadata.name;
 
-    const row = render(
+    const row = renderWithQueryClient(
       <PipelineRunListRowWithColumns
         obj={succeededPlr}
         customData={{
