@@ -36,9 +36,9 @@ const EditSecretForm: React.FC = () => {
   const location = useLocation();
   const secretName = new URLSearchParams(location.search).get('secretName');
 
-  const [secretData, isLoading, error] = useSecret(namespace, secretName);
+  const [secretData, secretLoaded, error] = useSecret(namespace, secretName);
 
-  if (isLoading) {
+  if (!secretLoaded) {
     return (
       <Bullseye>
         <Spinner />
@@ -47,7 +47,7 @@ const EditSecretForm: React.FC = () => {
   }
 
   if (error) {
-    return getErrorState(error, isLoading, 'secret');
+    return getErrorState(error, secretLoaded, 'secret');
   }
 
   const typeFromLabels = secretData.type as SecretType;
