@@ -2,6 +2,8 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react-hooks';
 import { CONFORMA_TASK, EC_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
+import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
 import { ComponentConformaResult } from '~/types/conforma';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { useTaskRunsForPipelineRuns } from '../../../hooks/useTaskRunsV2';
@@ -27,10 +29,25 @@ jest.mock('../../../utils/tekton-results', () => ({
   getTaskRunLog: jest.fn(),
 }));
 
+jest.mock('~/feature-flags/hooks', () => ({
+  ...jest.requireActual('~/feature-flags/hooks'),
+  useIsOnFeatureFlag: jest.fn(),
+}));
+
 const mockGetTaskRunLogs = getTaskRunLog as jest.Mock;
 const mockCommmonFetchJSON = createK8sUtilMock('commonFetchJSON');
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
 const mockUsePipelineRunV2 = usePipelineRunV2 as jest.Mock;
+const mockUseIsOnFeatureFlag = useIsOnFeatureFlag as jest.Mock;
+
+const mockPipelineRunOwnerRef = [
+  {
+    kind: 'PipelineRun',
+    uid: 'pipeline-run-uid',
+    name: 'test-pipelinerun',
+    apiVersion: 'tekton.dev/v1',
+  },
+];
 
 const createDefaultMockImplementation = () => {
   return (_namespace: string, _pipelineRunName: string, taskName?: string) => {
@@ -42,6 +59,7 @@ const createDefaultMockImplementation = () => {
               namespace: 'test-ns',
               name: 'test-taskrun',
               uid: 'test-uid',
+              ownerReferences: mockPipelineRunOwnerRef,
             },
             status: {
               podName: 'pod-acdf',
@@ -105,6 +123,7 @@ describe('useConformaResult', () => {
     mockUseNamespaceHook('test-ns');
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);
     mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
   });
 
   const renderHookWithQueryClient = (pipelineRunName: string) => {
@@ -194,6 +213,7 @@ describe('useConformaResult', () => {
                   namespace: 'test-ns',
                   name: 'test-taskrun',
                   uid: 'test-uid',
+                  ownerReferences: mockPipelineRunOwnerRef,
                 },
                 status: {},
               },
@@ -278,7 +298,8 @@ describe('useConformaResult', () => {
     expect(ecResult).toBeDefined();
   });
 
-  it('should return handle 404 error', async () => {
+  it('should return handle 404 error and fall back to Tekton Results when kubearchive is disabled', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
     mockCommmonFetchJSON.mockRejectedValue({ code: 404 });
     mockGetTaskRunLogs.mockResolvedValue(`
       step-vulnerabilities :-
@@ -300,6 +321,44 @@ describe('useConformaResult', () => {
     expect(mockGetTaskRunLogs).toHaveBeenCalled();
     expect(ecLoaded).toBe(true);
     expect(ec).toEqual([]);
+  });
+
+  it('should retry with KubeArchive path prefix on 404 when kubearchive is enabled', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockCommmonFetchJSON
+      .mockRejectedValueOnce({ code: 404 })
+      .mockResolvedValueOnce(mockConformaJSON);
+
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
+
+    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(2);
+    expect(mockCommmonFetchJSON).toHaveBeenLastCalledWith(expect.any(String), {
+      pathPrefix: KUBEARCHIVE_PATH_PREFIX,
+    });
+    expect(mockGetTaskRunLogs).not.toHaveBeenCalled();
+
+    const [ecResult, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(ecResult[0].successes.length).toEqual(1);
+    expect(ecResult[0].violations.length).toEqual(1);
+  });
+
+  it('should show empty state when both K8s and KubeArchive fail with kubearchive enabled', async () => {
+    mockUseIsOnFeatureFlag.mockReturnValue(true);
+    mockCommmonFetchJSON
+      .mockRejectedValueOnce({ code: 404 })
+      .mockRejectedValueOnce(new Error('KubeArchive error'));
+
+    const { result, waitForNextUpdate } = renderHookWithQueryClient('dummy-abcd');
+    await waitForNextUpdate();
+
+    expect(mockCommmonFetchJSON).toHaveBeenCalledTimes(2);
+    expect(mockGetTaskRunLogs).not.toHaveBeenCalled();
+
+    const [ecResult, loaded] = result.current;
+    expect(loaded).toBe(true);
+    expect(ecResult).toBeUndefined();
   });
 });
 
@@ -349,6 +408,7 @@ describe('useConformaResult', () => {
     mockUseNamespaceHook('test-ns');
     mockUsePipelineRunV2.mockReturnValue([mockEnterpriseContractPipelineRun, true, null]);
     mockUseTaskRunsForPipelineRuns.mockImplementation(createDefaultMockImplementation());
+    mockUseIsOnFeatureFlag.mockReturnValue(false);
   });
 
   const renderHookWithQueryClient = (pipelineRunName: string) => {
