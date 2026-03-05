@@ -8,12 +8,15 @@ import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { ComponentVersion } from '~/types/component';
 import getVersionListHeader, { SortableHeaders } from './ComponentVersionListHeader';
 import { ComponentVersionListRow, VersionListRowCustomData } from './ComponentVersionListRow';
 
 type ComponentVersionListViewProps = {
   componentName: string;
 };
+
+const EMPTY_VERSIONS: ComponentVersion[] = [];
 
 const sortPaths: Record<SortableHeaders, string> = {
   [SortableHeaders.name]: 'name',
@@ -34,10 +37,7 @@ const ComponentVersionListView: React.FC<
     SortByDirection.asc,
   );
 
-  const versions = React.useMemo(
-    () => component?.spec?.source?.versions ?? [],
-    [component?.spec?.source?.versions],
-  );
+  const versions = component?.spec?.source?.versions ?? EMPTY_VERSIONS;
 
   const filteredVersions = React.useMemo(
     () => versions.filter((v) => v.name.toLowerCase().includes(nameFilter.trim().toLowerCase())),
