@@ -3135,8 +3135,8 @@ __metadata:
   linkType: hard
 
 "@segment/analytics-next@npm:^1.81.1":
-  version: 1.81.1
-  resolution: "@segment/analytics-next@npm:1.81.1"
+  version: 1.82.0
+  resolution: "@segment/analytics-next@npm:1.82.0"
   dependencies:
     "@lukeed/uuid": "npm:^2.0.0"
     "@segment/analytics-core": "npm:1.8.2"
@@ -3149,7 +3149,7 @@ __metadata:
     node-fetch: "npm:^2.6.7"
     tslib: "npm:^2.4.1"
     unfetch: "npm:^4.1.0"
-  checksum: 10/e470f247578ff15ac1094b83607a037e2b82fa8b33d32ec60cb13eee5e920e5f97208cb376022b5f98447654dfbeadbb2857b8808b38dd1e5b89494c63c96bb1
+  checksum: 10/8485976a2302234e874e28a73e682720bc32acd4cf229276c6947895f4768537de6e8648b4abc8244e8527e8172b4f63a4f8965cad83e5a2570cbecc8f83ae58
   languageName: node
   linkType: hard
 
