@@ -40,7 +40,7 @@ export const detectGitType = (url: string): GitProvider => {
   if (hasDomain(url, 'forgejo.org')) {
     return GitProvider.FORGEJO;
   }
-  // Not a known URL
+  // Valid URL, but provider is not one of the explicitly recognized hosts
   return GitProvider.UNSURE;
 };
 

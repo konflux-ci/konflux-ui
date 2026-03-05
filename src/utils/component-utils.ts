@@ -24,7 +24,7 @@ export const GIT_PROVIDER_ANNOTATION_VALUE = {
   GITLAB: 'gitlab',
   FORGEJO: 'forgejo',
 };
-export const GITLAB_PROVIDER_URL_ANNOTATION = 'git-provider-url';
+export const GIT_PROVIDER_URL_ANNOTATION = 'git-provider-url';
 
 export enum ComponentBuildState {
   enabled = 'enabled',
