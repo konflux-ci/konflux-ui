@@ -1,10 +1,10 @@
+import { COMPONENT_VERSION_DETAILS_PATH } from '@routes/paths';
+import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
 import {
   ComponentVersionDetailsViewLayout,
   componentVersionDetailsViewLoader,
-} from '../../components/ComponentVersion';
-import ComponentVersionDetailsTab from '../../components/ComponentVersion/tabs/ComponentVersionDetailsTab';
-import { COMPONENT_VERSION_DETAILS_PATH } from '../paths';
-import { RouteErrorBoundry } from '../RouteErrorBoundary';
+} from '~/components/ComponentVersion';
+import ComponentVersionDetailsTab from '~/components/ComponentVersion/tabs/ComponentVersionDetailsTab';
 
 const componentVersionRoutes = [
   {

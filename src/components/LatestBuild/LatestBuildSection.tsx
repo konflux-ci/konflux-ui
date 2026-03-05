@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {
   Alert,
+  Bullseye,
   DescriptionList,
   DescriptionListDescription,
   DescriptionListGroup,
@@ -36,9 +37,9 @@ const LatestBuildSection: React.FC<LatestBuildSectionProps> = ({ component, vers
 
   if (!pipelineRunLoaded) {
     return (
-      <div className="pf-v5-u-m-lg">
+      <Bullseye>
         <Spinner />
-      </div>
+      </Bullseye>
     );
   }
 
