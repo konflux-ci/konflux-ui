@@ -13,10 +13,8 @@ import {
   K8sResourceListOptions,
 } from '~/k8s';
 import { TQueryInfiniteOptions, TQueryOptions } from '../k8s/query/type';
-import { PipelineRunModel } from '../models';
-import { PipelineRunKind } from '../types';
 import { K8sModelCommon, K8sResourceCommon, WatchK8sResource } from '../types/k8s';
-import { filterOutStaleRunningPipelineRunsFromArchive } from '../utils/resource-utils';
+import { filterOutDeletedAndStaleRunningResources } from '../utils/resource-utils';
 import { useIsKubeArchiveEnabled } from './conditional-checks';
 import { KUBEARCHIVE_PATH_PREFIX, KUBEARCHIVE_RESOURCE_LIMIT } from './const';
 import { convertToKubearchiveQueryParams, withKubearchivePathPrefix } from './fetch-utils';
@@ -62,26 +60,16 @@ export function useKubearchiveListResourceQuery<
       const fullRes = await k8sListResource<T>(
         withKubearchivePathPrefix<K8sResourceListOptions>(pagedOptions),
       );
+
+      const filteredData = filterOutDeletedAndStaleRunningResources(fullRes?.items ?? [], model);
+
       // Attach the continue token to the result via a custom property
-      Object.defineProperty(fullRes.items, '_continue', {
+      Object.defineProperty(filteredData, '_continue', {
         value: fullRes.metadata?.continue,
         enumerable: false,
       });
 
-      if (!!fullRes?.items?.length && model === PipelineRunModel) {
-        const filteredItems = filterOutStaleRunningPipelineRunsFromArchive(
-          fullRes.items as unknown as PipelineRunKind[],
-        ) as unknown as T[];
-
-        Object.defineProperty(filteredItems, '_continue', {
-          value: fullRes.metadata?.continue,
-          enumerable: false,
-        });
-
-        return filteredItems;
-      }
-
-      return fullRes.items;
+      return filteredData;
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage: T[] & { _continue?: string }) => lastPage?._continue || undefined,

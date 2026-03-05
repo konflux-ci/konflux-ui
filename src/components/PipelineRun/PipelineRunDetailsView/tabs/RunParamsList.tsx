@@ -1,26 +1,11 @@
 import * as React from 'react';
 import { PipelineRunParam, PipelineTaskParam } from '../../../../types';
 import NameValueList from './NameValueList';
+import { normalizeValueToString } from './utils';
 
 type Props = {
   params: (PipelineRunParam | PipelineTaskParam)[];
   compressed?: boolean;
-};
-
-const normalizeValueToString = (value: unknown): string => {
-  if (value === null || value === undefined) {
-    return '';
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(String).join(', ');
-  }
-
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
-  }
-
-  return String(value);
 };
 
 const RunParamsList: React.FC<React.PropsWithChildren<Props>> = ({ params, compressed }) => {
