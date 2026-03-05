@@ -9,6 +9,13 @@ const initialValues = {
 };
 
 describe('SourceSecretForm', () => {
+  it('should disable auth type dropdown and show edit-mode helper text when isEditMode is true', () => {
+    formikRenderer(<SourceSecretForm isEditMode />, initialValues);
+    expect(screen.getByText('You cannot edit the authentication type in edit mode')).toBeVisible();
+    const authTypeToggle = screen.getByTestId('dropdown-toggle');
+    expect(authTypeToggle).toBeDisabled();
+  });
+
   it('should show correct fields based on selected auth type', () => {
     formikRenderer(<SourceSecretForm />, initialValues);
     expect(screen.getByText('Authentication type')).toBeVisible();

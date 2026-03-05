@@ -26,12 +26,16 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
       <DropdownField
         name="source.authType"
         label="Authentication type"
-        helpText="Select how you want to authenticate"
+        helpText={
+          isEditMode
+            ? 'You cannot edit the authentication type in edit mode'
+            : 'Select how you want to authenticate'
+        }
         items={[
           { key: 'basic', value: SourceSecretType.basic },
           { key: 'ssh', value: SourceSecretType.ssh },
         ]}
-        required
+        isDisabled={isEditMode}
         className="secret-type-subform__dropdown"
       />
       <InputField name="source.host" label="Host" helperText="Host for the secret" />
