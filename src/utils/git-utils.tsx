@@ -4,55 +4,7 @@ import { GitAltIcon } from '@patternfly/react-icons/dist/esm/icons/git-alt-icon'
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import gitUrlParse from 'git-url-parse';
-
-export const getGitPath = (
-  gitSource: string,
-  revision: string,
-  path?: string,
-  domain?: string,
-): string => {
-  if (!revision) {
-    // main or master branch but we cannot construct the url
-    return '';
-  }
-  let prefix: string;
-  switch (gitSource) {
-    case 'github.com':
-      prefix = '/tree';
-      break;
-    case 'bitbucket.org':
-      prefix = '/branch';
-      break;
-    case 'gitlab.com':
-      prefix = '/-/tree';
-      break;
-    default:
-      if (gitSource.endsWith('forgejo.org')) {
-        prefix = '/src/branch';
-        break;
-      }
-      if (domain === 'gitlab.cee.redhat.com') {
-        prefix = '/-/tree';
-        break;
-      }
-      // omit path for unknown source
-      return '';
-  }
-  return `${prefix}/${revision}${path ? `/${path}` : ''}`;
-};
-
-export const getGitIcon = (gitSource: string): React.ReactElement => {
-  switch (gitSource) {
-    case 'github.com':
-      return <GithubIcon alt="GitHub" />;
-    case 'bitbucket.org':
-      return <BitbucketIcon alt="Bitbucket" />;
-    case 'gitlab.com':
-      return <GitlabIcon alt="Gitlab" />;
-    default:
-      return <GitAltIcon alt="Git" />;
-  }
-};
+import ForgejoLogo from '../shared/assets/forgejo-logo.svg';
 
 type ProviderConfig = {
   source: string;
@@ -66,6 +18,11 @@ const providers: ProviderConfig[] = [
     source: 'github.com',
     branchPath: (branch) => `/tree/${branch}`,
     commitPath: (sha) => `/commit/${sha}`,
+  },
+  {
+    source: 'bitbucket.org',
+    branchPath: (branch) => `/branch/${branch}`,
+    commitPath: (sha) => `/commits/${sha}`,
   },
   {
     source: 'gitlab.com',
@@ -97,6 +54,44 @@ const findProvider = (parsed: gitUrlParse.GitUrl): ProviderConfig | undefined =>
     return keywords && hostSegments.some((seg) => keywords.includes(seg));
   });
 };
+
+const findProviderByHost = (host: string): ProviderConfig | undefined => {
+  const segments = host.split('.');
+  return providers.find(
+    (p) => p.source === host || p.selfHostedKeywords?.some((kw) => segments.includes(kw)),
+  );
+};
+
+export const getGitPath = (
+  gitSource: string,
+  revision: string,
+  path?: string,
+  domain?: string,
+): string => {
+  if (!revision) return '';
+  const provider = findProviderByHost(domain ?? gitSource);
+  if (!provider) return '';
+  return `${provider.branchPath(revision)}${path ? `/${path}` : ''}`;
+};
+
+const forgejoIcon = (
+  <ForgejoLogo
+    role="img"
+    aria-label="Forgejo"
+    style={{ width: '1em', height: '1em', color: 'inherit' }}
+  />
+);
+
+const GIT_ICONS: Partial<Record<string, React.ReactElement>> = {
+  'github.com': <GithubIcon alt="GitHub" />,
+  'bitbucket.org': <BitbucketIcon alt="Bitbucket" />,
+  'gitlab.com': <GitlabIcon alt="Gitlab" />,
+  'forgejo.org': forgejoIcon,
+  'codeberg.org': <GitlabIcon alt="Codeberg" />,
+};
+
+export const getGitIcon = (gitSource: string): React.ReactElement =>
+  GIT_ICONS[findProviderByHost(gitSource)?.source ?? ''] ?? <GitAltIcon alt="Git" />;
 
 export const createBranchUrl = (repoUrl?: string, branch?: string): string | undefined => {
   if (!repoUrl || !branch) {

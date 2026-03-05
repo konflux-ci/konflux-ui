@@ -1,6 +1,12 @@
+import * as React from 'react';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
 import { createBranchUrl, getGitIcon, getGitPath } from '../git-utils';
+
+jest.mock(
+  '../../shared/assets/forgejo-logo.svg',
+  () => (props: { 'aria-label'?: string }) => React.createElement('svg', props),
+);
 
 describe('git-utils', () => {
   describe('getGitIcon', () => {
@@ -17,6 +23,18 @@ describe('git-utils', () => {
     it('should return Gitlab icon', () => {
       const result = render(getGitIcon('gitlab.com'));
       expect(result.baseElement.querySelector('svg').getAttribute('alt')).toBe('Gitlab');
+    });
+
+    it('should return Forgejo icon', () => {
+      const result = render(getGitIcon('forgejo.org'));
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('aria-label', 'Forgejo');
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('role', 'img');
+    });
+
+    it('should return Forgejo icon for subdomain', () => {
+      const result = render(getGitIcon('code.forgejo.org'));
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('aria-label', 'Forgejo');
+      expect(result.baseElement.querySelector('svg')).toHaveAttribute('role', 'img');
     });
 
     it('should return Git icon', () => {
@@ -61,9 +79,9 @@ describe('git-utils', () => {
       expect(result).toBe('/-/tree/org/test');
     });
 
-    it('should return correct path for self hosted instance', () => {
+    it('should return correct path for self hosted gitlab instance by keyword', () => {
       const result = getGitPath('customrepo.com', 'org', 'test', 'gitlab.abcd.org.com');
-      expect(result).toBe('');
+      expect(result).toBe('/-/tree/org/test');
     });
   });
 
@@ -118,8 +136,14 @@ describe('git-utils', () => {
       );
     });
 
+    it('should construct Bitbucket branch URL', () => {
+      expect(createBranchUrl('https://bitbucket.org/org/repo', 'main')).toBe(
+        'https://bitbucket.org/org/repo/branch/main',
+      );
+    });
+
     it('should return undefined for unknown git providers', () => {
-      expect(createBranchUrl('https://bitbucket.org/org/repo', 'main')).toBeUndefined();
+      expect(createBranchUrl('https://customrepo.com/org/repo', 'main')).toBeUndefined();
     });
 
     it('should return undefined for a non-parseable URL', () => {
