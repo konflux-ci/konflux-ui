@@ -295,7 +295,6 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         unfilteredData={commits}
         EmptyMsg={isFiltered ? EmptyMessage : NoDataEmptyMessage}
         NoDataEmptyMsg={NoDataEmptyMessage}
-        Toolbar={DataToolbar}
         aria-label="Commit List"
         Header={CommitsListHeaderWithSorting}
         Row={(props) => {
