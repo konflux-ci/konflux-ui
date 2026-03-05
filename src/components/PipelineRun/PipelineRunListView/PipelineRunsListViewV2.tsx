@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import PipelineRunsFilterToolbarV2 from '~/components/Filter/toolbars/PipelineRunsFilterToolbarV2';
+import PipelineRunsFilterToolbar from '~/components/Filter/toolbars/PipelineRunsFilterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import {
-  filterPipelineRunsV2,
-  PipelineRunsFilterStateV2,
-} from '~/components/Filter/utils/pipelineruns-filter-utils-v2';
+  filterPipelineRuns,
+  PipelineRunsFilterState,
+} from '~/components/Filter/utils/pipelineruns-filter-utils';
 import { SESSION_STORAGE_KEYS } from '~/consts/constants';
 import { useComponent } from '~/hooks/useComponents';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
@@ -43,7 +43,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
 }) => {
   const namespace = useNamespace();
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
-  const filters: PipelineRunsFilterStateV2 = useDeepCompareMemoize({
+  const filters: PipelineRunsFilterState = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
@@ -88,17 +88,9 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   const sortedPipelineRuns = React.useMemo((): PipelineRunKind[] => {
     if (!pipelineRuns) return [];
 
-    // @ts-expect-error: toSorted might not be in TS yet
-    if (typeof pipelineRuns.toSorted === 'function') {
-      // @ts-expect-error: toSorted might not be in TS yet
-      return pipelineRuns.toSorted((a, b) =>
-        String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
-      );
-    }
-
-    return pipelineRuns.sort((a, b) =>
+    return [...pipelineRuns].sort((a, b) =>
       String(b.status?.startTime || '').localeCompare(String(a.status?.startTime || '')),
-    ) as PipelineRunKind[];
+    );
   }, [pipelineRuns]);
 
   const statusFilterObj = React.useMemo(
@@ -132,7 +124,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
 
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRunsV2(sortedPipelineRuns, filters, componentName),
+    () => filterPipelineRuns(sortedPipelineRuns, filters, undefined, componentName),
     [sortedPipelineRuns, filters, componentName],
   );
 
@@ -155,7 +147,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   return (
     <Flex direction={{ default: 'column' }}>
       {(isFiltered || sortedPipelineRuns.length > 0) && (
-        <PipelineRunsFilterToolbarV2
+        <PipelineRunsFilterToolbar
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}

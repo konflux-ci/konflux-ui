@@ -1,28 +1,28 @@
 import * as React from 'react';
-import { Bullseye, Flex, Spinner } from '@patternfly/react-core';
+import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import ColumnManagement from '~/shared/components/table/ColumnManagement';
-import { getErrorState } from '~/shared/utils/error-utils';
-import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
+import { SESSION_STORAGE_KEYS } from '~/consts/constants';
 import {
   PipelineRunLabel,
   PipelineRunType,
   RUN_STATUS_PRIORITY,
   runStatus,
-} from '../../../consts/pipelinerun';
-import { useComponent } from '../../../hooks/useComponents';
-import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
-import { useSortedResources } from '../../../hooks/useSortedResources';
-import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
-import { Table, useDeepCompareMemoize } from '../../../shared';
-import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { Commit, PipelineRunKind } from '../../../types';
-import { getCommitsFromPLRs, getCommitSha, statuses } from '../../../utils/commits-utils';
+} from '~/consts/pipelinerun';
+import { useComponent } from '~/hooks/useComponents';
+import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
+import { useSortedResources } from '~/hooks/useSortedResources';
+import { useVisibleColumns } from '~/hooks/useVisibleColumns';
+import { Table, useDeepCompareMemoize } from '~/shared';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import ColumnManagement from '~/shared/components/table/ColumnManagement';
+import { useNamespace } from '~/shared/providers/Namespace';
+import { getErrorState } from '~/shared/utils/error-utils';
+import { Commit, PipelineRunKind } from '~/types';
+import { getCommitsFromPLRs, getCommitSha, statuses } from '~/utils/commits-utils';
 import { getCommitStatusFromPipelineRuns } from '../commit-status';
 import CommitsEmptyStateV2 from '../CommitsEmptyStateV2';
 import {
@@ -116,7 +116,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     () =>
       pipelineRuns?.filter((plr) =>
         allVersionBranches.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT_VERSION]),
-      ),
+      ) ?? [],
     [allVersionBranches, pipelineRuns],
   );
 
@@ -335,12 +335,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         description="Selected columns will be displayed in the commits table."
       />
       {isFetchingNextPage ? (
-        <div
-          style={{
-            marginTop: 'var(--pf-v5-global--spacer--2xl)',
-            marginBottom: 'var(--pf-v5-global--spacer--2xl)',
-          }}
-        >
+        <Stack style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }} hasGutter>
           <Bullseye>
             <Spinner
               size="lg"
@@ -348,7 +343,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
               data-test="commits-list-next-page-loading-spinner"
             />
           </Bullseye>
-        </div>
+        </Stack>
       ) : null}
     </Flex>
   );
