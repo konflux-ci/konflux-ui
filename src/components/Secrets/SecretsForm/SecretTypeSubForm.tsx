@@ -87,6 +87,9 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
         <SourceSecretForm isEditMode={isEditMode} onAuthTypeChange={setCurrentAuthType} />
       );
     }
+    if (form?.key === 'image-pull') {
+      form.component = <ImagePullSecretForm isEditMode={isEditMode} />;
+    }
     return form;
   }, [currentType, isEditMode]);
 
