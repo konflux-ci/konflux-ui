@@ -1,8 +1,12 @@
 import React from 'react';
+import Prism from 'prismjs';
 import { logger } from '~/monitoring/logger';
 import { flattenTokenText } from './log-viewer-utils';
-import Prism from './prism-log-language';
+import registerLogSyntax from './refractor-log';
 import type { TokenizedLine } from './types';
+
+// Register the log language
+registerLogSyntax(Prism);
 
 /**
  * Custom hook for lazy tokenization with caching

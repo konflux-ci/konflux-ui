@@ -1,4 +1,4 @@
-import type Prism from './prism-log-language';
+import type Prism from 'prismjs';
 
 /** Represents a search match location in the log viewer */
 export interface SearchedWord {

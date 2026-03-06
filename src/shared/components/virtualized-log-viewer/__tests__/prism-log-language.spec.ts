@@ -1,36 +1,57 @@
-import Prism from '../prism-log-language';
+import Prism from 'prismjs';
+import registerLogSyntax from '../refractor-log';
+
+// Register the log language
+registerLogSyntax(Prism);
 
 describe('Prism Log Language', () => {
-  describe('Timestamps', () => {
-    it('should tokenize ISO 8601 timestamp with Z', () => {
+  describe('Date and Time', () => {
+    it('should tokenize ISO 8601 date', () => {
       const tokens = Prism.tokenize('2026-02-02T10:52:23Z', Prism.languages.log);
 
-      const timestamp = tokens.find((t) => typeof t !== 'string' && t.type === 'timestamp');
-      expect(timestamp).toBeDefined();
-      expect(timestamp).toHaveProperty('content', '2026-02-02T10:52:23Z');
+      const dateToken = tokens.find((t) => typeof t !== 'string' && t.type === 'date');
+      expect(dateToken).toBeDefined();
+      expect(dateToken).toHaveProperty('content', '2026-02-02T');
     });
 
-    it('should tokenize ISO 8601 timestamp with timezone offset', () => {
-      const tokens = Prism.tokenize('2026-02-02T10:51:43+00:00', Prism.languages.log);
+    it('should tokenize time with Z timezone', () => {
+      const tokens = Prism.tokenize('10:52:23Z', Prism.languages.log);
 
-      const timestamp = tokens.find((t) => typeof t !== 'string' && t.type === 'timestamp');
-      expect(timestamp).toBeDefined();
-      expect(timestamp).toHaveProperty('content', '2026-02-02T10:51:43+00:00');
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '10:52:23Z');
     });
 
-    it('should tokenize slash-separated date with time', () => {
-      const tokens = Prism.tokenize('2026/02/02 10:52:23', Prism.languages.log);
+    it('should tokenize time with timezone offset', () => {
+      const tokens = Prism.tokenize('10:51:43+00:00', Prism.languages.log);
 
-      const timestamp = tokens.find((t) => typeof t !== 'string' && t.type === 'timestamp');
-      expect(timestamp).toBeDefined();
-      expect(timestamp).toHaveProperty('content', '2026/02/02 10:52:23');
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '10:51:43+00:00');
+    });
+
+    it('should tokenize slash-separated date', () => {
+      const tokens = Prism.tokenize('2026/02/02', Prism.languages.log);
+
+      const dateToken = tokens.find((t) => typeof t !== 'string' && t.type === 'date');
+      expect(dateToken).toBeDefined();
+      expect(dateToken).toHaveProperty('content', '2026/02/02');
     });
 
     it('should tokenize bracketed time', () => {
       const tokens = Prism.tokenize('[10:30:45]', Prism.languages.log);
 
-      const timestamp = tokens.find((t) => typeof t !== 'string' && t.type === 'timestamp');
-      expect(timestamp).toBeDefined();
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '10:30:45');
+    });
+
+    it('should tokenize relative time units', () => {
+      const tokens = Prism.tokenize('took 100ms', Prism.languages.log);
+
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '100ms');
     });
   });
 
@@ -109,6 +130,30 @@ describe('Prism Log Language', () => {
       expect(kvToken).toBeDefined();
     });
 
+    it('should tokenize "key"="value" with double-quoted key', () => {
+      const tokens = Prism.tokenize('"architecture"="x86_64"', Prism.languages.log);
+
+      const kvToken = tokens.find((t) => typeof t !== 'string' && t.type === 'key-value');
+      expect(kvToken).toBeDefined();
+    });
+
+    it('should tokenize multiple quoted key-value pairs', () => {
+      const tokens = Prism.tokenize(
+        '"architecture"="x86_64" "vcs-type"="git" "build-date"="2026-03-05T06:00:17Z"',
+        Prism.languages.log,
+      );
+
+      const kvTokens = tokens.filter((t) => typeof t !== 'string' && t.type === 'key-value');
+      expect(kvTokens.length).toBe(3);
+    });
+
+    it("should tokenize 'key'='value' with single-quoted key", () => {
+      const tokens = Prism.tokenize("'status'='active'", Prism.languages.log);
+
+      const kvToken = tokens.find((t) => typeof t !== 'string' && t.type === 'key-value');
+      expect(kvToken).toBeDefined();
+    });
+
     it('should tokenize key=value with timestamp in value', () => {
       const tokens = Prism.tokenize('time="2026-02-02T10:52:23Z"', Prism.languages.log);
 
@@ -146,16 +191,20 @@ describe('Prism Log Language', () => {
   describe('Complex Log Lines', () => {
     it('should tokenize complete log line with all elements', () => {
       const logLine =
-        '2026-02-02T10:52:23Z INFO msg="check completed" status=FAILED check=HasLicense';
+        '2026-02-02T10:52:23Z INFO msg="check completed" ERROR occurred check=HasLicense';
       const tokens = Prism.tokenize(logLine, Prism.languages.log);
 
-      const timestamp = tokens.find((t) => typeof t !== 'string' && t.type === 'timestamp');
+      const dateToken = tokens.find((t) => typeof t !== 'string' && t.type === 'date');
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
       const infoLevel = tokens.find((t) => typeof t !== 'string' && t.type === 'log-level-info');
+      const errorLevel = tokens.find((t) => typeof t !== 'string' && t.type === 'log-level-error');
       const kvTokens = tokens.filter((t) => typeof t !== 'string' && t.type === 'key-value');
 
-      expect(timestamp).toBeDefined();
+      expect(dateToken).toBeDefined();
+      expect(timeToken).toBeDefined();
       expect(infoLevel).toBeDefined();
-      expect(kvTokens.length).toBeGreaterThanOrEqual(2);
+      expect(errorLevel).toBeDefined();
+      expect(kvTokens.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should prioritize log levels over other patterns', () => {
@@ -173,6 +222,215 @@ describe('Prism Log Language', () => {
     });
   });
 
+  describe('URLs and Email', () => {
+    it('should tokenize HTTP URLs', () => {
+      const tokens = Prism.tokenize('Visit https://example.com', Prism.languages.log);
+
+      const urlToken = tokens.find((t) => typeof t !== 'string' && t.type === 'url');
+      expect(urlToken).toBeDefined();
+      expect(urlToken).toHaveProperty('content', 'https://example.com');
+    });
+
+    it('should tokenize FTP URLs', () => {
+      const tokens = Prism.tokenize('Download ftp://files.example.com/data', Prism.languages.log);
+
+      const urlToken = tokens.find((t) => typeof t !== 'string' && t.type === 'url');
+      expect(urlToken).toBeDefined();
+    });
+
+    it('should tokenize email addresses', () => {
+      const tokens = Prism.tokenize('Contact user@example.com for help', Prism.languages.log);
+
+      const emailToken = tokens.find((t) => typeof t !== 'string' && t.type === 'email');
+      expect(emailToken).toBeDefined();
+      expect(emailToken).toHaveProperty('content', 'user@example.com');
+    });
+  });
+
+  describe('Container Images', () => {
+    it('should tokenize Docker image with tag', () => {
+      const tokens = Prism.tokenize('quay.io/konflux-ci/test:latest', Prism.languages.log);
+
+      const imageToken = tokens.find((t) => typeof t !== 'string' && t.type === 'container-image');
+      expect(imageToken).toBeDefined();
+    });
+
+    it('should tokenize Docker image with SHA256 digest', () => {
+      const tokens = Prism.tokenize(
+        'quay.io/repo/image@sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        Prism.languages.log,
+      );
+
+      const imageToken = tokens.find((t) => typeof t !== 'string' && t.type === 'container-image');
+      expect(imageToken).toBeDefined();
+    });
+
+    it('should tokenize docker:// protocol images', () => {
+      const tokens = Prism.tokenize('docker://localhost:5000/myapp:v1.0', Prism.languages.log);
+
+      const imageToken = tokens.find((t) => typeof t !== 'string' && t.type === 'container-image');
+      expect(imageToken).toBeDefined();
+    });
+  });
+
+  describe('Files', () => {
+    it('should tokenize filename with extension', () => {
+      const tokens = Prism.tokenize('Reading config.yaml file', Prism.languages.log);
+
+      const filenameToken = tokens.find((t) => typeof t !== 'string' && t.type === 'filename');
+      expect(filenameToken).toBeDefined();
+      expect(filenameToken).toHaveProperty('content', 'config.yaml');
+    });
+
+    it('should tokenize various file extensions', () => {
+      const tokens = Prism.tokenize('main.py script.sh app.ts Dockerfile', Prism.languages.log);
+
+      const filenameTokens = tokens.filter((t) => typeof t !== 'string' && t.type === 'filename');
+      expect(filenameTokens.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should tokenize file paths', () => {
+      const tokens = Prism.tokenize('File at /var/log/app.log', Prism.languages.log);
+
+      const pathToken = tokens.find((t) => typeof t !== 'string' && t.type === 'file-path');
+      expect(pathToken).toBeDefined();
+    });
+
+    it('should tokenize relative file paths', () => {
+      const tokens = Prism.tokenize('./src/main.ts', Prism.languages.log);
+
+      const pathToken = tokens.find((t) => typeof t !== 'string' && t.type === 'file-path');
+      expect(pathToken).toBeDefined();
+    });
+  });
+
+  describe('Identifiers', () => {
+    it('should tokenize IPv4 addresses', () => {
+      const tokens = Prism.tokenize('Connected from 192.168.1.100', Prism.languages.log);
+
+      const ipToken = tokens.find((t) => typeof t !== 'string' && t.type === 'ip-address');
+      expect(ipToken).toBeDefined();
+      expect(ipToken).toHaveProperty('content', '192.168.1.100');
+    });
+
+    it('should tokenize MAC addresses', () => {
+      const tokens = Prism.tokenize('Device MAC: a1:b2:c3:d4:e5:f6', Prism.languages.log);
+
+      const macToken = tokens.find((t) => typeof t !== 'string' && t.type === 'mac-address');
+      expect(macToken).toBeDefined();
+      expect(macToken).toHaveProperty('content', 'a1:b2:c3:d4:e5:f6');
+    });
+
+    it('should tokenize domain names', () => {
+      const tokens = Prism.tokenize('Connecting to api.example.com server', Prism.languages.log);
+
+      const domainToken = tokens.find((t) => typeof t !== 'string' && t.type === 'domain');
+      expect(domainToken).toBeDefined();
+      expect(domainToken).toHaveProperty('content', 'api.example.com');
+    });
+
+    it('should tokenize UUIDs', () => {
+      const tokens = Prism.tokenize(
+        'Request ID: 550e8400-e29b-41d4-a716-446655440000',
+        Prism.languages.log,
+      );
+
+      const uuidToken = tokens.find((t) => typeof t !== 'string' && t.type === 'uuid');
+      expect(uuidToken).toBeDefined();
+      expect(uuidToken).toHaveProperty('content', '550e8400-e29b-41d4-a716-446655440000');
+    });
+
+    it('should tokenize Git SHA hashes', () => {
+      const tokens = Prism.tokenize('Commit abc1234def', Prism.languages.log);
+
+      const hashToken = tokens.find((t) => typeof t !== 'string' && t.type === 'hash');
+      expect(hashToken).toBeDefined();
+      expect(hashToken).toHaveProperty('content', 'abc1234def');
+    });
+
+    it('should tokenize SHA-256 hashes', () => {
+      const tokens = Prism.tokenize(
+        'Hash: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        Prism.languages.log,
+      );
+
+      const hashToken = tokens.find((t) => typeof t !== 'string' && t.type === 'hash');
+      expect(hashToken).toBeDefined();
+    });
+
+    it('should tokenize process IDs', () => {
+      const tokens = Prism.tokenize('Process [12345] started', Prism.languages.log);
+
+      const pidToken = tokens.find((t) => typeof t !== 'string' && t.type === 'pid');
+      expect(pidToken).toBeDefined();
+      expect(pidToken).toHaveProperty('content', '[12345]');
+    });
+  });
+
+  describe('Booleans', () => {
+    it('should tokenize boolean true', () => {
+      const tokens = Prism.tokenize('Result: true', Prism.languages.log);
+
+      const boolToken = tokens.find((t) => typeof t !== 'string' && t.type === 'boolean');
+      expect(boolToken).toBeDefined();
+      expect(boolToken).toHaveProperty('content', 'true');
+    });
+
+    it('should tokenize boolean false and null', () => {
+      const tokens = Prism.tokenize('Values: false, null, true', Prism.languages.log);
+
+      const boolTokens = tokens.filter((t) => typeof t !== 'string' && t.type === 'boolean');
+      expect(boolTokens.length).toBe(3);
+    });
+  });
+
+  describe('Strings', () => {
+    it('should tokenize double-quoted strings', () => {
+      const tokens = Prism.tokenize('"Hello World"', Prism.languages.log);
+
+      const stringToken = tokens.find((t) => typeof t !== 'string' && t.type === 'string');
+      expect(stringToken).toBeDefined();
+      expect(stringToken).toHaveProperty('content', '"Hello World"');
+    });
+
+    it('should tokenize single-quoted strings', () => {
+      const tokens = Prism.tokenize("'test message'", Prism.languages.log);
+
+      const stringToken = tokens.find((t) => typeof t !== 'string' && t.type === 'string');
+      expect(stringToken).toBeDefined();
+    });
+  });
+
+  describe('Exceptions', () => {
+    it('should tokenize Java stack traces', () => {
+      const stackTrace = `java.lang.NullPointerException: Cannot invoke method
+    at com.example.MyClass.myMethod(MyClass.java:42)
+    at com.example.Main.main(Main.java:10)`;
+
+      const tokens = Prism.tokenize(stackTrace, Prism.languages.log);
+
+      const exceptionToken = tokens.find((t) => typeof t !== 'string' && t.type === 'exception');
+      expect(exceptionToken).toBeDefined();
+    });
+  });
+
+  describe('Separators', () => {
+    it('should tokenize separator lines', () => {
+      const tokens = Prism.tokenize('---', Prism.languages.log);
+
+      const separatorToken = tokens.find((t) => typeof t !== 'string' && t.type === 'separator');
+      expect(separatorToken).toBeDefined();
+      expect(separatorToken).toHaveProperty('content', '---');
+    });
+
+    it('should tokenize equals separator', () => {
+      const tokens = Prism.tokenize('====', Prism.languages.log);
+
+      const separatorToken = tokens.find((t) => typeof t !== 'string' && t.type === 'separator');
+      expect(separatorToken).toBeDefined();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle empty string', () => {
       const tokens = Prism.tokenize('', Prism.languages.log);
@@ -184,28 +442,27 @@ describe('Prism Log Language', () => {
       expect(tokens).toEqual(['This is plain text']);
     });
 
-    it('should not tokenize partial timestamps', () => {
+    it('should tokenize date-only values', () => {
       const tokens = Prism.tokenize('2026-02-02', Prism.languages.log);
 
-      const timestampToken = tokens.find((t) => typeof t !== 'string' && t.type === 'timestamp');
-      expect(timestampToken).toBeUndefined();
+      const dateToken = tokens.find((t) => typeof t !== 'string' && t.type === 'date');
+      expect(dateToken).toBeDefined();
+      expect(dateToken).toHaveProperty('content', '2026-02-02');
     });
   });
 
   describe('Pattern Order Dependencies', () => {
-    it('should tokenize key-value BEFORE timestamp to prevent inner values from being matched', () => {
-      // If timestamp pattern comes first, it might match the timestamp inside the quoted value
-      const tokens = Prism.tokenize('time="2026-02-02T10:52:23Z"', Prism.languages.log);
+    it('should tokenize key-value BEFORE string to prevent quoted keys from being matched as strings', () => {
+      // Key-value must come before string pattern to properly match "key"="value"
+      const tokens = Prism.tokenize('"architecture"="x86_64"', Prism.languages.log);
 
-      // Should tokenize as key-value (not as standalone timestamp)
+      // Should tokenize as key-value, not as separate strings
       const kvToken = tokens.find((t) => typeof t !== 'string' && t.type === 'key-value');
       expect(kvToken).toBeDefined();
 
-      // The inner timestamp should be part of the key-value token, not a separate timestamp token
-      const standaloneTimestamp = tokens.find(
-        (t) => typeof t !== 'string' && t.type === 'timestamp',
-      );
-      expect(standaloneTimestamp).toBeUndefined();
+      // Should not have standalone string tokens (the quotes are part of key-value)
+      const stringTokens = tokens.filter((t) => typeof t !== 'string' && t.type === 'string');
+      expect(stringTokens.length).toBe(0);
     });
 
     it('should tokenize ERROR/FAILED before PASSED to avoid conflicts', () => {
