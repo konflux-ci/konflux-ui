@@ -27,7 +27,7 @@ import { GetNextPage, NextPageProps, useTRTaskRuns } from './useTektonResults';
  * Returns interface matches existing useTaskRuns exactly with infinite loading support.
  */
 export const useTaskRunsV2 = (
-  namespace: string,
+  namespace: string | undefined,
   options?: Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'selector' | 'fieldSelector'>>,
   queryOptions?: TQueryInfiniteOptions<TaskRunKind[], Error, InfiniteData<TaskRunKind[], unknown>>,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
@@ -227,8 +227,8 @@ export const useTaskRunsV2 = (
  * @returns Tuple of [taskRuns, loaded, error] sorted by completion time
  */
 export const useTaskRunsForPipelineRuns = (
-  namespace: string,
-  pipelineRunName: string,
+  namespace: string | undefined,
+  pipelineRunName: string | undefined,
   taskName?: string,
   watch: boolean = true,
 ): [TaskRunKind[], boolean, unknown, GetNextPage, NextPageProps] => {
