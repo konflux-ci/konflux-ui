@@ -30,3 +30,22 @@ export const useSecrets = (
     [secrets, isLoading, error],
   );
 };
+
+export const useSecret = (
+  namespace: string,
+  name: string,
+): [SecretKind | undefined, boolean, unknown] => {
+  const {
+    data: secret,
+    isLoading,
+    error,
+  } = useK8sWatchResource<SecretKind>(
+    {
+      groupVersionKind: SecretGroupVersionKind,
+      namespace,
+      name,
+    },
+    SecretModel,
+  );
+  return [secret, !isLoading, error];
+};

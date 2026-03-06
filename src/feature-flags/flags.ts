@@ -114,6 +114,12 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
+  'edit-secret-page': {
+    key: 'edit-secret-page',
+    description: 'Editing existing secrets',
+    defaultEnabled: true,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;
