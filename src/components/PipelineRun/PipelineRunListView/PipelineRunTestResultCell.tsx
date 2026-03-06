@@ -24,20 +24,28 @@ export const PipelineRunTestResultCell: React.FC<React.PropsWithChildren<Props>>
   const [testOutputResult, isPipelineRunTestOutputResultLoading, testOutputNote] =
     usePipelineRunTestOutputResult(plr, shouldFetchTestResult ? namespace : undefined);
 
+  const cellContent = isPipelineRunTestOutputResultLoading ? (
+    <Spinner size="lg" />
+  ) : (
+    <>{testOutputResult ? <StatusIconWithText status={testOutputResult} /> : '-'}</>
+  );
+
   return (
     <TableData className={className}>
-      <Popover
-        triggerAction="hover"
-        aria-label="error popover"
-        bodyContent={testOutputNote}
-        isVisible={testOutputNote ? undefined : false}
-      >
-        {isPipelineRunTestOutputResultLoading ? (
-          <Spinner size="lg" />
-        ) : (
-          <div>{testOutputResult ? <StatusIconWithText status={testOutputResult} /> : '-'}</div>
-        )}
-      </Popover>
+      {testOutputNote ? (
+        <Popover bodyContent={testOutputNote} aria-label="test output details">
+          <span
+            role="button"
+            tabIndex={0}
+            aria-label="test output details"
+            style={{ cursor: 'pointer' }}
+          >
+            {cellContent}
+          </span>
+        </Popover>
+      ) : (
+        cellContent
+      )}
     </TableData>
   );
 };
