@@ -140,14 +140,14 @@ export const GitImportForm: React.FC<{ applicationName: string }> = ({ applicati
                     or Create a secret for{' '}
                     <ExternalLink
                       href={LEARN_MORE_GITLAB_URL}
-                      dataTestID="git-import-form-konflux-create-secret-gitlab-external-link"
+                      dataTestID="create-secret-gitlab-link"
                     >
                       GitLab
                     </ExternalLink>{' '}
                     or{' '}
                     <ExternalLink
                       href={LEARN_MORE_FORGEJO_URL}
-                      dataTestID="git-import-form-konflux-create-secret-forgejo-external-link"
+                      dataTestID="create-secret-forgejo-link"
                     >
                       Forgejo
                     </ExternalLink>{' '}

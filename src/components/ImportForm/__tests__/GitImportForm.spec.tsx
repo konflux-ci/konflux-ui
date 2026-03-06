@@ -157,12 +157,8 @@ describe('GitImportForm', () => {
 
     it('should render ExternalLinks to GitLab and Forgejo create-secret docs', () => {
       routerRenderer(<GitImportForm applicationName="test-app" />);
-      expect(
-        screen.getByTestId('git-import-form-konflux-create-secret-gitlab-external-link'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByTestId('git-import-form-konflux-create-secret-forgejo-external-link'),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId('create-secret-gitlab-link')).toBeInTheDocument();
+      expect(screen.getByTestId('create-secret-forgejo-link')).toBeInTheDocument();
     });
   });
 });
