@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { downloadYaml } from '~/utils/common-utils';
 import { useK8sAndKarchResource } from '../../../hooks/useK8sAndKarchResources';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunGroupVersionKind, SnapshotGroupVersionKind } from '../../../models';
@@ -42,8 +43,14 @@ jest.mock('../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunV2: jest.fn(),
 }));
 
+jest.mock('~/utils/common-utils', () => ({
+  ...jest.requireActual('~/utils/common-utils'),
+  downloadYaml: jest.fn(),
+}));
+
 const useSnapshotMock = useK8sAndKarchResource as jest.Mock;
 const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
+const downloadYamlMock = downloadYaml as jest.Mock;
 
 const mockSnapshots: IntegrationTestScenarioKind[] = [...MockSnapshots];
 
@@ -173,5 +180,40 @@ describe('SnapshotDetailsView', () => {
     const triggerAction = screen.getByText('Trigger release');
     expect(triggerAction).toBeInTheDocument();
     expect(triggerAction.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  describe('Download YAML action', () => {
+    it('should render Download YAML action in actions dropdown', async () => {
+      const user = userEvent.setup();
+      useSnapshotMock.mockReturnValue({
+        data: mockSnapshots[0],
+        isLoading: false,
+        source: ResourceSource.Cluster,
+      });
+      renderWithQueryClientAndRouter(<SnapshotDetails />);
+
+      const actionsButton = screen.getByRole('button', { name: /Actions/i });
+      await user.click(actionsButton);
+
+      expect(screen.getByRole('menuitem', { name: /Download YAML/i })).toBeInTheDocument();
+    });
+
+    it('should call downloadYaml with snapshot when Download YAML is clicked', async () => {
+      const user = userEvent.setup();
+      useSnapshotMock.mockReturnValue({
+        data: mockSnapshots[0],
+        isLoading: false,
+        source: ResourceSource.Cluster,
+      });
+      renderWithQueryClientAndRouter(<SnapshotDetails />);
+
+      const actionsButton = screen.getByRole('button', { name: /Actions/i });
+      await user.click(actionsButton);
+
+      const downloadAction = screen.getByRole('menuitem', { name: /Download YAML/i });
+      await user.click(downloadAction);
+
+      expect(downloadYamlMock).toHaveBeenCalledWith(mockSnapshots[0]);
+    });
   });
 });

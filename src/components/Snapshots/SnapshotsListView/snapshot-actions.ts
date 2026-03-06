@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { ResourceSource } from '~/types/k8s';
+import { downloadYaml } from '~/utils/common-utils';
 import { ReleaseModel } from '../../../models';
 import { RELEASEPLAN_TRIGGER_PATH } from '../../../routes/paths';
 import { Action } from '../../../shared/components/action-menu/types';
@@ -20,6 +21,12 @@ export const useSnapshotActions = (snapshot: Snapshot, source?: ResourceSource):
     const canTriggerRelease = canCreateRelease && !isArchived;
 
     return [
+      {
+        cta: () => downloadYaml(snapshot),
+        id: 'download-snapshot-yaml',
+        label: 'Download YAML',
+        // TODO: Add analytics???
+      },
       {
         cta: canTriggerRelease
           ? {
