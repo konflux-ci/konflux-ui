@@ -114,6 +114,17 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
+  'feedback-section': {
+    key: 'feedback-section',
+    description: 'Feedback section for Konflux UI',
+    defaultEnabled: true,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster'],
+      failureReason: 'Not a staging cluster',
+      visibleInFeatureFlagPanel: false,
+    },
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

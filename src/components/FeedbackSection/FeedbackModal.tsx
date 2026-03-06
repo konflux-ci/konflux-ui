@@ -2,50 +2,65 @@ import * as React from 'react';
 import { ModalVariant, Flex, FlexItem, Bullseye, Spinner, Panel } from '@patternfly/react-core';
 import { ErrorBoundary } from '@sentry/react';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
+import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
 import RHsupportDark from '../../assets/rh_feedback--dark.svg';
 import RHsupportLight from '../../assets/rh_feedback.svg';
 import BeginningSection from './components/BeginningSection';
+import { FeedbackValues } from './components/FeedbackForm';
 import { FeedbackSections } from './consts';
-import { BugInfo, FeatureInfo } from './feedback-utils';
+import { getBugURL, getFeatureURL } from './feedback-utils';
+import './FeedbackModal.scss';
 
 const BugRFESection = React.lazy(() => import('./components/BugRFEForm'));
 const FeedbackSection = React.lazy(() => import('./components/FeedbackForm'));
 
-import './FeedbackModal.scss';
-
-export type FeedbackFormValues = {
-  bug?: BugInfo;
-  feature?: FeatureInfo;
-  feedback?: { description: string; scale: number };
-};
+export interface SubmitClicked {
+  submitClicked: boolean;
+}
 
 const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onClose }) => {
   const [currentSection, setCurrentSection] = React.useState<FeedbackSections>(
     FeedbackSections.BeginningSection,
   );
   const { effectiveTheme } = useTheme();
-  // const [konfluxInfo] = useKonfluxPublicInfo();
 
-  // const handleSubmit = (values: { bug?: BugInfo; feature?: FeatureInfo }) => {
-  //   if (currentSection === FeedbackSections.BugSection) {
-  //     const { bug } = values;
-  //     const url = getBugURL(bug, konfluxInfo);
-  //     window.open(url, '_blank');
-  //     onClose(null, { submitClicked: true });
-  //   }
+  const onCancel = () => {
+    onClose(null, { submitClicked: false });
+  };
 
-  //   if (currentSection === FeedbackSections.FeatureSection) {
-  //     const { feature } = values;
-  //     const url = getFeatureURL(feature);
-  //     window.open(url, '_blank');
-  //     onClose(null, { submitClicked: true });
-  //   }
-  //   if (currentSection === FeedbackSections.FeedbackSection) {
-  //     // Add Sentry/Segment connection here
-  //     onClose(null, { submitClicked: true });
-  //   }
-  // };
+  const onBack = () => {
+    setCurrentSection(FeedbackSections.BeginningSection);
+  };
+  const [konfluxInfo] = useKonfluxPublicInfo();
+
+  const handleBugFeatureSubmit = React.useCallback(
+    (values: { description: string; title: string; additionalInfo?: boolean }) => {
+      if (currentSection === FeedbackSections.BugSection) {
+        const { description, title, additionalInfo = false } = values;
+        const url = getBugURL(
+          { description, title, getAdditionalInfo: additionalInfo },
+          konfluxInfo,
+        );
+        window.open(url, '_blank');
+        onClose(null, { submitClicked: true });
+      }
+
+      if (currentSection === FeedbackSections.FeatureSection) {
+        const url = getFeatureURL(values);
+        window.open(url, '_blank');
+        onClose(null, { submitClicked: true });
+      }
+    },
+    [currentSection, konfluxInfo, onClose],
+  );
+
+  const handleFeedbackSubmit = (values: FeedbackValues) => {
+    // eslint-disable-next-line no-console
+    console.log(values);
+    // segment integration to go here
+    onClose(null, { submitClicked: true });
+  };
 
   return (
     <Flex
@@ -64,23 +79,29 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
               }
             >
               {currentSection === FeedbackSections.BeginningSection && (
-                <BeginningSection setCurrentSection={setCurrentSection} onClose={onClose} />
+                <BeginningSection onSectionChange={setCurrentSection} onClose={onCancel} />
               )}
               {currentSection === FeedbackSections.FeedbackSection && (
-                <FeedbackSection onClose={onClose} setCurrentSection={setCurrentSection} />
+                <FeedbackSection
+                  onClose={onCancel}
+                  onBack={onBack}
+                  onSubmit={handleFeedbackSubmit}
+                />
               )}
               {currentSection === FeedbackSections.BugSection && (
                 <BugRFESection
                   currentSection={FeedbackSections.BugSection}
-                  onClose={onClose}
-                  setCurrentSection={setCurrentSection}
+                  onClose={onCancel}
+                  onBack={onBack}
+                  onSubmit={handleBugFeatureSubmit}
                 />
               )}
               {currentSection === FeedbackSections.FeatureSection && (
                 <BugRFESection
                   currentSection={FeedbackSections.FeatureSection}
-                  onClose={onClose}
-                  setCurrentSection={setCurrentSection}
+                  onClose={onCancel}
+                  onBack={onBack}
+                  onSubmit={handleBugFeatureSubmit}
                 />
               )}
             </React.Suspense>

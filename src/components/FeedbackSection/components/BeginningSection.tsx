@@ -17,11 +17,11 @@ import { FeedbackSections } from '../consts';
 import { SubmitClicked } from './FeedbackForm';
 
 interface BeginningSectionProps {
-  setCurrentSection: (section: FeedbackSections) => void;
+  onSectionChange: (section: FeedbackSections) => void;
   onClose: (event?: KeyboardEvent | React.MouseEvent, submitClicked?: SubmitClicked) => void;
 }
 
-const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, onClose }) => {
+const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, onClose }) => {
   return (
     <>
       <PanelHeader className="feedback-modal__panel-header">
@@ -42,7 +42,7 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, 
             isCompact
             isClickable
             className="feedback-modal__section-card"
-            onClick={() => setCurrentSection(FeedbackSections.FeedbackSection)}
+            onClick={() => onSectionChange(FeedbackSections.FeedbackSection)}
           >
             <CardTitle>
               <TextContent>
@@ -57,12 +57,11 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, 
               </TextContent>
             </CardBody>
           </Card>
-
           <Card
             isCompact
             isClickable
             className="feedback-modal__section-card"
-            onClick={() => setCurrentSection(FeedbackSections.BugSection)}
+            onClick={() => onSectionChange(FeedbackSections.BugSection)}
           >
             <CardTitle>
               <TextContent>
@@ -83,7 +82,7 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, 
             isCompact
             isClickable
             className="feedback-modal__section-card"
-            onClick={() => setCurrentSection(FeedbackSections.FeatureSection)}
+            onClick={() => onSectionChange(FeedbackSections.FeatureSection)}
           >
             <CardTitle>
               <TextContent>
@@ -93,7 +92,7 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ setCurrentSection, 
             <CardBody>
               <TextContent>
                 <Text component={TextVariants.small}>
-                  Share yout ideas for new feature to make Konflux even better for all users.
+                  Share your ideas for new feature to make Konflux even better for all users.
                 </Text>
               </TextContent>
             </CardBody>
