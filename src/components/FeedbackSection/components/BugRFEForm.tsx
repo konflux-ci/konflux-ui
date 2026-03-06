@@ -17,21 +17,26 @@ import {
   HelperText,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
-import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { FeedbackSections } from '../consts';
-import { getBugURL, getFeatureURL } from '../feedback-utils';
-import { SubmitClicked } from './FeedbackForm';
+
+interface SubmitValues {
+  title: string;
+  description: string;
+  additionalInfo?: boolean;
+}
 
 interface BugRFESectionProps {
   currentSection: FeedbackSections;
-  setCurrentSection: (FeedbackSections) => void;
-  onClose: (event?: KeyboardEvent | React.MouseEvent, submitClicked?: SubmitClicked) => void;
+  onBack: () => void;
+  onClose: () => void;
+  onSubmit: (values: SubmitValues) => void;
 }
 
 const BugRFESection: React.FC<BugRFESectionProps> = ({
   currentSection,
   onClose,
-  setCurrentSection,
+  onBack,
+  onSubmit,
 }) => {
   const [additionalInfo, setAdditionalInfo] = React.useState<boolean>(false);
   const [title, setTitle] = React.useState<string>('');
@@ -41,23 +46,6 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
     description: false,
   });
 
-  const [konfluxInfo] = useKonfluxPublicInfo();
-
-  const handleSubmit = () => {
-    if (currentSection === FeedbackSections.BugSection) {
-      const bug = { title, description, getAdditionalInfo: additionalInfo };
-      const url = getBugURL(bug, konfluxInfo);
-      window.open(url, '_blank');
-      onClose(null, { submitClicked: true });
-    }
-
-    if (currentSection === FeedbackSections.FeatureSection) {
-      const feature = { title, description };
-      const url = getFeatureURL(feature);
-      window.open(url, '_blank');
-      onClose(null, { submitClicked: true });
-    }
-  };
   return (
     <>
       <div className="feedback-modal__panel-header">
@@ -135,7 +123,6 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
                   : 'feature-description'
               }
               required
-              maxLength={65536}
               value={description}
               onChange={(_e, val: string) => {
                 setDescription(val);
@@ -167,18 +154,22 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
         <Button
           variant="primary"
           type={ButtonType.submit}
-          onClick={handleSubmit}
+          onClick={() => {
+            onSubmit({
+              title,
+              description,
+              additionalInfo:
+                currentSection === FeedbackSections.BugSection ? additionalInfo : undefined,
+            });
+          }}
           isDisabled={title.length < 1 || description.length < 1}
         >
           Preview on Github
         </Button>
-        <Button
-          variant="secondary"
-          onClick={() => setCurrentSection(FeedbackSections.BeginningSection)}
-        >
+        <Button variant="secondary" onClick={onBack}>
           Back
         </Button>
-        <Button variant="link" onClick={() => onClose(null, { submitClicked: false })}>
+        <Button variant="link" onClick={onClose}>
           Cancel
         </Button>
       </PanelFooter>

@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
 import { routerRenderer } from '~/unit-test-utils';
 import BugRFEForm from '../components/BugRFEForm';
 import { FeedbackSections } from '../consts';
@@ -13,7 +13,8 @@ jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
 }));
 
 const onCloseMock = jest.fn();
-const setCurrentSectionMock = jest.fn();
+const onBackMock = jest.fn();
+const onSubmitMock = jest.fn();
 
 describe('BugRFEForm', () => {
   it('should show BugForm when current Section is BugSection', () => {
@@ -21,7 +22,8 @@ describe('BugRFEForm', () => {
       <BugRFEForm
         currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
-        setCurrentSection={setCurrentSectionMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
       />,
     );
     screen.getByText('Report a bug');
@@ -35,7 +37,8 @@ describe('BugRFEForm', () => {
       <BugRFEForm
         currentSection={FeedbackSections.FeatureSection}
         onClose={onCloseMock}
-        setCurrentSection={setCurrentSectionMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
       />,
     );
     screen.getByText('Request a new feature');
@@ -49,13 +52,13 @@ describe('BugRFEForm', () => {
       <BugRFEForm
         currentSection={FeedbackSections.FeatureSection}
         onClose={onCloseMock}
-        setCurrentSection={setCurrentSectionMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
       />,
     );
     const backButton = screen.getByText('Back');
     fireEvent.click(backButton);
-    expect(setCurrentSectionMock).toHaveBeenCalled();
-    expect(setCurrentSectionMock).toHaveBeenCalledWith(FeedbackSections.BeginningSection);
+    expect(onBackMock).toHaveBeenCalled();
   });
 
   it('should close Form when Cancel is clicked', () => {
@@ -63,7 +66,8 @@ describe('BugRFEForm', () => {
       <BugRFEForm
         currentSection={FeedbackSections.FeatureSection}
         onClose={onCloseMock}
-        setCurrentSection={setCurrentSectionMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
       />,
     );
     const cancelButton = screen.getByText('Cancel');
@@ -78,7 +82,8 @@ describe('BugForm input and validation', () => {
       <BugRFEForm
         currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
-        setCurrentSection={setCurrentSectionMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
       />,
     );
     expect(screen.getByRole('textbox', { name: 'Title' })).toBeVisible();
@@ -91,10 +96,70 @@ describe('BugForm input and validation', () => {
       <BugRFEForm
         currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
-        setCurrentSection={setCurrentSectionMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
       />,
     );
     expect(screen.getByRole('button', { name: 'Preview on Github' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Preview on Github' })).toBeDisabled();
+  });
+
+  it('should enable submit button after correct entries and call on Submit', () => {
+    const screen = routerRenderer(
+      <BugRFEForm
+        currentSection={FeedbackSections.BugSection}
+        onClose={onCloseMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
+      />,
+    );
+
+    const titleInput = screen.getByRole('textbox', { name: 'Title' });
+    const descriptionInput = screen.getByRole('textbox', { name: 'Description' });
+    act(() => {
+      fireEvent.change(titleInput, { target: { value: 'Title' } });
+      fireEvent.change(descriptionInput, { target: { value: 'Description' } });
+    });
+
+    expect(screen.getByRole('button', { name: 'Preview on Github' })).toBeEnabled();
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Preview on Github' }));
+      expect(onSubmitMock).toHaveBeenCalled();
+      expect(onSubmitMock).toHaveBeenCalledWith({
+        title: 'Title',
+        description: 'Description',
+        additionalInfo: false,
+      });
+    });
+  });
+
+  it('should request additionalInfo when selected', () => {
+    const screen = routerRenderer(
+      <BugRFEForm
+        currentSection={FeedbackSections.BugSection}
+        onClose={onCloseMock}
+        onBack={onBackMock}
+        onSubmit={onSubmitMock}
+      />,
+    );
+
+    const titleInput = screen.getByRole('textbox', { name: 'Title' });
+    const descriptionInput = screen.getByRole('textbox', { name: 'Description' });
+    act(() => {
+      fireEvent.change(titleInput, { target: { value: 'Title' } });
+      fireEvent.change(descriptionInput, { target: { value: 'Description' } });
+      fireEvent.click(screen.getByRole('checkbox', { name: 'get system info' }));
+    });
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Preview on Github' }));
+      expect(onSubmitMock).toHaveBeenCalled();
+      expect(onSubmitMock).toHaveBeenCalledWith({
+        title: 'Title',
+        description: 'Description',
+        additionalInfo: true,
+      });
+    });
   });
 });

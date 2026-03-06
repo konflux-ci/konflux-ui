@@ -14,28 +14,29 @@ import {
   HelperText,
   HelperTextItem,
 } from '@patternfly/react-core';
-import HelpPopover from '../../HelpPopover';
-import { FeedbackSections } from '../consts';
 
 export interface SubmitClicked {
   submitClicked: boolean;
 }
 
-interface FeedbackSectionProps {
-  setCurrentSection: (FeedbackSections) => void;
-  onClose: (event?: KeyboardEvent | React.MouseEvent, submitClicked?: SubmitClicked) => void;
+export interface FeedbackValues {
+  description: string;
+  scale: number;
+  email?: string;
 }
 
-const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSection }) => {
+interface FeedbackSectionProps {
+  onBack: () => void;
+  onClose: () => void;
+  onSubmit: (values: FeedbackValues) => void;
+}
+
+const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSubmit }) => {
   const [radioRating, setRadioRating] = React.useState<number>(null);
   const [feedback, setFeedback] = React.useState<string>('');
   const [feedbackTouched, setFeedbackTouched] = React.useState<boolean>(false);
   const [email, setEmail] = React.useState<string>('');
 
-  const handleSubmit = () => {
-    // Todo: segment integration goes in here
-    onClose(null, { submitClicked: true });
-  };
   return (
     <>
       <div className="feedback-modal__panel-header">
@@ -54,10 +55,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSe
           <FormGroup
             label={
               <>
-                <b>
-                  How happy are you with recent experience using Konflux{' '}
-                  <HelpPopover headerContent="More info" bodyContent="more info" />
-                </b>
+                How happy are you with recent experience using Konflux
                 <TextContent>
                   <Text component={TextVariants.p}>
                     Please rate using the following scale, 5 - very satisfied to 1 - very
@@ -109,7 +107,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSe
             />
           </FormGroup>
 
-          <FormGroup className="feedback-modal__input-field" label={<b>Share your feedback *</b>}>
+          <FormGroup className="feedback-modal__input-field" label="Share your feedback *">
             <TextInput
               id="feedback"
               name="feedback"
@@ -153,18 +151,15 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, setCurrentSe
         <Button
           variant="primary"
           type={ButtonType.submit}
-          onClick={handleSubmit}
+          onClick={() => onSubmit({ description: feedback, scale: radioRating, email })}
           isDisabled={feedback.length < 1}
         >
           Submit feedback
         </Button>
-        <Button
-          variant="secondary"
-          onClick={() => setCurrentSection(FeedbackSections.BeginningSection)}
-        >
+        <Button variant="secondary" onClick={onBack}>
           Back
         </Button>
-        <Button variant="link" onClick={() => onClose(null, { submitClicked: false })}>
+        <Button variant="link" onClick={onClose}>
           Cancel
         </Button>
       </PanelFooter>
