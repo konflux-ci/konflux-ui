@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
 import { CONFORMA_TASK } from '~/consts/security';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunModel } from '../../../models';
@@ -137,6 +138,11 @@ export const PipelineRunDetailsView: React.FC = () => {
             ? "You don't have access to cancel a build"
             : undefined,
           onClick: () => pipelineRunCancel(pipelineRun),
+        },
+        {
+          onClick: () => downloadYaml(pipelineRun),
+          key: 'download-pipelinerun-yaml',
+          label: 'Download YAML',
         },
       ]}
       baseURL={PIPELINE_RUNS_DETAILS_PATH.createPath({
