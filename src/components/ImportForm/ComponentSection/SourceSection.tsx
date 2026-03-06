@@ -43,6 +43,9 @@ export const SourceSection = () => {
         if (gitType === GitProvider.GITLAB) {
           await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.GITLAB);
         }
+        if (gitType === GitProvider.FORGEJO) {
+          await setFieldValue('gitProviderAnnotation', GIT_PROVIDER_ANNOTATION_VALUE.FORGEJO);
+        }
 
         let parsed: GitUrlParse.GitUrl;
         let name: string;

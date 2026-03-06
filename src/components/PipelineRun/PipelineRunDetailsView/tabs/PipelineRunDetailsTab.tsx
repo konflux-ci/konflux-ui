@@ -58,23 +58,26 @@ import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 
-function replaceParamValue(results, paramName, visibility, proxyHost) {
-  if (!results) {
-    return results;
+const addProxyUrlParamValue = <T extends { name: string; value: string | string[] }>(
+  items: T[] | undefined | null,
+  paramName: string,
+  visibility: ImageRepositoryVisibility,
+  proxyHost: string | null | undefined,
+): T[] | null | undefined => {
+  if (!items || visibility !== ImageRepositoryVisibility.private) {
+    return items;
   }
-  return results.map((r) =>
-    r.name === paramName
-      ? {
-          ...r,
-          value: getImageUrlForVisibility(
-            r.value as string,
-            visibility as ImageRepositoryVisibility,
-            proxyHost as string,
-          ),
-        }
-      : r,
-  );
-}
+  return items.flatMap((r) => {
+    if (r.name !== paramName || typeof r.value !== 'string') {
+      return r;
+    }
+    const proxyUrl = getImageUrlForVisibility(r.value, visibility, proxyHost ?? null);
+    if (proxyUrl == null || proxyUrl === r.value) {
+      return [r];
+    }
+    return [r, { ...r, name: `${paramName} (via access proxy)`, value: proxyUrl }];
+  });
+};
 
 const PipelineRunDetailsTab: React.FC = () => {
   const pipelineRunName = useParams<RouterParams>().pipelineRunName;
@@ -103,7 +106,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   }, [snapshotStatusAnnotation]);
 
   const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
+  const [urlInfo, imageProxyLoaded, proxyError] = useImageProxy();
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     componentName,
@@ -115,7 +118,46 @@ const PipelineRunDetailsTab: React.FC = () => {
     [taskRuns, generateSbomUrl],
   );
 
-  if (!(loaded && taskRunsLoaded && imageRepoLoaded && proxyLoaded)) {
+  const results = getPipelineRunStatusResults(pipelineRun);
+  const patchedResultsForProxy = React.useMemo(
+    () =>
+      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
+        ? addProxyUrlParamValue(
+            results,
+            'IMAGE_URL',
+            imageRepository.spec.image.visibility,
+            urlInfo?.hostname,
+          )
+        : results,
+    [
+      imageProxyLoaded,
+      imageRepoLoaded,
+      imageRepository?.spec.image?.visibility,
+      results,
+      urlInfo?.hostname,
+    ],
+  );
+  const specParams = pipelineRun?.spec?.params;
+  const patchedSpecParamsForProxy = React.useMemo(
+    () =>
+      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
+        ? addProxyUrlParamValue(
+            specParams,
+            'output-image',
+            imageRepository.spec.image.visibility,
+            urlInfo?.hostname,
+          )
+        : specParams,
+    [
+      imageProxyLoaded,
+      imageRepoLoaded,
+      imageRepository?.spec.image?.visibility,
+      specParams,
+      urlInfo?.hostname,
+    ],
+  );
+
+  if (!(loaded && taskRunsLoaded)) {
     return (
       <Bullseye>
         <Spinner />
@@ -126,21 +168,6 @@ const PipelineRunDetailsTab: React.FC = () => {
   if (error) {
     return getErrorState(error, loaded, 'pipeline run');
   }
-
-  const results = getPipelineRunStatusResults(pipelineRun);
-  const patchedResultsForProxy = replaceParamValue(
-    results,
-    'IMAGE_URL',
-    imageRepository?.spec?.image?.visibility,
-    urlInfo?.hostname,
-  );
-  const specParams = pipelineRun.spec.params;
-  const patchedSpecParamsForProxy = replaceParamValue(
-    specParams,
-    'output-image',
-    imageRepository?.spec?.image?.visibility,
-    urlInfo?.hostname,
-  );
 
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;
@@ -453,7 +480,7 @@ const PipelineRunDetailsTab: React.FC = () => {
             </FlexItem>
           </Flex>
 
-          {patchedResultsForProxy ? (
+          {patchedResultsForProxy?.length ? (
             <>
               <Divider style={{ padding: 'var(--pf-v5-global--spacer--lg) 0' }} />
               <RunResultsList results={patchedResultsForProxy} status={pipelineStatus} />

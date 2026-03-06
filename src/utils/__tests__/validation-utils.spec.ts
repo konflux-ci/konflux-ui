@@ -1,7 +1,32 @@
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../types';
-import { SecretFromSchema } from '../validation-utils';
+import { GIT_URL, SecretFromSchema } from '../validation-utils';
 
 describe('validation-utils', () => {
+  describe('git URL regexes', () => {
+    it('accepts github URLs for domain and user/repo', () => {
+      const url = 'https://github.com/konflux-ci/konflux-ui';
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    });
+
+    it('accepts gitlab URLs for domain and user/repo', () => {
+      const url = 'https://gitlab.com/konflux-ci/konflux-ui';
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    });
+
+    it('accepts forgejo URLs with subdomains for domain and user/repo', () => {
+      const url = 'https://v14.next.forgejo.org/pshivpuj/Konflux-ci.dev';
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    });
+
+    it('rejects unsupported domains', () => {
+      const url = 'https://example.com/konflux-ci/konflux-ui';
+      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(false);
+      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(false);
+    });
+  });
   it('should return error for incorrect secret name', async () => {
     await expect(() =>
       SecretFromSchema.validate({

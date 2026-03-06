@@ -471,7 +471,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // Should fall back to original URL when proxy info is not available
-      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(konfluxImageUrl).length).toBeGreaterThan(0);
     });
 
     it('should handle image repository errors gracefully', () => {
@@ -482,21 +482,21 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // Should fall back to original URL when image repository fails
-      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(konfluxImageUrl).length).toBeGreaterThan(0);
     });
 
-    it('should wait for all data to load before rendering', () => {
+    it('should render content without waiting for image repository to load', () => {
       mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
       mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
       mockUseImageRepository.mockReturnValue([null, false, null]); // imageRepo still loading
 
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
-      // Should show spinner while waiting for image repository to load
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Pipeline run details' })).toBeInTheDocument();
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     });
 
-    it('should wait for proxy info to load before rendering private images', () => {
+    it('should render content without waiting for proxy to load', () => {
       mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
       mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
       mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
@@ -504,8 +504,32 @@ describe('PipelineRunDetailsTab', () => {
 
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
-      // Should show spinner while waiting for proxy to load
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      // Should render details immediately; proxy loading does not block the tab
+      expect(screen.getByRole('heading', { name: 'Pipeline run details' })).toBeInTheDocument();
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
+
+    it('should show original URL when image repository is still loading', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([null, false, null]); // imageRepo still loading
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.queryByText(proxyImageUrl)).not.toBeInTheDocument();
+    });
+
+    it('should show original URL when proxy is still loading', () => {
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(pipelineRunWithImageUrl));
+      mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+      mockUseImageRepository.mockReturnValue([mockPrivateImageRepository, true, null]);
+      mockUseImageProxy.mockReturnValue([null, false, null]); // proxy still loading
+
+      renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
+
+      expect(screen.getByText(konfluxImageUrl)).toBeInTheDocument();
+      expect(screen.queryByText(proxyImageUrl)).not.toBeInTheDocument();
     });
 
     it('should not use proxy URL for user-owned private repositories', () => {
@@ -516,7 +540,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // User-owned repo should NOT use proxy URL even if private
-      expect(screen.getByText(userOwnedImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(userOwnedImageUrl).length).toBeGreaterThan(0);
     });
 
     it('should not use proxy URL in params for user-owned private repositories', () => {
@@ -527,7 +551,7 @@ describe('PipelineRunDetailsTab', () => {
       renderWithQueryClientAndRouter(<PipelineRunDetailsTab />);
 
       // User-owned repo should NOT use proxy URL in params even if private
-      expect(screen.getByText(userOwnedImageUrl)).toBeInTheDocument();
+      expect(screen.getAllByText(userOwnedImageUrl).length).toBeGreaterThan(0);
     });
   });
 });

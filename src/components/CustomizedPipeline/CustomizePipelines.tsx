@@ -17,7 +17,7 @@ import {
 import { Tbody, Thead, Th, Tr, Td, Table /* data-codemods */ } from '@patternfly/react-table';
 import SendIconUrl from '../../assets/send.svg';
 import SuccessIconUrl from '../../assets/success.svg';
-import { LEARN_MORE_GITLAB_URL } from '../../consts/documentation';
+import { LEARN_MORE_GITLAB_OR_FORGEJO_URL } from '../../consts/documentation';
 import { useKonfluxPublicInfo } from '../../hooks/useKonfluxPublicInfo';
 import { PACState } from '../../hooks/usePACState';
 import { ComponentModel } from '../../models';
@@ -316,8 +316,8 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               Konflux build pipelines are Pipelines as Code that are committed to your
               component&apos;s repository. To automatically build on future changes, merge the
               initial pull request sent to your connected repository. You must provide permission to
-              your repository in the Konflux Git application. If you&apos;re using GitLab, you must
-              grant permission by uploading a repository access token.
+              your repository in the Konflux Git application. If you&apos;re using GitLab or
+              Forgejo, you must grant permission by uploading a repository access token.
             </Text>
             <Text component={TextVariants.p}>
               {applicationUrl ? (
@@ -335,14 +335,14 @@ const CustomizePipeline: React.FC<React.PropsWithChildren<Props>> = ({
               ) : null}
               <ExternalLink
                 style={{ paddingLeft: 'var(--pf-v5-global--spacer--2xl)' }}
-                href={LEARN_MORE_GITLAB_URL}
+                href={LEARN_MORE_GITLAB_OR_FORGEJO_URL}
                 analytics={{
-                  link_name: 'learn-more-gitlab-token',
-                  link_location: 'gitlab-repository-access-token',
+                  link_name: 'learn-more-gitlab-or-forgejo-token',
+                  link_location: 'gitlab-or-forgejo-repository-access-token',
                   namespace,
                 }}
               >
-                Learn more about GitLab repository access token
+                Learn more about GitLab or Forgejo repository access token
               </ExternalLink>
             </Text>
           </TextContent>

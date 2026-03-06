@@ -36,8 +36,17 @@ describe('Basic Happy Path', () => {
   ];
   const pipeline = 'docker-build-oci-ta';
 
+  // Track if any test has failed - used to skip deletion on failure
+  let hasTestFailed = false;
+
   before(function () {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
+  });
+
+  afterEach(function () {
+    if (this.currentTest?.state === 'failed') {
+      hasTestFailed = true;
+    }
   });
 
   it('Create an Application with a component', () => {
@@ -88,6 +97,7 @@ describe('Basic Happy Path', () => {
       // Pipeline build plan was removed from the Pipeline runs Tab
       // See https://issues.redhat.com/browse/KFLUXBUGS-603
       ComponentsTabPage.openComponent(componentName);
+      ComponentDetailsPage.verifyPipelineRunIsVisible(`${componentName}-on-pull`);
       componentPage.clickMergePullRequest();
 
       APIHelper.mergePR(
@@ -192,7 +202,7 @@ describe('Basic Happy Path', () => {
       applicationDetailPage.openBuildLog(componentName);
       applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
       applicationDetailPage.verifyFailedLogTasksNotExists();
-      applicationDetailPage.checkBuildLog('push-dockerfile', 'Selecting auth for quay.io');
+      applicationDetailPage.checkBuildLog('push-dockerfile', 'Using token for quay.io');
       applicationDetailPage.closeBuildLog();
     });
   });
@@ -208,6 +218,15 @@ describe('Basic Happy Path', () => {
   });
 
   describe('Delete the application via UI', () => {
+    before(function () {
+      // Skip deletion if any previous test has failed on stage - preserve app for debugging
+      if (hasTestFailed && Cypress.env('PERIODIC_RUN_STAGE')) {
+        cy.log('⚠️ Skipping application deletion - previous tests failed');
+        cy.log(`Application "${applicationName}" will be preserved for debugging`);
+        this.skip();
+      }
+    });
+
     it('Delete the application via UI', () => {
       Common.navigateTo(NavItem.applications);
       Applications.filterApplication(applicationName);

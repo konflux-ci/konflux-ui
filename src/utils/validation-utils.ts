@@ -11,12 +11,13 @@ export const konfluxUsernameYupValidation = yup
   .matches(KONFLUX_USERNAME_REGEX, KONFLUX_USERNAME_REGEX_MGS);
 
 export const GIT_URL_REGEX =
-  /^((((ssh|git|https?:?):\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%]*?:?))$/;
+  /^((((ssh|git|https?:?)\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%.]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%.]*?:?))$/;
 
 export const GIT_URL = {
   PROTOCOL_REGEX: /^https?:\/\//,
-  DOMAIN_REGEX: /^(https?:\/\/)?(github|gitlab|bitbucket)\.[\w.-]+/,
-  USER_OR_REPO_REGEX: /^https?:\/\/(github|gitlab|bitbucket)\.[\w.-]+\/[\w.-]+\/[\w.-]/,
+  DOMAIN_REGEX: /^(https?:\/\/)?([\w-]+\.)*(github|gitlab|bitbucket|forgejo)\.[\w.-]+/,
+  USER_OR_REPO_REGEX:
+    /^https?:\/\/([\w-]+\.)*(github|gitlab|bitbucket|forgejo)\.[\w.-]+\/[\w.-]+\/[\w.-]+/,
 };
 
 export const RESOURCE_NAME_REGEX = /^[a-z]([-a-z0-9]*[a-z0-9])?$/;

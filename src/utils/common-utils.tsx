@@ -1,3 +1,5 @@
+import { saveAs } from 'file-saver';
+import { dump } from 'js-yaml';
 import { curry } from 'lodash-es';
 import { HttpError } from '~/k8s/error';
 import { ApplicationKind } from '~/types';
@@ -21,6 +23,15 @@ export const has404Error = (error: unknown): error is HttpError => {
   return error instanceof HttpError && error.code === 404;
 };
 
+export const downloadYaml = <T extends K8sResourceCommon>(resource: T) => {
+  if (!resource) return;
+  const resourceYaml = dump(resource) as string;
+  const blob = new Blob([resourceYaml], {
+    type: 'text/yaml;charset=utf-8',
+  });
+  const filename = `${resource.metadata?.name || 'resource'}.yaml`;
+  saveAs(blob, filename);
+};
 /**
  * Parse a string value to boolean
  * @param value - String value ("true"/"false" or undefined)

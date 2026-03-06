@@ -115,3 +115,10 @@ export enum SucceedConditionReason {
   ExceededResourceQuota = 'ExceededResourceQuota',
   ConditionCheckFailed = 'ConditionCheckFailed',
 }
+
+export const UNFINISHED_PLR_STATUSES = [
+  runStatus.Pending,
+  runStatus.Running,
+  runStatus.Idle,
+  runStatus.Cancelling,
+];

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ResourceSource } from '~/types/k8s';
 import { PipelineRunLabel } from '../consts/pipelinerun';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../models';
 import { Snapshot } from '../types/coreBuildService';
@@ -7,7 +8,7 @@ import { useK8sAndKarchResource, useK8sAndKarchResources } from './useK8sAndKarc
 export const useSnapshot = (
   namespace: string,
   name: string,
-): [Snapshot | undefined, boolean, unknown, unknown, boolean] => {
+): [Snapshot | undefined, boolean, unknown, unknown, boolean, ResourceSource] => {
   const resourceInit = React.useMemo(
     () =>
       namespace
@@ -28,12 +29,13 @@ export const useSnapshot = (
     fetchError,
     wsError,
     isError,
+    source,
   } = useK8sAndKarchResource<Snapshot>(resourceInit);
 
-  return [snapshot, !isLoading, fetchError, wsError, isError];
+  return [snapshot, !isLoading, fetchError, wsError, isError, source];
 };
 
-export const useSnapshotsForApplication = (namespace, applicationName) => {
+export const useSnapshotsForApplication = (namespace, applicationName, releasable = false) => {
   return useK8sAndKarchResources<Snapshot>(
     {
       groupVersionKind: SnapshotGroupVersionKind,
@@ -46,5 +48,10 @@ export const useSnapshotsForApplication = (namespace, applicationName) => {
       },
     },
     SnapshotModel,
+    undefined,
+    undefined,
+    {
+      enableArchive: !releasable,
+    },
   );
 };

@@ -1,10 +1,11 @@
 import { useParams } from 'react-router-dom';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useK8sAndKarchResource } from '../../../hooks/useK8sAndKarchResources';
 import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { PipelineRunGroupVersionKind, SnapshotGroupVersionKind } from '../../../models';
 import { IntegrationTestScenarioKind } from '../../../types/coreBuildService';
-import { WatchK8sResource } from '../../../types/k8s';
+import { ResourceSource, WatchK8sResource } from '../../../types/k8s';
 import { renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { pipelineWithCommits } from '../../Commits/__data__/pipeline-with-commits';
 import { useCommitStatus } from '../../Commits/commit-status';
@@ -136,5 +137,41 @@ describe('SnapshotDetailsView', () => {
     renderWithQueryClientAndRouter(<SnapshotDetails />);
     expect(screen.getByTestId('snapshot-header-details')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-name').innerHTML).toBe('my-test-output-no-labels');
+  });
+
+  it('should show enabled trigger release action for cluster snapshot', async () => {
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+      source: ResourceSource.Cluster,
+    });
+    renderWithQueryClientAndRouter(<SnapshotDetails />);
+
+    const actionsButton = screen.getByRole('button', { name: /Actions/i });
+    await act(async () => {
+      await userEvent.click(actionsButton);
+    });
+
+    const triggerAction = screen.getByText('Trigger release');
+    expect(triggerAction).toBeInTheDocument();
+    expect(triggerAction.closest('button, a')).not.toHaveAttribute('aria-disabled', 'true');
+  });
+
+  it('should show disabled trigger release action for archived snapshot', async () => {
+    useSnapshotMock.mockReturnValue({
+      data: mockSnapshots[0],
+      isLoading: false,
+      source: ResourceSource.Archive,
+    });
+    renderWithQueryClientAndRouter(<SnapshotDetails />);
+
+    const actionsButton = screen.getByRole('button', { name: /Actions/i });
+    await act(async () => {
+      await userEvent.click(actionsButton);
+    });
+
+    const triggerAction = screen.getByText('Trigger release');
+    expect(triggerAction).toBeInTheDocument();
+    expect(triggerAction.closest('button, a')).toHaveAttribute('aria-disabled', 'true');
   });
 });

@@ -12,6 +12,11 @@ runs:
         if [ -f ./konflux-ci/generate-err-logs.sh ]; then
           ./konflux-ci/generate-err-logs.sh
         fi
+      shell: bash
+
+    - name: Copy UI E2E test logs
+      if: ${{ !cancelled() }}
+      run: |
         mkdir -p logs
         if [ -d artifacts ]; then cp -r artifacts/* logs/ || true; fi
       shell: bash

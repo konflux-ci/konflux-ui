@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { screen, act } from '@testing-library/react';
+import { screen, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
+import { ResourceSource } from '~/types/k8s';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../../utils/test-utils';
@@ -58,7 +59,7 @@ jest.mock('../../../../shared/components/table', () => {
 const useMockSnapshots = useK8sAndKarchResources as jest.Mock;
 
 const createWrappedComponent = () => (
-  <FilterContextProvider filterParams={['name', 'commit message', 'showMergedOnly']}>
+  <FilterContextProvider filterParams={['name', 'commitMessage', 'showMergedOnly', 'releasable']}>
     <SnapshotsListView applicationName="test-app" />
   </FilterContextProvider>
 );
@@ -72,7 +73,12 @@ describe('SnapshotsListView - Column Headers', () => {
   });
 
   it('should display all expected column headers correctly', () => {
-    useMockSnapshots.mockReturnValue({ data: mockSnapshots, isLoading: false, hasError: false });
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
 
     act(() => {
       renderWithQueryClientAndRouter(createWrappedComponent());
@@ -88,5 +94,98 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(screen.getByText('Components')).toBeInTheDocument();
     expect(screen.getByText('Commit Message')).toBeInTheDocument();
     expect(screen.getByText('Reference')).toBeInTheDocument();
+  });
+
+  it('should filter out archive snapshots when releasable filter is enabled', () => {
+    const clusterSnapshot = {
+      ...mockSnapshots[0],
+      metadata: { ...mockSnapshots[0].metadata, name: 'cluster-snapshot', uid: 'uid-cluster' },
+    };
+    const archiveSnapshot = {
+      ...mockSnapshots[0],
+      metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
+    };
+
+    const mockGetSource = (resource) => {
+      if (resource.metadata?.uid === 'uid-cluster') return ResourceSource.Cluster;
+      if (resource.metadata?.uid === 'uid-archive') return ResourceSource.Archive;
+      return undefined;
+    };
+
+    useMockSnapshots.mockImplementation(
+      (_resourceInit, _model, _queryOptions, _options, queryControl) => {
+        const enableArchive = queryControl?.enableArchive !== false;
+
+        return {
+          data: enableArchive ? [clusterSnapshot, archiveSnapshot] : [clusterSnapshot],
+          getSource: mockGetSource,
+          isLoading: false,
+          hasError: false,
+        };
+      },
+    );
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
+    expect(screen.getByText('archive-snapshot')).toBeInTheDocument();
+
+    expect(useMockSnapshots).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      undefined,
+      undefined,
+      expect.objectContaining({ enableArchive: true }),
+    );
+
+    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+    expect(switchElement).not.toBeChecked();
+
+    act(() => {
+      fireEvent.click(switchElement);
+    });
+
+    const callsWithEnableArchiveFalse = useMockSnapshots.mock.calls.filter(
+      (call) => call[4]?.enableArchive === false,
+    );
+    expect(callsWithEnableArchiveFalse.length).toBeGreaterThan(0);
+
+    expect(screen.getByText('cluster-snapshot')).toBeInTheDocument();
+    expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
+
+    expect(switchElement).toBeChecked();
+  });
+
+  it('should show filter dashboard if no results but filters are applied', () => {
+    const archiveSnapshot = {
+      ...mockSnapshots[0],
+      metadata: { ...mockSnapshots[0].metadata, name: 'archive-snapshot', uid: 'uid-archive' },
+    };
+
+    useMockSnapshots.mockImplementation(
+      (_resourceInit, _model, _queryOptions, _options, queryControl) => {
+        const enableArchive = queryControl?.enableArchive !== false;
+
+        return {
+          data: enableArchive ? [archiveSnapshot] : [],
+          getSource: () => ResourceSource.Archive,
+          isLoading: false,
+          hasError: false,
+        };
+      },
+    );
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    const switchElement = screen.getByRole('checkbox', { name: /show only releasable snapshots/i });
+
+    act(() => {
+      fireEvent.click(switchElement);
+    });
+
+    expect(switchElement).toBeInTheDocument();
   });
 });

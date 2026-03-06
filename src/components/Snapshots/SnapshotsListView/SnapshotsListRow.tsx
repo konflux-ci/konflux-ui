@@ -17,8 +17,9 @@ const SnapshotsListRow: React.FC<React.PropsWithChildren<SnapshotsListRowProps>>
   customData,
 }) => {
   const namespace = useNamespace();
-  const { applicationName } = customData || {};
-  const actions = useSnapshotActions(snapshot);
+  const { applicationName, getSource } = customData || {};
+  const source = getSource?.(snapshot);
+  const actions = useSnapshotActions(snapshot, source);
 
   const componentCount = snapshot.spec.components?.length || 0;
 

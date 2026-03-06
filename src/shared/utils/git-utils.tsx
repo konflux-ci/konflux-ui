@@ -4,11 +4,13 @@ import { GitAltIcon } from '@patternfly/react-icons/dist/esm/icons/git-alt-icon'
 import { GithubIcon } from '@patternfly/react-icons/dist/esm/icons/github-icon';
 import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import { GIT_URL_REGEX } from '../../utils/validation-utils';
+import ForgejoLogo from '../assets/forgejo-logo.svg';
 
 export enum GitProvider {
   GITHUB = 'github',
   BITBUCKET = 'bitbucket',
   GITLAB = 'gitlab',
+  FORGEJO = 'forgejo',
   UNSURE = 'other',
   INVALID = '',
 }
@@ -35,6 +37,9 @@ export const detectGitType = (url: string): GitProvider => {
   if (hasDomain(url, 'gitlab.com')) {
     return GitProvider.GITLAB;
   }
+  if (hasDomain(url, 'forgejo.org')) {
+    return GitProvider.FORGEJO;
+  }
   // Not a known URL
   return GitProvider.UNSURE;
 };
@@ -50,6 +55,14 @@ export const routeDecoratorIcon = (routeURL: string): React.ReactElement => {
       return <BitbucketIcon title="Source code" />;
     case GitProvider.GITLAB:
       return <GitlabIcon title="Source code" />;
+    case GitProvider.FORGEJO:
+      return (
+        <ForgejoLogo
+          role="img"
+          aria-label="Source code"
+          style={{ width: '1em', height: '1em', color: 'inherit' }}
+        />
+      );
     default:
       return <GitAltIcon title="Source code" />;
   }

@@ -376,3 +376,9 @@ export const runStatusToRunStatus = (status: runStatus): RunStatus => {
       return RunStatus.Pending;
   }
 };
+
+export const isTaskRunInPipelineRun = (
+  pipelineRun: PipelineRunKind,
+  taskRunName: string,
+): boolean =>
+  pipelineRun?.status?.pipelineSpec?.tasks?.some((task) => task.name === taskRunName) ?? false;
