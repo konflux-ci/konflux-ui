@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { renderHook, act } from '@testing-library/react-hooks';
+import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunEventType, PipelineRunLabel, runStatus } from '../../../../consts/pipelinerun';
 import { useComponent } from '../../../../hooks/useComponents';
 import { useSnapshot } from '../../../../hooks/useSnapshots';
@@ -10,6 +11,7 @@ import { useAccessReviewForModel } from '../../../../utils/rbac';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
 import { mockComponent } from '../../../Components/ComponentDetails/__data__/mockComponentDetails';
 import {
+  useDownloadYamlActionLazy,
   usePipelinererunAction,
   usePipelinerunActions,
   useRerunActionLazy,
@@ -68,6 +70,57 @@ jest.mock('../../../../k8s', () => ({
 jest.mock('../../../../shared/providers/Namespace', () => ({
   useNamespace: jest.fn(() => 'test-ns'),
 }));
+
+jest.mock('~/utils/common-utils', () => ({
+  ...jest.requireActual('~/utils/common-utils'),
+  downloadYaml: jest.fn(),
+}));
+
+const downloadYamlMock = downloadYaml as jest.Mock;
+
+describe('useDownloadYamlActionLazy', () => {
+  const mockPipelineRun = {
+    metadata: { name: 'test-plr', namespace: 'test-ns' },
+    spec: {},
+    status: {},
+  } as unknown as PipelineRunKind;
+
+  beforeEach(() => {
+    downloadYamlMock.mockImplementation(() => {});
+  });
+
+  it('should return one action with Download YAML id and label after onOpen', () => {
+    const { result } = renderHook(() => useDownloadYamlActionLazy(mockPipelineRun));
+
+    act(() => {
+      result.current[1](true);
+    });
+
+    const actions = result.current[0];
+    expect(actions).toHaveLength(1);
+    expect(actions[0]).toEqual(
+      expect.objectContaining({
+        id: 'download-pipelinerun-yaml',
+        label: 'Download YAML',
+      }),
+    );
+    expect(typeof actions[0].cta).toBe('function');
+  });
+
+  it('should call downloadYaml with pipelineRun when Download YAML cta is invoked', () => {
+    const { result } = renderHook(() => useDownloadYamlActionLazy(mockPipelineRun));
+
+    act(() => {
+      result.current[1](true);
+    });
+
+    const actions = result.current[0];
+    (actions[0].cta as () => void)();
+
+    expect(downloadYamlMock).toHaveBeenCalledTimes(1);
+    expect(downloadYamlMock).toHaveBeenCalledWith(mockPipelineRun);
+  });
+});
 
 describe('usePipelinerunActions', () => {
   let navigateMock: jest.Mock;

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { testPipelineRuns, DataState } from '~/__data__/pipelinerun-data';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
@@ -7,6 +8,7 @@ import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { createPipelineRunMockStates } from '~/unit-test-utils/mock-pipelinerun-test-utils';
 import { createUseParamsMock, routerRenderer } from '~/unit-test-utils/mock-react-router';
+import { downloadYaml } from '~/utils/common-utils';
 import { PipelineRunDetailsView } from '../PipelineRunDetailsView';
 
 // Reuse existing mock data from src/__data__/pipelinerun-data.ts
@@ -63,8 +65,14 @@ jest.mock('../../../../utils/rbac', () => ({
   useAccessReviewForModel: (...args: unknown[]) => mockUseAccessReviewForModel(...args),
 }));
 
+jest.mock('~/utils/common-utils', () => ({
+  ...jest.requireActual('~/utils/common-utils'),
+  downloadYaml: jest.fn(),
+}));
+
 // Shared mock state helpers
 const mockPipelineRunStates = createPipelineRunMockStates();
+const downloadYamlMock = downloadYaml as jest.Mock;
 
 // We are testing:
 // component composition, loading/error states, tab rendering logic, action setup, query param handling
@@ -197,5 +205,34 @@ describe('PipelineRunDetailsView', () => {
     // Find the status label and verify it shows the correct status
     const statusLabel = screen.getByText('Succeeded').closest('.pf-v5-c-label');
     expect(statusLabel).toHaveClass('pf-m-green');
+  });
+
+  describe('Download YAML action', () => {
+    it('should render Download YAML action in actions dropdown', async () => {
+      const user = userEvent.setup();
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+
+      routerRenderer(<PipelineRunDetailsView />);
+
+      const actionsButton = screen.getByRole('button', { name: /actions/i });
+      await user.click(actionsButton);
+
+      expect(screen.getByRole('menuitem', { name: /Download YAML/i })).toBeInTheDocument();
+    });
+
+    it('should call downloadYaml with pipelineRun when Download YAML is clicked', async () => {
+      const user = userEvent.setup();
+      mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+
+      routerRenderer(<PipelineRunDetailsView />);
+
+      const actionsButton = screen.getByRole('button', { name: /actions/i });
+      await user.click(actionsButton);
+
+      const downloadAction = screen.getByRole('menuitem', { name: /Download YAML/i });
+      await user.click(downloadAction);
+
+      expect(downloadYamlMock).toHaveBeenCalledWith(mockPipelineRun);
+    });
   });
 });
