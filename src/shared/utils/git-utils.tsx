@@ -37,10 +37,14 @@ export const detectGitType = (url: string): GitProvider => {
   if (hasDomain(url, 'gitlab.com')) {
     return GitProvider.GITLAB;
   }
-  if (hasDomain(url, 'forgejo.org')) {
+  if (
+    url.includes('forgejo.org') ||
+    url.includes('codeberg.org') ||
+    url.includes('fedoraproject.org')
+  ) {
     return GitProvider.FORGEJO;
   }
-  // Not a known URL
+  // Valid URL, but provider is not one of the explicitly recognized hosts
   return GitProvider.UNSURE;
 };
 
