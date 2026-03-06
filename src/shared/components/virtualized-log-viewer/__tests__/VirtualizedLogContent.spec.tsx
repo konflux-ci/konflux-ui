@@ -1,8 +1,12 @@
 import { screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import Prism from 'prismjs';
 import { renderWithQueryClientAndRouter } from '~/unit-test-utils/rendering-utils';
-import Prism from '../prism-log-language';
+import registerLogSyntax from '../refractor-log';
 import { VirtualizedLogContent } from '../VirtualizedLogContent';
+
+// Register the log language
+registerLogSyntax(Prism);
 
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
@@ -107,18 +111,28 @@ describe('VirtualizedLogContent Integration Tests', () => {
 
   describe('Log Line Rendering', () => {
     it('should render plain text log lines', () => {
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} />,
+      );
 
-      const textElements = screen.getAllByText(/line \d/);
-      expect(textElements.length).toBeGreaterThan(0);
+      // Text may be split across multiple elements due to tokenization
+      const logContent = container.querySelector('.log-viewer__content-column');
+      expect(logContent).toBeInTheDocument();
+      expect(logContent?.textContent).toContain('line 1');
+      expect(logContent?.textContent).toContain('line 2');
+      expect(logContent?.textContent).toContain('line 3');
     });
 
     it('should render actual log content', () => {
-      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} />,
+      );
 
-      expect(screen.getByText(/line 1/)).toBeInTheDocument();
-      expect(screen.getByText(/line 2/)).toBeInTheDocument();
-      expect(screen.getByText(/line 3/)).toBeInTheDocument();
+      // Use container queries since tokenization splits text across elements
+      const logContent = container.querySelector('.log-viewer__content-column');
+      expect(logContent?.textContent).toContain('line 1');
+      expect(logContent?.textContent).toContain('line 2');
+      expect(logContent?.textContent).toContain('line 3');
     });
 
     it('should preserve raw text when tokenization fails', () => {
@@ -286,16 +300,17 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should handle data with trailing newlines', () => {
       const dataWithNewlines = 'line 1\nline 2\n\n';
 
-      renderWithQueryClientAndRouter(
+      const { container } = renderWithQueryClientAndRouter(
         <VirtualizedLogContent {...defaultProps} data={dataWithNewlines} />,
       );
 
       const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
       expect(listElement).toBeInTheDocument();
 
-      // Should render the lines
-      expect(screen.getByText(/line 1/)).toBeInTheDocument();
-      expect(screen.getByText(/line 2/)).toBeInTheDocument();
+      // Should render the lines - use container queries since tokenization splits text
+      const logContent = container.querySelector('.log-viewer__content-column');
+      expect(logContent?.textContent).toContain('line 1');
+      expect(logContent?.textContent).toContain('line 2');
     });
 
     it('should handle special characters in log content', () => {

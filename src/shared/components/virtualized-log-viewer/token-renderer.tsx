@@ -1,6 +1,6 @@
 import React from 'react';
+import Prism from 'prismjs';
 import { flattenTokenText, isMatchCurrent } from './log-viewer-utils';
-import Prism from './prism-log-language';
 import type { MatchRange } from './types';
 
 /**

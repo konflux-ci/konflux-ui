@@ -1,4 +1,4 @@
-import Prism from './prism-log-language';
+import Prism from 'prismjs';
 import type { MatchRange } from './types';
 
 /** Recursively flattens nested Prism tokens into plain text */

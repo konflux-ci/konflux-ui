@@ -1,5 +1,5 @@
+import Prism from 'prismjs';
 import { flattenTokenText, getLineMatches, isMatchCurrent } from '../log-viewer-utils';
-import Prism from '../prism-log-language';
 
 describe('log-viewer-utils', () => {
   describe('flattenTokenText', () => {
