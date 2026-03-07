@@ -8,6 +8,7 @@ import ErrorEmptyState from '../shared/components/empty-state/ErrorEmptyState';
 import { namespaceLoader, NamespaceProvider } from '../shared/providers/Namespace';
 import applicationRoutes from './page-routes/application';
 import commitRoutes from './page-routes/commit';
+import componentVersionRoutes from './page-routes/component-version';
 import componentRoutes from './page-routes/components';
 import componentsPageRoutes from './page-routes/components-page';
 import integrationTestRoutes from './page-routes/integration-test';
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
       ...applicationRoutes,
       ...componentRoutes,
       ...componentsPageRoutes,
+      ...componentVersionRoutes,
       ...releaseRoutes,
       ...releaseServiceRoutes,
       ...secretRoutes,
