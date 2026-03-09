@@ -123,9 +123,14 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   // TODO: temporary until item count is not removed from MultiSelect
   const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
 
+  const effectiveFilters = React.useMemo(
+    () => (versionName ? { ...filters, version: [] } : filters),
+    [filters, versionName],
+  );
+
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(sortedPipelineRuns, filters, undefined, componentName),
-    [sortedPipelineRuns, filters, componentName],
+    () => filterPipelineRuns(sortedPipelineRuns, effectiveFilters, undefined, componentName),
+    [sortedPipelineRuns, effectiveFilters, componentName],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : sortedPipelineRuns);

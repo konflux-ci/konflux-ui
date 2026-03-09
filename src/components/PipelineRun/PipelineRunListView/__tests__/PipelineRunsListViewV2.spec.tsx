@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, waitFor } from '@testing-library/react';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
@@ -286,5 +286,23 @@ describe('PipelineRunsListViewV2', () => {
     ]);
     render(<TestedComponentV2 />);
     screen.getByTestId('data-table-skeleton');
+  });
+
+  it('should ignore stale version filter on fixed-version pages', async () => {
+    render(
+      <FilterContext.Provider
+        value={{
+          filters: { version: '["stale-branch"]' },
+          setFilters: jest.fn(),
+          onClearFilters: jest.fn(),
+        }}
+      >
+        <PipelineRunsListViewV2 componentName="sample-component" versionName="main" />
+      </FilterContext.Provider>,
+    );
+    await waitFor(() => {
+      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
+      expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
+    });
   });
 });
