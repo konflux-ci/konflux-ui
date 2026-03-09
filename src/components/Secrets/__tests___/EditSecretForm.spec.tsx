@@ -13,10 +13,20 @@ import {
 } from '../__data__/mock-secrets';
 import EditSecretForm from '../SecretsForm/EditSecretForm';
 
-jest.mock('react-router-dom', () => ({
-  useNavigate: jest.fn(),
-  useLocation: jest.fn(),
-}));
+jest.mock('react-router-dom', () => {
+  const mockUseNavigate = jest.fn();
+  const mockUseLocation = jest.fn();
+  const useSearchParams = jest.fn(() => {
+    const location = mockUseLocation() as { search?: string };
+    const search = typeof location?.search === 'string' ? location.search : '';
+    return [new URLSearchParams(search), jest.fn()];
+  });
+  return {
+    useNavigate: mockUseNavigate,
+    useLocation: mockUseLocation,
+    useSearchParams,
+  };
+});
 
 jest.mock('~/hooks/useSecrets', () => ({
   useSecret: jest.fn(),
