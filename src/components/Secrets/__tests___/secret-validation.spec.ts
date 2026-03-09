@@ -1,5 +1,8 @@
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../../types';
-import { secretFormValidationSchema } from '../utils/secret-validation';
+import {
+  getSecretFormValidationSchema,
+  secretFormValidationSchema,
+} from '../utils/secret-validation';
 
 describe('validation-utils', () => {
   it('should validate name field', async () => {
@@ -77,5 +80,19 @@ describe('validation-utils', () => {
         },
       }),
     ).rejects.toThrow('Required');
+  });
+
+  it('should allow empty SSH private key when editing (isEditMode)', async () => {
+    const editSchema = getSecretFormValidationSchema({ isEditMode: true });
+    await expect(
+      editSchema.validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.source,
+        source: {
+          authType: SourceSecretType.ssh,
+          ['ssh-privatekey']: '',
+        },
+      }),
+    ).resolves.toBeDefined();
   });
 });
