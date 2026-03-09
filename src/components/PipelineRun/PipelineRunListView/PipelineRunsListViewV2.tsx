@@ -71,7 +71,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
       React.useMemo(
         () => ({
           selector: {
-            filterByCreationTimestampAfter: component.metadata?.creationTimestamp,
+            filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             filterByName: nameFilter || undefined,
             matchLabels: {
               [PipelineRunLabel.COMPONENT]: componentName,
@@ -81,7 +81,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
             },
           },
         }),
-        [component.metadata?.creationTimestamp, componentName, nameFilter, versionName],
+        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionName],
       ),
     );
 
