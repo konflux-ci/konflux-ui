@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           # Use head_branch to identify runs; pull_requests can be empty for pull_request_target from forks
           cutoff="$(date -u -d '1 day ago' +%Y-%m-%dT%H:%M:%SZ)"
-          runs=$(gh api "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&per_page=50" \
+          runs=$(gh api --paginate "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&per_page=100" \
             --jq '[.workflow_runs[]
               | select(.event == "pull_request_target")
               | select(.created_at >= "'"$cutoff"'")
