@@ -1,11 +1,12 @@
 import * as React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Bullseye, Form, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useSearchParam } from '~/hooks/useSearchParam';
 import { useSecret } from '~/hooks/useSecrets';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
@@ -33,8 +34,7 @@ import { SecretTypeSubForm } from './SecretTypeSubForm';
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
-  const location = useLocation();
-  const secretName = new URLSearchParams(location.search).get('secretName');
+  const [secretName] = useSearchParam('secretName');
 
   const [secretData, secretLoaded, error] = useSecret(namespace, secretName);
 

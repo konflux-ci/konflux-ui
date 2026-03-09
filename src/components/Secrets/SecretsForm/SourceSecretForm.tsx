@@ -36,6 +36,7 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
           { key: 'ssh', value: SourceSecretType.ssh },
         ]}
         isDisabled={isEditMode}
+        required={!isEditMode}
         className="secret-type-subform__dropdown"
       />
       <InputField name="source.host" label="Host" helperText="Host for the secret" />
@@ -67,6 +68,7 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
               ? 'If you want to keep the same SSH private key, leave this field blank'
               : 'For Git authentication'
           }
+          required={!isEditMode}
         />
       )}
     </>
