@@ -120,7 +120,6 @@ const EditSecretForm: React.FC = () => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((editError) => {
-            // eslint-disable-next-line no-console
             logger.warn('Error while submitting secret form:', { editError });
             actions.setSubmitting(false);
             actions.setStatus({ submitError: editError.message });
