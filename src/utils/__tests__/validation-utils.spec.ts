@@ -1,30 +1,36 @@
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../types';
-import { GIT_URL, SecretFromSchema } from '../validation-utils';
+import { GIT_REPO_URL_REGEX, SecretFromSchema } from '../validation-utils';
 
 describe('validation-utils', () => {
-  describe('git URL regexes', () => {
-    it('accepts github URLs for domain and user/repo', () => {
-      const url = 'https://github.com/konflux-ci/konflux-ui';
-      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
-      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+  describe('git repo URL regex', () => {
+    it('accepts github URLs', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://github.com/konflux-ci/konflux-ui')).toBe(true);
     });
 
-    it('accepts gitlab URLs for domain and user/repo', () => {
-      const url = 'https://gitlab.com/konflux-ci/konflux-ui';
-      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
-      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    it('accepts gitlab URLs', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://gitlab.com/konflux-ci/konflux-ui')).toBe(true);
     });
 
-    it('accepts forgejo URLs with subdomains for domain and user/repo', () => {
-      const url = 'https://v14.next.forgejo.org/pshivpuj/Konflux-ci.dev';
-      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(true);
-      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(true);
+    it('accepts forgejo URLs with subdomains', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://v14.next.forgejo.org/pshivpuj/Konflux-ci.dev')).toBe(
+        true,
+      );
     });
 
-    it('rejects unsupported domains', () => {
-      const url = 'https://example.com/konflux-ci/konflux-ui';
-      expect(GIT_URL.DOMAIN_REGEX.test(url)).toBe(false);
-      expect(GIT_URL.USER_OR_REPO_REGEX.test(url)).toBe(false);
+    it('accepts codeberg.org URLs', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://codeberg.org/owner/repo')).toBe(true);
+    });
+
+    it('accepts forge.fedoraproject.org URLs', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://forge.fedoraproject.org/owner/repo')).toBe(true);
+    });
+
+    it('accepts custom/self-hosted domain URLs', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://example.com/konflux-ci/konflux-ui')).toBe(true);
+    });
+
+    it('accepts URLs with port', () => {
+      expect(GIT_REPO_URL_REGEX.test('https://git.example.com:8443/org/repo')).toBe(true);
     });
   });
   it('should return error for incorrect secret name', async () => {
