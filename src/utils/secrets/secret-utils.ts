@@ -194,16 +194,16 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
-const getDefaultRegistryCreds = () => [{ registry: '', username: '', password: '', email: '' }];
+const REGISTRY_CREDS_DEFAULT = [{ registry: '', username: '', password: '', email: '' }];
 
 export const getRegistryCreds = (secretData: SecretKind) => {
   if ((secretData.type as SecretType) !== SecretType.dockerconfigjson) {
-    return getDefaultRegistryCreds();
+    return REGISTRY_CREDS_DEFAULT;
   }
 
   const encoded = secretData.data?.['.dockerconfigjson'];
   if (!encoded) {
-    return getDefaultRegistryCreds();
+    return REGISTRY_CREDS_DEFAULT;
   }
 
   try {
@@ -217,12 +217,12 @@ export const getRegistryCreds = (secretData: SecretKind) => {
         password: '', // Intentionally not displayed, password is sensitive
         email: authData.email ?? '',
       }));
-      return creds.length > 0 ? creds : getDefaultRegistryCreds();
+      return creds.length > 0 ? creds : REGISTRY_CREDS_DEFAULT;
     }
   } catch {
-    return getDefaultRegistryCreds();
+    return REGISTRY_CREDS_DEFAULT;
   }
-  return getDefaultRegistryCreds();
+  return REGISTRY_CREDS_DEFAULT;
 };
 
 export const getTargetLabelsForRemoteSecret = (
