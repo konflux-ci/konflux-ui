@@ -27,6 +27,11 @@ describe('shared git-utils', () => {
       expect(detectGitType('https://www.forgejo.org/org/repo')).toBe(GitProvider.FORGEJO);
     });
 
+    it('returns FORGEJO for Forgejo subdomain URLs', () => {
+      expect(detectGitType('https://v14.next.forgejo.org/org/repo')).toBe(GitProvider.FORGEJO);
+      expect(detectGitType('https://code.forgejo.org/org/repo')).toBe(GitProvider.FORGEJO);
+    });
+
     it('returns INVALID for non-URLs', () => {
       expect(detectGitType('not a url')).toBe(GitProvider.INVALID);
     });
