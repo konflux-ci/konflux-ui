@@ -1,9 +1,22 @@
-import { PipelineRunKind, PipelineRunKindV1Beta1 } from '../types';
-import { K8sResourceCommon } from '../types/k8s';
+import { PipelineRunModel, ReleaseModel } from '../models';
+import {
+  Condition,
+  PipelineRunKind,
+  PipelineRunKindV1Beta1,
+  ReleaseCondition,
+  ReleaseKind,
+} from '../types';
+import { K8sModelCommon, K8sResourceCommon } from '../types/k8s';
 
 export const filterDeletedResources = <R extends K8sResourceCommon[]>(resources: R) => {
   return resources.filter((res) => !res.metadata.deletionTimestamp);
 };
+
+const isStaleRunningPipelineRunCondition = (c: Condition): boolean =>
+  c.status === 'Unknown' && c.type === 'Succeeded' && c.reason === 'Running';
+
+const isStaleRunningReleaseCondition = (c: Condition): boolean =>
+  c.status === 'False' && c.type === ReleaseCondition.Released && c.reason === 'Progressing';
 
 /*
   When pipelineruns are running, the etcd would keep their results.
@@ -23,9 +36,35 @@ export const filterOutStaleRunningPipelineRunsFromArchive = (
 ): (PipelineRunKindV1Beta1 | PipelineRunKind)[] | undefined => {
   return pipelineRuns?.filter((pipelinerun) => {
     return (
-      pipelinerun?.status?.conditions?.every(
-        (c) => !(c.status === 'Unknown' && c.type === 'Succeeded' && c.reason === 'Running'),
-      ) ?? true
+      pipelinerun?.status?.conditions?.every((c) => !isStaleRunningPipelineRunCondition(c)) ?? true
     );
   });
+};
+
+export const filterOutDeletedAndStaleRunningResources = <T extends K8sResourceCommon>(
+  resources: T[],
+  model: K8sModelCommon,
+): T[] => {
+  if (model === PipelineRunModel) {
+    return (resources as unknown as (PipelineRunKindV1Beta1 | PipelineRunKind)[])?.filter(
+      (pipelinerun) => {
+        return (
+          (pipelinerun?.status?.conditions?.every((c) => !isStaleRunningPipelineRunCondition(c)) ??
+            true) ||
+          !pipelinerun.metadata?.deletionTimestamp
+        );
+      },
+    ) as unknown as T[];
+  }
+
+  if (model === ReleaseModel) {
+    return (resources as unknown as ReleaseKind[])?.filter((release) => {
+      return (
+        (release?.status?.conditions?.every((c) => !isStaleRunningReleaseCondition(c)) ?? true) ||
+        !release.metadata?.deletionTimestamp
+      );
+    }) as unknown as T[];
+  }
+
+  return filterDeletedResources(resources) as unknown as T[];
 };

@@ -37,7 +37,7 @@ import {
   BuildRequest,
   BUILD_REQUEST_ANNOTATION,
   GIT_PROVIDER_ANNOTATION,
-  GITLAB_PROVIDER_URL_ANNOTATION,
+  GIT_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
 import {
   createK8sSecretResource,
@@ -165,7 +165,7 @@ export const createComponent = (
     const newAnnotations = annotations;
     if (gitProviderAnnotation || gitURLAnnotation) {
       newAnnotations[GIT_PROVIDER_ANNOTATION] = gitProviderAnnotation;
-      newAnnotations[GITLAB_PROVIDER_URL_ANNOTATION] = gitURLAnnotation;
+      newAnnotations[GIT_PROVIDER_URL_ANNOTATION] = gitURLAnnotation;
     }
     resource.metadata.annotations = { ...resource.metadata.annotations, ...newAnnotations };
   }

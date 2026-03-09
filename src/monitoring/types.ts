@@ -1,4 +1,5 @@
-import { LogLevelValues } from './const';
+import type { LogLevel } from '~/consts/log-levels';
+export type { LogLevel } from '~/consts/log-levels';
 
 /** Monitoring provider ID */
 export type MonitoringProviderId = 'sentry' | 'noop';
@@ -14,8 +15,6 @@ export interface MonitoringConfig {
     errors?: number; // error capture sample rate (0..1)
   };
 }
-
-export type LogLevel = (typeof LogLevelValues)[keyof typeof LogLevelValues];
 
 /** User context to associate events and traces with a user. */
 export interface UserContext {

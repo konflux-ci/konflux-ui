@@ -61,7 +61,7 @@ import ScanDescriptionListGroup from './ScanDescriptionListGroup';
 const addProxyUrlParamValue = <T extends { name: string; value: string | string[] }>(
   items: T[] | undefined | null,
   paramName: string,
-  visibility: ImageRepositoryVisibility | undefined,
+  visibility: ImageRepositoryVisibility,
   proxyHost: string | null | undefined,
 ): T[] | null | undefined => {
   if (!items || visibility !== ImageRepositoryVisibility.private) {
@@ -106,7 +106,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   }, [snapshotStatusAnnotation]);
 
   const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
-  const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
+  const [urlInfo, imageProxyLoaded, proxyError] = useImageProxy();
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     componentName,
@@ -118,7 +118,46 @@ const PipelineRunDetailsTab: React.FC = () => {
     [taskRuns, generateSbomUrl],
   );
 
-  if (!(loaded && taskRunsLoaded && imageRepoLoaded && proxyLoaded)) {
+  const results = getPipelineRunStatusResults(pipelineRun);
+  const patchedResultsForProxy = React.useMemo(
+    () =>
+      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
+        ? addProxyUrlParamValue(
+            results,
+            'IMAGE_URL',
+            imageRepository.spec.image.visibility,
+            urlInfo?.hostname,
+          )
+        : results,
+    [
+      imageProxyLoaded,
+      imageRepoLoaded,
+      imageRepository?.spec.image?.visibility,
+      results,
+      urlInfo?.hostname,
+    ],
+  );
+  const specParams = pipelineRun?.spec?.params;
+  const patchedSpecParamsForProxy = React.useMemo(
+    () =>
+      imageProxyLoaded && imageRepoLoaded && !!imageRepository?.spec?.image?.visibility
+        ? addProxyUrlParamValue(
+            specParams,
+            'output-image',
+            imageRepository.spec.image.visibility,
+            urlInfo?.hostname,
+          )
+        : specParams,
+    [
+      imageProxyLoaded,
+      imageRepoLoaded,
+      imageRepository?.spec.image?.visibility,
+      specParams,
+      urlInfo?.hostname,
+    ],
+  );
+
+  if (!(loaded && taskRunsLoaded)) {
     return (
       <Bullseye>
         <Spinner />
@@ -129,21 +168,6 @@ const PipelineRunDetailsTab: React.FC = () => {
   if (error) {
     return getErrorState(error, loaded, 'pipeline run');
   }
-
-  const results = getPipelineRunStatusResults(pipelineRun);
-  const patchedResultsForProxy = addProxyUrlParamValue(
-    results,
-    'IMAGE_URL',
-    imageRepository?.spec?.image?.visibility,
-    urlInfo?.hostname,
-  );
-  const specParams = pipelineRun.spec.params;
-  const patchedSpecParamsForProxy = addProxyUrlParamValue(
-    specParams,
-    'output-image',
-    imageRepository?.spec?.image?.visibility,
-    urlInfo?.hostname,
-  );
 
   const pipelineRunFailed = (getPLRLogSnippet(pipelineRun, taskRuns) ||
     {}) as ErrorDetailsWithStaticLog;

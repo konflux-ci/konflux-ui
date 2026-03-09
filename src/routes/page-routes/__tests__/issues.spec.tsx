@@ -31,6 +31,12 @@ jest.mock('~/components/Issues', () => ({
   issuesPageLoader: jest.fn(() => ({ data: 'test-data' })),
 }));
 
+// Mock ensureFeatureFlagOnLoader so lazy() doesn't throw HttpError(404)
+jest.mock('~/feature-flags/utils', () => ({
+  ...jest.requireActual('~/feature-flags/utils'),
+  ensureFeatureFlagOnLoader: jest.fn(),
+}));
+
 describe('Issues Routes Configuration', () => {
   it('should export an array of routes', () => {
     expect(Array.isArray(issuesRoutes)).toBe(true);

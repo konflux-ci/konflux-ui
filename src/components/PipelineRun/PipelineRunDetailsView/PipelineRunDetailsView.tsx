@@ -14,7 +14,7 @@ import {
 } from '../../../routes/paths';
 import { RouterParams } from '../../../routes/utils';
 import { useNamespace } from '../../../shared/providers/Namespace';
-import { isResourceEnterpriseContract } from '../../../utils/enterprise-contract-utils';
+import { isResourceEnterpriseContract } from '../../../utils/conforma-utils';
 import { pipelineRunCancel, pipelineRunStop } from '../../../utils/pipeline-actions';
 import { isTaskRunInPipelineRun, pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
