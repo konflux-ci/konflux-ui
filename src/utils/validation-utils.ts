@@ -13,12 +13,8 @@ export const konfluxUsernameYupValidation = yup
 export const GIT_URL_REGEX =
   /^((((ssh|git|https?:?)\/\/:?)(([^\s@]+@|[^@]:?)[-\w.]+(:\d\d+:?)?(\/[-\w.~/?[\]!$&'()*+,;=:@%.]*:?)?:?))|([^\s@]+@[-\w.]+:[-\w.~/?[\]!$&'()*+,;=:@%.]*?:?))$/;
 
-export const GIT_URL = {
-  PROTOCOL_REGEX: /^https?:\/\//,
-  DOMAIN_REGEX: /^(https?:\/\/)?([\w-]+\.)*(github|gitlab|bitbucket|forgejo)\.[\w.-]+/,
-  USER_OR_REPO_REGEX:
-    /^https?:\/\/([\w-]+\.)*(github|gitlab|bitbucket|forgejo)\.[\w.-]+\/[\w.-]+\/[\w.-]+/,
-};
+// Basic git repo URL: https? + host + optional port + /owner/repo (any domain allowed)
+export const GIT_REPO_URL_REGEX = /^https?:\/\/[\w.-]+(\.[\w.-]+)*(:\d+)?\/[\w.-]+\/[\w.-]+/;
 
 export const RESOURCE_NAME_REGEX = /^[a-z]([-a-z0-9]*[a-z0-9])?$/;
 export const RESOURCE_NAME_REGEX_MSG =
