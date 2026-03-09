@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
-import { downloadYaml } from '~/utils/common-utils';
+import { downloadYamlAction } from '~/utils/common-utils';
 import {
   PipelineRunEventType,
   PipelineRunLabel,
@@ -438,13 +438,7 @@ export const useDownloadYamlActionLazy = (
 ): LazyActionHookResult<Action> => {
   return useLazyActionMenu({
     buildActions: () => {
-      return [
-        {
-          cta: () => downloadYaml(pipelineRun),
-          id: 'download-pipelinerun-yaml',
-          label: 'Download YAML',
-        },
-      ];
+      return [downloadYamlAction(pipelineRun)];
     },
   });
 };

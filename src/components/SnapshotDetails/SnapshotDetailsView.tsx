@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { downloadYaml } from '~/utils/common-utils';
+import { downloadYamlAction } from '~/utils/common-utils';
 import { SnapshotLabels } from '../../consts/snapshots';
 import { useSnapshot } from '../../hooks/useSnapshots';
 import { SNAPSHOT_DETAILS_PATH, SNAPSHOT_LIST_PATH } from '../../routes/paths';
@@ -131,11 +131,10 @@ const SnapshotDetailsView: React.FC = () => {
             disabledTooltip,
             onClick: cta,
           },
-          {
-            onClick: () => downloadYaml(snapshot),
-            key: 'download-snapshot-yaml',
-            label: 'Download YAML',
-          },
+          (() => {
+            const action = downloadYamlAction(snapshot);
+            return { onClick: action.cta, key: action.id, label: action.label };
+          })(),
         ]}
       />
     );

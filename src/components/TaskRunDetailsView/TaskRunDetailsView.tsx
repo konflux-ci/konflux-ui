@@ -6,7 +6,7 @@ import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { CONFORMA_TASK } from '~/consts/security';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
-import { downloadYaml } from '~/utils/common-utils';
+import { downloadYamlAction } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
@@ -108,11 +108,10 @@ export const TaskRunDetailsView: React.FC = () => {
         </>
       }
       actions={[
-        {
-          key: 'download-task-run-yaml',
-          label: 'Download YAML',
-          onClick: () => downloadYaml(taskRun),
-        },
+        (() => {
+          const action = downloadYamlAction(taskRun);
+          return { onClick: action.cta, key: action.id, label: action.label };
+        })(),
       ]}
       baseURL={baseURL}
       tabs={[

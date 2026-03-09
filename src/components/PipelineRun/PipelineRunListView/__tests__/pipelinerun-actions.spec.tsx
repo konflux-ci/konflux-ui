@@ -71,15 +71,25 @@ jest.mock('../../../../shared/providers/Namespace', () => ({
   useNamespace: jest.fn(() => 'test-ns'),
 }));
 
-jest.mock('~/utils/common-utils', () => ({
-  ...jest.requireActual('~/utils/common-utils'),
-  downloadYaml: jest.fn(),
-}));
+jest.mock('~/utils/common-utils', () => {
+  const actual = jest.requireActual('~/utils/common-utils');
+  const mockDownloadYaml = jest.fn();
+  return {
+    ...actual,
+    downloadYaml: mockDownloadYaml,
+    downloadYamlAction: (obj: { kind?: string }) => ({
+      cta: () => mockDownloadYaml(obj),
+      id: `download-${(obj.kind ?? 'resource').toLowerCase()}-yaml`,
+      label: 'Download YAML',
+    }),
+  };
+});
 
 const downloadYamlMock = downloadYaml as jest.Mock;
 
 describe('useDownloadYamlActionLazy', () => {
   const mockPipelineRun = {
+    kind: 'PipelineRun',
     metadata: { name: 'test-plr', namespace: 'test-ns' },
     spec: {},
     status: {},

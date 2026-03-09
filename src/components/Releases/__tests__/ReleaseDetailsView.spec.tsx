@@ -41,10 +41,19 @@ jest.mock('../../../utils/release-actions', () => ({
   releaseRerun: jest.fn(),
 }));
 
-jest.mock('~/utils/common-utils', () => ({
-  ...jest.requireActual('~/utils/common-utils'),
-  downloadYaml: jest.fn(),
-}));
+jest.mock('~/utils/common-utils', () => {
+  const actual = jest.requireActual('~/utils/common-utils');
+  const mockDownloadYaml = jest.fn();
+  return {
+    ...actual,
+    downloadYaml: mockDownloadYaml,
+    downloadYamlAction: (obj: { kind?: string }) => ({
+      cta: () => mockDownloadYaml(obj),
+      id: `download-${(obj.kind ?? 'resource').toLowerCase()}-yaml`,
+      label: 'Download YAML',
+    }),
+  };
+});
 
 const useMockRelease = useK8sAndKarchResource as jest.Mock;
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;

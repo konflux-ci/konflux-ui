@@ -4,7 +4,7 @@ import { Bullseye, Spinner, Text, TextVariants } from '@patternfly/react-core';
 import { ReleaseModel } from '~/models';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TrackEvents, useTrackEvent } from '~/utils/analytics';
-import { downloadYaml } from '~/utils/common-utils';
+import { downloadYamlAction } from '~/utils/common-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
 import { useAuth } from '../../auth/useAuth';
 import { useRelease } from '../../hooks/useReleases';
@@ -99,11 +99,10 @@ const ReleaseDetailsView: React.FC = () => {
           key: 're-run-release',
           label: 'Re-run release',
         },
-        {
-          onClick: () => downloadYaml(release),
-          key: 'download-release-yaml',
-          label: 'Download YAML',
-        },
+        (() => {
+          const action = downloadYamlAction(release);
+          return { onClick: action.cta, key: action.id, label: action.label };
+        })(),
       ]}
       tabs={[
         {
