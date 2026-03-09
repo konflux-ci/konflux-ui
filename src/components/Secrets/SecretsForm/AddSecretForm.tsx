@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { logger } from '@sentry/react';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
@@ -55,7 +56,7 @@ const AddSecretForm: React.FC = () => {
           })
           .catch((error) => {
             // eslint-disable-next-line no-console
-            console.warn('Error while submitting secret form:', error);
+            logger.warn('Error while submitting secret form:', { error });
             actions.setSubmitting(false);
             actions.setStatus({ submitError: error.message });
           });
