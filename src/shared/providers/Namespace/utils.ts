@@ -23,7 +23,10 @@ function fetchNamespaces(): Promise<NamespaceKind[]>;
 function fetchNamespaces(name: string): Promise<NamespaceKind>;
 function fetchNamespaces(name?: string): Promise<NamespaceKind | NamespaceKind[]> {
   return !name
-    ? K8sListResourceItems<NamespaceKind>({ model: NamespaceModel })
+    ? K8sListResourceItems<NamespaceKind>({
+        model: NamespaceModel,
+        fetchOptions: { timeout: 300000 }, // 5 minutes timeout for large namespace lists
+      })
     : K8sGetResource<NamespaceKind>({ model: NamespaceModel, queryOptions: { name } });
 }
 
