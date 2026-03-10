@@ -13,6 +13,10 @@ interface PipelineRunEmptyStateProps {
   applicationName: string;
 }
 
+/**
+ * @deprecated
+ * Replaced by PipelineRunEmptyStateV2
+ */
 const PipelineRunEmptyState: React.FC<React.PropsWithChildren<PipelineRunEmptyStateProps>> = ({
   applicationName,
 }) => {

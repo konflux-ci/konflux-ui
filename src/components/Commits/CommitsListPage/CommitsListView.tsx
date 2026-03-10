@@ -68,6 +68,10 @@ const getSortCommitFunction = (
   }
 };
 
+/**
+ * @deprecated
+ * Replaced by CommitsListViewV2
+ */
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,
