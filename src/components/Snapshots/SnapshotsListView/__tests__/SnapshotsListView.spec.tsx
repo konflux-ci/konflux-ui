@@ -92,7 +92,7 @@ describe('SnapshotsListView - Column Headers', () => {
 
     expect(screen.getByText('Created at')).toBeInTheDocument();
     expect(screen.getByText('Components')).toBeInTheDocument();
-    expect(screen.getByText('Commit Message')).toBeInTheDocument();
+    expect(screen.getByText('Commit message')).toBeInTheDocument();
     expect(screen.getByText('Reference')).toBeInTheDocument();
   });
 

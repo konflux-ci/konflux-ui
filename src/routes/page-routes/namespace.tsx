@@ -8,7 +8,9 @@ const workspaceRoutes = [
     path: NAMESPACE_LIST_PATH.path,
     errorElement: <RouteErrorBoundry />,
     async lazy() {
-      const { NamespaceListView } = await import('../../components/NamespaceList');
+      const { NamespaceListView } = await import(
+        '../../components/NamespaceList' /* webpackChunkName: "namespace-list" */
+      );
       return {
         element: (
           <FilterContextProvider filterParams={['name']}>

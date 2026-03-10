@@ -63,7 +63,7 @@ const InternalFLAGS = {
     key: 'kubearchive-logs',
     description: 'Use Kubearchive to fetch logs instead of Tekton',
     defaultEnabled: true,
-    status: 'wip',
+    status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
       failureReason: 'Kubearchive is not available on this cluster',
@@ -85,7 +85,7 @@ const InternalFLAGS = {
     key: 'taskruns-kubearchive',
     description: 'Use Kubearchive as data source for TaskRuns instead of Tekton results',
     defaultEnabled: true,
-    status: 'wip',
+    status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
       failureReason: 'Kubearchive is not available on this cluster',
@@ -96,7 +96,7 @@ const InternalFLAGS = {
     key: 'pipelineruns-kubearchive',
     description: 'Use KubeArchive as data source for PipelineRuns instead of Tekton Results',
     defaultEnabled: true,
-    status: 'wip',
+    status: 'ready',
     guard: {
       allOf: ['isKubearchiveEnabled'],
       failureReason: 'Kubearchive is not available on this cluster',

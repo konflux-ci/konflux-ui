@@ -26,6 +26,7 @@ import {
 } from '~/components/PipelineRun/ScanDetailStatus';
 import { Issue, IssueState, IssueSeverity } from '~/kite/issue-type';
 import { useIssues } from '~/kite/kite-hooks';
+import { ISSUES_LIST_PATH } from '~/routes/paths';
 import { LoadingSkeleton } from '~/shared';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -100,7 +101,9 @@ export const LatestIssuesCard: React.FC = () => {
         <Button
           variant="link"
           isInline
-          component={(props) => <Link {...props} to="/issues/list" />}
+          component={(props) => (
+            <Link {...props} to={ISSUES_LIST_PATH.createPath({ workspaceName: namespace })} />
+          )}
         >
           View all issues <ArrowRightIcon />
         </Button>

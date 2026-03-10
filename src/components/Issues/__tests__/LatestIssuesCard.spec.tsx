@@ -146,7 +146,7 @@ describe('LatestIssuesCard', () => {
       // Check that the "View all issues" link is present and has correct href
       const viewAllLink = screen.getByRole('link', { name: /view all issues/i });
       expect(viewAllLink).toBeInTheDocument();
-      expect(viewAllLink).toHaveAttribute('href', '/issues/list');
+      expect(viewAllLink).toHaveAttribute('href', '/ns/test-namespace/issues/list');
     });
 
     it('should render issues with different severities and their corresponding icons', () => {
@@ -385,7 +385,7 @@ describe('LatestIssuesCard', () => {
 
       const viewAllLink = screen.getByRole('link', { name: /view all issues/i });
       expect(viewAllLink).toBeInTheDocument();
-      expect(viewAllLink).toHaveAttribute('href', '/issues/list');
+      expect(viewAllLink).toHaveAttribute('href', '/ns/test-namespace/issues/list');
     });
   });
 
