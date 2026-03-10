@@ -61,6 +61,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         values={component}
         setValues={(newValues) => setFilters({ ...filters, component: newValues })}
         options={componentOptions}
+        hasInlineFilter={true}
       />
       <MultiSelect
         label="Application"
@@ -68,6 +69,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         values={application}
         setValues={(newValues) => setFilters({ ...filters, application: newValues })}
         options={applicationOptions}
+        hasInlineFilter={true}
       />
       <MultiSelect
         label="Release Plan"
@@ -75,6 +77,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         values={releasePlan}
         setValues={(newValues) => setFilters({ ...filters, releasePlan: newValues })}
         options={releasePlanOptions}
+        hasInlineFilter={true}
       />
       <MultiSelect
         label="Namespace"
@@ -82,6 +85,7 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
         values={namespace}
         setValues={(newValues) => setFilters({ ...filters, namespace: newValues })}
         options={namespaceOptions}
+        hasInlineFilter={true}
       />
       <MultiSelect
         label="Product"
@@ -107,4 +111,4 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
   );
 };
 
-export default React.memo(MonitoredReleasesFilterToolbar);
+export default MonitoredReleasesFilterToolbar;
