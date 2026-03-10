@@ -1111,4 +1111,44 @@ describe('ReleaseMonitorListView', () => {
       expect(uniqueNamespaces.size).toBe(10);
     });
   });
+
+  describe('Filter empty state with namespace filter', () => {
+    it('shows SelectNamespaceEmptyState when namespace filter is cleared with more than NAMESPACE_THRESHOLD namespaces', async () => {
+      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+        metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
+      }));
+
+      mockGetLastUsedNamespace.mockReturnValue('namespace-1');
+      mockUseNamespaceInfo.mockReturnValue({
+        namespaces: fifteenNamespaces,
+        namespacesLoaded: true,
+        lastUsedNamespace: 'namespace-1',
+      });
+
+      renderWithProviders(<ReleaseMonitorListView />);
+
+      // Wait for initial namespace to be fetched and releases to load
+      await waitFor(() => {
+        expect(screen.getByText('test-release-1')).toBeInTheDocument();
+      });
+
+      // Open namespace filter menu
+      const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+      fireEvent.click(namespaceButton);
+
+      // Uncheck the namespace-1 option to clear the filter
+      const option = screen.getByLabelText('namespace-1', { selector: 'input', exact: true });
+      fireEvent.click(option);
+
+      // Should show SelectNamespaceEmptyState
+      await waitFor(() => {
+        expect(screen.getByText('Select a namespace to view releases')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            'Select one or more namespaces from the namespace filter above to view releases.',
+          ),
+        ).toBeInTheDocument();
+      });
+    });
+  });
 });

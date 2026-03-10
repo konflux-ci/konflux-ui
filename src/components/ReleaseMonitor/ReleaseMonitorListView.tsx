@@ -308,10 +308,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const applicationFilterOptions =
       noApplication > 0
         ? {
-          'No application': noApplication,
-          [MENU_DIVIDER]: 1,
-          ...applicationOptions,
-        }
+            'No application': noApplication,
+            [MENU_DIVIDER]: 1,
+            ...applicationOptions,
+          }
         : applicationOptions;
 
     const componentOptions = createFilterObj(
@@ -324,10 +324,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const componentFilterOptions =
       noComponent > 0
         ? {
-          'No component': noComponent,
-          [MENU_DIVIDER]: 1,
-          ...componentOptions,
-        }
+            'No component': noComponent,
+            [MENU_DIVIDER]: 1,
+            ...componentOptions,
+          }
         : componentOptions;
 
     const productOptions = createFilterObj(releases, (mr) => mr?.product);
@@ -337,10 +337,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const productFilterOptions =
       noProduct > 0
         ? {
-          'No product': noProduct,
-          [MENU_DIVIDER]: 1,
-          ...productOptions,
-        }
+            'No product': noProduct,
+            [MENU_DIVIDER]: 1,
+            ...productOptions,
+          }
         : productOptions;
 
     const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
@@ -350,10 +350,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     const productVersionFilterOptions =
       noProductVersion > 0
         ? {
-          'No product version': noProductVersion,
-          [MENU_DIVIDER]: 1,
-          ...productVersionOptions,
-        }
+            'No product version': noProductVersion,
+            [MENU_DIVIDER]: 1,
+            ...productVersionOptions,
+          }
         : productVersionOptions;
 
     // For namespace options, ensure ALL namespaces are available, not just loaded ones
@@ -397,7 +397,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
             if (
               !existing ||
               new Date(existing.metadata.creationTimestamp) <
-              new Date(release.metadata.creationTimestamp)
+                new Date(release.metadata.creationTimestamp)
             ) {
               acc.latestReleasesByComponent[componentName] = release;
             }
@@ -469,8 +469,20 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     productVersion.length > 0 ||
     filters.showLatest;
 
+  // Show SelectNamespaceEmptyState when:
+  // 1. Initial state: no namespaces have been fetched yet
+  // 2. Namespace filter cleared: user cleared the namespace filter after having data
   const shouldShowNamespaceSelector =
-    loaded && namespaces.length > NAMESPACE_THRESHOLD && namespacesToFetch.length === 0;
+    loaded &&
+    namespaces.length > NAMESPACE_THRESHOLD &&
+    (namespacesToFetch.length === 0 || namespace.length === 0);
+
+  // When namespace filter is cleared, show empty data to trigger NoDataEmptyMsg (SelectNamespaceEmptyState)
+  const shouldShowEmptyForNamespaceFilter =
+    namespaces.length > NAMESPACE_THRESHOLD && namespace.length === 0 && releases.length > 0;
+
+  const displayData = shouldShowEmptyForNamespaceFilter ? [] : sortedFilteredData;
+  const unfilteredDisplayData = shouldShowEmptyForNamespaceFilter ? [] : sortedFilteredData;
 
   return (
     <PageLayout title="Release Monitor" description={pageDescription}>
@@ -503,24 +515,24 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         releases.length > 0 ||
         namespacesToFetch.length > 0 ||
         (loaded && namespaces.length > NAMESPACE_THRESHOLD)) && (
-          <MonitoredReleasesFilterToolbar
-            filters={filters}
-            setFilters={setFilters}
-            onClearFilters={onClearFilters}
-            statusOptions={filterOptions.statusOptions}
-            applicationOptions={filterOptions.applicationOptions}
-            releasePlanOptions={filterOptions.releasePlanOptions}
-            namespaceOptions={filterOptions.namespaceOptions}
-            componentOptions={filterOptions.componentOptions}
-            productOptions={filterOptions.productOptions}
-            productVersionOptions={filterOptions.productVersionOptions}
-          />
-        )}
+        <MonitoredReleasesFilterToolbar
+          filters={filters}
+          setFilters={setFilters}
+          onClearFilters={onClearFilters}
+          statusOptions={filterOptions.statusOptions}
+          applicationOptions={filterOptions.applicationOptions}
+          releasePlanOptions={filterOptions.releasePlanOptions}
+          namespaceOptions={filterOptions.namespaceOptions}
+          componentOptions={filterOptions.componentOptions}
+          productOptions={filterOptions.productOptions}
+          productVersionOptions={filterOptions.productVersionOptions}
+        />
+      )}
 
       <Table
         virtualize
-        data={sortedFilteredData}
-        unfilteredData={sortedFilteredData}
+        data={displayData}
+        unfilteredData={unfilteredDisplayData}
         EmptyMsg={EmptyMsg}
         NoDataEmptyMsg={
           shouldShowNamespaceSelector ? SelectNamespaceEmptyState : MonitoredReleaseEmptyState
