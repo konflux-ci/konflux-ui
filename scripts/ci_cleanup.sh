@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Purpose: This script cleans up repositories and bots that remain on GitHub and Quay after CI automation runs.
 GH_ORG="redhat-hac-qe"
 GH_SEARCH_PHASE="devfile-sample-code-with-quarkus-"
@@ -52,11 +53,12 @@ clean_github() {
         if [ "$created_epoch" -lt "$month_ago" ]; then
             repo_locator=$(echo "$repo" | jq -r '.owner.login + "/" + .name')
             echo -n "Deleting $repo_locator created at $created_at... "
-            if gh repo delete $repo_locator --yes 2>/dev/null; then
+            if delete_output=$(gh repo delete $repo_locator --yes 2>&1); then
                 echo "✅ DELETED"
                 removed_repos=$((removed_repos + 1))
             else
                 echo "❌ FAILED"
+                echo "  Error: $delete_output"
                 failed_repos=$((failed_repos + 1))
             fi
         else
@@ -161,7 +163,7 @@ clean_konflux() {
     # Delete applications by default
     resources_type=applications
     for var in "${required_vars[@]}"; do
-        if [ -z "${!var}" ]; then
+        if [ -z "${!var:-}" ]; then
             echo "Error: Required environment variable $var is not set"
             exit 1
         fi
@@ -177,14 +179,19 @@ clean_konflux() {
 
     # Login to OpenShift using oc
     echo "Authenticating to Konflux API server..."
-    if ! oc login --server="${KONFLUX_API_SERVER}" --token="${KONFLUX_TOKEN}" -n "${KONFLUX_NAMESPACE}" --insecure-skip-tls-verify > /dev/null; then
+    if ! login_output=$(oc login --server="${KONFLUX_API_SERVER}" --token="${KONFLUX_TOKEN}" -n "${KONFLUX_NAMESPACE}" --insecure-skip-tls-verify 2>&1); then
         echo "❌ Authentication failed"
+        echo "Error: $login_output"
         exit 1
     fi
     echo "✅ Authentication successful"
 
     # Get current namespace
-    CURRENT_NAMESPACE=$(oc project -q 2>/dev/null)
+    if ! CURRENT_NAMESPACE=$(oc project -q 2>&1); then
+        echo "❌ Failed to get current namespace"
+        echo "Error: $CURRENT_NAMESPACE"
+        exit 1
+    fi
 
     if [[ "$CURRENT_NAMESPACE" == "$KONFLUX_NAMESPACE" ]]; then
         echo "Using namespace: $CURRENT_NAMESPACE"
@@ -212,11 +219,13 @@ clean_konflux() {
     while read -r resources_items; do
         resources_name=$(echo "$resources_items" | jq -r '.name')
         created_at=$(echo "$resources_items" | jq -r '.created')
-        if ! created_epoch=$(date -d "$created_at" +%s 2>&1); then
+        if ! date_output=$(date -d "$created_at" +%s 2>&1); then
             echo "Warning: Invalid timestamp for $resources_name: $created_at"
+            echo "  Error: $date_output"
             skipped_resources=$((skipped_resources + 1))
             continue
         fi
+        created_epoch=$date_output
 
         if [ -z "$resources_name" ] || [ "$resources_name" = "null" ]; then
             echo "Skipping - Invalid resource name"
@@ -230,11 +239,12 @@ clean_konflux() {
                 removed_resources=$((removed_resources + 1))
             else
                 echo -n "Deleting $resources_name created at $created_at... "
-                if oc delete $resources_type "$resources_name" -n "$KONFLUX_NAMESPACE" --ignore-not-found=true > /dev/null; then
+                if delete_output=$(oc delete $resources_type "$resources_name" -n "$KONFLUX_NAMESPACE" --ignore-not-found=true 2>&1); then
                     echo "✅ DELETED"
                     removed_resources=$((removed_resources + 1))
                 else
                     echo "❌ FAILED"
+                    echo "  Error: $delete_output"
                     failed_resources=$((failed_resources + 1))
                 fi
             fi
