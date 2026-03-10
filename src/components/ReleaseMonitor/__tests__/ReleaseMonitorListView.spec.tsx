@@ -1151,4 +1151,38 @@ describe('ReleaseMonitorListView', () => {
       });
     });
   });
+
+  describe('Inline filter functionality', () => {
+    it('renders component filter button', async () => {
+      renderWithProviders(<ReleaseMonitorListView />);
+      await waitForReleasesLoaded();
+
+      const componentButton = screen.getByRole('button', { name: /component filter menu/i });
+      expect(componentButton).toBeInTheDocument();
+    });
+
+    it('renders application filter button', async () => {
+      renderWithProviders(<ReleaseMonitorListView />);
+      await waitForReleasesLoaded();
+
+      const applicationButton = screen.getByRole('button', { name: /application filter menu/i });
+      expect(applicationButton).toBeInTheDocument();
+    });
+
+    it('renders release plan filter button', async () => {
+      renderWithProviders(<ReleaseMonitorListView />);
+      await waitForReleasesLoaded();
+
+      const releasePlanButton = screen.getByRole('button', { name: /Release Plan filter menu/i });
+      expect(releasePlanButton).toBeInTheDocument();
+    });
+
+    it('renders namespace filter button with inline filter support', async () => {
+      renderWithProviders(<ReleaseMonitorListView />);
+      await waitForReleasesLoaded();
+
+      const namespaceButton = screen.getByRole('button', { name: /namespace filter menu/i });
+      expect(namespaceButton).toBeInTheDocument();
+    });
+  });
 });
