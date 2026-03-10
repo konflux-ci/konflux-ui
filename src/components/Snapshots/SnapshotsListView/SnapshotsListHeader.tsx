@@ -13,7 +13,7 @@ export const snapshotColumns = [
   { title: 'Name', className: snapshotsTableColumnClasses.name, sortable: true },
   { title: 'Created at', className: snapshotsTableColumnClasses.createdAt, sortable: true },
   { title: 'Components', className: snapshotsTableColumnClasses.components },
-  { title: 'Commit Message', className: snapshotsTableColumnClasses.commitMessage },
+  { title: 'Commit message', className: snapshotsTableColumnClasses.commitMessage },
   { title: 'Reference', className: snapshotsTableColumnClasses.reference },
   { title: '', className: snapshotsTableColumnClasses.kebab },
 ];
