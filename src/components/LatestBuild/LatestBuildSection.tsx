@@ -6,14 +6,17 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Flex,
   Spinner,
 } from '@patternfly/react-core';
-import { useLatestSuccessfulBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
+import { useLatestBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentKind } from '~/types';
 import { getCommitsFromPLRs } from '~/utils/commits-utils';
+import { pipelineRunStatus } from '~/utils/pipeline-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
+import { StatusIconWithTextLabel } from '../StatusIcon/StatusIcon';
 
 type LatestBuildSectionProps = {
   component: ComponentKind;
@@ -24,7 +27,7 @@ const LatestBuildSection: React.FC<LatestBuildSectionProps> = ({ component, vers
   const namespace = useNamespace();
 
   const [pipelineRun, pipelineRunLoaded, pipelineRunError] =
-    useLatestSuccessfulBuildPipelineRunForComponentV2(namespace, component.metadata.name, version);
+    useLatestBuildPipelineRunForComponentV2(namespace, component.metadata.name, version);
 
   const commit = React.useMemo(
     () => ((pipelineRunLoaded && pipelineRun && getCommitsFromPLRs([pipelineRun], 1)) || [])[0],
@@ -44,8 +47,10 @@ const LatestBuildSection: React.FC<LatestBuildSectionProps> = ({ component, vers
   }
 
   if (!pipelineRun) {
-    return <Alert variant="info" isInline title="No successful build pipeline available" />;
+    return <Alert variant="info" isInline title="No build pipeline available" />;
   }
+
+  const status = pipelineRunStatus(pipelineRun);
 
   return (
     <DescriptionList>
@@ -74,7 +79,10 @@ const LatestBuildSection: React.FC<LatestBuildSectionProps> = ({ component, vers
       <DescriptionListGroup>
         <DescriptionListTerm>Latest build pipeline run</DescriptionListTerm>
         <DescriptionListDescription data-test="latest-build-pipelinerun">
-          {pipelineRun.metadata?.name ?? '-'}
+          <Flex direction={{ default: 'row' }}>
+            <StatusIconWithTextLabel status={status} />
+            {pipelineRun.metadata?.name ?? '-'}
+          </Flex>
         </DescriptionListDescription>
       </DescriptionListGroup>
     </DescriptionList>
