@@ -29,7 +29,7 @@ export const SnapshotCreationStatus: React.FC<Props> = ({ pipelineRun }) => {
     }
   }, [snapshotStatusAnnotation]);
 
-  if (!snapshotCreationStatus) return null;
+  if (!snapshotCreationStatus?.message) return null;
 
   return (
     <DescriptionListGroup>

@@ -74,5 +74,37 @@ describe('SnapshotCreationStatus', () => {
       expect(screen.getByText('Snapshot failed')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /Snapshot failed/ })).toBeInTheDocument();
     });
+
+    it('should render nothing when status is failed but message is missing', () => {
+      render(
+        <SnapshotCreationStatus
+          pipelineRun={createPipelineRunWithAnnotation(JSON.stringify({ status: 'failed' }))}
+        />,
+      );
+
+      expect(screen.queryByText('Snapshot creation status')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('when valid JSON but no message', () => {
+    it('should render nothing when annotation has no message', () => {
+      render(
+        <SnapshotCreationStatus
+          pipelineRun={createPipelineRunWithAnnotation(JSON.stringify({}))}
+        />,
+      );
+
+      expect(screen.queryByText('Snapshot creation status')).not.toBeInTheDocument();
+    });
+
+    it('should render nothing when status is success but message is missing', () => {
+      render(
+        <SnapshotCreationStatus
+          pipelineRun={createPipelineRunWithAnnotation(JSON.stringify({ status: 'success' }))}
+        />,
+      );
+
+      expect(screen.queryByText('Snapshot creation status')).not.toBeInTheDocument();
+    });
   });
 });
