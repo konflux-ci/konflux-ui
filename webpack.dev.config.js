@@ -11,7 +11,7 @@ export default merge(commonConfig, {
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
-    historyApiFallback: true,
+    historyApiFallback: { disableDotRule: true },
     port: DEV_SERVER_PORT,
     hot: true,
     server: 'https',
