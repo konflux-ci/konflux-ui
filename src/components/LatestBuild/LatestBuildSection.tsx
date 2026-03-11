@@ -9,14 +9,14 @@ import {
   Flex,
   Spinner,
 } from '@patternfly/react-core';
+import CommitLabel from '~/components/Commits/commit-label/CommitLabel';
+import { StatusIconWithTextLabel } from '~/components/StatusIcon/StatusIcon';
 import { useLatestBuildPipelineRunForComponentV2 } from '~/hooks/useLatestPushBuildPipeline';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentKind } from '~/types';
 import { getCommitsFromPLRs } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
-import CommitLabel from '../Commits/commit-label/CommitLabel';
-import { StatusIconWithTextLabel } from '../StatusIcon/StatusIcon';
 
 type LatestBuildSectionProps = {
   component: ComponentKind;
