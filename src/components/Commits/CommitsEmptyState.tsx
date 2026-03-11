@@ -15,7 +15,7 @@ type CommitsEmptyStateProps = {
 
 /**
  * @deprecated
- * Replaced by CommitsEmptyStateV2
+ * Replaced by CommitsEmptyStateV2 with new component model
  */
 export const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps>> = ({
   applicationName,

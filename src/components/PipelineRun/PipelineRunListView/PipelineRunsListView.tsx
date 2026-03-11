@@ -39,7 +39,7 @@ type PipelineRunsListViewProps = {
 
 /**
  * @deprecated
- * Replaced by PipelineRunsListViewV2
+ * Replaced by PipelineRunsListViewV2 with new component model
  */
 const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListViewProps>> = ({
   applicationName,
