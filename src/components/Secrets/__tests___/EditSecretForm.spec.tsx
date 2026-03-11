@@ -387,6 +387,44 @@ describe('EditSecretForm', () => {
       expect(editSecretResource).not.toHaveBeenCalled();
     });
 
+    it('shows Required when image pull secret docker config field is touched and left empty', async () => {
+      renderWithSecret(mockImageSecretDockercfgForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Upload a .dockercfg or .docker/)).toBeInTheDocument();
+      });
+
+      const configInput = screen.getByRole('textbox', { name: 'File upload' });
+      fireEvent.change(configInput, { target: { value: '' } });
+      fireEvent.blur(configInput);
+
+      await waitFor(() => {
+        expect(screen.getByText('Required')).toBeInTheDocument();
+      });
+
+      expect(editSecretResource).not.toHaveBeenCalled();
+    });
+
+    it('shows JSON format error when image pull secret docker config is invalid JSON', async () => {
+      renderWithSecret(mockImageSecretDockercfgForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Upload a .dockercfg or .docker/)).toBeInTheDocument();
+      });
+
+      const configInput = screen.getByRole('textbox', { name: 'File upload' });
+      fireEvent.change(configInput, { target: { value: 'not valid json {{{' } });
+      fireEvent.blur(configInput);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Configuration file should be in JSON format.'),
+        ).toBeInTheDocument();
+      });
+
+      expect(editSecretResource).not.toHaveBeenCalled();
+    });
+
     it('sets submit error and does not navigate when editSecretResource rejects', async () => {
       (editSecretResource as jest.Mock).mockRejectedValue(new Error('Patch failed'));
 
