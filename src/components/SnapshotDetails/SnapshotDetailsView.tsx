@@ -15,6 +15,7 @@ import { createCommitObjectFromPLR } from '../../utils/commits-utils';
 import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import CommitLabel from '../Commits/commit-label/CommitLabel';
 import { DetailsPage } from '../DetailsPage';
+import { createDetailsPageAction } from '../DetailsPage/utils';
 
 const SnapshotDetailsView: React.FC = () => {
   const namespace = useNamespace();
@@ -131,10 +132,7 @@ const SnapshotDetailsView: React.FC = () => {
             disabledTooltip,
             onClick: cta,
           },
-          (() => {
-            const action = downloadYamlAction(snapshot);
-            return { onClick: action.cta, key: action.id, label: action.label };
-          })(),
+          createDetailsPageAction(downloadYamlAction(snapshot)),
         ]}
       />
     );

@@ -20,6 +20,7 @@ import {
 import { useNamespace } from '../../shared/providers/Namespace';
 import { useApplicationBreadcrumbs } from '../Applications/breadcrumbs/breadcrumb-utils';
 import { DetailsPage } from '../DetailsPage';
+import { createDetailsPageAction } from '../DetailsPage/utils';
 import { StatusIconWithTextLabel } from '../topology/StatusIcon';
 
 export const TaskRunDetailsView: React.FC = () => {
@@ -107,12 +108,7 @@ export const TaskRunDetailsView: React.FC = () => {
           <StatusIconWithTextLabel status={trStatus} />
         </>
       }
-      actions={[
-        (() => {
-          const action = downloadYamlAction(taskRun);
-          return { onClick: action.cta, key: action.id, label: action.label };
-        })(),
-      ]}
+      actions={[createDetailsPageAction(downloadYamlAction(taskRun))]}
       baseURL={baseURL}
       tabs={[
         {

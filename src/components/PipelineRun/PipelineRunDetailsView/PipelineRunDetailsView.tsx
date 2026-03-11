@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import { createDetailsPageAction } from '~/components/DetailsPage/utils';
 import { CONFORMA_TASK } from '~/consts/security';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { downloadYamlAction } from '~/utils/common-utils';
@@ -139,10 +140,7 @@ export const PipelineRunDetailsView: React.FC = () => {
             : undefined,
           onClick: () => pipelineRunCancel(pipelineRun),
         },
-        (() => {
-          const action = downloadYamlAction(pipelineRun);
-          return { onClick: action.cta, key: action.id, label: action.label };
-        })(),
+        createDetailsPageAction(downloadYamlAction(pipelineRun)),
       ]}
       baseURL={PIPELINE_RUNS_DETAILS_PATH.createPath({
         workspaceName: namespace,
