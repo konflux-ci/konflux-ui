@@ -73,20 +73,22 @@ export const isPartnerTask = (
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
-export const getAuthType = (type: SecretType) => {
+export const getAuthType = (
+  type: SecretType,
+): ImagePullSecretType | SourceSecretType | SecretTypeDropdownLabel | undefined => {
   switch (type) {
     case SecretType.dockerconfigjson:
-      return 'Image registry credentials';
+      return ImagePullSecretType.ImageRegistryCreds;
     case SecretType.dockercfg:
-      return 'Upload config file';
+      return ImagePullSecretType.UploadConfigFile;
     case SecretType.basicAuth:
-      return 'Basic authentication';
+      return SourceSecretType.basic;
     case SecretType.sshAuth:
-      return 'SSH authentication';
+      return SourceSecretType.ssh;
     case SecretType.opaque:
-      return 'Opaque';
+      return SecretTypeDropdownLabel.opaque;
     default:
-      return 'Unknown';
+      return undefined;
   }
 };
 
