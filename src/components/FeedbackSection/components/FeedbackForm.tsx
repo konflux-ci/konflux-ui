@@ -25,7 +25,7 @@ export interface FeedbackValues {
   email?: string;
 }
 
-interface FeedbackSectionProps {
+export interface FeedbackSectionProps {
   onBack: () => void;
   onClose: () => void;
   onSubmit: (values: FeedbackValues) => void;

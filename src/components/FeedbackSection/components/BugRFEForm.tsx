@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Link } from 'react-router-dom';
 import {
   Button,
   ButtonType,
@@ -17,7 +16,6 @@ import {
   HelperText,
 } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons/dist/esm/icons/outlined-question-circle-icon';
-import { FeedbackSections } from '../consts';
 
 interface SubmitValues {
   title: string;
@@ -25,18 +23,22 @@ interface SubmitValues {
   additionalInfo?: boolean;
 }
 
-interface BugRFESectionProps {
-  currentSection: FeedbackSections;
+export interface BugRFESectionProps {
   onBack: () => void;
   onClose: () => void;
   onSubmit: (values: SubmitValues) => void;
+  sectionHeading: string;
+  sectionDescription: React.ReactElement | string;
+  isAdditionalInfo?: boolean;
 }
 
 const BugRFESection: React.FC<BugRFESectionProps> = ({
-  currentSection,
   onClose,
   onBack,
   onSubmit,
+  sectionHeading,
+  sectionDescription,
+  isAdditionalInfo = false,
 }) => {
   const [additionalInfo, setAdditionalInfo] = React.useState<boolean>(false);
   const [title, setTitle] = React.useState<string>('');
@@ -50,26 +52,10 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
     <>
       <div className="feedback-modal__panel-header">
         <TextContent>
-          <Text component={TextVariants.h1}>
-            {currentSection === FeedbackSections.BugSection
-              ? 'Report a bug'
-              : 'Request a new feature'}
-          </Text>
+          <Text component={TextVariants.h1}>{sectionHeading}</Text>
         </TextContent>
         <TextContent className="feedback-modal__spacer-bottom">
-          <Text component={TextVariants.small}>
-            {currentSection === FeedbackSections.BugSection ? (
-              <>
-                Describe the bug you encountered. For urgent issues, use{' '}
-                <Link to="#" target="blank">
-                  #konflux-user-forum
-                </Link>{' '}
-                instead
-              </>
-            ) : (
-              'Please provide detailed description of the feature'
-            )}
-          </Text>
+          <Text component={TextVariants.small}>{sectionDescription}</Text>
         </TextContent>
       </div>
       <div className="feedback-modal__content-main">
@@ -80,9 +66,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
               name="title"
               aria-label="Title"
               label="Title"
-              data-test={
-                currentSection === FeedbackSections.BugSection ? 'bug-title' : 'feature-title'
-              }
+              data-test="issue-title"
               required
               value={title}
               onChange={(_e, val: string) => {
@@ -105,7 +89,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
             className="feedback-modal__input-field"
             label={
               <>
-                Please provide detailed description of the bug{' '}
+                Please provide detailed description{' '}
                 <Tooltip content="more info">
                   <OutlinedQuestionCircleIcon />
                 </Tooltip>
@@ -117,11 +101,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
               name="description"
               aria-label="Description"
               label="Description"
-              data-test={
-                currentSection === FeedbackSections.BugSection
-                  ? 'bug-description'
-                  : 'feature-description'
-              }
+              data-test="issue-description"
               required
               value={description}
               onChange={(_e, val: string) => {
@@ -139,7 +119,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
               </FormHelperText>
             )}
           </FormGroup>
-          {currentSection === FeedbackSections.BugSection && (
+          {isAdditionalInfo && (
             <Checkbox
               id="additionalInfo"
               aria-label="get system info"
@@ -158,8 +138,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
             onSubmit({
               title,
               description,
-              additionalInfo:
-                currentSection === FeedbackSections.BugSection ? additionalInfo : undefined,
+              additionalInfo,
             });
           }}
           isDisabled={title.length < 1 || description.length < 1}
