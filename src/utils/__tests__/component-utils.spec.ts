@@ -18,6 +18,7 @@ import {
   LAST_CONFIGURATION_ANNOTATION,
   updateImageRepositoryVisibility,
   getImageUrlForVisibility,
+  getPipelineName,
 } from '../component-utils';
 import { createK8sUtilMock } from '../test-utils';
 
@@ -376,5 +377,92 @@ describe('getImageUrlForVisibility', () => {
     expect(getImageUrlForVisibility(konfluxProdUrl, ImageRepositoryVisibility.private, '')).toBe(
       konfluxProdUrl,
     );
+  });
+});
+
+describe('getPipelineName', () => {
+  it('should return "-" when both pipelines are undefined', () => {
+    expect(getPipelineName(undefined, undefined)).toBe('-');
+  });
+
+  it('should return "-" when pipeline has no definition keys', () => {
+    expect(getPipelineName({}, undefined)).toBe('-');
+  });
+
+  it('should return pipelineref-by-name from pull-and-push', () => {
+    expect(
+      getPipelineName({ 'pull-and-push': { 'pipelineref-by-name': 'my-pipeline' } }, undefined),
+    ).toBe('my-pipeline');
+  });
+
+  it('should return pipelinespec-from-bundle name from pull-and-push', () => {
+    expect(
+      getPipelineName(
+        {
+          'pull-and-push': {
+            'pipelinespec-from-bundle': { name: 'bundle-pipeline', bundle: 'latest' },
+          },
+        },
+        undefined,
+      ),
+    ).toBe('bundle-pipeline');
+  });
+
+  it('should prefer pipelineref-by-name over pipelinespec-from-bundle', () => {
+    expect(
+      getPipelineName(
+        {
+          'pull-and-push': {
+            'pipelineref-by-name': 'by-name',
+            'pipelinespec-from-bundle': { name: 'from-bundle', bundle: 'latest' },
+          },
+        },
+        undefined,
+      ),
+    ).toBe('by-name');
+  });
+
+  it('should fall back to push definition', () => {
+    expect(getPipelineName({ push: { 'pipelineref-by-name': 'push-pipeline' } }, undefined)).toBe(
+      'push-pipeline',
+    );
+  });
+
+  it('should fall back to pull definition', () => {
+    expect(getPipelineName({ pull: { 'pipelineref-by-name': 'pull-pipeline' } }, undefined)).toBe(
+      'pull-pipeline',
+    );
+  });
+
+  it('should prefer pull-and-push over push and pull', () => {
+    expect(
+      getPipelineName(
+        {
+          'pull-and-push': { 'pipelineref-by-name': 'pull-and-push-pipeline' },
+          push: { 'pipelineref-by-name': 'push-pipeline' },
+          pull: { 'pipelineref-by-name': 'pull-pipeline' },
+        },
+        undefined,
+      ),
+    ).toBe('pull-and-push-pipeline');
+  });
+
+  it('should use defaultPipeline when versionPipeline is undefined', () => {
+    expect(
+      getPipelineName(undefined, { 'pull-and-push': { 'pipelineref-by-name': 'default-pl' } }),
+    ).toBe('default-pl');
+  });
+
+  it('should prefer versionPipeline over defaultPipeline', () => {
+    expect(
+      getPipelineName(
+        { 'pull-and-push': { 'pipelineref-by-name': 'version-pl' } },
+        { 'pull-and-push': { 'pipelineref-by-name': 'default-pl' } },
+      ),
+    ).toBe('version-pl');
+  });
+
+  it('should return "-" when definition has no name fields', () => {
+    expect(getPipelineName({ 'pull-and-push': {} }, undefined)).toBe('-');
   });
 });

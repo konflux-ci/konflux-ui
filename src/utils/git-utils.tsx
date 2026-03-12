@@ -6,36 +6,61 @@ import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import gitUrlParse from 'git-url-parse';
 import ForgejoLogo from '../shared/assets/forgejo-logo.svg';
 
-const PROVIDERS: { source: string; selfHostedKeywords?: string[] }[] = [
-  { source: 'github.com' },
-  { source: 'bitbucket.org' },
-  { source: 'gitlab.com', selfHostedKeywords: ['gitlab'] },
-  { source: 'forgejo.org', selfHostedKeywords: ['forgejo', 'gitea'] },
-  { source: 'codeberg.org' },
+type ProviderConfig = {
+  source: string;
+  branchPath: (branch: string) => string;
+  commitPath: (sha: string) => string;
+  selfHostedKeywords?: string[]; // hostname segments that identify self hosted instances
+};
+
+const providers: ProviderConfig[] = [
+  {
+    source: 'github.com',
+    branchPath: (branch) => `/tree/${branch}`,
+    commitPath: (sha) => `/commit/${sha}`,
+  },
+  {
+    source: 'bitbucket.org',
+    branchPath: (branch) => `/branch/${branch}`,
+    commitPath: (sha) => `/commits/${sha}`,
+  },
+  {
+    source: 'gitlab.com',
+    branchPath: (branch) => `/-/tree/${branch}`,
+    commitPath: (sha) => `/-/commit/${sha}`,
+    selfHostedKeywords: ['gitlab'],
+  },
+  {
+    source: 'forgejo.org',
+    branchPath: (branch) => `/src/branch/${branch}`,
+    commitPath: (sha) => `/commit/${sha}`,
+    selfHostedKeywords: ['forgejo', 'gitea'],
+  },
+  {
+    source: 'codeberg.org',
+    branchPath: (branch) => `/src/branch/${branch}`,
+    commitPath: (sha) => `/commit/${sha}`,
+  },
 ];
 
-const PATH_PREFIX: Record<string, string> = {
-  'github.com': '/tree',
-  'bitbucket.org': '/branch',
-  'gitlab.com': '/-/tree',
+const findProvider = (parsed: gitUrlParse.GitUrl): ProviderConfig | undefined => {
+  const hostSegments: string[] = parsed.resource.split('.');
+  return providers.find((p) => {
+    if (parsed.source === p.source) {
+      return true;
+    }
+
+    const keywords = p.selfHostedKeywords;
+    return keywords && hostSegments.some((seg) => keywords.includes(seg));
+  });
 };
 
-export const findProvider = (hostOrUrl: string): string | undefined => {
-  const host = hostOrUrl.includes('://')
-    ? (gitUrlParse(hostOrUrl) as gitUrlParse.GitUrl).resource
-    : hostOrUrl;
+const findProviderByHost = (host: string): ProviderConfig | undefined => {
   const segments = host.split('.');
-  return PROVIDERS.find(
+  return providers.find(
     (p) => p.source === host || p.selfHostedKeywords?.some((kw) => segments.includes(kw)),
-  )?.source;
+  );
 };
-
-const getPathPrefix = (gitSource: string, domain?: string): string | null =>
-  gitSource === 'forgejo.org' || gitSource.endsWith('.forgejo.org')
-    ? '/src/branch'
-    : domain === 'gitlab.cee.redhat.com'
-      ? '/-/tree'
-      : PATH_PREFIX[gitSource] ?? null;
 
 export const getGitPath = (
   gitSource: string,
@@ -43,8 +68,10 @@ export const getGitPath = (
   path?: string,
   domain?: string,
 ): string => {
-  const prefix = getPathPrefix(gitSource, domain);
-  return !revision || !prefix ? '' : `${prefix}/${revision}${path ? `/${path}` : ''}`;
+  if (!revision) return '';
+  const provider = findProviderByHost(domain ?? gitSource);
+  if (!provider) return '';
+  return `${provider.branchPath(revision)}${path ? `/${path}` : ''}`;
 };
 
 const forgejoIcon = (
@@ -64,4 +91,25 @@ const GIT_ICONS: Partial<Record<string, React.ReactElement>> = {
 };
 
 export const getGitIcon = (gitSource: string): React.ReactElement =>
-  GIT_ICONS[findProvider(gitSource) ?? ''] ?? <GitAltIcon alt="Git" />;
+  GIT_ICONS[findProviderByHost(gitSource)?.source ?? ''] ?? <GitAltIcon alt="Git" />;
+
+export const createBranchUrl = (repoUrl?: string, branch?: string): string | undefined => {
+  if (!repoUrl || !branch) {
+    return undefined;
+  }
+
+  let parsed: gitUrlParse.GitUrl;
+  try {
+    parsed = gitUrlParse(repoUrl);
+  } catch {
+    return undefined;
+  }
+
+  const provider = findProvider(parsed);
+  if (!provider) {
+    return undefined;
+  }
+
+  const cleanUrl = repoUrl.replace(/\.git$/, '');
+  return `${cleanUrl}${provider.branchPath(branch)}`;
+};
