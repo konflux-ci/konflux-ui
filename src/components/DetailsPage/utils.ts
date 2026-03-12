@@ -18,7 +18,5 @@ export const createDetailsPageAction = (action: DetailsPageActionInput): Details
   label: action.label,
   isDisabled: action.isDisabled ?? action.disabled,
   disabledTooltip: action.disabledTooltip,
-  onClick: () => {
-    if (typeof action.cta === 'function') void action.cta();
-  },
+  onClick: () => action.cta(),
 });
