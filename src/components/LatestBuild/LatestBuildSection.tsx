@@ -46,10 +46,6 @@ const LatestBuildSection: React.FC<LatestBuildSectionProps> = ({ component, vers
     );
   }
 
-  if (!pipelineRun) {
-    return <Alert variant="info" isInline title="No build pipeline available" />;
-  }
-
   const status = pipelineRunStatus(pipelineRun);
 
   return (
@@ -79,10 +75,14 @@ const LatestBuildSection: React.FC<LatestBuildSectionProps> = ({ component, vers
       <DescriptionListGroup>
         <DescriptionListTerm>Latest build pipeline run</DescriptionListTerm>
         <DescriptionListDescription data-test="latest-build-pipelinerun">
-          <Flex direction={{ default: 'row' }}>
-            <StatusIconWithTextLabel status={status} />
-            {pipelineRun.metadata?.name ?? '-'}
-          </Flex>
+          {pipelineRun ? (
+            <Flex direction={{ default: 'row' }}>
+              <StatusIconWithTextLabel status={status} />
+              {pipelineRun.metadata?.name ?? '-'}
+            </Flex>
+          ) : (
+            <Alert variant="info" isInline title="No build pipeline available" />
+          )}
         </DescriptionListDescription>
       </DescriptionListGroup>
     </DescriptionList>
