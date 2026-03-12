@@ -1,0 +1,19 @@
+---
+description: Common rules for maintaining documentation and code consistency/quality
+alwaysApply: true
+---
+
+# Common Rules
+
+## Analytics Documentation Sync
+
+When any code changes are made to files in `src/analytics/` — check whether the change requires updating `docs/analytics.md`. This includes but is not limited to:
+
+- New methods added to `AnalyticsService`
+- Changes to method signatures or behavior
+- New event types or property schemas
+- Changes to configuration, initialization, or the config resolution flow
+- Changes to login/logout detection logic
+- New exports or hooks added to the analytics module
+
+If the change affects any documented behavior, API, or architecture, update `docs/analytics.md` to reflect the change before completing the task.
