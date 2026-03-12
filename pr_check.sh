@@ -261,6 +261,163 @@ upload_coverage() {
     return $UPLOAD_RESULT
 }
 
+check_infra_deployments_prs() {
+    # Configuration with defaults
+    local INFRA_REPO="${INFRA_DEPLOYMENTS_REPO:-redhat-appstudio/infra-deployments}"
+    local COMPONENT="${COMPONENT_NAME:-konflux-ui}"
+    local PR_LIMIT="${INFRA_PR_LIMIT:-100}"  # Max PRs to fetch per query
+    local PR_STATE="${INFRA_PR_STATE:-open}"  # open, closed, merged, or all
+    local BOT_LOGIN="${INFRA_BOT_LOGIN:-app/rh-tap-build-team}"
+
+    # Check if gh CLI is available
+    if ! gh_check=$(command -v gh 2>&1); then
+        echo "⚠️ gh CLI not found, skipping infra-deployments PR check"
+        echo "  Error: $gh_check"
+        return 0
+    fi
+
+    # Check if GH_TOKEN is set
+    if [ -z "${GH_TOKEN:-}" ]; then
+        echo "⚠️ GH_TOKEN not set, skipping infra-deployments PR check"
+        return 0
+    fi
+
+    # Ensure artifacts directory exists
+    mkdir -p artifacts
+
+    echo "Checking ${PR_STATE} PRs in ${INFRA_REPO} for ${COMPONENT} (limit: ${PR_LIMIT})..."
+
+    # Get PRs that mention the component in title using GitHub search
+    if ! prs_json=$(gh pr list \
+        --repo "${INFRA_REPO}" \
+        --search "${COMPONENT} in:title state:${PR_STATE}" \
+        --json number,title,author,createdAt,url,state,body \
+        --limit "${PR_LIMIT}" 2>&1); then
+        echo "⚠️ Failed to fetch PRs from ${INFRA_REPO}"
+        echo "  Error: $prs_json"
+        jq -n \
+            --arg error "Failed to fetch PRs from ${INFRA_REPO}" \
+            --arg details "${prs_json}" \
+            '{error: $error, details: $details}' > artifacts/infra-deployments-prs.json
+        return 0
+    fi
+
+    # For bot-created PRs, extract included PRs from body
+    prs_json=$(echo "$prs_json" | jq --arg bot "$BOT_LOGIN" '
+        map(
+            if .author.login == $bot then
+                .includedPRs = [.body // "" |
+                    scan("https://github.com/[^/]+/[^/]+/pull/\\d+") |
+                    sub("https://github.com/"; "") |
+                    sub("/pull/"; "#")
+                ]
+            else
+                .includedPRs = []
+            end
+        )
+    ')
+
+    if [ -z "$prs_json" ] || [ "$prs_json" = "[]" ]; then
+        echo "✅ No ${PR_STATE} PRs found in infra-deployments for ${COMPONENT}"
+        echo "[]" > artifacts/infra-deployments-prs.json
+        return 0
+    fi
+
+    local pr_count
+    pr_count=$(echo "$prs_json" | jq '. | length')
+
+    echo "⚠️ Found ${pr_count} ${PR_STATE} PR(s) in infra-deployments:"
+    echo "$prs_json" | jq -r '.[] | "  #\(.number): \(.title) (by \(.author.login), created \(.createdAt | split("T")[0])) - \(.url)"'
+
+    # Save PR information for use in reports
+    echo "$prs_json" > artifacts/infra-deployments-prs.json
+
+    return 0
+}
+
+format_infra_prs_message() {
+    local json_file="artifacts/infra-deployments-prs.json"
+    local BOT_LOGIN="${INFRA_BOT_LOGIN:-app/rh-tap-build-team}"
+
+    # Return empty if file doesn't exist
+    if [ ! -f "$json_file" ]; then
+        return 0
+    fi
+
+    # Check if the file contains an error object (not an array)
+    local file_type
+    if ! file_type=$(jq -r 'type' "$json_file" 2>&1); then
+        echo "⚠️ Failed to read PR file type" >&2
+        echo "  Error: $file_type" >&2
+        return 0
+    fi
+
+    if [ "$file_type" != "array" ]; then
+        # Handle error case
+        local error_msg
+        error_msg=$(jq -r '.error // "Unknown error"' "$json_file" 2>&1)
+        local error_details
+        error_details=$(jq -r '.details // ""' "$json_file" 2>&1)
+
+        echo "⚠️ Skipping infra PR list due to lookup error" >&2
+        echo "  Error: $error_msg" >&2
+        if [ -n "$error_details" ]; then
+            echo "  Details: $error_details" >&2
+        fi
+
+        # Return error message for Slack
+        printf '\n\n⚠️ *Failed to fetch infra-deployments PRs*\n%s' "$error_msg"
+        return 0
+    fi
+
+    # Handle normal PR list
+    local pr_count
+    if ! pr_count=$(jq '. | length' "$json_file" 2>&1); then
+        echo "⚠️ Failed to count PRs" >&2
+        echo "  Error: $pr_count" >&2
+        return 0
+    fi
+
+    if [ "$pr_count" -eq 0 ]; then
+        return 0
+    fi
+
+    # Format PR list
+    # Different formatting for bot vs human PRs:
+    # - Bot PRs: highlight included konflux-ui PRs with clickable links
+    # - Human PRs: show full title and author info
+    local pr_list
+    if ! pr_list=$(jq -r --arg bot "$BOT_LOGIN" '
+        .[] |
+        # Common format: #number - title by @author at date
+        # For bot PRs, prepend "(includes ui#xxx, ui#yyy)" if available
+        (
+            if (.author.login == $bot and (.includedPRs | length) > 0) then
+                "(includes " + (
+                    .includedPRs | map(
+                        # Extract PR number and create clickable link
+                        (. | sub("konflux-ci/konflux-ui#"; "")) as $num |
+                        "<https://github.com/konflux-ci/konflux-ui/pull/" + $num + "|ui#" + $num + ">"
+                    ) | join(", ")
+                ) + ") "
+            else
+                ""
+            end
+        ) as $includes |
+        "<\(.url)|#\(.number)> " + $includes + "- \(.title) by @\(.author.login) at \(.createdAt | split("T")[0])"
+    ' "$json_file" 2>&1); then
+        # Redirect debug logs to stderr (>&2) so they don’t get captured when stdout is redirected.
+        echo "⚠️ Failed to format PR list" >&2
+        echo "  Error: $pr_list" >&2
+        # Return error message for Slack
+        printf '\n\n⚠️ *Failed to format infra-deployments PRs*\nError formatting %s PR(s)' "$pr_count"
+        return 0
+    fi
+
+    # Return formatted message for Slack
+    printf '\n\n📋 *Open infra-deployments PRs (%s):*\n%s' "$pr_count" "$pr_list"
+}
+
 send_report() {
     EXIT_STATUS=$1
     MESSAGE_GIVEN=$2
@@ -303,24 +460,59 @@ send_report() {
     fi
 
     MESSAGE="$MESSAGE $JOB_URL"
-    
+
+    # Append infra-deployments PR information if available
+    local infra_prs_msg
+    infra_prs_msg=$(format_infra_prs_message)
+    MESSAGE="$MESSAGE$infra_prs_msg"
+
     echo "Message: $MESSAGE"
+
+    # Build JSON payload properly using jq to avoid injection issues
+    PAYLOAD=$(jq -n \
+        --arg channel "${SLACK_CHANNEL_ID}" \
+        --arg text "$MESSAGE" \
+        '{channel: $channel, text: $text}')
+
+    # For testing: print the Slack payload without actually sending
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+        echo ""
+        echo "=== DRY RUN: Would send to Slack ==="
+        echo "Channel: ${SLACK_CHANNEL_ID:-[NOT SET]}"
+        echo "Message:"
+        echo -e "$MESSAGE"
+        echo ""
+        echo "JSON Payload:"
+        echo "$PAYLOAD" | jq '.'
+        echo "===================================="
+        return 0
+    fi
 
     curl -X POST https://slack.com/api/chat.postMessage \
         -H "Authorization: Bearer ${SLACK_TOKEN}" \
         -H "Content-Type: application/json; charset=utf-8" \
-        -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE}\"}"
+        -d "$PAYLOAD"
 
 }
 
-USAGE_MESSAGE="Usage: $0 [build|test|upload-coverage|send-report]
+USAGE_MESSAGE="Usage: $0 [build|test|upload-coverage|send-report|check-infra-prs]
 
-   send-report <exit_status> <message> 
-       exit_status: mandatory 
-           values: success, failure 
+   send-report <exit_status> <message>
+       exit_status: mandatory
+           values: success, failure
        message: optional
-           if empty, message is generated 
-           if set, message is used as is and JOB_URL is added after message"
+           if empty, message is generated
+           if set, message is used as is and JOB_URL is added after message
+
+   check-infra-prs
+       Check for PRs in infra-deployments repository for konflux-ui
+       Requires: gh CLI and GH_TOKEN environment variable
+       Optional env vars:
+         INFRA_DEPLOYMENTS_REPO - target repo (default: redhat-appstudio/infra-deployments)
+         COMPONENT_NAME - component to search (default: konflux-ui)
+         INFRA_PR_LIMIT - max PRs to fetch (default: 100)
+         INFRA_PR_STATE - PR state: open, closed, merged, all (default: open)
+         INFRA_BOT_LOGIN - bot account name (default: app/rh-tap-build-team)"
 
 if [ $# -eq 0 ]; then
     echo -e "$USAGE_MESSAGE"
@@ -342,6 +534,10 @@ case "$1" in
     upload-coverage)
         echo "Uploading coverage..."
         upload_coverage
+        ;;
+    check-infra-prs)
+        echo "Checking infra-deployments PRs..."
+        check_infra_deployments_prs
         ;;
     send-report)
         echo "Sending Slack report..."
