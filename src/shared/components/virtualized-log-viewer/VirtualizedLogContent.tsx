@@ -8,9 +8,6 @@ import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
 import { useTokenization } from './useTokenization';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
-import './prism-log-theme.scss';
-
-export type { SearchedWord };
 
 export interface VirtualizedLogContentProps {
   data: string;
