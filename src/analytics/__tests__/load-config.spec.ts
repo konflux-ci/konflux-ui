@@ -1,5 +1,10 @@
 import { loadAnalyticsConfig } from '../load-config';
 
+const plainTextHeaders = { get: (h: string) => (h === 'content-type' ? 'text/plain' : null) };
+const htmlHeaders = {
+  get: (h: string) => (h === 'content-type' ? 'text/html; charset=utf-8' : null),
+};
+
 describe('loadAnalyticsConfig', () => {
   const originalKonfluxRuntime = window.KONFLUX_RUNTIME;
 
@@ -16,11 +21,16 @@ describe('loadAnalyticsConfig', () => {
     it('should return config from APIs when both respond successfully', async () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         if (url === '/segment/key') {
-          return Promise.resolve({ ok: true, text: () => Promise.resolve('api-write-key-123') });
+          return Promise.resolve({
+            ok: true,
+            headers: plainTextHeaders,
+            text: () => Promise.resolve('api-write-key-123'),
+          });
         }
         if (url === '/segment/url') {
           return Promise.resolve({
             ok: true,
+            headers: plainTextHeaders,
             text: () => Promise.resolve('https://api.segment.io/v1'),
           });
         }
@@ -39,11 +49,16 @@ describe('loadAnalyticsConfig', () => {
     it('should trim whitespace from API responses', async () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         if (url === '/segment/key') {
-          return Promise.resolve({ ok: true, text: () => Promise.resolve('  key-123  \n') });
+          return Promise.resolve({
+            ok: true,
+            headers: plainTextHeaders,
+            text: () => Promise.resolve('  key-123  \n'),
+          });
         }
         if (url === '/segment/url') {
           return Promise.resolve({
             ok: true,
+            headers: plainTextHeaders,
             text: () => Promise.resolve('  https://api.example.com  \n'),
           });
         }
@@ -62,12 +77,47 @@ describe('loadAnalyticsConfig', () => {
     it('should fall back to runtime config when key API returns empty', async () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         if (url === '/segment/key') {
-          return Promise.resolve({ ok: true, text: () => Promise.resolve('') });
+          return Promise.resolve({
+            ok: true,
+            headers: plainTextHeaders,
+            text: () => Promise.resolve(''),
+          });
         }
         if (url === '/segment/url') {
           return Promise.resolve({
             ok: true,
+            headers: plainTextHeaders,
             text: () => Promise.resolve('https://api.segment.io/v1'),
+          });
+        }
+        return Promise.reject(new Error('unexpected url'));
+      });
+
+      window.KONFLUX_RUNTIME = { ANALYTICS_ENABLED: 'false' };
+
+      const config = await loadAnalyticsConfig();
+
+      expect(config).toEqual({
+        enabled: false,
+        writeKey: undefined,
+        apiUrl: undefined,
+      });
+    });
+
+    it('should fall back to runtime config when response is HTML (historyApiFallback)', async () => {
+      (global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (url === '/segment/key') {
+          return Promise.resolve({
+            ok: true,
+            headers: htmlHeaders,
+            text: () => Promise.resolve('<!DOCTYPE html><html>...</html>'),
+          });
+        }
+        if (url === '/segment/url') {
+          return Promise.resolve({
+            ok: true,
+            headers: htmlHeaders,
+            text: () => Promise.resolve('<!DOCTYPE html><html>...</html>'),
           });
         }
         return Promise.reject(new Error('unexpected url'));
@@ -153,11 +203,12 @@ describe('loadAnalyticsConfig', () => {
     it('should fall back to runtime config when key API returns 404', async () => {
       (global.fetch as jest.Mock).mockImplementation((url: string) => {
         if (url === '/segment/key') {
-          return Promise.resolve({ ok: false, status: 404 });
+          return Promise.resolve({ ok: false, status: 404, headers: plainTextHeaders });
         }
         if (url === '/segment/url') {
           return Promise.resolve({
             ok: true,
+            headers: plainTextHeaders,
             text: () => Promise.resolve('https://api.segment.io/v1'),
           });
         }

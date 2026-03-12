@@ -21,7 +21,7 @@ export async function loadAnalyticsConfig(): Promise<AnalyticsConfig> {
       fetch('/segment/url'),
     ]);
 
-    if (keyResponse.ok && urlResponse.ok) {
+    if (keyResponse.ok && urlResponse.ok && isPlainText(keyResponse) && isPlainText(urlResponse)) {
       const writeKey = (await keyResponse.text()).trim();
       const apiUrl = (await urlResponse.text()).trim();
 
@@ -34,6 +34,11 @@ export async function loadAnalyticsConfig(): Promise<AnalyticsConfig> {
   }
 
   return loadAnalyticsConfigFromRuntime();
+}
+
+function isPlainText(response: Response): boolean {
+  const contentType = response.headers.get('content-type') || '';
+  return contentType.includes('text/plain');
 }
 
 /**
