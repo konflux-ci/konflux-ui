@@ -71,6 +71,25 @@ export const isPartnerTask = (
   return !!Object.values(arr).find((secret) => secret.name === secretName);
 };
 
+export const getAuthType = (
+  type: SecretType,
+): ImagePullSecretType | SourceSecretType | SecretTypeDropdownLabel | undefined => {
+  switch (type) {
+    case SecretType.dockerconfigjson:
+      return ImagePullSecretType.ImageRegistryCreds;
+    case SecretType.dockercfg:
+      return ImagePullSecretType.UploadConfigFile;
+    case SecretType.basicAuth:
+      return SourceSecretType.basic;
+    case SecretType.sshAuth:
+      return SourceSecretType.ssh;
+    case SecretType.opaque:
+      return SecretTypeDropdownLabel.opaque;
+    default:
+      return undefined;
+  }
+};
+
 export const getSupportedPartnerTaskKeyValuePairs = (
   secretName?: string,
   arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
@@ -175,6 +194,37 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
+const REGISTRY_CREDS_DEFAULT = [{ registry: '', username: '', password: '', email: '' }];
+
+export const getRegistryCreds = (secretData: SecretKind) => {
+  if ((secretData.type as SecretType) !== SecretType.dockerconfigjson) {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+
+  const encoded = secretData.data?.['.dockerconfigjson'];
+  if (!encoded) {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+
+  try {
+    const parsed = JSON.parse(Base64.decode(encoded)) as {
+      auths?: { [key: string]: { username: string; password: string; email: string } };
+    };
+    if (parsed?.auths && typeof parsed.auths === 'object') {
+      const creds = Object.entries(parsed.auths).map(([registryName, authData]) => ({
+        registry: registryName,
+        username: authData.username,
+        password: '', // Intentionally not displayed, password is sensitive
+        email: authData.email ?? '',
+      }));
+      return creds.length > 0 ? creds : REGISTRY_CREDS_DEFAULT;
+    }
+  } catch {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+  return REGISTRY_CREDS_DEFAULT;
+};
+
 export const getTargetLabelsForRemoteSecret = (
   values: AddSecretFormValues,
 ): { [key: string]: string } => {
@@ -225,6 +275,29 @@ export const getAnnotationForSecret = (values: AddSecretFormValues): { [key: str
     return null;
   }
   return { [SecretLabels.REPO_ANNOTATION]: values.source.repo };
+};
+
+export const createK8sSecretResource = (
+  values: AddSecretFormValues,
+  secretResource: SecretKind,
+): SecretKind => {
+  const labels = {
+    secret: getLabelsForSecret(values),
+  };
+
+  const annotations = getAnnotationForSecret(values);
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels?.secret,
+      },
+      annotations,
+    },
+  };
+
+  return k8sSecretResource;
 };
 
 export const statusFromConditions = (
@@ -278,10 +351,44 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (namespace) => {
+const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
+  return await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: newK8sSecretResource.metadata.name,
+      ns: newK8sSecretResource.metadata.namespace,
+    },
+    patches: [
+      {
+        op: 'add',
+        path: '/metadata/labels',
+        value: newK8sSecretResource.metadata.labels,
+      },
+      {
+        op: 'add',
+        path: '/metadata/annotations',
+        value: newK8sSecretResource.metadata.annotations,
+      },
+      {
+        op: 'replace',
+        path: '/data',
+        value: newK8sSecretResource.data,
+      },
+    ],
+  });
+};
+
+export const editSecretResource = (updatedSecret: AddSecretFormValues, namespace: string) => {
+  const secretResource: SecretKind = getSecretFormData(updatedSecret, namespace);
+  const newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+
+  return updateSecretResource(newK8sSecretResource);
+};
+
+export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
   return [
     { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
-    { path: '#', name: 'Add secret' },
+    { path: '#', name: `${operation} secret` },
   ];
 };
 

@@ -8,9 +8,13 @@ import EncodedFileUploadField from './EncodedFileUploadField';
 
 type SourceSecretFormProps = {
   onAuthTypeChange?: (type: SourceSecretType) => void;
+  isEditMode?: boolean;
 };
 
-export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeChange }) => {
+export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
+  onAuthTypeChange,
+  isEditMode = false,
+}) => {
   const [{ value: type }] = useField<SourceSecretType>('source.authType');
 
   React.useEffect(() => {
@@ -22,12 +26,17 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeCh
       <DropdownField
         name="source.authType"
         label="Authentication type"
-        helpText="Select how you want to authenticate"
+        helpText={
+          isEditMode
+            ? 'You cannot edit the authentication type in edit mode'
+            : 'Select how you want to authenticate'
+        }
         items={[
           { key: 'basic', value: SourceSecretType.basic },
           { key: 'ssh', value: SourceSecretType.ssh },
         ]}
-        required
+        isDisabled={isEditMode}
+        required={!isEditMode}
         className="secret-type-subform__dropdown"
       />
       <InputField name="source.host" label="Host" helperText="Host for the secret" />
@@ -54,8 +63,12 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({ onAuthTypeCh
           name="source.ssh-privatekey"
           id="text-file-ssh"
           label="SSH private key"
-          helpText="For Git authentication"
-          required
+          helpText={
+            isEditMode
+              ? 'If you want to keep the same SSH private key, leave this field blank'
+              : 'For Git authentication'
+          }
+          required={!isEditMode}
         />
       )}
     </>
