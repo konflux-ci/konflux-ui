@@ -1,6 +1,6 @@
+import { logger } from '~/monitoring/logger';
 import type { AnalyticsProperties } from '~/utils/analytics';
 import { getAnalytics } from '.';
-import { logger } from '~/monitoring/logger';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
@@ -16,16 +16,18 @@ export class AnalyticsService {
     this.commonProperties = { ...this.commonProperties, ...properties };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   track(_event: string, _properties: AnalyticsProperties = {}): void {
     // noop — will be wired to getAnalytics()?.track() later
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   page(_name?: string, _properties: AnalyticsProperties = {}): void {
     // noop — will be wired to getAnalytics()?.page() later
   }
 
   identify(user: AnalyticsUser): void {
-    getAnalytics()?.identify(user.preferredUsername ?? undefined, {
+    void getAnalytics()?.identify(user.preferredUsername ?? undefined, {
       email: user.email,
       username: user.preferredUsername,
     });

@@ -10,32 +10,6 @@ const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   apiUrl: undefined,
 };
 
-/**
- * Fetch Segment config from backend APIs (/segment/key and /segment/url).
- * Falls back to window.KONFLUX_RUNTIME values for local development.
- */
-export async function loadAnalyticsConfig(): Promise<AnalyticsConfig> {
-  try {
-    const [keyResponse, urlResponse] = await Promise.all([
-      fetch('/segment/key'),
-      fetch('/segment/url'),
-    ]);
-
-    if (keyResponse.ok && urlResponse.ok && isPlainText(keyResponse) && isPlainText(urlResponse)) {
-      const writeKey = (await keyResponse.text()).trim();
-      const apiUrl = (await urlResponse.text()).trim();
-
-      if (writeKey) {
-        return { enabled: true, writeKey, apiUrl };
-      }
-    }
-  } catch {
-    // API fetch failed, fall through to runtime config
-  }
-
-  return loadAnalyticsConfigFromRuntime();
-}
-
 function isPlainText(response: Response): boolean {
   const contentType = response.headers.get('content-type') || '';
   return contentType.includes('text/plain');
@@ -62,4 +36,30 @@ function loadAnalyticsConfigFromRuntime(): AnalyticsConfig {
     writeKey: runtime.ANALYTICS_WRITE_KEY || '',
     apiUrl: runtime.ANALYTICS_API_URL || '',
   };
+}
+
+/**
+ * Fetch Segment config from backend APIs (/segment/key and /segment/url).
+ * Falls back to window.KONFLUX_RUNTIME values for local development.
+ */
+export async function loadAnalyticsConfig(): Promise<AnalyticsConfig> {
+  try {
+    const [keyResponse, urlResponse] = await Promise.all([
+      fetch('/segment/key'),
+      fetch('/segment/url'),
+    ]);
+
+    if (keyResponse.ok && urlResponse.ok && isPlainText(keyResponse) && isPlainText(urlResponse)) {
+      const writeKey = (await keyResponse.text()).trim();
+      const apiUrl = (await urlResponse.text()).trim();
+
+      if (writeKey) {
+        return { enabled: true, writeKey, apiUrl };
+      }
+    }
+  } catch {
+    // API fetch failed, fall through to runtime config
+  }
+
+  return loadAnalyticsConfigFromRuntime();
 }

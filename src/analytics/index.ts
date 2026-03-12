@@ -6,7 +6,7 @@ let analyticsInstance: Analytics | undefined;
 // Deferred promise that resolves to true/false once init settles.
 // Condition resolvers await this instead of polling a boolean flag.
 let resolveReady: (value: boolean) => void;
-let analyticsReady: Promise<boolean> = new Promise((r) => {
+const analyticsReady: Promise<boolean> = new Promise((r) => {
   resolveReady = r;
 });
 
