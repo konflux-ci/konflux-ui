@@ -9,6 +9,7 @@ import {
   createCommitObjectFromPLR,
   createRepoBranchURL,
   createRepoPullRequestURL,
+  createRepoUrl,
   getCommitDisplayName,
   getCommitsFromPLRs,
   getCommitShortName,
@@ -238,12 +239,13 @@ describe('commit-utils', () => {
           gitProvider: 'github',
         } as Commit),
       ).toEqual('https://github.com/a/b/pull/23');
+      // Without gitProvider, still works if repoURL is present (prioritized)
       expect(
         createRepoPullRequestURL({
           repoURL: 'https://github.com/a/b',
           pullRequestNumber: '23',
         } as Commit),
-      ).toEqual(null);
+      ).toEqual('https://github.com/a/b/pull/23');
       expect(
         createRepoPullRequestURL({
           gitProvider: 'github',
@@ -270,12 +272,13 @@ describe('commit-utils', () => {
           gitProvider: 'github',
         } as Commit),
       ).toEqual('https://github.com/a/b/tree/main');
+      // Without gitProvider, still works if repoURL is present (prioritized)
       expect(
         createRepoBranchURL({
           repoURL: 'https://github.com/a/b',
           branch: 'main',
         } as Commit),
-      ).toEqual(null);
+      ).toEqual('https://github.com/a/b/tree/main');
       expect(
         createRepoBranchURL({
           gitProvider: 'github',
@@ -290,6 +293,239 @@ describe('commit-utils', () => {
           gitProvider: 'github',
           repoName: 'b',
           repoOrg: 'a',
+        } as Commit),
+      ).toEqual(null);
+    });
+  });
+
+  describe('createRepoUrl for multiple providers', () => {
+    it('should prioritize repoURL for all providers', () => {
+      // GitHub with repoURL
+      expect(
+        createRepoUrl({
+          repoURL: 'https://github.com/org/repo',
+          gitProvider: 'github',
+        } as Commit),
+      ).toEqual('https://github.com/org/repo');
+
+      // GitLab with repoURL
+      expect(
+        createRepoUrl({
+          repoURL: 'https://gitlab.com/org/repo',
+          gitProvider: 'gitlab',
+        } as Commit),
+      ).toEqual('https://gitlab.com/org/repo');
+
+      // Forgejo with repoURL (self-hosted)
+      expect(
+        createRepoUrl({
+          repoURL: 'https://forgejo.example.com/org/repo',
+          gitProvider: 'forgejo',
+        } as Commit),
+      ).toEqual('https://forgejo.example.com/org/repo');
+    });
+
+    it('should construct gitlab.com URL when repoURL is missing', () => {
+      expect(
+        createRepoUrl({
+          gitProvider: 'gitlab',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual('https://gitlab.com/org/repo');
+    });
+
+    it('should return null for forgejo without repoURL', () => {
+      // Forgejo is self-hosted, can't construct URL without repoURL
+      expect(
+        createRepoUrl({
+          gitProvider: 'forgejo',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual(null);
+    });
+
+    it('should construct github.com URL when repoURL is missing', () => {
+      expect(
+        createRepoUrl({
+          gitProvider: 'github',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual('https://github.com/org/repo');
+    });
+
+    it('should return null for missing required fields', () => {
+      // Missing gitProvider
+      expect(
+        createRepoUrl({
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual(null);
+
+      // Missing repoOrg
+      expect(
+        createRepoUrl({
+          gitProvider: 'github',
+          repoName: 'repo',
+        } as Commit),
+      ).toEqual(null);
+
+      // Missing repoName
+      expect(
+        createRepoUrl({
+          gitProvider: 'github',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual(null);
+    });
+
+    it('should return null for unknown providers without repoURL', () => {
+      expect(
+        createRepoUrl({
+          gitProvider: 'bitbucket',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual(null);
+    });
+  });
+
+  describe('createRepoBranchURL for multiple providers', () => {
+    it('should use gitlab branch URL pattern', () => {
+      expect(
+        createRepoBranchURL({
+          repoURL: 'https://gitlab.com/org/repo',
+          branch: 'main',
+          gitProvider: 'gitlab',
+        } as Commit),
+      ).toEqual('https://gitlab.com/org/repo/-/tree/main');
+
+      expect(
+        createRepoBranchURL({
+          gitProvider: 'gitlab',
+          branch: 'feature-branch',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual('https://gitlab.com/org/repo/-/tree/feature-branch');
+    });
+
+    it('should use forgejo branch URL pattern', () => {
+      expect(
+        createRepoBranchURL({
+          repoURL: 'https://forgejo.example.com/org/repo',
+          branch: 'main',
+          gitProvider: 'forgejo',
+        } as Commit),
+      ).toEqual('https://forgejo.example.com/org/repo/src/branch/main');
+
+      expect(
+        createRepoBranchURL({
+          repoURL: 'https://codeberg.org/org/repo',
+          branch: 'develop',
+          gitProvider: 'forgejo',
+        } as Commit),
+      ).toEqual('https://codeberg.org/org/repo/src/branch/develop');
+    });
+
+    it('should return null for forgejo without repoURL', () => {
+      expect(
+        createRepoBranchURL({
+          gitProvider: 'forgejo',
+          branch: 'main',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual(null);
+    });
+
+    it('should use default pattern for github', () => {
+      expect(
+        createRepoBranchURL({
+          repoURL: 'https://github.com/org/repo',
+          branch: 'main',
+          gitProvider: 'github',
+        } as Commit),
+      ).toEqual('https://github.com/org/repo/tree/main');
+    });
+
+    it('should return null when branch is missing', () => {
+      expect(
+        createRepoBranchURL({
+          repoURL: 'https://gitlab.com/org/repo',
+          gitProvider: 'gitlab',
+        } as Commit),
+      ).toEqual(null);
+    });
+  });
+
+  describe('createRepoPullRequestURL for multiple providers', () => {
+    it('should use gitlab merge request URL pattern', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://gitlab.com/org/repo',
+          pullRequestNumber: '42',
+          gitProvider: 'gitlab',
+        } as Commit),
+      ).toEqual('https://gitlab.com/org/repo/-/merge_requests/42');
+
+      expect(
+        createRepoPullRequestURL({
+          gitProvider: 'gitlab',
+          pullRequestNumber: '100',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual('https://gitlab.com/org/repo/-/merge_requests/100');
+    });
+
+    it('should use forgejo pull request URL pattern', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://forgejo.example.com/org/repo',
+          pullRequestNumber: '123',
+          gitProvider: 'forgejo',
+        } as Commit),
+      ).toEqual('https://forgejo.example.com/org/repo/pulls/123');
+
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://codeberg.org/org/repo',
+          pullRequestNumber: '456',
+          gitProvider: 'forgejo',
+        } as Commit),
+      ).toEqual('https://codeberg.org/org/repo/pulls/456');
+    });
+
+    it('should return null for forgejo without repoURL', () => {
+      expect(
+        createRepoPullRequestURL({
+          gitProvider: 'forgejo',
+          pullRequestNumber: '42',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual(null);
+    });
+
+    it('should use default pattern for github', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://github.com/org/repo',
+          pullRequestNumber: '789',
+          gitProvider: 'github',
+        } as Commit),
+      ).toEqual('https://github.com/org/repo/pull/789');
+    });
+
+    it('should return null when pullRequestNumber is missing', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://gitlab.com/org/repo',
+          gitProvider: 'gitlab',
         } as Commit),
       ).toEqual(null);
     });

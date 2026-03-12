@@ -179,21 +179,36 @@ export const showPLRMessage = (plr: PipelineRunKind): string => {
 };
 
 export const createRepoUrl = (commit: Commit): string | null => {
-  if (commit.gitProvider !== 'github') {
-    return null;
-  }
+  // Prioritize repoURL if available (works for all providers including self-hosted)
   if (commit.repoURL) {
     return commit.repoURL;
   }
+  
+  // Construct URL based on provider for cloud instances
   if (commit.repoName && commit.repoOrg) {
-    return `https://github.com/${commit.repoOrg}/${commit.repoName}`;
+    if (commit.gitProvider === 'github') {
+      return `https://github.com/${commit.repoOrg}/${commit.repoName}`;
+    }
+    if (commit.gitProvider === 'gitlab') {
+      return `https://gitlab.com/${commit.repoOrg}/${commit.repoName}`;
+    }
+    // Forgejo is self-hosted, cannot construct URL without repoURL
   }
+  
   return null;
 };
 
 export const createRepoBranchURL = (commit: Commit): string | null => {
   const repoUrl = createRepoUrl(commit);
   if (commit.branch && repoUrl) {
+    // Use provider-specific URL patterns
+    if (commit.gitProvider === 'gitlab') {
+      return `${repoUrl}/-/tree/${commit.branch}`;
+    }
+    if (commit.gitProvider === 'forgejo') {
+      return `${repoUrl}/src/branch/${commit.branch}`;
+    }
+    // Default pattern for github and others
     return `${repoUrl}/tree/${commit.branch}`;
   }
   return null;
@@ -202,6 +217,14 @@ export const createRepoBranchURL = (commit: Commit): string | null => {
 export const createRepoPullRequestURL = (commit: Commit): string | null => {
   const repoURL = createRepoUrl(commit);
   if (commit.pullRequestNumber && repoURL) {
+    // Use provider-specific URL patterns
+    if (commit.gitProvider === 'gitlab') {
+      return `${repoURL}/-/merge_requests/${commit.pullRequestNumber}`;
+    }
+    if (commit.gitProvider === 'forgejo') {
+      return `${repoURL}/pulls/${commit.pullRequestNumber}`;
+    }
+    // Default pattern for github and others
     return `${repoURL}/pull/${commit.pullRequestNumber}`;
   }
   return null;
