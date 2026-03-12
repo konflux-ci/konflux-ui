@@ -33,38 +33,38 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   const commitBranch = plr.metadata.annotations?.[PipelineRunLabel.COMMIT_BRANCH_ANNOTATION] ?? '';
   const commitUser =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_USER_LABEL] ||
-    plr.metadata.labels[PipelineRunLabel.TEST_COMMIT_USER_LABEL] ||
-    plr.metadata.annotations[PipelineRunLabel.TEST_COMMIT_USER_LABEL];
+    plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_USER_LABEL] ||
+    plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_USER_LABEL];
   const creationTime = plr.metadata.creationTimestamp;
-  const application = plr.metadata.labels[PipelineRunLabel.APPLICATION];
-  const component = plr.metadata.labels[PipelineRunLabel.COMPONENT] ?? '';
+  const application = plr.metadata.labels?.[PipelineRunLabel.APPLICATION];
+  const component = plr.metadata.labels?.[PipelineRunLabel.COMPONENT] ?? '';
   const repoName =
-    plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_URL_LABEL] ||
-    plr.metadata.labels[PipelineRunLabel.TEST_REPOSITORY_NAME] ||
-    plr.metadata.annotations[PipelineRunLabel.TEST_REPOSITORY_NAME];
+    plr.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL] ||
+    plr.metadata.labels?.[PipelineRunLabel.TEST_REPOSITORY_NAME] ||
+    plr.metadata.annotations?.[PipelineRunLabel.TEST_REPOSITORY_NAME];
   const repoURL = getSourceUrl(plr);
   const repoOrg =
-    plr.metadata.labels[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
-    plr.metadata.annotations[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
-    plr.metadata.labels[PipelineRunLabel.TEST_REPO_ORG_LABEL] ||
-    plr.metadata.annotations[PipelineRunLabel.TEST_REPO_ORG_LABEL];
+    plr.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
+    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
+    plr.metadata.labels?.[PipelineRunLabel.TEST_REPO_ORG_LABEL] ||
+    plr.metadata.annotations?.[PipelineRunLabel.TEST_REPO_ORG_LABEL];
   const shaURL =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
     `${repoURL}/commit/${commitSHA}`;
   const shaTitle =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
-    plr.metadata.labels[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
-    plr.metadata.annotations[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
-    plr.metadata.labels[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL] ||
-    plr.metadata.annotations[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL];
-  const pullRequestNumber = plr.metadata.labels[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
+    plr.metadata.labels?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
+    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
+    plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL] ||
+    plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL];
+  const pullRequestNumber = plr.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
   const eventType =
-    plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
-    plr.metadata.labels[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ||
-    plr.metadata.annotations[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
+    plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
+    plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ||
+    plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
   const isPullRequest =
-    plr.metadata.labels[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
+    plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
 
   return {
     metadata: {
@@ -93,7 +93,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
 const updateCommitObject = (plr: PipelineRunKind, commit: Commit): Commit => {
   const newCommit = commit;
   const creationTime = plr.metadata.creationTimestamp;
-  const component = plr.metadata.labels[PipelineRunLabel.COMPONENT] ?? '';
+  const component = plr.metadata.labels?.[PipelineRunLabel.COMPONENT] ?? '';
 
   if (new Date(newCommit.creationTime).getTime() > new Date(creationTime).getTime()) {
     newCommit.creationTime = creationTime;
@@ -264,25 +264,25 @@ export const createCommitObjectFromSnapshot = (snapshot: Snapshot): Commit => {
     snapshot.metadata.annotations?.[SnapshotLabels.COMMIT_USER_LABEL] ??
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_SENDER];
   const creationTime = snapshot.metadata.creationTimestamp;
-  const application = snapshot.metadata.labels[SnapshotLabels.APPLICATION];
-  const component = snapshot.metadata.labels[SnapshotLabels.COMPONENT] ?? '';
-  const repoName = snapshot.metadata.labels[SnapshotLabels.PAC_URL_REPOSITORY_LABEL];
+  const application = snapshot.metadata.labels?.[SnapshotLabels.APPLICATION];
+  const component = snapshot.metadata.labels?.[SnapshotLabels.COMPONENT] ?? '';
+  const repoName = snapshot.metadata.labels?.[SnapshotLabels.PAC_URL_REPOSITORY_LABEL];
   const repoURL = getSnapshotSourceUrl(snapshot);
   const repoOrg =
-    snapshot.metadata.labels[SnapshotLabels.PAC_URL_ORG_LABEL] ||
-    snapshot.metadata.annotations[SnapshotLabels.PAC_URL_ORG_LABEL];
+    snapshot.metadata.labels?.[SnapshotLabels.PAC_URL_ORG_LABEL] ||
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_URL_ORG_LABEL];
   const shaURL =
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
     `${repoURL}/commit/${commitSHA}`;
   const shaTitle =
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
-    snapshot.metadata.labels[SnapshotLabels.PAC_GIT_PROVIDER] ||
-    snapshot.metadata.annotations[SnapshotLabels.PAC_GIT_PROVIDER];
-  const pullRequestNumber = snapshot.metadata.labels[SnapshotLabels.PAC_PULL_REQUEST_LABEL] ?? '';
-  const eventType = snapshot.metadata.labels[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
+    snapshot.metadata.labels?.[SnapshotLabels.PAC_GIT_PROVIDER] ||
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_GIT_PROVIDER];
+  const pullRequestNumber = snapshot.metadata.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL] ?? '';
+  const eventType = snapshot.metadata.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
   const isPullRequest =
-    snapshot.metadata.labels[SnapshotLabels.PAC_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
+    snapshot.metadata.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
 
   return {
     metadata: {
