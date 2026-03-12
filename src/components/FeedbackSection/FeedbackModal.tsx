@@ -1,19 +1,22 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { ModalVariant, Flex, FlexItem, Bullseye, Spinner, Panel } from '@patternfly/react-core';
-import { ErrorBoundary } from '@sentry/react';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
+import { lazyLoad, LazyLoadArguments } from '~/shared/components/lazy-load/lazy';
+import { StatusBox } from '~/shared/components/status-box/StatusBox';
 import RHsupportDark from '../../assets/rh_feedback--dark.svg';
 import RHsupportLight from '../../assets/rh_feedback.svg';
 import BeginningSection from './components/BeginningSection';
-import { FeedbackValues } from './components/FeedbackForm';
+import { BugRFESectionProps } from './components/BugRFEForm';
+import { FeedbackSectionProps, FeedbackValues } from './components/FeedbackForm';
 import { FeedbackSections } from './consts';
 import { getBugURL, getFeatureURL } from './feedback-utils';
 import './FeedbackModal.scss';
 
-const BugRFESection = React.lazy(() => import('./components/BugRFEForm'));
-const FeedbackSection = React.lazy(() => import('./components/FeedbackForm'));
+const FeedbackSection = lazyLoad<FeedbackSectionProps & LazyLoadArguments>(() => import('./components/FeedbackForm'));
+const BugRFEForm = lazyLoad<BugRFESectionProps & LazyLoadArguments>(() => import('./components/BugRFEForm'));
 
 export interface SubmitClicked {
   submitClicked: boolean;
@@ -34,25 +37,23 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
   };
   const [konfluxInfo] = useKonfluxPublicInfo();
 
-  const handleBugFeatureSubmit = React.useCallback(
+  const handleBugSubmit = React.useCallback(
     (values: { description: string; title: string; additionalInfo?: boolean }) => {
-      if (currentSection === FeedbackSections.BugSection) {
-        const { description, title, additionalInfo = false } = values;
-        const url = getBugURL(
-          { description, title, getAdditionalInfo: additionalInfo },
-          konfluxInfo,
-        );
-        window.open(url, '_blank');
-        onClose(null, { submitClicked: true });
-      }
-
-      if (currentSection === FeedbackSections.FeatureSection) {
-        const url = getFeatureURL(values);
-        window.open(url, '_blank');
-        onClose(null, { submitClicked: true });
-      }
+      const { description, title, additionalInfo = false } = values;
+      const url = getBugURL({ description, title, getAdditionalInfo: additionalInfo }, konfluxInfo);
+      window.open(url, '_blank');
+      onClose(null, { submitClicked: true });
     },
-    [currentSection, konfluxInfo, onClose],
+    [konfluxInfo, onClose],
+  );
+
+  const handleFeatureSubmit = React.useCallback(
+    (values: { description: string; title: string }) => {
+      const url = getFeatureURL(values);
+      window.open(url, '_blank');
+      onClose(null, { submitClicked: true });
+    },
+    [onClose],
   );
 
   const handleFeedbackSubmit = (values: FeedbackValues) => {
@@ -70,42 +71,61 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     >
       <FlexItem className="feedback-modal__feedback-description" flex={{ default: 'flex_2' }}>
         <Panel isScrollable className="feedback-modal__panel-content">
-          <ErrorBoundary>
-            <React.Suspense
+          {currentSection === FeedbackSections.BeginningSection && (
+            <BeginningSection onSectionChange={setCurrentSection} onClose={onCancel} />
+          )}
+          {currentSection === FeedbackSections.FeedbackSection && (
+            <FeedbackSection
               fallback={
                 <Bullseye>
                   <Spinner size="xl" />
                 </Bullseye>
               }
-            >
-              {currentSection === FeedbackSections.BeginningSection && (
-                <BeginningSection onSectionChange={setCurrentSection} onClose={onCancel} />
-              )}
-              {currentSection === FeedbackSections.FeedbackSection && (
-                <FeedbackSection
-                  onClose={onCancel}
-                  onBack={onBack}
-                  onSubmit={handleFeedbackSubmit}
-                />
-              )}
-              {currentSection === FeedbackSections.BugSection && (
-                <BugRFESection
-                  currentSection={FeedbackSections.BugSection}
-                  onClose={onCancel}
-                  onBack={onBack}
-                  onSubmit={handleBugFeatureSubmit}
-                />
-              )}
-              {currentSection === FeedbackSections.FeatureSection && (
-                <BugRFESection
-                  currentSection={FeedbackSections.FeatureSection}
-                  onClose={onCancel}
-                  onBack={onBack}
-                  onSubmit={handleBugFeatureSubmit}
-                />
-              )}
-            </React.Suspense>
-          </ErrorBoundary>
+              errorFallback={<StatusBox loadError="Couldn't load feedback form" />}
+              onClose={onCancel}
+              onBack={onBack}
+              onSubmit={handleFeedbackSubmit}
+            />
+          )}
+          {currentSection === FeedbackSections.BugSection && (
+            <BugRFEForm
+              fallback={
+                <Bullseye>
+                  <Spinner size="xl" />
+                </Bullseye>
+              }
+              errorFallback={<StatusBox loadError="Couldn't load bug form" />}
+              sectionHeading="Report a bug"
+              onClose={onCancel}
+              onBack={onBack}
+              onSubmit={handleBugSubmit}
+              sectionDescription={
+                <>
+                  Describe the bug you encountered. For urgent issues, use{' '}
+                  <Link to="#" target="blank">
+                    #konflux-user-forum
+                  </Link>{' '}
+                  instead
+                </>
+              }
+              isAdditionalInfo
+            />
+          )}
+          {currentSection === FeedbackSections.FeatureSection && (
+            <BugRFEForm
+              fallback={
+                <Bullseye>
+                  <Spinner size="xl" />
+                </Bullseye>
+              }
+              errorFallback={<StatusBox loadError="Couldn't load feature form" />}
+              onClose={onCancel}
+              onBack={onBack}
+              sectionHeading="Request a new feature"
+              sectionDescription="Please provide detailed description of the feature"
+              onSubmit={handleFeatureSubmit}
+            />
+          )}
         </Panel>
       </FlexItem>
 

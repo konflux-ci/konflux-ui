@@ -12,8 +12,8 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
-import { IfFeature } from '~/feature-flags/hooks';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { IfFeature } from '~/feature-flags/hooks';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
 import { createFeedbackModal } from '../FeedbackSection/FeedbackModal';

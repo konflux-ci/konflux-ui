@@ -1,7 +1,6 @@
 import { act, fireEvent, render } from '@testing-library/react';
 import { routerRenderer } from '~/unit-test-utils';
 import BugRFEForm from '../components/BugRFEForm';
-import { FeedbackSections } from '../consts';
 
 jest.mock('@tanstack/react-query', () => ({
   ...jest.requireActual('@tanstack/react-query'),
@@ -20,40 +19,27 @@ describe('BugRFEForm', () => {
   it('should show BugForm when current Section is BugSection', () => {
     const screen = routerRenderer(
       <BugRFEForm
-        currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
+        sectionHeading="Report a bug"
+        sectionDescription="Describe the bug you encountered"
       />,
     );
     screen.getByText('Report a bug');
     screen.getByText(/Describe the bug you encountered/);
     screen.getByText('Title');
-    screen.getByText('Please provide detailed description of the bug');
-  });
-
-  it('should show RFEForm when current Section is FeatureSection', () => {
-    const screen = render(
-      <BugRFEForm
-        currentSection={FeedbackSections.FeatureSection}
-        onClose={onCloseMock}
-        onBack={onBackMock}
-        onSubmit={onSubmitMock}
-      />,
-    );
-    screen.getByText('Request a new feature');
-    screen.getByText(/Please provide detailed description of the feature/);
-    screen.getByText('Title');
-    screen.getByText(/Please provide detailed description of the bug/);
+    screen.getByText('Please provide detailed description');
   });
 
   it('should go to Beginning section when Back button is clicked', () => {
     const screen = render(
       <BugRFEForm
-        currentSection={FeedbackSections.FeatureSection}
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
+        sectionDescription=""
+        sectionHeading=""
       />,
     );
     const backButton = screen.getByText('Back');
@@ -64,7 +50,8 @@ describe('BugRFEForm', () => {
   it('should close Form when Cancel is clicked', () => {
     const screen = render(
       <BugRFEForm
-        currentSection={FeedbackSections.FeatureSection}
+        sectionDescription=""
+        sectionHeading=""
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
@@ -80,10 +67,12 @@ describe('BugForm input and validation', () => {
   it('should show correct input fields', () => {
     const screen = routerRenderer(
       <BugRFEForm
-        currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
+        sectionDescription=""
+        sectionHeading=""
+        isAdditionalInfo
       />,
     );
     expect(screen.getByRole('textbox', { name: 'Title' })).toBeVisible();
@@ -94,10 +83,11 @@ describe('BugForm input and validation', () => {
   it('should have disabled Submit button by default', () => {
     const screen = routerRenderer(
       <BugRFEForm
-        currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
+        sectionDescription=""
+        sectionHeading=""
       />,
     );
     expect(screen.getByRole('button', { name: 'Preview on Github' })).toBeVisible();
@@ -107,10 +97,11 @@ describe('BugForm input and validation', () => {
   it('should enable submit button after correct entries and call on Submit', () => {
     const screen = routerRenderer(
       <BugRFEForm
-        currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
+        sectionDescription=""
+        sectionHeading=""
       />,
     );
 
@@ -137,10 +128,12 @@ describe('BugForm input and validation', () => {
   it('should request additionalInfo when selected', () => {
     const screen = routerRenderer(
       <BugRFEForm
-        currentSection={FeedbackSections.BugSection}
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
+        sectionDescription=""
+        sectionHeading=""
+        isAdditionalInfo
       />,
     );
 
