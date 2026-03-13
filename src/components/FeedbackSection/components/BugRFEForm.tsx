@@ -50,7 +50,7 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
 
   return (
     <>
-      <div className="feedback-modal__panel-header">
+      <div className="feedback-modal__panel-header" data-test="bug-rfe-form">
         <TextContent>
           <Text component={TextVariants.h1}>{sectionHeading}</Text>
         </TextContent>

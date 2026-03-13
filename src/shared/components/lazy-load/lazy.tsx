@@ -9,7 +9,7 @@ export type LazyLoadArguments = {
 
 export const AsyncBoundary = ({ children, loadingFallback, errorFallback }) => {
   return (
-    <ErrorBoundary fallback={errorFallback}>
+    <ErrorBoundary fallback={errorFallback} data-test="lazy-error-boundary">
       <Suspense fallback={loadingFallback ?? <Loading />}>{children}</Suspense>
     </ErrorBoundary>
   );
@@ -22,7 +22,7 @@ export const lazyLoad = <T extends LazyLoadArguments>(
   const LazyComp: React.LazyExoticComponent<ComponentType> = lazy(importFn);
   return function LazyWrapper({ fallback, errorFallback, ...props }: T) {
     return (
-      <AsyncBoundary loadingFallback={fallback} errorFallback={errorFallback}>
+      <AsyncBoundary loadingFallback={fallback} errorFallback={errorFallback} data-test="lazy-async-boundary">
         <LazyComp {...props} />
       </AsyncBoundary>
     );
