@@ -22,8 +22,8 @@ describe('BugRFEForm', () => {
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
-        sectionHeading="Report a bug"
-        sectionDescription="Describe the bug you encountered"
+        heading="Report a bug"
+        description="Describe the bug you encountered"
       />,
     );
     screen.getByText('Report a bug');
@@ -38,8 +38,8 @@ describe('BugRFEForm', () => {
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
-        sectionDescription=""
-        sectionHeading=""
+        description=""
+        heading=""
       />,
     );
     const backButton = screen.getByText('Back');
@@ -50,8 +50,8 @@ describe('BugRFEForm', () => {
   it('should close Form when Cancel is clicked', () => {
     const screen = render(
       <BugRFEForm
-        sectionDescription=""
-        sectionHeading=""
+        description=""
+        heading=""
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
@@ -70,8 +70,8 @@ describe('BugForm input and validation', () => {
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
-        sectionDescription=""
-        sectionHeading=""
+        description=""
+        heading=""
         isAdditionalInfo
       />,
     );
@@ -86,8 +86,8 @@ describe('BugForm input and validation', () => {
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
-        sectionDescription=""
-        sectionHeading=""
+        description=""
+        heading=""
       />,
     );
     expect(screen.getByRole('button', { name: 'Preview on Github' })).toBeVisible();
@@ -100,8 +100,8 @@ describe('BugForm input and validation', () => {
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
-        sectionDescription=""
-        sectionHeading=""
+        description=""
+        heading=""
       />,
     );
 
@@ -131,8 +131,8 @@ describe('BugForm input and validation', () => {
         onClose={onCloseMock}
         onBack={onBackMock}
         onSubmit={onSubmitMock}
-        sectionDescription=""
-        sectionHeading=""
+        description=""
+        heading=""
         isAdditionalInfo
       />,
     );

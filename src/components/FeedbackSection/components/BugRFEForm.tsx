@@ -27,8 +27,8 @@ export interface BugRFESectionProps {
   onBack: () => void;
   onClose: () => void;
   onSubmit: (values: SubmitValues) => void;
-  sectionHeading: string;
-  sectionDescription: React.ReactElement | string;
+  heading: string;
+  description: React.ReactElement | string;
   isAdditionalInfo?: boolean;
 }
 
@@ -36,8 +36,8 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
   onClose,
   onBack,
   onSubmit,
-  sectionHeading,
-  sectionDescription,
+  heading,
+  description: sectionDescription,
   isAdditionalInfo = false,
 }) => {
   const [additionalInfo, setAdditionalInfo] = React.useState<boolean>(false);
@@ -50,16 +50,26 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
 
   return (
     <>
-      <div className="feedback-modal__panel-header">
+      <div className="feedback-modal__panel-header" data-test="bug-rfe-form">
         <TextContent>
-          <Text component={TextVariants.h1}>{sectionHeading}</Text>
+          <Text component={TextVariants.h1}>{heading}</Text>
         </TextContent>
         <TextContent className="feedback-modal__spacer-bottom">
           <Text component={TextVariants.small}>{sectionDescription}</Text>
         </TextContent>
       </div>
-      <div className="feedback-modal__content-main">
-        <Form>
+      <Form
+        className="feedback-modal__form"
+        onSubmit={(e: React.FormEvent) => {
+          e.preventDefault();
+          onSubmit({
+            title,
+            description,
+            additionalInfo,
+          });
+        }}
+      >
+        <div className="feedback-modal__content-main">
           <FormGroup className="feedback-modal__input-field" label="Title">
             <TextInput
               id="title"
@@ -128,30 +138,23 @@ const BugRFESection: React.FC<BugRFESectionProps> = ({
               onChange={() => setAdditionalInfo(!additionalInfo)}
             />
           )}
-        </Form>
-      </div>
-      <PanelFooter className="feedback-modal__panel-footer">
-        <Button
-          variant="primary"
-          type={ButtonType.submit}
-          onClick={() => {
-            onSubmit({
-              title,
-              description,
-              additionalInfo,
-            });
-          }}
-          isDisabled={title.length < 1 || description.length < 1}
-        >
-          Preview on Github
-        </Button>
-        <Button variant="secondary" onClick={onBack}>
-          Back
-        </Button>
-        <Button variant="link" onClick={onClose}>
-          Cancel
-        </Button>
-      </PanelFooter>
+        </div>
+        <PanelFooter className="feedback-modal__panel-footer">
+          <Button
+            variant="primary"
+            type={ButtonType.submit}
+            isDisabled={title.length < 1 || description.length < 1}
+          >
+            Preview on Github
+          </Button>
+          <Button variant="secondary" onClick={onBack}>
+            Back
+          </Button>
+          <Button variant="link" onClick={onClose}>
+            Cancel
+          </Button>
+        </PanelFooter>
+      </Form>
     </>
   );
 };

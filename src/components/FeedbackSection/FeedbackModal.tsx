@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ModalVariant, Flex, FlexItem, Bullseye, Spinner, Panel } from '@patternfly/react-core';
+import { ModalVariant, Flex, FlexItem, Panel } from '@patternfly/react-core';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
@@ -15,8 +15,12 @@ import { FeedbackSections } from './consts';
 import { getBugURL, getFeatureURL } from './feedback-utils';
 import './FeedbackModal.scss';
 
-const FeedbackSection = lazyLoad<FeedbackSectionProps & LazyLoadArguments>(() => import('./components/FeedbackForm'));
-const BugRFEForm = lazyLoad<BugRFESectionProps & LazyLoadArguments>(() => import('./components/BugRFEForm'));
+const FeedbackSection = lazyLoad<FeedbackSectionProps & LazyLoadArguments>(
+  () => import('./components/FeedbackForm'),
+);
+const BugRFEForm = lazyLoad<BugRFESectionProps & LazyLoadArguments>(
+  () => import('./components/BugRFEForm'),
+);
 
 export interface SubmitClicked {
   submitClicked: boolean;
@@ -76,11 +80,6 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
           )}
           {currentSection === FeedbackSections.FeedbackSection && (
             <FeedbackSection
-              fallback={
-                <Bullseye>
-                  <Spinner size="xl" />
-                </Bullseye>
-              }
               errorFallback={<StatusBox loadError="Couldn't load feedback form" />}
               onClose={onCancel}
               onBack={onBack}
@@ -89,20 +88,18 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
           )}
           {currentSection === FeedbackSections.BugSection && (
             <BugRFEForm
-              fallback={
-                <Bullseye>
-                  <Spinner size="xl" />
-                </Bullseye>
-              }
               errorFallback={<StatusBox loadError="Couldn't load bug form" />}
-              sectionHeading="Report a bug"
+              heading="Report a bug"
               onClose={onCancel}
               onBack={onBack}
               onSubmit={handleBugSubmit}
-              sectionDescription={
+              description={
                 <>
                   Describe the bug you encountered. For urgent issues, use{' '}
-                  <Link to="#" target="blank">
+                  <Link
+                    to="https://redhat.enterprise.slack.com/archives/C04PZ7H0VA8"
+                    target="blank"
+                  >
                     #konflux-user-forum
                   </Link>{' '}
                   instead
@@ -113,16 +110,11 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
           )}
           {currentSection === FeedbackSections.FeatureSection && (
             <BugRFEForm
-              fallback={
-                <Bullseye>
-                  <Spinner size="xl" />
-                </Bullseye>
-              }
               errorFallback={<StatusBox loadError="Couldn't load feature form" />}
               onClose={onCancel}
               onBack={onBack}
-              sectionHeading="Request a new feature"
-              sectionDescription="Please provide detailed description of the feature"
+              heading="Request a new feature"
+              description="Please provide detailed description of the feature"
               onSubmit={handleFeatureSubmit}
             />
           )}

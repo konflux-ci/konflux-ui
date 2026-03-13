@@ -20,6 +20,10 @@
       background-color: var(--pf-v5-global--Color--100);
     }
   }
+  &__form {
+    height: 100%;
+    width: 100%;
+  }
   &__panel-content {
     padding: var(--pf-v5-global--spacer--xl);
     gap: var(--pf-v5-global--spacer--md);

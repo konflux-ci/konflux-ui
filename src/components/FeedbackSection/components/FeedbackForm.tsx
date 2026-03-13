@@ -50,8 +50,14 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
           </Text>
         </TextContent>
       </div>
-      <div className="feedback-modal__content-main">
-        <Form>
+      <Form
+        className="feedback-modal__form"
+        onSubmit={(e: React.FormEvent) => {
+          e.preventDefault();
+          onSubmit({ description: feedback, scale: radioRating, email });
+        }}
+      >
+        <div className="feedback-modal__content-main">
           <FormGroup
             label={
               <>
@@ -145,24 +151,19 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
               </HelperText>
             </FormHelperText>
           </FormGroup>
-        </Form>
-      </div>
-      <PanelFooter className="feedback-modal__panel-footer">
-        <Button
-          variant="primary"
-          type={ButtonType.submit}
-          onClick={() => onSubmit({ description: feedback, scale: radioRating, email })}
-          isDisabled={feedback.length < 1}
-        >
-          Submit feedback
-        </Button>
-        <Button variant="secondary" onClick={onBack}>
-          Back
-        </Button>
-        <Button variant="link" onClick={onClose}>
-          Cancel
-        </Button>
-      </PanelFooter>
+        </div>
+        <PanelFooter className="feedback-modal__panel-footer">
+          <Button variant="primary" type={ButtonType.submit} isDisabled={feedback.length < 1}>
+            Submit feedback
+          </Button>
+          <Button variant="secondary" onClick={onBack}>
+            Back
+          </Button>
+          <Button variant="link" onClick={onClose}>
+            Cancel
+          </Button>
+        </PanelFooter>
+      </Form>
     </>
   );
 };
