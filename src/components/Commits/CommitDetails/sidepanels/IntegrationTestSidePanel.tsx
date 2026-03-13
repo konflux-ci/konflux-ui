@@ -32,6 +32,7 @@ import { calculateDuration } from '../../../../utils/pipeline-utils';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
+import { CommitPipelineRunsList } from './CommitPipelineRunsList';
 
 export interface IntegrationTestSidePanelBodyProps {
   onClose: () => void;
@@ -82,10 +83,10 @@ const IntegrationTestSidePanel: React.FC<
               workflowNode.getLabel()
             )}
             <StatusIconWithTextLabel status={workflowNode.getData().status} />
-            
           </span>
           <span className="pf-v5-u-mt-xs commit-side-panel__subtext">
-            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
+            <PipelineIcon role="img" aria-label="Pipeline run" /> Integration test{' '}
+            <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
           </span>
           <DrawerActions>
             <DrawerCloseButton onClick={onClose} />
@@ -152,6 +153,11 @@ const IntegrationTestSidePanel: React.FC<
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>
+            <CommitPipelineRunsList
+              componentName={
+                integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT]
+              }
+            />
             {integrationTestPipeline && taskRunsLoaded && !taskRunsError ? (
               <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound showLogsLink />
             ) : null}
