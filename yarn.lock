@@ -1685,8 +1685,8 @@ __metadata:
   linkType: hard
 
 "@dotenvx/dotenvx@npm:^1.7.0":
-  version: 1.52.0
-  resolution: "@dotenvx/dotenvx@npm:1.52.0"
+  version: 1.55.1
+  resolution: "@dotenvx/dotenvx@npm:1.55.1"
   dependencies:
     commander: "npm:^11.1.0"
     dotenv: "npm:^17.2.1"
@@ -1699,7 +1699,7 @@ __metadata:
     which: "npm:^4.0.0"
   bin:
     dotenvx: src/cli/dotenvx.js
-  checksum: 10/f54195dfe8c83a5476781d6de1f24aa7005af6b02662ec7d2a19b00d996783e2cb19e274290fc328119ec6716521d211bfde33ee0eb96ca949b6fff21c09ae87
+  checksum: 10/6ecbf92377cea2fb572cab021801dfa44fbc8e5f7c48b0d6d56ade67814257bd6cf462984194346c09b304b0c875209906c5f4b04970bc1b1af6872bb35388ba
   languageName: node
   linkType: hard
 
