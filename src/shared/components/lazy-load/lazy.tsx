@@ -19,7 +19,8 @@ export const AsyncBoundary = ({ children, loadingFallback, errorFallback }) => {
 export const lazyLoad = <T extends LazyLoadArguments>(
   importFn,
 ): ((args: T) => React.ReactElement) => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument to address React's implementation of lazyComp
+  // to address React's implementation of lazyComp using any, if you change it internal functions throw error
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const LazyComp = lazy(importFn);
   return function LazyWrapper({ fallback, errorFallback, ...props }: T) {
     return (
