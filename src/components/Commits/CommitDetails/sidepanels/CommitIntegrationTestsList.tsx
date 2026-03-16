@@ -4,6 +4,8 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  List,
+  ListItem,
 } from '@patternfly/react-core';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
@@ -11,11 +13,11 @@ import { PIPELINE_RUNS_DETAILS_PATH } from '~/routes/paths';
 import { RouterParams } from '~/routes/utils';
 import { useNamespace } from '~/shared/providers/Namespace';
 
-export interface CommitPipelineRunsListProps {
+export interface CommitIntegrationTestsListProps {
   componentName?: string;
 }
 
-export const CommitPipelineRunsList: React.FC<CommitPipelineRunsListProps> = ({
+export const CommitIntegrationTestsList: React.FC<CommitIntegrationTestsListProps> = ({
   componentName,
 }) => {
   const { applicationName, commitName } = useParams<RouterParams>();
@@ -32,12 +34,9 @@ export const CommitPipelineRunsList: React.FC<CommitPipelineRunsListProps> = ({
 
   const pipelineRunsToShow = React.useMemo(() => {
     const runs = pipelineRuns ?? [];
-    const withName = runs.filter((plr) => plr.metadata?.name);
     const forComponent = componentName
-      ? withName.filter(
-          (plr) => plr.metadata?.labels?.[PipelineRunLabel.COMPONENT] === componentName,
-        )
-      : withName;
+      ? runs.filter((plr) => plr.metadata?.labels?.[PipelineRunLabel.COMPONENT] === componentName)
+      : runs;
     return forComponent;
   }, [pipelineRuns, componentName]);
 
@@ -53,16 +52,9 @@ export const CommitPipelineRunsList: React.FC<CommitPipelineRunsListProps> = ({
     <DescriptionListGroup>
       <DescriptionListTerm>Integration tests</DescriptionListTerm>
       <DescriptionListDescription>
-        <ul
-          className="pf-v5-c-description-list__group-list"
-          style={{ listStyle: 'none', paddingLeft: 0 }}
-        >
+        <List isPlain>
           {pipelineRunsToShow.map((plr) => (
-            <li
-              key={plr.metadata?.name}
-              className="pf-v5-u-mb-sm"
-              data-test={`pipeline-run-row-${plr.metadata?.name}`}
-            >
+            <ListItem key={plr.metadata?.name} data-test={`pipeline-run-row-${plr.metadata?.name}`}>
               <Link
                 to={PIPELINE_RUNS_DETAILS_PATH.createPath({
                   workspaceName: namespace,
@@ -72,9 +64,9 @@ export const CommitPipelineRunsList: React.FC<CommitPipelineRunsListProps> = ({
               >
                 {plr.metadata?.name}
               </Link>
-            </li>
+            </ListItem>
           ))}
-        </ul>
+        </List>
       </DescriptionListDescription>
     </DescriptionListGroup>
   );

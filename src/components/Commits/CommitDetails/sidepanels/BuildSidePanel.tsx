@@ -34,7 +34,7 @@ import RunResultsList from '../../../PipelineRun/PipelineRunDetailsView/tabs/Run
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
-import { CommitPipelineRunsList } from './CommitPipelineRunsList';
+import { CommitIntegrationTestsList } from './CommitIntegrationTestsList';
 
 export interface PipelineSidePanelBodyProps {
   onClose: () => void;
@@ -153,7 +153,7 @@ const BuildSidePanel: React.FC<React.PropsWithChildren<PipelineSidePanelBodyProp
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>
-            <CommitPipelineRunsList
+            <CommitIntegrationTestsList
               componentName={pipelineRun.metadata?.labels?.[PipelineRunLabel.COMPONENT]}
             />
             {taskRunsLoaded && !taskRunsError && (

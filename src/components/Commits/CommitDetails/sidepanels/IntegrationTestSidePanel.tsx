@@ -32,7 +32,7 @@ import { calculateDuration } from '../../../../utils/pipeline-utils';
 import ScanDescriptionListGroup from '../../../PipelineRun/PipelineRunDetailsView/tabs/ScanDescriptionListGroup';
 import { StatusIconWithTextLabel } from '../../../topology/StatusIcon';
 import { CommitWorkflowNodeModelData } from '../visualization/commit-visualization-types';
-import { CommitPipelineRunsList } from './CommitPipelineRunsList';
+import { CommitIntegrationTestsList } from './CommitIntegrationTestsList';
 
 export interface IntegrationTestSidePanelBodyProps {
   onClose: () => void;
@@ -153,7 +153,7 @@ const IntegrationTestSidePanel: React.FC<
                 )}
               </DescriptionListDescription>
             </DescriptionListGroup>
-            <CommitPipelineRunsList
+            <CommitIntegrationTestsList
               componentName={
                 integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT]
               }

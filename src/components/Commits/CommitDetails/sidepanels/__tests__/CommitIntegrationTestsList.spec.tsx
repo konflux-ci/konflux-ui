@@ -5,17 +5,7 @@ import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '../../../../../unit-test-utils';
-import { CommitPipelineRunsList } from '../CommitPipelineRunsList';
-
-jest.mock('react-router-dom', () => {
-  const actual = jest.requireActual('react-router-dom');
-  return {
-    ...actual,
-    Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
-      <a href={to}>{children}</a>
-    ),
-  };
-});
+import { CommitIntegrationTestsList } from '../CommitIntegrationTestsList';
 
 jest.mock('~/hooks/usePipelineRunsForCommitV2', () => ({
   usePipelineRunsForCommitV2: jest.fn(),
@@ -49,7 +39,7 @@ const renderWithRouter = (
   );
 };
 
-describe('CommitPipelineRunsList', () => {
+describe('CommitIntegrationTestsList', () => {
   const createMockTestPipelineRun = (
     name: string,
     componentName: string,
@@ -97,7 +87,7 @@ describe('CommitPipelineRunsList', () => {
     it('should render nothing when not loaded', () => {
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([], false));
 
-      const { container } = renderWithRouter(<CommitPipelineRunsList />);
+      const { container } = renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(container.firstChild).toBeNull();
     });
@@ -108,7 +98,7 @@ describe('CommitPipelineRunsList', () => {
       );
 
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const { container } = renderWithRouter(<CommitPipelineRunsList />, {
+      const { container } = renderWithRouter(<CommitIntegrationTestsList />, {
         applicationName: '',
       });
       expect(container.firstChild).toBeNull();
@@ -126,7 +116,7 @@ describe('CommitPipelineRunsList', () => {
           <Routes>
             <Route
               path="/ns/:workspaceName/applications/:applicationName/commit/:commitName?"
-              element={<CommitPipelineRunsList />}
+              element={<CommitIntegrationTestsList />}
             />
           </Routes>
         </MemoryRouter>,
@@ -138,7 +128,7 @@ describe('CommitPipelineRunsList', () => {
     it('should render nothing when pipeline runs list is empty', () => {
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([]));
 
-      const { container } = renderWithRouter(<CommitPipelineRunsList />);
+      const { container } = renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(container.firstChild).toBeNull();
     });
@@ -152,7 +142,7 @@ describe('CommitPipelineRunsList', () => {
       );
 
       const { container } = renderWithRouter(
-        <CommitPipelineRunsList componentName="component-c" />,
+        <CommitIntegrationTestsList componentName="component-c" />,
       );
 
       expect(container.firstChild).toBeNull();
@@ -167,7 +157,7 @@ describe('CommitPipelineRunsList', () => {
         { hasNextPage: false, isFetchingNextPage: false },
       ]);
 
-      const { container } = renderWithRouter(<CommitPipelineRunsList />);
+      const { container } = renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(container.firstChild).toBeNull();
     });
@@ -177,7 +167,7 @@ describe('CommitPipelineRunsList', () => {
     it('should call usePipelineRunsForCommitV2 with TEST type for integration tests', () => {
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([]));
 
-      renderWithRouter(<CommitPipelineRunsList />);
+      renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(mockUsePipelineRunsForCommitV2).toHaveBeenCalledWith(
         mockNamespace,
@@ -195,7 +185,7 @@ describe('CommitPipelineRunsList', () => {
       const plr1 = createMockTestPipelineRun('app-enterprise-contract-xyz', 'my-component');
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([plr1]));
 
-      renderWithRouter(<CommitPipelineRunsList />);
+      renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(screen.getByText('Integration tests')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'app-enterprise-contract-xyz' })).toBeInTheDocument();
@@ -206,7 +196,7 @@ describe('CommitPipelineRunsList', () => {
       const plr = createMockTestPipelineRun(plrName, 'my-component');
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([plr]));
 
-      renderWithRouter(<CommitPipelineRunsList />);
+      renderWithRouter(<CommitIntegrationTestsList />);
 
       const link = screen.getByRole('link', { name: plrName });
       expect(link).toBeInTheDocument();
@@ -221,7 +211,7 @@ describe('CommitPipelineRunsList', () => {
       const compBPlr = createMockTestPipelineRun('plr-comp-b-1', 'component-b');
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([compAPlr, compBPlr]));
 
-      renderWithRouter(<CommitPipelineRunsList componentName="component-a" />);
+      renderWithRouter(<CommitIntegrationTestsList componentName="component-a" />);
 
       expect(screen.getByRole('link', { name: 'plr-comp-a-1' })).toBeInTheDocument();
       expect(screen.queryByRole('link', { name: 'plr-comp-b-1' })).not.toBeInTheDocument();
@@ -232,7 +222,7 @@ describe('CommitPipelineRunsList', () => {
       const plr2 = createMockTestPipelineRun('plr-2', 'component-b');
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([plr1, plr2]));
 
-      renderWithRouter(<CommitPipelineRunsList />);
+      renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(screen.getByRole('link', { name: 'plr-1' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'plr-2' })).toBeInTheDocument();
@@ -243,26 +233,11 @@ describe('CommitPipelineRunsList', () => {
       const plr2 = createMockTestPipelineRun('plr-second', 'my-component');
       mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([plr1, plr2]));
 
-      renderWithRouter(<CommitPipelineRunsList componentName="my-component" />);
+      renderWithRouter(<CommitIntegrationTestsList componentName="my-component" />);
 
       expect(screen.getByRole('link', { name: 'plr-first' })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'plr-second' })).toBeInTheDocument();
       expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    });
-
-    it('should exclude pipeline runs without metadata.name from the list', () => {
-      const validPlr = createMockTestPipelineRun('valid-plr', 'my-component');
-      const noNamePlr = {
-        ...createMockTestPipelineRun('ignored', 'my-component'),
-        metadata: { ...createMockTestPipelineRun('x', 'y').metadata, name: undefined },
-      } as PipelineRunKind;
-      mockUsePipelineRunsForCommitV2.mockReturnValue(defaultHookReturn([validPlr, noNamePlr]));
-
-      renderWithRouter(<CommitPipelineRunsList />);
-
-      expect(screen.getByRole('link', { name: 'valid-plr' })).toBeInTheDocument();
-      expect(screen.queryByText('ignored')).not.toBeInTheDocument();
-      expect(screen.getAllByRole('listitem')).toHaveLength(1);
     });
 
     it('should render pipeline run rows with data-test attribute for automation', () => {
@@ -271,7 +246,7 @@ describe('CommitPipelineRunsList', () => {
         defaultHookReturn([createMockTestPipelineRun(plrName, 'comp')]),
       );
 
-      renderWithRouter(<CommitPipelineRunsList />);
+      renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(screen.getByTestId(`pipeline-run-row-${plrName}`)).toBeInTheDocument();
     });
@@ -283,7 +258,7 @@ describe('CommitPipelineRunsList', () => {
         defaultHookReturn([createMockTestPipelineRun('plr-1', 'comp')]),
       );
 
-      renderWithRouter(<CommitPipelineRunsList />);
+      renderWithRouter(<CommitIntegrationTestsList />);
 
       expect(screen.getByText('Integration tests')).toBeInTheDocument();
       const list = screen.getByRole('list');
