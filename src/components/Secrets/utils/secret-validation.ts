@@ -4,35 +4,7 @@ import * as yup from 'yup';
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../../types';
 import { resourceNameYupValidation } from '../../../utils/validation-utils';
 
-export type SecretFormValidationOptions = {
-  isEditMode?: boolean;
-};
-
-const getSourceValidation = (isEditMode: boolean) =>
-  yup.object({
-    authType: yup.string(),
-    username: yup
-      .string()
-      .when('authType', (authType, schema) =>
-        authType === SourceSecretType.basic ? yup.string() : schema,
-      ),
-    password: yup
-      .string()
-      .when('authType', (authType, schema) =>
-        authType === SourceSecretType.basic ? yup.string().required('Required') : schema,
-      ),
-    ['ssh-privatekey']: yup
-      .string()
-      .when('authType', (authType, schema) =>
-        authType === SourceSecretType.ssh
-          ? isEditMode
-            ? yup.string()
-            : yup.string().required('Required')
-          : schema,
-      ),
-  });
-
-export const getSecretFormValidationSchema = (options: SecretFormValidationOptions = {}) =>
+export const secretFormValidationSchema = ({ isEditMode = false }: { isEditMode?: boolean } = {}) =>
   yup.object({
     name: resourceNameYupValidation,
     type: yup.string(),
@@ -111,13 +83,32 @@ export const getSecretFormValidationSchema = (options: SecretFormValidationOptio
           })
         : schema,
     ),
-    source: yup
-      .object()
-      .when('type', (type, schema) =>
-        type === SecretTypeDropdownLabel.source
-          ? getSourceValidation(Boolean(options.isEditMode))
-          : schema,
-      ),
+    source: yup.object().when('type', (type, schema) =>
+      type === SecretTypeDropdownLabel.source
+        ? yup.object({
+            authType: yup.string(),
+            username: yup
+              .string()
+              .when('authType', (authType, basicSchema) =>
+                authType === SourceSecretType.basic ? yup.string() : basicSchema,
+              ),
+            password: yup
+              .string()
+              .when('authType', (authType, basicSchema) =>
+                authType === SourceSecretType.basic
+                  ? yup.string().required('Required')
+                  : basicSchema,
+              ),
+            ['ssh-privatekey']: yup
+              .string()
+              .when('authType', (authType, sshSchema) =>
+                authType === SourceSecretType.ssh
+                  ? isEditMode
+                    ? yup.string()
+                    : yup.string().required('Required')
+                  : sshSchema,
+              ),
+          })
+        : schema,
+    ),
   });
-
-export const secretFormValidationSchema = getSecretFormValidationSchema();
