@@ -1,7 +1,15 @@
 import * as React from 'react';
 import '@testing-library/jest-dom';
 import { render } from '@testing-library/react';
-import { createBranchUrl, getGitIcon, getGitPath } from '../git-utils';
+import {
+  createBranchUrl,
+  createGitBranchURL,
+  createGitCommitURL,
+  createGitPullRequestURL,
+  createHostedRepoURL,
+  getGitIcon,
+  getGitPath,
+} from '../git-utils';
 
 jest.mock(
   '../../shared/assets/forgejo-logo.svg',
@@ -183,6 +191,63 @@ describe('git-utils', () => {
       expect(createBranchUrl('https://github.com/org/repo', 'feature/my-branch')).toBe(
         'https://github.com/org/repo/tree/feature/my-branch',
       );
+    });
+  });
+
+  describe('createGit*URL', () => {
+    it('should build provider-specific branch URLs', () => {
+      expect(createGitBranchURL('https://github.com/org/repo', 'main')).toBe(
+        'https://github.com/org/repo/tree/main',
+      );
+      expect(createGitBranchURL('https://gitlab.com/org/repo', 'main')).toBe(
+        'https://gitlab.com/org/repo/-/tree/main',
+      );
+      expect(createGitBranchURL('https://bitbucket.org/org/repo', 'main')).toBe(
+        'https://bitbucket.org/org/repo/branch/main',
+      );
+      expect(createGitBranchURL('https://codeberg.org/org/repo', 'main')).toBe(
+        'https://codeberg.org/org/repo/src/branch/main',
+      );
+    });
+
+    it('should build provider-specific commit URLs', () => {
+      expect(createGitCommitURL('https://github.com/org/repo', 'abc123')).toBe(
+        'https://github.com/org/repo/commit/abc123',
+      );
+      expect(createGitCommitURL('https://gitlab.com/org/repo', 'abc123')).toBe(
+        'https://gitlab.com/org/repo/-/commit/abc123',
+      );
+      expect(createGitCommitURL('https://bitbucket.org/org/repo', 'abc123')).toBe(
+        'https://bitbucket.org/org/repo/commits/abc123',
+      );
+    });
+
+    it('should build provider-specific pull request URLs', () => {
+      expect(createGitPullRequestURL('https://github.com/org/repo', '1')).toBe(
+        'https://github.com/org/repo/pull/1',
+      );
+      expect(createGitPullRequestURL('https://gitlab.com/org/repo', '1')).toBe(
+        'https://gitlab.com/org/repo/-/merge_requests/1',
+      );
+      expect(createGitPullRequestURL('https://bitbucket.org/org/repo', '1')).toBe(
+        'https://bitbucket.org/org/repo/pull-requests/1',
+      );
+      expect(createGitPullRequestURL('https://forgejo.example.com/org/repo', '1')).toBe(
+        'https://forgejo.example.com/org/repo/pulls/1',
+      );
+    });
+
+    it('should build hosted repo URLs only for supported cloud providers', () => {
+      expect(createHostedRepoURL('org', 'repo', 'github')).toBe('https://github.com/org/repo');
+      expect(createHostedRepoURL('org', 'repo', 'gitlab')).toBe('https://gitlab.com/org/repo');
+      expect(createHostedRepoURL('org', 'repo', 'bitbucket')).toBe(
+        'https://bitbucket.org/org/repo',
+      );
+      expect(createHostedRepoURL('org', 'repo', 'codeberg')).toBe(
+        'https://codeberg.org/org/repo',
+      );
+      expect(createHostedRepoURL('org', 'repo', 'forgejo')).toBe(null);
+      expect(createHostedRepoURL('org', 'repo', 'gitea')).toBe(null);
     });
   });
 });

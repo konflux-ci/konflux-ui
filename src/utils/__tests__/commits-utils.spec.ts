@@ -110,6 +110,27 @@ describe('commit-utils', () => {
       expect(result.isPullRequest).toBe(true);
       expect(result.pullRequestNumber).toBe('');
     });
+
+    it('Should build gitlab shaURL from shared provider config when annotation is missing', () => {
+      const gitlabPLR = {
+        ...pipelineWithCommits[0],
+        metadata: {
+          ...pipelineWithCommits[0].metadata,
+          labels: {
+            ...pipelineWithCommits[0].metadata.labels,
+            'pipelinesascode.tekton.dev/git-provider': 'gitlab',
+          },
+          annotations: {
+            ...pipelineWithCommits[0].metadata.annotations,
+            'pipelinesascode.tekton.dev/repo-url': 'https://gitlab.com/test-org/test-repo',
+            'pipelinesascode.tekton.dev/sha-url': undefined,
+          },
+        },
+      };
+
+      const result = createCommitObjectFromPLR(gitlabPLR);
+      expect(result.shaURL).toBe('https://gitlab.com/test-org/test-repo/-/commit/commit123');
+    });
   });
 
   describe('createCommitObjectFromSnapshot', () => {
@@ -183,6 +204,27 @@ describe('commit-utils', () => {
       const result = createCommitObjectFromSnapshot(snapshotMissingPR);
       expect(result.isPullRequest).toBe(true);
       expect(result.pullRequestNumber).toBe('');
+    });
+
+    it('Should build gitlab shaURL from shared provider config when annotation is missing', () => {
+      const gitlabSnapshot = {
+        ...mockSnapshot,
+        metadata: {
+          ...mockSnapshot.metadata,
+          labels: {
+            ...mockSnapshot.metadata.labels,
+            'pac.test.appstudio.openshift.io/git-provider': 'gitlab',
+          },
+          annotations: {
+            ...mockSnapshot.metadata.annotations,
+            'pac.test.appstudio.openshift.io/repo-url': 'https://gitlab.com/test-org/frontend-repo',
+            'pac.test.appstudio.openshift.io/sha-url': undefined,
+          },
+        },
+      };
+
+      const result = createCommitObjectFromSnapshot(gitlabSnapshot);
+      expect(result.shaURL).toBe('https://gitlab.com/test-org/frontend-repo/-/commit/abc123def4567890');
     });
   });
 
@@ -356,6 +398,26 @@ describe('commit-utils', () => {
       ).toEqual('https://github.com/org/repo');
     });
 
+    it('should construct bitbucket.org URL when repoURL is missing', () => {
+      expect(
+        createRepoUrl({
+          gitProvider: 'bitbucket',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual('https://bitbucket.org/org/repo');
+    });
+
+    it('should construct codeberg.org URL when repoURL is missing', () => {
+      expect(
+        createRepoUrl({
+          gitProvider: 'codeberg',
+          repoName: 'repo',
+          repoOrg: 'org',
+        } as Commit),
+      ).toEqual('https://codeberg.org/org/repo');
+    });
+
     it('should return null for missing required fields', () => {
       // Missing gitProvider
       expect(
@@ -382,10 +444,10 @@ describe('commit-utils', () => {
       ).toEqual(null);
     });
 
-    it('should return null for unknown providers without repoURL', () => {
+    it('should return null for unsupported providers without repoURL', () => {
       expect(
         createRepoUrl({
-          gitProvider: 'bitbucket',
+          gitProvider: 'custom-host',
           repoName: 'repo',
           repoOrg: 'org',
         } as Commit),
@@ -450,6 +512,15 @@ describe('commit-utils', () => {
           gitProvider: 'github',
         } as Commit),
       ).toEqual('https://github.com/org/repo/tree/main');
+    });
+
+    it('should use bitbucket branch URL pattern from shared provider config', () => {
+      expect(
+        createRepoBranchURL({
+          repoURL: 'https://bitbucket.org/org/repo',
+          branch: 'main',
+        } as Commit),
+      ).toEqual('https://bitbucket.org/org/repo/branch/main');
     });
 
     it('should return null when branch is missing', () => {
@@ -519,6 +590,15 @@ describe('commit-utils', () => {
           gitProvider: 'github',
         } as Commit),
       ).toEqual('https://github.com/org/repo/pull/789');
+    });
+
+    it('should use bitbucket pull request URL pattern from shared provider config', () => {
+      expect(
+        createRepoPullRequestURL({
+          repoURL: 'https://bitbucket.org/org/repo',
+          pullRequestNumber: '789',
+        } as Commit),
+      ).toEqual('https://bitbucket.org/org/repo/pull-requests/789');
     });
 
     it('should return null when pullRequestNumber is missing', () => {

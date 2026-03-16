@@ -7,6 +7,12 @@ import {
 import { SnapshotLabels } from '../consts/snapshots';
 import { PipelineRunKind, Commit } from '../types';
 import { Snapshot } from '../types/coreBuildService';
+import {
+  createGitBranchURL,
+  createGitCommitURL,
+  createGitPullRequestURL,
+  createHostedRepoURL,
+} from './git-utils';
 import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
 export const statuses = [
@@ -48,16 +54,16 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_REPO_ORG_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_REPO_ORG_LABEL];
-  const shaURL =
-    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
-  const shaTitle =
-    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL];
+  const shaURL =
+    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
+    createGitCommitURL(repoURL, commitSHA, gitProvider);
+  const shaTitle =
+    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const pullRequestNumber = plr.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
   const eventType =
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
@@ -183,33 +189,18 @@ export const createRepoUrl = (commit: Commit): string | null => {
   if (commit.repoURL) {
     return commit.repoURL;
   }
-  
-  // Construct URL based on provider for cloud instances
-  if (commit.repoName && commit.repoOrg) {
-    if (commit.gitProvider === 'github') {
-      return `https://github.com/${commit.repoOrg}/${commit.repoName}`;
-    }
-    if (commit.gitProvider === 'gitlab') {
-      return `https://gitlab.com/${commit.repoOrg}/${commit.repoName}`;
-    }
-    // Forgejo is self-hosted, cannot construct URL without repoURL
+
+  if (commit.repoName && commit.repoOrg && commit.gitProvider) {
+    return createHostedRepoURL(commit.repoOrg, commit.repoName, commit.gitProvider);
   }
-  
+
   return null;
 };
 
 export const createRepoBranchURL = (commit: Commit): string | null => {
   const repoUrl = createRepoUrl(commit);
   if (commit.branch && repoUrl) {
-    // Use provider-specific URL patterns
-    if (commit.gitProvider === 'gitlab') {
-      return `${repoUrl}/-/tree/${commit.branch}`;
-    }
-    if (commit.gitProvider === 'forgejo') {
-      return `${repoUrl}/src/branch/${commit.branch}`;
-    }
-    // Default pattern for github and others
-    return `${repoUrl}/tree/${commit.branch}`;
+    return createGitBranchURL(repoUrl, commit.branch, commit.gitProvider);
   }
   return null;
 };
@@ -217,15 +208,7 @@ export const createRepoBranchURL = (commit: Commit): string | null => {
 export const createRepoPullRequestURL = (commit: Commit): string | null => {
   const repoURL = createRepoUrl(commit);
   if (commit.pullRequestNumber && repoURL) {
-    // Use provider-specific URL patterns
-    if (commit.gitProvider === 'gitlab') {
-      return `${repoURL}/-/merge_requests/${commit.pullRequestNumber}`;
-    }
-    if (commit.gitProvider === 'forgejo') {
-      return `${repoURL}/pulls/${commit.pullRequestNumber}`;
-    }
-    // Default pattern for github and others
-    return `${repoURL}/pull/${commit.pullRequestNumber}`;
+    return createGitPullRequestURL(repoURL, commit.pullRequestNumber, commit.gitProvider);
   }
   return null;
 };
@@ -271,14 +254,14 @@ export const createCommitObjectFromSnapshot = (snapshot: Snapshot): Commit => {
   const repoOrg =
     snapshot.metadata.labels?.[SnapshotLabels.PAC_URL_ORG_LABEL] ||
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_URL_ORG_LABEL];
-  const shaURL =
-    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
-  const shaTitle =
-    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
     snapshot.metadata.labels?.[SnapshotLabels.PAC_GIT_PROVIDER] ||
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_GIT_PROVIDER];
+  const shaURL =
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
+    createGitCommitURL(repoURL, commitSHA, gitProvider);
+  const shaTitle =
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
   const pullRequestNumber = snapshot.metadata.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL] ?? '';
   const eventType = snapshot.metadata.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
   const isPullRequest =

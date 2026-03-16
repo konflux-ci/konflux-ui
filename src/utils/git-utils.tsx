@@ -6,61 +6,106 @@ import { GitlabIcon } from '@patternfly/react-icons/dist/esm/icons/gitlab-icon';
 import gitUrlParse from 'git-url-parse';
 import ForgejoLogo from '../shared/assets/forgejo-logo.svg';
 
-type ProviderConfig = {
+type GitProviderConfig = {
   source: string;
-  branchPath: (branch: string) => string;
-  commitPath: (sha: string) => string;
-  selfHostedKeywords?: string[]; // hostname segments that identify self hosted instances
+  branchPath: string;
+  commitPath: string;
+  pullRequestPath: string;
+  canConstructHostedRepoUrl?: boolean;
+  selfHostedKeywords?: string[];
 };
 
-const providers: ProviderConfig[] = [
+const PROVIDERS: GitProviderConfig[] = [
   {
     source: 'github.com',
-    branchPath: (branch) => `/tree/${branch}`,
-    commitPath: (sha) => `/commit/${sha}`,
+    branchPath: '/tree',
+    commitPath: '/commit',
+    pullRequestPath: '/pull',
+    canConstructHostedRepoUrl: true,
+    selfHostedKeywords: ['github'],
   },
   {
     source: 'bitbucket.org',
-    branchPath: (branch) => `/branch/${branch}`,
-    commitPath: (sha) => `/commits/${sha}`,
+    branchPath: '/branch',
+    commitPath: '/commits',
+    pullRequestPath: '/pull-requests',
+    canConstructHostedRepoUrl: true,
+    selfHostedKeywords: ['bitbucket'],
   },
   {
     source: 'gitlab.com',
-    branchPath: (branch) => `/-/tree/${branch}`,
-    commitPath: (sha) => `/-/commit/${sha}`,
+    branchPath: '/-/tree',
+    commitPath: '/-/commit',
+    pullRequestPath: '/-/merge_requests',
+    canConstructHostedRepoUrl: true,
     selfHostedKeywords: ['gitlab'],
   },
   {
     source: 'forgejo.org',
-    branchPath: (branch) => `/src/branch/${branch}`,
-    commitPath: (sha) => `/commit/${sha}`,
+    branchPath: '/src/branch',
+    commitPath: '/commit',
+    pullRequestPath: '/pulls',
+    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['forgejo', 'gitea'],
   },
   {
     source: 'codeberg.org',
-    branchPath: (branch) => `/src/branch/${branch}`,
-    commitPath: (sha) => `/commit/${sha}`,
+    branchPath: '/src/branch',
+    commitPath: '/commit',
+    pullRequestPath: '/pulls',
+    canConstructHostedRepoUrl: true,
+    selfHostedKeywords: ['codeberg'],
   },
 ];
 
-const findProvider = (parsed: gitUrlParse.GitUrl): ProviderConfig | undefined => {
-  const hostSegments: string[] = parsed.resource.split('.');
-  return providers.find((p) => {
-    if (parsed.source === p.source) {
-      return true;
-    }
+type GitPathType = 'branchPath' | 'commitPath' | 'pullRequestPath';
 
-    const keywords = p.selfHostedKeywords;
-    return keywords && hostSegments.some((seg) => keywords.includes(seg));
-  });
-};
-
-const findProviderByHost = (host: string): ProviderConfig | undefined => {
+export const findProvider = (hostOrUrl: string): string | undefined => {
+  const host = hostOrUrl.includes('://')
+    ? (gitUrlParse(hostOrUrl) as gitUrlParse.GitUrl).resource
+    : hostOrUrl;
   const segments = host.split('.');
-  return providers.find(
+
+  return PROVIDERS.find(
     (p) => p.source === host || p.selfHostedKeywords?.some((kw) => segments.includes(kw)),
-  );
+  )?.source;
 };
+
+const getProviderConfig = (hostOrUrl: string): GitProviderConfig | undefined => {
+  const provider = findProvider(hostOrUrl);
+  return provider ? PROVIDERS.find((p) => p.source === provider) : undefined;
+};
+
+const getProviderConfigBySourceOrHost = (value: string): GitProviderConfig | undefined =>
+  PROVIDERS.find((p) => p.source === value) ?? getProviderConfig(value);
+
+const getProviderPath = (hostOrUrl: string, pathType: GitPathType): string | null =>
+  getProviderConfig(hostOrUrl)?.[pathType] ?? null;
+
+const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, '');
+
+const buildProviderRepoURL = (
+  repoURL: string,
+  identifier: string,
+  pathType: GitPathType,
+  hostOrUrl?: string,
+  fallbackPath?: string,
+): string | null => {
+  if (!repoURL || !identifier) {
+    return null;
+  }
+
+  const pathPrefix =
+    getProviderPath(hostOrUrl ?? repoURL, pathType) ?? getProviderPath(repoURL, pathType);
+  const resolvedPathPrefix = pathPrefix ?? fallbackPath;
+
+  return resolvedPathPrefix
+    ? `${trimTrailingSlash(repoURL)}${resolvedPathPrefix}/${identifier}`
+    : null;
+};
+
+const getPathPrefix = (gitSource: string, domain?: string): string | null =>
+  getProviderPath(domain ?? gitSource, 'branchPath') ?? getProviderPath(gitSource, 'branchPath');
 
 export const getGitPath = (
   gitSource: string,
@@ -68,10 +113,43 @@ export const getGitPath = (
   path?: string,
   domain?: string,
 ): string => {
-  if (!revision) return '';
-  const provider = findProviderByHost(domain ?? gitSource);
-  if (!provider) return '';
-  return `${provider.branchPath(revision)}${path ? `/${path}` : ''}`;
+  const prefix = getPathPrefix(gitSource, domain);
+  return !revision || !prefix ? '' : `${prefix}/${revision}${path ? `/${path}` : ''}`;
+};
+
+export const createGitBranchURL = (
+  repoURL: string,
+  branch: string,
+  hostOrUrl?: string,
+): string | null => buildProviderRepoURL(repoURL, branch, 'branchPath', hostOrUrl, '/tree');
+
+export const createGitCommitURL = (
+  repoURL: string,
+  commitSHA: string,
+  hostOrUrl?: string,
+): string | null => buildProviderRepoURL(repoURL, commitSHA, 'commitPath', hostOrUrl, '/commit');
+
+export const createGitPullRequestURL = (
+  repoURL: string,
+  pullRequestNumber: string,
+  hostOrUrl?: string,
+): string | null =>
+  buildProviderRepoURL(repoURL, pullRequestNumber, 'pullRequestPath', hostOrUrl, '/pull');
+
+export const createHostedRepoURL = (
+  repoOrg: string,
+  repoName: string,
+  providerOrHost: string,
+): string | null => {
+  if (!repoOrg || !repoName || !providerOrHost) {
+    return null;
+  }
+
+  const provider = getProviderConfigBySourceOrHost(providerOrHost);
+
+  return provider?.canConstructHostedRepoUrl
+    ? `https://${provider.source}/${repoOrg}/${repoName}`
+    : null;
 };
 
 const forgejoIcon = (
@@ -91,7 +169,7 @@ const GIT_ICONS: Partial<Record<string, React.ReactElement>> = {
 };
 
 export const getGitIcon = (gitSource: string): React.ReactElement =>
-  GIT_ICONS[findProviderByHost(gitSource)?.source ?? ''] ?? <GitAltIcon alt="Git" />;
+  GIT_ICONS[findProvider(gitSource) ?? ''] ?? <GitAltIcon alt="Git" />;
 
 export const createBranchUrl = (repoUrl?: string, branch?: string): string | undefined => {
   if (!repoUrl || !branch) {
@@ -105,11 +183,11 @@ export const createBranchUrl = (repoUrl?: string, branch?: string): string | und
     return undefined;
   }
 
-  const provider = findProvider(parsed);
+  const provider = findProvider(parsed.resource);
   if (!provider) {
     return undefined;
   }
 
   const cleanUrl = repoUrl.replace(/\.git$/, '');
-  return `${cleanUrl}${provider.branchPath(branch)}`;
+  return createGitBranchURL(cleanUrl, branch, provider) ?? undefined;
 };
