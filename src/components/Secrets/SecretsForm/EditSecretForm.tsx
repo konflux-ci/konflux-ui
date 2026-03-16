@@ -29,7 +29,7 @@ import {
   getSecretBreadcrumbs,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
-import { getSecretFormValidationSchema } from '../utils/secret-validation';
+import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
 const EditSecretForm: React.FC = () => {
@@ -125,7 +125,7 @@ const EditSecretForm: React.FC = () => {
             actions.setStatus({ submitError: editError.message });
           });
       }}
-      validationSchema={getSecretFormValidationSchema({ isEditMode: true })}
+      validationSchema={secretFormValidationSchema({ isEditMode: true })}
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout

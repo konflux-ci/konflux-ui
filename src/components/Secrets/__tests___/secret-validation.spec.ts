@@ -1,13 +1,12 @@
 import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '../../../types';
-import {
-  getSecretFormValidationSchema,
-  secretFormValidationSchema,
-} from '../utils/secret-validation';
+import { secretFormValidationSchema } from '../utils/secret-validation';
 
 describe('validation-utils', () => {
+  const getSchema = () => secretFormValidationSchema();
+
   it('should validate name field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: '123',
       }),
     ).rejects.toThrow(
@@ -15,7 +14,7 @@ describe('validation-utils', () => {
     );
 
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'very-very-very-very-very-long-resource-name-which-is-invalid-name',
       }),
     ).rejects.toThrow('Must be no more than 63 characters.');
@@ -23,7 +22,7 @@ describe('validation-utils', () => {
 
   it('should validate opaque field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.opaque,
         opaque: {
@@ -35,7 +34,7 @@ describe('validation-utils', () => {
 
   it('should validate image field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.image,
         image: {
@@ -46,7 +45,7 @@ describe('validation-utils', () => {
     ).rejects.toThrow('Required');
 
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.image,
         image: {
@@ -59,7 +58,7 @@ describe('validation-utils', () => {
 
   it('should validate source field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.source,
         source: {
@@ -71,7 +70,7 @@ describe('validation-utils', () => {
     ).rejects.toThrow('Required');
 
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.source,
         source: {
@@ -83,7 +82,7 @@ describe('validation-utils', () => {
   });
 
   it('should allow empty SSH private key when editing (isEditMode)', async () => {
-    const editSchema = getSecretFormValidationSchema({ isEditMode: true });
+    const editSchema = secretFormValidationSchema({ isEditMode: true });
     await expect(
       editSchema.validate({
         name: 'test-resource',
