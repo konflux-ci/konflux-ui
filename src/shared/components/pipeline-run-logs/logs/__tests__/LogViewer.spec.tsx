@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { useTheme } from '~/shared/theme';
 import { mockConsole, MockConsole } from '~/unit-test-utils';
+import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rendering-utils';
 import LogViewer from '../LogViewer';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
