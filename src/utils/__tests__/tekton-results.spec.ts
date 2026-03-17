@@ -16,6 +16,7 @@ import {
   RecordsList,
   getTaskRunLog,
   nameFilter,
+  commitSearchFilter,
   selectorToFilter,
 } from '../tekton-results';
 import { createK8sUtilMock } from '../test-utils';
@@ -285,6 +286,59 @@ describe('tekton-results', () => {
         expect(nameFilter('TEST-RESOURCE-name')).toStrictEqual(
           'data.metadata.name.contains("test-resource-name")',
         );
+      });
+    });
+
+    describe('commitSearchFilter', () => {
+      it('should return empty string for empty or whitespace-only input', () => {
+        expect(commitSearchFilter('')).toStrictEqual('');
+        expect(commitSearchFilter('   ')).toStrictEqual('');
+      });
+
+      it('should search across commit SHA labels and annotations', () => {
+        const result = commitSearchFilter('abc123');
+        expect(result).toContain(
+          'data.metadata.labels["pipelinesascode.tekton.dev/sha"].contains("abc123")',
+        );
+        expect(result).toContain(
+          'data.metadata.labels["pac.test.appstudio.openshift.io/sha"].contains("abc123")',
+        );
+        expect(result).toContain(
+          'data.metadata.annotations["build.appstudio.redhat.com/commit_sha"].contains("abc123")',
+        );
+      });
+
+      it('should search across commit title annotation', () => {
+        const result = commitSearchFilter('fix button');
+        expect(result).toContain(
+          'data.metadata.annotations["pipelinesascode.tekton.dev/sha-title"].contains("fix button")',
+        );
+      });
+
+      it('should search across component label', () => {
+        const result = commitSearchFilter('my-component');
+        expect(result).toContain(
+          'data.metadata.labels["appstudio.openshift.io/component"].contains("my-component")',
+        );
+      });
+
+      it('should search across PR number label and strip # prefix', () => {
+        const result = commitSearchFilter('#42');
+        expect(result).toContain(
+          'data.metadata.labels["pipelinesascode.tekton.dev/pull-request"].contains("42")',
+        );
+      });
+
+      it('should lowercase the search term', () => {
+        const result = commitSearchFilter('ABC123');
+        expect(result).toContain(
+          'data.metadata.labels["pipelinesascode.tekton.dev/sha"].contains("abc123")',
+        );
+      });
+
+      it('should produce OR filter across all fields', () => {
+        const result = commitSearchFilter('test');
+        expect(result).toMatch(/\|\|/);
       });
     });
     it('should convert In operator', () => {

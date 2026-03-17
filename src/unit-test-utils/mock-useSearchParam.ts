@@ -1,5 +1,10 @@
 let params = {};
 
+/** Clears URL search param state for tests using {@link mockUseSearchParamBatch}. */
+export function resetMockSearchParams(): void {
+  params = {};
+}
+
 export const mockUseSearchParamBatch = () => {
   const getter = () => {
     return params;
