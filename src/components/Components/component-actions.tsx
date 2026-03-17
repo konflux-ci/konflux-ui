@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ComponentModel, ServiceAccountModel } from '../../models';
-import { COMPONENT_LINKED_SECRETS_PATH } from '../../routes/paths';
+import { COMPONENT_LINKED_SECRETS_PATH, COMPONENT_LIST_PATH } from '../../routes/paths';
 import { Action } from '../../shared/components/action-menu/types';
 import { useNamespace } from '../../shared/providers/Namespace/useNamespaceInfo';
 import { ComponentKind } from '../../types';
@@ -13,6 +14,7 @@ import { componentDeleteModal } from '../modal/resource-modals';
 export const useComponentActions = (component: ComponentKind, name: string): Action[] => {
   const namespace = useNamespace();
   const showModal = useModalLauncher();
+  const navigate = useNavigate();
   const applicationName = component?.spec.application;
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
   const [canDeleteComponent] = useAccessReviewForModel(ComponentModel, 'delete');
@@ -73,7 +75,16 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
     ];
 
     updatedActions.push({
-      cta: () => showModal(componentDeleteModal(component)),
+      cta: () =>
+        showModal(componentDeleteModal(component))?.closed?.then(({ submitClicked }) => {
+          if (submitClicked)
+            navigate(
+              COMPONENT_LIST_PATH.createPath({
+                applicationName,
+                workspaceName: namespace,
+              }),
+            );
+        }),
       id: `delete-${name.toLowerCase()}`,
       label: 'Delete component',
       disabled: !canDeleteComponent,
@@ -89,6 +100,7 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
     canManageLinkedSecrets,
     canDeleteComponent,
     showModal,
+    navigate,
   ]);
 
   return actions;
