@@ -77,6 +77,7 @@ const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
+const useTRSearchMock = useTRPipelineRunsMock;
 
 const commits = getCommitsFromPLRs(pipelineWithCommits.slice(0, 4));
 
@@ -90,6 +91,13 @@ describe('CommitsListView', () => {
   beforeEach(() => {
     usePipelineRunsV2Mock.mockReturnValue([
       pipelineWithCommits.slice(0, 4),
+      true,
+      undefined,
+      undefined,
+      { isFetchingNextPage: false, hasNextPage: false },
+    ]);
+    useTRSearchMock.mockReturnValue([
+      [],
       true,
       undefined,
       undefined,
@@ -274,6 +282,36 @@ describe('CommitsListView', () => {
         },
       },
     );
+  });
+
+  it('should query Tekton Results directly when searching for commits', () => {
+    const view = renderWithQueryClient(<CommitsList />);
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, {
+        target: { value: 'abc123' },
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    view.rerender(<CommitsList />);
+
+    expect(useTRSearchMock).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        filter: expect.stringContaining('abc123'),
+        selector: expect.objectContaining({
+          matchLabels: expect.objectContaining({
+            'appstudio.openshift.io/application': 'purple-mermaid-app',
+          }),
+        }),
+      }),
+    );
+
+    const clearFilterButton = view.getAllByRole('button', { name: 'Clear all filters' })[0];
+    fireEvent.click(clearFilterButton);
   });
 
   it('should show loader if next page is loading', () => {

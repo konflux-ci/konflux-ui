@@ -18,12 +18,14 @@ import { useApplication } from '../../../hooks/useApplications';
 import { useComponents } from '../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../hooks/usePipelineRunsV2';
 import { useSortedResources } from '../../../hooks/useSortedResources';
+import { useTRPipelineRuns } from '../../../hooks/useTektonResults';
 import { useVisibleColumns } from '../../../hooks/useVisibleColumns';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs, getCommitSha, statuses } from '../../../utils/commits-utils';
+import { commitSearchFilter } from '../../../utils/tekton-results';
 import { getCommitStatusFromPipelineRuns } from '../commit-status';
 import CommitsEmptyState from '../CommitsEmptyState';
 import {
@@ -118,14 +120,50 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
       ),
     );
 
+  const searchFilter = React.useMemo(
+    () => (nameFilter ? commitSearchFilter(nameFilter) : undefined),
+    [nameFilter],
+  );
+
+  const searchOptions = React.useMemo(
+    () => ({
+      selector: {
+        filterByCreationTimestampAfter: application?.metadata?.creationTimestamp,
+        matchLabels: {
+          [PipelineRunLabel.APPLICATION]: applicationName,
+          ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
+          [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+        },
+      },
+      filter: searchFilter,
+    }),
+    [application?.metadata?.creationTimestamp, applicationName, componentName, searchFilter],
+  );
+
+  const [searchPipelineRuns, searchLoaded, searchError] = useTRPipelineRuns(
+    searchFilter && applicationLoaded ? namespace : null,
+    searchOptions,
+  );
+
+  const searchInProgress = !!searchFilter && !searchLoaded;
+
+  const mergedPipelineRuns = React.useMemo(() => {
+    if (!searchFilter || !searchLoaded || searchPipelineRuns.length === 0) return pipelineRuns;
+    const existingUids = new Set(pipelineRuns.map((plr) => plr.metadata?.uid));
+    const newSearchResults = searchPipelineRuns.filter(
+      (plr) => !existingUids.has(plr.metadata?.uid),
+    );
+    return [...pipelineRuns, ...newSearchResults];
+  }, [pipelineRuns, searchPipelineRuns, searchFilter, searchLoaded]);
+
   // filter to only BUILD type PLRs for the list display
   const buildPipelineRuns = React.useMemo(() => {
     return (
-      pipelineRuns?.filter(
+      mergedPipelineRuns?.filter(
         (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
       ) || []
     );
-  }, [pipelineRuns]);
+  }, [mergedPipelineRuns]);
 
   const [components, componentsLoaded, componentsError] = useComponents(namespace, applicationName);
   const componentNames = React.useMemo(
@@ -136,10 +174,10 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
   // used in CommitListRow to calculate the correct latest PLR status
   const allPipelineRunsFilteredByComponents = React.useMemo(
     () =>
-      pipelineRuns?.filter((plr) =>
+      mergedPipelineRuns?.filter((plr) =>
         componentNames.includes(plr.metadata?.labels?.[PipelineRunLabel.COMPONENT]),
       ),
-    [componentNames, pipelineRuns],
+    [componentNames, mergedPipelineRuns],
   );
 
   const commits = React.useMemo(
@@ -283,8 +321,8 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [visibleColumns, activeSortIndex, activeSortDirection],
   );
 
-  if (error) {
-    return getErrorState(error, loaded, 'commits');
+  if (error || searchError) {
+    return getErrorState(error || searchError, loaded, 'commits');
   }
 
   return (
@@ -308,7 +346,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
             />
           );
         }}
-        loaded={loaded && !(hasNextPage && buildPipelineRuns?.length === 0)}
+        loaded={loaded && !searchInProgress && !(hasNextPage && buildPipelineRuns?.length === 0)}
         getRowProps={(obj: Commit) => ({
           id: obj.sha,
         })}
