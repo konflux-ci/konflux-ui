@@ -59,7 +59,7 @@ const CommitLabel: React.FC<React.PropsWithChildren<CommitLabelProps>> = ({
       {commitShortName}
     </Label>
   );
-  const tooltip = tipText[gitProvider];
+  const tooltip = shaURL ? tipText[gitProvider] : undefined;
   if (tooltip) {
     return <Tooltip content={tooltip}>{label}</Tooltip>;
   }
