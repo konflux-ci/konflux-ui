@@ -53,4 +53,10 @@ describe('CommitLabel', () => {
     expect(label.queryByTestId(`git-lab-icon`)).not.toBeInTheDocument();
     expect(label.queryByTestId(`bit-bucket-icon`)).not.toBeInTheDocument();
   });
+
+  it('should render non-clickable label when shaURL is missing', () => {
+    const label = render(<CommitLabel gitProvider={GitProvider.GITLAB} sha={sha} shaURL={undefined} />);
+    expect(label.queryByRole('link')).not.toBeInTheDocument();
+    expect(label.getByTestId('commit-label-9135b3a')).toBeInTheDocument();
+  });
 });

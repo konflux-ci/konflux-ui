@@ -24,7 +24,7 @@ const providerIcon = {
 type CommitLabelProps = {
   gitProvider: GitProvider | string;
   sha: string;
-  shaURL: string;
+  shaURL?: string;
 };
 const CommitLabel: React.FC<React.PropsWithChildren<CommitLabelProps>> = ({
   gitProvider,
@@ -38,17 +38,23 @@ const CommitLabel: React.FC<React.PropsWithChildren<CommitLabelProps>> = ({
       className={css('commit-label', gitProvider === GitProvider.GITHUB && 'black-icon')}
       icon={providerIcon[gitProvider]}
       isCompact
-      render={({ className, content }) => (
-        <a
-          href={shaURL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={className}
-          data-test={`commit-label-${commitShortName}`}
-        >
-          {content}
-        </a>
-      )}
+      render={({ className, content }) =>
+        shaURL ? (
+          <a
+            href={shaURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={className}
+            data-test={`commit-label-${commitShortName}`}
+          >
+            {content}
+          </a>
+        ) : (
+          <span className={className} data-test={`commit-label-${commitShortName}`}>
+            {content}
+          </span>
+        )
+      }
     >
       {commitShortName}
     </Label>

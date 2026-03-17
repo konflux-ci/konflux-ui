@@ -325,14 +325,14 @@ describe('commit-utils', () => {
       ).toEqual('https://forgejo.example.com/org/repo');
     });
 
-    it('should construct gitlab.com URL when repoURL is missing', () => {
+    it('should return null for gitlab when repoURL is missing', () => {
       expect(
         createRepoUrl({
           gitProvider: 'gitlab',
           repoName: 'repo',
           repoOrg: 'org',
         } as Commit),
-      ).toEqual('https://gitlab.com/org/repo');
+      ).toEqual(null);
     });
 
     it('should return null for forgejo without repoURL', () => {
@@ -410,7 +410,7 @@ describe('commit-utils', () => {
           repoName: 'repo',
           repoOrg: 'org',
         } as Commit),
-      ).toEqual('https://gitlab.com/org/repo/-/tree/feature-branch');
+      ).toEqual(null);
     });
 
     it('should use forgejo branch URL pattern', () => {
@@ -479,7 +479,7 @@ describe('commit-utils', () => {
           repoName: 'repo',
           repoOrg: 'org',
         } as Commit),
-      ).toEqual('https://gitlab.com/org/repo/-/merge_requests/100');
+      ).toEqual(null);
     });
 
     it('should use forgejo pull request URL pattern', () => {

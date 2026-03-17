@@ -29,7 +29,7 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/branch',
     commitPath: '/commits',
     pullRequestPath: '/pull-requests',
-    canConstructHostedRepoUrl: true,
+    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['bitbucket'],
   },
   {
@@ -37,7 +37,7 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/-/tree',
     commitPath: '/-/commit',
     pullRequestPath: '/-/merge_requests',
-    canConstructHostedRepoUrl: true,
+    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['gitlab'],
   },
   {
@@ -53,7 +53,7 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/src/branch',
     commitPath: '/commit',
     pullRequestPath: '/pulls',
-    canConstructHostedRepoUrl: true,
+    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['codeberg'],
   },
 ];
@@ -89,7 +89,6 @@ const buildProviderRepoURL = (
   identifier: string,
   pathType: GitPathType,
   hostOrUrl?: string,
-  fallbackPath?: string,
 ): string | null => {
   if (!repoURL || !identifier) {
     return null;
@@ -97,10 +96,8 @@ const buildProviderRepoURL = (
 
   const pathPrefix =
     getProviderPath(hostOrUrl ?? repoURL, pathType) ?? getProviderPath(repoURL, pathType);
-  const resolvedPathPrefix = pathPrefix ?? fallbackPath;
-
-  return resolvedPathPrefix
-    ? `${trimTrailingSlash(repoURL)}${resolvedPathPrefix}/${identifier}`
+  return pathPrefix
+    ? `${trimTrailingSlash(repoURL)}${pathPrefix}/${identifier}`
     : null;
 };
 
@@ -121,20 +118,20 @@ export const createGitBranchURL = (
   repoURL: string,
   branch: string,
   hostOrUrl?: string,
-): string | null => buildProviderRepoURL(repoURL, branch, 'branchPath', hostOrUrl, '/tree');
+): string | null => buildProviderRepoURL(repoURL, branch, 'branchPath', hostOrUrl);
 
 export const createGitCommitURL = (
   repoURL: string,
   commitSHA: string,
   hostOrUrl?: string,
-): string | null => buildProviderRepoURL(repoURL, commitSHA, 'commitPath', hostOrUrl, '/commit');
+): string | null => buildProviderRepoURL(repoURL, commitSHA, 'commitPath', hostOrUrl);
 
 export const createGitPullRequestURL = (
   repoURL: string,
   pullRequestNumber: string,
   hostOrUrl?: string,
 ): string | null =>
-  buildProviderRepoURL(repoURL, pullRequestNumber, 'pullRequestPath', hostOrUrl, '/pull');
+  buildProviderRepoURL(repoURL, pullRequestNumber, 'pullRequestPath', hostOrUrl);
 
 export const createHostedRepoURL = (
   repoOrg: string,

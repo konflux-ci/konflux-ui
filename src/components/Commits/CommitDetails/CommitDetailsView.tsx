@@ -100,11 +100,15 @@ const CommitDetailsView: React.FC = () => {
           </Text>
         }
         actions={[
-          {
-            key: 'go-to-source',
-            label: 'Go to source',
-            onClick: () => window.open(commit.shaURL),
-          },
+          ...(commit.shaURL
+            ? [
+                {
+                  key: 'go-to-source',
+                  label: 'Go to source',
+                  onClick: () => window.open(commit.shaURL),
+                },
+              ]
+            : []),
         ]}
         baseURL={COMMIT_DETAILS_PATH.createPath({
           workspaceName: namespace,
