@@ -1,21 +1,24 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { runStatus } from '~/consts/pipelinerun';
-import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
+import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
+import {
+  mockUseSearchParamBatch,
+  resetMockSearchParams,
+} from '~/unit-test-utils/mock-useSearchParam';
 import { useComponents } from '../../../../hooks/useComponents';
 import { usePipelineRunsV2 } from '../../../../hooks/usePipelineRunsV2';
-import { useTRPipelineRuns } from '../../../../hooks/useTektonResults';
 import * as dateTime from '../../../../shared/components/timestamp/datetime';
+import { PipelineRunKind } from '../../../../types';
 import { mockUseNamespaceHook } from '../../../../unit-test-utils/mock-namespace';
 import { getCommitsFromPLRs } from '../../../../utils/commits-utils';
+import { pipelineRunMatchesCommitSearch } from '../../../../utils/pipeline-run-commit-search';
 import { createUseApplicationMock, renderWithQueryClient } from '../../../../utils/test-utils';
 import { pipelineWithCommits } from '../../__data__/pipeline-with-commits';
 import { MockComponents } from '../../CommitDetails/visualization/__data__/MockCommitWorkflowData';
 import CommitsListRow from '../CommitsListRow';
 import CommitsListView from '../CommitsListView';
 
-jest.mock('../../../../hooks/useTektonResults');
 jest.useFakeTimers();
 
 jest.mock('react-i18next', () => ({
@@ -73,7 +76,6 @@ jest.mock('../../../../hooks/usePipelineRunsV2', () => ({
   usePipelineRunsV2: jest.fn(),
 }));
 
-const useTRPipelineRunsMock = useTRPipelineRuns as jest.Mock;
 const useComponentsMock = useComponents as jest.Mock;
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 const usePipelineRunsV2Mock = usePipelineRunsV2 as jest.Mock;
@@ -86,15 +88,31 @@ const CommitsList = () => (
   </FilterContextProvider>
 );
 
+const defaultPipelineRunsForView = pipelineWithCommits
+  .slice(0, 4)
+  .filter(
+    (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+  );
+
 describe('CommitsListView', () => {
   beforeEach(() => {
-    usePipelineRunsV2Mock.mockReturnValue([
-      pipelineWithCommits.slice(0, 4),
-      true,
-      undefined,
-      undefined,
-      { isFetchingNextPage: false, hasNextPage: false },
-    ]);
+    resetMockSearchParams();
+    usePipelineRunsV2Mock.mockImplementation(
+      (_ns, options: { commitSearchTerm?: string } | undefined) => {
+        const raw = options?.commitSearchTerm;
+        const term = typeof raw === 'string' ? raw.trim() : '';
+        const plrs = term
+          ? defaultPipelineRunsForView.filter((plr) => pipelineRunMatchesCommitSearch(plr, term))
+          : defaultPipelineRunsForView;
+        return [
+          plrs,
+          true,
+          undefined,
+          undefined,
+          { isFetchingNextPage: false, hasNextPage: false },
+        ];
+      },
+    );
     useComponentsMock.mockReturnValue([MockComponents, true]);
     useNamespaceMock.mockReturnValue('test-ns');
   });
@@ -217,15 +235,50 @@ describe('CommitsListView', () => {
     expect(screen.queryByText('#11 test-title')).not.toBeInTheDocument();
     expect(screen.queryByText('#12 test-title-3')).not.toBeInTheDocument();
 
-    // clear the filter
-    const clearFilterButton = view.getAllByRole('button', { name: 'Clear all filters' })[0];
-    fireEvent.click(clearFilterButton);
-    view.rerender(<CommitsList />);
+    // No rows + empty state can hide the toolbar; remount to clear search params like a fresh visit.
+    view.unmount();
+    resetMockSearchParams();
+    renderWithQueryClient(<CommitsList />);
     expect(screen.queryByText('#11 test-title')).toBeInTheDocument();
     expect(screen.queryByText('#12 test-title-3')).toBeInTheDocument();
   });
 
   it('should filter by commit status', () => {
+    const failedPlr: PipelineRunKind = {
+      ...pipelineWithCommits[2],
+      status: {
+        ...pipelineWithCommits[2].status,
+        conditions: [
+          {
+            lastTransitionTime: '2022-06-20T12:49:27Z',
+            message: 'Tasks Failed: 1',
+            reason: 'Failed',
+            status: 'False',
+            type: 'Succeeded',
+          },
+        ],
+      },
+    };
+    usePipelineRunsV2Mock.mockImplementation(
+      (_ns, options: { commitSearchTerm?: string } | undefined) => {
+        const raw = options?.commitSearchTerm;
+        const term = typeof raw === 'string' ? raw.trim() : '';
+        const buildPlrs = [pipelineWithCommits[0], failedPlr].filter(
+          (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+        );
+        const plrs = term
+          ? buildPlrs.filter((plr) => pipelineRunMatchesCommitSearch(plr, term))
+          : buildPlrs;
+        return [
+          plrs,
+          true,
+          undefined,
+          undefined,
+          { isFetchingNextPage: false, hasNextPage: false },
+        ];
+      },
+    );
+
     const view = renderWithQueryClient(<CommitsList />);
 
     const filterMenuButton = view.getByRole('button', { name: /filter/i });
@@ -249,13 +302,13 @@ describe('CommitsListView', () => {
       undefined,
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    useTRPipelineRunsMock.mockReturnValue([[], false]);
     useComponentsMock.mockReturnValue([[], false]);
     renderWithQueryClient(<CommitsList />);
     expect(screen.getByTestId('data-table-skeleton')).toBeVisible();
   });
 
   it('should call usePipelineRuns with componentName when provided', () => {
+    usePipelineRunsV2Mock.mockClear();
     renderWithQueryClient(
       <FilterContextProvider filterParams={['name', 'status']}>
         <CommitsListView applicationName="purple-mermaid-app" componentName="sample-component" />
@@ -263,8 +316,8 @@ describe('CommitsListView', () => {
     );
 
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
-      'test-ns', // namespace
-      {
+      'test-ns',
+      expect.objectContaining({
         selector: {
           filterByCreationTimestampAfter: undefined,
           matchLabels: {
@@ -272,8 +325,48 @@ describe('CommitsListView', () => {
             'appstudio.openshift.io/component': 'sample-component',
           },
         },
-      },
+      }),
     );
+  });
+
+  it('should pass commit search options to usePipelineRunsV2 when filtering commits', () => {
+    const view = renderWithQueryClient(<CommitsList />);
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, {
+        target: { value: 'commit123' },
+      });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    view.rerender(<CommitsList />);
+
+    expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        commitSearchTerm: 'commit123',
+        selector: expect.objectContaining({
+          matchLabels: expect.objectContaining({
+            'appstudio.openshift.io/application': 'purple-mermaid-app',
+          }),
+        }),
+      }),
+    );
+    expect(usePipelineRunsV2Mock).not.toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        selector: expect.objectContaining({
+          matchLabels: expect.objectContaining({
+            'pipelines.appstudio.openshift.io/type': 'build',
+          }),
+        }),
+      }),
+    );
+
+    view.unmount();
+    // Next test's beforeEach runs resetMockSearchParams; no cleanup needed here.
   });
 
   it('should show loader if next page is loading', () => {

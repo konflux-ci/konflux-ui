@@ -117,8 +117,9 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
             },
           },
+          ...(nameFilter.trim() ? { commitSearchTerm: nameFilter } : {}),
         }),
-        [application?.metadata?.creationTimestamp, applicationName, componentName],
+        [application?.metadata?.creationTimestamp, applicationName, componentName, nameFilter],
       ),
     );
 
@@ -186,24 +187,16 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [commits, commitStatusMap],
   );
 
+  // Name / commit matching is handled by usePipelineRunsV2 (cluster watch + Tekton Results CEL or
+  // KubeArchive list + pipelineRunMatchesCommitSearch). Avoid a second client-only name pass that
+  // could hide rows the backends already matched.
   const filteredCommits = React.useMemo(
     () =>
       commits.filter((commit) => {
         const commitStatus = commitStatusMap[commit.sha] || runStatus.Unknown;
-        return (
-          (!nameFilter ||
-            commit.sha.indexOf(nameFilter) !== -1 ||
-            commit.components.some(
-              (c) => c.toLowerCase().indexOf(nameFilter.trim().toLowerCase()) !== -1,
-            ) ||
-            commit.pullRequestNumber
-              .toLowerCase()
-              .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
-            commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
-          (!statusFilter.length || statusFilter.includes(commitStatus))
-        );
+        return !statusFilter.length || statusFilter.includes(commitStatus);
       }),
-    [commits, nameFilter, statusFilter, commitStatusMap],
+    [commits, statusFilter, commitStatusMap],
   );
 
   // Default sorted commits using useSortedResources for standard columns
