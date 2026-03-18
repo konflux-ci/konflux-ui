@@ -15,9 +15,7 @@ jobs:
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
       SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_JOB_REPORT_ID }}
       SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_PERIODIC_REPORT }}
-      CHECK_INFRA_PRS: "true"
       # secrets
-      GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       CYPRESS_GH_TOKEN: ${{ secrets.HAC_TEST_GH_TOKEN }}
       GH_APP_ID: ${{ secrets.GH_APP_ID }}
       GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
