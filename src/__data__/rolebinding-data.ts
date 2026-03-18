@@ -59,6 +59,23 @@ export const mockRoleBindings: RoleBinding[] = [
   },
 ];
 
+export const mockRoleBindingsWithMultipleUsers: RoleBinding[] = [
+  {
+    apiVersion: 'rbac.authorization.k8s.io/v1',
+    kind: 'RoleBinding',
+    metadata: { name: 'konflux-contributor-user1-actions-user', namespace: 'test-ns' },
+    subjects: [
+      { apiGroup: 'rbac.authorization.k8s.io', name: 'user1', kind: 'User' },
+      { apiGroup: 'rbac.authorization.k8s.io', name: 'user2', kind: 'User' },
+    ],
+    roleRef: {
+      apiGroup: 'rbac.authorization.k8s.io',
+      kind: 'ClusterRole',
+      name: 'konflux-contributor-user-actions',
+    },
+  },
+];
+
 export const mockRoleBindingWithoutUser: RoleBinding = {
   ...mockRoleBinding,
   subjects: mockRoleBinding.subjects.map((subject) =>

@@ -12,7 +12,7 @@ export const RBListHeader = () => [
       className: rbTableColumnClasses.username,
       info: {
         popover:
-          'The primary user or service account from the role binding. Shows the first subject after sanitization for Kubernetes compatibility. Displays "-" when no subjects are defined.',
+          'Each row is one subject (user, group, or service account) from the role binding. Bindings with multiple subjects appear as multiple rows. Displays "-" when the binding has no subjects.',
       },
     },
   },

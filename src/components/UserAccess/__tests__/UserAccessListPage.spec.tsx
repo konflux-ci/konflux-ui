@@ -117,11 +117,9 @@ describe('UserAccessListPage', () => {
 
       renderWithQueryClientAndRouter(<UserAccessPage />);
 
-      // Shows filtered empty state when no role bindings exist because
-      // the component filters all role bindings (including empty array)
-      // This is the current expected behavior - when there's truly no data,
-      // the filter result is empty, so FilteredEmptyState is shown
-      expect(screen.getByText('No results found')).toBeInTheDocument();
+      // Namespace has no bindings → full empty state (not FilteredEmptyState / "No results found")
+      expect(screen.getByTestId('user-access__empty')).toBeInTheDocument();
+      expect(screen.getByText('Grant user access')).toBeInTheDocument();
     });
 
     it('should show Grant access button when empty', () => {

@@ -17,13 +17,18 @@ import { Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
-import { RoleBinding } from '../../types';
 import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
 import { RBListHeader } from './RBListHeader';
 import { RBListRow } from './RBListRow';
+import {
+  expandRoleBindingsToTableRows,
+  filterUserAccessRowsByUsername,
+  UserAccessTableRow,
+} from './userAccessTableRows';
+// import { mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
 
 const UserAccessEmptyState: React.FC<
   React.PropsWithChildren<{
@@ -70,15 +75,16 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   });
   const { username: usernameFilter } = filters;
   const [roleBindings, loaded, error] = useRoleBindings(namespace);
+  // const roleBindings = mockRoleBindingsWithMultipleUsers;
+
+  const tableRows = React.useMemo(
+    () => expandRoleBindingsToTableRows(roleBindings),
+    [roleBindings],
+  );
 
   const filterRBs = React.useMemo(
-    () =>
-      roleBindings.filter(
-        (rb) =>
-          (!usernameFilter && !rb.subjects) ||
-          rb.subjects?.some((subject) => textMatch(subject.name, usernameFilter)),
-      ),
-    [roleBindings, usernameFilter],
+    () => filterUserAccessRowsByUsername(tableRows, usernameFilter),
+    [tableRows, usernameFilter],
   );
 
   if (error) {
@@ -91,10 +97,10 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         <Spinner />
       </Bullseye>
     );
+  }
 
-    if (!filterRBs) {
-      return <UserAccessEmptyState canCreateRB={canCreateRB} />;
-    }
+  if (!roleBindings.length) {
+    return <UserAccessEmptyState canCreateRB={canCreateRB} />;
   }
 
   return (
@@ -129,8 +135,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           Header={RBListHeader}
           Row={RBListRow}
           loaded
-          getRowProps={(obj: RoleBinding) => ({
-            id: obj.metadata.name,
+          getRowProps={(obj: UserAccessTableRow) => ({
+            id: obj.rowKey,
           })}
         />
       ) : (

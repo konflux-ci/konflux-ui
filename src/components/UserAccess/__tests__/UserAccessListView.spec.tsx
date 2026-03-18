@@ -3,7 +3,11 @@ import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecate
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
-import { mockRoleBinding, mockRoleBindings } from '../../../__data__/rolebinding-data';
+import {
+  mockRoleBinding,
+  mockRoleBindings,
+  mockRoleBindingsWithMultipleUsers,
+} from '../../../__data__/rolebinding-data';
 import { useRoleMap } from '../../../hooks/useRole';
 import { useRoleBindings } from '../../../hooks/useRoleBindings';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
@@ -89,6 +93,13 @@ describe('UserAccessListView', () => {
     useRoleBindingsMock.mockReturnValue([[mockRoleBinding], true]);
     render(UserAccessList);
     expect(screen.getByText('user1')).toBeInTheDocument();
+  });
+
+  it('should list every subject when one role binding has multiple users', () => {
+    useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
+    render(UserAccessList);
+    expect(screen.getByText('user1')).toBeInTheDocument();
+    expect(screen.getByText('user2')).toBeInTheDocument();
   });
 
   it('should display empty state if no role bindings match the filter', async () => {
