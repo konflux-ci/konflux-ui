@@ -1,6 +1,16 @@
 // Minimal overrides for virtualized log viewer
 // PatternFly's log-viewer.css provides all other styles including search highlighting
 
+.pf-v5-c-log-viewer__main {
+  margin-bottom: var(--pf-v5-global--spacer--md) !important;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Prevent scroll chaining and double scrollbars
+  box-sizing: border-box; // Include padding/border in width calculation
+}
+
 .pf-v5-c-log-viewer__text {
   white-space: pre-wrap; // Allow long lines to wrap while preserving spaces and line breaks
 }
@@ -8,7 +18,9 @@
 // Line number gutter styles (GitHub-inspired)
 // Using specific selector to override PatternFly's default display
 .pf-v5-c-log-viewer__list.log-viewer__with-gutter {
+  margin-top: var(--pf-v5-global--spacer--sm) !important;
   display: flex;
+  box-sizing: border-box; // Ensure scrollbar is included in width
 }
 
 .log-viewer__gutter {

@@ -127,6 +127,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   const virtualItems = virtualizer.getVirtualItems();
 
+  // Cache total size to prevent layout shifts during scroll
+  const totalSize = virtualizer.getTotalSize();
+
   return (
     <>
       {/* Hidden element to measure actual line height from PatternFly CSS */}
@@ -151,7 +154,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         {/* Total height container */}
         <div
           style={{
-            height: `${virtualizer.getTotalSize()}px`,
+            height: `${totalSize}px`,
             width: '100%',
             position: 'relative',
             display: 'flex',

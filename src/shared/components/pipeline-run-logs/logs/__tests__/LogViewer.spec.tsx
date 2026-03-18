@@ -83,6 +83,14 @@ describe('LogViewer Integration Tests', () => {
       configurable: true,
       value: 800,
     });
+    Object.defineProperty(HTMLElement.prototype, 'clientHeight', {
+      configurable: true,
+      value: 600,
+    });
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      value: 800,
+    });
 
     mockUseFullscreen.mockReturnValue([false, jest.fn(), jest.fn(), true]);
     mockUseTheme.mockReturnValue({
@@ -146,8 +154,8 @@ describe('LogViewer Integration Tests', () => {
       const main = container.querySelector('.pf-v5-c-log-viewer__main');
       expect(main).toBeInTheDocument();
 
-      // Check scroll container
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__scroll-container');
+      // Check scroll container (now uses pf-v5-c-log-viewer__list class)
+      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__list');
       expect(scrollContainer).toBeInTheDocument();
     });
 

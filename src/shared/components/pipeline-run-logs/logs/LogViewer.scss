@@ -35,6 +35,8 @@
   &__content {
     min-height: 0;
     flex: 1;
+    overflow: hidden; // Prevent content from overflowing and creating page scrollbar
+    width: 100%; // Ensure content respects container width
   }
 
   &__resume-stream-button-wrapper {

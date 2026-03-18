@@ -1,5 +1,4 @@
 import React from 'react';
-import { Stack, StackItem } from '@patternfly/react-core';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
 import '@patternfly/react-styles/css/components/LogViewer/log-viewer.css';
@@ -55,18 +54,16 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   }, [rowInFocus, scrollToRow]);
 
   return (
-    <Stack className="pf-v5-c-log-viewer__main" style={{ height: '100%' }}>
-      <StackItem className="pf-v5-c-log-viewer__scroll-container" style={{ height: '100%' }}>
-        <VirtualizedLogContent
-          data={data}
-          height={height}
-          width={width}
-          scrollToRow={effectiveScrollToRow}
-          onScroll={onScroll}
-          searchText={searchedInput}
-          currentSearchMatch={rowInFocus}
-        />
-      </StackItem>
-    </Stack>
+    <div className="pf-v5-c-log-viewer__main">
+      <VirtualizedLogContent
+        data={data}
+        height={height}
+        width={width}
+        scrollToRow={effectiveScrollToRow}
+        onScroll={onScroll}
+        searchText={searchedInput}
+        currentSearchMatch={rowInFocus}
+      />
+    </div>
   );
 };

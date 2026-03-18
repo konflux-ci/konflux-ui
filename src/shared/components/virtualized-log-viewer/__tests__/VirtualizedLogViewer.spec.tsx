@@ -42,11 +42,9 @@ describe('VirtualizedLogViewer Integration Tests', () => {
 
       const mainElement = container.querySelector('.pf-v5-c-log-viewer__main');
       expect(mainElement).toBeInTheDocument();
-      expect(mainElement).toHaveStyle({ height: '100%' });
 
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__scroll-container');
+      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__list');
       expect(scrollContainer).toBeInTheDocument();
-      expect(scrollContainer).toHaveStyle({ height: '100%' });
     });
 
     it('should render virtualized log list with real VirtualizedLogContent integration', () => {
