@@ -68,15 +68,9 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
   const [activeMenu, setActiveMenu] = React.useState<string>('context-switcher-root-menu');
   const [localStorage, setLocalStorage] = useLocalStorage<LocalStorageKeys>(LOCAL_STORAGE_KEY);
 
-  const recentItems = React.useMemo(
-    () => (localStorage as LocalStorageKeys)?.recentItems || {},
-    [localStorage],
-  );
+  const recentItems = React.useMemo(() => localStorage?.recentItems || {}, [localStorage]);
 
-  const lastTab = React.useMemo(
-    () => (localStorage as LocalStorageKeys)?.lastTab || {},
-    [localStorage],
-  );
+  const lastTab = React.useMemo(() => localStorage?.lastTab || {}, [localStorage]);
 
   const [activeTab, setActiveTab] = React.useState<ContextTab>(
     lastTab[resourceType] === undefined ? ContextTab.All : lastTab[resourceType],
@@ -107,7 +101,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
     const recentKeys = recentItems[resourceType] || [];
     if (!recentKeys.includes(key)) {
       setLocalStorage({
-        ...((localStorage as LocalStorageKeys) || {}),
+        ...(localStorage || {}),
         recentItems: {
           ...recentItems,
           [resourceType]: [key, ...recentKeys.slice(0, maxRecentItems - 1)],
@@ -120,7 +114,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
 
   const onTabChange = (_: React.MouseEvent, key: number) => {
     setLocalStorage({
-      ...((localStorage as LocalStorageKeys) || {}),
+      ...(localStorage || {}),
       lastTab: { ...lastTab, [resourceType]: key },
     });
     setActiveTab(key);

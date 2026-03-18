@@ -119,6 +119,16 @@ const InternalFLAGS = {
     description: 'Editing existing secrets',
     defaultEnabled: true,
     status: 'wip',
+  'feedback-section': {
+    key: 'feedback-section',
+    description: 'Feedback section for Konflux UI',
+    defaultEnabled: true,
+    status: 'wip',
+    guard: {
+      allOf: ['isStagingCluster'],
+      failureReason: 'Not a staging cluster',
+      visibleInFeatureFlagPanel: false,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

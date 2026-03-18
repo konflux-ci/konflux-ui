@@ -57,6 +57,7 @@ import { createPipelineRunSBOMsModal } from './PipelineRunSBOMsModal';
 import RunParamsList from './RunParamsList';
 import RunResultsList from './RunResultsList';
 import ScanDescriptionListGroup from './ScanDescriptionListGroup';
+import { SnapshotCreationStatus } from './SnapshotCreationStatus';
 
 const addProxyUrlParamValue = <T extends { name: string; value: string | string[] }>(
   items: T[] | undefined | null,
@@ -90,20 +91,6 @@ const PipelineRunDetailsTab: React.FC = () => {
     namespace,
     pipelineRunName,
   );
-
-  // Use optional chaining to safely access pipelineRun properties before the loading/error checks
-  // This prevents crashes when pipelineRun is null (e.g., during error states)
-  // The hooks (useMemo) will run unconditionally but safely handle undefined values
-  const snapshotStatusAnnotation =
-    pipelineRun?.metadata?.annotations?.[PipelineRunLabel.CREATE_SNAPSHOT_STATUS];
-
-  const snapshotCreationStatus = React.useMemo(() => {
-    try {
-      return JSON.parse(snapshotStatusAnnotation);
-    } catch (e) {
-      return null;
-    }
-  }, [snapshotStatusAnnotation]);
 
   const componentName = pipelineRun?.metadata?.labels?.[PipelineRunLabel.COMPONENT];
   const [urlInfo, imageProxyLoaded, proxyError] = useImageProxy();
@@ -264,14 +251,7 @@ const PipelineRunDetailsTab: React.FC = () => {
                   <DescriptionListTerm>Duration</DescriptionListTerm>
                   <DescriptionListDescription>{duration ?? '-'}</DescriptionListDescription>
                 </DescriptionListGroup>
-                {snapshotCreationStatus && (
-                  <DescriptionListGroup>
-                    <DescriptionListTerm>Snapshot creation status</DescriptionListTerm>
-                    <DescriptionListDescription>
-                      {snapshotCreationStatus.message}
-                    </DescriptionListDescription>
-                  </DescriptionListGroup>
-                )}
+                <SnapshotCreationStatus pipelineRun={pipelineRun} />
               </DescriptionList>
             </FlexItem>
             <FlexItem style={{ flex: 1 }}>
