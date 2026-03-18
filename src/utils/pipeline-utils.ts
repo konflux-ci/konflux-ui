@@ -74,9 +74,8 @@ export const getRandomChars = (len = 6): string => {
     .slice(2, len + 2);
 };
 
-export const isPipelineV1Beta1 = (
-  pipeiline: PipelineRunKind,
-): pipeiline is PipelineRunKindV1Beta1 => pipeiline?.apiVersion === 'tekton.dev/v1beta1';
+export const isPipelineV1Beta1 = (pipeline: PipelineRunKind): pipeline is PipelineRunKindV1Beta1 =>
+  pipeline?.apiVersion === 'tekton.dev/v1beta1';
 
 export const isTaskV1Beta1 = (task: TaskRunKind): task is TaskRunKindV1Beta1 =>
   task?.apiVersion === 'tekton.dev/v1beta1';

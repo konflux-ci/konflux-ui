@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useSnapshot } from '~/hooks/useSnapshots';
 import { PIPELINE_RUNS_LIST_PATH } from '~/routes/paths';
 import { useNamespace } from '~/shared/providers/Namespace';
+import { downloadYamlAction } from '~/utils/common-utils';
 import {
   PipelineRunEventType,
   PipelineRunLabel,
@@ -432,11 +433,22 @@ export const useStopCancelActionsLazy = (
   });
 };
 
+export const useDownloadYamlActionLazy = (
+  pipelineRun: PipelineRunKind,
+): LazyActionHookResult<Action> => {
+  return useLazyActionMenu({
+    buildActions: () => {
+      return [downloadYamlAction(pipelineRun)];
+    },
+  });
+};
+
 export const usePipelinerunActionsLazy = (
   pipelineRun: PipelineRunKind,
 ): LazyActionHookResult<Action> => {
   const rerunHook = useRerunActionLazy(pipelineRun);
   const stopCancelHook = useStopCancelActionsLazy(pipelineRun);
+  const downloadYamlHook = useDownloadYamlActionLazy(pipelineRun);
 
-  return composeLazyActions(rerunHook, stopCancelHook);
+  return composeLazyActions(rerunHook, stopCancelHook, downloadYamlHook);
 };
