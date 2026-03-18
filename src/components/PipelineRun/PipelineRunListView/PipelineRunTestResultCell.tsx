@@ -1,4 +1,4 @@
-import { Popover, Spinner } from '@patternfly/react-core';
+import { Popover, Skeleton } from '@patternfly/react-core';
 import { UNFINISHED_PLR_STATUSES } from '~/consts/pipelinerun';
 import { usePipelineRunTestOutputResult } from '~/hooks/usePipelineRunTestOutputResult';
 import { TableData } from '~/shared';
@@ -19,13 +19,15 @@ export const PipelineRunTestResultCell: React.FC<React.PropsWithChildren<Props>>
 }) => {
   const status = pipelineRunStatus(plr);
   const shouldFetchTestResult =
-    !UNFINISHED_PLR_STATUSES.includes(status) && plr.status?.completionTime !== undefined;
+    !!namespace &&
+    !UNFINISHED_PLR_STATUSES.includes(status) &&
+    plr.status?.completionTime !== undefined;
 
   const [testOutputResult, isPipelineRunTestOutputResultLoading, testOutputNote] =
-    usePipelineRunTestOutputResult(plr, shouldFetchTestResult ? namespace : undefined);
+    usePipelineRunTestOutputResult(shouldFetchTestResult ? namespace : null, plr);
 
   const cellContent = isPipelineRunTestOutputResultLoading ? (
-    <Spinner size="lg" />
+    <Skeleton screenreaderText="Loading PipelineRun test output result" />
   ) : (
     <>{testOutputResult ? <StatusIconWithText status={testOutputResult} /> : '-'}</>
   );
@@ -34,12 +36,7 @@ export const PipelineRunTestResultCell: React.FC<React.PropsWithChildren<Props>>
     <TableData className={className}>
       {testOutputNote ? (
         <Popover bodyContent={testOutputNote} aria-label="test output details">
-          <span
-            role="button"
-            tabIndex={0}
-            aria-label="test output details"
-            style={{ cursor: 'pointer' }}
-          >
+          <span role="button" aria-label="test output details" style={{ cursor: 'pointer' }}>
             {cellContent}
           </span>
         </Popover>

@@ -30,13 +30,13 @@ describe('PipelineRunTestResultCell', () => {
     usePipelineRunTestOutputResultMock.mockReturnValue([null, false, undefined]);
   });
 
-  it('renders loading spinner when test result is loading', () => {
+  it('renders loading skeleton when test result is loading', () => {
     usePipelineRunTestOutputResultMock.mockReturnValue([null, true, undefined]);
     const plr = testPipelineRuns[
       DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
     ] as unknown as PipelineRunKind;
     const { container } = renderCell(plr, 'test-ns');
-    expect(container.querySelector('.pf-v5-c-spinner')).toBeInTheDocument();
+    expect(container.querySelector('.pf-v5-c-skeleton')).toBeInTheDocument();
   });
 
   it('renders "-" when there is no test result', () => {
@@ -77,12 +77,12 @@ describe('PipelineRunTestResultCell', () => {
   it('passes namespace to usePipelineRunTestOutputResult when PLR is finished', () => {
     const plr = testPipelineRuns[DataState.SUCCEEDED] as unknown as PipelineRunKind;
     renderCell(plr, 'my-namespace');
-    expect(usePipelineRunTestOutputResultMock).toHaveBeenCalledWith(plr, 'my-namespace');
+    expect(usePipelineRunTestOutputResultMock).toHaveBeenCalledWith('my-namespace', plr);
   });
 
-  it('passes undefined namespace to usePipelineRunTestOutputResult when PLR is not finished', () => {
+  it('passes null namespace to usePipelineRunTestOutputResult when PLR is not finished', () => {
     const plr = testPipelineRuns[DataState.RUNNING] as unknown as PipelineRunKind;
     renderCell(plr, 'my-namespace');
-    expect(usePipelineRunTestOutputResultMock).toHaveBeenCalledWith(plr, undefined);
+    expect(usePipelineRunTestOutputResultMock).toHaveBeenCalledWith(null, plr);
   });
 });
