@@ -33,7 +33,7 @@ describe('LineNumberGutter', () => {
   describe('Rendering', () => {
     it('should render gutter container', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} />);
-      const gutter = container.querySelector('.log-viewer__gutter');
+      const gutter = container.querySelector('.line-number__gutter');
 
       expect(gutter).toBeInTheDocument();
     });
@@ -84,17 +84,17 @@ describe('LineNumberGutter', () => {
   describe('Styling and Positioning', () => {
     it('should apply correct CSS classes to gutter cells', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} />);
-      const cells = container.querySelectorAll('.log-viewer__gutter-cell');
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
 
       expect(cells.length).toBe(3);
       cells.forEach((cell) => {
-        expect(cell).toHaveClass('log-viewer__gutter-cell');
+        expect(cell).toHaveClass('line-number__gutter-cell');
       });
     });
 
     it('should apply correct positioning styles', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} itemSize={25} />);
-      const firstCell = container.querySelector('.log-viewer__gutter-cell');
+      const firstCell = container.querySelector('.line-number__gutter-cell');
 
       expect(firstCell).toHaveStyle({
         position: 'absolute',
@@ -106,7 +106,7 @@ describe('LineNumberGutter', () => {
 
     it('should apply transform based on virtual item start position', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} />);
-      const cells = container.querySelectorAll('.log-viewer__gutter-cell');
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
 
       expect(cells[0]).toHaveStyle({ transform: 'translateY(0px)' });
       expect(cells[1]).toHaveStyle({ transform: 'translateY(20px)' });
@@ -115,7 +115,7 @@ describe('LineNumberGutter', () => {
 
     it('should render correct number of gutter cells', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} />);
-      const cells = container.querySelectorAll('.log-viewer__gutter-cell');
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
 
       // Should render one cell per virtual item
       expect(cells.length).toBe(3);
@@ -129,10 +129,10 @@ describe('LineNumberGutter', () => {
         <LineNumberGutter {...defaultProps} isLineHighlighted={isLineHighlighted} />,
       );
 
-      const cells = container.querySelectorAll('.log-viewer__gutter-cell');
-      expect(cells[0]).not.toHaveClass('log-viewer__gutter-cell--highlighted');
-      expect(cells[1]).toHaveClass('log-viewer__gutter-cell--highlighted');
-      expect(cells[2]).not.toHaveClass('log-viewer__gutter-cell--highlighted');
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
+      expect(cells[0]).not.toHaveClass('line-number__gutter-cell--highlighted');
+      expect(cells[1]).toHaveClass('line-number__gutter-cell--highlighted');
+      expect(cells[2]).not.toHaveClass('line-number__gutter-cell--highlighted');
     });
 
     it('should call isLineHighlighted with correct line numbers', () => {
@@ -150,7 +150,7 @@ describe('LineNumberGutter', () => {
         <LineNumberGutter {...defaultProps} isLineHighlighted={isLineHighlighted} />,
       );
 
-      const cells = container.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      const cells = container.querySelectorAll('.line-number__gutter-cell--highlighted');
       expect(cells.length).toBe(3);
     });
   });
@@ -212,7 +212,7 @@ describe('LineNumberGutter', () => {
   describe('Edge Cases', () => {
     it('should handle empty virtualItems array', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} virtualItems={[]} />);
-      const gutter = container.querySelector('.log-viewer__gutter');
+      const gutter = container.querySelector('.line-number__gutter');
 
       expect(gutter).toBeInTheDocument();
       expect(gutter?.children.length).toBe(0);
@@ -235,14 +235,14 @@ describe('LineNumberGutter', () => {
 
     it('should handle very small item sizes', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} itemSize={1} />);
-      const cell = container.querySelector('.log-viewer__gutter-cell');
+      const cell = container.querySelector('.line-number__gutter-cell');
 
       expect(cell).toHaveStyle({ height: '1px' });
     });
 
     it('should handle very large item sizes', () => {
       const { container } = render(<LineNumberGutter {...defaultProps} itemSize={100} />);
-      const cell = container.querySelector('.log-viewer__gutter-cell');
+      const cell = container.querySelector('.line-number__gutter-cell');
 
       expect(cell).toHaveStyle({ height: '100px' });
     });
@@ -264,7 +264,7 @@ describe('LineNumberGutter', () => {
       render(<LineNumberGutter {...defaultProps} />);
 
       const link = screen.getByText('1').closest('a');
-      expect(link).toHaveClass('log-viewer__line-number');
+      expect(link).toHaveClass('line-number__line-number');
 
       // Links should be focusable by default
       link?.focus();
@@ -296,7 +296,7 @@ describe('LineNumberGutter', () => {
       ];
 
       const { container } = render(<LineNumberGutter {...defaultProps} virtualItems={items} />);
-      const cells = container.querySelectorAll('.log-viewer__gutter-cell');
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
 
       expect(cells[0]).toHaveStyle({ transform: 'translateY(0px)' });
       expect(cells[1]).toHaveStyle({ transform: 'translateY(500px)' });

@@ -9,6 +9,8 @@ import { useSearchRegex } from './useSearchRegex';
 import { useTokenization } from './useTokenization';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
 
+import './VirtualizedLogContent.scss';
+
 export interface VirtualizedLogContentProps {
   data: string;
   height: number;
@@ -132,7 +134,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   return (
     <>
-      {/* Hidden element to measure actual line height from PatternFly CSS */}
+      {/* Hidden element to measure actual line height */}
       <div
         ref={measureCallbackRef}
         className="pf-v5-c-log-viewer__list-item"
@@ -144,7 +146,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       {/* Scrollable container with gutter */}
       <div
         ref={parentRef}
-        className="pf-v5-c-log-viewer__list log-viewer__with-gutter"
+        className="log-content__list log-content__with-gutter"
         style={{
           height: `${height}px`,
           width: typeof width === 'number' ? `${width}px` : width,
@@ -169,7 +171,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           />
 
           {/* Log content */}
-          <div className="log-viewer__content-column">
+          <div className="log-content__content-column">
             {virtualItems.map((virtualItem) => {
               const lineNumber: number = virtualItem.index + 1;
               const isHighlighted = isLineHighlighted(lineNumber);
@@ -178,7 +180,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
                   key={virtualItem.key}
                   data-index={virtualItem.index}
                   ref={virtualizer.measureElement}
-                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-viewer__line--highlighted' : ''}`}
+                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''}`}
                   style={{
                     position: 'absolute',
                     top: 0,

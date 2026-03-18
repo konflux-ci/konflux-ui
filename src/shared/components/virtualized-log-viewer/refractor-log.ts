@@ -25,6 +25,7 @@
  */
 
 import type Prism from 'prismjs';
+
 import './refractor-log.scss';
 
 export default function registerLogSyntax(PrismInstance: typeof Prism) {

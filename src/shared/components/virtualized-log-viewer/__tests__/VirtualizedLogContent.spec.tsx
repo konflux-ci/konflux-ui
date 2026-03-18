@@ -43,7 +43,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
   describe('Rendering and Structure', () => {
     it('should render log content container with proper structure', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
 
       expect(listElement).toBeInTheDocument();
     });
@@ -53,14 +53,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
         <VirtualizedLogContent {...defaultProps} height={500} width={800} />,
       );
 
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toHaveStyle({ height: '500px', width: '800px' });
     });
 
     it('should support percentage width', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} width="80%" />);
 
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toHaveStyle({ width: '80%' });
     });
 
@@ -116,7 +116,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Text may be split across multiple elements due to tokenization
-      const logContent = container.querySelector('.log-viewer__content-column');
+      const logContent = container.querySelector('.log-content__content-column');
       expect(logContent).toBeInTheDocument();
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
@@ -129,7 +129,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Use container queries since tokenization splits text across elements
-      const logContent = container.querySelector('.log-viewer__content-column');
+      const logContent = container.querySelector('.log-content__content-column');
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
       expect(logContent?.textContent).toContain('line 3');
@@ -147,7 +147,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Verify the raw text is displayed
-      const logContent = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logContent = container.querySelector('.log-content__list');
       expect(logContent?.textContent).toContain(testData);
 
       // Restore original tokenize function
@@ -226,7 +226,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       expect(combinedText).toBe('[error]');
 
       // Verify standalone "error" is NOT matched
-      const logText = container.querySelector('.pf-v5-c-log-viewer__list')?.textContent || '';
+      const logText = container.querySelector('.log-content__list')?.textContent || '';
       expect(logText).toContain('normal error');
       // The word "error" after "normal" should not be highlighted
       const allText = Array.from(marks)
@@ -255,14 +255,14 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Component should render without errors
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
     });
 
     it('should handle scrollToRow prop for scroll positioning', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} scrollToRow={5} />);
 
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
     });
 
@@ -277,7 +277,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
     it('should handle empty data gracefully', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data="" />);
 
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
     });
 
@@ -304,11 +304,11 @@ describe('VirtualizedLogContent Integration Tests', () => {
         <VirtualizedLogContent {...defaultProps} data={dataWithNewlines} />,
       );
 
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Should render the lines - use container queries since tokenization splits text
-      const logContent = container.querySelector('.log-viewer__content-column');
+      const logContent = container.querySelector('.log-content__content-column');
       expect(logContent?.textContent).toContain('line 1');
       expect(logContent?.textContent).toContain('line 2');
     });
@@ -319,7 +319,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         <VirtualizedLogContent {...defaultProps} data={specialData} />,
       );
 
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement?.textContent).toContain('<html>');
       expect(listElement?.textContent).toContain('&');
       expect(listElement?.textContent).toContain('"quotes"');
@@ -386,7 +386,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
       );
 
       // Query the log list content (not the hidden measurement element)
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
       expect(logList?.textContent).toContain('https://example.com');
     });
@@ -397,7 +397,7 @@ describe('VirtualizedLogContent Integration Tests', () => {
         <VirtualizedLogContent {...defaultProps} data={dataWithSpaces} />,
       );
 
-      const logText = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logText = container.querySelector('.log-content__list');
       expect(logText).toBeInTheDocument();
 
       // Pre-wrap should preserve multiple spaces
@@ -415,7 +415,7 @@ Another short line`;
       );
 
       // Query the actual virtualized list items (excluding the hidden measurement element)
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__list');
+      const scrollContainer = container.querySelector('.log-content__list');
       expect(scrollContainer).toBeInTheDocument();
 
       const listItems = scrollContainer?.querySelectorAll('.pf-v5-c-log-viewer__list-item');
@@ -479,35 +479,35 @@ Another short line`;
     it('should render line number gutter', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutter = document.querySelector('.log-viewer__gutter');
+      const gutter = document.querySelector('.line-number__gutter');
       expect(gutter).toBeInTheDocument();
     });
 
     it('should render line numbers in the gutter', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const lineNumbers = document.querySelectorAll('.log-viewer__line-number');
+      const lineNumbers = document.querySelectorAll('.line-number__line-number');
       expect(lineNumbers.length).toBeGreaterThan(0);
     });
 
     it('should apply with-gutter class to container', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const container = document.querySelector('.log-viewer__with-gutter');
+      const container = document.querySelector('.log-content__with-gutter');
       expect(container).toBeInTheDocument();
     });
 
     it('should render content in separate column from gutter', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const contentColumn = document.querySelector('.log-viewer__content-column');
+      const contentColumn = document.querySelector('.log-content__content-column');
       expect(contentColumn).toBeInTheDocument();
     });
 
     it('should have clickable line number links', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const lineNumberLinks = document.querySelectorAll('.log-viewer__line-number');
+      const lineNumberLinks = document.querySelectorAll('.line-number__line-number');
       lineNumberLinks.forEach((link) => {
         expect(link).toHaveAttribute('href');
         expect(link.getAttribute('href')).toMatch(/^#L\d+$/);
@@ -517,7 +517,7 @@ Another short line`;
     it('should have accessible line number links', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const lineNumberLinks = document.querySelectorAll('.log-viewer__line-number');
+      const lineNumberLinks = document.querySelectorAll('.line-number__line-number');
       lineNumberLinks.forEach((link) => {
         expect(link).toHaveAttribute('aria-label');
         expect(link.getAttribute('aria-label')).toMatch(/^Jump to line \d+$/);
@@ -527,9 +527,9 @@ Another short line`;
     it('should align gutter cells with content lines', () => {
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
-      const gutterCells = document.querySelectorAll('.log-viewer__gutter-cell');
+      const gutterCells = document.querySelectorAll('.line-number__gutter-cell');
       const contentItems = document.querySelectorAll(
-        '.log-viewer__content-column .pf-v5-c-log-viewer__list-item',
+        '.log-content__content-column .pf-v5-c-log-viewer__list-item',
       );
 
       // Should have matching number of visible items
@@ -552,11 +552,11 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Should highlight gutter cell
-      const highlightedCells = document.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      const highlightedCells = document.querySelectorAll('.line-number__gutter-cell--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
       // Should highlight line content
-      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
@@ -566,10 +566,10 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Range should be highlighted
-      const highlightedCells = document.querySelectorAll('.log-viewer__gutter-cell--highlighted');
+      const highlightedCells = document.querySelectorAll('.line-number__gutter-cell--highlighted');
       expect(highlightedCells.length).toBeGreaterThan(0);
 
-      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
@@ -580,7 +580,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data={shortData} />);
 
       // Component should render without errors
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Should not crash and should handle gracefully
@@ -594,7 +594,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data={shortData} />);
 
       // Component should render without errors even with out-of-range hash
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
     });
 
@@ -606,7 +606,7 @@ Another short line`;
         <VirtualizedLogContent {...defaultProps} data="" />,
       );
 
-      let listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      let listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Update with actual data
@@ -614,11 +614,11 @@ Another short line`;
       rerender(<VirtualizedLogContent {...defaultProps} data={dataWithLines} />);
 
       // Should now have content and handle the hash
-      listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Should highlight the line from hash
-      const highlightedLines = document.querySelectorAll('.log-viewer__line--highlighted');
+      const highlightedLines = document.querySelectorAll('.log-content__line--highlighted');
       expect(highlightedLines.length).toBeGreaterThan(0);
     });
 
@@ -629,7 +629,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} data={longData} />);
 
       // Should render without performance issues
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
 
       // Should only render visible items due to virtualization
@@ -643,7 +643,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Should render normally without errors
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
     });
 
@@ -653,7 +653,7 @@ Another short line`;
       renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
 
       // Should render normally
-      const listElement = document.querySelector('.pf-v5-c-log-viewer__list');
+      const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
     });
   });

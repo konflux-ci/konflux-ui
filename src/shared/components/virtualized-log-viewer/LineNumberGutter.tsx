@@ -2,6 +2,8 @@ import React from 'react';
 import { Flex } from '@patternfly/react-core';
 import type { VirtualItem } from '@tanstack/react-virtual';
 
+import './LineNumberGutter.scss';
+
 export interface LineNumberGutterProps {
   /** Virtual items from the virtualizer */
   virtualItems: VirtualItem[];
@@ -26,14 +28,14 @@ export const LineNumberGutter: React.FC<LineNumberGutterProps> = ({
   isLineHighlighted,
 }) => {
   return (
-    <Flex className="log-viewer__gutter" direction={{ default: 'column' }}>
+    <Flex className="line-number__gutter" direction={{ default: 'column' }}>
       {virtualItems.map((virtualItem) => {
         const lineNumber = virtualItem.index + 1;
         const isHighlighted = isLineHighlighted(lineNumber);
         return (
           <div
             key={`gutter-${virtualItem.key}`}
-            className={`log-viewer__gutter-cell ${isHighlighted ? 'log-viewer__gutter-cell--highlighted' : ''}`}
+            className={`line-number__gutter-cell ${isHighlighted ? 'line-number__gutter-cell--highlighted' : ''}`}
             style={{
               position: 'absolute',
               top: 0,
@@ -44,7 +46,7 @@ export const LineNumberGutter: React.FC<LineNumberGutterProps> = ({
           >
             <a
               href={`#L${lineNumber}`}
-              className="log-viewer__line-number"
+              className="line-number__line-number"
               aria-label={`Jump to line ${lineNumber}`}
               onClick={(e) => {
                 e.preventDefault();

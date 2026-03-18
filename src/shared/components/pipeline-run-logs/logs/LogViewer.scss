@@ -48,28 +48,13 @@
   }
 }
 
-.pf-v5-c-log-viewer {
-  .pf-v5-c-log-viewer__list {
-    overflow-x: hidden !important;
-    width: 100% !important;
-  }
-  &__main {
-    margin-bottom: var(--pf-v5-global--spacer--md);
-    height: 100% !important;
-  }
-
-  &__scroll-container {
-    overflow-y: visible !important;
-  }
-
-  // force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)
-  &.log-viewer--light {
-    --pf-v5-c-log-viewer__main--BackgroundColor: var(--pf-v5-global--palette--white);
-    --pf-v5-c-log-viewer__main--BorderColor: var(--pf-v5-global--palette--black-300);
-    --pf-v5-c-log-viewer__text--Color: var(--pf-v5-global--palette--black-900);
-    --pf-v5-c-log-viewer__index--Color: var(--pf-v5-global--palette--black-600);
-    --pf-v5-c-log-viewer--m-line-numbers__main--before--BackgroundColor: var(
-      --pf-v5-global--palette--black-300
-    );
-  }
+// Force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)
+.pf-v5-c-log-viewer.log-viewer--light {
+  --pf-v5-c-log-viewer__main--BackgroundColor: var(--pf-v5-global--palette--white);
+  --pf-v5-c-log-viewer__main--BorderColor: var(--pf-v5-global--palette--black-300);
+  --pf-v5-c-log-viewer__text--Color: var(--pf-v5-global--palette--black-900);
+  --pf-v5-c-log-viewer__index--Color: var(--pf-v5-global--palette--black-600);
+  --pf-v5-c-log-viewer--m-line-numbers__main--before--BackgroundColor: var(
+    --pf-v5-global--palette--black-300
+  );
 }
