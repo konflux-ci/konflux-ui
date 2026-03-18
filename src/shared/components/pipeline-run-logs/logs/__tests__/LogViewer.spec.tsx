@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
@@ -5,6 +6,7 @@ import { saveAs } from 'file-saver';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { useTheme } from '~/shared/theme';
 import LogViewer from '../LogViewer';
+import { useLogViewerTheme } from '../useLogViewerTheme';
 
 // Mock only external dependencies and browser APIs
 jest.mock('file-saver', () => ({
@@ -24,6 +26,10 @@ jest.mock('~/shared/theme', () => ({
   })),
 }));
 
+jest.mock('../useLogViewerTheme', () => ({
+  useLogViewerTheme: jest.fn(() => ['dark', jest.fn()]),
+}));
+
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
   ...jest.requireActual('lodash-es'),
@@ -37,6 +43,7 @@ jest.mock('lodash-es', () => ({
 const mockSaveAs = saveAs as jest.Mock;
 const mockUseFullscreen = useFullscreen as jest.Mock;
 const mockUseTheme = useTheme as jest.Mock;
+const mockUseLogViewerTheme = useLogViewerTheme as jest.Mock;
 
 describe('LogViewer Integration Tests', () => {
   const mockTaskRun = {
@@ -89,6 +96,7 @@ describe('LogViewer Integration Tests', () => {
       systemPreference: 'light',
       setThemePreference: jest.fn(),
     });
+    mockUseLogViewerTheme.mockReturnValue(['dark', jest.fn()]);
   });
 
   describe('Full component rendering', () => {
@@ -221,7 +229,13 @@ describe('LogViewer Integration Tests', () => {
   describe('Theme switching', () => {
     it('should toggle between light and dark themes', async () => {
       const user = userEvent.setup();
-      const { container } = render(<LogViewer {...defaultProps} />);
+      const ThemeToggleTestWrapper: React.FC = () => {
+        const [logTheme, setLogThemeState] = React.useState<'light' | 'dark'>('dark');
+        mockUseLogViewerTheme.mockReturnValue([logTheme, setLogThemeState]);
+        return <LogViewer {...defaultProps} />;
+      };
+
+      const { container } = render(<ThemeToggleTestWrapper />);
 
       const themeCheckbox = screen.getByLabelText('Dark theme');
       const logViewer = container.querySelector('.pf-v5-c-log-viewer');
@@ -229,12 +243,14 @@ describe('LogViewer Integration Tests', () => {
       // Initially dark theme
       expect(themeCheckbox).toBeChecked();
       expect(logViewer).toHaveClass('pf-m-dark');
+      expect(logViewer).not.toHaveClass('log-viewer--light');
 
       // Switch to light theme
       await user.click(themeCheckbox);
 
       await waitFor(() => {
         expect(logViewer).not.toHaveClass('pf-m-dark');
+        expect(logViewer).toHaveClass('log-viewer--light');
       });
 
       // Switch back to dark theme
@@ -242,10 +258,27 @@ describe('LogViewer Integration Tests', () => {
 
       await waitFor(() => {
         expect(logViewer).toHaveClass('pf-m-dark');
+        expect(logViewer).not.toHaveClass('log-viewer--light');
       });
     });
 
-    it('should disable theme toggle when global theme is dark', () => {
+    it('should apply light log theme modifier when main theme is dark and user selects light', () => {
+      mockUseTheme.mockReturnValue({
+        preference: 'dark',
+        effectiveTheme: 'dark',
+        systemPreference: 'dark',
+        setThemePreference: jest.fn(),
+      });
+      mockUseLogViewerTheme.mockReturnValue(['light', jest.fn()]);
+
+      const { container } = render(<LogViewer {...defaultProps} />);
+
+      const logViewer = container.querySelector('.pf-v5-c-log-viewer');
+      expect(logViewer).toHaveClass('log-viewer--light');
+      expect(logViewer).not.toHaveClass('pf-m-dark');
+    });
+
+    it('should keep theme toggle enabled when global theme is dark so user can choose light log theme', () => {
       mockUseTheme.mockReturnValue({
         preference: 'dark',
         effectiveTheme: 'dark',
@@ -256,7 +289,7 @@ describe('LogViewer Integration Tests', () => {
       render(<LogViewer {...defaultProps} />);
 
       const themeCheckbox = screen.getByLabelText('Dark theme');
-      expect(themeCheckbox).toBeDisabled();
+      expect(themeCheckbox).not.toBeDisabled();
     });
   });
 

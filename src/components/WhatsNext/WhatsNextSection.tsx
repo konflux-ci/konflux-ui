@@ -50,8 +50,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
 
   const handleCardDismissal = React.useCallback(
     (id: number) => {
-      let dismissedCards: number[] = [];
-      if (localStorageItem !== null) dismissedCards = localStorageItem as number[];
+      const dismissedCards = Array.isArray(localStorageItem) ? localStorageItem : [];
       setLocalStorageItem([id, ...dismissedCards]);
     },
     [localStorageItem, setLocalStorageItem],
@@ -67,7 +66,7 @@ const WhatsNextSection: React.FunctionComponent<React.PropsWithChildren<WhatsNex
         const ItemIcon = item.icon;
 
         return (
-          !(localStorageItem as number[])?.includes(item?.id) && (
+          !localStorageItem?.includes(item?.id) && (
             <Card className="whats-next-card" key={item.id} isFlat>
               <SplitItem>
                 <ItemIcon aria-label={item.title} role="img" className="whats-next-card__icon" />

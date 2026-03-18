@@ -13,6 +13,10 @@ import {
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
 import { createK8sWatchResourceMock, createUseApplicationMock } from '../../utils/test-utils';
+import {
+  createMockPipelineRunWithPrLabel,
+  createMockPipelineRunWithPrLabelAndUser,
+} from '../__data__/mock-data';
 import { PACState } from '../usePACState';
 import usePACStatesForComponents from '../usePACStatesForComponents';
 
@@ -176,5 +180,69 @@ describe('usePACStatesForComponents', () => {
     const results = renderHook(() => usePACStatesForComponents(components)).result.current;
     expect(results['my-pending-component']).toBe(PACState.pending);
     expect(getNextPageMock).toHaveBeenCalled();
+  });
+
+  it('should not filter out PUSH pipeline runs with PR label in selector', () => {
+    const mockPipelineRun = createMockPipelineRunWithPrLabel('my-ready-component');
+
+    useK8sWatchResourceMock.mockReturnValue([[mockPipelineRun], true]);
+
+    const components = [createComponent('my-ready-component', ComponentBuildState.enabled)];
+    renderHook(() => usePACStatesForComponents(components));
+
+    // Verify useK8sWatchResource was called
+    expect(useK8sWatchResourceMock).toHaveBeenCalled();
+
+    // Get the selector argument passed to useK8sWatchResource (via usePipelineRunsV2)
+    const callArgs = useK8sWatchResourceMock.mock.calls[0];
+    const watchResource = callArgs[0];
+
+    // Verify that the selector does NOT have a matchExpression filtering out PR labels
+    const matchExpressions = watchResource?.selector?.matchExpressions || [];
+    const hasPRLabelFilter = matchExpressions.some(
+      (expr: { key: string; operator: string }) =>
+        expr.key === PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL && expr.operator === 'DoesNotExist',
+    );
+
+    expect(hasPRLabelFilter).toBe(false);
+  });
+
+  it('should identify ready state when PUSH pipeline run has PR label', () => {
+    const mockPipelineRun = createMockPipelineRunWithPrLabel('my-ready-component');
+
+    useK8sWatchResourceMock.mockReturnValue([[mockPipelineRun], true]);
+
+    const components = [createComponent('my-ready-component', ComponentBuildState.enabled)];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-ready-component']).toBe(PACState.ready);
+  });
+
+  it('should identify ready state when PUSH pipeline run has PR label and non-bot commit user', () => {
+    const mockPipelineRun = createMockPipelineRunWithPrLabelAndUser(
+      'my-ready-component',
+      'user-name',
+    );
+
+    useK8sWatchResourceMock.mockReturnValue([[mockPipelineRun], true]);
+
+    const components = [createComponent('my-ready-component', ComponentBuildState.enabled)];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-ready-component']).toBe(PACState.ready);
+  });
+
+  it('should identify pending state when PUSH pipeline run has PR label but commit user is bot', () => {
+    const mockPipelineRun = createMockPipelineRunWithPrLabelAndUser(
+      'my-pending-component',
+      'test-app[bot]',
+    );
+
+    useK8sWatchResourceMock.mockReturnValue([[mockPipelineRun], true]);
+
+    const components = [createComponent('my-pending-component', ComponentBuildState.enabled)];
+    const results = renderHook(() => usePACStatesForComponents(components)).result.current;
+
+    expect(results['my-pending-component']).toBe(PACState.pending);
   });
 });
