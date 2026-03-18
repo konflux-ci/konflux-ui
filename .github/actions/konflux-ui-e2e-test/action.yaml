@@ -21,10 +21,6 @@ runs:
       if: ${{ always() }}
       run: |
         if [[ ${{ env.JOB_TYPE }} == 'periodic'* ]]; then
-          # Only check infra PRs if explicitly enabled (to avoid noise)
-          if [[ "${CHECK_INFRA_PRS:-false}" == "true" ]]; then
-            ./pr_check.sh check-infra-prs
-          fi
           ./pr_check.sh send-report ${{ steps.e2e.outcome }}
         fi
       shell: bash
