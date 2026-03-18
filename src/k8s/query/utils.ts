@@ -23,6 +23,11 @@ export const createQueryKeys = ({
   const selector = queryOptions?.queryParams?.labelSelector
     ? [queryOptions?.queryParams?.labelSelector]
     : [];
+  const qp = queryOptions?.queryParams;
+  const filterParams =
+    qp?.name !== undefined || qp?.creationTimestampAfter !== undefined
+      ? [{ name: qp?.name, creationTimestampAfter: qp?.creationTimestampAfter }]
+      : [];
   return [
     ...(prefix ? [prefix] : []),
     queryOptions?.ns,
@@ -33,6 +38,7 @@ export const createQueryKeys = ({
     },
     ...idKey,
     ...selector,
+    ...filterParams,
   ];
 };
 

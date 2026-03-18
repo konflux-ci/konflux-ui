@@ -1,0 +1,40 @@
+name: Rerun Failed PR Checks
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  rerun-failed-pr-checks:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Rerun failed PR check runs from last 24h
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Use head_branch to identify runs; pull_requests can be empty for pull_request_target from forks
+          cutoff="$(date -u -d '1 day ago' +%Y-%m-%dT%H:%M:%SZ)"
+          runs=$(gh api "repos/${REPO}/actions/workflows/pr-check.yaml/runs?status=completed&per_page=100" \
+            --jq '[.workflow_runs[]
+              | select(.event == "pull_request_target")
+              | select(.created_at >= "'"$cutoff"'")
+              | select(.head_branch != null and .head_branch != "")
+              | {branch: .head_branch, id: .id, created_at: .created_at, conclusion: .conclusion}]
+              | sort_by(.branch, .created_at)
+              | group_by(.branch)
+              | map(last)
+              | map(select(.conclusion == "failure"))
+              | .[].id')
+          if [ -z "${runs}" ]; then
+            echo "No failed PR check runs in the last 24h."
+            exit 0
+          fi
+          for run_id in ${runs}; do
+            echo "Rerunning workflow run ${run_id}"
+            gh api -X POST "repos/${REPO}/actions/runs/${run_id}/rerun"
+          done
