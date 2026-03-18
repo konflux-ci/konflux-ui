@@ -21,8 +21,8 @@ const defaultGetNextPage = jest.fn();
 describe('usePipelineRunTestOutputResult', () => {
   let queryClient: QueryClient;
 
-  const renderHookWithQueryClient = (plr: PipelineRunKind, namespace?: string) => {
-    return renderHook(() => usePipelineRunTestOutputResult(plr, namespace), {
+  const renderHookWithQueryClient = (plr: PipelineRunKind, namespace: string | null) => {
+    return renderHook(() => usePipelineRunTestOutputResult(namespace, plr), {
       wrapper: ({ children }) =>
         React.createElement(QueryClientProvider, { client: queryClient }, children),
     });
@@ -41,11 +41,11 @@ describe('usePipelineRunTestOutputResult', () => {
   });
 
   describe('when pipeline run has TEST_OUTPUT in status.results', () => {
-    it('returns Succeeded and note when result is SUCCESS and namespace is undefined', () => {
+    it('returns Succeeded and note when result is SUCCESS and namespace is null', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
       ] as unknown as PipelineRunKind;
-      const { result } = renderHookWithQueryClient(plr, undefined);
+      const { result } = renderHookWithQueryClient(plr, null);
 
       expect(result.current).toEqual([
         runStatus.Succeeded,
@@ -54,11 +54,11 @@ describe('usePipelineRunTestOutputResult', () => {
       ]);
     });
 
-    it('returns TestFailed and note when result is ERROR and namespace is undefined', () => {
+    it('returns TestFailed and note when result is ERROR and namespace is null', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITH_TEST_OUTPUT_ERROR
       ] as unknown as PipelineRunKind;
-      const { result } = renderHookWithQueryClient(plr, undefined);
+      const { result } = renderHookWithQueryClient(plr, null);
 
       expect(result.current).toEqual([
         runStatus.TestFailed,
@@ -101,14 +101,14 @@ describe('usePipelineRunTestOutputResult', () => {
       expect(result.current[2]).toBe('Simulated success for testing TEST_OUTPUT reporting');
     });
 
-    it('bypasses TaskRun query when PLR already has TEST_OUTPUT (calls hook with undefined namespace)', () => {
+    it('bypasses TaskRun query when PLR already has TEST_OUTPUT (calls hook with null namespace)', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
       ] as unknown as PipelineRunKind;
       renderHookWithQueryClient(plr, 'test-ns');
 
       expect(useTaskRunsForPipelineRunsMock).toHaveBeenCalledWith(
-        undefined,
+        null,
         plr.metadata?.name,
         undefined,
         false,
@@ -122,7 +122,7 @@ describe('usePipelineRunTestOutputResult', () => {
       renderHookWithQueryClient(plr, 'test-ns');
 
       expect(useTaskRunsForPipelineRunsMock).toHaveBeenCalledWith(
-        undefined,
+        null,
         plr.metadata?.name,
         undefined,
         false,
@@ -283,7 +283,7 @@ describe('usePipelineRunTestOutputResult', () => {
   });
 
   describe('loading state', () => {
-    it('returns isLoading false when namespace is undefined', () => {
+    it('returns isLoading false when namespace is null', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
       ] as unknown as PipelineRunKind;
@@ -295,7 +295,7 @@ describe('usePipelineRunTestOutputResult', () => {
         defaultNextPageProps,
       ]);
 
-      const { result } = renderHookWithQueryClient(plr, undefined);
+      const { result } = renderHookWithQueryClient(plr, null);
 
       expect(result.current[1]).toBe(false);
     });
@@ -405,7 +405,7 @@ describe('usePipelineRunTestOutputResult', () => {
         defaultNextPageProps,
       ]);
 
-      const { result } = renderHookWithQueryClient(plr, undefined);
+      const { result } = renderHookWithQueryClient(plr, null);
 
       expect(result.current).toEqual([null, false, undefined]);
     });

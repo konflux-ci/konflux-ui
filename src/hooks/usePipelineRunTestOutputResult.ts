@@ -24,8 +24,8 @@ const TEST_STATUS_RANK_ORDER: Record<string, number> = {
 };
 
 export const usePipelineRunTestOutputResult = (
+  namespace: string | null,
   plr: PipelineRunKind,
-  namespace?: string,
 ): UsePipelineRunTestOutputResult => {
   const needsTaskRunFallback = useMemo(() => {
     if (!plr) return false;
@@ -36,11 +36,11 @@ export const usePipelineRunTestOutputResult = (
     return !hasPipelineLevelTestOutput;
   }, [plr]);
 
-  const taskRunNamespace = needsTaskRunFallback ? namespace : undefined;
+  const taskRunNamespace = needsTaskRunFallback ? namespace : null;
 
   const [taskRuns, loaded, error, getNextPage, nextPageProps] = useTaskRunsForPipelineRuns(
     taskRunNamespace,
-    plr.metadata?.name,
+    plr.metadata?.name ?? null,
     undefined,
     false,
   );
@@ -81,11 +81,9 @@ export const usePipelineRunTestOutputResult = (
     [testStatus?.result],
   );
 
-  // when taskRunNamespace is undefined we are not fetching task runs (e.g. PLR has TEST_OUTPUT); treat as not loading
+  // when taskRunNamespace is null we are not fetching task runs (e.g. PLR has TEST_OUTPUT); treat as not loading
   const isLoading =
-    taskRunNamespace !== undefined
-      ? (!loaded && !error) || nextPageProps.isFetchingNextPage
-      : false;
+    taskRunNamespace !== null ? (!loaded && !error) || nextPageProps.isFetchingNextPage : false;
 
   return [convertedStatus, isLoading, testStatus?.note];
 };
