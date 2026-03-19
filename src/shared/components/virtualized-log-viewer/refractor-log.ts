@@ -39,32 +39,59 @@ export default function registerLogSyntax(PrismInstance: typeof Prism) {
       greedy: true,
     },
 
+    /* ================= MIME Type ================= */
+    'mime-type': {
+      pattern: /\b[a-z]+\/[a-z0-9][\w.+-]*(?:;\s*[a-z][\w-]*=[^\s;]+)*/i,
+      greedy: true,
+    },
+
     /* ================= Container Images ================= */
     'container-image': {
       pattern:
-        /\b(?:docker|oci):\/\/(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d+)?\/[\w\-/.]+(?::[\w.-]+)?(?:@sha256:[a-f0-9]{64})?|\b(?:docker|oci):\/\/localhost:\d+\/[\w\-/.]+(?::[\w.-]+)?(?:@sha256:[a-f0-9]{64})?|\b(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d+)?\/[\w\-/.]+(?::[\w.-]+)?(?:@sha256:[a-f0-9]{64})?/i,
+        /\b(?:docker|oci):\/\/(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d+)?\/(?:[\w.-]+\/)*[\w.-]+(?::[\w.-]+)?(?:@sha256:[a-f0-9]{64})?(?=\s|$|[^\w/-])|\b(?:docker|oci):\/\/localhost:\d+\/(?:[\w.-]+\/)*[\w.-]+(?::[\w.-]+)?(?:@sha256:[a-f0-9]{64})?(?=\s|$|[^\w/-])|\b(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}(?::\d+)?\/(?:[\w.-]+\/)*[\w.-]+(?::[\w.-]+)?(?:@sha256:[a-f0-9]{64})?(?=\s|$|[^\w/-])/i,
       greedy: true,
+      alias: 'constant',
+    },
+
+    /* ================= Webpack Loader Chain ================= */
+    'loader-chain': {
+      pattern: /(?:\.\/|\/)?[\w@.-]+(?:\/[\w@.-]+)+(?:!(?:\.\/|\/)?[\w@.-]+(?:\/[\w@.-]+)+)+/,
+      greedy: true,
+      alias: 'file-path',
     },
 
     /* ================= Filenames ================= */
     filename: {
       pattern:
-        /\b[a-zA-Z0-9_][\w.-]*\.(?:sh|bash|py|js|ts|tsx|jsx|json|yaml|yml|xml|txt|log|md|go|rs|java|c|cpp|h|hpp|conf|cfg|ini|toml|env|dockerfile|sql|rb|php|css|scss|html|vue|svelte)(?![\w.-])/i,
+        /\b[a-zA-Z0-9_][\w.-]*\.(?:sh|bash|py|js|ts|tsx|jsx|json|yaml|yml|xml|txt|log|md|go|rs|java|c|cpp|h|hpp|conf|cfg|ini|toml|env|dockerfile|lock|ico|sarif|sql|rb|php|css|scss|html|svg|vue|svelte)(?![\w.-])/i,
       greedy: true,
+    },
+
+    /* ================= CLI Arguments ================= */
+    'cli-arg': {
+      pattern: /--?[a-zA-Z][\w-]*(?:=[^\s]+)?/,
+      greedy: true,
+      inside: {
+        key: {
+          pattern: /^--?[a-zA-Z][\w-]*(?==)/,
+          alias: 'attr-name',
+        },
+        operator: /=/,
+      },
     },
 
     /* ================= Key=Value ================= */
     'key-value': {
       pattern:
-        /(^|[\s,])(?:"([a-zA-Z_][\w.-]*)"|'([a-zA-Z_][\w.-]*)'|([a-zA-Z_][\w.-]*))(=)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,}\]]+)/,
+        /(^|[\s,({[])(?:"([a-zA-Z_][\w.-]*)"|'([a-zA-Z_][\w.-]*)'|([a-zA-Z_][\w.-]*))([:+-]?=)(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[^\s,)}\]]+)/,
       greedy: true,
       lookbehind: true,
       inside: {
         key: {
-          pattern: /^(?:"[a-zA-Z_][\w.-]*"|'[a-zA-Z_][\w.-]*'|[a-zA-Z_][\w.-]*)(?==)/,
+          pattern: /^(?:"[a-zA-Z_][\w.-]*"|'[a-zA-Z_][\w.-]*'|[a-zA-Z_][\w.-]*)(?=[:+-]?=)/,
           alias: 'attr-name',
         },
-        operator: /=/,
+        operator: /[:+-]?=/,
       },
     },
 
@@ -144,7 +171,7 @@ export default function registerLogSyntax(PrismInstance: typeof Prism) {
 
     /* ================= Domain ================= */
     domain: {
-      pattern: /(^|\s)[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*\.[a-z][a-z0-9-]+(?=\s)/,
+      pattern: /(^|\s)[a-z][a-z0-9-]{2,}(?:\.[a-z][a-z0-9-]*)*\.[a-z]{2,}(?=\s)/,
       lookbehind: true,
       alias: 'constant',
     },
@@ -152,20 +179,29 @@ export default function registerLogSyntax(PrismInstance: typeof Prism) {
     /* ================= UUID ================= */
     uuid: {
       pattern: /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i,
+      greedy: true,
       alias: 'constant',
     },
 
     /* ================= Hash ================= */
     hash: {
       pattern:
-        /\b(?:[a-f0-9]{7,16}(?=[a-f])[a-f0-9]*|[a-f0-9]{32}|[a-f0-9]{40}|[a-f0-9]{64}|[a-f0-9]{128})\b/i,
+        /\b(?:(?=[a-f0-9]*[a-f])[a-f0-9]{32}|(?=[a-f0-9]*[a-f])[a-f0-9]{40}|(?=[a-f0-9]*[a-f])[a-f0-9]{64}|(?=[a-f0-9]*[a-f])[a-f0-9]{128}|(?=[a-f0-9]*[a-f])[a-f0-9]{7,16})\b/i,
     },
 
     /* ================= File Path ================= */
     'file-path': {
-      pattern: /(^|[\s])([a-z]:[\\/][\w\-./\\]+|\/[\w\-./]*|\.\.?\/[\w\-./]+)/i,
+      pattern:
+        /(^|[\s=:])(?![a-z0-9.-]+\.[a-z]{2,}\/)(\s*[a-z]:[\\/][\w/.-]+|\s*\/[\w/.-]+|\s*\.\.?\/[\w/.-]+|\s*[a-z][\w-]+(?:\/[\w.-]+)+)/i,
       lookbehind: true,
       greedy: true,
+    },
+
+    /* ================= Kubernetes Resources (fallback) ================= */
+    'k8s-resource': {
+      pattern: /\b[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*\/[a-z0-9][\w.-]*\b/i,
+      greedy: true,
+      alias: 'file-path',
     },
 
     /* ================= Date / Time ================= */

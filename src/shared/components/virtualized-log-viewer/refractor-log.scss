@@ -49,15 +49,8 @@
     cursor: pointer;
   }
 
-  /* ================= Container Images ================= */
-
-  .token.container-image {
-    color: var(--pf-v5-global--palette--purple-400);
-    font-weight: 500;
-  }
-
   /* ================= Files ================= */
-
+  .token.mime-type,
   .token.filename,
   .token.file-path {
     color: var(--pf-v5-global--palette--light-blue-300);
@@ -106,10 +99,11 @@
     }
   }
 
-  /* ================= Key-Value Pairs ================= */
+  /* ================= Key-Value Pairs and CLI Arguments ================= */
 
-  // key=value pairs - use PatternFly orange for keys (good contrast in both light/dark modes)
-  .token.key-value {
+  // key=value pairs and CLI args - use PatternFly orange for keys (good contrast in both light/dark modes)
+  .token.key-value,
+  .token.cli-arg {
     .token.key,
     .token.attr-name {
       color: var(--pf-v5-global--palette--orange-400);
