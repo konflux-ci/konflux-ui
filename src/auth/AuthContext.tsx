@@ -1,10 +1,16 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
+import {
+  analyticsService,
+  consumeLoginSignal,
+  LOGGED_IN_QUERY_PARAM,
+} from '~/analytics/AnalyticsService';
 import { AuthContextType } from './type';
 import { setUserDataToLocalStorage } from './utils';
 
 const redirectToLogin = () => {
-  window.location.replace(`/oauth2/sign_in?rd=${window.location.pathname}`);
+  const returnPath = `${window.location.pathname}?${LOGGED_IN_QUERY_PARAM}=1`;
+  window.location.replace(`/oauth2/sign_in?rd=${encodeURIComponent(returnPath)}`);
 };
 
 export const AuthContext = React.createContext<AuthContextType>({
@@ -32,6 +38,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
             email: data.email,
             preferredUsername: data.preferredUsername,
           });
+          if (consumeLoginSignal()) {
+            analyticsService.userLogin(data);
+          }
           setIsAuthenticated(true);
         }
       } catch (err) {
@@ -43,6 +52,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
   }, []);
 
   const signOut = async () => {
+    analyticsService.userLogout();
     await fetch('/oauth2/sign_out');
     redirectToLogin();
   };

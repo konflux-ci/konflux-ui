@@ -45,7 +45,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: 'test-write-key-123',
         apiUrl: 'https://api.segment.io/v1',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -63,6 +63,7 @@ describe('initAnalytics and getAnalytics', () => {
         },
       );
       expect(indexModule.getAnalytics()).toBe(mockAnalyticsInstance);
+      await expect(indexModule.whenAnalyticsReady()).resolves.toBe(true);
       expect(consoleMock.info).toHaveBeenCalledWith('Analytics loaded');
     });
 
@@ -72,7 +73,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: 'test-write-key-123',
         apiUrl: '',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -80,6 +81,7 @@ describe('initAnalytics and getAnalytics', () => {
       expect(loadAnalyticsConfigMock).toHaveBeenCalled();
       expect(mockAnalyticsBrowser.load).not.toHaveBeenCalled();
       expect(indexModule.getAnalytics()).toBeUndefined();
+      await expect(indexModule.whenAnalyticsReady()).resolves.toBe(false);
     });
 
     it('should not load SDK when apiUrl is missing', async () => {
@@ -88,7 +90,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: 'test-write-key-123',
         apiUrl: '',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -103,7 +105,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: 'test-write-key-123',
         apiUrl: '  ',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -118,7 +120,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: '',
         apiUrl: '',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -133,7 +135,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: '   ',
         apiUrl: '',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -148,7 +150,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: '  test-key  ',
         apiUrl: '  https://api.example.com  ',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       await indexModule.initAnalytics();
@@ -172,7 +174,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: 'test-write-key-123',
         apiUrl: 'https://api.segment.io/v1',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const initError = new Error('Failed to load Segment SDK');
       mockAnalyticsBrowser.load.mockRejectedValue(initError);
@@ -182,6 +184,7 @@ describe('initAnalytics and getAnalytics', () => {
 
       expect(consoleMock.error).toHaveBeenCalledWith('Error loading Analytics', initError);
       expect(indexModule.getAnalytics()).toBeUndefined();
+      await expect(indexModule.whenAnalyticsReady()).resolves.toBe(false);
     });
   });
 
@@ -197,7 +200,7 @@ describe('initAnalytics and getAnalytics', () => {
         writeKey: 'test-write-key-123',
         apiUrl: 'https://api.segment.io/v1',
       };
-      loadAnalyticsConfigMock.mockReturnValue(mockConfig);
+      loadAnalyticsConfigMock.mockResolvedValue(mockConfig);
 
       const indexModule = await import('../index');
       expect(indexModule.getAnalytics()).toBeUndefined();
