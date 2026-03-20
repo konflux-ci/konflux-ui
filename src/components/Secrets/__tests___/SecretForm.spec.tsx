@@ -72,6 +72,52 @@ describe('SecretForm', () => {
   });
 });
 
+describe('SecretForm labels', () => {
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <InternalKeyValueFileInputField {...props} />
+    ));
+  });
+
+  it('renders Labels section with helper text for key/value secret type', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+    await waitFor(() => {
+      const form = screen.getByTestId('secret-form');
+      expect(form).toBeInTheDocument();
+      expect(form).toHaveTextContent('Labels');
+      expect(
+        screen.getByText('You can add labels to provide more context or tag your secret.'),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Add label')).toBeInTheDocument();
+    });
+  });
+
+  it('renders Labels section for source secret type', async () => {
+    formikRenderer(
+      <SecretForm existingSecrets={existingSecrets} />,
+      secretFormValuesForSourceSecret,
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId('secret-form')).toHaveTextContent('Labels');
+    });
+  });
+
+  it('allows editing label key and value fields', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
+    await waitFor(() => {
+      expect(screen.getByTestId('pairs-list-name')).toBeInTheDocument();
+    });
+
+    fireEvent.input(screen.getByTestId('pairs-list-name'), { target: { value: 'team' } });
+    fireEvent.input(screen.getByTestId('pairs-list-value'), { target: { value: 'konflux' } });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('pairs-list-name')).toHaveValue('team');
+      expect(screen.getByTestId('pairs-list-value')).toHaveValue('konflux');
+    });
+  });
+});
+
 describe('SecretForm SourceSecret', () => {
   it('should show correct fields for Source Secret', async () => {
     formikRenderer(
