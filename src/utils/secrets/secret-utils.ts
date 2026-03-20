@@ -6,7 +6,9 @@ import { K8sQueryCreateResource, K8sQueryPatchResource } from '../../k8s';
 import { SecretModel } from '../../models';
 import {
   AddSecretFormValues,
+  BuildTimeSecret,
   ImagePullSecretType,
+  ImportSecret,
   K8sSecretType,
   RemoteSecretStatusReason,
   RemoteSecretStatusType,
@@ -19,7 +21,6 @@ import {
   SecretTypeDisplayLabel,
   SecretTypeDropdownLabel,
   SourceSecretType,
-  BuildTimeSecret,
 } from '../../types';
 
 export { SecretForComponentOption };
@@ -213,6 +214,33 @@ export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]
     labels[SecretLabels.HOST_LABEL] = values.source.host;
   }
 
+  if (addCommonSecretLabel) {
+    labels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
+  }
+  return labels;
+};
+
+/** Labels for secrets created via import / build-secret modal (`ImportSecret`). */
+export const getLabelsForImportSecret = (values: ImportSecret): Record<string, string> | null => {
+  const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
+  const hasUserLabels = values.labels?.some(({ key, value }) => Boolean(key && value));
+
+  if (!values.source?.host && !hasUserLabels && !addCommonSecretLabel) {
+    return null;
+  }
+
+  const labels: Record<string, string> = {};
+  if (values.labels?.length) {
+    values.labels.forEach(({ key, value }) => {
+      if (key && value) {
+        labels[key] = value;
+      }
+    });
+  }
+  if (values.source?.host) {
+    labels[SecretLabels.CREDENTIAL_LABEL] = SecretLabels.CREDENTIAL_VALUE;
+    labels[SecretLabels.HOST_LABEL] = values.source.host;
+  }
   if (addCommonSecretLabel) {
     labels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
   }

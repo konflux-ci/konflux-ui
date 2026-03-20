@@ -67,6 +67,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
     currentComponent,
     relatedComponents: [],
     secretForComponentOption: null,
+    labels: [{ key: '', value: '' }],
   };
 
   return (

@@ -41,6 +41,7 @@ import {
 } from './component-utils';
 import {
   getAnnotationForSecret,
+  getLabelsForImportSecret,
   getLabelsForSecret,
   getSecretFormData,
   SecretForComponentOption,
@@ -366,12 +367,14 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
       return acc;
     }, {});
   }
+  const importLabels = getLabelsForImportSecret(values);
   const secretResource: SecretKind = {
     apiVersion: SecretModel.apiVersion,
     kind: SecretModel.kind,
     metadata: {
       name: values.secretName,
       namespace,
+      ...(importLabels && Object.keys(importLabels).length > 0 ? { labels: importLabels } : {}),
     },
     type:
       values.type === SecretTypeDropdownLabel.source

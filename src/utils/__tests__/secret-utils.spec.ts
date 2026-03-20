@@ -11,6 +11,7 @@ import {
   ImagePullSecretType,
   RemoteSecretStatusReason,
   SecretFor,
+  SecretForComponentOption,
   SecretLabels,
   SecretType,
   SecretTypeDropdownLabel,
@@ -20,6 +21,7 @@ import {
   createSecretResource,
   getAnnotationForSecret,
   getKubernetesSecretType,
+  getLabelsForImportSecret,
   getLabelsForSecret,
   getSecretFormData,
   getSupportedPartnerTaskKeyValuePairs,
@@ -431,6 +433,39 @@ describe('getLabelsForSecret', () => {
     ).toEqual({
       [SecretLabels.CREDENTIAL_LABEL]: SecretLabels.CREDENTIAL_VALUE,
       [SecretLabels.HOST_LABEL]: 'www.github.com',
+    });
+  });
+});
+
+describe('getLabelsForImportSecret', () => {
+  it('returns null when there are no user labels, host, or common-secret option', () => {
+    expect(
+      getLabelsForImportSecret({
+        secretName: 's',
+        type: SecretTypeDropdownLabel.opaque,
+      }),
+    ).toBeNull();
+  });
+
+  it('returns user-defined labels', () => {
+    expect(
+      getLabelsForImportSecret({
+        secretName: 's',
+        type: SecretTypeDropdownLabel.opaque,
+        labels: [{ key: 'team', value: 'konflux' }],
+      }),
+    ).toEqual({ team: 'konflux' });
+  });
+
+  it('adds common-secret label when linking to all components', () => {
+    expect(
+      getLabelsForImportSecret({
+        secretName: 's',
+        type: SecretTypeDropdownLabel.opaque,
+        secretForComponentOption: SecretForComponentOption.all,
+      }),
+    ).toEqual({
+      [SecretLabels.COMMON_SECRET_LABEL]: 'true',
     });
   });
 });

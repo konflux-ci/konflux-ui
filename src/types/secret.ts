@@ -25,6 +25,7 @@ export type ImportSecret = {
     }[];
   };
   image?: Image;
+  labels?: KeyValueEntry[];
   currentComponent?: null | CurrentComponentRef;
   relatedComponents?: [];
   secretForComponentOption?: null | SecretForComponentOption;
@@ -140,6 +141,7 @@ export type BuildTimeSecret = {
     }[];
   };
   image?: Image;
+  labels?: KeyValueEntry[];
 };
 
 export type SecretFormValues = ImportSecret & {
