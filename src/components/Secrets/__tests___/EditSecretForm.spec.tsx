@@ -6,6 +6,7 @@ import { SecretKind, SecretTypeDropdownLabel, SourceSecretType } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import {
   mockImageSecretDockerconfigjsonForEdit,
+  mockImageSecretDockerconfigjsonMultiForEdit,
   mockImageSecretDockercfgForEdit,
   mockOpaqueSecretForEdit,
   mockSourceSecretBasicAuthForEdit,
@@ -368,23 +369,153 @@ describe('EditSecretForm', () => {
       });
     });
 
-    it('shows validation error when source basic auth password is empty on submit', async () => {
+    it('does not show Required when source basic auth password is left blank in edit mode', async () => {
       renderWithSecret(mockSourceSecretBasicAuthForEdit);
 
       await waitFor(() => {
         expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
       });
 
-      // Touch password field and leave empty to trigger validation
       const passwordInput = screen.getByTestId('secret-source-password');
       fireEvent.focus(passwordInput);
       fireEvent.blur(passwordInput);
 
       await waitFor(() => {
-        expect(screen.getByText('Required')).toBeInTheDocument();
+        expect(screen.queryByText('Required')).not.toBeInTheDocument();
+      });
+    });
+
+    it('calls editSecretResource with preserved source password when password left blank', async () => {
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/^Host/)).toBeInTheDocument();
       });
 
-      expect(editSecretResource).not.toHaveBeenCalled();
+      fireEvent.input(screen.getByLabelText(/^Host/), { target: { value: 'github.org' } });
+      fireEvent.blur(screen.getByLabelText(/^Host/));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTestId('submit-button'));
+      });
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.source,
+            name: 'source-secret-basic',
+            source: expect.objectContaining({
+              authType: SourceSecretType.basic,
+              username: 'gituser',
+              password: 'gitpass',
+              host: 'github.org',
+              repo: 'org/repo',
+            }),
+          }),
+          'test-ns',
+        );
+      });
+    });
+
+    it('calls editSecretResource with preserved registry password when image password left blank', async () => {
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockImageSecretDockerconfigjsonForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('reguser')).toBeInTheDocument();
+      });
+
+      fireEvent.input(screen.getByDisplayValue('reguser'), {
+        target: { value: 'reguser-updated' },
+      });
+      fireEvent.blur(screen.getByDisplayValue('reguser-updated'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTestId('submit-button'));
+      });
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.image,
+            name: 'image-secret-dockerconfigjson',
+            image: expect.objectContaining({
+              authType: 'Image registry credentials',
+              registryCreds: expect.arrayContaining([
+                expect.objectContaining({
+                  registry: 'registry.example.com',
+                  username: 'reguser-updated',
+                  password: 'regpass',
+                  email: 'reg@example.com',
+                }),
+              ]),
+            }),
+          }),
+          'test-ns',
+        );
+      });
+    });
+
+    it('preserves both passwords when only the second registry credential username is changed', async () => {
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+
+      renderWithSecret(mockImageSecretDockerconfigjsonMultiForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByDisplayValue('user-a')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('user-b')).toBeInTheDocument();
+      });
+
+      fireEvent.input(screen.getByDisplayValue('user-b'), {
+        target: { value: 'user-b-updated' },
+      });
+      fireEvent.blur(screen.getByDisplayValue('user-b-updated'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled();
+      });
+
+      act(() => {
+        fireEvent.click(screen.getByTestId('submit-button'));
+      });
+
+      await waitFor(() => {
+        expect(editSecretResource).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: SecretTypeDropdownLabel.image,
+            name: 'image-secret-dockerconfigjson-multi',
+            image: expect.objectContaining({
+              authType: 'Image registry credentials',
+              registryCreds: [
+                expect.objectContaining({
+                  registry: 'registry-a.example.com',
+                  username: 'user-a',
+                  password: 'pass-a',
+                  email: 'a@example.com',
+                }),
+                expect.objectContaining({
+                  registry: 'registry-b.example.com',
+                  username: 'user-b-updated',
+                  password: 'pass-b',
+                  email: 'b@example.com',
+                }),
+              ],
+            }),
+          }),
+          'test-ns',
+        );
+      });
     });
 
     it('shows Required when image pull secret docker config field is touched and left empty', async () => {

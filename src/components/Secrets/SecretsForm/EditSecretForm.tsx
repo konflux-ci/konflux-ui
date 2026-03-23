@@ -64,11 +64,13 @@ const EditSecretForm: React.FC = () => {
     value,
   }));
 
+  const registryCreds = getRegistryCreds(secretData);
+
   const imageSecret =
     secretType === SecretTypeDropdownLabel.image
       ? {
           authType: authTypeFromLabels,
-          registryCreds: getRegistryCreds(secretData),
+          registryCreds: registryCreds.map((cred) => ({ ...cred, password: '' })),
           dockerconfig: secretData.data?.['.dockercfg'],
         }
       : undefined;
@@ -107,12 +109,32 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        // SSH field left blank in edit: keep existing key
+        // Source Secret SSH field left blank in edit: keep existing key
         if (
           typeFromLabels === SecretType.sshAuth &&
           (values.source['ssh-privatekey'] === '' || values.source['ssh-privatekey'] === undefined)
         ) {
           values.source['ssh-privatekey'] = secretData.data['ssh-privatekey'];
+        }
+
+        // Source Secret password left blank in edit: keep existing password
+        if (
+          secretType === SecretTypeDropdownLabel.source &&
+          typeFromLabels === SecretType.basicAuth &&
+          (values.source.password === '' || values.source.password === undefined)
+        ) {
+          values.source.password = atob(secretData.data.password);
+        }
+
+        // Image Pull Secret creds password left blank in edit: keep existing password
+        if (
+          secretType === SecretTypeDropdownLabel.image &&
+          typeFromLabels === SecretType.dockerconfigjson
+        ) {
+          values.image.registryCreds.forEach(
+            (cred, idx) =>
+              (cred.password = cred.password === '' ? registryCreds[idx].password : cred.password),
+          );
         }
 
         editSecretResource(values, secretData.metadata.namespace)

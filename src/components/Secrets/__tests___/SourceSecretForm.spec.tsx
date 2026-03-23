@@ -33,4 +33,17 @@ describe('SourceSecretForm', () => {
 
     expect(screen.getByText('SSH private key')).toBeVisible();
   });
+
+  it('shows keep-password placeholder for basic auth when isEditMode is true', () => {
+    formikRenderer(<SourceSecretForm isEditMode />, {
+      source: {
+        authType: 'Basic authentication',
+        username: 'gituser',
+        password: '',
+      },
+    });
+    expect(
+      screen.getByPlaceholderText('To keep the same password, leave this field blank'),
+    ).toBeVisible();
+  });
 });

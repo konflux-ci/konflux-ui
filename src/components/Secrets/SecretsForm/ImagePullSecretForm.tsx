@@ -102,7 +102,7 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
               </HelperTextItem>
             </HelperText>
           </Title>
-          <MultiImageCredentialForm name="image.registryCreds" />
+          <MultiImageCredentialForm name="image.registryCreds" isEditMode={isEditMode} />
         </>
       ) : (
         <>
