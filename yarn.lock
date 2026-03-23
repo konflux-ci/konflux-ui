@@ -10906,7 +10906,7 @@ __metadata:
     stylelint-scss: "npm:^6.4.0"
     swc-loader: "npm:^0.2.6"
     type-fest: "npm:^4.22.0"
-    typescript: "npm:5.5.4"
+    typescript: "npm:6.0.2"
     web-vitals: "npm:^4.2.4"
     webpack: "npm:^5.93.0"
     webpack-bundle-analyzer: "npm:^4.10.2"
@@ -15096,23 +15096,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:5.5.4":
-  version: 5.5.4
-  resolution: "typescript@npm:5.5.4"
+"typescript@npm:6.0.2":
+  version: 6.0.2
+  resolution: "typescript@npm:6.0.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/1689ccafef894825481fc3d856b4834ba3cc185a9c2878f3c76a9a1ef81af04194849840f3c69e7961e2312771471bb3b460ca92561e1d87599b26c37d0ffb6f
+  checksum: 10/b9fc2fcee7ee8e5ca6f5138181964550531e18e2d20ecb71b802d4d495881e3444e0ef94cbb6e84eb2ba41e913f6feae3ca33cc722b32e6e6dfadb32d23b80e6
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A5.5.4#optional!builtin<compat/typescript>":
-  version: 5.5.4
-  resolution: "typescript@patch:typescript@npm%3A5.5.4#optional!builtin<compat/typescript>::version=5.5.4&hash=379a07"
+"typescript@patch:typescript@npm%3A6.0.2#optional!builtin<compat/typescript>":
+  version: 6.0.2
+  resolution: "typescript@patch:typescript@npm%3A6.0.2#optional!builtin<compat/typescript>::version=6.0.2&hash=5786d5"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 10/746fdd0865c5ce4f15e494c57ede03a9e12ede59cfdb40da3a281807853fe63b00ef1c912d7222143499aa82f18b8b472baa1830df8804746d09b55f6cf5b1cc
+  checksum: 10/e5501dfcf8c5b6b9a61f6fa53decc40187cebe3a2b7b2bd51c615007ad4cf6d58298461fef63294f6be9d5f2f33019b2a2e2bf02d9cb7d7f6ec94372bf24ffa2
   languageName: node
   linkType: hard
 
