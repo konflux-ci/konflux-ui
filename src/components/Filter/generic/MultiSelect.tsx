@@ -23,6 +23,7 @@ type MultiSelectProps = {
   optionLabels?: Record<string, string>;
   hasInlineFilter?: boolean;
   inlineFilterPlaceholderText?: string;
+  inlineFilterThreshold?: number;
 };
 
 const MultiSelectComponent = ({
@@ -37,9 +38,17 @@ const MultiSelectComponent = ({
   optionLabels,
   hasInlineFilter = false,
   inlineFilterPlaceholderText,
+  inlineFilterThreshold = 20,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded ?? false);
   const [filterValue, setFilterValue] = React.useState('');
+
+  // Determine if inline filter should be shown based on threshold
+  const showInlineFilter = React.useMemo(() => {
+    if (!hasInlineFilter) return false;
+    const itemCount = Object.keys(options).filter((key) => !key.startsWith(MENU_DIVIDER)).length;
+    return itemCount > inlineFilterThreshold;
+  }, [hasInlineFilter, options, inlineFilterThreshold]);
 
   // Memoize the options to prevent re-creating them on every render
   const selectOptions = React.useMemo(() => {
@@ -49,7 +58,7 @@ const MultiSelectComponent = ({
     return keys
       .filter((key) => {
         // If inline filter is disabled, show all options
-        if (!hasInlineFilter) return true;
+        if (!showInlineFilter) return true;
         // If filter is empty, show all options
         if (!filterValue?.trim()) return true;
         // Otherwise, filter based on the filter value
@@ -64,7 +73,7 @@ const MultiSelectComponent = ({
           </SelectOption>
         ),
       );
-  }, [options, filterValue, hasInlineFilter, optionLabels]);
+  }, [filterValue, optionLabels, options, showInlineFilter]);
 
   const onFilter = React.useCallback(
     (_event: React.ChangeEvent<HTMLInputElement> | null, value: string) => {
@@ -117,7 +126,7 @@ const MultiSelectComponent = ({
         onToggle={(_, exp: boolean) => {
           setExpanded(exp);
           // Reset filter when opening or closing to ensure fresh state
-          if (hasInlineFilter) {
+          if (showInlineFilter) {
             setFilterValue('');
           }
         }}
@@ -131,7 +140,7 @@ const MultiSelectComponent = ({
         }}
         selections={values}
         isGrouped
-        {...(hasInlineFilter && {
+        {...(showInlineFilter && {
           hasInlineFilter: true,
           onFilter,
           inlineFilterPlaceholderText:

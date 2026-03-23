@@ -1114,7 +1114,7 @@ describe('ReleaseMonitorListView', () => {
 
   describe('Filter empty state with namespace filter', () => {
     it('shows SelectNamespaceEmptyState when namespace filter is cleared with more than NAMESPACE_THRESHOLD namespaces', async () => {
-      const fifteenNamespaces = Array.from({ length: 15 }, (_, i) => ({
+      const fifteenNamespaces = Array.from({ length: 25 }, (_, i) => ({
         metadata: { name: `namespace-${i + 1}`, creationTimestamp: '2023-12-01T00:00:00Z' },
       }));
 
