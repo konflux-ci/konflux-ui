@@ -13,12 +13,16 @@ main.tsx
               ├── fetch /segment/key + /segment/url   # Production: backend APIs
               └── window.KONFLUX_RUNTIME              # Local dev: runtime-config.js
 
+App (main.tsx)                               # Renders after auth
+  ├── useKonfluxPublicInfo()                 # Fetch version data from ConfigMap
+  ├── setCommonProperties()                  # Set CommonFields if available
+  └── consumeLoginSignal() → onLogin()       # Login event (once public info settles)
+
 AuthContext.tsx
-  ├── userLogin()   (on real OAuth login)   # identify + login event
-  └── userLogout()  (on sign out)           # logout event + reset
+  └── onLogout() (on sign out)               # track user_logout + reset
 
 Components
-  └── analyticsService.track(event, props)  # Custom events (via AnalyticsService)
+  └── useTrackAnalyticsEvent()               # Type-safe track hook
 ```
 
 ### Key files
@@ -27,10 +31,11 @@ Components
 |------|---------|
 | `src/analytics/index.ts` | SDK initialization, `getAnalytics()`, `whenAnalyticsReady()`, re-exports generated types |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
-| `src/analytics/AnalyticsService.ts` | Service class — type-safe `track()`, `page()`, login/logout |
+| `src/analytics/AnalyticsService.ts` | Service class — type-safe `track()`, `page()`, `identify()`, `reset()` |
 | `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
 | `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
-| `src/analytics/hooks.ts` | `useAnalyticsCommonProperties` hook |
+| `src/analytics/hooks.ts` | `useTrackAnalyticsEvent` hook |
+| `src/auth/useAuthAnalytics.ts` | `useAuthAnalytics` hook — `onLogin`/`onLogout` callbacks |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/analytics/types.ts` | `AnalyticsConfig` type |
 | `src/registers.ts` | Registers the `isAnalyticsEnabled` condition |
@@ -126,14 +131,11 @@ analyticsService.track(TrackEvents.feedback_submitted_event, {
 // Track a page view
 analyticsService.page('Application Details', { app_id: '123' });
 
-// Identify a user (called automatically on login)
+// Identify a user (called automatically by useAuthAnalytics on login)
 analyticsService.identify(user);
 
-// Login event (called automatically by AuthContext — fires identify + track)
-analyticsService.userLogin(user);
-
-// Logout event (called automatically by AuthContext — fires track + reset)
-analyticsService.userLogout();
+// Reset Segment identity (called automatically by useAuthAnalytics on logout)
+analyticsService.reset();
 ```
 
 ### Type-safe `track()`
@@ -189,14 +191,17 @@ The OAuth2 proxy handles authentication. The challenge is distinguishing a real 
 1. User visits the app, `/oauth2/userinfo` returns 401
 2. `redirectToLogin()` redirects to `/oauth2/sign_in?rd=/original/path?logged_in=1`
 3. User authenticates externally, oauth2-proxy redirects back to `/original/path?logged_in=1`
-4. `consumeLoginSignal()` detects the `logged_in` param, strips it from the URL, returns `true`
-5. `analyticsService.userLogin(user)` fires — only on real logins
+4. `AuthProvider` sets `isAuthenticated = true`, `App` renders
+5. `App` waits for `useKonfluxPublicInfo()` to settle (loaded or error)
+6. If version fields are present in the ConfigMap, `analyticsService.setCommonProperties(...)` is called
+7. `consumeLoginSignal()` detects the `logged_in` param, strips it from the URL, returns `true`
+8. `onLogin(user)` fires — identify + track `user_login` event (with or without common properties)
 
 On a page refresh, there's no `logged_in` param, so no login event fires.
 
 ### Logout
 
-`analyticsService.userLogout()` is called in `signOut()` before the sign-out fetch. It fires a `user_logout` track event (with the hashed userId from login) while the user identity is still attached, then calls `analytics.reset()` to clear the Segment identity.
+`onLogout(user)` is called in `AuthContext.signOut()` before the sign-out fetch. It fires a `user_logout` track event (with the obfuscated userId), then calls `analyticsService.reset()` to clear the Segment identity.
 
 ---
 

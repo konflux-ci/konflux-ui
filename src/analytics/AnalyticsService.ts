@@ -1,17 +1,9 @@
-import { logger } from '~/monitoring/logger';
-import { obfuscate } from './obfuscate';
-import { CommonFields, EventPropertiesMap, getAnalytics, SHA256Hash, TrackEvents } from '.';
+import { CommonFields, EventPropertiesMap, getAnalytics, TrackEvents } from '.';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
-export interface AnalyticsUser {
-  email: string | null;
-  preferredUsername: string | null;
-}
-
 export class AnalyticsService {
   private commonProperties: Partial<CommonFields> = {};
-  private hashedUserIdPromise: Promise<SHA256Hash> | undefined;
 
   setCommonProperties(properties: Partial<CommonFields>): void {
     this.commonProperties = { ...this.commonProperties, ...properties };
@@ -25,43 +17,16 @@ export class AnalyticsService {
     void getAnalytics()?.page(name, { ...this.commonProperties, ...properties });
   }
 
-  identify(user: AnalyticsUser): void {
-    void getAnalytics()?.identify(user.preferredUsername ?? undefined, {
-      email: user.email,
-      username: user.preferredUsername,
-    });
+  identify(userId: string): void {
+    void getAnalytics()?.identify(userId);
   }
 
-  userLogin(user: AnalyticsUser): void {
-    this.identify(user);
-    if (user.preferredUsername) {
-      this.hashedUserIdPromise = obfuscate(user.preferredUsername);
-      void this.hashedUserIdPromise.then((userId) => {
-        this.track(TrackEvents.user_login_event, { userId });
-      });
-    }
-    logger.info('User Logged In');
-  }
-
-  userLogout(): void {
-    const analytics = getAnalytics();
-    if (this.hashedUserIdPromise && analytics) {
-      void this.hashedUserIdPromise.then((userId) => {
-        void analytics.track(TrackEvents.user_logout_event, {
-          ...this.commonProperties,
-          userId,
-        });
-        analytics.reset();
-        this.hashedUserIdPromise = undefined;
-      });
-    } else {
-      analytics?.reset();
-    }
-    logger.info('User Logged Out');
+  reset(): void {
+    void getAnalytics()?.reset();
   }
 
   getCommonProperties(): Partial<CommonFields> {
-    return { ...this.commonProperties };
+    return { ...(this.commonProperties ?? {}) };
   }
 }
 

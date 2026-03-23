@@ -1,4 +1,4 @@
-import { AnalyticsService, AnalyticsUser, consumeLoginSignal } from '../AnalyticsService';
+import { AnalyticsService, consumeLoginSignal } from '../AnalyticsService';
 import { SHA256Hash, TrackEvents } from '../gen/analytics-types';
 
 jest.mock('..', () => ({
@@ -6,18 +6,7 @@ jest.mock('..', () => ({
   getAnalytics: jest.fn(),
 }));
 
-jest.mock('../obfuscate', () => ({
-  obfuscate: jest.fn(),
-}));
-
-jest.mock('~/monitoring/logger', () => ({
-  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
-}));
-
 const { getAnalytics }: { getAnalytics: jest.Mock } = jest.requireMock('..');
-const { obfuscate }: { obfuscate: jest.Mock } = jest.requireMock('../obfuscate');
-const { logger: mockLogger }: { logger: Record<string, jest.Mock> } =
-  jest.requireMock('~/monitoring/logger');
 
 const FAKE_HASH = 'abc123def456' as SHA256Hash;
 
@@ -33,18 +22,12 @@ const enableAnalytics = () => {
   return mockSegment;
 };
 
-const testUser: AnalyticsUser = {
-  email: 'test@example.com',
-  preferredUsername: 'testuser',
-};
-
 describe('AnalyticsService', () => {
   let service: AnalyticsService;
 
   beforeEach(() => {
     service = new AnalyticsService();
     jest.clearAllMocks();
-    obfuscate.mockResolvedValue(FAKE_HASH);
   });
 
   describe('setCommonProperties / getCommonProperties', () => {
@@ -141,120 +124,29 @@ describe('AnalyticsService', () => {
   });
 
   describe('identify', () => {
-    it('should call analytics.identify with user traits', () => {
+    it('should call analytics.identify with userId', () => {
       enableAnalytics();
-      service.identify(testUser);
+      service.identify('user-hash-123');
 
-      expect(mockSegment.identify).toHaveBeenCalledWith('testuser', {
-        email: 'test@example.com',
-        username: 'testuser',
-      });
-    });
-
-    it('should pass undefined when preferredUsername is null', () => {
-      enableAnalytics();
-      service.identify({ email: 'test@example.com', preferredUsername: null });
-
-      expect(mockSegment.identify).toHaveBeenCalledWith(undefined, {
-        email: 'test@example.com',
-        username: null,
-      });
+      expect(mockSegment.identify).toHaveBeenCalledWith('user-hash-123');
     });
 
     it('should not throw when analytics is undefined', () => {
       getAnalytics.mockReturnValue(undefined);
-      expect(() => service.identify(testUser)).not.toThrow();
+      expect(() => service.identify('user-hash-123')).not.toThrow();
     });
   });
 
-  describe('userLogin', () => {
-    it('should identify the user and track a login event', async () => {
+  describe('reset', () => {
+    it('should call analytics.reset', () => {
       enableAnalytics();
-      service.userLogin(testUser);
-
-      expect(mockSegment.identify).toHaveBeenCalledWith('testuser', {
-        email: 'test@example.com',
-        username: 'testuser',
-      });
-      expect(obfuscate).toHaveBeenCalledWith('testuser');
-
-      await obfuscate.mock.results[0].value;
-
-      expect(mockSegment.track).toHaveBeenCalledWith(TrackEvents.user_login_event, {
-        userId: FAKE_HASH,
-      });
-      expect(mockLogger.info).toHaveBeenCalledWith('User Logged In');
-    });
-
-    it('should not track when preferredUsername is null', () => {
-      enableAnalytics();
-      service.userLogin({ email: 'test@example.com', preferredUsername: null });
-
-      expect(mockSegment.identify).toHaveBeenCalled();
-      expect(obfuscate).not.toHaveBeenCalled();
-      expect(mockSegment.track).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith('User Logged In');
-    });
-  });
-
-  describe('userLogout', () => {
-    it('should track logout event and reset when user was logged in', async () => {
-      const segment = enableAnalytics();
-
-      service.userLogin(testUser);
-      await obfuscate.mock.results[0].value;
-
-      jest.clearAllMocks();
-      getAnalytics.mockReturnValue(segment);
-
-      service.userLogout();
-      await Promise.resolve();
-
-      expect(segment.track).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
-        userId: FAKE_HASH,
-      });
-      expect(segment.reset).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith('User Logged Out');
-    });
-
-    it('should include common properties in the logout track call', async () => {
-      const segment = enableAnalytics();
-      service.setCommonProperties({
-        clusterVersion: '4.14',
-        konfluxVersion: '1.0',
-        kubernetesVersion: '1.30',
-      });
-
-      service.userLogin(testUser);
-      await obfuscate.mock.results[0].value;
-
-      jest.clearAllMocks();
-      getAnalytics.mockReturnValue(segment);
-
-      service.userLogout();
-      await Promise.resolve();
-
-      expect(segment.track).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
-        clusterVersion: '4.14',
-        konfluxVersion: '1.0',
-        kubernetesVersion: '1.30',
-        userId: FAKE_HASH,
-      });
-    });
-
-    it('should just reset when no user was logged in', () => {
-      const segment = enableAnalytics();
-      service.userLogout();
-
-      expect(segment.track).not.toHaveBeenCalled();
-      expect(segment.reset).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith('User Logged Out');
+      service.reset();
+      expect(mockSegment.reset).toHaveBeenCalled();
     });
 
     it('should not throw when analytics is undefined', () => {
       getAnalytics.mockReturnValue(undefined);
-      expect(() => service.userLogout()).not.toThrow();
-      expect(mockLogger.info).toHaveBeenCalledWith('User Logged Out');
+      expect(() => service.reset()).not.toThrow();
     });
   });
 });

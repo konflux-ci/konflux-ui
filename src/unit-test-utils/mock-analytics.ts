@@ -1,4 +1,4 @@
-import { analyticsService } from '../analytics/AnalyticsService';
+import { analyticsService } from '~/analytics/AnalyticsService';
 
 /**
  * Spies on an analyticsService method and replaces it with a jest.fn().
@@ -10,10 +10,13 @@ import { analyticsService } from '../analytics/AnalyticsService';
  * expect(trackMock).toHaveBeenCalledWith(TrackEvents.user_login_event, { userId });
  */
 export const mockAnalyticsServiceFn = (name: string) => {
+  // Lazy import avoids eagerly loading the analytics module tree
+  // (which pulls in conditional-checks → feature-flags hooks) at module init time.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockFn = jest.fn();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  jest.spyOn(analyticsService as any, name).mockImplementation(mockFn);
+  jest.spyOn(analyticsService, name as keyof typeof analyticsService).mockImplementation(mockFn);
 
   return mockFn;
 };

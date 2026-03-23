@@ -64,4 +64,8 @@ export type KonfluxPublicInfo = {
   integrations?: KonfluxPublicInfoIntegrations;
   rbac: KonfluxRbacItem[];
   visibility?: KonfluxInstanceVisibilityType;
+  clusterVersion?: string;
+  konfluxVersion?: string;
+  kubernetesVersion?: string;
+  openshiftVersion?: string;
 };

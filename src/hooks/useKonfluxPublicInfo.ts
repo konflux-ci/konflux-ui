@@ -16,6 +16,9 @@ export const useKonfluxPublicInfo = (): [KonfluxPublicInfo, boolean, unknown] =>
       name: 'konflux-public-info',
     },
     ConfigMapModel,
+    {
+      staleTime: Infinity, // No need to refetch this data
+    },
   );
 
   // Memoize the result of info.json for performance
@@ -61,7 +64,10 @@ export const getKonfluxPublicInfo = async (
         ns: 'konflux-info',
       },
     },
-    options,
+    {
+      staleTime: Infinity,
+      ...options,
+    },
   );
 
   if (!configMap?.data?.['info.json']) {
