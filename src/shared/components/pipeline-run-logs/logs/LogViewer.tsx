@@ -35,9 +35,9 @@ import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/u
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
-import { useTheme } from '~/shared/theme';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
+import { useLogViewerTheme } from './useLogViewerTheme';
 
 import './LogViewer.scss';
 
@@ -74,8 +74,7 @@ const LogViewer: React.FC<Props> = ({
   onScroll: onScrollProp,
 }) => {
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
-  const { effectiveTheme } = useTheme();
-  const [logTheme, setLogTheme] = React.useState<'light' | 'dark'>('dark');
+  const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
   // Auto-scroll and resume button logic
@@ -168,6 +167,7 @@ const LogViewer: React.FC<Props> = ({
           style={{ height: isFullscreen ? '100vh' : '100%' }}
           className={classNames('log-viewer__container', 'pf-v5-c-log-viewer', {
             'pf-m-dark': logTheme === 'dark',
+            'log-viewer--light': logTheme === 'light',
           })}
         >
           {/* Toolbar */}
@@ -196,10 +196,8 @@ const LogViewer: React.FC<Props> = ({
                     <Checkbox
                       id={themeCheckboxId}
                       label="Dark theme"
-                      // theme toggle should be disabled if global theme is dark
-                      isDisabled={effectiveTheme === 'dark'}
                       checked={logTheme === 'dark'}
-                      onClick={() => setLogTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+                      onClick={() => setLogTheme(logTheme === 'dark' ? 'light' : 'dark')}
                     />
                   </ToolbarItem>
                   <ToolbarItem variant="separator" className="log-viewer__divider" />

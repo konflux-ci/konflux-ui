@@ -4,13 +4,32 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
+import { FeatureFlagsStore } from '~/feature-flags/store';
 import { ModalProvider } from '../../modal/ModalProvider';
 import { HelpDropdown } from '../HelpDropdown';
 
 const mockUseKonfluxPublicInfo = jest.fn();
+
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: () => mockUseKonfluxPublicInfo(),
 }));
+
+jest.mock('~/feature-flags/hooks', () => {
+  const actual = jest.requireActual('~/feature-flags/hooks');
+  return {
+    ...actual,
+    useFeatureFlags: jest.fn(() => [{ 'feedback-section': true }, jest.fn()]),
+  };
+});
+
+jest.mock('~/feature-flags/store', () => ({
+  FeatureFlagsStore: {
+    isOn: jest.fn(),
+    subscribe: jest.fn(),
+  },
+}));
+
+const mockFeatureFlagsStore = FeatureFlagsStore as jest.Mocked<typeof FeatureFlagsStore>;
 
 const renderWithModalProvider = (component: React.ReactElement) => {
   return render(<ModalProvider>{component}</ModalProvider>);
@@ -20,6 +39,7 @@ describe('HelpDropdown Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseKonfluxPublicInfo.mockReturnValue([{ visibility: 'public' }]);
+    mockFeatureFlagsStore.isOn.mockReturnValue(true);
   });
 
   describe('Rendering', () => {
@@ -39,12 +59,19 @@ describe('HelpDropdown Component', () => {
 
       expect(screen.queryByText('About Konflux')).not.toBeInTheDocument();
       expect(screen.queryByText('Documentation')).not.toBeInTheDocument();
+      expect(screen.queryByText('Share feedback')).not.toBeInTheDocument();
     });
 
     it('should not show AboutModal initially', () => {
       renderWithModalProvider(<HelpDropdown />);
 
       expect(screen.queryByTestId('about-modal')).not.toBeInTheDocument();
+    });
+
+    it('should not show FeedbackModal initially', () => {
+      renderWithModalProvider(<HelpDropdown />);
+
+      expect(screen.queryByTestId('feedback-modal')).not.toBeInTheDocument();
     });
   });
 
@@ -58,6 +85,7 @@ describe('HelpDropdown Component', () => {
       await waitFor(() => {
         expect(screen.getByText('About Konflux')).toBeInTheDocument();
         expect(screen.getByText('Documentation')).toBeInTheDocument();
+        expect(screen.getByText('Share feedback')).toBeInTheDocument();
       });
     });
 
@@ -88,9 +116,11 @@ describe('HelpDropdown Component', () => {
       await waitFor(() => {
         const aboutItem = screen.getByTestId('help-dropdown-about');
         const docItem = screen.getByTestId('help-dropdown-documentation');
+        const feedbackItem = screen.getByTestId('help-dropdown-feedback');
 
         expect(aboutItem).toBeInTheDocument();
         expect(docItem).toBeInTheDocument();
+        expect(feedbackItem).toBeInTheDocument();
       });
     });
 
@@ -118,6 +148,21 @@ describe('HelpDropdown Component', () => {
         const aboutButton = screen.getByRole('menuitem', { name: /About Konflux/i });
         expect(aboutButton).toBeInTheDocument();
         expect(aboutButton).toHaveAttribute('role', 'menuitem');
+      });
+    });
+  });
+
+  describe('Feedback Modal Functionality', () => {
+    it('should have Share feedback menu item with correct attributes', async () => {
+      renderWithModalProvider(<HelpDropdown />);
+
+      const helpIcon = screen.getByLabelText('Help menu toggle');
+      fireEvent.click(helpIcon);
+
+      await waitFor(() => {
+        const feedbackButton = screen.getByRole('menuitem', { name: /Share feedback/i });
+        expect(feedbackButton).toBeInTheDocument();
+        expect(feedbackButton).toHaveAttribute('role', 'menuitem');
       });
     });
   });
