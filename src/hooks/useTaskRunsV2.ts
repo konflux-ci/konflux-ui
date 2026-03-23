@@ -248,7 +248,7 @@ export const useTaskRunsForPipelineRuns = (
       selector,
       watch,
     },
-    { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
+    { enabled: !!(namespace && pipelineRunName) },
   );
 
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
