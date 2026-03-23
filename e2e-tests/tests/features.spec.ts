@@ -22,7 +22,7 @@ describe('Test Features Flags', function () {
       'Close the modal',
       'Click on some blank spot so hover labels are hidden in top menu',
       'Click a bell icon in the top menu',
-      'A drawer should be opened on a right side of the page',
+      'A notification-drawer should be present on a page',
     ]);
   });
 });

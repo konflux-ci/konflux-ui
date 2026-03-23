@@ -113,3 +113,8 @@ export const componentDetailsPO = {
   buildImage: '[data-test="build-container-image-test"] input',
   route: '[data-test="environment-cell"] > div > a',
 };
+
+export const namespacesPagePO = {
+  filterNamespaceInput: '[aria-label="name filter"]',
+  title: 'h1:contains("Namespaces")',
+};
