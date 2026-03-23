@@ -157,6 +157,11 @@ const IntegrationTestSidePanel: React.FC<
               componentName={
                 integrationTestPipeline?.metadata?.labels?.[PipelineRunLabel.COMPONENT]
               }
+              integrationTestScenario={
+                integrationTestPipeline?.metadata?.labels?.[
+                  PipelineRunLabel.TEST_SERVICE_SCENARIO
+                ] ?? workflowNode.getLabel()
+              }
             />
             {integrationTestPipeline && taskRunsLoaded && !taskRunsError ? (
               <ScanDescriptionListGroup taskRuns={taskRuns} hideIfNotFound showLogsLink />
