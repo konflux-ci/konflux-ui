@@ -120,9 +120,9 @@ const InternalFLAGS = {
     defaultEnabled: true,
     status: 'wip',
     guard: {
-      allOf: ['isStagingCluster'],
-      failureReason: 'Not a staging cluster',
-      visibleInFeatureFlagPanel: false,
+      allOf: ['isAnalyticsEnabled'],
+      failureReason: 'Analytics is not enabled on this cluster',
+      visibleInFeatureFlagPanel: true,
     },
   },
 } satisfies Record<string, FeatureMeta>;
