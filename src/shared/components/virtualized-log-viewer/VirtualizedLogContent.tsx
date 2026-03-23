@@ -6,6 +6,7 @@ import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
+import { useSmartRowHeight } from './useSmartRowHeight';
 import { useTokenization } from './useTokenization';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
 
@@ -65,18 +66,30 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     }
   }, []);
 
-  // Initialize virtualizer
+  // Use PatternFly's smart row height estimation strategy
+  const { getEstimatedRowHeight, measurementContainerRef } = useSmartRowHeight({
+    lines,
+    containerRef: parentRef,
+    baseLineHeight: itemSize,
+    fastRowHeightEstimationLimit: 5000, // Match PatternFly's default
+  });
+
+  // Initialize virtualizer with dynamic measurement enabled
+  // Key strategy: Use large overscan for small logs to measure most items upfront
+  const overscanCount = lines.length < 500 ? Math.min(lines.length, 100) : 20;
+
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
     count: lines.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => itemSize,
-    overscan: 10,
+    estimateSize: getEstimatedRowHeight,
+    overscan: overscanCount,
   });
 
   // Handle scroll behavior (direction, programmatic scroll, scrollToRow)
   useVirtualizedScroll({
     virtualizer,
     scrollToRow,
+    totalCount: lines.length,
     onScroll,
   });
 
@@ -134,7 +147,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   return (
     <>
-      {/* Hidden element to measure actual line height */}
+      {/* Hidden element to measure base line height */}
       <div
         ref={measureCallbackRef}
         className="pf-v5-c-log-viewer__list-item"
@@ -142,6 +155,19 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       >
         <span className="pf-v5-c-log-viewer__text">M</span>
       </div>
+
+      {/* Hidden container for measuring long lines */}
+      <div
+        ref={measurementContainerRef}
+        className="log-content__content-column"
+        style={{
+          position: 'absolute',
+          visibility: 'hidden',
+          pointerEvents: 'none',
+          top: '-9999px',
+          left: '-9999px',
+        }}
+      />
 
       {/* Scrollable container with gutter */}
       <div

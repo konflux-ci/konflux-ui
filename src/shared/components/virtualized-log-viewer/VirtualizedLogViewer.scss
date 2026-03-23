@@ -12,6 +12,9 @@
 }
 
 .pf-v5-c-log-viewer__text {
-  white-space: pre-wrap; // Allow long lines to wrap while preserving spaces and line breaks
+  // Match PatternFly LogViewer's text wrapping behavior
+  word-break: break-all;
+  white-space: break-spaces; // Similar to pre-wrap but handles trailing spaces better
+  line-break: anywhere;
 }
 
