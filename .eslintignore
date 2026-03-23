@@ -8,4 +8,5 @@ e2e-tests/*
 commitlint.config.js
 **.config.js
 config/*
+scripts/*
 public/runtime-config.js

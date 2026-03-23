@@ -1,6 +1,6 @@
 import { logger } from '~/monitoring/logger';
-import type { AnalyticsProperties } from '~/utils/analytics';
-import { getAnalytics } from '.';
+import { obfuscate } from './obfuscate';
+import { CommonFields, EventPropertiesMap, getAnalytics, SHA256Hash, TrackEvents } from '.';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
@@ -10,20 +10,19 @@ export interface AnalyticsUser {
 }
 
 export class AnalyticsService {
-  private commonProperties: AnalyticsProperties = {};
+  private commonProperties: Partial<CommonFields> = {};
+  private hashedUserIdPromise: Promise<SHA256Hash> | undefined;
 
-  setCommonProperties(properties: AnalyticsProperties): void {
+  setCommonProperties(properties: Partial<CommonFields>): void {
     this.commonProperties = { ...this.commonProperties, ...properties };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  track(_event: string, _properties: AnalyticsProperties = {}): void {
-    // noop — will be wired to getAnalytics()?.track() later
+  track<E extends TrackEvents>(event: E, properties: EventPropertiesMap[E]): void {
+    void getAnalytics()?.track(event, { ...this.commonProperties, ...properties });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  page(_name?: string, _properties: AnalyticsProperties = {}): void {
-    // noop — will be wired to getAnalytics()?.page() later
+  page(name?: string, properties: Record<string, unknown> = {}): void {
+    void getAnalytics()?.page(name, { ...this.commonProperties, ...properties });
   }
 
   identify(user: AnalyticsUser): void {
@@ -35,15 +34,33 @@ export class AnalyticsService {
 
   userLogin(user: AnalyticsUser): void {
     this.identify(user);
+    if (user.preferredUsername) {
+      this.hashedUserIdPromise = obfuscate(user.preferredUsername);
+      void this.hashedUserIdPromise.then((userId) => {
+        this.track(TrackEvents.user_login_event, { userId });
+      });
+    }
     logger.info('User Logged In');
   }
 
   userLogout(): void {
-    getAnalytics()?.reset();
+    const analytics = getAnalytics();
+    if (this.hashedUserIdPromise && analytics) {
+      void this.hashedUserIdPromise.then((userId) => {
+        void analytics.track(TrackEvents.user_logout_event, {
+          ...this.commonProperties,
+          userId,
+        });
+        analytics.reset();
+        this.hashedUserIdPromise = undefined;
+      });
+    } else {
+      analytics?.reset();
+    }
     logger.info('User Logged Out');
   }
 
-  getCommonProperties(): AnalyticsProperties {
+  getCommonProperties(): Partial<CommonFields> {
     return { ...this.commonProperties };
   }
 }

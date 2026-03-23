@@ -25,9 +25,12 @@ Components
 
 | File | Purpose |
 |------|---------|
-| `src/analytics/index.ts` | SDK initialization, `getAnalytics()`, `whenAnalyticsReady()` |
+| `src/analytics/index.ts` | SDK initialization, `getAnalytics()`, `whenAnalyticsReady()`, re-exports generated types |
 | `src/analytics/load-config.ts` | Config resolution (API-first, runtime fallback) |
-| `src/analytics/AnalyticsService.ts` | Service class for tracking events |
+| `src/analytics/AnalyticsService.ts` | Service class — type-safe `track()`, `page()`, login/logout |
+| `src/analytics/gen/analytics-types.ts` | Auto-generated types from segment-bridge schema |
+| `src/analytics/obfuscate.ts` | SHA-256 hashing for PIA fields (`SHA256Hash` branded type) |
+| `src/analytics/hooks.ts` | `useAnalyticsCommonProperties` hook |
 | `src/analytics/conditional-checks.ts` | `isAnalyticsEnabled` condition + `useIsAnalyticsEnabled` hook |
 | `src/analytics/types.ts` | `AnalyticsConfig` type |
 | `src/registers.ts` | Registers the `isAnalyticsEnabled` condition |
@@ -102,12 +105,23 @@ The `AnalyticsService` class is the primary interface for tracking. A singleton 
 
 ```ts
 import { analyticsService } from '~/analytics/AnalyticsService';
+import { TrackEvents } from '~/analytics';
+import { obfuscate } from '~/analytics/obfuscate';
 
-// Set properties that are included in every event
-analyticsService.setCommonProperties({ cluster: 'prod', environment: 'staging' });
+// Set CommonFields — merged into every track() and page() call
+analyticsService.setCommonProperties({
+  clusterVersion: '4.14',
+  konfluxVersion: '1.2.3',
+  kubernetesVersion: '1.30',
+});
 
-// Track a custom event
-analyticsService.track('Button Clicked', { button_name: 'create-app' });
+// Track a typed event (event name → required properties enforced at compile time)
+const userId = await obfuscate(rawUsername);
+analyticsService.track(TrackEvents.feedback_submitted_event, {
+  userId,
+  rating: 5,
+  feedback: 'Great experience',
+});
 
 // Track a page view
 analyticsService.page('Application Details', { app_id: '123' });
@@ -115,16 +129,41 @@ analyticsService.page('Application Details', { app_id: '123' });
 // Identify a user (called automatically on login)
 analyticsService.identify(user);
 
-// Login event (called automatically by AuthContext)
+// Login event (called automatically by AuthContext — fires identify + track)
 analyticsService.userLogin(user);
 
-// Logout event (called automatically by AuthContext)
+// Logout event (called automatically by AuthContext — fires track + reset)
 analyticsService.userLogout();
 ```
 
-### Common Properties
+### Type-safe `track()`
 
-Properties set via `setCommonProperties()` are merged into every `track` call. Use this for data that applies globally (cluster, environment, etc.).
+The `track` method uses a generic signature tied to `EventPropertiesMap`:
+
+```ts
+track<E extends TrackEvents>(event: E, properties: EventPropertiesMap[E]): void
+```
+
+Each `TrackEvents` enum value maps to the event-specific properties (minus `CommonFields`, which are merged automatically). This means the compiler enforces the correct payload shape for each event.
+
+### Common Properties (`CommonFields`)
+
+`setCommonProperties()` accepts `Partial<CommonFields>` — the base fields required on every Segment event (cluster version, Konflux version, etc.). These are automatically merged into every `track()` and `page()` call.
+
+Use the `useAnalyticsCommonProperties` hook to set them from the React tree once version data is available:
+
+```ts
+import { useAnalyticsCommonProperties } from '~/analytics/hooks';
+
+const App = () => {
+  useAnalyticsCommonProperties({
+    clusterVersion: info.clusterVersion,
+    konfluxVersion: info.konfluxVersion,
+    kubernetesVersion: info.kubernetesVersion,
+  });
+  return <Routes />;
+};
+```
 
 ### Direct SDK Access
 
@@ -157,7 +196,7 @@ On a page refresh, there's no `logged_in` param, so no login event fires.
 
 ### Logout
 
-`analyticsService.userLogout()` is called in `signOut()` before the sign-out fetch. This fires the logout event while the user identity is still attached, then calls `analytics.reset()` to clear the Segment identity.
+`analyticsService.userLogout()` is called in `signOut()` before the sign-out fetch. It fires a `user_logout` track event (with the hashed userId from login) while the user identity is still attached, then calls `analytics.reset()` to clear the Segment identity.
 
 ---
 
@@ -199,30 +238,42 @@ The condition awaits the deferred `whenAnalyticsReady()` promise, so it always r
 
 ## Adding New Events
 
-### Step 1: Track in a component
+### Step 1: Define the event in the schema
+
+New events must be defined in the [segment-bridge schema](https://github.com/konflux-ci/segment-bridge/tree/main/schema). After the schema PR merges, update the pinned commit and regenerate types:
+
+```bash
+yarn generate:analytics-types
+```
+
+This generates the event type, adds it to `TrackEvents`, and creates the `EventPropertiesMap` entry automatically.
+
+### Step 2: Track in a component
 
 ```ts
 import { analyticsService } from '~/analytics/AnalyticsService';
+import { TrackEvents } from '~/analytics';
+import { obfuscate } from '~/analytics/obfuscate';
 
-const handleClick = () => {
-  analyticsService.track('Application Created', {
-    app_name: name,
-    component_count: components.length,
+const handleSubmit = async () => {
+  const userId = await obfuscate(username);
+  analyticsService.track(TrackEvents.feedback_submitted_event, {
+    userId,
+    rating: 5,
+    feedback: 'Great!',
   });
 };
 ```
 
-### Step 2: Track in a hook (existing pattern)
-
-The existing `useTrackEvent` hook in `src/utils/analytics.ts` can also be used from React components. It will be wired to Segment in a future update.
+The compiler enforces the correct properties for each event — passing wrong fields or missing required ones is a type error.
 
 ### Guidelines
 
-- Use past-tense event names: `Application Created`, `Button Clicked`, `Pipeline Run Viewed`
-- Include relevant context as properties, not in the event name
-- Don't track PII beyond username/email (which are handled by `identify`)
+- Event names and schemas are defined in segment-bridge, not in UI code
+- PIA fields (userId, email, etc.) must be obfuscated using `obfuscate()` which returns `SHA256Hash`
+- Don't track raw PII — all identifying data goes through `obfuscate()`
 - Events are no-ops when analytics is disabled — no need to guard with `if` checks
-- Use `setCommonProperties()` for data that applies to all events, not per-event properties
+- Use `setCommonProperties()` for `CommonFields` that apply to all events
 
 ---
 
@@ -264,3 +315,64 @@ The existing `useTrackEvent` hook in `src/utils/analytics.ts` can also be used f
 1. Check that `initAnalytics()` completed — `await whenAnalyticsReady()` in the console
 2. Verify the condition is registered in `src/registers.ts`
 3. Check `FeatureFlagsStore.conditions` in the console for the current state
+
+
+# Analytics Type Generation
+
+The Konflux UI generates TypeScript types from the [segment-bridge analytics schema](https://github.com/konflux-ci/segment-bridge/tree/main/schema) to ensure type-safe Segment event tracking.
+
+## Quick Start
+
+```bash
+yarn generate:analytics-types
+```
+
+This produces `src/analytics/gen/analytics-types.ts` containing:
+
+- **`CommonFields`** — base interface inherited by every event
+- **Per-event types** (e.g. `UserLoginEvent`) — `CommonFields & { ...event-specific fields }`
+- **`SHA256Hash`** — branded type for obfuscated PIA fields (prevents passing raw strings)
+- **`TrackEvents`** — enum of event names for Segment `track()` calls
+- **`KonfluxUISegmentEvents`** — union of all event types
+
+## Schema Pinning
+
+The generator fetches the schema from segment-bridge at a **pinned commit hash** (not `main`) to ensure stable, reproducible builds. The commit is configured in `scripts/generate-analytics-types.mjs`:
+
+```js
+const SCHEMA_COMMIT = '<commit-hash>';
+```
+
+### Updating the schema version
+
+1. Check the [segment-bridge schema](https://github.com/konflux-ci/segment-bridge/tree/main/schema) for changes
+2. Update `SCHEMA_COMMIT` in `scripts/generate-analytics-types.mjs` to the new commit hash
+3. Run `yarn generate:analytics-types`
+4. Verify the generated types and commit
+
+## Usage
+
+```ts
+import { TrackEvents, UserLoginEvent, SHA256Hash } from '../analytics/gen/analytics-types';
+import { obfuscate } from '../analytics/obfuscate';
+
+// obfuscate() returns SHA256Hash — required by PIA fields
+const hashedUserId: SHA256Hash = await obfuscate(rawUserId);
+
+const event: UserLoginEvent = {
+  userId: hashedUserId,
+  clusterVersion: '1.30',
+  konfluxVersion: '1.2.3',
+  kubernetesVersion: '1.30',
+};
+
+analytics.track(TrackEvents.user_login_event, event);
+```
+
+## Obfuscation
+
+Fields marked as PIA in the schema are typed as `SHA256Hash` — a branded string type. Raw strings cannot be assigned to these fields. Use the `obfuscate()` utility (`src/analytics/obfuscate.ts`) which hashes via the Web Crypto API and returns `SHA256Hash`.
+
+## Local Development
+
+During development, if the remote schema URL is unreachable, the generator falls back to a local clone of segment-bridge at `../segment-bridge/schema/ui.json` (relative to the konflux-ui repo root). So make sure the segment-bridge is cloned on your local.
