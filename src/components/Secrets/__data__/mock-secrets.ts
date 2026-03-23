@@ -240,6 +240,36 @@ export const mockImageSecretDockerconfigjsonForEdit: SecretKind = {
   },
 };
 
+const dockerconfigjsonMultiRegistryPayload = {
+  auths: {
+    'registry-a.example.com': {
+      username: 'user-a',
+      password: 'pass-a',
+      email: 'a@example.com',
+      auth: Base64.encode('user-a:pass-a'),
+    },
+    'registry-b.example.com': {
+      username: 'user-b',
+      password: 'pass-b',
+      email: 'b@example.com',
+      auth: Base64.encode('user-b:pass-b'),
+    },
+  },
+};
+
+export const mockImageSecretDockerconfigjsonMultiForEdit: SecretKind = {
+  apiVersion: 'v1',
+  kind: 'Secret',
+  metadata: {
+    name: 'image-secret-dockerconfigjson-multi',
+    namespace: 'test-ns',
+  },
+  type: SecretType.dockerconfigjson,
+  data: {
+    '.dockerconfigjson': Base64.encode(JSON.stringify(dockerconfigjsonMultiRegistryPayload)),
+  },
+};
+
 const dockercfgPayload = {
   'registry.example.com': {
     username: 'cfguser',

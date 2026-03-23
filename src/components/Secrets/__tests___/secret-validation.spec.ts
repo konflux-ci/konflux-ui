@@ -94,4 +94,60 @@ describe('validation-utils', () => {
       }),
     ).resolves.toBeDefined();
   });
+
+  it('should allow empty source basic auth password when editing (isEditMode)', async () => {
+    const editSchema = secretFormValidationSchema({ isEditMode: true });
+    await expect(
+      editSchema.validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.source,
+        source: {
+          authType: SourceSecretType.basic,
+          username: 'username',
+          password: '',
+        },
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  it('should still require source basic auth password when not editing', async () => {
+    await expect(() =>
+      secretFormValidationSchema({ isEditMode: false }).validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.source,
+        source: {
+          authType: SourceSecretType.basic,
+          username: 'username',
+          password: '',
+        },
+      }),
+    ).rejects.toThrow('Required');
+  });
+
+  it('should allow empty image registry credential password when editing (isEditMode)', async () => {
+    const editSchema = secretFormValidationSchema({ isEditMode: true });
+    await expect(
+      editSchema.validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.image,
+        image: {
+          authType: ImagePullSecretType.ImageRegistryCreds,
+          registryCreds: [{ registry: 'reg.io', username: 'u', password: '', email: '' }],
+        },
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  it('should still require image registry credential password when not editing', async () => {
+    await expect(() =>
+      secretFormValidationSchema({ isEditMode: false }).validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.image,
+        image: {
+          authType: ImagePullSecretType.ImageRegistryCreds,
+          registryCreds: [{ registry: 'reg.io', username: 'u', password: '', email: '' }],
+        },
+      }),
+    ).rejects.toThrow('Required');
+  });
 });

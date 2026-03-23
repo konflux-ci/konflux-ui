@@ -30,7 +30,7 @@ export const secretFormValidationSchema = ({ isEditMode = false }: { isEditMode?
                     yup.object({
                       registry: yup.string().required('Required'),
                       username: yup.string().required('Required'),
-                      password: yup.string().required('Required'),
+                      password: isEditMode ? yup.string() : yup.string().required('Required'),
                     }),
                   )
                 : regSchema,
@@ -96,7 +96,9 @@ export const secretFormValidationSchema = ({ isEditMode = false }: { isEditMode?
               .string()
               .when('authType', (authType, basicSchema) =>
                 authType === SourceSecretType.basic
-                  ? yup.string().required('Required')
+                  ? isEditMode
+                    ? yup.string()
+                    : yup.string().required('Required')
                   : basicSchema,
               ),
             ['ssh-privatekey']: yup
