@@ -35,18 +35,11 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
 
   const activeNamespaceName: string = params.workspaceName ?? getLastUsedNamespace();
 
-  const namespacesData = React.useMemo(
-    () => (namespacesError ? [] : namespaces ?? []),
-    [namespacesError, namespaces],
-  );
-
-  const homeNamespace = React.useMemo(
-    () =>
-      !namespaceLoading
-        ? namespacesData.find((n) => n.metadata.name === activeNamespaceName)
-        : null,
-    [namespacesData, namespaceLoading, activeNamespaceName],
-  );
+  const homeNamespace = React.useMemo(() => {
+    if (namespaceLoading || namespacesError) return null;
+    const namespacesData = namespaces ?? [];
+    return namespacesData.find((n) => n.metadata.name === activeNamespaceName);
+  }, [namespaces, namespacesError, namespaceLoading, activeNamespaceName]);
 
   const {
     data: namespaceResource,
@@ -94,7 +87,7 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
       value={{
         namespace: activeNamespaceName,
         namespaceResource,
-        namespaces: namespacesData,
+        namespaces: namespacesError ? [] : namespaces ?? [],
         namespacesLoaded: !(namespaceLoading && activeNamespaceLoading),
         lastUsedNamespace: getLastUsedNamespace(),
       }}
