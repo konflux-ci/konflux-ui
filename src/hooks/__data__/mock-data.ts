@@ -1,4 +1,5 @@
-import { SecretKind, ServiceAccountKind } from '../../types';
+import { PipelineRunLabel } from '../../consts/pipelinerun';
+import { PipelineRunKind, SecretKind, ServiceAccountKind } from '../../types';
 import { LimitRange, SnapshotEnvironmentBinding } from '../../types/coreBuildService';
 import { RouteKind } from '../../types/routes';
 
@@ -588,3 +589,59 @@ export const mockedSecrets: SecretKind[] = [
     },
   },
 ];
+
+/**
+ * Mock PipelineRun with PR number label - useful for testing PAC state logic
+ * that should NOT filter out PUSH pipeline runs even when they have a PR label
+ */
+export const mockPipelineRunWithPrNumberLabel: Partial<PipelineRunKind> = {
+  metadata: {
+    name: 'test-push-with-pr',
+    creationTimestamp: '2023-07-25T00:00:00Z',
+    labels: {
+      [PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL]: '10',
+    },
+  },
+};
+
+/**
+ * Mock PipelineRun with PR number label and a specific component
+ */
+export const createMockPipelineRunWithPrLabel = (
+  componentName: string,
+  overrides?: Partial<PipelineRunKind>,
+): Partial<PipelineRunKind> => ({
+  metadata: {
+    name: 'test-push-with-pr',
+    creationTimestamp: '2023-07-25T00:00:00Z',
+    labels: {
+      [PipelineRunLabel.COMPONENT]: componentName,
+      [PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL]: '10',
+    },
+    ...overrides?.metadata,
+  },
+  ...overrides,
+});
+
+/**
+ * Mock PipelineRun with PR number label and commit user annotation
+ */
+export const createMockPipelineRunWithPrLabelAndUser = (
+  componentName: string,
+  commitUser: string,
+  overrides?: Partial<PipelineRunKind>,
+): Partial<PipelineRunKind> => ({
+  metadata: {
+    name: 'test-push-with-pr',
+    creationTimestamp: '2023-07-25T00:00:00Z',
+    labels: {
+      [PipelineRunLabel.COMPONENT]: componentName,
+      [PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL]: '10',
+    },
+    annotations: {
+      [PipelineRunLabel.COMMIT_USER_LABEL]: commitUser,
+    },
+    ...overrides?.metadata,
+  },
+  ...overrides,
+});
