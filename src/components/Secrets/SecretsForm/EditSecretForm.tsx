@@ -18,6 +18,7 @@ import {
   AddSecretFormValues,
   KeyValueEntry,
   SecretFor,
+  SecretKind,
   SecretLabels,
   SecretType,
   SecretTypeDropdownLabel,
@@ -31,6 +32,43 @@ import {
 } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
+
+const isUnset = (value: unknown): boolean => value === '' || value === undefined;
+
+/** In edit mode, blank sensitive fields mean “keep cluster value” — fill from loaded secret before patch. */
+function preserveUnsetSensitiveSecretValues(
+  values: AddSecretFormValues,
+  secretData: SecretKind,
+  secretType: SecretTypeDropdownLabel,
+  typeFromLabels: SecretType,
+  parsedRegistryCreds: ReturnType<typeof getRegistryCreds>,
+): void {
+  switch (typeFromLabels) {
+    case SecretType.sshAuth:
+      if (isUnset(values.source['ssh-privatekey'])) {
+        values.source['ssh-privatekey'] = secretData.data['ssh-privatekey'];
+      }
+      break;
+    case SecretType.basicAuth:
+      if (
+        secretType === SecretTypeDropdownLabel.source &&
+        isUnset(values.source.password) &&
+        secretData.data?.password
+      ) {
+        values.source.password = atob(secretData.data.password);
+      }
+      break;
+    case SecretType.dockerconfigjson:
+      if (secretType === SecretTypeDropdownLabel.image) {
+        values.image.registryCreds.forEach((cred, idx) => {
+          cred.password = cred.password === '' ? parsedRegistryCreds[idx].password : cred.password;
+        });
+      }
+      break;
+    default:
+      break;
+  }
+}
 
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
@@ -109,33 +147,13 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
-        // Source Secret SSH field left blank in edit: keep existing key
-        if (
-          typeFromLabels === SecretType.sshAuth &&
-          (values.source['ssh-privatekey'] === '' || values.source['ssh-privatekey'] === undefined)
-        ) {
-          values.source['ssh-privatekey'] = secretData.data['ssh-privatekey'];
-        }
-
-        // Source Secret password left blank in edit: keep existing password
-        if (
-          secretType === SecretTypeDropdownLabel.source &&
-          typeFromLabels === SecretType.basicAuth &&
-          (values.source.password === '' || values.source.password === undefined)
-        ) {
-          values.source.password = atob(secretData.data.password);
-        }
-
-        // Image Pull Secret creds password left blank in edit: keep existing password
-        if (
-          secretType === SecretTypeDropdownLabel.image &&
-          typeFromLabels === SecretType.dockerconfigjson
-        ) {
-          values.image.registryCreds.forEach(
-            (cred, idx) =>
-              (cred.password = cred.password === '' ? registryCreds[idx].password : cred.password),
-          );
-        }
+        preserveUnsetSensitiveSecretValues(
+          values,
+          secretData,
+          secretType,
+          typeFromLabels,
+          registryCreds,
+        );
 
         editSecretResource(values, secretData.metadata.namespace)
           .then(() => {

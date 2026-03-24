@@ -216,7 +216,6 @@ export const getRegistryCreds = (secretData: SecretKind) => {
       const creds = Object.entries(parsed.auths).map(([registryName, authData]) => ({
         registry: registryName,
         username: authData.username,
-        // password: '', // Intentionally not displayed, password is sensitive
         password: authData.password,
         email: authData.email ?? '',
       }));
