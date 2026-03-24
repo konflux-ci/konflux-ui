@@ -60,7 +60,11 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
 
   getActiveTaskRun = (taskRuns: TaskRunKind[], activeTask: string): string => {
     const activeTaskRun = activeTask
-      ? taskRuns.find((taskRun) => taskRun.metadata.name.endsWith(activeTask))
+      ? taskRuns.find(
+          (taskRun) =>
+            taskRun?.metadata?.labels?.[TektonResourceLabel.pipelineTask] === activeTask ||
+            taskRun?.metadata?.name?.endsWith(activeTask),
+        )
       : taskRuns.find((taskRun) => taskRunStatus(taskRun) === runStatus.Failed) ||
         taskRuns[taskRuns.length - 1];
 

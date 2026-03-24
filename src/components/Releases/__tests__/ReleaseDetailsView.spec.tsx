@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useK8sAndKarchResource } from '~/hooks/useK8sAndKarchResources';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { TrackEvents } from '~/utils/analytics';
+import { downloadYaml } from '~/utils/common-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
 import { releaseRerun } from '../../../utils/release-actions';
 import { renderWithQueryClientAndRouter } from '../../../utils/test-utils';
@@ -40,9 +41,24 @@ jest.mock('../../../utils/release-actions', () => ({
   releaseRerun: jest.fn(),
 }));
 
+jest.mock('~/utils/common-utils', () => {
+  const actual = jest.requireActual('~/utils/common-utils');
+  const mockDownloadYaml = jest.fn();
+  return {
+    ...actual,
+    downloadYaml: mockDownloadYaml,
+    downloadYamlAction: (obj: { kind?: string }) => ({
+      cta: () => mockDownloadYaml(obj),
+      id: `download-${(obj.kind ?? 'resource').toLowerCase()}-yaml`,
+      label: 'Download YAML',
+    }),
+  };
+});
+
 const useMockRelease = useK8sAndKarchResource as jest.Mock;
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
 const releaseRerunMock = releaseRerun as jest.Mock;
+const downloadYamlMock = downloadYaml as jest.Mock;
 
 describe('ReleaseDetailsView', () => {
   const useNamespaceMock = mockUseNamespaceHook('test-ws');
@@ -246,6 +262,41 @@ describe('ReleaseDetailsView', () => {
 
       // releaseRerun should still be called
       expect(releaseRerunMock).toHaveBeenCalledWith(mockRelease, 'test@example.com');
+    });
+  });
+
+  describe('Download YAML action', () => {
+    it('should render Download YAML action in actions dropdown', async () => {
+      const user = userEvent.setup();
+      useMockRelease.mockReturnValue({
+        data: mockRelease,
+        isLoading: false,
+        fetchError: undefined,
+      });
+      renderWithQueryClientAndRouter(<ReleaseDetailsView />);
+
+      const actionsButton = screen.getByRole('button', { name: /Actions/i });
+      await user.click(actionsButton);
+
+      expect(screen.getByRole('menuitem', { name: /Download YAML/i })).toBeInTheDocument();
+    });
+
+    it('should call downloadYaml with release when Download YAML is clicked', async () => {
+      const user = userEvent.setup();
+      useMockRelease.mockReturnValue({
+        data: mockRelease,
+        isLoading: false,
+        fetchError: undefined,
+      });
+      renderWithQueryClientAndRouter(<ReleaseDetailsView />);
+
+      const actionsButton = screen.getByRole('button', { name: /Actions/i });
+      await user.click(actionsButton);
+
+      const downloadAction = screen.getByRole('menuitem', { name: /Download YAML/i });
+      await user.click(downloadAction);
+
+      expect(downloadYamlMock).toHaveBeenCalledWith(mockRelease);
     });
   });
 });
