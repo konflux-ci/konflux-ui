@@ -20,7 +20,7 @@ export type KonfluxUISegmentEvents = UserLoginEvent | UserLogoutEvent | Feedback
  */
 export type UserLoginEvent = CommonFields & {
   /**
-   * Unique identifier of the user
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
    */
   userId: SHA256Hash;
 };
@@ -29,7 +29,7 @@ export type UserLoginEvent = CommonFields & {
  */
 export type UserLogoutEvent = CommonFields & {
   /**
-   * Unique identifier of the user
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
    */
   userId: SHA256Hash;
 };
@@ -38,7 +38,7 @@ export type UserLogoutEvent = CommonFields & {
  */
 export type FeedbackSubmittedEvent = CommonFields & {
   /**
-   * Unique identifier of the user
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
    */
   userId: SHA256Hash;
   /**
@@ -59,6 +59,10 @@ export type FeedbackSubmittedEvent = CommonFields & {
  * Base fields required on every Segment event sent from Konflux UI
  */
 export interface CommonFields {
+  /**
+   * Unique identifier of the cluster, used as salt for obfuscating PIA fields
+   */
+  clusterId?: string;
   /**
    * Version of the OpenShift/Kubernetes cluster
    */

@@ -116,7 +116,7 @@ const InternalFLAGS = {
   },
   'feedback-section': {
     key: 'feedback-section',
-    description: 'Feedback section for Konflux UI',
+    description: 'Provide feedback to the Konflux team',
     defaultEnabled: true,
     status: 'wip',
     guard: {

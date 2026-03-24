@@ -21,8 +21,10 @@ const { useTrackAnalyticsEvent }: { useTrackAnalyticsEvent: jest.Mock } =
 const { logger }: { logger: Record<string, jest.Mock> } = jest.requireMock('~/monitoring/logger');
 
 const FAKE_HASH = 'abc123def456' as SHA256Hash;
+const FAKE_CLUSTER_ID = 'test-cluster-id';
 const identifyMock = mockAnalyticsServiceFn('identify');
 const resetMock = mockAnalyticsServiceFn('reset');
+const getCommonPropertiesMock = mockAnalyticsServiceFn('getCommonProperties');
 
 const testUser = { email: 'test@example.com', preferredUsername: 'testuser' };
 
@@ -34,6 +36,7 @@ describe('useAuthAnalytics', () => {
     mockTrackEvent = jest.fn();
     useTrackAnalyticsEvent.mockReturnValue(mockTrackEvent);
     obfuscate.mockResolvedValue(FAKE_HASH);
+    getCommonPropertiesMock.mockReturnValue({ clusterId: FAKE_CLUSTER_ID });
   });
 
   describe('onLogin', () => {
@@ -44,7 +47,7 @@ describe('useAuthAnalytics', () => {
         result.current.onLogin(testUser);
       });
 
-      expect(obfuscate).toHaveBeenCalledWith('testuser');
+      expect(obfuscate).toHaveBeenCalledWith('testuser', FAKE_CLUSTER_ID);
 
       await obfuscate.mock.results[0].value;
 
@@ -77,7 +80,7 @@ describe('useAuthAnalytics', () => {
         result.current.onLogout(testUser);
       });
 
-      expect(obfuscate).toHaveBeenCalledWith('testuser');
+      expect(obfuscate).toHaveBeenCalledWith('testuser', FAKE_CLUSTER_ID);
 
       await obfuscate.mock.results[0].value;
 

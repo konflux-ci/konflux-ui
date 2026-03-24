@@ -12,10 +12,8 @@ import { analyticsService } from '~/analytics/AnalyticsService';
 export const mockAnalyticsServiceFn = (name: string) => {
   // Lazy import avoids eagerly loading the analytics module tree
   // (which pulls in conditional-checks → feature-flags hooks) at module init time.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mockFn = jest.fn();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jest.spyOn(analyticsService, name as keyof typeof analyticsService).mockImplementation(mockFn);
 
   return mockFn;

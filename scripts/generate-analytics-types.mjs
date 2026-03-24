@@ -65,6 +65,19 @@ async function main() {
   await rm(OUTPUT_DIR, { recursive: true, force: true });
   await mkdir(OUTPUT_DIR, { recursive: true });
 
+  // Enrich descriptions for fields with x-obfuscation-salt before compiling
+  for (const def of Object.values(schema.$defs || {})) {
+    for (const schemaEntry of def.allOf || []) {
+      for (const [, fieldDef] of Object.entries(schemaEntry.properties || {})) {
+        const salt = fieldDef['x-obfuscation-salt'];
+        if (salt) {
+          const base = (fieldDef.description || '').replace(/\.?\s*$/, '');
+          fieldDef.description = `${base}. Obfuscated via ${fieldDef['x-obfuscation'] || 'sha256'} with \`${salt}\` as salt.`;
+        }
+      }
+    }
+  }
+
   const ts = await compile(schema, 'KonfluxUISegmentEvents', {
     bannerComment: HEADER,
     additionalProperties: false,

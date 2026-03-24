@@ -37,4 +37,29 @@ describe('obfuscate', () => {
     const result = await obfuscate('日本語テスト');
     expect(result).toMatch(/^[0-9a-f]{64}$/);
   });
+
+  it('should produce a different hash when salt is provided', async () => {
+    const withoutSalt = await obfuscate('testuser');
+    const withSalt = await obfuscate('testuser', 'cluster1');
+    expect(withoutSalt).not.toBe(withSalt);
+  });
+
+  it('should produce different hashes for different salts', async () => {
+    const salt1 = await obfuscate('testuser', 'cluster1');
+    const salt2 = await obfuscate('testuser', 'cluster2');
+    expect(salt1).not.toBe(salt2);
+  });
+
+  it('should produce consistent output for the same value and salt', async () => {
+    const first = await obfuscate('testuser', 'cluster1');
+    const second = await obfuscate('testuser', 'cluster1');
+    expect(first).toBe(second);
+  });
+
+  it('should hash value:salt when salt is provided', async () => {
+    const result = await obfuscate('testuser', 'cluster1');
+    // Should match SHA-256 of "testuser:cluster1"
+    const expected = await obfuscate('testuser:cluster1');
+    expect(result).toBe(expected);
+  });
 });

@@ -21,7 +21,8 @@ export const useAuthAnalytics = () => {
   const onLogin = React.useCallback(
     (user: UserDataType) => {
       if (user.preferredUsername) {
-        void obfuscate(user.preferredUsername).then((userId) => {
+        const { clusterId } = analyticsService.getCommonProperties();
+        void obfuscate(user.preferredUsername, clusterId).then((userId) => {
           analyticsService.identify(userId);
           trackEvent(TrackEvents.user_login_event, { userId });
         });
@@ -34,7 +35,8 @@ export const useAuthAnalytics = () => {
   const onLogout = React.useCallback(
     (user: UserDataType) => {
       if (user.preferredUsername) {
-        void obfuscate(user.preferredUsername).then((userId) => {
+        const { clusterId } = analyticsService.getCommonProperties();
+        void obfuscate(user.preferredUsername, clusterId).then((userId) => {
           trackEvent(TrackEvents.user_logout_event, { userId });
           analyticsService.reset();
         });
