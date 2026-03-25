@@ -65,7 +65,14 @@ function renderValue(value: unknown, level: number = 0): React.ReactNode {
     return entries.length === 0 ? (
       <span>—</span>
     ) : (
-      <Stack hasGutter={level === 0}>
+      <Stack
+        hasGutter={level === 0}
+        style={
+          level > 0
+            ? { paddingLeft: `var(--pf-v5-global--spacer--${level > 1 ? 'xl' : 'md'})` }
+            : undefined
+        }
+      >
         {entries.map(([k, v]) => (
           <StackItem key={k}>
             <strong>{humanizeKey(k)}:</strong> {renderValue(v, level + 1)}
