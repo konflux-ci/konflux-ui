@@ -1,4 +1,8 @@
-import { mockSecret } from '../../components/Secrets/__data__/mock-secrets';
+import {
+  mockImageSecretDockerconfigjsonForEdit,
+  mockOpaqueSecretForEdit,
+  mockSecret,
+} from '../../components/Secrets/__data__/mock-secrets';
 import {
   sampleImagePullSecret,
   sampleOpaqueSecret,
@@ -21,6 +25,7 @@ import {
   getAnnotationForSecret,
   getKubernetesSecretType,
   getLabelsForSecret,
+  getRegistryCreds,
   getSecretFormData,
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
@@ -95,6 +100,25 @@ describe('createSecretResource', () => {
   it('should create Image pull secret resource', async () => {
     await createSecretResource(sampleImagePullSecret, 'test-ns', false);
     expect(k8sCreateResourceMock).toHaveBeenCalled();
+  });
+});
+
+describe('getRegistryCreds', () => {
+  it('returns parsed registry credentials including password from .dockerconfigjson', () => {
+    expect(getRegistryCreds(mockImageSecretDockerconfigjsonForEdit)).toEqual([
+      expect.objectContaining({
+        registry: 'registry.example.com',
+        username: 'reguser',
+        password: 'regpass',
+        email: 'reg@example.com',
+      }),
+    ]);
+  });
+
+  it('returns default empty row when secret is not dockerconfigjson type', () => {
+    expect(getRegistryCreds(mockOpaqueSecretForEdit)).toEqual([
+      { registry: '', username: '', password: '', email: '' },
+    ]);
   });
 });
 

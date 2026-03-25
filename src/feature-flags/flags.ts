@@ -114,6 +114,12 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
+  'edit-secret-page': {
+    key: 'edit-secret-page',
+    description: 'Editing existing secrets',
+    defaultEnabled: true,
+    status: 'wip',
+  },
   'feedback-section': {
     key: 'feedback-section',
     description: 'Provide feedback to the Konflux team',

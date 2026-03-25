@@ -9,7 +9,7 @@ describe('Feedback utils', () => {
   const bugInfo = { title: 'my-title', description: 'my-description' };
   const featureInfo = { title: 'feature-title', description: 'my-feature' };
   const konfluxInfo = {
-    imageProxy: { url: "image-proxy-url", oauthPath: null },
+    imageProxy: { url: 'image-proxy-url', oauthPath: null },
     environment: KonfluxInstanceEnvironments.STAGING,
     rbac: [],
     visibility: KonfluxInstanceVisibility.PRIVATE,
