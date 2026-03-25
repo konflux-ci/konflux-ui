@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import { dump } from 'js-yaml';
 import { TaskRunKind } from '../../types';
-import { downloadYaml, parseBoolean, parseNumber } from '../common-utils';
+import { downloadYaml, downloadYamlAction, parseBoolean, parseNumber } from '../common-utils';
 
 // Mock file-saver
 jest.mock('file-saver', () => ({
@@ -139,6 +139,43 @@ describe('downloadYaml', () => {
     return readPromise.then((content) => {
       expect(content).toBe(mockYamlContent);
     });
+  });
+});
+
+describe('downloadYamlAction', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should return action with id derived from resource kind, label and cta', () => {
+    const resource = {
+      kind: 'Snapshot',
+      metadata: { name: 'my-snapshot', namespace: 'ns' },
+    };
+    const action = downloadYamlAction(resource as TaskRunKind);
+
+    expect(action.id).toBe('download-snapshot-yaml');
+    expect(action.label).toBe('Download YAML');
+    expect(typeof action.cta).toBe('function');
+  });
+
+  it('should call downloadYaml with resource when cta is invoked', () => {
+    const resource = {
+      kind: 'Release',
+      metadata: { name: 'my-release', namespace: 'ns' },
+    };
+    const action = downloadYamlAction(resource as TaskRunKind);
+    action.cta();
+
+    expect(mockDump).toHaveBeenCalledWith(resource);
+    expect(mockSaveAs).toHaveBeenCalledTimes(1);
+  });
+
+  it('should use fallback id when kind is missing', () => {
+    const resource = { metadata: { name: 'unnamed', namespace: 'ns' } };
+    const action = downloadYamlAction(resource as TaskRunKind);
+
+    expect(action.id).toBe('download-resource-yaml');
   });
 });
 

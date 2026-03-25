@@ -32,6 +32,17 @@ export const downloadYaml = <T extends K8sResourceCommon>(resource: T) => {
   const filename = `${resource.metadata?.name || 'resource'}.yaml`;
   saveAs(blob, filename);
 };
+
+/** Returns a Download YAML action (action-menu Action shape). Use createDetailsPageAction() for DetailsPage. */
+export const downloadYamlAction = <T extends K8sResourceCommon>(obj: T) => {
+  const id = `download-${(obj.kind ?? 'resource').toLowerCase()}-yaml`;
+  return {
+    id,
+    label: 'Download YAML',
+    cta: () => downloadYaml(obj),
+  };
+};
+
 /**
  * Parse a string value to boolean
  * @param value - String value ("true"/"false" or undefined)

@@ -2,13 +2,8 @@ name: "Periodic job: STAGE FEATURES (test Konflux UI against stage cluster for f
 
 on:
   workflow_dispatch:
-
-  # Setting daily runs in a way that can be summarized 
-  # at the beginning of the working day on CET timezone.
-  schedule:
-    - cron: '0 0 * * *'
-    - cron: '0 6 * * *'
-    - cron: '0 19 * * *'
+  
+  # Currently not run due to AIA Remediation process https://redhat.atlassian.net/browse/KFLUXUI-1141
 
 jobs:
   periodic-stage-features-e2e-test:

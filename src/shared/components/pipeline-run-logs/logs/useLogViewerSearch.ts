@@ -1,5 +1,5 @@
 import React from 'react';
-import { SearchedWord } from '~/shared/components/virtualized-log-viewer/VirtualizedLogContent';
+import { SearchedWord } from '../../virtualized-log-viewer/types';
 
 interface UseLogViewerSearchParams {
   lines: string[];

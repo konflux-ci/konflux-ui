@@ -1,4 +1,3 @@
-import { pluralize, Text } from '@patternfly/react-core';
 import { SortByDirection, ThProps } from '@patternfly/react-table';
 import HelpPopover from '~/components/HelpPopover';
 import { ComponentProps } from '~/shared/components/table/Table';
@@ -14,7 +13,7 @@ export const releaseTableColumnClasses = {
   product: 'pf-m-width-20  pf-m-width-10-on-xl',
   productVersion: 'pf-m-width-20  pf-m-width-10-on-xl',
   namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
-  count: 'pf-m-width-10  pf-m-width-5-on-xl',
+  kebab: 'pf-v5-c-table__action',
 } as const;
 
 export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
@@ -80,38 +79,21 @@ const releaseColumns = [
     ),
     className: releaseTableColumnClasses.productVersion,
   },
+  {
+    title: ' ',
+    className: releaseTableColumnClasses.kebab,
+  },
 ] satisfies Parameters<typeof createTableHeaders>[0];
 
 export const getReleasesListHeader = (
   activeSortIndex: number,
   activeSortDirection: SortByDirection,
   onSort: ThProps['sort']['onSort'],
-  totalCount?: number,
 ) => {
   return (componentProps: ComponentProps) => {
-    const baseHeaders = createTableHeaders(releaseColumns)(
-      activeSortIndex,
-      activeSortDirection,
-      onSort,
-    )(componentProps);
-
-    return [
-      ...baseHeaders,
-      ...(totalCount !== undefined
-        ? [
-          {
-            title: (
-              <Text component="small" className="pf-v5-u-font-weight-bold pf-v5-u-font-size-sm">
-                {pluralize(totalCount, 'release')}
-              </Text>
-            ),
-            props: {
-              className: `${releaseTableColumnClasses.count} pf-v5-u-text-align-center`,
-            },
-          },
-        ]
-        : []),
-    ];
+    return createTableHeaders(releaseColumns)(activeSortIndex, activeSortDirection, onSort)(
+      componentProps,
+    );
   };
 };
 
