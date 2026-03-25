@@ -41,45 +41,34 @@ function renderFinalValue(value: unknown): React.ReactNode {
   return str;
 }
 
-function renderValue(value: unknown): React.ReactNode {
+function renderValue(value: unknown, level: number = 0): React.ReactNode {
   if (value === null || value === undefined) {
     return <span>—</span>;
   }
 
-  if (Array.isArray(value)) {
-    if (value.every((v) => isObject(v) && v !== null && !Array.isArray(v))) {
-      // Array of objects
-      return (
-        <ul style={{ margin: 0 }}>
-          {value.map((obj, idx) => (
-            <li key={idx} style={{ marginBottom: 'var(--pf-v5-global--spacer--sm)' }}>
-              {Object.entries(obj as Record<string, unknown>).map(([k, v]) => (
-                <div key={k}>
-                  <strong>{humanizeKey(k)}:</strong> {renderFinalValue(v)}
-                </div>
-              ))}
-            </li>
-          ))}
-        </ul>
-      );
-    }
+  const indent = level > 0 ? { marginLeft: `${level * 3}px` } : {};
 
-    // Array of simple values
-    return (
-      <ul style={{ margin: 0 }}>
-        {value.map((v, i) => (
-          <li key={i}>{renderFinalValue(v)}</li>
+  if (Array.isArray(value)) {
+    return value.length === 0 ? (
+      <span>—</span>
+    ) : (
+      <div style={indent}>
+        {value.map((item, idx) => (
+          <div key={idx}>{renderValue(item, level + 1)}</div>
         ))}
-      </ul>
+      </div>
     );
   }
 
   if (typeof value === 'object') {
-    return (
-      <div>
-        {Object.entries(value).map(([k, v]) => (
-          <div key={k} style={{ marginBottom: 'var(--pf-v5-global--spacer--sm)' }}>
-            <strong>{humanizeKey(k)}:</strong> {renderFinalValue(v)}
+    const entries = Object.entries(value as Record<string, unknown>);
+    return entries.length === 0 ? (
+      <span>—</span>
+    ) : (
+      <div style={indent}>
+        {entries.map(([k, v]) => (
+          <div key={k}>
+            <strong>{humanizeKey(k)}:</strong> {renderValue(v, level + 1)}
           </div>
         ))}
       </div>
