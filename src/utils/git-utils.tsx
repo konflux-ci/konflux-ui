@@ -11,7 +11,7 @@ type GitProviderConfig = {
   branchPath: string;
   commitPath: string;
   pullRequestPath: string;
-  canConstructHostedRepoUrl?: boolean;
+  hostedBaseUrl?: string;
   selfHostedKeywords?: string[];
 };
 
@@ -21,7 +21,7 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/tree',
     commitPath: '/commit',
     pullRequestPath: '/pull',
-    canConstructHostedRepoUrl: true,
+    hostedBaseUrl: 'https://github.com',
     selfHostedKeywords: ['github'],
   },
   {
@@ -29,7 +29,6 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/branch',
     commitPath: '/commits',
     pullRequestPath: '/pull-requests',
-    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['bitbucket'],
   },
   {
@@ -37,7 +36,6 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/-/tree',
     commitPath: '/-/commit',
     pullRequestPath: '/-/merge_requests',
-    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['gitlab'],
   },
   {
@@ -45,7 +43,6 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/src/branch',
     commitPath: '/commit',
     pullRequestPath: '/pulls',
-    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['forgejo', 'gitea'],
   },
   {
@@ -53,17 +50,32 @@ const PROVIDERS: GitProviderConfig[] = [
     branchPath: '/src/branch',
     commitPath: '/commit',
     pullRequestPath: '/pulls',
-    canConstructHostedRepoUrl: false,
     selfHostedKeywords: ['codeberg'],
   },
 ];
 
 type GitPathType = 'branchPath' | 'commitPath' | 'pullRequestPath';
 
+const getHostFromInput = (hostOrUrl: string): string | undefined => {
+  if (!hostOrUrl) {
+    return undefined;
+  }
+  if (!hostOrUrl.includes('://')) {
+    return hostOrUrl;
+  }
+  try {
+    const parsed = gitUrlParse(hostOrUrl) as { resource?: unknown };
+    return typeof parsed.resource === 'string' ? parsed.resource : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const findProvider = (hostOrUrl: string): string | undefined => {
-  const host = hostOrUrl.includes('://')
-    ? (gitUrlParse(hostOrUrl) as gitUrlParse.GitUrl).resource
-    : hostOrUrl;
+  const host = getHostFromInput(hostOrUrl);
+  if (!host) {
+    return undefined;
+  }
   const segments = host.split('.');
 
   return PROVIDERS.find(
@@ -144,8 +156,8 @@ export const createHostedRepoURL = (
 
   const provider = getProviderConfigBySourceOrHost(providerOrHost);
 
-  return provider?.canConstructHostedRepoUrl
-    ? `https://${provider.source}/${repoOrg}/${repoName}`
+  return provider?.hostedBaseUrl
+    ? `${provider.hostedBaseUrl}/${repoOrg}/${repoName}`
     : null;
 };
 
@@ -173,14 +185,7 @@ export const createBranchUrl = (repoUrl?: string, branch?: string): string | und
     return undefined;
   }
 
-  let parsed: gitUrlParse.GitUrl;
-  try {
-    parsed = gitUrlParse(repoUrl);
-  } catch {
-    return undefined;
-  }
-
-  const provider = findProvider(parsed.resource);
+  const provider = findProvider(repoUrl);
   if (!provider) {
     return undefined;
   }

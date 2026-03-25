@@ -1,4 +1,10 @@
 import {
+  createGitBranchURL,
+  createGitCommitURL,
+  createGitPullRequestURL,
+  createHostedRepoURL,
+} from '~/utils/git-utils';
+import {
   PipelineRunEventType,
   PipelineRunLabel,
   PipelineRunType,
@@ -7,12 +13,6 @@ import {
 import { SnapshotLabels } from '../consts/snapshots';
 import { PipelineRunKind, Commit } from '../types';
 import { Snapshot } from '../types/coreBuildService';
-import {
-  createGitBranchURL,
-  createGitCommitURL,
-  createGitPullRequestURL,
-  createHostedRepoURL,
-} from './git-utils';
 import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
 export const statuses = [
