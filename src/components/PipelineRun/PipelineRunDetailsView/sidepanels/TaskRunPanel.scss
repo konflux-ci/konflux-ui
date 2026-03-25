@@ -1,14 +1,32 @@
 .task-run-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
   &__head {
     flex-shrink: 0;
   }
+
   &__tabs {
-    flex-grow: 1;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
 
-    & > .pf-v5-c-tab-content {
-      flex-grow: 1;
+    .pf-v5-c-tab-content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pf-v5-c-drawer__main,
+    .pf-v5-c-drawer__content,
+    .pf-v5-c-drawer__body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
   }
 }

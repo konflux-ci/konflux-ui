@@ -13,6 +13,7 @@ import {
 import { APIHelper } from '../utils/APIHelper';
 import { Applications } from '../utils/Applications';
 import { Common } from '../utils/Common';
+import { Features } from '../utils/Features';
 import { UIhelper } from '../utils/UIhelper';
 
 describe('Basic Happy Path', () => {
@@ -41,6 +42,7 @@ describe('Basic Happy Path', () => {
 
   before(function () {
     APIHelper.createRepositoryFromTemplate(sourceOwner, sourceRepo, repoOwner, repoName);
+    Features.resetToDefault();
   });
 
   afterEach(function () {
