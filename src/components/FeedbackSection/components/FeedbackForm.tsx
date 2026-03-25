@@ -34,8 +34,13 @@ export interface FeedbackSectionProps {
 const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSubmit }) => {
   const [radioRating, setRadioRating] = React.useState<number>(null);
   const [feedback, setFeedback] = React.useState<string>('');
-  const [feedbackTouched, setFeedbackTouched] = React.useState<boolean>(false);
+  const [ratingError, setRatingError] = React.useState(false);
   const [email, setEmail] = React.useState<string>('');
+
+  const setRating = (value: number) => {
+    setRadioRating(value);
+    setRatingError(false);
+  };
 
   return (
     <>
@@ -54,11 +59,16 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
         className="feedback-modal__form"
         onSubmit={(e: React.FormEvent) => {
           e.preventDefault();
+          if (radioRating == null) {
+            setRatingError(true);
+            return;
+          }
           onSubmit({ description: feedback, scale: radioRating, email });
         }}
       >
         <div className="feedback-modal__content-main">
           <FormGroup
+            isRequired
             label={
               <>
                 How happy are you with recent experience using Konflux
@@ -75,7 +85,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
               isChecked={radioRating === 5}
               name="radio-rating-5"
               data-test="radio-rating-5"
-              onChange={() => setRadioRating(5)}
+              onChange={() => setRating(5)}
               label="5"
               id="radio-rating"
             />
@@ -83,7 +93,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
               isChecked={radioRating === 4}
               name="radio-rating-4"
               data-test="radio-rating-4"
-              onChange={() => setRadioRating(4)}
+              onChange={() => setRating(4)}
               label="4"
               id="radio-rating"
             />
@@ -91,7 +101,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
               isChecked={radioRating === 3}
               name="radio-rating-3"
               data-test="radio-rating-3"
-              onChange={() => setRadioRating(3)}
+              onChange={() => setRating(3)}
               label="3"
               id="radio-rating"
             />
@@ -99,7 +109,7 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
               isChecked={radioRating === 2}
               name="radio-rating-2"
               data-test="radio-rating-2"
-              onChange={() => setRadioRating(2)}
+              onChange={() => setRating(2)}
               label="2"
               id="radio-rating"
             />
@@ -107,33 +117,32 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
               isChecked={radioRating === 1}
               name="radio-rating-1"
               data-test="radio-rating-1"
-              onChange={() => setRadioRating(1)}
+              onChange={() => setRating(1)}
               label="1"
               id="radio-rating"
             />
+            {ratingError && (
+              <FormHelperText>
+                <HelperText>
+                  <HelperTextItem variant="error">Please select a rating</HelperTextItem>
+                </HelperText>
+              </FormHelperText>
+            )}
           </FormGroup>
 
-          <FormGroup className="feedback-modal__input-field" label="Share your feedback *">
+          <FormGroup className="feedback-modal__input-field" label="Share your feedback">
             <TextInput
               id="feedback"
               name="feedback"
               data-test="feedback-description"
-              required
               value={feedback}
-              onChange={(_e, val: string) => {
-                setFeedback(val);
-                if (!feedbackTouched) {
-                  setFeedbackTouched(true);
-                }
-              }}
+              onChange={(_e, val: string) => setFeedback(val)}
             />
-            {feedbackTouched && feedback.length < 1 && (
-              <FormHelperText>
-                <HelperText>
-                  <HelperTextItem variant="error">Required</HelperTextItem>
-                </HelperText>
-              </FormHelperText>
-            )}
+            <FormHelperText>
+              <HelperText>
+                <HelperTextItem variant="default">This is optional</HelperTextItem>
+              </HelperText>
+            </FormHelperText>
           </FormGroup>
           <FormGroup className="feedback-modal__input-field" label={<b>Email</b>}>
             <TextInput
@@ -153,7 +162,11 @@ const FeedbackSection: React.FC<FeedbackSectionProps> = ({ onClose, onBack, onSu
           </FormGroup>
         </div>
         <PanelFooter className="feedback-modal__panel-footer">
-          <Button variant="primary" type={ButtonType.submit} isDisabled={feedback.length < 1}>
+          <Button
+            variant="primary"
+            type={ButtonType.submit}
+            isDisabled={!radioRating || ratingError}
+          >
             Submit feedback
           </Button>
           <Button variant="secondary" onClick={onBack}>

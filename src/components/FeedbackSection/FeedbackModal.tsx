@@ -1,6 +1,9 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ModalVariant, Flex, FlexItem, Panel } from '@patternfly/react-core';
+import { analyticsService } from '~/analytics/AnalyticsService';
+import { TrackEvents } from '~/analytics/gen/analytics-types';
+import { obfuscate } from '~/analytics/obfuscate';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
@@ -60,10 +63,14 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     [onClose],
   );
 
-  const handleFeedbackSubmit = (values: FeedbackValues) => {
-    // eslint-disable-next-line no-console
-    console.log(values);
-    // segment integration to go here
+  const handleFeedbackSubmit = async (values: FeedbackValues) => {
+    const userEmail = values.email ? await obfuscate(values.email) : undefined;
+    analyticsService.track(TrackEvents.feedback_submitted_event, {
+      userId: userEmail,
+      rating: values.scale,
+      feedback: values.description,
+    });
+
     onClose(null, { submitClicked: true });
   };
 
