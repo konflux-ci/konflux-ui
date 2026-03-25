@@ -116,13 +116,13 @@ const InternalFLAGS = {
   },
   'feedback-section': {
     key: 'feedback-section',
-    description: 'Feedback section for Konflux UI',
+    description: 'Provide feedback to the Konflux team',
     defaultEnabled: true,
     status: 'wip',
     guard: {
-      allOf: ['isStagingCluster'],
-      failureReason: 'Not a staging cluster',
-      visibleInFeatureFlagPanel: false,
+      allOf: ['isAnalyticsEnabled'],
+      failureReason: 'Analytics is not enabled on this cluster',
+      visibleInFeatureFlagPanel: true,
     },
   },
 } satisfies Record<string, FeatureMeta>;
