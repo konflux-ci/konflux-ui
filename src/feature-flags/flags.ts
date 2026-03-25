@@ -119,11 +119,11 @@ const InternalFLAGS = {
     description: 'Provide feedback to the Konflux team',
     defaultEnabled: true,
     status: 'wip',
-    // guard: {
-    //   allOf: ['isAnalyticsEnabled'],
-    //   failureReason: 'Analytics is not enabled on this cluster',
-    //   visibleInFeatureFlagPanel: true,
-    // },
+    guard: {
+      allOf: ['isAnalyticsEnabled'],
+      failureReason: 'Analytics is not enabled on this cluster',
+      visibleInFeatureFlagPanel: true,
+    },
   },
 } satisfies Record<string, FeatureMeta>;
 

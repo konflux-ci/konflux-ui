@@ -128,7 +128,7 @@ describe('AnalyticsService', () => {
       enableAnalytics();
       service.identify(FAKE_HASH);
 
-      expect(mockSegment.identify).toHaveBeenCalledWith('user-hash-123');
+      expect(mockSegment.identify).toHaveBeenCalledWith(FAKE_HASH);
     });
 
     it('should not throw when analytics is undefined', () => {
