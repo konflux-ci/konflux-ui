@@ -10,6 +10,9 @@ import {
   Spinner,
   EmptyStateBody,
   Button,
+  Alert,
+  AlertGroup,
+  AlertActionCloseButton,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -41,6 +44,7 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 export const LinkedSecretsListView: React.FC = () => {
   const { componentName, applicationName } = useParams<RouterParams>();
+  const [showToast, setShowToast] = React.useState(false);
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.secretName);
@@ -113,8 +117,7 @@ export const LinkedSecretsListView: React.FC = () => {
       <Button
         variant="primary"
         // TODO: the "link secrets" functionality will be implemented in another ticket
-        // eslint-disable-next-line no-alert
-        onClick={() => alert('TODO')}
+        onClick={() => setShowToast(true)}
         style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}
       >
         Link secrets
@@ -124,6 +127,17 @@ export const LinkedSecretsListView: React.FC = () => {
 
   return (
     <>
+      {showToast && (
+        <AlertGroup isToast>
+          <Alert
+            variant="info"
+            title="Feature coming soon"
+            actionClose={<AlertActionCloseButton onClose={() => setShowToast(false)} />}
+          >
+            The &quot;link secrets&quot; functionality will be implemented in a future update.
+          </Alert>
+        </AlertGroup>
+      )}
       <PageLayout
         title="Manage linked secrets"
         description={<>You can add new secrets to this component or unlink existing secrets.</>}

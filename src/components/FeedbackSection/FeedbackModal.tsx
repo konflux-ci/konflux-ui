@@ -1,6 +1,14 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { ModalVariant, Flex, FlexItem, Panel } from '@patternfly/react-core';
+import { 
+  ModalVariant, 
+  Flex, 
+  FlexItem, 
+  Panel,
+  Alert,
+  AlertGroup,
+  AlertActionCloseButton
+} from '@patternfly/react-core';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
@@ -30,6 +38,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
   const [currentSection, setCurrentSection] = React.useState<FeedbackSections>(
     FeedbackSections.BeginningSection,
   );
+  const [showToast, setShowToast] = React.useState(false);
   const { effectiveTheme } = useTheme();
 
   const onCancel = () => {
@@ -64,15 +73,27 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     // eslint-disable-next-line no-console
     console.log(values);
     // segment integration to go here
-    onClose(null, { submitClicked: true });
+    setShowToast(true);
   };
 
   return (
-    <Flex
-      className="feedback-modal__feedback-flex"
-      direction={{ default: 'row' }}
-      alignItems={{ default: 'alignItemsStretch' }}
-    >
+    <>
+      {showToast && (
+        <AlertGroup isToast>
+          <Alert
+            variant="warning"
+            title="Feedback submission temporarily disabled"
+            actionClose={<AlertActionCloseButton onClose={() => setShowToast(false)} />}
+          >
+            The feedback system is undergoing maintenance. Your feedback has been logged locally in your browser console but not sent.
+          </Alert>
+        </AlertGroup>
+      )}
+      <Flex
+        className="feedback-modal__feedback-flex"
+        direction={{ default: 'row' }}
+        alignItems={{ default: 'alignItemsStretch' }}
+      >
       <FlexItem className="feedback-modal__feedback-description" flex={{ default: 'flex_2' }}>
         <Panel isScrollable className="feedback-modal__panel-content">
           {currentSection === FeedbackSections.BeginningSection && (
@@ -129,6 +150,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
         )}
       </FlexItem>
     </Flex>
+    </>
   );
 };
 
