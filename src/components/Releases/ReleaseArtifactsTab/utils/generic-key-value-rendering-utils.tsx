@@ -3,6 +3,8 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   DescriptionListDescription,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
 import { isObject } from 'lodash-es';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
@@ -46,17 +48,15 @@ function renderValue(value: unknown, level: number = 0): React.ReactNode {
     return <span>—</span>;
   }
 
-  const indent = level > 0 ? { marginLeft: `${level * 3}px` } : {};
-
   if (Array.isArray(value)) {
     return value.length === 0 ? (
       <span>—</span>
     ) : (
-      <div style={indent}>
+      <Stack hasGutter={level === 0}>
         {value.map((item, idx) => (
-          <div key={idx}>{renderValue(item, level + 1)}</div>
+          <StackItem key={idx}>{renderValue(item, level + 1)}</StackItem>
         ))}
-      </div>
+      </Stack>
     );
   }
 
@@ -65,13 +65,13 @@ function renderValue(value: unknown, level: number = 0): React.ReactNode {
     return entries.length === 0 ? (
       <span>—</span>
     ) : (
-      <div style={indent}>
+      <Stack hasGutter={level === 0}>
         {entries.map(([k, v]) => (
-          <div key={k}>
+          <StackItem key={k}>
             <strong>{humanizeKey(k)}:</strong> {renderValue(v, level + 1)}
-          </div>
+          </StackItem>
         ))}
-      </div>
+      </Stack>
     );
   }
 
