@@ -1,37 +1,26 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { analyticsService } from '~/analytics/AnalyticsService';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
-import { obfuscate } from '~/analytics/obfuscate';
 import FeedbackModal from '../FeedbackModal';
 
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => [{ visibility: 'private' }]),
 }));
 
-jest.mock('~/analytics/AnalyticsService', () => ({
-  analyticsService: {
-    track: jest.fn(),
-  },
+jest.mock('~/analytics/hooks', () => ({
+  useTrackAnalyticsEvent: jest.fn(),
 }));
 
-jest.mock('~/analytics/obfuscate', () => ({
-  obfuscate: jest.fn((value: string) => Promise.resolve(`obfuscated:${value}`)),
-}));
-
-function getTrackMock(): jest.Mock {
-  // eslint-disable-next-line @typescript-eslint/unbound-method -- replaced with jest.fn() via jest.mock
-  return analyticsService.track as jest.Mock;
-}
-
-function getObfuscateMock(): jest.Mock {
-  return obfuscate as unknown as jest.Mock;
-}
+const useTrackAnalyticsEventMock = jest.requireMock('~/analytics/hooks')
+  .useTrackAnalyticsEvent as jest.Mock;
 
 describe('FeedbackModal', () => {
+  let trackEventMock: jest.Mock;
+
   beforeEach(() => {
-    getTrackMock().mockClear();
-    getObfuscateMock().mockClear();
+    jest.clearAllMocks();
+    trackEventMock = jest.fn();
+    useTrackAnalyticsEventMock.mockReturnValue(trackEventMock);
   });
 
   it('should initialize with BeginingSection Cards', () => {
@@ -45,7 +34,7 @@ describe('FeedbackModal', () => {
     expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
   });
 
-  it('on feedback submit obfuscates email, tracks analytics, and closes with submitClicked', async () => {
+  it('on feedback submit tracks analytics and closes with submitClicked', async () => {
     const user = userEvent.setup();
     const onClose = jest.fn();
     render(<FeedbackModal onClose={onClose} />);
@@ -60,11 +49,8 @@ describe('FeedbackModal', () => {
     await user.click(screen.getByRole('button', { name: /Submit feedback/i }));
 
     await waitFor(() => {
-      expect(getObfuscateMock()).toHaveBeenCalledWith('user@example.com');
-    });
-    await waitFor(() => {
-      expect(getTrackMock()).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
-        userId: 'obfuscated:user@example.com',
+      expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
+        email: 'user@example.com',
         rating: 5,
         feedback: 'Great product',
       });
@@ -83,13 +69,12 @@ describe('FeedbackModal', () => {
     await user.click(screen.getByRole('button', { name: /Submit feedback/i }));
 
     await waitFor(() => {
-      expect(getTrackMock()).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
-        userId: undefined,
+      expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
+        email: undefined,
         rating: 3,
         feedback: '',
       });
     });
-    expect(getObfuscateMock()).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledWith(null, { submitClicked: true });
   });
 });

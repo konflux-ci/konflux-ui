@@ -49,8 +49,7 @@ const App = () => {
       });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    void obfuscate(user.preferredUsername, publicInfo?.clusterId as string).then((userId) => {
+    void obfuscate(user.preferredUsername, publicInfo?.clusterId).then((userId) => {
       analyticsService.setCommonProperties({ userId });
       if (consumeLoginSignal()) {
         onLogin();

@@ -1,9 +1,8 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ModalVariant, Flex, FlexItem, Panel } from '@patternfly/react-core';
-import { analyticsService } from '~/analytics/AnalyticsService';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
-import { obfuscate } from '~/analytics/obfuscate';
+import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
@@ -43,6 +42,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     setCurrentSection(FeedbackSections.BeginningSection);
   };
   const [konfluxInfo] = useKonfluxPublicInfo();
+  const trackEvent = useTrackAnalyticsEvent();
 
   const handleBugSubmit = React.useCallback(
     (values: { description: string; title: string; additionalInfo?: boolean }) => {
@@ -63,16 +63,17 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     [onClose],
   );
 
-  const handleFeedbackSubmit = async (values: FeedbackValues) => {
-    const userEmail = values.email ? await obfuscate(values.email) : undefined;
-    analyticsService.track(TrackEvents.feedback_submitted_event, {
-      userId: userEmail,
-      rating: values.scale,
-      feedback: values.description,
-    });
-
-    onClose(null, { submitClicked: true });
-  };
+  const handleFeedbackSubmit = React.useCallback(
+    (values: FeedbackValues) => {
+      trackEvent(TrackEvents.feedback_submitted_event, {
+        email: values.email || undefined,
+        rating: values.scale,
+        feedback: values.description,
+      });
+      onClose(null, { submitClicked: true });
+    },
+    [onClose, trackEvent],
+  );
 
   return (
     <Flex

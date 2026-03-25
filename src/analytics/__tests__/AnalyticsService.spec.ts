@@ -126,14 +126,14 @@ describe('AnalyticsService', () => {
   describe('identify', () => {
     it('should call analytics.identify with userId', () => {
       enableAnalytics();
-      service.identify('user-hash-123');
+      service.identify(FAKE_HASH);
 
       expect(mockSegment.identify).toHaveBeenCalledWith('user-hash-123');
     });
 
     it('should not throw when analytics is undefined', () => {
       getAnalytics.mockReturnValue(undefined);
-      expect(() => service.identify('user-hash-123')).not.toThrow();
+      expect(() => service.identify(FAKE_HASH)).not.toThrow();
     });
   });
 
