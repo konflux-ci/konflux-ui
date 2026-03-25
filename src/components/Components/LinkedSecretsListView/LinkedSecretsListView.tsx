@@ -10,9 +10,6 @@ import {
   Spinner,
   EmptyStateBody,
   Button,
-  Alert,
-  AlertGroup,
-  AlertActionCloseButton,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -32,7 +29,9 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { SecretKind } from '../../../types';
 import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
+import { useModalLauncher } from '../../modal/ModalProvider';
 import PageLayout from '../../PageLayout/PageLayout';
+import { createLinkSecretModalLauncher } from '../LinkSecret/LinkSecret';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';
 import { LinkedSecretsToolbar } from './LinkedSecretsToolbar';
@@ -44,7 +43,6 @@ const sortPaths: Record<SortableHeaders, string> = {
 
 export const LinkedSecretsListView: React.FC = () => {
   const { componentName, applicationName } = useParams<RouterParams>();
-  const [showToast, setShowToast] = React.useState(false);
   const namespace = useNamespace();
   const applicationBreadcrumbs = useApplicationBreadcrumbs();
   const [activeSortIndex, setActiveSortIndex] = React.useState<number>(SortableHeaders.secretName);
@@ -55,6 +53,7 @@ export const LinkedSecretsListView: React.FC = () => {
     namespace,
     componentName,
   );
+  const showModal = useModalLauncher();
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
 
@@ -116,8 +115,7 @@ export const LinkedSecretsListView: React.FC = () => {
       </EmptyStateBody>
       <Button
         variant="primary"
-        // TODO: the "link secrets" functionality will be implemented in another ticket
-        onClick={() => setShowToast(true)}
+        onClick={() => showModal(createLinkSecretModalLauncher()())}
         style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}
       >
         Link secrets
@@ -127,17 +125,6 @@ export const LinkedSecretsListView: React.FC = () => {
 
   return (
     <>
-      {showToast && (
-        <AlertGroup isToast>
-          <Alert
-            variant="info"
-            title="Feature coming soon"
-            actionClose={<AlertActionCloseButton onClose={() => setShowToast(false)} />}
-          >
-            The &quot;link secrets&quot; functionality will be implemented in a future update.
-          </Alert>
-        </AlertGroup>
-      )}
       <PageLayout
         title="Manage linked secrets"
         description={<>You can add new secrets to this component or unlink existing secrets.</>}
