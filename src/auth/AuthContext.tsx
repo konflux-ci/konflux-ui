@@ -1,11 +1,8 @@
 import * as React from 'react';
 import { Bullseye, Spinner } from '@patternfly/react-core';
-import {
-  analyticsService,
-  consumeLoginSignal,
-  LOGGED_IN_QUERY_PARAM,
-} from '~/analytics/AnalyticsService';
+import { LOGGED_IN_QUERY_PARAM } from '~/analytics/AnalyticsService';
 import { AuthContextType } from './type';
+import { useAuthAnalytics } from './useAuthAnalytics';
 import { setUserDataToLocalStorage } from './utils';
 
 const redirectToLogin = () => {
@@ -24,6 +21,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
     preferredUsername: null,
   });
   const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
+  const { onLogout } = useAuthAnalytics();
 
   React.useEffect(() => {
     const checkAuthStatus = async () => {
@@ -38,9 +36,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
             email: data.email,
             preferredUsername: data.preferredUsername,
           });
-          if (consumeLoginSignal()) {
-            analyticsService.userLogin(data);
-          }
           setIsAuthenticated(true);
         }
       } catch (err) {
@@ -52,7 +47,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
   }, []);
 
   const signOut = async () => {
-    analyticsService.userLogout();
+    onLogout(user);
     await fetch('/oauth2/sign_out');
     redirectToLogin();
   };

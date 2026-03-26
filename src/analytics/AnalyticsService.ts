@@ -1,50 +1,32 @@
-import { logger } from '~/monitoring/logger';
-import type { AnalyticsProperties } from '~/utils/analytics';
-import { getAnalytics } from '.';
+import { CommonFields, EventPropertiesMap, getAnalytics, TrackEvents } from '.';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
-export interface AnalyticsUser {
-  email: string | null;
-  preferredUsername: string | null;
-}
-
 export class AnalyticsService {
-  private commonProperties: AnalyticsProperties = {};
+  private commonProperties: Partial<CommonFields> = {};
 
-  setCommonProperties(properties: AnalyticsProperties): void {
+  setCommonProperties(properties: Partial<CommonFields>): void {
     this.commonProperties = { ...this.commonProperties, ...properties };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  track(_event: string, _properties: AnalyticsProperties = {}): void {
-    // noop — will be wired to getAnalytics()?.track() later
+  track<E extends TrackEvents>(event: E, properties: EventPropertiesMap[E]): void {
+    void getAnalytics()?.track(event, { ...this.commonProperties, ...properties });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  page(_name?: string, _properties: AnalyticsProperties = {}): void {
-    // noop — will be wired to getAnalytics()?.page() later
+  page(name?: string, properties: Record<string, unknown> = {}): void {
+    void getAnalytics()?.page(name, { ...this.commonProperties, ...properties });
   }
 
-  identify(user: AnalyticsUser): void {
-    void getAnalytics()?.identify(user.preferredUsername ?? undefined, {
-      email: user.email,
-      username: user.preferredUsername,
-    });
+  identify(userId: string): void {
+    void getAnalytics()?.identify(userId);
   }
 
-  userLogin(user: AnalyticsUser): void {
-    this.identify(user);
-    logger.info('User Logged In');
+  reset(): void {
+    void getAnalytics()?.reset();
   }
 
-  userLogout(): void {
-    getAnalytics()?.reset();
-    logger.info('User Logged Out');
-  }
-
-  getCommonProperties(): AnalyticsProperties {
-    return { ...this.commonProperties };
+  getCommonProperties(): Partial<CommonFields> {
+    return { ...(this.commonProperties ?? {}) };
   }
 }
 

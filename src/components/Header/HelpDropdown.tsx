@@ -12,7 +12,6 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
-import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { IfFeature } from '~/feature-flags/hooks';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
@@ -72,7 +71,7 @@ export const HelpDropdown: React.FC = () => {
                 onClick={handleFeedbackClick}
                 data-test="help-dropdown-feedback"
               >
-                Share feedback <FeatureFlagIndicator flags={['feedback-section']} />
+                Share feedback
               </DropdownItem>
             </IfFeature>
           </DropdownList>
