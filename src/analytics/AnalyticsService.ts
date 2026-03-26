@@ -1,11 +1,18 @@
-import { CommonFields, EventPropertiesMap, getAnalytics, TrackEvents } from '.';
+import { CommonFields, EventPropertiesMap, getAnalytics, SHA256Hash, TrackEvents } from '.';
 
 export const LOGGED_IN_QUERY_PARAM = 'logged_in';
 
-export class AnalyticsService {
-  private commonProperties: Partial<CommonFields> = {};
+export type CommonAnalyticsProperties = CommonFields & {
+  /**
+   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
+   */
+  userId: SHA256Hash;
+};
 
-  setCommonProperties(properties: Partial<CommonFields>): void {
+export class AnalyticsService {
+  private commonProperties: Partial<CommonAnalyticsProperties> = {};
+
+  setCommonProperties(properties: Partial<CommonAnalyticsProperties>): void {
     this.commonProperties = { ...this.commonProperties, ...properties };
   }
 
@@ -17,15 +24,16 @@ export class AnalyticsService {
     void getAnalytics()?.page(name, { ...this.commonProperties, ...properties });
   }
 
-  identify(userId: string): void {
+  identify(userId: SHA256Hash): void {
     void getAnalytics()?.identify(userId);
   }
 
   reset(): void {
     void getAnalytics()?.reset();
+    this.commonProperties = {};
   }
 
-  getCommonProperties(): Partial<CommonFields> {
+  getCommonProperties(): Partial<CommonAnalyticsProperties> {
     return { ...(this.commonProperties ?? {}) };
   }
 }

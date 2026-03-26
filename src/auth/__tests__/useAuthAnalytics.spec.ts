@@ -3,10 +3,6 @@ import { SHA256Hash, TrackEvents } from '~/analytics/gen/analytics-types';
 import { mockAnalyticsServiceFn } from '~/unit-test-utils';
 import { useAuthAnalytics } from '../useAuthAnalytics';
 
-jest.mock('~/analytics/obfuscate', () => ({
-  obfuscate: jest.fn(),
-}));
-
 jest.mock('~/analytics/hooks', () => ({
   useTrackAnalyticsEvent: jest.fn(),
 }));
@@ -15,18 +11,14 @@ jest.mock('~/monitoring/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
-const { obfuscate }: { obfuscate: jest.Mock } = jest.requireMock('~/analytics/obfuscate');
 const { useTrackAnalyticsEvent }: { useTrackAnalyticsEvent: jest.Mock } =
   jest.requireMock('~/analytics/hooks');
 const { logger }: { logger: Record<string, jest.Mock> } = jest.requireMock('~/monitoring/logger');
 
 const FAKE_HASH = 'abc123def456' as SHA256Hash;
-const FAKE_CLUSTER_ID = 'test-cluster-id';
 const identifyMock = mockAnalyticsServiceFn('identify');
 const resetMock = mockAnalyticsServiceFn('reset');
 const getCommonPropertiesMock = mockAnalyticsServiceFn('getCommonProperties');
-
-const testUser = { email: 'test@example.com', preferredUsername: 'testuser' };
 
 describe('useAuthAnalytics', () => {
   let mockTrackEvent: jest.Mock;
@@ -35,22 +27,18 @@ describe('useAuthAnalytics', () => {
     jest.clearAllMocks();
     mockTrackEvent = jest.fn();
     useTrackAnalyticsEvent.mockReturnValue(mockTrackEvent);
-    obfuscate.mockResolvedValue(FAKE_HASH);
-    getCommonPropertiesMock.mockReturnValue({ clusterId: FAKE_CLUSTER_ID });
+    getCommonPropertiesMock.mockReturnValue({ userId: FAKE_HASH });
   });
 
   describe('onLogin', () => {
-    it('should identify the user and track a login event', async () => {
+    it('should identify the user and track a login event', () => {
       const { result } = renderHook(() => useAuthAnalytics());
 
       act(() => {
-        result.current.onLogin(testUser);
+        result.current.onLogin();
       });
 
-      expect(obfuscate).toHaveBeenCalledWith('testuser', FAKE_CLUSTER_ID);
-
-      await obfuscate.mock.results[0].value;
-
+      expect(getCommonPropertiesMock).toHaveBeenCalled();
       expect(identifyMock).toHaveBeenCalledWith(FAKE_HASH);
       expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_login_event, {
         userId: FAKE_HASH,
@@ -58,32 +46,31 @@ describe('useAuthAnalytics', () => {
       expect(logger.info).toHaveBeenCalledWith('User Logged In');
     });
 
-    it('should not track or identify when preferredUsername is null', () => {
+    it('should still identify and track when common properties omit userId', () => {
+      getCommonPropertiesMock.mockReturnValue({});
       const { result } = renderHook(() => useAuthAnalytics());
 
       act(() => {
-        result.current.onLogin({ email: 'test@example.com', preferredUsername: null });
+        result.current.onLogin();
       });
 
-      expect(identifyMock).not.toHaveBeenCalled();
-      expect(obfuscate).not.toHaveBeenCalled();
-      expect(mockTrackEvent).not.toHaveBeenCalled();
+      expect(identifyMock).toHaveBeenCalledWith(undefined);
+      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_login_event, {
+        userId: undefined,
+      });
       expect(logger.info).toHaveBeenCalledWith('User Logged In');
     });
   });
 
   describe('onLogout', () => {
-    it('should track logout event and reset analytics', async () => {
+    it('should track logout event and reset analytics', () => {
       const { result } = renderHook(() => useAuthAnalytics());
 
       act(() => {
-        result.current.onLogout(testUser);
+        result.current.onLogout();
       });
 
-      expect(obfuscate).toHaveBeenCalledWith('testuser', FAKE_CLUSTER_ID);
-
-      await obfuscate.mock.results[0].value;
-
+      expect(getCommonPropertiesMock).toHaveBeenCalled();
       expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
         userId: FAKE_HASH,
       });
@@ -91,15 +78,17 @@ describe('useAuthAnalytics', () => {
       expect(logger.info).toHaveBeenCalledWith('User Logged Out');
     });
 
-    it('should just reset when preferredUsername is null', () => {
+    it('should still track logout and reset when common properties omit userId', () => {
+      getCommonPropertiesMock.mockReturnValue({});
       const { result } = renderHook(() => useAuthAnalytics());
 
       act(() => {
-        result.current.onLogout({ email: null, preferredUsername: null });
+        result.current.onLogout();
       });
 
-      expect(obfuscate).not.toHaveBeenCalled();
-      expect(mockTrackEvent).not.toHaveBeenCalled();
+      expect(mockTrackEvent).toHaveBeenCalledWith(TrackEvents.user_logout_event, {
+        userId: undefined,
+      });
       expect(resetMock).toHaveBeenCalled();
       expect(logger.info).toHaveBeenCalledWith('User Logged Out');
     });

@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics } from '~/analytics';
 import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
+import { obfuscate } from '~/analytics/obfuscate';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { initMonitoring } from '~/monitoring';
 import { AuthProvider } from './auth/AuthContext';
@@ -48,9 +49,12 @@ const App = () => {
       });
     }
 
-    if (consumeLoginSignal()) {
-      onLogin(user);
-    }
+    void obfuscate(user.preferredUsername, publicInfo?.clusterId).then((userId) => {
+      analyticsService.setCommonProperties({ userId });
+      if (consumeLoginSignal()) {
+        onLogin();
+      }
+    });
   }, [loaded, error, publicInfo, onLogin, user]);
 
   React.useEffect(() => {
