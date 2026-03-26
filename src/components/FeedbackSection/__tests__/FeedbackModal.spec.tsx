@@ -1,7 +1,16 @@
+import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TrackEvents } from '~/analytics/gen/analytics-types';
 import FeedbackModal from '../FeedbackModal';
+
+jest.mock('~/feature-flags/hooks', () => {
+  const actual = jest.requireActual('~/feature-flags/hooks');
+  return {
+    ...actual,
+    IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
 
 jest.mock('~/hooks/useKonfluxPublicInfo', () => ({
   useKonfluxPublicInfo: jest.fn(() => [{ visibility: 'private' }]),
@@ -58,13 +67,34 @@ describe('FeedbackModal', () => {
     expect(onClose).toHaveBeenCalledWith(null, { submitClicked: true });
   });
 
-  it('on feedback submit with only rating tracks analytics without email or description', async () => {
+  it('on feedback submit without rating tracks analytics with rating undefined', async () => {
     const user = userEvent.setup();
     const onClose = jest.fn();
     render(<FeedbackModal onClose={onClose} />);
 
     await user.click(screen.getByText('Share feedback'));
-    await screen.findByTestId('feedback-description');
+    const descriptionInput = await screen.findByTestId('feedback-description');
+    await user.type(descriptionInput, 'Feedback without score');
+    await user.click(screen.getByRole('button', { name: /Submit feedback/i }));
+
+    await waitFor(() => {
+      expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
+        email: undefined,
+        rating: undefined,
+        feedback: 'Feedback without score',
+      });
+    });
+    expect(onClose).toHaveBeenCalledWith(null, { submitClicked: true });
+  });
+
+  it('on feedback submit without email tracks analytics with rating and description', async () => {
+    const user = userEvent.setup();
+    const onClose = jest.fn();
+    render(<FeedbackModal onClose={onClose} />);
+
+    await user.click(screen.getByText('Share feedback'));
+    const descriptionInput = await screen.findByTestId('feedback-description');
+    await user.type(descriptionInput, 'Short feedback');
     await user.click(screen.getByTestId('radio-rating-3'));
     await user.click(screen.getByRole('button', { name: /Submit feedback/i }));
 
@@ -72,7 +102,7 @@ describe('FeedbackModal', () => {
       expect(trackEventMock).toHaveBeenCalledWith(TrackEvents.feedback_submitted_event, {
         email: undefined,
         rating: 3,
-        feedback: '',
+        feedback: 'Short feedback',
       });
     });
     expect(onClose).toHaveBeenCalledWith(null, { submitClicked: true });

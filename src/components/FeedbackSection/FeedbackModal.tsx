@@ -67,7 +67,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     (values: FeedbackValues) => {
       trackEvent(TrackEvents.feedback_submitted_event, {
         email: values.email || undefined,
-        rating: values.scale,
+        rating: values.scale || undefined,
         feedback: values.description,
       });
       onClose(null, { submitClicked: true });

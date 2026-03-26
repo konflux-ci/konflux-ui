@@ -30,6 +30,7 @@ export class AnalyticsService {
 
   reset(): void {
     void getAnalytics()?.reset();
+    this.commonProperties = {};
   }
 
   getCommonProperties(): Partial<CommonAnalyticsProperties> {

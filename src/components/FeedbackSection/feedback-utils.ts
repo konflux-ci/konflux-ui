@@ -16,25 +16,45 @@ type GetBugURL = (bug: BugInfo, konfluxInfo: KonfluxPublicInfo) => string;
 type GetFeatureURL = (bug: BugInfo) => string;
 
 export const getBugURL: GetBugURL = (bug, konfluxInfo) => {
-  const environment = `environment: ${konfluxInfo?.environment ? konfluxInfo.environment : 'unavailable'},
-clusterVersion: ${konfluxInfo?.clusterVersion ? konfluxInfo.clusterVersion : 'unavailable'},
-konfluxVersion: ${konfluxInfo?.konfluxVersion ? konfluxInfo.konfluxVersion : 'unavailable'},
-kubernetesVersion: ${konfluxInfo?.kubernetesVersion ? konfluxInfo.kubernetesVersion : 'unavailable'},
-openshiftVersion: ${konfluxInfo?.openshiftVersion ? konfluxInfo.openshiftVersion : 'unavailable'},`;
-
   const info = {
     'bug-title': bug.title,
     'bug-description': bug.description,
-    'user-agent': bug.getAdditionalInfo ? window.navigator.userAgent : null,
-    environment: bug.getAdditionalInfo ? environment : null,
-    'image-proxy': bug.getAdditionalInfo ? JSON.stringify(konfluxInfo?.imageProxy?.url) : null,
   };
 
+  const additionalInfoSection = bug.getAdditionalInfo
+    ? {
+        'user-agent': window.navigator.userAgent,
+        environment: konfluxInfo?.environment,
+        'image-proxy': JSON.stringify(konfluxInfo?.imageProxy?.url),
+      }
+    : null;
+
+  const additionalInfoVersions = bug.getAdditionalInfo
+    ? `cluster-version: ${konfluxInfo?.clusterVersion},
+konflux-version: ${konfluxInfo?.konfluxVersion},
+kubernetes-version: ${konfluxInfo?.kubernetesVersion},
+openshift-version: ${konfluxInfo?.openshiftVersion},`
+    : null;
+
   // update to use correct URL params
-  const additionalInfoURL = bug.getAdditionalInfo
-    ? `&user-agent=${encodeURIComponent(info['user-agent'])}&environment=${encodeURIComponent(info.environment)}&image-proxy=${encodeURIComponent(info['image-proxy'])}`
-    : '';
-  const url = `${FEEDBACK_BASE_URL}title=${encodeURIComponent(info['bug-title'])}&template=bug_report.yml&bug-description=${encodeURIComponent(info['bug-description'])}${additionalInfoURL}`;
+  const additionalInfoURL =
+    additionalInfoSection != null
+      ? `&${new URLSearchParams(
+          Object.entries(additionalInfoSection).reduce<Record<string, string>>(
+            (acc, [key, value]) => {
+              if (value) acc[key] = String(value);
+              return acc;
+            },
+            {},
+          ),
+        ).toString()}`
+      : '';
+
+  const additionalInfoVersionsURL =
+    additionalInfoVersions != null
+      ? `&additional-info=${encodeURIComponent(additionalInfoVersions)}`
+      : '';
+  const url = `${FEEDBACK_BASE_URL}title=${encodeURIComponent(info['bug-title'])}&template=bug_report.yml&bug-description=${encodeURIComponent(info['bug-description'])}${additionalInfoURL}${additionalInfoVersionsURL}`;
   return url;
 };
 

@@ -34,15 +34,14 @@ describe('Feedback utils', () => {
     expect(searchParams.get('template')).toBe('bug_report.yml');
     expect(searchParams.get('bug-description')).toBe('my-description');
     expect(searchParams.get('user-agent')).toBe(window.navigator.userAgent);
-
-    const environment = searchParams.get('environment') ?? '';
-    expect(environment).toContain(`environment: ${konfluxInfo.environment}`);
-    expect(environment).toContain(`clusterVersion: ${konfluxInfo.clusterVersion}`);
-    expect(environment).toContain(`konfluxVersion: ${konfluxInfo.konfluxVersion}`);
-    expect(environment).toContain(`kubernetesVersion: ${konfluxInfo.kubernetesVersion}`);
-    expect(environment).toContain(`openshiftVersion: ${konfluxInfo.openshiftVersion}`);
-
+    expect(searchParams.get('environment')).toBe(konfluxInfo.environment);
     expect(searchParams.get('image-proxy')).toBe(JSON.stringify(konfluxInfo.imageProxy?.url));
+
+    const additionalInfo = searchParams.get('additional-info') ?? '';
+    expect(additionalInfo).toContain(`cluster-version: ${konfluxInfo.clusterVersion}`);
+    expect(additionalInfo).toContain(`konflux-version: ${konfluxInfo.konfluxVersion}`);
+    expect(additionalInfo).toContain(`kubernetes-version: ${konfluxInfo.kubernetesVersion}`);
+    expect(additionalInfo).toContain(`openshift-version: ${konfluxInfo.openshiftVersion}`);
   });
 
   it('should return correct url for Feature', () => {
