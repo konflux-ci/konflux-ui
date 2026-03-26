@@ -16,11 +16,11 @@ type GetBugURL = (bug: BugInfo, konfluxInfo: KonfluxPublicInfo) => string;
 type GetFeatureURL = (bug: BugInfo) => string;
 
 export const getBugURL: GetBugURL = (bug, konfluxInfo) => {
-  const environment = `environment: ${konfluxInfo?.environment},
-clusterVersion: ${konfluxInfo?.clusterVersion || 'unavailable'},
-konfluxVersion: ${konfluxInfo?.konfluxVersion || 'unavailable'},
-kubernetesVersion: ${konfluxInfo?.kubernetesVersion || 'unavailable'},
-openshiftVersion: ${konfluxInfo?.openshiftVersion || 'unavailable'},`;
+  const environment = `environment: ${konfluxInfo?.environment ? konfluxInfo.environment : 'unavailable'},
+clusterVersion: ${konfluxInfo?.clusterVersion ? konfluxInfo.clusterVersion : 'unavailable'},
+konfluxVersion: ${konfluxInfo?.konfluxVersion ? konfluxInfo.konfluxVersion : 'unavailable'},
+kubernetesVersion: ${konfluxInfo?.kubernetesVersion ? konfluxInfo.kubernetesVersion : 'unavailable'},
+openshiftVersion: ${konfluxInfo?.openshiftVersion ? konfluxInfo.openshiftVersion : 'unavailable'},`;
 
   const info = {
     'bug-title': bug.title,
