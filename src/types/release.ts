@@ -35,10 +35,6 @@ export type ReleaseArtifacts = {
   merge_requests?: {
     url?: string;
   }[];
-  sboms?:{
-    component?: string[];
-    product?: string[];
-  };
   [key: string]: unknown;
 };
 
