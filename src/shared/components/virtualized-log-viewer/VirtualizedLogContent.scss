@@ -1,0 +1,25 @@
+.log-content__list {
+  overflow-x: hidden !important;
+  width: 100% !important;
+
+  &.log-content__with-gutter {
+    display: flex;
+    padding-top: var(--pf-v5-global--spacer--xs);
+    padding-bottom: var(--pf-v5-global--spacer--xs);
+    box-sizing: border-box;
+  }
+}
+
+.log-content__content-column {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.log-content__line--highlighted {
+  background-color: var(--pf-v5-global--palette--gold-50);
+
+  .pf-m-dark & {
+    background-color: var(--pf-v5-global--palette--gold-700);
+  }
+}

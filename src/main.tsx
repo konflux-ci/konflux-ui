@@ -5,8 +5,12 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import ReactDOM from 'react-dom/client';
 import { initAnalytics } from '~/analytics';
+import { analyticsService, consumeLoginSignal } from '~/analytics/AnalyticsService';
+import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { initMonitoring } from '~/monitoring';
 import { AuthProvider } from './auth/AuthContext';
+import { useAuth } from './auth/useAuth';
+import { useAuthAnalytics } from './auth/useAuthAnalytics';
 import { forceEnableFlagsOnce } from './feature-flags/forceEnableFlagsOnce';
 import { FeatureFlagsStore } from './feature-flags/store';
 import { getAllConditionsKeysFromFlags } from './feature-flags/utils';
@@ -25,6 +29,30 @@ forceEnableFlagsOnce(['kubearchive-logs', 'taskruns-kubearchive', 'pipelineruns-
 });
 
 const App = () => {
+  const [publicInfo, loaded, error] = useKonfluxPublicInfo();
+  const { onLogin } = useAuthAnalytics();
+  const { user } = useAuth();
+
+  React.useEffect(() => {
+    if (!loaded && !error) {
+      return;
+    }
+
+    if (loaded && !error && publicInfo) {
+      analyticsService.setCommonProperties({
+        clusterId: publicInfo.clusterId,
+        clusterVersion: publicInfo.clusterVersion,
+        konfluxVersion: publicInfo.konfluxVersion,
+        kubernetesVersion: publicInfo.kubernetesVersion,
+        openshiftVersion: publicInfo.openshiftVersion,
+      });
+    }
+
+    if (consumeLoginSignal()) {
+      onLogin(user);
+    }
+  }, [loaded, error, publicInfo, onLogin, user]);
+
   React.useEffect(() => {
     // webpack side effects to prevent tree-shaking
     if (REGISTRATIONS_LOADED) {

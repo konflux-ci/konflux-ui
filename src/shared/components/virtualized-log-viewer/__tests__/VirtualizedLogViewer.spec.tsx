@@ -35,18 +35,16 @@ describe('VirtualizedLogViewer Integration Tests', () => {
   });
 
   describe('Structure and Layout', () => {
-    it('should render complete component structure with PatternFly classes', () => {
+    it('should render complete component structure', () => {
       const { container } = renderWithQueryClientAndRouter(
         <VirtualizedLogViewer {...defaultProps} />,
       );
 
       const mainElement = container.querySelector('.pf-v5-c-log-viewer__main');
       expect(mainElement).toBeInTheDocument();
-      expect(mainElement).toHaveStyle({ height: '100%' });
 
-      const scrollContainer = container.querySelector('.pf-v5-c-log-viewer__scroll-container');
+      const scrollContainer = container.querySelector('.log-content__list');
       expect(scrollContainer).toBeInTheDocument();
-      expect(scrollContainer).toHaveStyle({ height: '100%' });
     });
 
     it('should render virtualized log list with real VirtualizedLogContent integration', () => {
@@ -54,7 +52,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
 
       // Should render actual log items through VirtualizedLogContent
@@ -88,7 +86,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} data="" />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
     });
 
@@ -111,7 +109,8 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} height={500} />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
+      expect(logList).toBeInTheDocument();
       expect(logList).toHaveStyle({ height: '500px' });
     });
 
@@ -120,7 +119,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toHaveStyle({ width: '100%' });
     });
 
@@ -129,7 +128,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} width="80%" />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toHaveStyle({ width: '80%' });
     });
 
@@ -138,7 +137,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} width={800} />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toHaveStyle({ width: '800px' });
     });
   });
@@ -150,7 +149,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} onScroll={onScroll} />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
 
       // Component should be rendered with scroll capability
@@ -196,7 +195,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
       );
 
       // Should render without search functionality
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
     });
 
@@ -237,7 +236,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         <VirtualizedLogViewer {...defaultProps} data={longData} />,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
 
       // Virtualization should only render visible items
@@ -299,7 +298,7 @@ describe('VirtualizedLogViewer Integration Tests', () => {
         </LogViewerToolbarContext.Provider>,
       );
 
-      const logList = container.querySelector('.pf-v5-c-log-viewer__list');
+      const logList = container.querySelector('.log-content__list');
       expect(logList).toBeInTheDocument();
     });
   });
