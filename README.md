@@ -42,31 +42,60 @@ A step by step series of examples that tell you how to get a development environ
    yarn start
    ```
 
-## Running with local Konflux
+## Running with Konflux-ci
 
-By default, the UI proxies API calls to the staging Konflux environment. To run the UI against a local Konflux deployment, follow the steps below.
+By default, the UI uses the stage cluster for API calls. However, if you want to run the UI with a local Konflux deployment, follow the steps below.
 
-1. Deploy Konflux locally by following the official konflux-ci guide:
-    https://github.com/konflux-ci/konflux-ci#trying-out-konflux
+1. Follow the guide at https://konflux-ci.dev/konflux-ci/docs/installation/install-local/ to deploy Konflux locally
 
-2. Configure local endpoints in `.env`:
+2. Once you have Konflux deployed, make the following changes to your .env file:
 
-```bash
-AUTH_URL=https://127.0.0.1:9443/
-REGISTRATION_URL=https://127.0.0.1:9443/
-PROXY_URL=https://127.0.0.1:9443/
-PROXY_WEBSOCKET_URL=wss://127.0.0.1:9443
+```diff
+# .env
+
++ AUTH_URL=https://127.0.0.1:9443/
++ REGISTRATION_URL=https://127.0.0.1:9443/
++ PROXY_URL=https://127.0.0.1:9443/
++ PROXY_WEBSOCKET_URL=wss://127.0.0.1:9443
+- AUTH_URL= https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
+- REGISTRATION_URL=https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
+- PROXY_URL=https://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
+- PROXY_WEBSOCKET_URL=wss://konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com/
 ```
 
-3. Start the UI:
+3. Update your webpack.dev.config.js file with the following changes:
 
-```bash
-yarn start
+```diff
+@@ webpack.dev.config.js:14 @@
+    historyApiFallback: true,
+    hot: true,
+    server: 'https',
+    proxy: [
+      {
++        context: (path) => path.includes('/oauth2/') || path.includes('/idp/'),
+-        context: (path) => path.includes('/oauth2/'),
+        target: process.env.AUTH_URL,
+        secure: false,
+        changeOrigin: true,
++        autoRewrite: true,
+-        autoRewrite: false,
+        toProxy: true,
+        headers: {
+          'X-Forwarded-Host': `localhost:${DEV_SERVER_PORT}`,
+        },
+        onProxyRes: (proxyRes) => {
+          const location = proxyRes.headers['location'];
+          if (location) {
+            proxyRes.headers['location'] = location.replace(
++              'localhost:9443',
++              `localhost:${DEV_SERVER_PORT}`,
+-              'konflux-ui.apps.stone-stg-rh01.l2vh.p1.openshiftapps.com%2Foauth2',
+-              `localhost:${DEV_SERVER_PORT}/oauth2`,
+            );
+          }
+        },
+
 ```
-
-Notes:
-- Do not patch `webpack.dev.config.js` for this setup. The committed dev configuration should be used as-is.
-- If you want to switch back to staging defaults, run `git checkout -- .env`.
 
 ## Available Scripts
 
