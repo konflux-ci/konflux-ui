@@ -12,7 +12,6 @@ import {
   EXTERNAL_DOCUMENTATION_BASE_URL,
   INTERNAL_DOCUMENTATION_BASE_URL,
 } from '~/consts/documentation';
-import { IfFeature } from '~/feature-flags/hooks';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { ExternalLink } from '~/shared';
 import { createFeedbackModal } from '../FeedbackSection/FeedbackModal';
@@ -65,15 +64,13 @@ export const HelpDropdown: React.FC = () => {
             <DropdownItem key="documentation" data-test="help-dropdown-documentation">
               <ExternalLink href={documentationLink} text={'Documentation'} />
             </DropdownItem>
-            <IfFeature flag="feedback-section">
-              <DropdownItem
-                key="about"
-                onClick={handleFeedbackClick}
-                data-test="help-dropdown-feedback"
-              >
-                Share feedback
-              </DropdownItem>
-            </IfFeature>
+            <DropdownItem
+              key="share-feedback"
+              onClick={handleFeedbackClick}
+              data-test="help-dropdown-feedback"
+            >
+              Share feedback
+            </DropdownItem>
           </DropdownList>
         </DropdownGroup>
       </Dropdown>
