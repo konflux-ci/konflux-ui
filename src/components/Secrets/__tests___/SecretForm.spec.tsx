@@ -147,6 +147,42 @@ describe('SecretForm Image Pull Secret', () => {
   });
 });
 
+describe('SecretForm SecretLinkOptions', () => {
+  beforeEach(() => {
+    mockKeyValueFileInputField.mockImplementation((props) => (
+      <InternalKeyValueFileInputField {...props} />
+    ));
+  });
+
+  it('should show "Do not link" option for basic auth source secrets', async () => {
+    formikRenderer(
+      <SecretForm existingSecrets={existingSecrets} />,
+      secretFormValuesForSourceSecret,
+    );
+    await waitFor(() => {
+      expect(screen.getByText('Do not link')).toBeInTheDocument();
+    });
+  });
+
+  it('should not show "Do not link" option for image pull secrets', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, addSecretFormValues);
+    await waitFor(() => {
+      expect(screen.queryByText('Do not link')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should select "Do not link" by default when secretForComponentOption is null', async () => {
+    formikRenderer(<SecretForm existingSecrets={existingSecrets} />, {
+      ...secretFormValuesForSourceSecret,
+      secretForComponentOption: null,
+    });
+    await waitFor(() => {
+      const doNotLinkRadio = screen.getByRole('radio', { name: 'Do not link' });
+      expect(doNotLinkRadio).toBeChecked();
+    });
+  });
+});
+
 describe('SecretForm KeyValueFileInputField', () => {
   beforeEach(() => {
     mockKeyValueFileInputField.mockImplementation((props) => (
