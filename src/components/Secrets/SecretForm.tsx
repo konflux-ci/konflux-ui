@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
@@ -42,6 +42,12 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
     FIELD_SECRET_FOR_COMPONENT_OPTION,
   );
+
+  useEffect(() => {
+    if (secretForComponentOption == null) {
+      void setValue(SecretForComponentOption.none);
+    }
+  }, [secretForComponentOption, setValue]);
 
   let options = useMemo(() => {
     return existingSecrets
@@ -94,6 +100,10 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
     (values?.source?.authType === SourceSecretType.basic &&
       currentType === SecretTypeDropdownLabel.source) ||
     currentType === SecretTypeDropdownLabel.image;
+
+  const shouldShowDefaultSecretLinkOptions =
+    values?.source?.authType === SourceSecretType.basic &&
+    currentType === SecretTypeDropdownLabel.source;
 
   return (
     <Form data-test="secret-form">
@@ -154,7 +164,11 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           currentComponent={currentComponent}
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}
-          radioLabels={SecretLinkOptionLabels.forImportSecret}
+          radioLabels={
+            shouldShowDefaultSecretLinkOptions
+              ? SecretLinkOptionLabels.default
+              : SecretLinkOptionLabels.forImportSecret
+          }
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
