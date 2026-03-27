@@ -191,10 +191,10 @@ export const usePLRScanResults = (
   pipelineRunNames: string[],
 ): [{ [key: string]: unknown }, boolean, string[], unknown] => {
   // Fetch directly from tekton-results because a task result is only present on completed tasks runs.
-  const cacheKey = React.useRef('');
-  React.useEffect(() => {
-    if (pipelineRunNames.length) cacheKey.current = pipelineRunNames.sort().join('|');
-  }, [pipelineRunNames]);
+  const cacheKey = React.useMemo(
+    () => (pipelineRunNames.length ? pipelineRunNames.sort().join('|') : ''),
+    [pipelineRunNames],
+  );
 
   const namespace = useNamespace();
   const kubearchiveEnabled = useIsOnFeatureFlag('taskruns-kubearchive');
@@ -235,10 +235,10 @@ export const usePLRScanResults = (
     return [
       scanResultsMap,
       loaded,
-      loaded && pipelineRunNames.sort().join('|') === cacheKey.current ? pipelineRunNames : [],
+      loaded && pipelineRunNames.sort().join('|') === cacheKey ? pipelineRunNames : [],
       error,
     ];
-  }, [loaded, pipelineRunNames, taskRuns, error]);
+  }, [loaded, pipelineRunNames, taskRuns, error, cacheKey]);
 };
 
 export const usePLRVulnerabilities = (
