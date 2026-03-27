@@ -43,11 +43,15 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
     FIELD_SECRET_FOR_COMPONENT_OPTION,
   );
 
+  const shouldShowDefaultSecretLinkOptions =
+    values?.source?.authType === SourceSecretType.basic &&
+    currentType === SecretTypeDropdownLabel.source;
+
   useEffect(() => {
-    if (secretForComponentOption == null) {
+    if (shouldShowDefaultSecretLinkOptions && secretForComponentOption == null) {
       void setValue(SecretForComponentOption.none);
     }
-  }, [secretForComponentOption, setValue]);
+  }, [shouldShowDefaultSecretLinkOptions, secretForComponentOption, setValue]);
 
   let options = useMemo(() => {
     return existingSecrets
@@ -100,10 +104,6 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
     (values?.source?.authType === SourceSecretType.basic &&
       currentType === SecretTypeDropdownLabel.source) ||
     currentType === SecretTypeDropdownLabel.image;
-
-  const shouldShowDefaultSecretLinkOptions =
-    values?.source?.authType === SourceSecretType.basic &&
-    currentType === SecretTypeDropdownLabel.source;
 
   return (
     <Form data-test="secret-form">
