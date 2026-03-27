@@ -1,7 +1,5 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useModalLauncher } from '../../modal/ModalProvider';
-import { createLinkSecretModalLauncher } from '../LinkSecret/LinkSecret';
 import {
   TextContent,
   Text,
@@ -31,7 +29,9 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { SecretKind } from '../../../types';
 import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
+import { useModalLauncher } from '../../modal/ModalProvider';
 import PageLayout from '../../PageLayout/PageLayout';
+import { createLinkSecretModalLauncher } from '../LinkSecret/LinkSecret';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';
 import { LinkedSecretsToolbar } from './LinkedSecretsToolbar';
