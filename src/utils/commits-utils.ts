@@ -63,8 +63,7 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
-  const isPullRequest =
-    plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] === PipelineRunEventType.PULL;
+  const isPullRequest = eventType === PipelineRunEventType.PULL;
 
   return {
     metadata: {
