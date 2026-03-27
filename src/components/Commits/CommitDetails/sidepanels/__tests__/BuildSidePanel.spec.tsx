@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { ElementModel, GraphElement } from '@patternfly/react-topology';
 import { render, screen } from '@testing-library/react';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
+import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useTaskRunsForPipelineRuns } from '~/hooks/useTaskRunsV2';
 import { PipelineRunKind } from '~/types';
 import { mockUseNamespaceHook } from '../../../../../unit-test-utils';
@@ -23,7 +24,12 @@ jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunsForPipelineRuns: jest.fn(),
 }));
 
+jest.mock('~/hooks/usePipelineRunsForCommitV2', () => ({
+  usePipelineRunsForCommitV2: jest.fn(),
+}));
+
 const mockUseTaskRunsForPipelineRuns = useTaskRunsForPipelineRuns as jest.Mock;
+const mockUsePipelineRunsForCommitV2 = usePipelineRunsForCommitV2 as jest.Mock;
 
 describe('BuildSidePanel', () => {
   const mockNamespace = 'test-namespace';
@@ -75,6 +81,13 @@ describe('BuildSidePanel', () => {
     jest.clearAllMocks();
     mockUseNamespaceHook(mockNamespace);
     mockUseTaskRunsForPipelineRuns.mockReturnValue([[], true, null]);
+    mockUsePipelineRunsForCommitV2.mockReturnValue([
+      [],
+      true,
+      null,
+      jest.fn(),
+      { hasNextPage: false, isFetchingNextPage: false },
+    ]);
   });
 
   describe('Basic Rendering', () => {
