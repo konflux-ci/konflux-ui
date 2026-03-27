@@ -8,7 +8,7 @@ import {
 } from '@patternfly/react-core/deprecated';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
-export const MENU_DIVIDER = "--divider--";
+export const MENU_DIVIDER = '--divider--';
 
 type MultiSelectProps = {
   label: string;
@@ -19,6 +19,8 @@ type MultiSelectProps = {
   values: string[];
   setValues: (filters: string[]) => void;
   options: { [key: string]: number };
+  /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
+  optionLabels?: Record<string, string>;
 };
 
 export const MultiSelect = ({
@@ -30,14 +32,21 @@ export const MultiSelect = ({
   values,
   setValues,
   options,
+  optionLabels,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
 
+  const chipLabels = optionLabels ? values.map((v) => optionLabels[v] ?? v) : values;
+  const labelToKey = optionLabels
+    ? Object.fromEntries(Object.entries(optionLabels).map(([k, v]) => [v, k]))
+    : undefined;
+
   return (
     <ToolbarFilter
-      chips={values}
+      chips={chipLabels}
       deleteChip={(_type, chip) => {
-        setValues(values.filter((v) => v !== chip));
+        const key = labelToKey ? labelToKey[chip as string] ?? chip : chip;
+        setValues(values.filter((v) => v !== key));
       }}
       deleteChipGroup={() => {
         setValues([]);
@@ -72,9 +81,9 @@ export const MultiSelect = ({
                   key={filter}
                   value={filter}
                   isChecked={values.includes(filter)}
-                  itemCount={options[filter] ?? 0}
+                  // TODO: remove the item count from other components, it is not accurate anyway as it only counts fetched resources
                 >
-                  {filter}
+                  {optionLabels?.[filter] ?? filter}
                 </SelectOption>
               ),
             )}
