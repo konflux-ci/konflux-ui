@@ -155,7 +155,7 @@ describe('usePLRScanResults', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     const { result } = renderHook(() => usePLRScanResults(['test2']));
-    expect(result.current).toEqual([null, true, [], undefined]);
+    expect(result.current).toEqual([null, true, ['test2'], undefined]);
   });
 
   it('returns error if scan results API is failing', () => {
@@ -168,7 +168,7 @@ describe('usePLRScanResults', () => {
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
     const { result } = renderHook(() => usePLRScanResults(['test2']));
-    expect(result.current).toEqual([null, true, [], badGatewayError]);
+    expect(result.current).toEqual([null, true, ['test2'], badGatewayError]);
   });
 
   it('returns scan results if taskrun is found', () => {
