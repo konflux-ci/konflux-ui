@@ -109,11 +109,31 @@ export const typeToDropdownLabel = (type: string) => {
       return type;
   }
 };
+/**
+ * Normalizes uploaded Docker config JSON to the shape expected for
+ * `kubernetes.io/dockerconfigjson` (`.dockerconfigjson` data key).
+ * Legacy `~/.dockercfg` files (flat registry → auth map) are wrapped as `{ auths: ... }`.
+ * Modern `config.json` content (with `auths`) is returned as-is.
+ */
+export const normalizeDockerConfigForDockerconfigjson = (
+  parsed: unknown,
+): Record<string, unknown> => {
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    return { auths: {} };
+  }
+  const obj = parsed as Record<string, unknown>;
+  if (obj.auths != null && typeof obj.auths === 'object' && !Array.isArray(obj.auths)) {
+    return obj;
+  }
+  return { auths: obj };
+};
+
 export const getKubernetesSecretType = (values: AddSecretFormValues) => {
-  let type = values.type;
   if (values.type === SecretTypeDropdownLabel.image) {
-    type = values.image.authType;
-  } else if (values.type === SecretTypeDropdownLabel.source) {
+    return SecretType.dockerconfigjson;
+  }
+  let type = values.type;
+  if (values.type === SecretTypeDropdownLabel.source) {
     type = values.source.authType;
   }
   return K8sSecretType[type];
@@ -144,8 +164,12 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
     } else {
       data = values.image.dockerconfig
         ? {
-            ['.dockercfg']: Base64.encode(
-              JSON.stringify(JSON.parse(Base64.decode(values.image.dockerconfig))),
+            ['.dockerconfigjson']: Base64.btoa(
+              JSON.stringify(
+                normalizeDockerConfigForDockerconfigjson(
+                  JSON.parse(Base64.decode(values.image.dockerconfig)),
+                ),
+              ),
             ),
           }
         : '';

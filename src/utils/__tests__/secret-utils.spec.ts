@@ -1,3 +1,4 @@
+import { Base64 } from 'js-base64';
 import { mockSecret } from '../../components/Secrets/__data__/mock-secrets';
 import {
   sampleImagePullSecret,
@@ -24,6 +25,7 @@ import {
   getLabelsForImportSecret,
   getLabelsForSecret,
   getSecretFormData,
+  normalizeDockerConfigForDockerconfigjson,
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
   getTargetLabelsForRemoteSecret,
@@ -271,6 +273,28 @@ const formValuesForSCM: AddSecretFormValues = {
   },
 };
 
+describe('normalizeDockerConfigForDockerconfigjson', () => {
+  it('wraps legacy flat dockercfg map in auths', () => {
+    const legacy = { 'https://index.docker.io/v1/': { auth: 'abc' } };
+    expect(normalizeDockerConfigForDockerconfigjson(legacy)).toEqual({
+      auths: legacy,
+    });
+  });
+
+  it('preserves modern config.json with auths', () => {
+    const modern = {
+      auths: { 'registry.io': { auth: 'xyz' } },
+      credHelpers: { 'registry.io': 'desktop' },
+    };
+    expect(normalizeDockerConfigForDockerconfigjson(modern)).toEqual(modern);
+  });
+
+  it('returns empty auths for invalid input', () => {
+    expect(normalizeDockerConfigForDockerconfigjson(null)).toEqual({ auths: {} });
+    expect(normalizeDockerConfigForDockerconfigjson([])).toEqual({ auths: {} });
+  });
+});
+
 describe('getKubernetesSecretType', () => {
   it('should return opaque secret type', () => {
     const opaqueFormValues = formValues;
@@ -292,7 +316,7 @@ describe('getKubernetesSecretType', () => {
       type: SecretTypeDropdownLabel.image,
       image: { ...formValues.image, authType: ImagePullSecretType.UploadConfigFile },
     };
-    expect(getKubernetesSecretType(uploadConfigFormValues)).toBe('kubernetes.io/dockercfg');
+    expect(getKubernetesSecretType(uploadConfigFormValues)).toBe('kubernetes.io/dockerconfigjson');
   });
   it('should return source secret type', () => {
     const sourceBasiAuthFormValues = { ...formValues, type: SecretTypeDropdownLabel.source };
@@ -337,10 +361,42 @@ describe('getSecretFormData', () => {
     };
     expect(getSecretFormData(dockerConfigFormValues, 'test-ns')).toEqual(
       expect.objectContaining({
-        type: 'kubernetes.io/dockercfg',
-        data: { ['.dockercfg']: expect.anything() },
+        type: 'kubernetes.io/dockerconfigjson',
+        data: { ['.dockerconfigjson']: expect.anything() },
       }),
     );
+  });
+
+  it('normalizes legacy .dockercfg-shaped upload to .dockerconfigjson with auths wrapper', () => {
+    const legacyDockercfg = {
+      'https://index.docker.io/v1/': {
+        username: 'user',
+        password: 'pass',
+        auth: 'dXNlcjpwYXNz',
+      },
+    };
+    const dockerconfig = Base64.encode(JSON.stringify(legacyDockercfg));
+    const result = getSecretFormData(
+      {
+        ...formValues,
+        type: SecretTypeDropdownLabel.image,
+        image: {
+          ...formValues.image,
+          authType: ImagePullSecretType.UploadConfigFile,
+          dockerconfig,
+        },
+      },
+      'test-ns',
+    );
+
+    expect(result.type).toBe('kubernetes.io/dockerconfigjson');
+    expect(Object.keys(result.data ?? {})).toEqual(['.dockerconfigjson']);
+    expect(result.data).not.toHaveProperty('.dockercfg');
+
+    const dockerconfigjsonB64 = result.data['.dockerconfigjson'];
+    expect(typeof dockerconfigjsonB64).toBe('string');
+    const parsed = JSON.parse(Base64.decode(dockerconfigjsonB64));
+    expect(parsed).toEqual({ auths: legacyDockercfg });
   });
 
   it('should return source secret resource with encoded data', () => {
