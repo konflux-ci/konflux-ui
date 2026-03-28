@@ -25,17 +25,21 @@ export const NamespaceContext = React.createContext<NamespaceContextData>({
 });
 
 export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const { data: namespaces, isLoading: namespaceLoading } = useQuery(createNamespaceQueryOptions());
+  const {
+    data: namespaces,
+    isLoading: namespaceLoading,
+    error: namespacesError,
+  } = useQuery(createNamespaceQueryOptions());
   const params = useParams<RouterParams>();
   const navigate = useNavigate();
 
   const activeNamespaceName: string = params.workspaceName ?? getLastUsedNamespace();
 
-  const homeNamespace = React.useMemo(
-    () =>
-      !namespaceLoading ? namespaces.find((n) => n.metadata.name === activeNamespaceName) : null,
-    [namespaces, namespaceLoading, activeNamespaceName],
-  );
+  const homeNamespace = React.useMemo(() => {
+    if (namespaceLoading || namespacesError) return null;
+    const namespacesData = namespaces ?? [];
+    return namespacesData.find((n) => n.metadata.name === activeNamespaceName);
+  }, [namespaces, namespacesError, namespaceLoading, activeNamespaceName]);
 
   const {
     data: namespaceResource,
@@ -76,12 +80,14 @@ export const NamespaceProvider: React.FC<React.PropsWithChildren> = ({ children 
     );
   }
 
+  // If namespaces failed to load but we have an active namespace, use fallback with empty list
+
   return (
     <NamespaceContext.Provider
       value={{
         namespace: activeNamespaceName,
         namespaceResource,
-        namespaces,
+        namespaces: namespacesError ? [] : namespaces ?? [],
         namespacesLoaded: !(namespaceLoading && activeNamespaceLoading),
         lastUsedNamespace: getLastUsedNamespace(),
       }}
