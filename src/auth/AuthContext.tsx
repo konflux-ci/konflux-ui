@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = React.memo(({ chi
   }, []);
 
   const signOut = async () => {
-    onLogout(user);
+    onLogout();
     await fetch('/oauth2/sign_out');
     redirectToLogin();
   };
