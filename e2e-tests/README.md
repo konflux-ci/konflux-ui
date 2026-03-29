@@ -55,9 +55,9 @@ For headless execution:
 ```
 $ yarn run cy:run
 ```
-Runs all available specs, by default in the Electron browser. Flags that might come in handy are `-b` to specify the browser, or `-s` to filter spec files based on a glob pattern. For example, running the basic happy path spec in Chrome:
+Runs `tests/basic-happy-path.spec.ts` in the Chrome browser (as defined in `package.json`). To run other specs or choose a different browser, invoke Cypress directly. For example, running all specs in Electron:
 ```
-$ yarn run cy:run -b chrome -s 'tests/basic-happy-path*'
+$ yarn cypress run -b electron --spec 'tests/**/*.spec.ts'
 ```
 
 ### Running test from source against local Konflux UI and local Konflux backend
@@ -140,7 +140,11 @@ $ podman push quay.io/konflux_ui_qe/konflux-ui-tests:mytag
 Test automation allows us to test early in the process and discover bugs before pushing code to the staging environment.
 
 ### PR checks
-Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). To be able to run the PR check job, you have to be a public member of `konflux-ci` organization.
+Cypress E2E tests run on pull requests using a [GitHub Action](https://github.com/konflux-ci/konflux-ui/blob/main/.github/workflows/pr-check.yaml). PR checks are allowed when at least one of the following conditions is met:
+
+- PR author is `red-hat-konflux[bot]`
+- PR has the `ok-to-test` label
+- PR author is listed in the workflow `ALLOWED_USERS`
 
 The job installs Konflux from a main branch and Konflux UI from a PR. It runs tests, gathers logs, and allows users to download them directly from the GitHub Action Summary page. Retriggering the job is possible either by pushing a commit to the branch or trigger it directly in the GitHub Action Summary page by `Re-run jobs` button.
 
@@ -151,7 +155,7 @@ The job installs Konflux from a main branch and Konflux UI from a PR. It runs te
 > ```
 > on:
 >   pull_request_target:
->     types: [opened, synchronize, reopened, labeled]
+>     types: [opened, synchronize, reopened, labeled, unlabeled]
 > ```
 
 The workflow is separated into the actions files within `.github/actions` directory. Each action is a composite action, which makes it reusable across multiple workflows. This way it's also visible as separated steps and is easier for debugging.

@@ -37,7 +37,7 @@
   },
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally
-  "forwardPorts": [3000, 9000],
+  "forwardPorts": [8080, 9000],
 
   // Use 'postCreateCommand' to run commands after the container is created
   "postCreateCommand": "yarn install",
@@ -64,7 +64,7 @@
 
   // Development server configuration
   "portsAttributes": {
-    "3000": {
+    "8080": {
       "label": "Development Server",
       "onAutoForward": "notify"
     },
