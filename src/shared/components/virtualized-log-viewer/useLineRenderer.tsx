@@ -2,11 +2,13 @@ import React from 'react';
 import { flattenTokenText, getLineMatches } from './log-viewer-utils';
 import { renderTokenRecursive } from './token-renderer';
 import type { SearchedWord, TokenizedLine } from './types';
+import { type VirtualLine } from './useLargeLineHandler';
 
 interface UseLineRendererParams {
-  tokenizeLine: (lineIndex: number) => TokenizedLine;
+  tokenizeLine: (virtualLineIndex: number) => TokenizedLine;
   searchRegex: RegExp | undefined;
   currentSearchMatch?: SearchedWord;
+  virtualLines: VirtualLine[];
 }
 
 /**
@@ -17,10 +19,14 @@ export function useLineRenderer({
   tokenizeLine,
   searchRegex,
   currentSearchMatch,
+  virtualLines,
 }: UseLineRendererParams) {
   const renderLine = React.useCallback(
-    (rowIndex: number) => {
-      const lineObj = tokenizeLine(rowIndex);
+    (virtualLineIndex: number) => {
+      const virtualLine = virtualLines[virtualLineIndex];
+      if (!virtualLine) return <span className="pf-v5-c-log-viewer__text">&nbsp;</span>;
+
+      const lineObj = tokenizeLine(virtualLineIndex);
       if (!lineObj) return <span className="pf-v5-c-log-viewer__text">&nbsp;</span>;
 
       const { tokens, text } = lineObj;
@@ -32,8 +38,11 @@ export function useLineRenderer({
       // Calculate matches dynamically (not cached) to support search changes without re-tokenization
       const matches = getLineMatches(text, searchRegex);
       let offset = 0;
+
+      // Check if this virtual line should show the current search match
+      // currentSearchMatch.rowIndex is now the virtual line index (0-based)
       const currentMatch =
-        currentSearchMatch?.rowIndex === rowIndex
+        currentSearchMatch?.rowIndex === virtualLineIndex
           ? matches[currentSearchMatch.matchIndex - 1] ?? null
           : null;
 
@@ -47,7 +56,7 @@ export function useLineRenderer({
         </span>
       );
     },
-    [tokenizeLine, currentSearchMatch, searchRegex],
+    [tokenizeLine, currentSearchMatch, searchRegex, virtualLines],
   );
 
   return renderLine;

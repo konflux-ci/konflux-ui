@@ -1,6 +1,7 @@
 import React from 'react';
 import { Flex } from '@patternfly/react-core';
 import type { VirtualItem } from '@tanstack/react-virtual';
+import { getDisplayLineNumber, type VirtualLine } from './useLargeLineHandler';
 
 import './LineNumberGutter.scss';
 
@@ -13,6 +14,8 @@ export interface LineNumberGutterProps {
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
   /** Function to check if a line is highlighted */
   isLineHighlighted: (lineNumber: number) => boolean;
+  /** Function to get original line info from virtual line index */
+  getOriginalLineInfo: (virtualLineIndex: number) => VirtualLine | null;
 }
 
 /**
@@ -26,12 +29,22 @@ export const LineNumberGutter: React.FC<LineNumberGutterProps> = ({
   itemSize,
   onLineClick,
   isLineHighlighted,
+  getOriginalLineInfo,
 }) => {
   return (
     <Flex className="line-number__gutter" direction={{ default: 'column' }}>
       {virtualItems.map((virtualItem) => {
-        const lineNumber = virtualItem.index + 1;
+        const virtualLineInfo = getOriginalLineInfo(virtualItem.index);
+        const lineNumber = getDisplayLineNumber(virtualLineInfo, virtualItem.index);
         const isHighlighted = isLineHighlighted(lineNumber);
+
+        // For split text chunks, show "line.chunk" format (e.g., "5.2")
+        // For formatted JSON and normal lines, show the line number directly
+        const displayLineNumber =
+          virtualLineInfo?.isSplit && !virtualLineInfo.isFormatted
+            ? `${lineNumber}.${virtualLineInfo.subLineIndex + 1}` // Chunks: "5.1", "5.2"...
+            : lineNumber.toString(); // Normal lines and formatted JSON: "2", "3", "4"...
+
         return (
           <div
             key={`gutter-${virtualItem.key}`}
@@ -53,8 +66,15 @@ export const LineNumberGutter: React.FC<LineNumberGutterProps> = ({
                 onLineClick(lineNumber, e);
               }}
               data-line-number={lineNumber}
+              title={
+                virtualLineInfo?.isSplit
+                  ? virtualLineInfo.isFormatted
+                    ? `Auto-formatted from line ${virtualLineInfo.originalLineIndex + 1} (${virtualLineInfo.totalSubLines} lines total)`
+                    : `Line ${virtualLineInfo.originalLineIndex + 1}, chunk ${virtualLineInfo.subLineIndex + 1}/${virtualLineInfo.totalSubLines}`
+                  : undefined
+              }
             >
-              {lineNumber}
+              {displayLineNumber}
             </a>
           </div>
         );
