@@ -43,8 +43,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   // Suppress harmless ResizeObserver errors from virtualizer
   useResizeObserverFix();
 
-  // Create search regex from search text
-  const searchRegex = useSearchRegex(searchText);
+  // keep search smooth input
+  const deferredSearchText = React.useDeferredValue(searchText);
+  const searchRegex = useSearchRegex(deferredSearchText);
 
   // Use tokenization hook for lazy tokenization with caching
   const { tokenizeLine } = useTokenization(lines);
