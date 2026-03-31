@@ -14,6 +14,7 @@ export default {
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/',
     clean: true,
+    globalObject: 'self', // Required for Web Workers
   },
   module: {
     rules: [
