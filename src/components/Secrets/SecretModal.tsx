@@ -9,6 +9,7 @@ import {
   BuildTimeSecret,
   CurrentComponentRef,
   ImagePullSecretType,
+  SecretForComponentOption,
 } from '../../types';
 import { SecretFromSchema } from '../../utils/validation-utils';
 import { RawComponentProps } from '../modal/createModalLauncher';
@@ -66,7 +67,7 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
     existingSecrets,
     currentComponent,
     relatedComponents: [],
-    secretForComponentOption: null,
+    secretForComponentOption: SecretForComponentOption.none,
   };
 
   return (
