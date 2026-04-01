@@ -514,9 +514,26 @@ export const createSecretWithLinkingComponents = async (
 ) => {
   const secretResource = getSecretObject(secret, namespace);
 
+  const labels = {
+    secret: getLabelsForSecret(secret),
+  };
+
+  const annotations = getAnnotationForSecret(secret);
+
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels?.secret,
+      },
+      annotations,
+    },
+  };
+
   const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
-    resource: secretResource,
+    resource: k8sSecretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
 
