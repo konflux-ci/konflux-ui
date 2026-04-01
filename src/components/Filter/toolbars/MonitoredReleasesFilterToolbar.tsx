@@ -31,13 +31,13 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
 }: MonitoredReleasesFilterToolbarProps) => {
   const {
     name,
-    status,
-    application,
-    releasePlan,
-    namespace,
-    component,
-    product,
-    productVersion,
+    statuses,
+    applications,
+    releasePlans,
+    namespaces,
+    components,
+    products,
+    productVersions,
     showLatest,
   } = filters;
 
@@ -51,51 +51,51 @@ const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarPro
       <MultiSelect
         label="Status"
         filterKey="status"
-        values={status}
-        setValues={(newValues) => setFilters({ ...filters, status: newValues })}
+        values={statuses}
+        setValues={(newValues) => setFilters({ ...filters, statuses: newValues })}
         options={statusOptions}
       />
       <MultiSelect
         label="Component"
         filterKey="component"
-        values={component}
-        setValues={(newValues) => setFilters({ ...filters, component: newValues })}
+        values={components}
+        setValues={(newValues) => setFilters({ ...filters, components: newValues })}
         options={componentOptions}
       />
       <MultiSelect
         label="Application"
         filterKey="application"
-        values={application}
-        setValues={(newValues) => setFilters({ ...filters, application: newValues })}
+        values={applications}
+        setValues={(newValues) => setFilters({ ...filters, applications: newValues })}
         options={applicationOptions}
       />
       <MultiSelect
         label="Release Plan"
         filterKey="releasePlan"
-        values={releasePlan}
-        setValues={(newValues) => setFilters({ ...filters, releasePlan: newValues })}
+        values={releasePlans}
+        setValues={(newValues) => setFilters({ ...filters, releasePlans: newValues })}
         options={releasePlanOptions}
       />
       <MultiSelect
         label="Namespace"
         filterKey="namespace"
-        values={namespace}
-        setValues={(newValues) => setFilters({ ...filters, namespace: newValues })}
+        values={namespaces}
+        setValues={(newValues) => setFilters({ ...filters, namespaces: newValues })}
         options={namespaceOptions}
         hasInlineFilter={true}
       />
       <MultiSelect
         label="Product"
         filterKey="product"
-        values={product}
-        setValues={(newValues) => setFilters({ ...filters, product: newValues })}
+        values={products}
+        setValues={(newValues) => setFilters({ ...filters, products: newValues })}
         options={productOptions}
       />
       <MultiSelect
         label="Product Version"
         filterKey="productVersion"
-        values={productVersion}
-        setValues={(newValues) => setFilters({ ...filters, productVersion: newValues })}
+        values={productVersions}
+        setValues={(newValues) => setFilters({ ...filters, productVersions: newValues })}
         options={productVersionOptions}
       />
       <Switch

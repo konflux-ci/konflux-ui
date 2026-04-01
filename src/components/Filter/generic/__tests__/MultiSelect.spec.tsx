@@ -107,7 +107,12 @@ describe('MultiSelect', () => {
 
     it('should return all options when filter value is empty', async () => {
       const user = userEvent.setup();
-      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       // Open the dropdown
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
@@ -123,7 +128,12 @@ describe('MultiSelect', () => {
 
     it('should filter options case-insensitively', async () => {
       const user = userEvent.setup();
-      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       // Open the dropdown
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
@@ -148,7 +158,12 @@ describe('MultiSelect', () => {
 
     it('should filter options with uppercase input', async () => {
       const user = userEvent.setup();
-      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -175,7 +190,12 @@ describe('MultiSelect', () => {
         'Service A': 10,
         'Service B': 7,
       };
-      renderMultiSelect({ ...defaultProps, options, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -197,7 +217,12 @@ describe('MultiSelect', () => {
 
     it('should handle empty filter value (whitespace only)', async () => {
       const user = userEvent.setup();
-      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -224,7 +249,12 @@ describe('MultiSelect', () => {
         'Item Two': 13,
         Other: 7,
       };
-      renderMultiSelect({ ...defaultProps, options, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -252,7 +282,12 @@ describe('MultiSelect', () => {
         'Option B': 3,
         '--divider--test': 2, // Another divider-like key
       };
-      renderMultiSelect({ ...defaultProps, options, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -279,7 +314,12 @@ describe('MultiSelect', () => {
         TestService: 3,
         'Test@App': 10,
       };
-      renderMultiSelect({ ...defaultProps, options, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -300,7 +340,12 @@ describe('MultiSelect', () => {
 
     it('should clear filter when dropdown is toggled closed and reopened', async () => {
       const user = userEvent.setup();
-      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -332,7 +377,12 @@ describe('MultiSelect', () => {
 
     it('should return empty array when no options match filter', async () => {
       const user = userEvent.setup();
-      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -360,7 +410,12 @@ describe('MultiSelect', () => {
         [MENU_DIVIDER]: 1,
         'Group B Item': 3,
       };
-      renderMultiSelect({ ...defaultProps, options, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -384,7 +439,12 @@ describe('MultiSelect', () => {
         [`${MENU_DIVIDER}-2`]: 1,
         'Item 3': 7,
       };
-      renderMultiSelect({ ...defaultProps, options, hasInlineFilter: true });
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
@@ -480,6 +540,7 @@ describe('MultiSelect', () => {
         ...defaultProps,
         hasInlineFilter: true,
         inlineFilterPlaceholderText: 'Search for items',
+        inlineFilterThreshold: 0,
       });
 
       const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
