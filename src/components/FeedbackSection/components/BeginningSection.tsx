@@ -13,6 +13,7 @@ import {
   PanelFooter,
   Button,
 } from '@patternfly/react-core';
+import { IfFeature } from '~/feature-flags/hooks';
 import { FeedbackSections } from '../consts';
 import { SubmitClicked } from './FeedbackForm';
 
@@ -38,25 +39,27 @@ const BeginningSection: React.FC<BeginningSectionProps> = ({ onSectionChange, on
       </PanelHeader>
       <PanelMain className="feedback-modal__content-main">
         <PanelMainBody className="feedback-modal__cards-list">
-          <Card
-            isCompact
-            isClickable
-            className="feedback-modal__section-card"
-            onClick={() => onSectionChange(FeedbackSections.FeedbackSection)}
-          >
-            <CardTitle>
-              <TextContent>
-                <Text component={TextVariants.p}>Share feedback</Text>
-              </TextContent>
-            </CardTitle>
-            <CardBody>
-              <TextContent>
-                <Text component={TextVariants.small}>
-                  Please share your experience using Konflux to the product team
-                </Text>
-              </TextContent>
-            </CardBody>
-          </Card>
+          <IfFeature flag="feedback-section">
+            <Card
+              isCompact
+              isClickable
+              className="feedback-modal__section-card"
+              onClick={() => onSectionChange(FeedbackSections.FeedbackSection)}
+            >
+              <CardTitle>
+                <TextContent>
+                  <Text component={TextVariants.p}>Share feedback</Text>
+                </TextContent>
+              </CardTitle>
+              <CardBody>
+                <TextContent>
+                  <Text component={TextVariants.small}>
+                    Please share your experience using Konflux to the product team
+                  </Text>
+                </TextContent>
+              </CardBody>
+            </Card>
+          </IfFeature>
           <Card
             isCompact
             isClickable
