@@ -20,6 +20,8 @@ import {
   SecretTypeDropdownLabel,
   SourceSecretType,
   BuildTimeSecret,
+  Source,
+  KeyValueEntry,
 } from '../../types';
 
 export { SecretForComponentOption };
@@ -185,7 +187,13 @@ export const getTargetLabelsForRemoteSecret = (
   return labels;
 };
 
-export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
+type SecretLabelInput = {
+  source?: Source;
+  labels?: KeyValueEntry[];
+  secretForComponentOption?: null | SecretForComponentOption;
+};
+
+export const getLabelsForSecret = (values: SecretLabelInput): { [key: string]: string } => {
   const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
 
   if (
@@ -219,7 +227,7 @@ export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]
   return labels;
 };
 
-export const getAnnotationForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
+export const getAnnotationForSecret = (values: SecretLabelInput): { [key: string]: string } => {
   if (!values.source?.repo) {
     // get scm annotation for repository
     return null;
