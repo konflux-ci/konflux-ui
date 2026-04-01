@@ -38,7 +38,6 @@ const MultiSelectComponent = ({
   inlineFilterThreshold = 20,
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded ?? false);
-  const [filterValue, setFilterValue] = React.useState('');
 
   // Determine if inline filter should be shown based on threshold
   const showInlineFilter = React.useMemo(() => {
@@ -49,33 +48,19 @@ const MultiSelectComponent = ({
 
   // Memoize the options to prevent re-creating them on every render
   const selectOptions = React.useMemo(() => {
-    const keys = Object.keys(options);
-    const lowerFilter = filterValue?.toLowerCase();
-
-    return keys
-      .filter((key) => {
-        // If inline filter is disabled, show all options
-        if (!showInlineFilter) return true;
-        // If filter is empty, show all options
-        if (!filterValue?.trim()) return true;
-        // Otherwise, filter based on the filter value
-        return !key.startsWith(MENU_DIVIDER) && key.toLowerCase().includes(lowerFilter);
-      })
-      .map((filter) =>
-        filter.startsWith(MENU_DIVIDER) ? (
-          <Divider key={filter} />
-        ) : (
-          <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
-            {filter}
-          </SelectOption>
-        ),
-      );
-  }, [filterValue, options, showInlineFilter]);
+    return Object.keys(options).map((filter) =>
+      filter.startsWith(MENU_DIVIDER) ? (
+        <Divider key={filter} />
+      ) : (
+        <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
+          {filter}
+        </SelectOption>
+      ),
+    );
+  }, [options]);
 
   const onFilter = React.useCallback(
     (_event: React.ChangeEvent<HTMLInputElement> | null, value: string) => {
-      setFilterValue(value);
-      // Return freshly calculated options based on the new filter value
       const keys = Object.keys(options);
       const lowerFilter = value?.toLowerCase();
 
@@ -116,10 +101,6 @@ const MultiSelectComponent = ({
         isOpen={expanded}
         onToggle={(_, exp: boolean) => {
           setExpanded(exp);
-          // Reset filter when opening or closing to ensure fresh state
-          if (showInlineFilter) {
-            setFilterValue('');
-          }
         }}
         onSelect={(event, selection) => {
           const checked = (event.target as HTMLInputElement).checked;

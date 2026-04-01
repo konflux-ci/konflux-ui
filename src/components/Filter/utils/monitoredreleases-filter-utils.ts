@@ -4,13 +4,13 @@ import { MonitoredReleaseKind } from '~/types';
 
 export type MonitoredReleasesFilterState = {
   name: string;
-  status: string[];
-  application: string[];
-  releasePlan: string[];
-  namespace: string[];
-  component: string[];
-  product: string[];
-  productVersion: string[];
+  statuses: string[];
+  applications: string[];
+  releasePlans: string[];
+  namespaces: string[];
+  components: string[];
+  products: string[];
+  productVersions: string[];
   showLatest: boolean;
 };
 
@@ -18,8 +18,16 @@ export const filterMonitoredReleases = (
   monitoredReleases: MonitoredReleaseKind[],
   filters: MonitoredReleasesFilterState,
 ): MonitoredReleaseKind[] => {
-  const { name, status, application, releasePlan, namespace, component, product, productVersion } =
-    filters;
+  const {
+    name,
+    statuses,
+    applications,
+    releasePlans,
+    namespaces,
+    components,
+    products,
+    productVersions,
+  } = filters;
 
   return monitoredReleases.filter((mr) => {
     const applicationName = mr?.metadata?.labels?.[PipelineRunLabel.APPLICATION];
@@ -30,31 +38,31 @@ export const filterMonitoredReleases = (
     const productVersionValue = mr?.productVersion;
 
     const applicationFilter =
-      !application.length ||
-      application.includes(applicationName) ||
-      (application.includes('No application') && applicationName === undefined);
+      !applications.length ||
+      applications.includes(applicationName) ||
+      (applications.includes('No application') && applicationName === undefined);
 
     const componentFilter =
-      !component.length ||
-      component.includes(componentName) ||
-      (component.includes('No component') && componentName === undefined);
+      !components.length ||
+      components.includes(componentName) ||
+      (components.includes('No component') && componentName === undefined);
 
     const productFilter =
-      !product.length ||
-      product.includes(productName) ||
-      (product.includes('No product') && !productName);
+      !products.length ||
+      products.includes(productName) ||
+      (products.includes('No product') && !productName);
 
     const productVersionFilter =
-      !productVersion.length ||
-      productVersion.includes(productVersionValue) ||
-      (productVersion.includes('No product version') && !productVersionValue);
+      !productVersions.length ||
+      productVersions.includes(productVersionValue) ||
+      (productVersions.includes('No product version') && !productVersionValue);
 
     return (
       (!name || mr?.metadata?.name?.indexOf(name) >= 0) &&
-      (!status.length || status.includes(getReleaseStatus(mr))) &&
+      (!statuses.length || statuses.includes(getReleaseStatus(mr))) &&
       applicationFilter &&
-      (!releasePlan.length || releasePlan.includes(releasePlanName)) &&
-      (!namespace.length || namespace.includes(namespaceName)) &&
+      (!releasePlans.length || releasePlans.includes(releasePlanName)) &&
+      (!namespaces.length || namespaces.includes(namespaceName)) &&
       componentFilter &&
       productFilter &&
       productVersionFilter
