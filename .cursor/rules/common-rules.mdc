@@ -1,0 +1,28 @@
+---
+description: Common rules for maintaining documentation and code consistency/quality
+alwaysApply: true
+---
+
+# Common Rules
+
+## Analytics Documentation Sync
+
+When any code changes are made to files in `src/analytics/` — check whether the change requires updating `docs/analytics.md`. This includes but is not limited to:
+
+- New methods added to `AnalyticsService`
+- Changes to method signatures or behavior
+- New event types or property schemas
+- Changes to configuration, initialization, or the config resolution flow
+- Changes to login/logout detection logic
+- New exports or hooks added to the analytics module
+
+If the change affects any documented behavior, API, or architecture, update `docs/analytics.md` to reflect the change before completing the task.
+
+## Analytics Event Tracking
+
+When tracking analytics events in components or hooks:
+
+- **Always use `useTrackAnalyticsEvent()`** from `~/analytics/hooks` to send events. This hook checks whether analytics is enabled before firing.
+- **Never call `analyticsService` directly** from components — it bypasses the analytics-enabled check and will send events even when analytics is disabled.
+- PIA fields (userId, email, etc.) must be obfuscated via `obfuscate()` from `~/analytics/obfuscate` before passing to the track function.
+- Event schemas and names come from the generated types (`TrackEvents` enum, `EventPropertiesMap`) — do not use hardcoded event name strings.
