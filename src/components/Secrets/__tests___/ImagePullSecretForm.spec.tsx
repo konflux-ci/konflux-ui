@@ -72,7 +72,7 @@ describe('ImagePullSecretForm', () => {
     expect(screen.getByText('Upload a .dockercfg or .docker/config.json file')).toBeVisible();
     expect(
       screen.getByText(
-        'This file contains configuration details and credentials to connect to a secure image registry',
+        'This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .docker/config.json format',
       ),
     ).toBeVisible();
   });

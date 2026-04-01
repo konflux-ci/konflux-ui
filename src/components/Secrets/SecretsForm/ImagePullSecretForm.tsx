@@ -103,7 +103,7 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = (
             name="image.dockerconfig"
             id="text-file-docker-config"
             label="Upload a .dockercfg or .docker/config.json file"
-            helpText="This file contains configuration details and credentials to connect to a secure image registry"
+            helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .docker/config.json format"
             required
             onValidate={validateDockerConfig}
           />
