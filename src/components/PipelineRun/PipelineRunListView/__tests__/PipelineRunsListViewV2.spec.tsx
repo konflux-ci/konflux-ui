@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunListRow } from '../PipelineRunListRow';
 import PipelineRunsListViewV2 from '../PipelineRunsListViewV2';
@@ -202,7 +203,7 @@ describe('PipelineRunsListViewV2', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     screen.getByText('Unable to load pipeline runs');
   });
 
@@ -214,12 +215,12 @@ describe('PipelineRunsListViewV2', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.getByText('Keep tabs on components and activity')).toBeVisible();
   });
 
   it('should render pipeline run rows when data is available', async () => {
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     await waitFor(() => {
       expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
       expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
@@ -227,12 +228,12 @@ describe('PipelineRunsListViewV2', () => {
   });
 
   it('should show version filter when versionName is not provided', () => {
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.getByRole('button', { name: 'Version filter menu' })).toBeVisible();
   });
 
   it('should hide version filter when versionName is provided', () => {
-    render(<TestedComponentV2 versionName="main" />);
+    renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
   });
 
@@ -244,12 +245,12 @@ describe('PipelineRunsListViewV2', () => {
       () => {},
       { isFetchingNextPage: true, hasNextPage: true },
     ]);
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.getByLabelText('Loading more pipeline runs')).toBeInTheDocument();
   });
 
   it('should call usePipelineRunsV2 with correct selector including component label', () => {
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
@@ -263,7 +264,7 @@ describe('PipelineRunsListViewV2', () => {
   });
 
   it('should include component version label in selector when versionName is provided', () => {
-    render(<TestedComponentV2 versionName="main" />);
+    renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
@@ -284,12 +285,12 @@ describe('PipelineRunsListViewV2', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponentV2 />);
+    renderWithQueryClient(<TestedComponentV2 />);
     screen.getByTestId('data-table-skeleton');
   });
 
   it('should ignore stale version filter on fixed-version pages', async () => {
-    render(
+    renderWithQueryClient(
       <FilterContext.Provider
         value={{
           filters: { version: '["stale-branch"]' },
