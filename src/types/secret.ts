@@ -197,7 +197,6 @@ export enum SourceSecretType {
   ssh = 'SSH Key',
 }
 /**
- * Maps dropdown / form keys to `SecretType` values used in the UI and for comparisons.
  * For image pull, `ImageRegistryCreds` vs `UploadConfigFile` intentionally differ so callers
  * (e.g. edit secret) can tell manual registry creds from an uploaded config. The Kubernetes
  * Secret `type` for both when creating/updating normalized pull secrets is
