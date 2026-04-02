@@ -161,18 +161,19 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
       data = dockerconfigjson
         ? { ['.dockerconfigjson']: Base64.btoa(JSON.stringify(dockerconfigjson)) }
         : '';
+    } else if (values.image.dockerconfig) {
+      let parsedDockerConfig: unknown;
+      try {
+        parsedDockerConfig = JSON.parse(Base64.decode(values.image.dockerconfig));
+      } catch {
+        parsedDockerConfig = {};
+      }
+      const normalized = normalizeDockerConfigForDockerconfigjson(parsedDockerConfig);
+      data = {
+        ['.dockerconfigjson']: Base64.btoa(JSON.stringify(normalized)),
+      };
     } else {
-      data = values.image.dockerconfig
-        ? {
-            ['.dockerconfigjson']: Base64.btoa(
-              JSON.stringify(
-                normalizeDockerConfigForDockerconfigjson(
-                  JSON.parse(Base64.decode(values.image.dockerconfig)),
-                ),
-              ),
-            ),
-          }
-        : '';
+      data = '';
     }
   } else if (values.type === SecretTypeDropdownLabel.source) {
     if (values.source.authType === SourceSecretType.basic) {
