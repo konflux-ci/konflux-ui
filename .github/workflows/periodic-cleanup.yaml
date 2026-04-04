@@ -44,18 +44,21 @@ jobs:
 
       - name: Cleanup GitHub repos
         id: github
+        if: ${{ always() }}
         run: |
           chmod +x ./scripts/ci_cleanup.sh
           ./scripts/ci_cleanup.sh github
 
       - name: Cleanup Quay repos and bots
         id: quay
+        if: ${{ always() }}
         run: |
           ./scripts/ci_cleanup.sh quay
 
       # We have to install oc, kubectl does not support login cmds
       - name: Install OpenShift CLI
         id: install-oc
+        if: ${{ always() }}
         run: |
           # Get the same version OC with stage konflux
           DOMAIN=$(echo "$KONFLUX_API_SERVER" | sed -E 's#https://api\.([^:]+).*#\1#')
@@ -69,6 +72,7 @@ jobs:
       # Use the oc cmds with sa token to delete resources
       - name: Cleanup Konflux staging resources
         id: konflux
+        if: ${{ steps.install-oc.conclusion == 'success' }}
         run: |
           ./scripts/ci_cleanup.sh konflux
 
