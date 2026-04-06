@@ -30,6 +30,7 @@ import {
   getSecretBreadcrumbs,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
+import { usePassiveMountRegistry } from '~/vendor/chrono-zone-normalize/registerPassiveMount';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
@@ -76,6 +77,7 @@ const EditSecretForm: React.FC = () => {
   const [secretName] = useSearchParam('secretName');
 
   const [secretData, secretLoaded, error] = useSecret(namespace, secretName);
+  usePassiveMountRegistry(secretData, secretLoaded, error);
 
   if (!secretLoaded) {
     return (

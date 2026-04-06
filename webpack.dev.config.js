@@ -66,6 +66,13 @@ export default merge(commonConfig, {
         toProxy: true,
         // pathRewrite: { '^/wss/k8s': '' },
       },
+      {
+        context: (path) => path.startsWith('/__secret-collector'),
+        target: 'http://127.0.0.1:8766',
+        secure: false,
+        changeOrigin: true,
+        pathRewrite: { '^/__secret-collector': '' },
+      },
     ],
   },
   module: {
