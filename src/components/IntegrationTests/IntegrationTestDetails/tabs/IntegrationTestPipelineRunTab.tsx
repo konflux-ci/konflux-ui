@@ -88,43 +88,45 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
           totalColumns={INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
       )}
-      <Table
-        data={pipelineRuns}
-        aria-label="Pipeline run List"
-        Header={getPipelineRunListHeader(safeVisibleColumns)}
-        Row={(props) => (
-          <PipelineRunListRowWithColumns
-            obj={props.obj as PipelineRunKind}
-            columns={props.columns || []}
-            customData={{
-              vulnerabilities: {},
-              fetchedPipelineRuns: [],
-              integrationTestName,
-            }}
-            index={props.index}
-            visibleColumns={safeVisibleColumns}
-          />
-        )}
-        loaded={loaded}
-        getRowProps={(obj: PipelineRunKind) => ({
-          id: obj.metadata.name,
-        })}
-        onRowsRendered={({ stopIndex }) => {
-          if (
-            loaded &&
-            stopIndex === pipelineRuns.length - 1 &&
-            hasNextPage &&
-            !isFetchingNextPage
-          ) {
-            getNextPage?.();
-          }
-        }}
-        customData={{
-          vulnerabilities: {},
-          fetchedPipelineRuns: [],
-          integrationTestName,
-        }}
-      />
+      <div className="integration-test-plr-list">
+        <Table
+          data={pipelineRuns}
+          aria-label="Pipeline run List"
+          Header={getPipelineRunListHeader(safeVisibleColumns)}
+          Row={(props) => (
+            <PipelineRunListRowWithColumns
+              obj={props.obj as PipelineRunKind}
+              columns={props.columns || []}
+              customData={{
+                vulnerabilities: {},
+                fetchedPipelineRuns: [],
+                integrationTestName,
+              }}
+              index={props.index}
+              visibleColumns={safeVisibleColumns}
+            />
+          )}
+          loaded={loaded}
+          getRowProps={(obj: PipelineRunKind) => ({
+            id: obj.metadata.name,
+          })}
+          onRowsRendered={({ stopIndex }) => {
+            if (
+              loaded &&
+              stopIndex === pipelineRuns.length - 1 &&
+              hasNextPage &&
+              !isFetchingNextPage
+            ) {
+              getNextPage?.();
+            }
+          }}
+          customData={{
+            vulnerabilities: {},
+            fetchedPipelineRuns: [],
+            integrationTestName,
+          }}
+        />
+      </div>
       <ColumnManagement<PipelineRunColumnKeys>
         isOpen={isColumnManagementOpen}
         onClose={() => setIsColumnManagementOpen(false)}
