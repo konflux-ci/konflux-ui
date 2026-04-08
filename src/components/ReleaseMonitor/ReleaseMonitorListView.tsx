@@ -284,8 +284,15 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
       };
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
+
+    // Filter releases to only include those from selected namespaces
+    const releasesFromSelectedNamespaces =
+      selectedNamespaces.length > 0
+        ? releases.filter((mr) => selectedNamespaces.includes(mr.metadata.namespace))
+        : releases;
+
     const applicationOptions = createFilterObj(
-      releases,
+      releasesFromSelectedNamespaces,
       (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
     );
     const noApplication = applicationOptions.undefined;
@@ -301,7 +308,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
         : applicationOptions;
 
     const componentOptions = createFilterObj(
-      releases,
+      releasesFromSelectedNamespaces,
       (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
     );
     const noComponent = componentOptions.undefined;
@@ -316,7 +323,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           }
         : componentOptions;
 
-    const productOptions = createFilterObj(releases, (mr) => mr?.product);
+    const productOptions = createFilterObj(releasesFromSelectedNamespaces, (mr) => mr?.product);
     const noProduct = productOptions.undefined;
     delete productOptions.undefined;
 
@@ -329,7 +336,10 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
           }
         : productOptions;
 
-    const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
+    const productVersionOptions = createFilterObj(
+      releasesFromSelectedNamespaces,
+      (mr) => mr?.productVersion,
+    );
     const noProductVersion = productVersionOptions.undefined;
     delete productVersionOptions.undefined;
 
@@ -344,7 +354,7 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
 
     // For namespace options, ensure ALL namespaces are available, not just loaded ones
     const namespaceOptionsFromReleases = createFilterObj(
-      releases,
+      releasesFromSelectedNamespaces,
       (mr) => mr?.metadata.namespace,
       nsKeys,
     );
@@ -360,15 +370,22 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
     );
 
     return {
-      statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statusList),
+      statusOptions: createFilterObj(
+        releasesFromSelectedNamespaces,
+        (mr) => getReleaseStatus(mr),
+        statusList,
+      ),
       applicationOptions: applicationFilterOptions,
-      releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
+      releasePlanOptions: createFilterObj(
+        releasesFromSelectedNamespaces,
+        (mr) => mr?.spec.releasePlan,
+      ),
       namespaceOptions,
       componentOptions: componentFilterOptions,
       productOptions: productFilterOptions,
       productVersionOptions: productVersionFilterOptions,
     };
-  }, [releases, namespaces]);
+  }, [releases, namespaces, selectedNamespaces]);
 
   const filteredData = React.useMemo(() => {
     let filtered = filterMonitoredReleases(releases, filters);
