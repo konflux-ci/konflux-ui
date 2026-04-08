@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKubearchiveListResourceQuery } from '~/kubearchive/hooks';
+import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { useTRPipelineRuns } from '../../hooks/useTektonResults';
 import { ComponentKind } from '../../types';
 import {
@@ -11,6 +12,10 @@ import {
   SAMPLE_ANNOTATION,
 } from '../../utils/component-utils';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
+import {
+  mockPipelineRunWithPrNumberLabel,
+  createMockPipelineRunWithPrLabelAndUser,
+} from '../__data__/mock-data';
 import usePACState, { PACState } from '../usePACState';
 
 jest.mock('../../hooks/useTektonResults');
@@ -155,5 +160,44 @@ describe('usePACState', () => {
     useTRPipelineRunsMock.mockReturnValueOnce([[], false]);
     const component = createComponent(ComponentBuildState.enabled);
     expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.loading);
+  });
+
+  it('should not filter out PUSH pipeline runs with PR label', () => {
+    useK8sWatchResourceMock.mockReturnValueOnce([[mockPipelineRunWithPrNumberLabel], true]);
+
+    const component = createComponent(ComponentBuildState.enabled);
+    renderHook(() => usePACState(component));
+
+    // Verify useK8sWatchResource was called
+    expect(useK8sWatchResourceMock).toHaveBeenCalled();
+
+    // Get the selector argument passed to useK8sWatchResource (via usePipelineRunsV2)
+    const callArgs = useK8sWatchResourceMock.mock.calls[0];
+    const watchResource = callArgs[0];
+
+    // Verify that the selector does NOT have a matchExpression filtering out PR labels
+    const matchExpressions = watchResource?.selector?.matchExpressions || [];
+    const hasPRLabelFilter = matchExpressions.some(
+      (expr: { key: string; operator: string }) =>
+        expr.key === PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL && expr.operator === 'DoesNotExist',
+    );
+
+    expect(hasPRLabelFilter).toBe(false);
+  });
+
+  it('should identify ready state when PUSH pipeline run has PR label', () => {
+    useK8sWatchResourceMock.mockReturnValueOnce([[mockPipelineRunWithPrNumberLabel], true]);
+
+    const component = createComponent(ComponentBuildState.enabled);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.ready);
+  });
+
+  it('should identify ready state when PUSH pipeline run has PR label and matches commit user', () => {
+    const mockPipelineRun = createMockPipelineRunWithPrLabelAndUser('', 'user-name');
+
+    useK8sWatchResourceMock.mockReturnValueOnce([[mockPipelineRun], true]);
+
+    const component = createComponent(ComponentBuildState.enabled);
+    expect(renderHook(() => usePACState(component)).result.current).toBe(PACState.ready);
   });
 });

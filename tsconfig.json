@@ -36,6 +36,7 @@
     "*.config.js",
     ".*.cjs",
     "node_modules",
-    "config/*"
+    "config/*",
+    "scripts/*"
   ]
 }

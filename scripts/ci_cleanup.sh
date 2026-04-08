@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Purpose: This script cleans up repositories and bots that remain on GitHub and Quay after CI automation runs.
 GH_ORG="redhat-hac-qe"
 GH_SEARCH_PHASE="devfile-sample-code-with-quarkus-"
@@ -10,11 +11,11 @@ QUAY_SEARCH_PHASE="java-quarkus-"
 # 2592000 is the number of seconds in 30 days (60*60*24*30)
 month_ago=$(($(date +%s) - 2592000))
 
-
 clean_up() {
     echo "Starting CI cleanup process..."
     clean_github
     clean_quay
+    clean_konflux
     echo "Cleanup completed."
 }
 
@@ -26,7 +27,7 @@ clean_github() {
     fi
     
     echo "Cleaning up GitHub repositories and bots..."
-    gh auth login --with-token <<< $GH_TOKEN
+    # Skipping the login as gh cli automatically uses the token from the environment variable
     
     # We create approximately 20 repositories per working day (100 per week). 
     # The repositories from successful PRs should removed after the test.
@@ -52,11 +53,12 @@ clean_github() {
         if [ "$created_epoch" -lt "$month_ago" ]; then
             repo_locator=$(echo "$repo" | jq -r '.owner.login + "/" + .name')
             echo -n "Deleting $repo_locator created at $created_at... "
-            if gh repo delete $repo_locator --yes 2>/dev/null; then
+            if delete_output=$(gh repo delete $repo_locator --yes 2>&1); then
                 echo "✅ DELETED"
                 removed_repos=$((removed_repos + 1))
             else
                 echo "❌ FAILED"
+                echo "  Error: $delete_output"
                 failed_repos=$((failed_repos + 1))
             fi
         else
@@ -155,6 +157,123 @@ clean_quay_bots() {
     done
 }
 
+clean_konflux() {
+    # Validate required environment variables
+    required_vars=("KONFLUX_API_SERVER" "KONFLUX_TOKEN" "KONFLUX_NAMESPACE")
+    # Delete applications by default
+    resources_type=applications
+    for var in "${required_vars[@]}"; do
+        if [ -z "${!var:-}" ]; then
+            echo "Error: Required environment variable $var is not set"
+            exit 1
+        fi
+    done
+
+    # Check for dry-run mode
+    DRY_RUN_MODE="${DRY_RUN:-false}"
+    if [ "$DRY_RUN_MODE" = "true" ]; then
+        echo "🔍 DRY RUN MODE - No $resources_type will be deleted"
+    fi
+
+    echo "Cleaning up Konflux staging $resources_type from ${KONFLUX_API_SERVER}..."
+
+    # Login to OpenShift using oc
+    echo "Authenticating to Konflux API server..."
+    if ! login_output=$(oc login --server="${KONFLUX_API_SERVER}" --token="${KONFLUX_TOKEN}" -n "${KONFLUX_NAMESPACE}" --insecure-skip-tls-verify 2>&1); then
+        echo "❌ Authentication failed"
+        echo "Error: $login_output"
+        exit 1
+    fi
+    echo "✅ Authentication successful"
+
+    # Get current namespace
+    if ! CURRENT_NAMESPACE=$(oc project -q 2>&1); then
+        echo "❌ Failed to get current namespace"
+        echo "Error: $CURRENT_NAMESPACE"
+        exit 1
+    fi
+
+    if [[ "$CURRENT_NAMESPACE" == "$KONFLUX_NAMESPACE" ]]; then
+        echo "Using namespace: $CURRENT_NAMESPACE"
+    else
+        echo "Error: Not the target namespace $KONFLUX_NAMESPACE (current: $CURRENT_NAMESPACE)."
+        echo "Access denied: The current user is authorized for $KONFLUX_NAMESPACE but does not have permission to access $CURRENT_NAMESPACE."
+        exit 1
+    fi
+
+    # List all resources
+    echo "Fetching $resources_type from namespace: $KONFLUX_NAMESPACE..."
+
+    removed_resources=0
+    skipped_resources=0
+    failed_resources=0
+
+    # Get resources with their creation timestamps
+    if ! resources_json=$(oc get "$resources_type" -n "$KONFLUX_NAMESPACE" -o json); then
+        echo "Error: Failed to fetch $resources_type from namespace $KONFLUX_NAMESPACE"
+        exit 1
+    fi
+
+    # Parse and process each resources
+    # Use process substitution to avoid subshell issue with pipe
+    while read -r resources_items; do
+        resources_name=$(echo "$resources_items" | jq -r '.name')
+        created_at=$(echo "$resources_items" | jq -r '.created')
+        if ! date_output=$(date -d "$created_at" +%s 2>&1); then
+            echo "Warning: Invalid timestamp for $resources_name: $created_at"
+            echo "  Error: $date_output"
+            skipped_resources=$((skipped_resources + 1))
+            continue
+        fi
+        created_epoch=$date_output
+
+        if [ -z "$resources_name" ] || [ "$resources_name" = "null" ]; then
+            echo "Skipping - Invalid resource name"
+            skipped_resources=$((skipped_resources + 1))
+            continue
+        fi
+
+        if [ "$created_epoch" -lt "$month_ago" ]; then
+            if [ "$DRY_RUN_MODE" = "true" ]; then
+                echo "🔍 [DRY RUN] Would delete $resources_type $resources_name created at $created_at"
+                removed_resources=$((removed_resources + 1))
+            else
+                echo -n "Deleting $resources_name created at $created_at... "
+                if delete_output=$(oc delete $resources_type "$resources_name" -n "$KONFLUX_NAMESPACE" --ignore-not-found=true 2>&1); then
+                    echo "✅ DELETED"
+                    removed_resources=$((removed_resources + 1))
+                else
+                    echo "❌ FAILED"
+                    echo "  Error: $delete_output"
+                    failed_resources=$((failed_resources + 1))
+                fi
+            fi
+        else
+            echo "Skipping $resources_name - younger than a month - created at $created_at"
+            skipped_resources=$((skipped_resources + 1))
+        fi
+    done < <(echo "$resources_json" | jq -c '.items[] | {name: .metadata.name, created: .metadata.creationTimestamp}')
+
+    if [ "$DRY_RUN_MODE" = "true" ]; then
+        echo ""
+        echo "=========================================="
+        echo "DRY RUN SUMMARY:"
+        echo "Would remove: $removed_resources $resources_type"
+        echo "Would skip: $skipped_resources $resources_type"
+        echo "=========================================="
+        echo "To actually delete these $resources_type, run without DRY_RUN=true"
+    else
+        echo "Removed $removed_resources $resources_type."
+        echo "Skipped $skipped_resources $resources_type."
+        echo "Failed $failed_resources $resources_type."
+
+        if [ "$failed_resources" -gt 0 ]; then
+            echo "Warning: Some $resources_type failed to delete"
+            return 1
+        fi
+    fi
+}
+
 # Parse script arguments
 case "$1" in
   github)
@@ -163,11 +282,14 @@ case "$1" in
   quay)
     clean_quay
     ;;
+  konflux)
+    clean_konflux
+    ;;
   "" )
     clean_up
     ;;
   * )
-    echo "Usage: $0 [github|quay]"
+    echo "Usage: $0 [github|quay|konflux]"
     exit 1
     ;;
 esac

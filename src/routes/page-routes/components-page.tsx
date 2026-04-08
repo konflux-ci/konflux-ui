@@ -1,4 +1,6 @@
 import { RouteErrorBoundry } from '@routes/RouteErrorBoundary';
+import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
+import { ensureFeatureFlagOnLoader } from '~/feature-flags/utils';
 import {
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
@@ -9,11 +11,14 @@ import { COMPONENT_DETAILS_V2_PATH, COMPONENTS_PATH } from '../paths';
 const componentsPageRoutes = [
   {
     path: COMPONENTS_PATH.path,
-    lazy: async () => {
-      const { default: Component } = await import('~/components/ComponentsPage/ComponentsPage');
+    errorElement: <RouteErrorBoundry />,
+    async lazy() {
+      ensureFeatureFlagOnLoader('components-page');
+      const { default: Component } = await import(
+        '~/components/ComponentList/ComponentsListView' /* webpackChunkName: "components-list" */
+      );
       return { Component };
     },
-    errorElement: <RouteErrorBoundry />,
   },
   {
     path: COMPONENT_DETAILS_V2_PATH.path,
@@ -31,7 +36,7 @@ const componentsPageRoutes = [
       },
       {
         path: `versions`,
-        element: null, // TODO: implement Versions tab https://issues.redhat.com/browse/KFLUXUI-1007
+        element: <ComponentVersionsTab />,
       },
     ],
   },

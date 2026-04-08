@@ -101,7 +101,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
         dropdownItems={dropdownItems}
         onChange={(type) => {
           setCurrentType(type);
-          void setValue(null);
+          void setValue(SecretForComponentOption.none);
           if (type === SecretTypeDropdownLabel.image) {
             resetKeyValues();
             values.secretName &&
@@ -154,7 +154,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           currentComponent={currentComponent}
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}
-          radioLabels={SecretLinkOptionLabels.forImportSecret}
+          radioLabels={SecretLinkOptionLabels.default}
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
