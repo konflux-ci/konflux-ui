@@ -23,6 +23,7 @@ import {
   Source,
   KeyValueEntry,
 } from '../../types';
+import type { Patch } from '../../types/k8s';
 
 export { SecretForComponentOption };
 
@@ -359,30 +360,37 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
+/** Ensures JSON Patch always receives an object; `null`/missing maps become `{}` to clear metadata on the server. */
+const metadataMapForPatch = (
+  map: Record<string, string> | null | undefined,
+): Record<string, string> => (map && typeof map === 'object' && !Array.isArray(map) ? map : {});
+
 const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
+  const patches: Patch[] = [
+    {
+      op: 'add',
+      path: '/metadata/labels',
+      value: metadataMapForPatch(newK8sSecretResource.metadata?.labels),
+    },
+    {
+      op: 'add',
+      path: '/metadata/annotations',
+      value: metadataMapForPatch(newK8sSecretResource.metadata?.annotations),
+    },
+    {
+      op: 'replace',
+      path: '/data',
+      value: newK8sSecretResource.data,
+    },
+  ];
+
   return await K8sQueryPatchResource({
     model: SecretModel,
     queryOptions: {
       name: newK8sSecretResource.metadata.name,
       ns: newK8sSecretResource.metadata.namespace,
     },
-    patches: [
-      {
-        op: 'add',
-        path: '/metadata/labels',
-        value: newK8sSecretResource.metadata.labels,
-      },
-      {
-        op: 'add',
-        path: '/metadata/annotations',
-        value: newK8sSecretResource.metadata.annotations,
-      },
-      {
-        op: 'replace',
-        path: '/data',
-        value: newK8sSecretResource.data,
-      },
-    ],
+    patches,
   });
 };
 

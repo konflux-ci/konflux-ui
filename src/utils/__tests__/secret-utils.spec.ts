@@ -22,6 +22,7 @@ import {
 } from '../../types';
 import {
   createSecretResource,
+  editSecretResource,
   getAnnotationForSecret,
   getKubernetesSecretType,
   getLabelsForSecret,
@@ -477,6 +478,87 @@ describe('getAnnotationForSecret', () => {
     ).toEqual({
       [SecretLabels.REPO_ANNOTATION]: 'hac-dev',
     });
+  });
+});
+
+describe('editSecretResource', () => {
+  beforeEach(() => {
+    k8sPatchResourceMock.mockReset();
+    k8sPatchResourceMock.mockResolvedValue({});
+  });
+
+  it('sends labels and annotations patches as empty objects when form yields no metadata maps', async () => {
+    const values: AddSecretFormValues = {
+      ...formValues,
+      labels: [],
+      source: { authType: SourceSecretType.basic, username: 'u', password: 'p' },
+    };
+    await editSecretResource(values, 'test-ns');
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
+    const { patches, queryOptions } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(queryOptions).toMatchObject({ name: 'test', ns: 'test-ns' });
+    expect(patches[0]).toEqual({ op: 'add', path: '/metadata/labels', value: {} });
+    expect(patches[1]).toEqual({ op: 'add', path: '/metadata/annotations', value: {} });
+    expect(patches[2]).toMatchObject({ op: 'replace', path: '/data' });
+    expect(patches[2].value).toEqual({ test: 'dGVzdA==' });
+  });
+
+  it('sends SCM labels and repo annotation when host and repo are set', async () => {
+    await editSecretResource(formValuesForSCM, 'test-ns');
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
+    const { patches } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(patches[0]).toEqual({
+      op: 'add',
+      path: '/metadata/labels',
+      value: {
+        [SecretLabels.CREDENTIAL_LABEL]: SecretLabels.CREDENTIAL_VALUE,
+        [SecretLabels.HOST_LABEL]: 'www.github.com',
+      },
+    });
+    expect(patches[1]).toEqual({
+      op: 'add',
+      path: '/metadata/annotations',
+      value: { [SecretLabels.REPO_ANNOTATION]: 'hac-dev' },
+    });
+    expect(patches[2]).toMatchObject({ op: 'replace', path: '/data' });
+  });
+
+  it('merges user labels with SCM labels in the labels patch', async () => {
+    const values: AddSecretFormValues = {
+      ...formValuesForSCM,
+      labels: [{ key: 'env', value: 'prod' }],
+    };
+    await editSecretResource(values, 'test-ns');
+
+    const labelsPatch = k8sPatchResourceMock.mock.calls[0][0].patches[0];
+    expect(labelsPatch).toEqual({
+      op: 'add',
+      path: '/metadata/labels',
+      value: {
+        env: 'prod',
+        [SecretLabels.CREDENTIAL_LABEL]: SecretLabels.CREDENTIAL_VALUE,
+        [SecretLabels.HOST_LABEL]: 'www.github.com',
+      },
+    });
+  });
+
+  it('sends only user labels when no SCM host and annotations stay empty', async () => {
+    const values: AddSecretFormValues = {
+      ...formValues,
+      labels: [{ key: 'team', value: 'platform' }],
+      source: { authType: SourceSecretType.basic, username: 'u', password: 'p' },
+    };
+    await editSecretResource(values, 'test-ns');
+
+    const { patches } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(patches[0]).toEqual({
+      op: 'add',
+      path: '/metadata/labels',
+      value: { team: 'platform' },
+    });
+    expect(patches[1]).toEqual({ op: 'add', path: '/metadata/annotations', value: {} });
   });
 });
 
