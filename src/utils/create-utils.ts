@@ -514,9 +514,7 @@ export const createSecretWithLinkingComponents = async (
 ) => {
   const secretResource = getSecretObject(secret, namespace);
 
-  const labels = {
-    secret: getLabelsForSecret(secret),
-  };
+  const labels = getLabelsForSecret(secret);
 
   const annotations = getAnnotationForSecret(secret);
 
@@ -524,9 +522,7 @@ export const createSecretWithLinkingComponents = async (
     ...secretResource,
     metadata: {
       ...secretResource.metadata,
-      labels: {
-        ...labels?.secret,
-      },
+      labels,
       annotations,
     },
   };

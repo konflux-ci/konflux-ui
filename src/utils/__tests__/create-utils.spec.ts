@@ -433,7 +433,7 @@ describe('create-utils createSecretWithLinkingComponents', () => {
       expect.objectContaining({
         resource: expect.objectContaining({
           metadata: expect.objectContaining({
-            labels: {},
+            labels: null,
             annotations: null,
           }),
         }),
