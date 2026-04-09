@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
+import { useDebounceCallback } from '~/shared/hooks/useDebounceCallback';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
@@ -186,10 +187,28 @@ const Logs: React.FC<LogsProps> = ({
     };
   }, [containers, resource, resName, resNamespace, appendLog, source, isKubearchiveEnabled]);
 
-  const formattedLogs = React.useMemo(
-    () => processLogs(logSources, containers),
-    [logSources, containers],
-  );
+  const [formattedLogs, setFormattedLogs] = React.useState('');
+  const [processingLogs, setProcessingLogs] = React.useState(false);
+  const containersRef = React.useRef(containers);
+  containersRef.current = containers;
+
+  const processAndSetLogs = useDebounceCallback(() => {
+    const result = processLogs(logSources, containersRef.current);
+    setFormattedLogs(result);
+    setProcessingLogs(false);
+  }, 300);
+
+  React.useEffect(() => {
+    if (Object.keys(logSources).length === 0) {
+      setFormattedLogs('');
+      return;
+    }
+
+    setProcessingLogs(true);
+    processAndSetLogs();
+
+    return () => processAndSetLogs.cancel();
+  }, [logSources, processAndSetLogs]);
 
   const allLogsTerminated = React.useMemo<boolean>(() => {
     if (containers.length === 0) return false;
@@ -222,7 +241,7 @@ const Logs: React.FC<LogsProps> = ({
       downloadAllLabel={downloadAllLabel}
       onDownloadAll={onDownloadAll}
       taskRun={taskRun}
-      isLoading={isLoading}
+      isLoading={isLoading || processingLogs}
       errorMessage={error ? t('An error occurred while retrieving the requested logs.') : null}
     />
   );
