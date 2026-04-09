@@ -6,14 +6,16 @@ import {
   EmptyStateActions,
   EmptyStateBody,
   Spinner,
+  Text,
 } from '@patternfly/react-core';
+import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
-import { Table, useDeepCompareMemoize } from '../../shared';
+import { useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -21,14 +23,12 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
-import { RBListHeader } from './RBListHeader';
-import { RBListRow } from './RBListRow';
+import { UserAccessTableHeaderRow } from './RBListHeader';
+import { UserAccessTableBodyRow } from './RBListRow';
 import {
   expandRoleBindingsToTableRows,
   filterUserAccessRowsByUsername,
-  UserAccessTableRow,
 } from './userAccessTableRows';
-// import { mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
 
 const UserAccessEmptyState: React.FC<
   React.PropsWithChildren<{
@@ -87,8 +87,58 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     [tableRows, usernameFilter],
   );
 
-  if (error) {
-    return getErrorState(error, loaded, 'role bindings');
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState<Set<string>>(() => new Set());
+
+  React.useEffect(() => {
+    const allowed = new Set(filterRBs.map((r) => r.rowKey));
+    setSelectedRowKeys((prev) => {
+      const next = new Set<string>();
+      prev.forEach((k) => {
+        if (allowed.has(k)) {
+          next.add(k);
+        }
+      });
+      if (next.size === prev.size && [...prev].every((k) => next.has(k))) {
+        return prev;
+      }
+      return next;
+    });
+  }, [filterRBs]);
+
+  const onSelectAll = React.useCallback(
+    (_event: React.FormEvent<HTMLInputElement>, isSelecting: boolean) => {
+      setSelectedRowKeys((prev) => {
+        const next = new Set(prev);
+        if (isSelecting) {
+          filterRBs.forEach((r) => next.add(r.rowKey));
+        } else {
+          filterRBs.forEach((r) => next.delete(r.rowKey));
+        }
+        return next;
+      });
+    },
+    [filterRBs],
+  );
+
+  const onSelectRow = React.useCallback((rowKey: string, isSelected: boolean) => {
+    setSelectedRowKeys((prev) => {
+      const next = new Set(prev);
+      if (isSelected) {
+        next.add(rowKey);
+      } else {
+        next.delete(rowKey);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectedCount = selectedRowKeys.size;
+  const allVisibleSelected =
+    filterRBs.length > 0 && filterRBs.every((r) => selectedRowKeys.has(r.rowKey));
+
+  const errorState = getErrorState(error, loaded, 'role bindings');
+  if (errorState) {
+    return errorState;
   }
 
   if (!loaded) {
@@ -112,6 +162,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         onClearFilters={onClearFilters}
         dataTest="user-access-list-toolbar"
       >
+        {selectedCount > 0 ? (
+          <Text data-test="user-access-selected-count" component="small">
+            {selectedCount} selected
+          </Text>
+        ) : null}
         <ButtonWithAccessTooltip
           variant="primary"
           component={(props) => (
@@ -130,15 +185,31 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       {filterRBs.length ? (
         <Table
-          data={filterRBs}
           aria-label="User access list"
-          Header={RBListHeader}
-          Row={RBListRow}
-          loaded
-          getRowProps={(obj: UserAccessTableRow) => ({
-            id: obj.rowKey,
-          })}
-        />
+          variant="compact"
+          gridBreakPoint={TableGridBreakpoint.none}
+        >
+          <Thead>
+            <UserAccessTableHeaderRow
+              headerSelect={{
+                isAllSelected: allVisibleSelected,
+                isDisabled: filterRBs.length === 0,
+                onSelectAll,
+              }}
+            />
+          </Thead>
+          <Tbody>
+            {filterRBs.map((row, rowIndex) => (
+              <UserAccessTableBodyRow
+                key={row.rowKey}
+                obj={row}
+                rowIndex={rowIndex}
+                isSelected={selectedRowKeys.has(row.rowKey)}
+                onSelectRow={onSelectRow}
+              />
+            ))}
+          </Tbody>
+        </Table>
       ) : (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}

@@ -1,5 +1,4 @@
 import { MemoryRouter } from 'react-router-dom';
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
@@ -12,7 +11,6 @@ import { useRoleMap } from '../../../hooks/useRole';
 import { useRoleBindings } from '../../../hooks/useRoleBindings';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
-import { RBListRow } from '../RBListRow';
 import { UserAccessListView } from '../UserAccessListView';
 
 jest.useFakeTimers();
@@ -27,29 +25,6 @@ jest.mock('../../../utils/rbac', () => ({
 }));
 jest.mock('../../../hooks/useRoleBindings');
 jest.mock('../../../hooks/useRole');
-jest.mock('../../../shared/components/table', () => {
-  const actual = jest.requireActual('../../../shared/components/table');
-  return {
-    ...actual,
-    Table: (props) => {
-      const { data, filters, selected, match, kindObj } = props;
-      const cProps = { data, filters, selected, match, kindObj };
-      const columns = props.Header(cProps);
-      return (
-        <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-          <TableHeader role="rowgroup" />
-          <tbody>
-            {props.data.map((d, i) => (
-              <tr key={i}>
-                <RBListRow columns={null} obj={d} />
-              </tr>
-            ))}
-          </tbody>
-        </PfTable>
-      );
-    },
-  };
-});
 
 const UserAccessList = (
   <MemoryRouter>
@@ -151,6 +126,47 @@ describe('UserAccessListView', () => {
     const rows = r.getAllByRole('row');
     expect(rows.length).toBe(2);
     expect(rows[1]).toHaveTextContent('-');
+  });
+
+  it('should render row checkboxes including select-all on the user access table', () => {
+    useRoleBindingsMock.mockReturnValue([[mockRoleBinding], true]);
+    render(UserAccessList);
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should show selected count when a row checkbox is toggled', () => {
+    useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
+    render(UserAccessList);
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[1]);
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 selected');
+  });
+
+  it('should select all visible rows from the header checkbox', () => {
+    useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
+    render(UserAccessList);
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]);
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 selected');
+  });
+
+  it('should prune selection to visible rows when the username filter changes', async () => {
+    useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
+    render(UserAccessList);
+    const checkboxes = screen.getAllByRole('checkbox');
+    fireEvent.click(checkboxes[0]);
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 selected');
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
+    act(() => {
+      fireEvent.change(filter, { target: { value: 'user1' } });
+      jest.advanceTimersByTime(700);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 selected');
+    });
   });
 
   it('should exclude role bindings with undefined subjects when filtering by username', async () => {
