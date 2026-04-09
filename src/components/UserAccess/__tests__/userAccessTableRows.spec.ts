@@ -1,8 +1,5 @@
 import { mockRoleBinding, mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
-import {
-  expandRoleBindingsToTableRows,
-  filterUserAccessRowsByUsername,
-} from '../userAccessTableRows';
+import { expandRoleBindingsToTableRows, filterUserAccessRows } from '../userAccessTableRows';
 
 describe('userAccessTableRows', () => {
   describe('expandRoleBindingsToTableRows', () => {
@@ -21,12 +18,18 @@ describe('userAccessTableRows', () => {
     });
   });
 
-  describe('filterUserAccessRowsByUsername', () => {
-    it('returns rows matching subject name', () => {
+  describe('filterUserAccessRows', () => {
+    it('returns rows matching subject name when filtering by username', () => {
       const rows = expandRoleBindingsToTableRows(mockRoleBindingsWithMultipleUsers);
-      const filtered = filterUserAccessRowsByUsername(rows, 'user2');
+      const filtered = filterUserAccessRows(rows, { username: 'user2' });
       expect(filtered).toHaveLength(1);
       expect(filtered[0].subject?.name).toBe('user2');
+    });
+
+    it('returns all subject rows for bindings whose name matches', () => {
+      const rows = expandRoleBindingsToTableRows(mockRoleBindingsWithMultipleUsers);
+      const filtered = filterUserAccessRows(rows, { roleBindingName: 'konflux-contributor-user1' });
+      expect(filtered).toHaveLength(2);
     });
   });
 });

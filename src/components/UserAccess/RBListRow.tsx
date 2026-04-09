@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Skeleton } from '@patternfly/react-core';
 import { Td, Tr } from '@patternfly/react-table';
 import { useRoleMap } from '~/hooks/useRole';
-// import { RowFunctionArgs, TableData } from '~/shared';
 import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { rbTableColumnClasses } from './RBListHeader';
 import { useRBActions } from './user-access-actions';
@@ -71,20 +70,3 @@ export const UserAccessTableBodyRow: React.FC<UserAccessTableBodyRowProps> = ({
     <RBListDataTds obj={obj} />
   </Tr>
 );
-
-// export const RBListRow: React.FC<React.PropsWithChildren<RowFunctionArgs<UserAccessTableRow>>> = ({
-//   obj,
-// }) => {
-//   const { username, roleNode, bindingName, actionMenu } = useUserAccessRowDisplay(obj);
-
-//   return (
-//     <>
-//       <TableData className={rbTableColumnClasses.username}>{username}</TableData>
-//       <TableData className={rbTableColumnClasses.role}>{roleNode}</TableData>
-//       <TableData className={rbTableColumnClasses.rolebinding}>{bindingName}</TableData>
-//       <TableData className={rbTableColumnClasses.kebab}>
-//         {actionMenu}
-//       </TableData>
-//     </>
-//   );
-// };

@@ -28,7 +28,7 @@ jest.mock('../../../hooks/useRole');
 
 const UserAccessList = (
   <MemoryRouter>
-    <FilterContextProvider filterParams={['username']}>
+    <FilterContextProvider filterParams={['username', 'roleBindingName']}>
       <UserAccessListView />
     </FilterContextProvider>
   </MemoryRouter>
@@ -87,6 +87,24 @@ describe('UserAccessListView', () => {
     await waitFor(() => {
       expect(screen.getByText(/No results match this filter/)).toBeInTheDocument();
     });
+  });
+
+  it('should filter rows by role binding name', () => {
+    render(UserAccessList);
+    act(() => {
+      fireEvent.click(screen.getByTestId('user-access-list-filter-dropdown'));
+    });
+    const roleBindingOption = screen.getByRole('option', { name: 'Role binding' });
+    act(() => {
+      fireEvent.click(roleBindingOption);
+    });
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by role binding name...');
+    act(() => {
+      fireEvent.change(filter, { target: { value: 'konflux-maintainer-user2' } });
+      jest.advanceTimersByTime(700);
+    });
+    expect(screen.getByText('user2')).toBeInTheDocument();
+    expect(screen.queryByText('user1')).not.toBeInTheDocument();
   });
 
   it('should filter role bindings by username', () => {

@@ -29,18 +29,27 @@ export function expandRoleBindingsToTableRows(roleBindings: RoleBinding[]): User
   });
 }
 
-export function filterUserAccessRowsByUsername(
+export type UserAccessRowFilters = {
+  username?: string;
+  roleBindingName?: string;
+};
+
+export function filterUserAccessRows(
   rows: UserAccessTableRow[],
-  usernameFilter: string,
+  filters: UserAccessRowFilters,
 ): UserAccessTableRow[] {
-  const q = usernameFilter.trim().toLowerCase();
-  if (!q) {
-    return rows;
+  const usernameQ = filters.username?.trim().toLowerCase() ?? '';
+  if (usernameQ) {
+    return rows.filter((row) => row.subject && row.subject.name.toLowerCase().includes(usernameQ));
   }
-  return rows.filter((row) => {
-    if (!row.subject) {
-      return false;
-    }
-    return row.subject.name.toLowerCase().includes(q);
-  });
+
+  const roleBindingQ = filters.roleBindingName?.trim().toLowerCase() ?? '';
+  if (roleBindingQ) {
+    return rows.filter((row) => {
+      const name = row.roleBinding.metadata?.name?.toLowerCase() ?? '';
+      return name.includes(roleBindingQ);
+    });
+  }
+
+  return rows;
 }
