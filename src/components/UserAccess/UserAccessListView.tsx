@@ -16,6 +16,7 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
+// import { mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -232,11 +233,22 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           dataTest="user-access-list-toolbar"
           noLeftPadding
         >
-          {selectedCount > 0 ? (
-            <Text data-test="user-access-selected-count" component="small">
-              {selectedCount} selected
-            </Text>
-          ) : null}
+          <Text data-test="user-access-selected-count" component="small">
+            {selectedCount} user{selectedCount !== 1 ? 's' : ''} selected
+          </Text>
+          \
+          <ButtonWithAccessTooltip
+            variant="secondary"
+            // TODO: MODAL LAUNCHER HERE
+            isDisabled={selectedCount === 0}
+            tooltip={`No users selected. Select at least one user to change access.`} // No need for checking access, since only admin can load this page
+            analytics={{
+              link_name: 'change-access',
+              namespace,
+            }}
+          >
+            Change access
+          </ButtonWithAccessTooltip>
           <ButtonWithAccessTooltip
             variant="primary"
             component={(props) => (
