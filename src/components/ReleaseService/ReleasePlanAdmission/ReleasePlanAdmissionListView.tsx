@@ -3,6 +3,7 @@ import { Bullseye, PageSection, PageSectionVariants, Spinner } from '@patternfly
 import { FilterContext, FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import { useDocumentTitle } from '../../../hooks/useDocumentTitle';
 import { useReleasePlanAdmissions } from '../../../hooks/useReleasePlanAdmissions';
@@ -27,9 +28,9 @@ const ReleasePlanAdmissionListView: React.FC<React.PropsWithChildren<unknown>> =
 
   const filteredReleasePlanAdmission = React.useMemo(
     () =>
-      releasePlanAdmissions
-        ? releasePlanAdmissions.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1)
-        : [],
+      filterByText(releasePlanAdmissions ?? [], nameFilter, (r) => r.metadata.name, {
+        fuzzy: true,
+      }),
     [releasePlanAdmissions, nameFilter],
   );
 
