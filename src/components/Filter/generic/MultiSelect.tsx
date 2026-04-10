@@ -21,6 +21,8 @@ type MultiSelectProps = {
   options: { [key: string]: number };
   /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
   optionLabels?: Record<string, string>;
+  /** Max height of the open menu (PatternFly `Select` `maxHeight`), e.g. `320` or `"20rem"`. */
+  menuMaxHeight?: string | number;
 };
 
 export const MultiSelect = ({
@@ -33,8 +35,11 @@ export const MultiSelect = ({
   setValues,
   options,
   optionLabels,
+  menuMaxHeight = '10rem',
 }: MultiSelectProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded ?? false);
+
+  const allOptionKeys = [...new Set([...Object.keys(options), ...Object.keys(optionLabels ?? {})])];
 
   const chipLabels = optionLabels ? values.map((v) => optionLabels[v] ?? v) : values;
   const labelToKey = optionLabels
@@ -58,6 +63,7 @@ export const MultiSelect = ({
         toggleIcon={<FilterIcon />}
         toggleAriaLabel={toggleAriaLabel ?? `${label} filter menu`}
         variant={SelectVariant.checkbox}
+        maxHeight={menuMaxHeight}
         isOpen={expanded}
         onToggle={(_, exp: boolean) => setExpanded(exp)}
         onSelect={(event, selection) => {
@@ -73,7 +79,7 @@ export const MultiSelect = ({
       >
         {[
           <SelectGroup label={label} key={filterKey}>
-            {Object.keys(options).map((filter) =>
+            {allOptionKeys.map((filter) =>
               filter.startsWith(MENU_DIVIDER) ? (
                 <Divider key={filter} />
               ) : (
@@ -81,6 +87,7 @@ export const MultiSelect = ({
                   key={filter}
                   value={filter}
                   isChecked={values.includes(filter)}
+                  isDisabled={options[filter] === undefined}
                   // TODO: remove the item count from other components, it is not accurate anyway as it only counts fetched resources
                 >
                   {optionLabels?.[filter] ?? filter}
