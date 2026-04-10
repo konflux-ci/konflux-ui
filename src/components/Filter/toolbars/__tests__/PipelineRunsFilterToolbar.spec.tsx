@@ -123,4 +123,111 @@ describe('PipelineRunsFilterToolbar', () => {
       type: ['build'],
     });
   });
+
+  it('should not render version filter when versionOptions is not provided', () => {
+    render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          status: [],
+          type: [],
+        }}
+        setFilters={jest.fn()}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4 }}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+  });
+
+  it('should render version filter when versionOptions is provided', () => {
+    render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          status: [],
+          type: [],
+          version: [],
+        }}
+        setFilters={jest.fn()}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4 }}
+        versionOptions={{ main: 0, 'release-1.0': 0 }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Version filter menu' })).toBeVisible();
+  });
+
+  it('should update version filter when a version option is selected', async () => {
+    const setFilters = jest.fn();
+    const user = userEvent.setup();
+
+    render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          status: [],
+          type: [],
+          version: [],
+        }}
+        setFilters={setFilters}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4 }}
+        versionOptions={{ main: 0, 'release-1.0': 0 }}
+      />,
+    );
+
+    const versionFilter = screen.getByRole('button', {
+      name: /version filter menu/i,
+    });
+    await user.click(versionFilter);
+    expect(versionFilter).toHaveAttribute('aria-expanded', 'true');
+
+    const mainOption = screen.getByLabelText(/main/i, {
+      selector: 'input',
+    });
+    await user.click(mainOption);
+
+    expect(setFilters).toHaveBeenCalledTimes(1);
+    expect(setFilters).toHaveBeenCalledWith({
+      name: '',
+      status: [],
+      type: [],
+      version: ['main'],
+    });
+  });
+
+  it('should display optionLabels instead of keys when versionLabels is provided', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PipelineRunsFilterToolbar
+        filters={{
+          name: '',
+          status: [],
+          type: [],
+          version: [],
+        }}
+        setFilters={jest.fn()}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4 }}
+        versionOptions={{ main: 0, 'release-1.0': 0 }}
+        versionLabels={{ main: 'Main Branch', 'release-1.0': 'Release 1.0' }}
+      />,
+    );
+
+    const versionFilter = screen.getByRole('button', {
+      name: /version filter menu/i,
+    });
+    await user.click(versionFilter);
+
+    expect(screen.getByText('Main Branch')).toBeInTheDocument();
+    expect(screen.getByText('Release 1.0')).toBeInTheDocument();
+  });
 });
