@@ -1,64 +1,121 @@
 import * as React from 'react';
-import { Toolbar, ToolbarContent } from '@patternfly/react-core';
+import { Toolbar, ToolbarContent, ToolbarItem } from '@patternfly/react-core';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MultiSelect, MENU_DIVIDER } from '../MultiSelect';
 
-// Helper to wrap component in required Toolbar context
-const renderWithToolbar = (ui: React.ReactElement) => {
-  return render(
+const renderMultiSelect = (props: React.ComponentProps<typeof MultiSelect>) =>
+  render(
     <Toolbar>
-      <ToolbarContent>{ui}</ToolbarContent>
+      <ToolbarContent>
+        <ToolbarItem>
+          <MultiSelect {...props} />
+        </ToolbarItem>
+      </ToolbarContent>
     </Toolbar>,
   );
-};
 
 describe('MultiSelect', () => {
   const mockSetValues = jest.fn();
   const defaultProps = {
-    label: 'Test Filter',
-    filterKey: 'test',
-    values: [],
-    setValues: mockSetValues,
-    options: {
-      'Option A': 5,
-      'Option B': 3,
-      'Option C': 10,
-    },
+    label: 'Version',
+    filterKey: 'version',
+    values: [] as string[],
+    setValues: jest.fn(),
+    options: { main: 0, 'release-1.0': 0 },
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  it('should render options with raw keys when optionLabels is not provided', async () => {
+    const user = userEvent.setup();
+
+    renderMultiSelect(defaultProps);
+
+    await user.click(screen.getByRole('button', { name: 'Version filter menu' }));
+
+    expect(screen.getByText('main')).toBeInTheDocument();
+    expect(screen.getByText('release-1.0')).toBeInTheDocument();
+  });
+
+  it('should render display labels from optionLabels instead of raw keys', async () => {
+    const user = userEvent.setup();
+    const optionLabels = { main: 'Main Branch', 'release-1.0': 'Release 1.0' };
+
+    renderMultiSelect({ ...defaultProps, optionLabels });
+
+    await user.click(screen.getByRole('button', { name: 'Version filter menu' }));
+
+    expect(screen.getByText('Main Branch')).toBeInTheDocument();
+    expect(screen.getByText('Release 1.0')).toBeInTheDocument();
+  });
+
+  it('should show chip labels using optionLabels mapping', () => {
+    const optionLabels = { main: 'Main Branch', 'release-1.0': 'Release 1.0' };
+
+    renderMultiSelect({ ...defaultProps, values: ['main'], optionLabels });
+
+    expect(screen.getByText('Main Branch')).toBeInTheDocument();
+  });
+
+  it('should remove the correct key when a chip with a mapped label is deleted', async () => {
+    const setValues = jest.fn();
+    const user = userEvent.setup();
+    const optionLabels = { main: 'Main Branch', 'release-1.0': 'Release 1.0' };
+
+    renderMultiSelect({
+      ...defaultProps,
+      values: ['main', 'release-1.0'],
+      setValues,
+      optionLabels,
+    });
+
+    const mainChip = screen.getByText('Main Branch');
+    // close button of the `Main Branch` chip
+    const closeButton = mainChip.closest('li')?.querySelector('button');
+    expect(closeButton).toBeTruthy();
+    await user.click(closeButton);
+
+    expect(setValues).toHaveBeenCalledWith(['release-1.0']);
+  });
+
+  it('should show raw key in chips when optionLabels is not provided', () => {
+    renderMultiSelect({ ...defaultProps, values: ['main'] });
+
+    expect(screen.getByText('main')).toBeInTheDocument();
   });
 
   describe('Basic rendering', () => {
     it('should render with correct label', () => {
-      renderWithToolbar(<MultiSelect {...defaultProps} />);
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      renderMultiSelect(defaultProps);
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       expect(toggleButton).toBeInTheDocument();
     });
 
     it('should render with custom toggle aria label', () => {
-      renderWithToolbar(<MultiSelect {...defaultProps} toggleAriaLabel="Custom aria label" />);
+      renderMultiSelect({ ...defaultProps, toggleAriaLabel: 'Custom aria label' });
       const toggleButton = screen.getByRole('button', { name: /Custom aria label/i });
       expect(toggleButton).toBeInTheDocument();
     });
 
     it('should render with custom placeholder text', () => {
-      renderWithToolbar(<MultiSelect {...defaultProps} placeholderText="Select options" />);
+      renderMultiSelect({ ...defaultProps, placeholderText: 'Select options' });
       expect(screen.getByText('Select options')).toBeInTheDocument();
     });
   });
 
   describe('onFilter callback functionality', () => {
+    const filterOptions = { 'Option A': 5, 'Option B': 3, 'Option C': 10 };
+
     it('should return all options when filter value is empty', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect {...defaultProps} hasInlineFilter inlineFilterThreshold={0} />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       // Open the dropdown
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       // All options should be visible
@@ -71,12 +128,15 @@ describe('MultiSelect', () => {
 
     it('should filter options case-insensitively', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect {...defaultProps} hasInlineFilter inlineFilterThreshold={0} />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
       // Open the dropdown
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       // Wait for options to appear
@@ -85,7 +145,7 @@ describe('MultiSelect', () => {
       });
 
       // Type in filter input - using lowercase
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'option a');
 
       // Only Option A should be visible
@@ -98,18 +158,21 @@ describe('MultiSelect', () => {
 
     it('should filter options with uppercase input', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect {...defaultProps} hasInlineFilter inlineFilterThreshold={0} />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Option A')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'OPTION B');
 
       await waitFor(() => {
@@ -127,23 +190,21 @@ describe('MultiSelect', () => {
         'Service A': 10,
         'Service B': 7,
       };
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          options={options}
-          hasInlineFilter
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Application A')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'app');
 
       await waitFor(() => {
@@ -156,18 +217,21 @@ describe('MultiSelect', () => {
 
     it('should handle empty filter value (whitespace only)', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect {...defaultProps} hasInlineFilter inlineFilterThreshold={0} />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Option A')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, '   ');
 
       // All options should still be visible with whitespace-only filter
@@ -185,23 +249,21 @@ describe('MultiSelect', () => {
         'Item Two': 13,
         Other: 7,
       };
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          options={options}
-          hasInlineFilter
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Item One')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'item');
 
       // Should show filtered items with their counts
@@ -220,23 +282,21 @@ describe('MultiSelect', () => {
         'Option B': 3,
         '--divider--test': 2, // Another divider-like key
       };
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          options={options}
-          hasInlineFilter
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Option A')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'divider');
 
       // MENU_DIVIDER should be excluded from matching, but divider-like text can match
@@ -254,23 +314,21 @@ describe('MultiSelect', () => {
         TestService: 3,
         'Test@App': 10,
       };
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          options={options}
-          hasInlineFilter
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Test-Component')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'test-');
 
       await waitFor(() => {
@@ -282,18 +340,21 @@ describe('MultiSelect', () => {
 
     it('should clear filter when dropdown is toggled closed and reopened', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect {...defaultProps} hasInlineFilter inlineFilterThreshold={0} />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Option A')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'option a');
 
       await waitFor(() => {
@@ -316,18 +377,21 @@ describe('MultiSelect', () => {
 
     it('should return empty array when no options match filter', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect {...defaultProps} hasInlineFilter inlineFilterThreshold={0} />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options: filterOptions,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
         expect(screen.getByText('Option A')).toBeInTheDocument();
       });
 
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'nonexistent');
 
       await waitFor(() => {
@@ -346,20 +410,18 @@ describe('MultiSelect', () => {
         [MENU_DIVIDER]: 1,
         'Group B Item': 3,
       };
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          options={options}
-          hasInlineFilter
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       // Filter for "group" - both items should show with divider
-      const filterInput = screen.getByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.getByPlaceholderText(/Filter version/i);
       await user.type(filterInput, 'group');
 
       await waitFor(() => {
@@ -377,16 +439,14 @@ describe('MultiSelect', () => {
         [`${MENU_DIVIDER}-2`]: 1,
         'Item 3': 7,
       };
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          options={options}
-          hasInlineFilter
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        options,
+        hasInlineFilter: true,
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       // With no filter, all items should be visible (dividers render as Divider components)
@@ -402,9 +462,10 @@ describe('MultiSelect', () => {
   describe('Without inline filter', () => {
     it('should show all options without filtering capability', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(<MultiSelect {...defaultProps} hasInlineFilter={false} />);
+      const filterOptions = { 'Option A': 5, 'Option B': 3, 'Option C': 10 };
+      renderMultiSelect({ ...defaultProps, options: filterOptions, hasInlineFilter: false });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
@@ -414,7 +475,7 @@ describe('MultiSelect', () => {
       });
 
       // Filter input should not be present
-      const filterInput = screen.queryByPlaceholderText(/Filter test filter/i);
+      const filterInput = screen.queryByPlaceholderText(/Filter version/i);
       expect(filterInput).not.toBeInTheDocument();
     });
   });
@@ -422,9 +483,10 @@ describe('MultiSelect', () => {
   describe('Selection behavior', () => {
     it('should call setValues when option is selected', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(<MultiSelect {...defaultProps} />);
+      const selectOptions = { 'Option A': 5, 'Option B': 3 };
+      renderMultiSelect({ ...defaultProps, options: selectOptions, setValues: mockSetValues });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {
@@ -440,7 +502,12 @@ describe('MultiSelect', () => {
     });
 
     it('should display selected values as chips', () => {
-      renderWithToolbar(<MultiSelect {...defaultProps} values={['Option A', 'Option B']} />);
+      const selectOptions = { 'Option A': 5, 'Option B': 3 };
+      renderMultiSelect({
+        ...defaultProps,
+        options: selectOptions,
+        values: ['Option A', 'Option B'],
+      });
 
       // Chips should be visible
       expect(screen.getByText('Option A')).toBeInTheDocument();
@@ -449,7 +516,13 @@ describe('MultiSelect', () => {
 
     it('should call setValues to remove chip', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(<MultiSelect {...defaultProps} values={['Option A', 'Option B']} />);
+      const selectOptions = { 'Option A': 5, 'Option B': 3 };
+      renderMultiSelect({
+        ...defaultProps,
+        options: selectOptions,
+        values: ['Option A', 'Option B'],
+        setValues: mockSetValues,
+      });
 
       // Find and click the delete button for Option A chip
       const chips = screen.getAllByRole('button', { name: /close/i });
@@ -463,16 +536,14 @@ describe('MultiSelect', () => {
   describe('Custom inline filter placeholder', () => {
     it('should use custom inline filter placeholder text', async () => {
       const user = userEvent.setup();
-      renderWithToolbar(
-        <MultiSelect
-          {...defaultProps}
-          hasInlineFilter
-          inlineFilterPlaceholderText="Search for items"
-          inlineFilterThreshold={0}
-        />,
-      );
+      renderMultiSelect({
+        ...defaultProps,
+        hasInlineFilter: true,
+        inlineFilterPlaceholderText: 'Search for items',
+        inlineFilterThreshold: 0,
+      });
 
-      const toggleButton = screen.getByRole('button', { name: /Test Filter filter menu/i });
+      const toggleButton = screen.getByRole('button', { name: /Version filter menu/i });
       await user.click(toggleButton);
 
       await waitFor(() => {

@@ -1,5 +1,5 @@
-import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
-import { PipelineRunKind, PipelineRunStatus } from '../../../../types';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { filterPipelineRuns } from '../pipelineruns-filter-utils';
 
 const pipelineRuns: PipelineRunKind[] = [
@@ -24,6 +24,7 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST,
+        [PipelineRunLabel.COMPONENT_VERSION]: 'v1.0',
       },
     },
     spec: {
@@ -59,6 +60,7 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'test-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+        [PipelineRunLabel.COMPONENT_VERSION]: 'v2.0',
       },
     },
     spec: {
@@ -86,6 +88,7 @@ const pipelineRuns: PipelineRunKind[] = [
       labels: {
         'appstudio.openshift.io/component': 'sample-component',
         [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
+        [PipelineRunLabel.COMPONENT_VERSION]: 'v1.0',
       },
     },
     spec: {
@@ -146,6 +149,50 @@ describe('pipelineruns-filter-utils', () => {
       expect(result.length).toBe(2);
       const resultNames = [result[0].metadata.name, result[1].metadata.name];
       expect(resultNames.sort()).toStrictEqual(expectedNames.sort());
+    });
+
+    it('should filter pipeline runs by a single version', () => {
+      const filters = {
+        name: '',
+        status: [],
+        type: [],
+        version: ['v2.0'],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result).toHaveLength(1);
+      expect(result[0].metadata.name).toBe('basic-node-js-second');
+    });
+
+    it('should filter pipeline runs by multiple versions', () => {
+      const filters = {
+        name: '',
+        status: [],
+        type: [],
+        version: ['v1.0', 'v2.0'],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result).toHaveLength(3);
+    });
+
+    it('should return all pipeline runs when version is an empty array', () => {
+      const filters = {
+        name: '',
+        status: [],
+        type: [],
+        version: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result).toHaveLength(3);
+    });
+
+    it('should return all pipeline runs when version is undefined (backward compat)', () => {
+      const filters = {
+        name: '',
+        status: [],
+        type: [],
+      };
+      const result = filterPipelineRuns(pipelineRuns, filters);
+      expect(result).toHaveLength(3);
     });
   });
 });

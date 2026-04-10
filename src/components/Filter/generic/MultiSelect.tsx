@@ -19,6 +19,8 @@ type MultiSelectProps = {
   values: string[];
   setValues: (filters: string[]) => void;
   options: { [key: string]: number };
+  /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
+  optionLabels?: Record<string, string>;
   hasInlineFilter?: boolean;
   inlineFilterPlaceholderText?: string;
   inlineFilterThreshold?: number;
@@ -33,6 +35,7 @@ const MultiSelectComponent = ({
   values,
   setValues,
   options,
+  optionLabels,
   hasInlineFilter = false,
   inlineFilterPlaceholderText,
   inlineFilterThreshold = 20,
@@ -53,11 +56,11 @@ const MultiSelectComponent = ({
         <Divider key={filter} />
       ) : (
         <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
-          {filter}
+          {optionLabels?.[filter] ?? filter}
         </SelectOption>
       ),
     );
-  }, [options]);
+  }, [optionLabels, options]);
 
   const onFilter = React.useCallback(
     (_event: React.ChangeEvent<HTMLInputElement> | null, value: string) => {
@@ -74,19 +77,25 @@ const MultiSelectComponent = ({
             <Divider key={filter} />
           ) : (
             <SelectOption key={filter} value={filter} itemCount={options[filter] ?? 0}>
-              {filter}
+              {optionLabels?.[filter] ?? filter}
             </SelectOption>
           ),
         );
     },
-    [options],
+    [optionLabels, options],
   );
+
+  const chipLabels = optionLabels ? values.map((v) => optionLabels[v] ?? v) : values;
+  const labelToKey = optionLabels
+    ? Object.fromEntries(Object.entries(optionLabels).map(([k, v]) => [v, k]))
+    : undefined;
 
   return (
     <ToolbarFilter
-      chips={values}
+      chips={chipLabels}
       deleteChip={(_type, chip) => {
-        setValues(values.filter((v) => v !== chip));
+        const key = labelToKey ? labelToKey[chip as string] ?? chip : chip;
+        setValues(values.filter((v) => v !== key));
       }}
       deleteChipGroup={() => {
         setValues([]);
