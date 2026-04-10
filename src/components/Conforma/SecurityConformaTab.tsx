@@ -13,6 +13,7 @@ import { CONFORMA_POLICY_AVAILABLE_RULE_COLLECTIONS_URL } from '~/consts/documen
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { CONFORMA_RESULT_STATUS, UIConformaData } from '~/types/conforma';
+import { textMatch } from '~/utils/text-filter-utils';
 import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
@@ -75,7 +76,7 @@ export const SecurityConformaTab: React.FC<
     return crLoaded && conformaResult
       ? conformaResult?.filter((rule: UIConformaData) => {
           return (
-            (!ruleFilter || rule.title.toLowerCase().indexOf(ruleFilter.toLowerCase()) !== -1) &&
+            textMatch(rule.title, ruleFilter) &&
             (!statusFilter.length || statusFilter.includes(rule.status)) &&
             (!componentFilter.length || componentFilter.includes(rule.component))
           );

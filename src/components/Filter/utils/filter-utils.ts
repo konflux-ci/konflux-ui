@@ -1,3 +1,4 @@
+import { textMatch } from '~/utils/text-filter-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { PipelineRunKind } from '../../../types';
 import { pipelineRunStatus } from '../../../utils/pipeline-utils';
@@ -21,9 +22,8 @@ export const filterPipelineRuns = (
       const runType = plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE];
       return (
         (!name ||
-          plr.metadata.name.indexOf(name) >= 0 ||
-          plr.metadata.labels?.[PipelineRunLabel.COMPONENT]?.indexOf(name.trim().toLowerCase()) >=
-            0) &&
+          textMatch(plr.metadata.name, name) ||
+          textMatch(plr.metadata.labels?.[PipelineRunLabel.COMPONENT], name)) &&
         (!status.length || status.includes(pipelineRunStatus(plr))) &&
         (!type.length || type.includes(runType))
       );
