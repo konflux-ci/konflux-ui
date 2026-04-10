@@ -1,4 +1,4 @@
-import { textMatch, filterByText, TextFilterOptions } from '../text-filter-utils';
+import { textMatch, filterByText, TextFilterOptions } from '~/utils/text-filter-utils';
 
 describe('textMatch', () => {
   describe('default options', () => {
