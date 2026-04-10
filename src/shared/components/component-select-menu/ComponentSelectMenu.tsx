@@ -12,6 +12,7 @@ import {
 import { useField } from 'formik';
 import { flatten, isArray } from 'lodash-es';
 import { CurrentComponentRef } from '~/types/secret';
+import { textMatch } from '~/utils/text-filter-utils';
 import SelectComponentsDropdown from './SelectComponnetsDropdown';
 
 import './ComponentSelectMenu.scss';
@@ -92,8 +93,7 @@ export const ComponentSelectMenu: React.FC<ComponentSelectMenuProps> = ({
   };
 
   const filteredOptions = React.useMemo(() => {
-    const query = searchQuery.toLowerCase();
-    const filterFn = (items: string[]) => items?.filter((i) => i.toLowerCase()?.includes(query));
+    const filterFn = (items: string[]) => items?.filter((i) => textMatch(i, searchQuery));
 
     if (isGrouped) {
       return Object.entries(options).reduce(

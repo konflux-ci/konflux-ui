@@ -1,6 +1,7 @@
 import { PipelineRunLabel } from '~/consts/pipelinerun';
 import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { MonitoredReleaseKind } from '~/types';
+import { textMatch } from '~/utils/text-filter-utils';
 
 export type MonitoredReleasesFilterState = {
   name: string;
@@ -50,7 +51,7 @@ export const filterMonitoredReleases = (
       (productVersion.includes('No product version') && !productVersionValue);
 
     return (
-      (!name || mr?.metadata?.name?.indexOf(name) >= 0) &&
+      textMatch(mr?.metadata?.name, name) &&
       (!status.length || status.includes(getReleaseStatus(mr))) &&
       applicationFilter &&
       (!releasePlan.length || releasePlan.includes(releasePlanName)) &&

@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Application.svg';
 import { useApplications } from '../../hooks/useApplications';
 import { useSortedResources } from '../../hooks/useSortedResources';
@@ -56,14 +57,13 @@ const ApplicationListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   );
 
   const [applications, loaded, error] = useApplications(namespace);
-  const filteredApplications = React.useMemo(() => {
-    const lowerCaseNameFilter = nameFilter.toLowerCase();
-    return applications?.filter(
-      (app) =>
-        app.spec.displayName?.toLowerCase().includes(lowerCaseNameFilter) ??
-        app.metadata.name.includes(lowerCaseNameFilter),
-    );
-  }, [nameFilter, applications]);
+  const filteredApplications = React.useMemo(
+    () =>
+      applications?.filter((app) =>
+        textMatch(app.spec.displayName ?? app.metadata.name, nameFilter),
+      ),
+    [nameFilter, applications],
+  );
 
   const sortedApplications = useSortedResources(
     filteredApplications,

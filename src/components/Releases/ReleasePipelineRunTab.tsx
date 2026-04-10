@@ -17,6 +17,7 @@ import {
   getTenantCollectorProcessingFromRelease,
   getTenantProcessingFromRelease,
 } from '~/utils/release-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import { SESSION_STORAGE_KEYS } from '../../consts/constants';
 import { useVisibleColumns } from '../../hooks/useVisibleColumns';
 import ReleasePipelineListHeader from './ReleasePipelineList/ReleasePipelineListHeader';
@@ -130,11 +131,11 @@ const ReleasePipelineRunTab: React.FC = () => {
     ),
   ].filter(Boolean);
 
-  const filteredRuns = filters?.name
-    ? allRuns.filter((run) =>
-        run.pipelineRun.toLowerCase().includes((filters.name as string).toLowerCase()),
-      )
-    : allRuns;
+  const filteredRuns = filterByText(
+    allRuns,
+    filters?.name ? (filters.name as string) : '',
+    (run) => run.pipelineRun,
+  );
 
   const EmptyMessage = () => <FilteredEmptyState onClearFilters={onClearFilters} />;
 

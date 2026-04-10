@@ -1,18 +1,19 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  TextContent,
-  Text,
-  TextVariants,
+  Bullseye,
   PageSection,
   PageSectionVariants,
-  Bullseye,
   Spinner,
+  Text,
+  TextContent,
+  TextVariants,
   EmptyStateBody,
   Button,
 } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../../assets/secret.svg';
 import { useLinkedSecrets } from '../../../hooks/useLinkedSecrets';
 import { useSearchParam } from '../../../hooks/useSearchParam';
@@ -79,10 +80,7 @@ export const LinkedSecretsListView: React.FC = () => {
   );
 
   const filteredLinkedSecrets = React.useMemo(
-    () =>
-      sortedLinkedSecrets?.filter((linkedSecret) => {
-        return !nameFilter || linkedSecret.metadata.name.includes(nameFilter);
-      }),
+    () => filterByText(sortedLinkedSecrets ?? [], nameFilter, (s) => s.metadata.name),
     [sortedLinkedSecrets, nameFilter],
   );
 

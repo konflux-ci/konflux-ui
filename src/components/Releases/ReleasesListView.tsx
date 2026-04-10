@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { PageSection, PageSectionVariants, Title, Spinner, Bullseye } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { textMatch } from '~/utils/text-filter-utils';
 import { SESSION_STORAGE_KEYS } from '../../consts/constants';
 import { PipelineRunLabel } from '../../consts/pipelinerun';
 import {
@@ -92,14 +93,17 @@ const ReleasesListView: React.FC = () => {
   const { [filterType]: searchFilter } = filters;
 
   const filteredReleases = React.useMemo(() => {
-    if (isLoading && !releases.length) return [];
+    if (isLoading && !releases.length) {
+      return [];
+    }
+
     switch (filterType) {
       case FilterTypes.name:
-        return releases.filter((r) => r.metadata.name.indexOf(searchFilter) !== -1);
+        return releases.filter((r) => textMatch(r.metadata.name, searchFilter));
       case FilterTypes.releasePlan:
-        return releases.filter((r) => r.spec.releasePlan.indexOf(searchFilter) !== -1);
+        return releases.filter((r) => textMatch(r.spec.releasePlan, searchFilter));
       case FilterTypes.releaseSnapshot:
-        return releases.filter((r) => r.spec.snapshot.indexOf(searchFilter) !== -1);
+        return releases.filter((r) => textMatch(r.spec.snapshot, searchFilter));
       default:
         return releases;
     }

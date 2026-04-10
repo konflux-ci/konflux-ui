@@ -2,6 +2,7 @@ import * as React from 'react';
 import { PageSection, PageSectionVariants, Text, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { filterByText } from '~/utils/text-filter-utils';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { ComponentKind } from '../../../types';
@@ -25,12 +26,7 @@ const SnapshotComponentsList: React.FC<React.PropsWithChildren<SnapshotComponent
   const { name: nameFilter } = filters;
 
   const filteredComponents = React.useMemo(
-    () =>
-      components.filter(
-        (component) =>
-          !nameFilter ||
-          (component.metadata && component.metadata?.name.indexOf(nameFilter.trim()) !== -1),
-      ),
+    () => filterByText(components, nameFilter, (c) => c.metadata?.name),
     [nameFilter, components],
   );
 

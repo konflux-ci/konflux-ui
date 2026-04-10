@@ -9,6 +9,7 @@ import {
 } from '@patternfly/react-core';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
@@ -75,9 +76,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       roleBindings.filter(
         (rb) =>
           (!usernameFilter && !rb.subjects) ||
-          rb.subjects?.some((subject) =>
-            subject.name.toLowerCase().includes(usernameFilter.toLowerCase()),
-          ),
+          rb.subjects?.some((subject) => textMatch(subject.name, usernameFilter)),
       ),
     [roleBindings, usernameFilter],
   );

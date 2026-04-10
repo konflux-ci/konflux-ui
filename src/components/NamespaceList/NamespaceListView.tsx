@@ -12,6 +12,7 @@ import { QuestionCircleIcon } from '@patternfly/react-icons/dist/js/icons/questi
 import { GETTING_ACCESS_INTERNAL } from '~/consts/documentation';
 import { useInstanceVisibility } from '~/hooks/useUIInstance';
 import { KonfluxInstanceVisibility } from '~/types/konflux-public-info';
+import { filterByText } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/namespace.svg';
 import { ExternalLink, Table, useDeepCompareMemoize } from '../../shared';
 import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
@@ -54,10 +55,10 @@ const NamespaceListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const { name: nameFilter } = filters;
 
   namespaces?.sort((app1, app2) => app1.metadata.name.localeCompare(app2.metadata.name));
-  const filteredNamespaces = React.useMemo(() => {
-    const lowerCaseNameFilter = nameFilter.toLowerCase();
-    return namespaces?.filter((app) => app.metadata.name.includes(lowerCaseNameFilter));
-  }, [nameFilter, namespaces]);
+  const filteredNamespaces = React.useMemo(
+    () => filterByText(namespaces ?? [], nameFilter, (ns) => ns.metadata.name),
+    [nameFilter, namespaces],
+  );
 
   if (!loaded) {
     return (

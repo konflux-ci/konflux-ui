@@ -1,12 +1,12 @@
 import React from 'react';
 import {
+  Badge,
+  Divider,
+  HelperText,
+  HelperTextItem,
   Select,
   SelectList,
   SelectOption,
-  Badge,
-  HelperText,
-  HelperTextItem,
-  Divider,
   ValidatedOptions,
   MenuToggle,
   TextInputGroup,
@@ -17,6 +17,7 @@ import {
 import './BasicDropdown.scss';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { NO_RESULTS } from '~/consts/constants';
+import { filterByText } from '~/utils/text-filter-utils';
 
 export type DropdownItemObject = {
   key: string;
@@ -61,9 +62,7 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
     let newItems = items;
 
     if (filterValue) {
-      newItems = items.filter((item) =>
-        item.value.toLowerCase().includes(filterValue.toLowerCase()),
-      );
+      newItems = filterByText(items, filterValue, (item) => item.value);
 
       // When no options are found after filtering, display 'No results found'
       if (!newItems.length) {

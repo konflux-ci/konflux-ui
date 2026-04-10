@@ -5,6 +5,7 @@ import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlt
 import { useApplications } from '~/hooks/useApplications';
 import { useLocalStorage } from '~/shared/hooks/useLocalStorage';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import { FULL_APPLICATION_TITLE } from '../../../consts/labels';
 import {
   RELEASE_PLAN_COLUMNS_DEFINITIONS,
@@ -61,7 +62,7 @@ const ReleasePlanListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   }, [releasePlansLoaded, appLoaded, releasePlans, applications]);
 
   const filteredReleasePlans = React.useMemo(
-    () => releasePlanWithApplicationData.filter((r) => r.metadata.name.indexOf(nameFilter) !== -1),
+    () => filterByText(releasePlanWithApplicationData, nameFilter, (r) => r.metadata.name),
     [releasePlanWithApplicationData, nameFilter],
   );
 

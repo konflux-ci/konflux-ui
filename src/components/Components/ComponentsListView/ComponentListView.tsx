@@ -23,6 +23,7 @@ import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../../assets/Components.svg';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -114,7 +115,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
           : 'unknown';
 
         return (
-          (!nameFilter || component.metadata.name.indexOf(nameFilter) !== -1) &&
+          textMatch(component.metadata.name, nameFilter) &&
           (!statusFilter?.length || statusFilter.includes(capitalize(compStatus)))
         );
       }),
