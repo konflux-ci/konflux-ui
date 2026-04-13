@@ -10,21 +10,13 @@ export type UserAccessTableRow = {
 
 export function expandRoleBindingsToTableRows(roleBindings: RoleBinding[]): UserAccessTableRow[] {
   return roleBindings.flatMap((roleBinding) => {
-    const name = roleBinding.metadata?.name ?? 'unknown';
+    const roleRefName = roleBinding.roleRef?.name ?? 'unknown';
     const subjects = roleBinding.subjects;
-    if (!subjects?.length) {
-      return [
-        {
-          roleBinding,
-          subject: null,
-          rowKey: `${name}__no-subject`,
-        },
-      ];
-    }
+
     return subjects.map((subject, index) => ({
       roleBinding,
       subject,
-      rowKey: `${name}__${index}__${subject.kind}__${subject.name}`,
+      rowKey: `${roleRefName}__${index}__${subject.kind}__${subject.name}`,
     }));
   });
 }

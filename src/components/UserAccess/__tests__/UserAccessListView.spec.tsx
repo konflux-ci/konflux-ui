@@ -158,7 +158,7 @@ describe('UserAccessListView', () => {
     render(UserAccessList);
     const checkboxes = screen.getAllByRole('checkbox');
     fireEvent.click(checkboxes[1]);
-    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 selected');
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
   });
 
   it('should select all visible rows from the header checkbox', () => {
@@ -166,7 +166,7 @@ describe('UserAccessListView', () => {
     render(UserAccessList);
     const checkboxes = screen.getAllByRole('checkbox');
     fireEvent.click(checkboxes[0]);
-    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 selected');
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
   });
 
   it('should prune selection to visible rows when the username filter changes', async () => {
@@ -174,7 +174,7 @@ describe('UserAccessListView', () => {
     render(UserAccessList);
     const checkboxes = screen.getAllByRole('checkbox');
     fireEvent.click(checkboxes[0]);
-    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 selected');
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
     act(() => {
@@ -183,7 +183,7 @@ describe('UserAccessListView', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 selected');
+      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
     });
   });
 
