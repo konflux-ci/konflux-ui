@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Nav, NavItem, NavList } from '@patternfly/react-core';
+import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
+import { AngleUpIcon } from '@patternfly/react-icons/dist/esm/icons/angle-up-icon';
 import { css } from '@patternfly/react-styles';
 import get from 'lodash/get';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
@@ -23,7 +24,7 @@ interface PipelineRunLogsProps {
   onActiveTaskChange?: (value: string) => void;
 }
 interface PipelineRunLogsState {
-  activeItem: string;
+  activeItem: string | null;
   navUntouched: boolean;
 }
 class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunLogsState> {
@@ -58,7 +59,7 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
     }
   }
 
-  getActiveTaskRun = (taskRuns: TaskRunKind[], activeTask: string): string => {
+  getActiveTaskRun = (taskRuns: TaskRunKind[], activeTask: string): string | undefined => {
     const activeTaskRun = activeTask
       ? taskRuns.find(
           (taskRun) =>
@@ -129,14 +130,22 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
     );
   };
 
-  onNavSelect = (item: { itemId: number | string }) => {
+  onTaskRowClick = (taskRunName: string, isActive: boolean) => {
     const { onActiveTaskChange } = this.props;
-    const selectedTaskName = this.getTaskRunName(item.itemId as string);
+    if (isActive) {
+      this.setState({
+        activeItem: null,
+        navUntouched: false,
+      });
+      return;
+    }
+
+    const selectedTaskName = this.getTaskRunName(taskRunName);
     if (selectedTaskName) {
       onActiveTaskChange?.(selectedTaskName);
     }
     this.setState({
-      activeItem: item.itemId as string,
+      activeItem: taskRunName,
       navUntouched: false,
     });
   };
@@ -167,21 +176,10 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
             obj.metadata?.name,
           )
         : undefined;
-    const activeTaskRun = activeItem ? taskRunMap.get(activeItem) : undefined;
-    const podName = activeTaskRun?.status?.podName;
-    const resource: WatchK8sResource = taskCount > 0 &&
-      podName && {
-        name: podName,
-        groupVersionKind: PodGroupVersionKind,
-        namespace: obj.metadata.namespace,
-        isList: false,
-      };
 
-    const waitingForPods = !!(activeItem && !resource);
-    const taskName = activeTaskRun?.metadata?.labels?.[TektonResourceLabel.pipelineTask] || '-';
     const pipelineRunFinished = pipelineStatus !== runStatus.Running;
 
-    const selectedItemRef = (item: HTMLSpanElement) => {
+    const selectedItemRef = (item: HTMLButtonElement) => {
       if (item?.scrollIntoView) {
         item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
@@ -191,50 +189,77 @@ class PipelineRunLogs extends React.Component<PipelineRunLogsProps, PipelineRunL
       <div className={css('pipeline-run-logs', className)}>
         <div className="pipeline-run-logs__tasklist" data-test="logs-tasklist">
           {taskCount > 0 ? (
-            <Nav onSelect={(_event, item) => this.onNavSelect(item)} theme="light">
-              <NavList className="pipeline-run-logs__nav">
-                {taskRunNames.map((taskRunName) => {
-                  const taskRun = taskRunMap.get(taskRunName);
-                  return (
-                    <NavItem
-                      key={taskRunName}
-                      itemId={taskRunName}
-                      isActive={activeItem === taskRunName}
-                      className="pipeline-run-logs__navitem"
+            <ul className="pipeline-run-logs__task-sections">
+              {taskRunNames.map((taskRunName) => {
+                const taskRun = taskRunMap.get(taskRunName);
+                if (!taskRun) {
+                  return null;
+                }
+                const podName = taskRun.status?.podName;
+                const taskResource: WatchK8sResource | undefined =
+                  taskCount > 0 && podName
+                    ? {
+                        name: podName,
+                        groupVersionKind: PodGroupVersionKind,
+                        namespace: obj.metadata.namespace,
+                        isList: false,
+                      }
+                    : undefined;
+                const isActive = activeItem === taskRunName;
+                const taskLabel =
+                  taskRun.metadata?.labels?.[TektonResourceLabel.pipelineTask] || '-';
+
+                return (
+                  <li key={taskRunName} className="pipeline-run-logs__task-section">
+                    <button
+                      type="button"
+                      className={css(
+                        'pipeline-run-logs__task-header',
+                        isActive && 'pipeline-run-logs__task-header--active',
+                      )}
+                      onClick={() => this.onTaskRowClick(taskRunName, isActive)}
+                      aria-pressed={isActive}
+                      aria-expanded={isActive}
+                      ref={isActive ? selectedItemRef : undefined}
                     >
-                      <span ref={activeItem === taskRunName ? selectedItemRef : undefined}>
-                        <ColoredStatusIcon status={taskRunStatus(taskRun)} />
-                        <span className="pipeline-run-logs__namespan">
-                          {this.getTaskRunLabel(taskRun, taskRunName) || '-'}
-                        </span>
+                      <ColoredStatusIcon status={taskRunStatus(taskRun)} />
+                      <span className="pipeline-run-logs__namespan">
+                        {this.getTaskRunLabel(taskRun, taskRunName) || '-'}
                       </span>
-                    </NavItem>
-                  );
-                })}
-              </NavList>
-            </Nav>
+                      <span className="pipeline-run-logs__task-toggle-icon" aria-hidden="true">
+                        {isActive ? <AngleUpIcon /> : <AngleDownIcon />}
+                      </span>
+                    </button>
+                    {isActive && (
+                      <div className="pipeline-run-logs__task-section-logs">
+                        {taskResource ? (
+                          <LogsWrapperComponent
+                            resource={taskResource}
+                            taskRun={taskRun}
+                            downloadAllLabel={'Download all task logs'}
+                            onDownloadAll={downloadAllCallback}
+                          />
+                        ) : (
+                          <div className="pipeline-run-logs__log">
+                            <div className="pipeline-run-logs__logtext" data-test="task-logs-error">
+                              {!pipelineRunFinished && `Waiting for ${taskLabel} task to start `}
+                              {pipelineRunFinished && !obj.status && 'No logs found'}
+                              {logDetails && (
+                                <div className="pipeline-run-logs__logsnippet">
+                                  {logDetails.staticMessage}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
-            <div className="pipeline-run-logs__nav">{'No task runs found'}</div>
-          )}
-        </div>
-        <div className="pipeline-run-logs__container">
-          {activeItem && resource ? (
-            <LogsWrapperComponent
-              resource={resource}
-              taskRun={activeTaskRun}
-              downloadAllLabel={'Download all task logs'}
-              onDownloadAll={downloadAllCallback}
-            />
-          ) : (
-            <div className="pipeline-run-logs__log">
-              <div className="pipeline-run-logs__logtext" data-test="task-logs-error">
-                {waitingForPods && !pipelineRunFinished && `Waiting for ${taskName} task to start `}
-                {!resource && pipelineRunFinished && !obj.status && 'No logs found'}
-                {logDetails && (
-                  <div className="pipeline-run-logs__logsnippet">{logDetails.staticMessage}</div>
-                )}
-              </div>
-            </div>
+            <div className="pipeline-run-logs__nav">No task runs found</div>
           )}
         </div>
       </div>

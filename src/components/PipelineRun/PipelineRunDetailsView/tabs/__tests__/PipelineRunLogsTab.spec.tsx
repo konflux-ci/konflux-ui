@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { testPipelineRuns, DataState } from '~/__data__/pipelinerun-data';
 import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { useSearchParam } from '~/hooks/useSearchParam';
@@ -162,5 +163,25 @@ describe('PipelineRunLogsTab', () => {
     routerRenderer(<PipelineRunLogsTab />);
 
     expect(mockUseSearchParam).toHaveBeenCalledWith('task', undefined);
+  });
+
+  it('should toggle task log section when task header is clicked', async () => {
+    const user = userEvent.setup();
+    mockUsePipelineRunV2.mockReturnValue(mockPipelineRunStates.loaded(mockPipelineRun));
+    mockUseTaskRunsForPipelineRuns.mockReturnValue(mockTaskRunsStates.loaded(mockTaskRuns));
+
+    routerRenderer(<PipelineRunLogsTab />);
+
+    const [taskHeaderButton] = screen.getAllByRole('button');
+    expect(taskHeaderButton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('task-logs-error')).toBeInTheDocument();
+
+    await user.click(taskHeaderButton);
+    expect(taskHeaderButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('task-logs-error')).not.toBeInTheDocument();
+
+    await user.click(taskHeaderButton);
+    expect(taskHeaderButton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('task-logs-error')).toBeInTheDocument();
   });
 });

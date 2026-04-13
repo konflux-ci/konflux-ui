@@ -1,7 +1,9 @@
 .pipeline-run-logs {
   display: flex;
+  flex-direction: column;
   flex: 1;
   width: 100%;
+  min-height: 0;
   position: absolute;
   top: 0;
   bottom: 0;
@@ -12,42 +14,93 @@
     position: relative;
     top: 0.35em;
   }
-  &__navitem {
-    cursor: pointer;
-  }
   &__namespan {
     margin-left: var(--pf-v5-global--spacer--sm);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  &__task-header &__namespan {
+    margin-left: var(--pf-v5-global--spacer--sm);
+  }
   &__log {
-    height: 100%;
-    padding-top: var(--pf-v5-global--spacer--lg);
+    min-height: 120px;
+    padding-top: var(--pf-v5-global--spacer--md);
   }
   &__logtext {
     position: relative;
     background: var(--pf-v5-global--palette--black-1000); // pod log background color
     color: var(--pf-v5-global--palette--white);
-    height: 100%;
+    min-height: 120px;
     padding: var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md);
   }
   &__logsnippet {
     margin-top: var(--pf-v5-global--spacer--sm);
   }
   &__tasklist {
-    max-width: 30%;
-    min-width: 208px;
-    margin-top: var(--pf-v5-global--spacer--lg);
-    overflow-y: auto;
-  }
-  &__container {
     flex: 1;
-    display: flex;
-    //ensure log viewer can be seen on narrow screens
-    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    min-width: 0;
+    margin-top: var(--pf-v5-global--spacer--md);
+    overflow-y: auto;
+    overflow-x: hidden;
   }
-  &__container .pane-body {
+
+  &__task-sections {
+    list-style: none;
+    margin: 0;
     padding: 0;
+  }
+
+  &__task-section {
+    border-bottom: 1px solid var(--pf-v5-global--BorderColor--100);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__task-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md);
+    border: none;
+    background: var(--pf-v5-global--BackgroundColor--100);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--pf-v5-global--BackgroundColor--200);
+    }
+
+    &--active {
+      box-shadow: inset 3px 0 0 0 var(--pf-v5-global--primary-color--100);
+    }
+  }
+
+  &__task-toggle-icon {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    color: var(--pf-v5-global--Color--200);
+  }
+
+  /* Log viewer for the selected task sits directly under that task header */
+  &__task-section-logs {
+    /* Taller log area; upper bound keeps very large viewports usable. Matches ~SECTION_LOG_HEIGHT in LogViewer.tsx. */
+    min-height: clamp(440px, 42vh, 780px);
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--pf-v5-global--BorderColor--100);
+    background: var(--pf-v5-global--palette--black-1000);
+
+    .log-viewer__container {
+      flex: 1;
+      min-height: 0;
+    }
   }
 }
