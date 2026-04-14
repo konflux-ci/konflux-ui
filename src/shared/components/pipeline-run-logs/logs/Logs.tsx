@@ -25,13 +25,7 @@ export const processLogs = (logSources: LogSources, containers: ContainerSpec[])
     const containerName = container.name;
     if (logSources[containerName]) {
       allLogs += `\n\n${containerName.toUpperCase()}\n`;
-
-      const indentedLogs = logSources[containerName]
-        ?.split('\n')
-        ?.map((line) => `  ${line}`)
-        ?.join('\n');
-
-      allLogs += indentedLogs;
+      allLogs += `  ${logSources[containerName].replace(/\n/g, '\n  ')}`;
     }
   }
   return allLogs.trim();
