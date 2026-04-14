@@ -40,7 +40,7 @@ jobs:
             exit 0
           fi
 
-          ALLOWED_USERS=("Katka92" "rrosatti" "janaki29" "sahil143" "testcara" "milantaky" "StanislavJochman" "JoaoPedroPP" "rakshett" "abhinandan13jan" "marcin-michal")
+          ALLOWED_USERS=("Katka92" "rrosatti" "janaki29" "sahil143" "testcara" "milantaky" "StanislavJochman" "JoaoPedroPP" "abhinandan13jan" "marcin-michal")
           for author in "${ALLOWED_USERS[@]}"; do
             if [[ "$author" == "$PR_AUTHOR" ]]; then
               echo "PR author is in ALLOWED_USERS list. Running E2E tests."
