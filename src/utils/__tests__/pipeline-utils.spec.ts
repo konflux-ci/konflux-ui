@@ -255,12 +255,15 @@ describe('isPipelineV1Beta1', () => {
 });
 
 describe('taskTestResultStatus', () => {
-  it('should return ERROR status', () => {
+  it('should return ERROR status with numeric fields', () => {
     const resultsWithTestOutputError =
       testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_ERROR].status.results;
     expect(taskTestResultStatus(resultsWithTestOutputError as TektonResultsRun[])).toMatchObject({
       result: 'ERROR',
       note: 'Simulated failure for testing TEST_OUTPUT reporting',
+      successes: 0,
+      failures: 1,
+      warnings: 0,
     });
   });
 
@@ -280,12 +283,15 @@ describe('taskTestResultStatus', () => {
     ).toBeUndefined();
   });
 
-  it('should return SUCCESS for a successful TEST_OUTPUT result', () => {
+  it('should return SUCCESS with numeric fields for a successful TEST_OUTPUT result', () => {
     const resultsWithTestOutputSuccess =
       testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS].status.results;
     expect(taskTestResultStatus(resultsWithTestOutputSuccess as TektonResultsRun[])).toMatchObject({
       note: 'Simulated success for testing TEST_OUTPUT reporting',
       result: 'SUCCESS',
+      successes: 1,
+      failures: 0,
+      warnings: 0,
     });
   });
 
@@ -295,6 +301,23 @@ describe('taskTestResultStatus', () => {
     expect(
       taskTestResultStatus(resultsWithInvalidTestOutputJsonValue as TektonResultsRun[]),
     ).toBeUndefined();
+  });
+
+  it('should return undefined numeric fields when TEST_OUTPUT has no counts', () => {
+    const results: TektonResultsRun[] = [
+      {
+        name: 'TEST_OUTPUT',
+        value: '{"result": "SUCCESS", "note": "old format"}',
+      },
+    ];
+    const status = taskTestResultStatus(results);
+    expect(status).toEqual({
+      result: 'SUCCESS',
+      note: 'old format',
+      successes: undefined,
+      failures: undefined,
+      warnings: undefined,
+    });
   });
 });
 
