@@ -74,9 +74,8 @@ export const getRandomChars = (len = 6): string => {
     .slice(2, len + 2);
 };
 
-export const isPipelineV1Beta1 = (
-  pipeline: PipelineRunKind,
-): pipeline is PipelineRunKindV1Beta1 => pipeline?.apiVersion === 'tekton.dev/v1beta1';
+export const isPipelineV1Beta1 = (pipeline: PipelineRunKind): pipeline is PipelineRunKindV1Beta1 =>
+  pipeline?.apiVersion === 'tekton.dev/v1beta1';
 
 export const isTaskV1Beta1 = (task: TaskRunKind): task is TaskRunKindV1Beta1 =>
   task?.apiVersion === 'tekton.dev/v1beta1';
@@ -203,9 +202,12 @@ export const conditionsRunStatus = (conditions: Condition[], specStatus?: string
   }
 };
 
-type TaskTestResult = {
+export type TaskTestResult = {
   result: string;
   note?: string;
+  successes?: number;
+  failures?: number;
+  warnings?: number;
 };
 export const taskTestResultStatus = (
   taskResults: TektonResultsRun[],
@@ -219,7 +221,13 @@ export const taskTestResultStatus = (
   try {
     const outputValues = JSON.parse(testOutput.value);
     if (!outputValues.result) return;
-    return { result: outputValues.result, note: outputValues.note ?? undefined };
+    return {
+      result: outputValues.result,
+      note: outputValues.note ?? undefined,
+      successes: outputValues.successes ?? undefined,
+      failures: outputValues.failures ?? undefined,
+      warnings: outputValues.warnings ?? undefined,
+    };
   } catch (e) {
     // eslint-disable-next-line no-console
     console.warn('Error when trying to parse testOutput.value');
