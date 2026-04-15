@@ -41,6 +41,8 @@ import {
 } from './component-utils';
 import {
   createK8sSecretResource,
+  getAnnotationForSecret,
+  getLabelsForSecret,
   getSecretFormData,
   SecretForComponentOption,
 } from './secrets/secret-utils';

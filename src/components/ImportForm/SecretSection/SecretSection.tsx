@@ -150,12 +150,9 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
                 <InputField name={props.name} type={TextInputTypes.text} isDisabled />
               </GridItem>
               <GridItem span={6}>
-                <Flex
-                  alignItems={{ default: 'alignItemsCenter' }}
-                  spaceItems={{ default: 'spaceItemsSm' }}
-                >
+                <Flex spaceItems={{ default: 'spaceItemsNone' }}>
                   <FlexItem>
-                    <Tooltip content="Edit secret">
+                    <Tooltip content="Edit">
                       <Button
                         type={ButtonType.button}
                         variant={ButtonVariant.plain}
@@ -163,6 +160,7 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
                         aria-label="Edit secret"
                         isDisabled={!canCreateSecret}
                         onClick={() => openEditSecretModal(rowIndex)}
+                        style={{ paddingRight: 0 }}
                       >
                         <PencilAltIcon />
                       </Button>
