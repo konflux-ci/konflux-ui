@@ -37,7 +37,7 @@ export const createFilterObj = <T>(
   validKeys?: string[],
   filterFn?: (item: T) => boolean,
 ): { [key: string]: number } => {
-  return items.reduce((acc, item) => {
+  const counts = items.slice(0, 30).reduce((acc, item) => {
     if (filterFn && !filterFn(item)) {
       return acc;
     }
@@ -54,4 +54,10 @@ export const createFilterObj = <T>(
 
     return acc;
   }, {});
+  return validKeys
+    ? validKeys.reduce((acc, key) => {
+        acc[key] = counts[key] ?? 0;
+        return acc;
+      }, counts)
+    : counts;
 };

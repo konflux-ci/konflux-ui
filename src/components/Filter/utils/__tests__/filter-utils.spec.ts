@@ -1,5 +1,4 @@
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { pipelineRunTypes } from '~/utils/pipelinerun-utils';
 import { mockPipelineRuns } from '../../../Components/__data__/mock-pipeline-run';
 import { createFilterObj } from '../filter-utils';
 
@@ -42,7 +41,7 @@ describe('filter-utils', () => {
       const result = createFilterObj(
         pipelineRuns,
         (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
-        pipelineRunTypes,
+        ['build', 'test'],
         (plr) => plr.kind === 'PipelineRun',
       );
       const expected = {
@@ -51,6 +50,49 @@ describe('filter-utils', () => {
       };
 
       expect(result).toStrictEqual(expected);
+    });
+
+    it('should order keys by descending count', () => {
+      const runs = [
+        ...pipelineRuns.slice(0, 2).map((plr) => ({
+          ...plr,
+          metadata: {
+            ...plr.metadata,
+            labels: {
+              ...plr.metadata.labels,
+              [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'test',
+            },
+          },
+        })),
+        {
+          ...pipelineRuns[0],
+          metadata: {
+            ...pipelineRuns[0].metadata,
+            labels: {
+              ...pipelineRuns[0].metadata.labels,
+              [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'build',
+            },
+          },
+        },
+      ];
+
+      const result = createFilterObj(
+        runs,
+        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
+        ['build', 'test'],
+        (plr) => plr.kind === 'PipelineRun',
+      );
+
+      expect(Object.keys(result)).toEqual(['test', 'build']);
+      expect(result).toEqual({ test: 2, build: 1 });
+    });
+
+    it('counts keys dynamically when validKeys is omitted', () => {
+      const result = createFilterObj(
+        pipelineRuns,
+        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
+      );
+      expect(result).toEqual({ build: 2, test: 1 });
     });
   });
 });
