@@ -251,7 +251,6 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         values={statusFilter}
         setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
         options={statusFilterObj}
-        optionLabels={Object.fromEntries(Object.values(runStatus).map((s) => [s, s]))}
       />
     </BaseTextFilterToolbar>
   );
