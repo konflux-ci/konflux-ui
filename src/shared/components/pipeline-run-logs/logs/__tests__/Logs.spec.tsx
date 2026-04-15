@@ -138,6 +138,11 @@ describe('Logs', () => {
           data: expect.any(String),
           allowAutoScroll: true,
           onScroll: undefined,
+          inProgressSectionId: 'container1',
+          logSections: [
+            { id: 'container1', title: 'container1', data: '' },
+            { id: 'container2', title: 'container2', data: '' },
+          ],
         }),
       );
     });
@@ -169,6 +174,7 @@ describe('Logs', () => {
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
             data: '',
+            logSections: undefined,
           }),
         );
       });
