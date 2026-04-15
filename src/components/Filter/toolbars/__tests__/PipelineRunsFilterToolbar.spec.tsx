@@ -178,7 +178,8 @@ describe('PipelineRunsFilterToolbar', () => {
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
+        // Counts must be > 0 for an option to be enabled (MultiSelect uses isDisabled={count === 0}).
+        versionOptions={{ main: 1, 'release-1.0': 0 }}
       />,
     );
 
