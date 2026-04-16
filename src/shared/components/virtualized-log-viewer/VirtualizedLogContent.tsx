@@ -2,6 +2,7 @@ import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
 import type { SearchedWord } from './types';
+import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
@@ -83,6 +84,13 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   // Use line number navigation hook
   const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
 
+  // Enable keyboard navigation (PageUp, PageDown, Home, End)
+  useKeyboardNavigation({
+    virtualizer,
+    scrollElementRef: parentRef,
+    enabled: true,
+  });
+
   // Scroll to highlighted lines when hash changes or on initial load
   React.useEffect(() => {
     if (highlightedLines && highlightedLines.start > 0 && lines.length > 0) {
@@ -147,10 +155,17 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       <div
         ref={parentRef}
         className="log-content__list log-content__with-gutter"
+        tabIndex={0}
         style={{
           height: `${height}px`,
           width: typeof width === 'number' ? `${width}px` : width,
           overflow: 'auto',
+        }}
+        onClick={() => {
+          // Ensure the container gets focus when clicked
+          // This is necessary because child elements with absolute positioning
+          // prevent clicks from reaching the parent
+          parentRef.current?.focus();
         }}
       >
         {/* Total height container */}
