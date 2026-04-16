@@ -190,5 +190,39 @@ describe('useKeyboardNavigation', () => {
 
       expect(result.current).toBe(first);
     });
+
+    it('does nothing when scrollElementRef is null', () => {
+      scrollElementRef = { current: null };
+      const { result } = setup();
+
+      fireKey(result.current, 'ArrowDown');
+
+      expect(mockScrollElement.scrollTop).toBe(100);
+    });
+
+    it('does nothing when scroll element is not focused', () => {
+      const { result } = setup();
+      mockScrollElement.blur();
+
+      fireKey(result.current, 'ArrowDown');
+
+      expect(mockScrollElement.scrollTop).toBe(100);
+    });
+
+    it('calls preventDefault and stopPropagation on nav keys', () => {
+      const { result } = setup();
+      const preventDefaultSpy = jest.fn();
+      const stopPropagationSpy = jest.fn();
+      const event = {
+        key: 'ArrowDown',
+        preventDefault: preventDefaultSpy,
+        stopPropagation: stopPropagationSpy,
+      } as unknown as React.KeyboardEvent<HTMLDivElement>;
+
+      result.current(event);
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
+    });
   });
 });
