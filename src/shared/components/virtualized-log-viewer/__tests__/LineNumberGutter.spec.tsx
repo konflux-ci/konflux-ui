@@ -19,11 +19,22 @@ describe('LineNumberGutter', () => {
     createMockVirtualItem(2, 40),
   ];
 
+  const mockGetOriginalLineInfo = jest.fn((virtualLineIndex: number) => ({
+    originalLineIndex: virtualLineIndex,
+    subLineIndex: 0,
+    totalSubLines: 1,
+    startPos: 0,
+    endPos: 100,
+    text: `line ${virtualLineIndex}`,
+    isSplit: false,
+  }));
+
   const defaultProps = {
     virtualItems: mockVirtualItems,
     itemSize: 20,
     onLineClick: jest.fn(),
     isLineHighlighted: jest.fn(() => false),
+    getOriginalLineInfo: mockGetOriginalLineInfo,
   };
 
   beforeEach(() => {

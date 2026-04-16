@@ -2,6 +2,7 @@ import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
 import type { SearchedWord } from './types';
+import { getDisplayLineNumber, useLargeLineHandler } from './useLargeLineHandler';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
@@ -40,6 +41,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   // Split data into lines
   const lines = React.useMemo(() => data.split('\n'), [data]);
 
+  // Split large lines into virtual sub-lines for better performance
+  const { virtualLines, getOriginalLineInfo } = useLargeLineHandler(lines);
+
   // Suppress harmless ResizeObserver errors from virtualizer
   useResizeObserverFix();
 
@@ -47,13 +51,14 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const searchRegex = useSearchRegex(searchText);
 
   // Use tokenization hook for lazy tokenization with caching
-  const { tokenizeLine } = useTokenization(lines);
+  const { tokenizeLine } = useTokenization(virtualLines);
 
   // Use line renderer hook for rendering individual lines
   const renderLine = useLineRenderer({
     tokenizeLine,
     searchRegex,
     currentSearchMatch,
+    virtualLines,
   });
 
   const measureCallbackRef = React.useCallback((node: HTMLDivElement | null) => {
@@ -65,15 +70,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     }
   }, []);
 
-  // Initialize virtualizer
+  // Initialize virtualizer - now uses virtual lines instead of original lines
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
-    count: lines.length,
+    count: virtualLines.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => itemSize,
     overscan: 10,
   });
 
   // Handle scroll behavior (direction, programmatic scroll, scrollToRow)
+  // Note: scrollToRow now refers to virtual line numbers (1-based)
   useVirtualizedScroll({
     virtualizer,
     scrollToRow,
@@ -168,13 +174,16 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
             itemSize={itemSize}
             onLineClick={handleLineClick}
             isLineHighlighted={isLineHighlighted}
+            getOriginalLineInfo={getOriginalLineInfo}
           />
 
           {/* Log content */}
           <div className="log-content__content-column">
             {virtualItems.map((virtualItem) => {
-              const lineNumber: number = virtualItem.index + 1;
+              const virtualLineInfo = getOriginalLineInfo(virtualItem.index);
+              const lineNumber: number = getDisplayLineNumber(virtualLineInfo, virtualItem.index);
               const isHighlighted = isLineHighlighted(lineNumber);
+
               return (
                 <div
                   key={virtualItem.key}

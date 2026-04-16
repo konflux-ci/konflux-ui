@@ -34,6 +34,7 @@ import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/l
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
+import { useLargeLineHandler } from '~/shared/components/virtualized-log-viewer/useLargeLineHandler';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
@@ -92,9 +93,15 @@ const LogViewer: React.FC<Props> = ({
 
   const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
 
-  // Search state and context management
+  // Create virtual lines for large line handling (JSON formatting, chunking)
+  const { virtualLines } = useLargeLineHandler(lines);
+
+  // Convert virtual lines to text array for search
+  const virtualLineTexts = React.useMemo(() => virtualLines.map((vl) => vl.text), [virtualLines]);
+
+  // Search state and context management (uses virtual lines for search)
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
-    lines,
+    lines: virtualLineTexts,
     autoScroll,
   });
 
