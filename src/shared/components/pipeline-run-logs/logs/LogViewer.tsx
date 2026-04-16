@@ -20,6 +20,8 @@ import {
   ExpandIcon,
   OutlinedPlayCircleIcon,
 } from '@patternfly/react-icons/dist/esm/icons';
+import { AngleDownIcon } from '@patternfly/react-icons/dist/esm/icons/angle-down-icon';
+import { AngleUpIcon } from '@patternfly/react-icons/dist/esm/icons/angle-up-icon';
 import {
   LogViewerSearch,
   LogViewerContext,
@@ -46,8 +48,28 @@ import './LogViewer.scss';
 // eslint-disable-next-line no-control-regex
 const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
+/** Virtualized row height matches `VirtualizedLogContent` default estimate. */
+const SECTION_LOG_LINE_PX = 20;
+const SECTION_LOG_MIN_PX = 64;
+const SECTION_LOG_MAX_PX = 440;
+/** Gutter / chrome inside the log viewport (not line text). */
+const SECTION_LOG_CHROME_PX = 24;
+
+/** Tight viewport for few lines; caps long output so each step scrolls internally. */
+function getSectionLogViewportHeightPx(logText: string): number {
+  const lineCount = Math.max(1, logText.split('\n').length);
+  const contentPx = lineCount * SECTION_LOG_LINE_PX + SECTION_LOG_CHROME_PX;
+  return Math.round(Math.min(SECTION_LOG_MAX_PX, Math.max(SECTION_LOG_MIN_PX, contentPx)));
+}
+
+export type LogSection = { id: string; title: string; data: string };
+
 export type Props = {
   showSearch?: boolean;
+  /** When set, one block per step (container) with its own heading and collapsible body. */
+  logSections?: LogSection[];
+  /** Step (container) currently in progress; unfolded by default while others start folded. */
+  inProgressSectionId?: string;
   data: string;
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
@@ -64,6 +86,8 @@ export type Props = {
 
 const LogViewer: React.FC<Props> = ({
   showSearch = true,
+  logSections,
+  inProgressSectionId,
   allowAutoScroll,
   data = '',
   downloadAllLabel,
@@ -76,6 +100,45 @@ const LogViewer: React.FC<Props> = ({
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
+
+  const sectionCount = logSections?.length ?? 0;
+  const useSectionedLayout = sectionCount > 0;
+  const singleSectionLayout = sectionCount === 1;
+  const multiSectionLayout = sectionCount > 1;
+  const showSearchToolbar = showSearch && (!useSectionedLayout || singleSectionLayout);
+
+  const getDefaultCollapsedSectionIds = React.useCallback((): ReadonlySet<string> => {
+    const defaultCollapsed = new Set((logSections ?? []).map((section) => section.id));
+    if (inProgressSectionId) {
+      defaultCollapsed.delete(inProgressSectionId);
+    }
+    return defaultCollapsed;
+  }, [logSections, inProgressSectionId]);
+
+  const [collapsedSectionIds, setCollapsedSectionIds] = React.useState<ReadonlySet<string>>(
+    getDefaultCollapsedSectionIds,
+  );
+  const [hasUserToggledSections, setHasUserToggledSections] = React.useState(false);
+
+  const toggleSectionCollapsed = React.useCallback((sectionId: string) => {
+    setHasUserToggledSections(true);
+    setCollapsedSectionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) {
+        next.delete(sectionId);
+      } else {
+        next.add(sectionId);
+      }
+      return next;
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (!useSectionedLayout || hasUserToggledSections) {
+      return;
+    }
+    setCollapsedSectionIds(getDefaultCollapsedSectionIds());
+  }, [useSectionedLayout, hasUserToggledSections, getDefaultCollapsedSectionIds]);
 
   // Auto-scroll and resume button logic
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
@@ -90,7 +153,15 @@ const LogViewer: React.FC<Props> = ({
     return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
   }, [data]);
 
-  const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
+  const lines = React.useMemo(() => {
+    if (multiSectionLayout) {
+      return processedData.split('\n');
+    }
+    if (singleSectionLayout && logSections?.[0]) {
+      return logSections[0].data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '').split('\n');
+    }
+    return processedData.split('\n');
+  }, [multiSectionLayout, singleSectionLayout, logSections, processedData]);
 
   // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
@@ -128,6 +199,16 @@ const LogViewer: React.FC<Props> = ({
   const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
 
   React.useEffect(() => {
+    if (multiSectionLayout) {
+      setViewerHeight(undefined);
+      return undefined;
+    }
+
+    if (singleSectionLayout && logSections?.[0] && collapsedSectionIds.has(logSections[0].id)) {
+      setViewerHeight(undefined);
+      return undefined;
+    }
+
     const updateHeight = (immediate = false) => {
       if (containerRef.current) {
         const measured = containerRef.current.clientHeight;
@@ -157,7 +238,7 @@ const LogViewer: React.FC<Props> = ({
       window.removeEventListener('resize', debouncedUpdateHeight);
       debouncedUpdateHeight.cancel();
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, multiSectionLayout, singleSectionLayout, logSections, collapsedSectionIds]);
 
   return (
     <LogViewerContext.Provider value={logViewerContextValue}>
@@ -184,7 +265,7 @@ const LogViewer: React.FC<Props> = ({
                     <FeatureFlagIndicator flags={['kubearchive-logs', 'taskruns-kubearchive']} />
                   </ToolbarItem>
                 </ToolbarGroup>
-                {showSearch && (
+                {showSearchToolbar && (
                   <ToolbarGroup>
                     <ToolbarItem>
                       <LogViewerSearch placeholder="Search" minSearchChars={0} />
@@ -268,16 +349,70 @@ const LogViewer: React.FC<Props> = ({
           </Banner>
 
           {/* Log Viewer */}
-          <div ref={containerRef} className="log-viewer__content">
-            {viewerHeight && (
-              <VirtualizedLogViewer
-                data={processedData}
-                height={viewerHeight}
-                scrollToRow={scrolledRow}
-                onScroll={handleScroll}
-              />
-            )}
-          </div>
+          {useSectionedLayout ? (
+            <div
+              className={classNames(
+                'log-viewer__content',
+                'log-viewer__content--sections',
+                singleSectionLayout && 'log-viewer__content--sections-single',
+              )}
+            >
+              {(logSections ?? []).map((sec) => {
+                const sectionData = sec.data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
+                const isCollapsed = collapsedSectionIds.has(sec.id);
+                const showViewer = multiSectionLayout || viewerHeight;
+                const sectionContentHeightPx = getSectionLogViewportHeightPx(sectionData);
+                const sectionViewerHeightPx = multiSectionLayout
+                  ? sectionContentHeightPx
+                  : Math.min(viewerHeight ?? SECTION_LOG_MAX_PX, sectionContentHeightPx);
+
+                return (
+                  <div key={sec.id} className="log-viewer__section">
+                    <button
+                      type="button"
+                      className="log-viewer__section-header"
+                      onClick={() => toggleSectionCollapsed(sec.id)}
+                      aria-expanded={!isCollapsed}
+                      aria-controls={`log-viewer-section-body-${sec.id}`}
+                      data-test={`log-section-toggle-${sec.id}`}
+                    >
+                      <span className="log-viewer__section-heading">{sec.title}</span>
+                      <span className="log-viewer__section-toggle-icon" aria-hidden="true">
+                        {isCollapsed ? <AngleDownIcon /> : <AngleUpIcon />}
+                      </span>
+                    </button>
+                    {!isCollapsed && (
+                      <div
+                        id={`log-viewer-section-body-${sec.id}`}
+                        ref={singleSectionLayout ? containerRef : undefined}
+                        className="log-viewer__section-body"
+                      >
+                        {showViewer && (
+                          <VirtualizedLogViewer
+                            data={sectionData}
+                            height={sectionViewerHeightPx}
+                            scrollToRow={singleSectionLayout ? scrolledRow : undefined}
+                            onScroll={handleScroll}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div ref={containerRef} className="log-viewer__content">
+              {viewerHeight && (
+                <VirtualizedLogViewer
+                  data={processedData}
+                  height={viewerHeight}
+                  scrollToRow={scrolledRow}
+                  onScroll={handleScroll}
+                />
+              )}
+            </div>
+          )}
 
           {/* Footer */}
           {showResumeStreamButton && (

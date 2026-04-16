@@ -181,6 +181,73 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
+  describe('Multi-step logs (logSections)', () => {
+    it('should hide search and keep sections folded by default', () => {
+      render(
+        <LogViewer
+          {...defaultProps}
+          showSearch
+          logSections={[
+            { id: 'a', title: 'step-a', data: 'one' },
+            { id: 'b', title: 'step-b', data: 'two' },
+          ]}
+          data="merged"
+        />,
+      );
+
+      expect(screen.queryByPlaceholderText('Search')).not.toBeInTheDocument();
+      const toggleA = screen.getByTestId('log-section-toggle-a');
+      const toggleB = screen.getByTestId('log-section-toggle-b');
+      expect(toggleA).toHaveAttribute('aria-expanded', 'false');
+      expect(toggleB).toHaveAttribute('aria-expanded', 'false');
+      expect(document.querySelectorAll('.pf-v5-c-log-viewer__main').length).toBe(0);
+    });
+
+    it('should unfold only in-progress section by default and allow toggling', async () => {
+      const user = userEvent.setup();
+      render(
+        <LogViewer
+          {...defaultProps}
+          inProgressSectionId="a"
+          logSections={[
+            { id: 'a', title: 'step-a', data: 'line-a' },
+            { id: 'b', title: 'step-b', data: 'line-b' },
+          ]}
+          data="merged"
+        />,
+      );
+
+      const logMainCount = () => document.querySelectorAll('.pf-v5-c-log-viewer__main').length;
+      expect(logMainCount()).toBe(1);
+
+      const toggleA = screen.getByTestId('log-section-toggle-a');
+      const toggleB = screen.getByTestId('log-section-toggle-b');
+      expect(toggleA).toHaveAttribute('aria-expanded', 'true');
+      expect(toggleB).toHaveAttribute('aria-expanded', 'false');
+      await user.click(toggleA);
+      expect(toggleA).toHaveAttribute('aria-expanded', 'false');
+      expect(logMainCount()).toBe(0);
+
+      await user.click(toggleA);
+      expect(toggleA).toHaveAttribute('aria-expanded', 'true');
+      expect(logMainCount()).toBe(1);
+    });
+
+    it('should keep search for a single step section', () => {
+      render(
+        <LogViewer
+          {...defaultProps}
+          showSearch
+          logSections={[{ id: 'only', title: 'only-step', data: 'x\ny' }]}
+          data="merged"
+        />,
+      );
+
+      expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
+      expect(screen.getByTestId('log-section-toggle-only')).toBeInTheDocument();
+    });
+  });
+
   describe('ANSI escape code processing', () => {
     it('should strip ANSI escape codes from log data', () => {
       const dataWithAnsi = '\x1b[32mSuccess\x1b[0m\n\x1b[31mError\x1b[0m\nPlain text';

@@ -12,7 +12,7 @@ import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
 import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
-import LogViewer, { type Props as LogViewerProps } from './LogViewer';
+import LogViewer, { type LogSection, type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
 
@@ -191,6 +191,30 @@ const Logs: React.FC<LogsProps> = ({
     [logSources, containers],
   );
 
+  const logSections: LogSection[] | undefined = React.useMemo(() => {
+    if (containers.length === 0) {
+      return undefined;
+    }
+    return containers.map((container) => ({
+      id: container.name,
+      title: container.name,
+      data: logSources[container.name] || '',
+    }));
+  }, [containers, logSources]);
+
+  const inProgressSectionId = React.useMemo<string | undefined>(() => {
+    if (containers.length === 0) {
+      return undefined;
+    }
+    const allStatuses: ContainerStatus[] = resource?.status?.containerStatuses ?? [];
+    const inProgressContainer = containers.find((container) => {
+      const status = allStatuses.find((c) => c.name === container.name);
+      return containerToLogSourceStatus(status) !== LOG_SOURCE_TERMINATED;
+    });
+
+    return inProgressContainer?.name;
+  }, [containers, resource?.status?.containerStatuses]);
+
   const allLogsTerminated = React.useMemo<boolean>(() => {
     if (containers.length === 0) return false;
 
@@ -217,6 +241,8 @@ const Logs: React.FC<LogsProps> = ({
   return (
     <LogViewer
       data={formattedLogs}
+      logSections={logSections}
+      inProgressSectionId={inProgressSectionId}
       allowAutoScroll={allowAutoScroll && !allLogsTerminated}
       onScroll={onScroll}
       downloadAllLabel={downloadAllLabel}
