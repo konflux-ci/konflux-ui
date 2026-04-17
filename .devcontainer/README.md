@@ -65,7 +65,7 @@ While this documentation highlights the installation process for VS Code and oth
 ## What's Included
 
 - **Node.js 20**: Latest LTS version as required by the project
-- **Yarn 1.22.22**: Package manager as specified in the project requirements
+- **Yarn Berry (v4.x)**: Managed via Corepack as specified by the `packageManager` field
 - **VS Code Extensions**: Pre-configured with useful extensions for React/TypeScript development
 - **Development Tools**: ESLint, Prettier, Stylelint, and more
 
@@ -100,7 +100,7 @@ yarn analyze
 
 The devcontainer automatically forwards these ports:
 
-- **Port 3000**: Development server (automatically opens when running `yarn start`)
+- **Port 8080**: Development server (automatically opens when running `yarn start`)
 - **Port 9000**: Webpack Bundle Analyzer
 
 ## Features
@@ -244,7 +244,7 @@ After making changes to the pipeline selection feature:
 ### General Issues
 
 - **Dependencies not installing**: Try rebuilding the container (`F1` → "Dev Containers: Rebuild Container")
-- **Port conflicts**: Check that ports 3000 and 9000 aren't already in use on your host machine
+- **Port conflicts**: Check that ports 8080 and 9000 aren't already in use on your host machine
 
 ### Docker-Specific Issues
 
