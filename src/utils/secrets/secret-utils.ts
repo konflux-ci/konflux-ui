@@ -290,19 +290,19 @@ export const createK8sSecretResource = (
   values: AddSecretFormValues,
   secretResource: SecretKind,
 ): SecretKind => {
-  const labels = {
-    secret: getLabelsForSecret(values),
-  };
-
+  const labels = getLabelsForSecret(values);
   const annotations = getAnnotationForSecret(values);
+
   const k8sSecretResource = {
     ...secretResource,
     metadata: {
       ...secretResource.metadata,
       labels: {
-        ...labels?.secret,
+        ...labels,
       },
-      annotations,
+      annotations: {
+        ...annotations,
+      },
     },
   };
 

@@ -17,6 +17,7 @@ import { useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { Base64 } from 'js-base64';
 import { IMPORT_SECRET_HELP_TEXT } from '~/consts/secrets';
+import { IfFeature } from '~/feature-flags/hooks';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
 import TextColumnField from '../../../shared/components/formik-fields/text-column-field/TextColumnField';
@@ -141,7 +142,7 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
         }
       >
         {(props) => {
-          const rowIndex = Number.parseInt(props.name.split('.').pop() ?? '', 10);
+          const rowIndex = props.idx;
           const editTestId = `${props.name.replace('.', '-')}-edit-button`;
 
           return (
@@ -152,19 +153,21 @@ const SecretSection: React.FC<SecretSectionProps> = ({ currentComponent }) => {
               <GridItem span={6}>
                 <Flex spaceItems={{ default: 'spaceItemsNone' }}>
                   <FlexItem>
-                    <Tooltip content="Edit">
-                      <Button
-                        type={ButtonType.button}
-                        variant={ButtonVariant.plain}
-                        data-test={editTestId}
-                        aria-label="Edit secret"
-                        isDisabled={!canCreateSecret}
-                        onClick={() => openEditSecretModal(rowIndex)}
-                        style={{ paddingRight: 0 }}
-                      >
-                        <PencilAltIcon />
-                      </Button>
-                    </Tooltip>
+                    <IfFeature flag="edit-secret-page">
+                      <Tooltip content="Edit">
+                        <Button
+                          type={ButtonType.button}
+                          variant={ButtonVariant.plain}
+                          data-test={editTestId}
+                          aria-label="Edit secret"
+                          isDisabled={!canCreateSecret}
+                          onClick={() => openEditSecretModal(rowIndex)}
+                          style={{ paddingRight: 0 }}
+                        >
+                          <PencilAltIcon />
+                        </Button>
+                      </Tooltip>
+                    </IfFeature>
                   </FlexItem>
                   <FlexItem>{props.removeButton}</FlexItem>
                 </Flex>

@@ -95,7 +95,6 @@ const SecretModal: React.FC<React.PropsWithChildren<SecretModalProps>> = ({
       onSubmit={(v) => createPartnerTaskSecret(v, onSubmit, modalProps.onClose)}
       initialValues={initialValues}
       validationSchema={SecretFromSchema}
-      // enableReinitialize
     >
       {(props) => {
         return (

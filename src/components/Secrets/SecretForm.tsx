@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
@@ -38,9 +38,6 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
 
-  useEffect(() => {
-    setCurrentType(values.type);
-  }, [values.type]);
   const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
   const defaultImageKeyValues = [{ key: '.dockerconfigjson', value: '', readOnlyKey: true }];
   const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
