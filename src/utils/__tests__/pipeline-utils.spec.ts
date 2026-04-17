@@ -16,6 +16,7 @@ import {
   taskTestResultStatus,
   testOutputResultToRunStatus,
   isTaskRunInPipelineRun,
+  getDisplayNameFromChildReferences,
 } from '../pipeline-utils';
 
 const samplePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
@@ -346,5 +347,53 @@ describe('isTaskRunInPipelineRun', () => {
     expect(isTaskRunInPipelineRun(mockPipelineRuns[0] as PipelineRunKind, 'clone-repository')).toBe(
       true,
     );
+  });
+});
+
+describe('getDisplayNameFromChildReferences', () => {
+  const pipelineRunWithChildRefs = {
+    status: {
+      childReferences: [
+        { name: 'build-task-run-1', pipelineTaskName: 'build', displayName: 'Build linux/amd64' },
+        { name: 'build-task-run-2', pipelineTaskName: 'build', displayName: 'Build linux/arm64' },
+        { name: 'test-task-run', pipelineTaskName: 'test' },
+      ],
+    },
+  } as PipelineRunKind;
+
+  it('should return displayName when childReference matches', () => {
+    expect(getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'build-task-run-1')).toBe(
+      'Build linux/amd64',
+    );
+    expect(getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'build-task-run-2')).toBe(
+      'Build linux/arm64',
+    );
+  });
+
+  it('should return undefined when childReference has no displayName', () => {
+    expect(
+      getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'test-task-run'),
+    ).toBeUndefined();
+  });
+
+  it('should return undefined when taskRunName does not match any childReference', () => {
+    expect(
+      getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'non-existent'),
+    ).toBeUndefined();
+  });
+
+  it('should return undefined when pipelineRun is undefined', () => {
+    expect(getDisplayNameFromChildReferences(undefined, 'build-task-run-1')).toBeUndefined();
+  });
+
+  it('should return undefined when taskRunName is undefined', () => {
+    expect(getDisplayNameFromChildReferences(pipelineRunWithChildRefs, undefined)).toBeUndefined();
+  });
+
+  it('should return undefined when pipelineRun has no childReferences', () => {
+    const pipelineRunNoRefs = { status: {} } as PipelineRunKind;
+    expect(
+      getDisplayNameFromChildReferences(pipelineRunNoRefs, 'build-task-run-1'),
+    ).toBeUndefined();
   });
 });
