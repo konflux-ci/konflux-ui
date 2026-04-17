@@ -6,7 +6,7 @@ export type PipelineRunsFilterState = {
   name: string;
   status: string[];
   type: string[];
-  version?: string[];
+  version?: string;
 };
 
 export const filterPipelineRuns = (
@@ -28,8 +28,10 @@ export const filterPipelineRuns = (
             .indexOf(componentName.trim().toLowerCase()) >= 0) &&
         (!status.length || status.includes(pipelineRunStatus(plr))) &&
         (!type.length || type.includes(runType)) &&
-        (!version?.length ||
-          version.includes(plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION]))
+        (!version ||
+          plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION]
+            ?.toLowerCase()
+            .indexOf(version) >= 0)
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));
