@@ -147,6 +147,7 @@ const Data: React.FC<React.PropsWithChildren<DataProps>> = ({
   if (NoDataEmptyMsg && isEmpty(unfilteredData)) {
     return (
       <div className="loading-box loading-box__loaded">
+        {Toolbar}
         {NoDataEmptyMsg ? <NoDataEmptyMsg /> : <EmptyBox label={label} />}
       </div>
     );
