@@ -77,12 +77,7 @@ export const MultiSelect = ({
               filter.startsWith(MENU_DIVIDER) ? (
                 <Divider key={filter} />
               ) : (
-                <SelectOption
-                  key={filter}
-                  value={filter}
-                  isChecked={values.includes(filter)}
-                  // TODO: remove the item count from other components, it is not accurate anyway as it only counts fetched resources
-                >
+                <SelectOption key={filter} value={filter} isChecked={values.includes(filter)}>
                   {optionLabels?.[filter] ?? filter}
                 </SelectOption>
               ),

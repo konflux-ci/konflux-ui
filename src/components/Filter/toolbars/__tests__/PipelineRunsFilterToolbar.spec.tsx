@@ -2,15 +2,18 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PipelineRunsFilterToolbar from '../PipelineRunsFilterToolbar';
 
+const defaultFilters = {
+  name: '',
+  status: [] as string[],
+  type: [] as string[],
+  version: '',
+};
+
 describe('PipelineRunsFilterToolbar', () => {
-  it('it should render filter tooblar accurately', () => {
+  it('it should render filter toolbar accurately', () => {
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-        }}
+        filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
@@ -23,29 +26,31 @@ describe('PipelineRunsFilterToolbar', () => {
     expect(screen.getByRole('button', { name: 'Type filter menu' })).toBeVisible();
   });
 
-  it('it should update name filter', async () => {
+  it('it should update name filter when search type is Name', async () => {
     const setFilters = jest.fn();
     const user = userEvent.setup();
 
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-        }}
+        filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
+        filterOptions={['Name', 'Version']}
       />,
     );
 
-    const name = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-    await user.type(name, 'test');
-    expect(name.value).toBe('test');
+    const nameInput = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    await user.type(nameInput, 'test');
+    expect(nameInput.value).toBe('test');
     await waitFor(() => expect(setFilters).toHaveBeenCalledTimes(1));
-    expect(setFilters).toHaveBeenCalledWith({ name: 'test', status: [], type: [] });
+    expect(setFilters).toHaveBeenCalledWith({
+      name: 'test',
+      version: '',
+      status: [],
+      type: [],
+    });
   });
 
   it('it should update status filter', async () => {
@@ -54,11 +59,7 @@ describe('PipelineRunsFilterToolbar', () => {
 
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-        }}
+        filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
@@ -83,6 +84,7 @@ describe('PipelineRunsFilterToolbar', () => {
       name: '',
       status: ['Succeeded'],
       type: [],
+      version: '',
     });
   });
 
@@ -92,11 +94,7 @@ describe('PipelineRunsFilterToolbar', () => {
 
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-        }}
+        filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
@@ -121,17 +119,14 @@ describe('PipelineRunsFilterToolbar', () => {
       name: '',
       status: [],
       type: ['build'],
+      version: '',
     });
   });
 
-  it('should not render version filter when versionOptions is not provided', () => {
+  it('should not render Name/Version dropdown when filterOptions is not provided', () => {
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-        }}
+        filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
@@ -139,95 +134,70 @@ describe('PipelineRunsFilterToolbar', () => {
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Name' })).not.toBeInTheDocument();
   });
 
-  it('should render version filter when versionOptions is provided', () => {
+  it('should not render Name/Version dropdown when filterOptions is an empty array', () => {
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-          version: [],
-        }}
+        filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
+        filterOptions={[]}
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Version filter menu' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Name' })).not.toBeInTheDocument();
   });
 
-  it('should update version filter when a version option is selected', async () => {
+  it('should render Name/Version dropdown when filterOptions is provided', () => {
+    render(
+      <PipelineRunsFilterToolbar
+        filters={defaultFilters}
+        setFilters={jest.fn()}
+        onClearFilters={jest.fn()}
+        typeOptions={{ build: 2, test: 2 }}
+        statusOptions={{ Succeeded: 4 }}
+        filterOptions={['Name', 'Version']}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Name' })).toBeVisible();
+  });
+
+  it('should update version search when search type is Version', async () => {
+    jest.useFakeTimers();
     const setFilters = jest.fn();
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
 
     render(
       <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-          version: [],
-        }}
+        filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={{ build: 2, test: 2 }}
         statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
+        filterOptions={['Name', 'Version']}
       />,
     );
 
-    const versionFilter = screen.getByRole('button', {
-      name: /version filter menu/i,
-    });
-    await user.click(versionFilter);
-    expect(versionFilter).toHaveAttribute('aria-expanded', 'true');
+    await user.click(screen.getByRole('button', { name: 'Name' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Version' }));
 
-    const mainOption = screen.getByLabelText(/main/i, {
-      selector: 'input',
-    });
-    await user.click(mainOption);
+    const searchInput = screen.getByRole('textbox', { name: 'name filter' });
+    await user.type(searchInput, 'main');
+    jest.advanceTimersByTime(600);
 
-    expect(setFilters).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(setFilters).toHaveBeenCalled());
     expect(setFilters).toHaveBeenCalledWith({
       name: '',
+      version: 'main',
       status: [],
       type: [],
-      version: ['main'],
     });
-  });
 
-  it('should display optionLabels instead of keys when versionLabels is provided', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <PipelineRunsFilterToolbar
-        filters={{
-          name: '',
-          status: [],
-          type: [],
-          version: [],
-        }}
-        setFilters={jest.fn()}
-        onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
-        versionLabels={{ main: 'Main Branch', 'release-1.0': 'Release 1.0' }}
-      />,
-    );
-
-    const versionFilter = screen.getByRole('button', {
-      name: /version filter menu/i,
-    });
-    await user.click(versionFilter);
-
-    expect(screen.getByText('Main Branch')).toBeInTheDocument();
-    expect(screen.getByText('Release 1.0')).toBeInTheDocument();
+    jest.useRealTimers();
   });
 });
