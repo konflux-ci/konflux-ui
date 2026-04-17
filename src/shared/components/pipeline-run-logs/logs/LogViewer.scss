@@ -46,6 +46,11 @@
     right: 0;
     z-index: 1000;
   }
+
+  &__bullseye {
+    padding-top: var(--pf-v5-global--spacer--md);
+    padding-bottom: var(--pf-v5-global--spacer--md);
+  }
 }
 
 // Force light theme on the log content when user selects "Light theme" (e.g. when main app theme is dark)

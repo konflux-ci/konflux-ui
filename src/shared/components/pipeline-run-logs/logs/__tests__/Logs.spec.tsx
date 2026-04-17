@@ -17,6 +17,7 @@ jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
     data: string;
     allowAutoScroll: boolean;
+    isLoading?: boolean;
     onScroll?: () => void;
   }) {
     mockLogViewer(props);
@@ -798,6 +799,76 @@ describe('Logs', () => {
         allowAutoScroll: true, // Should be true when no containers (empty array)
       }),
     );
+  });
+
+  describe('loading indicator while processing logs', () => {
+    it('should show loading while logs are being debounced', async () => {
+      jest.useFakeTimers();
+
+      const terminatedContainer: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
+
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer],
+        },
+      };
+
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock).mockResolvedValue('some log output');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }]}
+        />,
+      );
+
+      // After fetch resolves but before debounce fires, isLoading should be true
+      await act(async () => {
+        await Promise.resolve(); // let fetch resolve
+      });
+
+      expect(mockLogViewer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isLoading: true,
+        }),
+      );
+
+      // After debounce fires, isLoading should be false
+      act(() => {
+        jest.advanceTimersByTime(300);
+      });
+
+      expect(mockLogViewer).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          isLoading: false,
+          data: expect.stringContaining('some log output'),
+        }),
+      );
+
+      jest.useRealTimers();
+    });
+
+    it('should not show loading when there are no log sources', () => {
+      render(<Logs {...defaultProps} containers={[]} />);
+
+      expect(mockLogViewer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isLoading: false,
+          data: '',
+        }),
+      );
+    });
   });
 
   it('should handle containers that are not yet started', () => {
