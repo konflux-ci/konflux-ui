@@ -1,59 +1,91 @@
-version: 1
+# CodeRabbit v2 configuration for konflux-ui
+# Reference: https://docs.coderabbit.ai/reference/configuration
 
-# Add this new section at the top level
-tone_instructions: 'Provide concise, professional summaries without poems, creative elements, or ASCII art. Focus on technical details and actionable insights.'
+language: en-US
 
-# Files to include and exclude
-include:
-  - '**/*.ts'
-  - '**/*.tsx'
-  - '**/*.scss'
-  - 'package.json'
-  - '**/*.yaml'
-  - '**/*.yml'
-  - '**/*.md'
-  - '**/*.js'
-  - '**/*.cjs'
-  - '**/*.mjs'
+tone_instructions: >
+  Provide concise, professional summaries without poems, creative elements,
+  or ASCII art. Focus on technical details and actionable insights.
 
-exclude:
-  - 'dist/**'
-  - 'node_modules/**'
-  - 'coverage/**'
+reviews:
+  profile: assertive
+  poem: false
 
-rules:
-  # ✅ Complexity
-  complexity:
-    maxFunctionLength: 60
-    maxNestedBlocks: 3
+  path_filters:
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.scss"
+    - "**/*.js"
+    - "**/*.cjs"
+    - "**/*.mjs"
+    - "**/*.yaml"
+    - "**/*.yml"
+    - "**/*.md"
+    - "package.json"
+    - "!dist/**"
+    - "!node_modules/**"
+    - "!coverage/**"
 
-  # ✅ Naming
-  naming:
-    enforcePascalCaseForComponents: true
+  path_instructions:
+    - path: "src/**/*.{ts,tsx}"
+      instructions: |
+        ## TypeScript & React guidelines
 
-  # ✅ TypeScript rules
-  typescript:
-    enforceStrictNullChecks: true
-    preferReadonlyProps: true
-    suggestBetterTypes: true
+        ### Complexity
+        - Flag functions longer than ~60 lines; suggest breaking them into smaller helpers.
+        - Flag nesting deeper than 3 levels (if/for/switch); suggest early returns or extraction.
 
-  # ✅ React rules
-  react:
-    enforceHooksRules: true
-    preferFunctionComponents: true
-    avoidInlineStyles: true
+        ### Naming
+        - React components must use PascalCase.
+        - Hooks must start with `use`.
+        - Non-component exports should use camelCase.
 
-  # ✅ Performance
-  performance:
-    avoidUnnecessaryRerenders: true
-    suggestMemoization: true
+        ### TypeScript
+        - Flag `any` types; suggest a concrete type or `unknown` + narrowing.
+        - Flag missing null checks when a value may be undefined (strict-null style).
+        - Prefer `readonly` for props and data-only interfaces.
+        - Suggest more precise types wherever `string | number` or similar unions can be narrowed.
 
-  # ✅ Architecture & Readability
-  architecture:
-    enforceSeparationOfConcerns: true
-    suggestFolderStructure: true
-    suggestCodeSplitting: true
+        ### React
+        - Enforce Rules of Hooks (no conditional hook calls, no hooks in loops).
+        - Prefer function components; flag class components unless there is a clear reason.
+        - Avoid inline style objects that recreate on every render; suggest SCSS classes or `useMemo`.
+        - Flag `useEffect` with missing or over-broad dependency arrays.
+        - Suggest `useMemo`/`useCallback` where a value or callback is expensive and referenced by children.
 
-limits:
-  maxFileSizeKB: 500
-  maxReviewTimeMinutes: 60
+        ### Architecture & import restrictions
+        - `src/utils/**` may only import from `utils`, `types`, `k8s`, `models`, `consts`,
+          `kubearchive`, `unit-test-utils`, `__data__`, `auth`, `shared`, or `routes`.
+        - `src/types/**` may only import from `types`.
+        - `src/models/**` may only import from `models` or `types`.
+        - `src/k8s/**` may only import from `k8s` or `types/k8s`.
+        - `src/shared/**` may only import from `shared`, `k8s`, or `types/k8s`.
+        - `src/feature-flags/**` may only import from `feature-flags`.
+        - `src/kubearchive/**` may only import from `kubearchive`, `k8s`, or `types/k8s`.
+        - Flag imports that violate these layering rules.
+
+        ### Performance
+        - Flag unnecessary re-renders caused by object/array literals or inline functions in JSX.
+        - Suggest code-splitting (`React.lazy` / dynamic import) for large leaf components.
+
+  auto_review:
+    enabled: true
+    drafts: false
+
+  finishing_touches:
+    docstrings:
+      enabled: true
+
+  tools:
+    eslint:
+      enabled: true
+    stylelint:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    actionlint:
+      enabled: true
+    biome:
+      enabled: false
