@@ -5,8 +5,9 @@ import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
 import { TektonResourceLabel } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { downloadYaml } from '~/utils/common-utils';
+import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
 import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
-import { createUseParamsMock, renderWithQueryClientAndRouter } from '../../../utils/test-utils';
+import { renderWithQueryClientAndRouter } from '../../../utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunDetailsView } from '../TaskRunDetailsView';
 
@@ -17,15 +18,22 @@ jest.mock('react-i18next', () => ({
 const navigateMock = jest.fn();
 const mockTaskRun = testTaskRuns[0];
 
+const useParamsMock = jest.fn().mockReturnValue({ taskRunName: mockTaskRun.metadata.name });
+
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     Link: (props) => <a href={props.to}>{props.children}</a>,
     useNavigate: () => navigateMock,
+    useParams: () => useParamsMock(),
     useSearchParams: () => React.useState(() => new URLSearchParams()),
   };
 });
+
+jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+  usePipelineRunV2: jest.fn(),
+}));
 
 jest.mock('../../../hooks/useTaskRunsV2', () => ({
   useTaskRunV2: jest.fn(),
@@ -46,12 +54,15 @@ jest.mock('~/utils/common-utils', () => {
 });
 
 const useTaskRunMock = useTaskRunV2 as jest.Mock;
+const usePipelineRunV2Mock = usePipelineRunV2 as jest.Mock;
 const downloadYamlMock = downloadYaml as jest.Mock;
-// const sanitizeHtmlMock = sanitizeHtml as jest.Mock;
 
 describe('TaskRunDetailsView', () => {
-  createUseParamsMock({ taskRunName: mockTaskRun.metadata.name });
   mockUseNamespaceHook('test-ns');
+
+  beforeEach(() => {
+    usePipelineRunV2Mock.mockReturnValue([undefined, false]);
+  });
 
   it('should render spinner if taskrun data is not loaded', () => {
     useTaskRunMock.mockReturnValue([null, false]);
@@ -117,5 +128,50 @@ describe('TaskRunDetailsView', () => {
 
     renderWithQueryClientAndRouter(<TaskRunDetailsView />);
     expect(screen.getByRole('tab', { name: /security/i })).toBeInTheDocument();
+  });
+
+  it('should show displayName from childReferences when available', () => {
+    useTaskRunMock.mockReturnValue([mockTaskRun, true]);
+    usePipelineRunV2Mock.mockReturnValue([
+      {
+        status: {
+          childReferences: [
+            {
+              name: mockTaskRun.metadata.name,
+              pipelineTaskName: 'example-task',
+              displayName: 'Build for linux/amd64',
+            },
+          ],
+        },
+      },
+      true,
+    ]);
+
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+    const titleSpan = document.querySelector('.pf-v5-u-mr-sm');
+    expect(titleSpan).not.toBeNull();
+    expect(titleSpan.textContent).toContain('(Build for linux/amd64)');
+  });
+
+  it('should not show displayName parentheses when childReferences has no displayName', () => {
+    useTaskRunMock.mockReturnValue([mockTaskRun, true]);
+    usePipelineRunV2Mock.mockReturnValue([
+      {
+        status: {
+          childReferences: [
+            {
+              name: mockTaskRun.metadata.name,
+              pipelineTaskName: 'example-task',
+            },
+          ],
+        },
+      },
+      true,
+    ]);
+
+    renderWithQueryClientAndRouter(<TaskRunDetailsView />);
+    const titleSpan = document.querySelector('.pf-v5-u-mr-sm');
+    expect(titleSpan).not.toBeNull();
+    expect(titleSpan.textContent).not.toContain('(');
   });
 });
