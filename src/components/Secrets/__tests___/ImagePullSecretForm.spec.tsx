@@ -50,7 +50,30 @@ const missingAuthDockerConfig = {
   },
 };
 
+const registryCredsEditInitialValues = {
+  image: {
+    authType: 'Image registry credentials',
+    registryCreds: [
+      { registry: 'registry.io', username: 'user', password: '', email: 'user@example.com' },
+    ],
+  },
+};
+
 describe('ImagePullSecretForm', () => {
+  it('should disable auth type dropdown and show edit-mode helper text when isEditMode is true', () => {
+    formikRenderer(<ImagePullSecretForm isEditMode />, initialValues);
+    expect(screen.getByText('You cannot edit the authentication type in edit mode')).toBeVisible();
+    const authTypeToggle = screen.getByTestId('dropdown-toggle');
+    expect(authTypeToggle).toBeDisabled();
+  });
+
+  it('shows keep-password placeholder on registry credentials when isEditMode is true', () => {
+    formikRenderer(<ImagePullSecretForm isEditMode />, registryCredsEditInitialValues);
+    expect(
+      screen.getByPlaceholderText('To keep the same password, leave this field blank'),
+    ).toBeVisible();
+  });
+
   it('should show correct fields based on selected auth type', () => {
     formikRenderer(<ImagePullSecretForm />, initialValues);
     expect(screen.getByText('Authentication type')).toBeVisible();

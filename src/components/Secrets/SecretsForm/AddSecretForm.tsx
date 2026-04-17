@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, PageSection, PageSectionVariants } from '@patternfly/react-core';
+import { logger } from '@sentry/react';
 import { Formik } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
@@ -11,7 +12,7 @@ import ExternalLink from '~/shared/components/links/ExternalLink';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { AddSecretFormValues, SecretFor, SecretTypeDropdownLabel } from '~/types';
 import { addSecretWithLinkingComponents } from '~/utils/create-utils';
-import { getAddSecretBreadcrumbs } from '~/utils/secrets/secret-utils';
+import { getSecretBreadcrumbs } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
@@ -54,8 +55,7 @@ const AddSecretForm: React.FC = () => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((error) => {
-            // eslint-disable-next-line no-console
-            console.warn('Error while submitting secret form:', error);
+            logger.warn('Error while submitting secret form:', { error });
             actions.setSubmitting(false);
             actions.setStatus({ submitError: error.message });
           });
@@ -64,7 +64,7 @@ const AddSecretForm: React.FC = () => {
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout
-          breadcrumbs={getAddSecretBreadcrumbs(namespace)}
+          breadcrumbs={getSecretBreadcrumbs(namespace, 'Add')}
           title="Add secret"
           description={
             <>
