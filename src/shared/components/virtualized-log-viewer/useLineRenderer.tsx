@@ -24,19 +24,30 @@ export function useLineRenderer({
       if (!lineObj) return <span className="pf-v5-c-log-viewer__text">&nbsp;</span>;
 
       const { tokens, text } = lineObj;
-      if (tokens.length === 0) {
-        // Preserve raw text when tokenization fails, only show &nbsp; for truly empty lines
-        return <span className="pf-v5-c-log-viewer__text">{text || '\u00A0'}</span>;
-      }
 
-      // Calculate matches dynamically (not cached) to support search changes without re-tokenization
+      // Calculate search matches dynamically (not cached) to support search changes without re-tokenization
       const matches = getLineMatches(text, searchRegex);
-      let offset = 0;
       const currentMatch =
         currentSearchMatch?.rowIndex === rowIndex
           ? matches[currentSearchMatch.matchIndex - 1] ?? null
           : null;
 
+      // Handle plain text mode (tokens.length === 0)
+      // This occurs for: monster lines, empty lines, or tokenization failures
+      if (tokens.length === 0) {
+        // Empty line: show non-breaking space
+        if (!text) {
+          return <span className="pf-v5-c-log-viewer__text">{'\u00A0'}</span>;
+        }
+
+        // Plain text with search highlighting
+        // Render as a single text token with search matches applied
+        const rendered = renderTokenRecursive(text, 0, matches, currentMatch, 0);
+        return <span className="pf-v5-c-log-viewer__text">{rendered}</span>;
+      }
+
+      // Normal mode: render syntax-highlighted tokens with search matches
+      let offset = 0;
       return (
         <span className="pf-v5-c-log-viewer__text">
           {tokens.map((t, i) => {
