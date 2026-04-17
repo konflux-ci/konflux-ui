@@ -47,7 +47,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
-    version: unparsedFilters.version ? (unparsedFilters.version as string[]) : [],
+    version: unparsedFilters.version ? (unparsedFilters.version as string) : '',
   });
 
   const {
@@ -108,23 +108,8 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     [sortedPipelineRuns],
   );
 
-  const allVersions = React.useMemo(
-    () => component?.spec?.source?.versions ?? [],
-    [component?.spec?.source?.versions],
-  );
-
-  const allVersionBranches = React.useMemo(() => allVersions.map((v) => v.revision), [allVersions]);
-
-  const versionLabelMap = React.useMemo(
-    () => Object.fromEntries(allVersions.map((v) => [v.revision, v.name])),
-    [allVersions],
-  );
-
-  // TODO: temporary until item count is not removed from MultiSelect
-  const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
-
   const effectiveFilters = React.useMemo(
-    () => (versionName ? { ...filters, version: [] } : filters),
+    () => (versionName ? { ...filters, version: '' } : filters),
     [filters, versionName],
   );
 
@@ -158,8 +143,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           onClearFilters={onClearFilters}
           typeOptions={typeFilterObj}
           statusOptions={statusFilterObj}
-          versionOptions={!versionName ? versionFilterObj : undefined}
-          versionLabels={!versionName ? versionLabelMap : undefined}
+          filterOptions={versionName ? ['Name', 'Version'] : []}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
