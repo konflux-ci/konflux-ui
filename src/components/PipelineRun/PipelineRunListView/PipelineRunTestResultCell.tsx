@@ -1,10 +1,11 @@
-import { Popover, Skeleton } from '@patternfly/react-core';
+import * as React from 'react';
+import { Skeleton } from '@patternfly/react-core';
 import { UNFINISHED_PLR_STATUSES } from '~/consts/pipelinerun';
 import { usePipelineRunTestOutputResult } from '~/hooks/usePipelineRunTestOutputResult';
 import { TableData } from '~/shared';
 import { PipelineRunKind } from '~/types';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
-import { StatusIconWithText } from '../../topology/StatusIcon';
+import { PipelineRunTestOutputResult } from './PipelineRunTestOutputResult';
 
 type Props = {
   plr: PipelineRunKind;
@@ -23,25 +24,15 @@ export const PipelineRunTestResultCell: React.FC<React.PropsWithChildren<Props>>
     !UNFINISHED_PLR_STATUSES.includes(status) &&
     plr.status?.completionTime !== undefined;
 
-  const [testOutputResult, isPipelineRunTestOutputResultLoading, testOutputNote] =
+  const [aggregatedTestResult, isPipelineRunTestOutputResultLoading] =
     usePipelineRunTestOutputResult(shouldFetchTestResult ? namespace : null, plr);
-
-  const cellContent = isPipelineRunTestOutputResultLoading ? (
-    <Skeleton screenreaderText="Loading PipelineRun test output result" />
-  ) : (
-    <>{testOutputResult ? <StatusIconWithText status={testOutputResult} /> : '-'}</>
-  );
 
   return (
     <TableData className={className}>
-      {testOutputNote ? (
-        <Popover bodyContent={testOutputNote} aria-label="test output details">
-          <span role="button" aria-label="test output details" style={{ cursor: 'pointer' }}>
-            {cellContent}
-          </span>
-        </Popover>
+      {isPipelineRunTestOutputResultLoading ? (
+        <Skeleton screenreaderText="Loading PipelineRun test output result" />
       ) : (
-        cellContent
+        <PipelineRunTestOutputResult aggregatedTestResult={aggregatedTestResult} />
       )}
     </TableData>
   );
