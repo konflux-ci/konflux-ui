@@ -21,10 +21,13 @@ describe('useKeyboardNavigation', () => {
     );
   };
 
-  const fireKey = (key: string) => {
-    const event = new KeyboardEvent('keydown', { key, bubbles: true });
-    Object.defineProperty(event, 'preventDefault', { value: jest.fn() });
-    document.dispatchEvent(event);
+  const fireKey = (handler: (e: React.KeyboardEvent<HTMLDivElement>) => void, key: string) => {
+    const event = {
+      key,
+      preventDefault: jest.fn(),
+      stopPropagation: jest.fn(),
+    } as unknown as React.KeyboardEvent<HTMLDivElement>;
+    handler(event);
   };
 
   beforeEach(() => {
@@ -67,36 +70,36 @@ describe('useKeyboardNavigation', () => {
   // ================= Arrow keys =================
   describe('Arrow keys', () => {
     it('handles ArrowDown', () => {
-      setup();
+      const { result } = setup();
 
-      fireKey('ArrowDown');
+      fireKey(result.current, 'ArrowDown');
 
       expect(mockScrollElement.scrollTop).toBe(120);
     });
 
     it('handles ArrowUp', () => {
       mockScrollElement.scrollTop = 120;
-      setup();
+      const { result } = setup();
 
-      fireKey('ArrowUp');
+      fireKey(result.current, 'ArrowUp');
 
       expect(mockScrollElement.scrollTop).toBe(100);
     });
 
     it('does not scroll below 0', () => {
       mockScrollElement.scrollTop = 10;
-      setup();
+      const { result } = setup();
 
-      fireKey('ArrowUp');
+      fireKey(result.current, 'ArrowUp');
 
       expect(mockScrollElement.scrollTop).toBe(0);
     });
 
     it('does not scroll beyond max on ArrowDown', () => {
       mockScrollElement.scrollTop = 4495;
-      setup();
+      const { result } = setup();
 
-      fireKey('ArrowDown');
+      fireKey(result.current, 'ArrowDown');
 
       expect(mockScrollElement.scrollTop).toBe(4500);
     });
@@ -105,36 +108,36 @@ describe('useKeyboardNavigation', () => {
   // ================= Page keys =================
   describe('Page keys', () => {
     it('handles PageDown', () => {
-      setup();
+      const { result } = setup();
 
-      fireKey('PageDown');
+      fireKey(result.current, 'PageDown');
 
       expect(mockScrollElement.scrollTop).toBe(600);
     });
 
     it('handles PageUp', () => {
       mockScrollElement.scrollTop = 600;
-      setup();
+      const { result } = setup();
 
-      fireKey('PageUp');
+      fireKey(result.current, 'PageUp');
 
       expect(mockScrollElement.scrollTop).toBe(100);
     });
 
     it('does not scroll below 0 on PageUp', () => {
       mockScrollElement.scrollTop = 100;
-      setup();
+      const { result } = setup();
 
-      fireKey('PageUp');
+      fireKey(result.current, 'PageUp');
 
       expect(mockScrollElement.scrollTop).toBe(0);
     });
 
     it('does not scroll beyond max on PageDown', () => {
       mockScrollElement.scrollTop = 4800;
-      setup();
+      const { result } = setup();
 
-      fireKey('PageDown');
+      fireKey(result.current, 'PageDown');
 
       expect(mockScrollElement.scrollTop).toBe(5000);
     });
@@ -143,17 +146,17 @@ describe('useKeyboardNavigation', () => {
   // ================= Home / End =================
   describe('Home / End keys', () => {
     it('handles Home', () => {
-      setup();
+      const { result } = setup();
 
-      fireKey('Home');
+      fireKey(result.current, 'Home');
 
       expect(mockScrollElement.scrollTop).toBe(0);
     });
 
     it('handles End', () => {
-      setup();
+      const { result } = setup();
 
-      fireKey('End');
+      fireKey(result.current, 'End');
 
       expect(mockScrollElement.scrollTop).toBe(5000);
     });
@@ -163,30 +166,63 @@ describe('useKeyboardNavigation', () => {
   describe('other behaviors', () => {
     it('ignores unsupported keys', () => {
       const initial = mockScrollElement.scrollTop;
-      setup();
+      const { result } = setup();
 
-      fireKey('Tab');
+      fireKey(result.current, 'Tab');
 
       expect(mockScrollElement.scrollTop).toBe(initial);
     });
 
     it('does nothing when disabled', () => {
       const initial = mockScrollElement.scrollTop;
-      setup(false);
+      const { result } = setup(false);
 
-      fireKey('PageDown');
+      fireKey(result.current, 'PageDown');
 
       expect(mockScrollElement.scrollTop).toBe(initial);
     });
 
-    it('cleans up event listener on unmount', () => {
-      const spy = jest.spyOn(document, 'removeEventListener');
+    it('returns a stable callback reference', () => {
+      const { result, rerender } = setup();
+      const first = result.current;
 
-      const { unmount } = setup();
+      rerender();
 
-      unmount();
+      expect(result.current).toBe(first);
+    });
 
-      expect(spy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    it('does nothing when scrollElementRef is null', () => {
+      scrollElementRef = { current: null };
+      const { result } = setup();
+
+      fireKey(result.current, 'ArrowDown');
+
+      expect(mockScrollElement.scrollTop).toBe(100);
+    });
+
+    it('does nothing when scroll element is not focused', () => {
+      const { result } = setup();
+      mockScrollElement.blur();
+
+      fireKey(result.current, 'ArrowDown');
+
+      expect(mockScrollElement.scrollTop).toBe(100);
+    });
+
+    it('calls preventDefault and stopPropagation on nav keys', () => {
+      const { result } = setup();
+      const preventDefaultSpy = jest.fn();
+      const stopPropagationSpy = jest.fn();
+      const event = {
+        key: 'ArrowDown',
+        preventDefault: preventDefaultSpy,
+        stopPropagation: stopPropagationSpy,
+      } as unknown as React.KeyboardEvent<HTMLDivElement>;
+
+      result.current(event);
+
+      expect(preventDefaultSpy).toHaveBeenCalled();
+      expect(stopPropagationSpy).toHaveBeenCalled();
     });
   });
 });

@@ -143,7 +143,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
 
   // Enable keyboard navigation (PageUp, PageDown, Home, End)
-  useKeyboardNavigation({
+  const onKeyboardNavigation = useKeyboardNavigation({
     virtualizer,
     scrollElementRef: parentRef,
     enabled: true,
@@ -225,6 +225,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           // prevent clicks from reaching the parent
           parentRef.current?.focus();
         }}
+        onKeyDown={onKeyboardNavigation}
       >
         {/* Total height container */}
         <div

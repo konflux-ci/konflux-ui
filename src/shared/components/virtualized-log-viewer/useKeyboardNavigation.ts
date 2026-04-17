@@ -9,21 +9,22 @@ interface UseKeyboardNavigationParams {
 
 const NAV_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
 
+type ReturnType = (event: React.KeyboardEvent<HTMLDivElement>) => void;
+
 export const useKeyboardNavigation = ({
   virtualizer,
   scrollElementRef,
   enabled = true,
-}: UseKeyboardNavigationParams) => {
-  React.useEffect(() => {
-    if (!enabled) return;
+}: UseKeyboardNavigationParams): ReturnType => {
+  return React.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!enabled) return;
 
-    const scrollElement = scrollElementRef.current;
-    if (!scrollElement) return;
+      const scrollElement = scrollElementRef.current;
+      if (!scrollElement) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
       const active = document.activeElement;
-
-      if (!active || (active !== scrollElement && !scrollElement.contains(active))) {
+      if (active !== scrollElement && !scrollElement.contains(active)) {
         return;
       }
 
@@ -73,12 +74,7 @@ export const useKeyboardNavigation = ({
       } else {
         scrollElement.scrollTop = Math.min(maxScroll, Math.max(0, next));
       }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [enabled, scrollElementRef, virtualizer]);
+    },
+    [enabled, scrollElementRef, virtualizer],
+  );
 };
