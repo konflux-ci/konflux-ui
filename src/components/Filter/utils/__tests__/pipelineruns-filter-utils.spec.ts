@@ -156,30 +156,19 @@ describe('pipelineruns-filter-utils', () => {
         name: '',
         status: [],
         type: [],
-        version: ['v2.0'],
+        version: 'v2.0',
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result).toHaveLength(1);
       expect(result[0].metadata.name).toBe('basic-node-js-second');
     });
 
-    it('should filter pipeline runs by multiple versions', () => {
+    it('should return all pipeline runs when version is an empty string', () => {
       const filters = {
         name: '',
         status: [],
         type: [],
-        version: ['v1.0', 'v2.0'],
-      };
-      const result = filterPipelineRuns(pipelineRuns, filters);
-      expect(result).toHaveLength(3);
-    });
-
-    it('should return all pipeline runs when version is an empty array', () => {
-      const filters = {
-        name: '',
-        status: [],
-        type: [],
-        version: [],
+        version: '',
       };
       const result = filterPipelineRuns(pipelineRuns, filters);
       expect(result).toHaveLength(3);
