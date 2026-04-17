@@ -227,13 +227,15 @@ describe('PipelineRunsListViewV2', () => {
     });
   });
 
-  it('should show version filter when versionName is not provided', () => {
+  it('should not render Name/Version search dropdown when not scoped to a version', () => {
     renderWithQueryClient(<TestedComponentV2 />);
-    expect(screen.getByRole('button', { name: 'Version filter menu' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Name' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
   });
 
-  it('should hide version filter when versionName is provided', () => {
+  it('should render Name/Version search dropdown when scoped to a component version', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
+    expect(screen.getByRole('button', { name: 'Name' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
   });
 
@@ -293,7 +295,7 @@ describe('PipelineRunsListViewV2', () => {
     renderWithQueryClient(
       <FilterContext.Provider
         value={{
-          filters: { version: '["stale-branch"]' },
+          filters: { name: '', status: [], type: [], version: 'stale-branch' },
           setFilters: jest.fn(),
           onClearFilters: jest.fn(),
         }}
