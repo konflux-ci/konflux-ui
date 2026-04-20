@@ -1,5 +1,6 @@
 import React from 'react';
 import { ComponentVersionsTab } from '~/components/ComponentsPage/tabs/ComponentVersionsTab';
+import { ActivityTabV2 } from '~/shared/components/activity-tab/ActivityTabV2';
 import {
   ComponentDetailsTab,
   ComponentDetailsViewLayout,
@@ -56,15 +57,18 @@ describe('Components page routes configuration', () => {
     expect(detailsRoute.children).toBeDefined();
   });
 
-  it('should include index and placeholder child routes', () => {
+  it('should include index, activity, and version child routes', () => {
     const [, detailsRoute] = componentsPageRoutes as [{ path: string }, PathRoute];
-    const [indexRoute, activityRoute, versionsRoute] = detailsRoute.children;
+    const [indexRoute, activityWithTabRoute, activityRoute, versionsRoute] = detailsRoute.children;
 
     expect(indexRoute.index).toBe(true);
     expect(indexRoute.element).toEqual(<ComponentDetailsTab />);
 
+    expect(activityWithTabRoute.path).toBe('activity/:activityTab');
+    expect(activityWithTabRoute.element).toEqual(<ActivityTabV2 />);
+
     expect(activityRoute.path).toBe('activity');
-    expect(activityRoute.element).toBeNull();
+    expect(activityRoute.element).toEqual(<ActivityTabV2 />);
 
     expect(versionsRoute.path).toBe('versions');
     expect(versionsRoute.element).toEqual(<ComponentVersionsTab />);

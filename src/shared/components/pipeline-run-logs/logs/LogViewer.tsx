@@ -125,7 +125,7 @@ const LogViewer: React.FC<Props> = ({
 
   // Use containerRef to measure actual height for VirtualizedLogViewer
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const [viewerHeight, setViewerHeight] = React.useState(600);
+  const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
 
   React.useEffect(() => {
     const updateHeight = (immediate = false) => {
@@ -269,12 +269,15 @@ const LogViewer: React.FC<Props> = ({
 
           {/* Log Viewer */}
           <div ref={containerRef} className="log-viewer__content">
-            <VirtualizedLogViewer
-              data={processedData}
-              height={viewerHeight}
-              scrollToRow={scrolledRow}
-              onScroll={handleScroll}
-            />
+            {viewerHeight && (
+              <VirtualizedLogViewer
+                key={taskRun?.metadata?.uid || 'default'}
+                data={processedData}
+                height={viewerHeight}
+                scrollToRow={scrolledRow}
+                onScroll={handleScroll}
+              />
+            )}
           </div>
 
           {/* Footer */}

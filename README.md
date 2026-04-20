@@ -46,7 +46,7 @@ A step by step series of examples that tell you how to get a development environ
 
 By default, the UI uses the stage cluster for API calls. However, if you want to run the UI with a local Konflux deployment, follow the steps below.
 
-1. Follow the guide at https://github.com/konflux-ci/konflux-ci to deploy Konflux locally (use branch: `new-ui`)
+1. Follow the guide at https://konflux-ci.dev/konflux-ci/docs/installation/install-local/ to deploy Konflux locally
 
 2. Once you have Konflux deployed, make the following changes to your .env file:
 

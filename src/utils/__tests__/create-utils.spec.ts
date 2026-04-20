@@ -13,6 +13,7 @@ import { k8sCreateResource, k8sUpdateResource } from '../../k8s/k8s-fetch';
 import { SecretModel } from '../../models';
 import { ApplicationModel } from '../../models/application';
 import { ComponentModel } from '../../models/component';
+import { ImportSecret, SecretLabels, SecretTypeDropdownLabel, SourceSecretType } from '../../types';
 import { queueInstance } from '../async-queue';
 import {
   createApplication,
@@ -20,6 +21,7 @@ import {
   sanitizeName,
   getSecretObject,
   addSecretWithLinkingComponents,
+  createSecretWithLinkingComponents,
 } from '../create-utils';
 import { SecretForComponentOption } from '../secrets/secret-utils';
 import { linkSecretToServiceAccounts } from '../service-account/service-account-utils';
@@ -375,6 +377,102 @@ describe('create-utils addSecretWithLinkingComponents', () => {
     expect(createResourceMock).toHaveBeenCalled();
     expect(enqueueSpy).toHaveBeenCalled();
     expect(enqueueSpy).toHaveBeenCalledWith(expect.any(Function));
+  });
+});
+
+describe('create-utils createSecretWithLinkingComponents', () => {
+  const baseImportSecret: ImportSecret = {
+    secretName: 'my-import-secret',
+    type: SecretTypeDropdownLabel.opaque,
+    opaque: { keyValues: [{ key: 'token', value: 'abc123' }] },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    createResourceMock.mockResolvedValue({
+      metadata: { name: 'my-import-secret' },
+    });
+  });
+
+  it('should create a secret with source labels and annotations when host and repo are set', async () => {
+    const secret: ImportSecret = {
+      ...baseImportSecret,
+      type: SecretTypeDropdownLabel.source,
+      source: {
+        authType: SourceSecretType.basic,
+        host: 'github.com',
+        repo: 'org/repo',
+        username: 'user',
+        password: 'pass',
+      },
+    };
+
+    await createSecretWithLinkingComponents(secret, 'my-component', 'test-ns', false);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: expect.objectContaining({
+          metadata: expect.objectContaining({
+            labels: expect.objectContaining({
+              [SecretLabels.CREDENTIAL_LABEL]: SecretLabels.CREDENTIAL_VALUE,
+              [SecretLabels.HOST_LABEL]: 'github.com',
+            }),
+            annotations: expect.objectContaining({
+              [SecretLabels.REPO_ANNOTATION]: 'org/repo',
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should create a secret without labels or annotations when source is not set', async () => {
+    await createSecretWithLinkingComponents(baseImportSecret, 'my-component', 'test-ns', false);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: expect.objectContaining({
+          metadata: expect.objectContaining({
+            labels: null,
+            annotations: null,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should add common secret label when secretForComponentOption is all', async () => {
+    const secret: ImportSecret = {
+      ...baseImportSecret,
+      secretForComponentOption: SecretForComponentOption.all,
+    };
+
+    await createSecretWithLinkingComponents(secret, 'my-component', 'test-ns', false);
+
+    expect(createResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resource: expect.objectContaining({
+          metadata: expect.objectContaining({
+            labels: expect.objectContaining({
+              [SecretLabels.COMMON_SECRET_LABEL]: 'true',
+            }),
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should not enqueue linking task on dry run', async () => {
+    await createSecretWithLinkingComponents(baseImportSecret, 'my-component', 'test-ns', true);
+
+    expect(createResourceMock).toHaveBeenCalled();
+    expect(enqueueSpy).not.toHaveBeenCalled();
+  });
+
+  it('should enqueue linking task when componentName is provided', async () => {
+    await createSecretWithLinkingComponents(baseImportSecret, 'my-component', 'test-ns', false);
+
+    expect(enqueueSpy).toHaveBeenCalled();
   });
 });
 

@@ -71,3 +71,6 @@ export async function initAnalytics(): Promise<void> {
     console.error('Error loading Analytics', error);
   }
 }
+
+export * from './gen/analytics-types';
+export { useTrackAnalyticsEvent } from './hooks';
