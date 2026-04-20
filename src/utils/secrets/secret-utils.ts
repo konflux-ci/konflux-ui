@@ -394,9 +394,29 @@ const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
   });
 };
 
-export const editSecretResource = (updatedSecret: AddSecretFormValues, namespace: string) => {
+export const editSecretResource = (
+  updatedSecret: AddSecretFormValues,
+  namespace: string,
+  existingSecret?: SecretKind,
+) => {
   const secretResource: SecretKind = getSecretFormData(updatedSecret, namespace);
-  const newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+  let newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+
+  // Preserve annotations not represented in the form (e.g. kubectl/CLI), while applying UI-driven keys.
+  if (existingSecret) {
+    const existingAnnotations = metadataMapForPatch(existingSecret.metadata?.annotations);
+    const formAnnotations = metadataMapForPatch(newK8sSecretResource.metadata?.annotations);
+    newK8sSecretResource = {
+      ...newK8sSecretResource,
+      metadata: {
+        ...newK8sSecretResource.metadata,
+        annotations: {
+          ...existingAnnotations,
+          ...formAnnotations,
+        },
+      },
+    };
+  }
 
   return updateSecretResource(newK8sSecretResource);
 };

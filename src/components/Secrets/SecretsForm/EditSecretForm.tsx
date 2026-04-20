@@ -155,7 +155,7 @@ const EditSecretForm: React.FC = () => {
           registryCreds,
         );
 
-        editSecretResource(values, secretData.metadata.namespace)
+        editSecretResource(values, secretData.metadata.namespace, secretData)
           .then(() => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })

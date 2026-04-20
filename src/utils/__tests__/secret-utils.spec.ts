@@ -560,6 +560,51 @@ describe('editSecretResource', () => {
     });
     expect(patches[1]).toEqual({ op: 'add', path: '/metadata/annotations', value: {} });
   });
+
+  it('merges existing cluster annotations with form annotations when existing secret is passed', async () => {
+    const existingWithCliAnnotations = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        name: 'test',
+        namespace: 'test-ns',
+        annotations: {
+          'kubectl.kubernetes.io/last-applied-configuration': '{"kind":"Secret"}',
+          'custom.io/managed-by': 'cli',
+        },
+      },
+    };
+    await editSecretResource(formValuesForSCM, 'test-ns', existingWithCliAnnotations);
+
+    const { patches } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(patches[1]).toEqual({
+      op: 'add',
+      path: '/metadata/annotations',
+      value: {
+        'kubectl.kubernetes.io/last-applied-configuration': '{"kind":"Secret"}',
+        'custom.io/managed-by': 'cli',
+        [SecretLabels.REPO_ANNOTATION]: 'hac-dev',
+      },
+    });
+  });
+
+  it('lets form-derived annotations override existing keys when both define the same key', async () => {
+    const existing = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        name: 'test',
+        namespace: 'test-ns',
+        annotations: {
+          [SecretLabels.REPO_ANNOTATION]: 'old-repo',
+        },
+      },
+    };
+    await editSecretResource(formValuesForSCM, 'test-ns', existing);
+
+    const annotationsPatch = k8sPatchResourceMock.mock.calls[0][0].patches[1];
+    expect(annotationsPatch.value[SecretLabels.REPO_ANNOTATION]).toBe('hac-dev');
+  });
 });
 
 describe('patchCommonSecretLabel', () => {

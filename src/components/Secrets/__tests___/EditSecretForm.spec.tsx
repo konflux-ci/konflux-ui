@@ -269,6 +269,7 @@ describe('EditSecretForm', () => {
             }),
           }),
           'test-ns',
+          mockOpaqueSecretForEdit,
         );
       });
 
@@ -318,6 +319,7 @@ describe('EditSecretForm', () => {
             }),
           }),
           'test-ns',
+          mockImageSecretDockerconfigjsonForEdit,
         );
       });
 
@@ -359,6 +361,7 @@ describe('EditSecretForm', () => {
             }),
           }),
           'test-ns',
+          mockSourceSecretBasicAuthForEdit,
         );
       });
 
@@ -419,6 +422,7 @@ describe('EditSecretForm', () => {
             }),
           }),
           'test-ns',
+          mockSourceSecretBasicAuthForEdit,
         );
       });
     });
@@ -463,6 +467,7 @@ describe('EditSecretForm', () => {
             }),
           }),
           'test-ns',
+          mockImageSecretDockerconfigjsonForEdit,
         );
       });
     });
@@ -514,6 +519,7 @@ describe('EditSecretForm', () => {
             }),
           }),
           'test-ns',
+          mockImageSecretDockerconfigjsonMultiForEdit,
         );
       });
     });
