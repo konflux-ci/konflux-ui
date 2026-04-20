@@ -176,7 +176,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           if (!isMounted) return;
           virtualizer.scrollToIndex(scrollIndex, {
             align: 'center',
-            behavior: 'smooth',
+            behavior: 'auto',
           });
         });
       });
