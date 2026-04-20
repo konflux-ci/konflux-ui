@@ -2,12 +2,20 @@ import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
 import type { SearchedWord } from './types';
+import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
 import { useResizeObserverFix } from './useResizeObserverFix';
 import { useSearchRegex } from './useSearchRegex';
 import { useTokenization } from './useTokenization';
 import { useVirtualizedScroll } from './useVirtualizedScroll';
+import {
+  VIRTUALIZATION_CONFIG,
+  getOverscanCount,
+  getSafetyMargin,
+  measureAverageCharWidth,
+  calculateCharsPerLine,
+} from './virtualization-utils';
 
 import './VirtualizedLogContent.scss';
 
@@ -35,7 +43,10 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   currentSearchMatch,
 }) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
-  const [itemSize, setItemSize] = React.useState(20);
+  const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
+  // Fallback values for when DOM measurement is unavailable (SSR, Canvas API failure, etc.)
+  const avgCharWidthRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH);
+  const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
   // Split data into lines
   const lines = React.useMemo(() => data.split('\n'), [data]);
@@ -43,8 +54,9 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   // Suppress harmless ResizeObserver errors from virtualizer
   useResizeObserverFix();
 
-  // Create search regex from search text
-  const searchRegex = useSearchRegex(searchText);
+  // keep search smooth input
+  const deferredSearchText = React.useDeferredValue(searchText);
+  const searchRegex = useSearchRegex(deferredSearchText);
 
   // Use tokenization hook for lazy tokenization with caching
   const { tokenizeLine } = useTokenization(lines);
@@ -65,12 +77,59 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
     }
   }, []);
 
+  // Measure average character width once on mount
+  // Uses Canvas API to get accurate font metrics for height estimation
+  React.useEffect(() => {
+    if (!parentRef.current) return;
+
+    const container = parentRef.current;
+
+    // Use RAF to ensure DOM elements are fully rendered
+    const rafId = requestAnimationFrame(() => {
+      const style = getComputedStyle(container);
+      const font = style.font || `${style.fontSize} ${style.fontFamily}`;
+
+      // Measure average character width
+      avgCharWidthRef.current = measureAverageCharWidth(font);
+
+      // Calculate how many characters fit per line
+      charsPerLineRef.current = calculateCharsPerLine(container, avgCharWidthRef.current);
+    });
+
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  // Conservative height estimation function
+  // Uses text length to estimate wrapped lines, with safety margin
+  // This is called by virtualizer for each row to estimate its height before rendering
+  const estimateRowHeight = React.useCallback(
+    (index: number): number => {
+      if (itemSize === 0) return VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT;
+
+      const text = lines[index] || '';
+
+      // Use dynamically calculated charsPerLine based on actual font metrics
+      const charsPerLine = charsPerLineRef.current;
+      const estimatedLines = Math.max(1, Math.ceil(text.length / charsPerLine));
+
+      // Apply dynamic safety margin based on log size
+      const safetyMultiplier = getSafetyMargin(lines.length);
+
+      return Math.ceil(itemSize * estimatedLines * safetyMultiplier);
+    },
+    [itemSize, lines],
+  );
+
+  // Calculate overscan based on log size
+  // Larger overscan = more items pre-rendered = more accurate measurements
+  const overscanCount = React.useMemo(() => getOverscanCount(lines.length), [lines.length]);
+
   // Initialize virtualizer
   const virtualizer = useVirtualizer<HTMLDivElement, Element>({
     count: lines.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => itemSize,
-    overscan: 10,
+    estimateSize: estimateRowHeight,
+    overscan: overscanCount,
   });
 
   // Handle scroll behavior (direction, programmatic scroll, scrollToRow)
@@ -82,6 +141,13 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
   // Use line number navigation hook
   const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
+
+  // Enable keyboard navigation (PageUp, PageDown, Home, End)
+  useKeyboardNavigation({
+    virtualizer,
+    scrollElementRef: parentRef,
+    enabled: true,
+  });
 
   // Scroll to highlighted lines when hash changes or on initial load
   React.useEffect(() => {
@@ -147,10 +213,17 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
       <div
         ref={parentRef}
         className="log-content__list log-content__with-gutter"
+        tabIndex={0}
         style={{
           height: `${height}px`,
           width: typeof width === 'number' ? `${width}px` : width,
           overflow: 'auto',
+        }}
+        onClick={() => {
+          // Ensure the container gets focus when clicked
+          // This is necessary because child elements with absolute positioning
+          // prevent clicks from reaching the parent
+          parentRef.current?.focus();
         }}
       >
         {/* Total height container */}
