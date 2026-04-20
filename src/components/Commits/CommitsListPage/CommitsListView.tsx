@@ -25,7 +25,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs, getCommitSha, statuses } from '../../../utils/commits-utils';
 import { getCommitStatusFromPipelineRuns } from '../commit-status';
-import CommitsEmptyState from '../CommitsEmptyState';
+import { CommitsEmptyState } from '../CommitsEmptyState';
 import {
   CommitColumnKeys,
   COMMIT_COLUMNS_DEFINITIONS,
@@ -68,6 +68,10 @@ const getSortCommitFunction = (
   }
 };
 
+/**
+ * @deprecated
+ * Replaced by CommitsListViewV2 with new component model
+ */
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,

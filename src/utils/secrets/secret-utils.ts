@@ -21,6 +21,8 @@ import {
   SecretTypeDisplayLabel,
   SecretTypeDropdownLabel,
   SourceSecretType,
+  Source,
+  KeyValueEntry,
 } from '../../types';
 
 export { SecretForComponentOption };
@@ -211,7 +213,13 @@ export const getTargetLabelsForRemoteSecret = (
   return labels;
 };
 
-export const getLabelsForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
+type SecretLabelInput = {
+  source?: Source;
+  labels?: KeyValueEntry[];
+  secretForComponentOption?: null | SecretForComponentOption;
+};
+
+export const getLabelsForSecret = (values: SecretLabelInput): { [key: string]: string } => {
   const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
 
   if (
