@@ -280,7 +280,9 @@ export const getLabelsForImportSecret = (values: ImportSecret): Record<string, s
   return labels;
 };
 
-export const getAnnotationForSecret = (values: AddSecretFormValues): { [key: string]: string } => {
+export const getAnnotationForSecret = (
+  values: AddSecretFormValues | ImportSecret,
+): { [key: string]: string } => {
   if (!values.source?.repo) {
     // get scm annotation for repository
     return null;
