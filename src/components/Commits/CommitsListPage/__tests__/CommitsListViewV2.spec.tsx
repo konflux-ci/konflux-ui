@@ -163,15 +163,28 @@ describe('CommitsListViewV2', () => {
     expect(screen.getByText('#12 test-title-3')).toBeInTheDocument();
   });
 
-  it('should show version filter when versionName is not provided', () => {
-    renderWithQueryClient(<CommitsListV2 />);
-    const versionButtons = screen.getAllByRole('button', { name: 'Version filter menu' });
-    expect(versionButtons.length).toBeGreaterThan(0);
+  it('should show Name/Version search mode dropdown when versionName is provided', async () => {
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    const searchModeToggle = screen
+      .getAllByRole('button', { name: 'Name' })
+      .find((el) => el.classList.contains('pf-v5-c-menu-toggle'));
+    if (!searchModeToggle) {
+      throw new Error('Expected Name/Version search mode menu toggle');
+    }
+
+    act(() => {
+      fireEvent.click(searchModeToggle);
+    });
+    expect(await screen.findByRole('menuitem', { name: 'Version' })).toBeInTheDocument();
   });
 
-  it('should hide version filter when versionName is provided', () => {
-    renderWithQueryClient(<CommitsListV2 versionName="main" />);
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+  it('should hide Name/Version search mode dropdown when versionName is not provided', () => {
+    renderWithQueryClient(<CommitsListV2 />);
+    const searchModeMenuToggle = screen
+      .queryAllByRole('button', { name: 'Name' })
+      .find((el) => el.classList.contains('pf-v5-c-menu-toggle'));
+    expect(searchModeMenuToggle).toBeUndefined();
   });
 
   it('should show loader if next page is loading', () => {
