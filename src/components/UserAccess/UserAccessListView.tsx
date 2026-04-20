@@ -5,6 +5,7 @@ import {
   AlertVariant,
   Bullseye,
   Button,
+  capitalize,
   Divider,
   EmptyStateActions,
   EmptyStateBody,
@@ -205,6 +206,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     const segments = rowKey.split('__');
     return {
       roleRefName: segments[0],
+      roleName: segments[0].split('-')[1],
       index: segments[1],
       role: segments[2],
       name: segments[3],
@@ -401,14 +403,14 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           <FlexItem>
             <List style={{ marginLeft: 'var(--pf-v5-global--spacer--md)' }}>
               {[...selectedRowKeys].map((rowKey) => {
-                const segments = rowKey.split('__');
-                const label =
-                  segments.length === 2 && segments[1] === 'no-subject'
-                    ? '-'
-                    : segments.slice(3).join('__') || rowKey;
+                const { name: username, role, roleName: currentRoleName } = splitRowKey(rowKey);
+
                 return (
                   <ListItem key={rowKey}>
-                    <span className={textStyles.fontWeightBold}>{label}</span>: {segments[2]}
+                    <span className={textStyles.fontWeightBold}>
+                      {username} ({role})
+                    </span>
+                    : {capitalize(currentRoleName)}
                   </ListItem>
                 );
               })}
