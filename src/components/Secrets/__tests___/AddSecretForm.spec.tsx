@@ -18,7 +18,7 @@ jest.mock('~/utils/secrets/secret-utils', () => {
   const actual = jest.requireActual('~/utils/secrets/secret-utils');
   return {
     ...actual,
-    getAddSecretBreadcrumbs: jest.fn(undefined),
+    getSecretBreadcrumbs: jest.fn(() => []),
   };
 });
 

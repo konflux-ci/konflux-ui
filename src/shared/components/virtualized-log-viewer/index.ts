@@ -10,3 +10,4 @@ export type {
   UseLineNumberNavigationResult,
   HighlightedLineRange,
 } from './useLineNumberNavigation';
+export { useKeyboardNavigation } from './useKeyboardNavigation';

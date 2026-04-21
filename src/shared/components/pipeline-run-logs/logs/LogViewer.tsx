@@ -271,6 +271,7 @@ const LogViewer: React.FC<Props> = ({
           <div ref={containerRef} className="log-viewer__content">
             {viewerHeight && (
               <VirtualizedLogViewer
+                key={taskRun?.metadata?.uid || 'default'}
                 data={processedData}
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
