@@ -23,7 +23,7 @@ runs:
       with:
         repository: 'konflux-ci/konflux-ci'
         path: 'konflux-ci'
-        ref: 'main'
+        ref: 'legacy'
 
     - name: Disable AppArmor
       # works around a change in ubuntu 24.04 that restricts Linux namespace access
