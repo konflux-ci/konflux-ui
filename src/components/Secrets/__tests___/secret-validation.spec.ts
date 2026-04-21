@@ -2,9 +2,11 @@ import { ImagePullSecretType, SecretTypeDropdownLabel, SourceSecretType } from '
 import { secretFormValidationSchema } from '../utils/secret-validation';
 
 describe('validation-utils', () => {
+  const getSchema = () => secretFormValidationSchema();
+
   it('should validate name field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: '123',
       }),
     ).rejects.toThrow(
@@ -12,7 +14,7 @@ describe('validation-utils', () => {
     );
 
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'very-very-very-very-very-long-resource-name-which-is-invalid-name',
       }),
     ).rejects.toThrow('Must be no more than 63 characters.');
@@ -20,7 +22,7 @@ describe('validation-utils', () => {
 
   it('should validate opaque field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.opaque,
         opaque: {
@@ -32,7 +34,7 @@ describe('validation-utils', () => {
 
   it('should validate image field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.image,
         image: {
@@ -43,7 +45,7 @@ describe('validation-utils', () => {
     ).rejects.toThrow('Required');
 
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.image,
         image: {
@@ -56,7 +58,7 @@ describe('validation-utils', () => {
 
   it('should validate source field', async () => {
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.source,
         source: {
@@ -68,12 +70,82 @@ describe('validation-utils', () => {
     ).rejects.toThrow('Required');
 
     await expect(() =>
-      secretFormValidationSchema.validate({
+      getSchema().validate({
         name: 'test-resource',
         type: SecretTypeDropdownLabel.source,
         source: {
           authType: SourceSecretType.ssh,
           ['ssh-privatekey']: '',
+        },
+      }),
+    ).rejects.toThrow('Required');
+  });
+
+  it('should allow empty SSH private key when editing (isEditMode)', async () => {
+    const editSchema = secretFormValidationSchema({ isEditMode: true });
+    await expect(
+      editSchema.validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.source,
+        source: {
+          authType: SourceSecretType.ssh,
+          ['ssh-privatekey']: '',
+        },
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  it('should allow empty source basic auth password when editing (isEditMode)', async () => {
+    const editSchema = secretFormValidationSchema({ isEditMode: true });
+    await expect(
+      editSchema.validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.source,
+        source: {
+          authType: SourceSecretType.basic,
+          username: 'username',
+          password: '',
+        },
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  it('should still require source basic auth password when not editing', async () => {
+    await expect(() =>
+      secretFormValidationSchema({ isEditMode: false }).validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.source,
+        source: {
+          authType: SourceSecretType.basic,
+          username: 'username',
+          password: '',
+        },
+      }),
+    ).rejects.toThrow('Required');
+  });
+
+  it('should allow empty image registry credential password when editing (isEditMode)', async () => {
+    const editSchema = secretFormValidationSchema({ isEditMode: true });
+    await expect(
+      editSchema.validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.image,
+        image: {
+          authType: ImagePullSecretType.ImageRegistryCreds,
+          registryCreds: [{ registry: 'reg.io', username: 'u', password: '', email: '' }],
+        },
+      }),
+    ).resolves.toBeDefined();
+  });
+
+  it('should still require image registry credential password when not editing', async () => {
+    await expect(() =>
+      secretFormValidationSchema({ isEditMode: false }).validate({
+        name: 'test-resource',
+        type: SecretTypeDropdownLabel.image,
+        image: {
+          authType: ImagePullSecretType.ImageRegistryCreds,
+          registryCreds: [{ registry: 'reg.io', username: 'u', password: '', email: '' }],
         },
       }),
     ).rejects.toThrow('Required');
