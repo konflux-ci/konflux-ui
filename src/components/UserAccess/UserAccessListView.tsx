@@ -419,7 +419,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
           <FlexItem>
             <Flex direction={{ default: 'column' }}>
-              <FlexItem style={{ marginBottom: '0' }}>
+              <FlexItem style={{ marginBottom: 'var(--pf-v5-global--spacer--xs)' }}>
                 <Text data-test="user-access-change-role-label">New role*</Text>
               </FlexItem>
               <FlexItem>
@@ -432,6 +432,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
                         isExpanded={isRoleSelectOpen}
                         onClick={() => setRoleSelectOpen(!isRoleSelectOpen)}
                         isDisabled={roleSelectOptions.length === 0}
+                        isFullWidth
                       >
                         {modalSelectedRoleRef
                           ? roleMap.roleMap[modalSelectedRoleRef] ?? modalSelectedRoleRef
