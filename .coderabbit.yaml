@@ -7,24 +7,15 @@ tone_instructions: >
   Provide concise, professional summaries without poems, creative elements,
   or ASCII art. Focus on technical details and actionable insights.
 
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/.cursor/rules/*"
+
 reviews:
   profile: assertive
   poem: false
-
-  path_filters:
-    - "**/*.ts"
-    - "**/*.tsx"
-    - "**/*.scss"
-    - "**/*.js"
-    - "**/*.cjs"
-    - "**/*.mjs"
-    - "**/*.yaml"
-    - "**/*.yml"
-    - "**/*.md"
-    - "package.json"
-    - "!dist/**"
-    - "!node_modules/**"
-    - "!coverage/**"
 
   path_instructions:
     - path: "src/**/*.{ts,tsx}"
@@ -38,7 +29,7 @@ reviews:
         ### Naming
         - React components must use PascalCase.
         - Hooks must start with `use`.
-        - Non-component exports should use camelCase.
+        - Non-component, non-type exports (variables, functions, hooks) should use camelCase; types, interfaces, classes, and enums should use PascalCase.
 
         ### TypeScript
         - Flag `any` types; suggest a concrete type or `unknown` + narrowing.
@@ -70,10 +61,12 @@ reviews:
 
   auto_review:
     enabled: true
-    drafts: false
+    drafts: true
 
   finishing_touches:
     docstrings:
+      enabled: true
+    unit_tests:
       enabled: true
 
   tools:
@@ -87,5 +80,3 @@ reviews:
       enabled: true
     actionlint:
       enabled: true
-    biome:
-      enabled: false
