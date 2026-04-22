@@ -1,4 +1,4 @@
-name: "Watch changes in Konflux-ci sanity test related files"
+name: "Watch changes in Konflux-ci deployment related files"
 
 on:
   # Can be triggered manually 
@@ -9,7 +9,7 @@ on:
     - cron: '0 1 * * *'
 
 jobs:
-  watch-konflux-ci-sanity-test-files:
+  watch-konflux-ci-deployment-files:
     runs-on: ubuntu-latest
     env:
       JOB_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -24,16 +24,17 @@ jobs:
       - name: Check files for change
         id: check-files
         run: |
-          # List of files used by sanity test workflow
+          # List of files used by the deploy-local.sh based deployment
           FILES=(
-            ".github/workflows/sanity-test.yml"
-            "kind-config.yaml"
+            "scripts/deploy-local.sh"
+            "scripts/setup-kind-local-cluster.sh"
+            "scripts/deploy-secrets.sh"
+            "scripts/resolve-konflux-cr.sh"
             "deploy-deps.sh"
-            "wait-for-all.sh"
-            "deploy-konflux.sh"
-            "deploy-test-resources.sh"
-            "test/e2e/prepare-e2e.sh"
+            "kind-config.yaml"
             "generate-err-logs.sh"
+            "operator/config/samples/konflux_v1alpha1_konflux.yaml"
+            "operator/config/samples/konflux-e2e.yaml"
           )
       
           TEMP_DIR=$(mktemp -d)
@@ -71,7 +72,7 @@ jobs:
           if [[ "${{ steps.check-files.outputs.files_changed }}" == 'false' ]]; then
             echo "Job was successful, skipping Slack report to limit noise in channel"
           elif [[ "${{ steps.check-files.outputs.files_changed }}" == 'true' ]]; then
-            ./pr_check.sh send-report failure ":warning: $(date '+%b %-d') Sanity test related files changed, please check if sanity test workflow needs to be updated :warning:"
+            ./pr_check.sh send-report failure ":warning: $(date '+%b %-d') Konflux-ci deployment related files changed, please check if the deploy action needs to be updated :warning:"
           else
             ./pr_check.sh send-report failure
           fi
