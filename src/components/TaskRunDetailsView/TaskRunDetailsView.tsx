@@ -4,13 +4,13 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { CONFORMA_TASK } from '~/consts/security';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
 import { downloadYamlAction } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
 import { getDisplayNameFromChildReferences, taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
-import { usePipelineRunV2 } from '../../hooks/usePipelineRunsV2';
 import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
 import {
   PIPELINERUN_DETAILS_PATH,
