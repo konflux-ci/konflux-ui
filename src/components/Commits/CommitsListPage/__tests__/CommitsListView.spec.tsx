@@ -94,6 +94,12 @@ const defaultPipelineRunsForView = pipelineWithCommits
     (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
   );
 
+// Represents the full set the backend can return when a search term is provided,
+// including historical pipeline runs not in the initial page (pipelineWithCommits[4+]).
+const allBuildPipelineRunsForSearch = pipelineWithCommits.filter(
+  (plr) => plr.metadata?.labels?.[PipelineRunLabel.PIPELINE_TYPE] === PipelineRunType.BUILD,
+);
+
 describe('CommitsListView', () => {
   beforeEach(() => {
     resetMockSearchParams();
@@ -102,7 +108,7 @@ describe('CommitsListView', () => {
         const raw = options?.commitSearchTerm;
         const term = typeof raw === 'string' ? raw.trim() : '';
         const plrs = term
-          ? defaultPipelineRunsForView.filter((plr) => pipelineRunMatchesCommitSearch(plr, term))
+          ? allBuildPipelineRunsForSearch.filter((plr) => pipelineRunMatchesCommitSearch(plr, term))
           : defaultPipelineRunsForView;
         return [
           plrs,
@@ -385,6 +391,27 @@ describe('CommitsListView', () => {
     );
 
     expect(screen.getByTestId('commits-list-next-page-loading-spinner')).toBeVisible();
+  });
+
+  it('should surface a historical commit not in the initial page when searching', async () => {
+    // 'commit777' exists only in pipelineWithCommits[4], which is outside the default
+    // slice(0,4) used for the initial (no-search) view. This verifies that the component
+    // merges backend search results (allBuildPipelineRunsForSearch) rather than
+    // re-filtering already-loaded rows, so historical commits are discoverable.
+    const view = renderWithQueryClient(<CommitsList />);
+
+    const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
+    act(() => {
+      fireEvent.change(filter, { target: { value: 'commit777' } });
+    });
+    act(() => {
+      jest.advanceTimersByTime(700);
+    });
+    view.rerender(<CommitsList />);
+
+    await waitFor(() => {
+      expect(screen.getByText('manual-build-component')).toBeInTheDocument();
+    });
   });
 
   it('should display commits in a sorted order', async () => {
