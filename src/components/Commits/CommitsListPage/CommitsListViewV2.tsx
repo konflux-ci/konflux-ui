@@ -83,11 +83,10 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName ? { [PipelineRunLabel.COMPONENT_VERSION]: versionName } : {}),
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, versionName],
+        [component?.metadata?.creationTimestamp, componentName],
       ),
     );
 
@@ -213,11 +212,12 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
       text={nameFilter}
       label="name"
       setText={(newSearchValue, searchType) => {
-        if (searchType === 'Name') {
-          return setFilters({ ...filters, name: newSearchValue, version: '' });
-        }
-        if (searchType === 'Version') {
-          return setFilters({ ...filters, version: newSearchValue, name: '' });
+        switch (searchType) {
+          case 'Version':
+            return setFilters({ ...filters, version: newSearchValue, name: '' });
+          case 'Name':
+          default:
+            return setFilters({ ...filters, name: newSearchValue, version: '' });
         }
       }}
       onClearFilters={onClearFilters}

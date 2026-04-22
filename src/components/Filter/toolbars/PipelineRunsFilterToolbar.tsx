@@ -30,11 +30,12 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
       text={name}
       label="name"
       setText={(newSearchValue, searchType) => {
-        if (searchType === 'Name') {
-          return setFilters({ ...filters, name: newSearchValue, version: '' });
-        }
-        if (searchType === 'Version') {
-          return setFilters({ ...filters, version: newSearchValue, name: '' });
+        switch (searchType) {
+          case 'Version':
+            return setFilters({ ...filters, version: newSearchValue, name: '' });
+          case 'Name':
+          default:
+            return setFilters({ ...filters, name: newSearchValue, version: '' });
         }
       }}
       onClearFilters={onClearFilters}
