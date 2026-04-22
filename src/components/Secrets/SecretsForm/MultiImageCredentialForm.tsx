@@ -13,6 +13,7 @@ import { uniqueId } from 'lodash-es';
 
 type MultiImageCredentialFormProps = {
   name: string;
+  isEditMode?: boolean;
 };
 
 type RegistryCredential = {
@@ -24,7 +25,7 @@ type RegistryCredential = {
 
 export const MultiImageCredentialForm: React.FC<
   React.PropsWithChildren<MultiImageCredentialFormProps>
-> = ({ name }) => {
+> = ({ name, isEditMode = false }) => {
   const [{ value: fieldValues }] = useField<RegistryCredential[]>(name);
   const [uniqId, setUniqId] = React.useState(uniqueId());
 
@@ -78,7 +79,8 @@ export const MultiImageCredentialForm: React.FC<
                 label="Password"
                 type={TextInputTypes.password}
                 helperText="For image registry authentication"
-                isRequired
+                placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}
+                isRequired={!isEditMode}
               />
               <InputField
                 name={`${name}.${idx.toString()}.email`}
