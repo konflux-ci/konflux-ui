@@ -58,7 +58,7 @@ export const TaskRunDetailsView: React.FC = () => {
     return getErrorState(error, loaded, 'task run');
   }
 
-  if (!loaded || !plrName) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner />
