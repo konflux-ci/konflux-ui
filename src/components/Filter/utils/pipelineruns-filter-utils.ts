@@ -31,7 +31,7 @@ export const filterPipelineRuns = (
         (!version ||
           plr?.metadata.labels[PipelineRunLabel.COMPONENT_VERSION]
             ?.toLowerCase()
-            .indexOf(version) >= 0)
+            .indexOf(version.toLowerCase()) >= 0)
       );
     })
     .filter((plr) => !customFilter || customFilter(plr));

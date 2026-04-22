@@ -44,7 +44,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   filterOptions = [],
 }) => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
-  const [searchOption, setSearchOption] = React.useState<string>('Name');
+  const [searchOption, setSearchOption] = React.useState<string>(filterOptions?.[0] ?? '');
   const onTextInput = useDebounceCallback((value: string) => {
     setText(value, searchOption);
   }, 600);
@@ -56,12 +56,12 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
         data-test={`${label}-input-filter`}
         type="search"
         aria-label={`${label} filter`}
-        placeholder={`Filter by ${label}...`}
+        placeholder={`Filter by ${filterOptions.length > 0 ? searchOption.toLocaleLowerCase() : label}...`}
         onChange={(_, value) => onTextInput(value)}
         value={text}
       />
     ),
-    [text, label, onTextInput],
+    [text, label, onTextInput, searchOption, filterOptions],
   );
 
   const searchGroup = React.useMemo(
