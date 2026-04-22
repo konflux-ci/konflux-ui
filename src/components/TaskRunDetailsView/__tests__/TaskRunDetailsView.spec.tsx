@@ -2,12 +2,12 @@ import * as React from 'react';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CONFORMA_TASK, ENTERPRISE_CONTRACT_LABEL } from '~/consts/security';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
+import { useTaskRunV2 } from '~/hooks/useTaskRunsV2';
 import { TektonResourceLabel } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { downloadYaml } from '~/utils/common-utils';
-import { usePipelineRunV2 } from '../../../hooks/usePipelineRunsV2';
-import { useTaskRunV2 } from '../../../hooks/useTaskRunsV2';
-import { renderWithQueryClientAndRouter } from '../../../utils/test-utils';
+import { renderWithQueryClientAndRouter } from '~/utils/test-utils';
 import { testTaskRuns } from '../../TaskRunListView/__data__/mock-TaskRun-data';
 import { TaskRunDetailsView } from '../TaskRunDetailsView';
 
@@ -31,11 +31,11 @@ jest.mock('react-router-dom', () => {
   };
 });
 
-jest.mock('../../../hooks/usePipelineRunsV2', () => ({
+jest.mock('~/hooks/usePipelineRunsV2', () => ({
   usePipelineRunV2: jest.fn(),
 }));
 
-jest.mock('../../../hooks/useTaskRunsV2', () => ({
+jest.mock('~/hooks/useTaskRunsV2', () => ({
   useTaskRunV2: jest.fn(),
 }));
 
