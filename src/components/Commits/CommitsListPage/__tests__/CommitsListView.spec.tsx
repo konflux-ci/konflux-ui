@@ -316,7 +316,7 @@ describe('CommitsListView', () => {
     );
 
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
-      'test-ns',
+      'test-ns', // namespace
       expect.objectContaining({
         selector: {
           filterByCreationTimestampAfter: undefined,
@@ -371,8 +371,8 @@ describe('CommitsListView', () => {
 
   it('should show loader if next page is loading', () => {
     usePipelineRunsV2Mock.mockReturnValue([
-      [],
-      false,
+      defaultPipelineRunsForView,
+      true,
       undefined,
       undefined,
       { isFetchingNextPage: true, hasNextPage: true },

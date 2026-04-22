@@ -331,7 +331,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         title="Manage commit columns"
         description="Selected columns will be displayed in the commits table."
       />
-      {isFetchingNextPage ? (
+      {isFetchingNextPage && sortedCommits.length > 0 ? (
         <div
           style={{
             marginTop: 'var(--pf-v5-global--spacer--2xl)',
