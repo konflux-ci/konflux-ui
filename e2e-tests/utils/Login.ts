@@ -31,7 +31,6 @@ export class Login {
     cy.get(localKonfluxLoginPO.username).type(username);
     cy.get(localKonfluxLoginPO.password).type(password, { log: false });
     cy.get(localKonfluxLoginPO.loginButton).click();
-    cy.contains(localKonfluxLoginPO.grantAccessClass, localKonfluxLoginPO.grantAccessText).click();
     this.waitForApps();
   }
 

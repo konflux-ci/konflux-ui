@@ -16,14 +16,12 @@ runs:
         tool-cache: false
         docker-images: false
 
-    # konflux-ci is cloned to /home/runner/work/konflux-ui/konflux-ui
-    # as it have to be at home folder to use helm/kind-action@v1 action
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       with:
         repository: 'konflux-ci/konflux-ci'
         path: 'konflux-ci'
-        ref: 'legacy'
+        ref: 'main'
 
     - name: Disable AppArmor
       # works around a change in ubuntu 24.04 that restricts Linux namespace access
@@ -31,41 +29,36 @@ runs:
       run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       shell: bash
 
-    - name: Create k8s Kind Cluster
-      uses: helm/kind-action@v1
+    - name: Install Kind
+      uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1
       with:
-        config: ./konflux-ci/kind-config.yaml
-        cluster_name: konflux
+        install_only: true
 
     - name: Show version information
       run: |
         : Show version information
-        kubectl version
+        kubectl version --client
         kind version
       shell: bash
 
+    - name: Deploy Konflux
+      env:
+        GITHUB_APP_ID: ${{ env.GH_APP_ID }}
+        GITHUB_PRIVATE_KEY: ${{ env.GH_APP_PRIVATE_KEY }}
+        WEBHOOK_SECRET: ${{ env.GH_APP_WEBHOOK_SECRET }}
+        QUAY_TOKEN: ${{ env.QUAY_TOKEN_TEST }}
+        QUAY_ORGANIZATION: ${{ env.QUAY_TEST_ORG }}
+        SMEE_CHANNEL: ${{ env.SMEE_URL }}
+      run: |
+        : Deploy Konflux using operator-based deployment
+        cd konflux-ci
+        ./scripts/deploy-local.sh
+      shell: bash
+
     - name: List namespaces
       run: |
         : List namespaces
         kubectl get namespace
-      shell: bash
-
-    - name: Deploying Dependencies
-      run: |
-        : Deploying Dependencies
-        ./konflux-ci/deploy-deps.sh
-      shell: bash
-
-    - name: List namespaces
-      run: |
-        : List namespaces
-        kubectl get namespace
-      shell: bash
-
-    - name: Wait for the dependencies to be ready
-      run: |
-        : Wait for the dependencies to be ready
-        ./konflux-ci/wait-for-all.sh
       shell: bash
 
     - name: Build konflux-ui image
@@ -83,34 +76,34 @@ runs:
         ./pr_check.sh build
       shell: bash
 
-    - name: Deploying Konflux
+    - name: Inject custom UI image into proxy deployment
       run: |
-        : Deploying Konflux
-        ./konflux-ci/deploy-konflux.sh
-      shell: bash
+        : Replace default UI image with instrumented build for e2e coverage
+        kubectl scale deployment/konflux-operator-controller-manager \
+          -n konflux-operator --replicas=0
+        kubectl wait --for=delete pod -l control-plane=controller-manager \
+          -n konflux-operator --timeout=2m
 
-    - name: List namespaces
-      run: |
-        : List namespaces
-        kubectl get namespace
-      shell: bash
+        kubectl patch deployment proxy -n konflux-ui --type='strategic' -p='{
+          "spec": {
+            "template": {
+              "spec": {
+                "initContainers": [
+                  {
+                    "name": "copy-static-content",
+                    "image": "localhost/test/test:konflux-ui",
+                    "imagePullPolicy": "IfNotPresent"
+                  },
+                  {
+                    "name": "generate-nginx-configs",
+                    "image": "localhost/test/test:konflux-ui",
+                    "imagePullPolicy": "IfNotPresent"
+                  }
+                ]
+              }
+            }
+          }
+        }'
 
-    - name: Deploy test resources
-      run: |
-        : Deploy test resources
-        ./konflux-ci/deploy-test-resources.sh
-      shell: bash
-
-    - name: Prepare resources for E2E tests
-      # Sets secrets, deploys image controller and setup smee.
-      env:
-        APP_ID: ${{ env.GH_APP_ID }}
-        APP_PRIVATE_KEY: ${{ env.GH_APP_PRIVATE_KEY }}
-        APP_WEBHOOK_SECRET: ${{ env.GH_APP_WEBHOOK_SECRET }}
-        QUAY_ORG: ${{ env.QUAY_TEST_ORG }}
-        QUAY_TOKEN: ${{ env.QUAY_TOKEN_TEST }}
-        SMEE_CHANNEL: ${{ env.SMEE_URL }}
-      run: |
-        : Prepare resources for E2E tests
-        ./konflux-ci/test/e2e/prepare-e2e.sh
+        kubectl rollout status deployment/proxy -n konflux-ui --timeout=5m
       shell: bash
