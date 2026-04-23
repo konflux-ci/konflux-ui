@@ -9,6 +9,9 @@ const defaultFilters = {
   version: '',
 };
 
+const typeOptions = ['build', 'test'];
+const statusOptions = ['Succeeded', 'Pending'];
+
 describe('PipelineRunsFilterToolbar', () => {
   it('it should render filter toolbar accurately', () => {
     render(
@@ -16,8 +19,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -27,16 +30,17 @@ describe('PipelineRunsFilterToolbar', () => {
   });
 
   it('it should update name filter when search type is Name', async () => {
+    jest.useFakeTimers();
     const setFilters = jest.fn();
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
 
     render(
       <PipelineRunsFilterToolbar
         filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
         filterOptions={['Name', 'Version']}
       />,
     );
@@ -44,6 +48,7 @@ describe('PipelineRunsFilterToolbar', () => {
     const nameInput = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
     await user.type(nameInput, 'test');
     expect(nameInput.value).toBe('test');
+    jest.advanceTimersByTime(600);
     await waitFor(() => expect(setFilters).toHaveBeenCalledTimes(1));
     expect(setFilters).toHaveBeenCalledWith({
       name: 'test',
@@ -51,6 +56,8 @@ describe('PipelineRunsFilterToolbar', () => {
       status: [],
       type: [],
     });
+
+    jest.useRealTimers();
   });
 
   it('it should update status filter', async () => {
@@ -62,8 +69,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -97,8 +104,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -129,8 +136,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -143,8 +150,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
         filterOptions={[]}
       />,
     );
@@ -158,8 +165,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
         filterOptions={['Name', 'Version']}
       />,
     );
@@ -177,8 +184,8 @@ describe('PipelineRunsFilterToolbar', () => {
         filters={defaultFilters}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
         filterOptions={['Name', 'Version']}
       />,
     );

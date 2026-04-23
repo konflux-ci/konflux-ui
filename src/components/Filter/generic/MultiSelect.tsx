@@ -18,7 +18,7 @@ type MultiSelectProps = {
   toggleAriaLabel?: string;
   values: string[];
   setValues: (filters: string[]) => void;
-  options: { [key: string]: number };
+  options: string[];
   /** Optional map from option key to display label. When provided, the option key is used as the value but the label is shown in the UI. */
   optionLabels?: Record<string, string>;
 };
@@ -73,7 +73,7 @@ export const MultiSelect = ({
       >
         {[
           <SelectGroup label={label} key={filterKey}>
-            {Object.keys(options).map((filter) =>
+            {options.map((filter) =>
               filter.startsWith(MENU_DIVIDER) ? (
                 <Divider key={filter} />
               ) : (

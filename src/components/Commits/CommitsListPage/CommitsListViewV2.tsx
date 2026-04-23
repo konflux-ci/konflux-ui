@@ -4,8 +4,7 @@ import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
 import {
   PipelineRunLabel,
   PipelineRunType,
@@ -149,11 +148,6 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     [commitPipelineRunMap],
   );
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(commits, (c) => commitStatusMap[c.sha] || runStatus.Unknown, statuses),
-    [commits, commitStatusMap],
-  );
-
   const filteredCommits = React.useMemo(
     () =>
       commits.filter((commit) => {
@@ -209,7 +203,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
 
   const DataToolbar = (
     <BaseTextFilterToolbar
-      text={nameFilter}
+      text={nameFilter || versionFilter}
       label="name"
       setText={(newSearchValue, searchType) => {
         switch (searchType) {
@@ -221,7 +215,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         }
       }}
       onClearFilters={onClearFilters}
-      filterOptions={versionName ? ['Name', 'Version'] : []}
+      filterOptions={versionName ? [...TEXT_SEARCH_TYPES] : []}
       data-test="commit-list-toolbar"
       totalColumns={COMMIT_COLUMNS_DEFINITIONS.length}
       openColumnManagement={() => setIsColumnManagementOpen(true)}
@@ -231,7 +225,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         filterKey="status"
         values={statusFilter}
         setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
-        options={statusFilterObj}
+        options={statuses}
       />
     </BaseTextFilterToolbar>
   );

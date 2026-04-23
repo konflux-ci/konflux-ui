@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { MultiSelect } from '../generic/MultiSelect';
 import { PipelineRunsFilterState } from '../utils/pipelineruns-filter-utils';
 import { BaseTextFilterToolbar } from './BaseTextFIlterToolbar';
@@ -6,8 +7,8 @@ type PipelineRunsFilterToolbarProps = {
   filters: PipelineRunsFilterState;
   setFilters: (filters: PipelineRunsFilterState) => void;
   onClearFilters: () => void;
-  typeOptions: { [key: string]: number };
-  statusOptions: { [key: string]: number };
+  typeOptions: string[];
+  statusOptions: string[];
   filterOptions?: string[];
   openColumnManagement?: () => void;
   totalColumns?: number;
@@ -24,6 +25,12 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   totalColumns,
 }: PipelineRunsFilterToolbarProps) => {
   const { name, status, type } = filters;
+  const typeOptionLabels = useMemo(() => {
+    return typeOptions.reduce<Record<string, string>>((acc, label) => {
+      acc[label] = label.charAt(0).toUpperCase() + label.slice(1);
+      return acc;
+    }, {});
+  }, [typeOptions]);
 
   return (
     <BaseTextFilterToolbar
@@ -56,6 +63,7 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
         values={type}
         setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
         options={typeOptions}
+        optionLabels={typeOptionLabels}
       />
     </BaseTextFilterToolbar>
   );

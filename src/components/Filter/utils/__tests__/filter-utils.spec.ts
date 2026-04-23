@@ -1,98 +1,103 @@
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, PipelineRunType } from '~/consts/pipelinerun';
+import { PipelineRunKind, PipelineRunStatus } from '~/types';
 import { mockPipelineRuns } from '../../../Components/__data__/mock-pipeline-run';
-import { createFilterObj } from '../filter-utils';
+import { filterPipelineRuns } from '../filter-utils';
 
-const pipelineRuns = [
-  {
-    ...mockPipelineRuns[0],
-    metadata: {
-      ...mockPipelineRuns[0].metadata,
-      labels: {
-        ...mockPipelineRuns[0].metadata.labels,
-        [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'build',
-      },
+const basePlr = mockPipelineRuns[0] as PipelineRunKind;
+
+const plrBuildSucceeded: PipelineRunKind = {
+  ...basePlr,
+  metadata: {
+    ...basePlr.metadata,
+    name: 'python-sample-942fq',
+    labels: {
+      ...basePlr.metadata.labels,
+      [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD as string,
     },
   },
-  {
-    ...mockPipelineRuns[0],
-    metadata: {
-      ...mockPipelineRuns[0].metadata,
-      labels: {
-        ...mockPipelineRuns[0].metadata.labels,
-        [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'build',
-      },
+};
+
+const plrTestPending: PipelineRunKind = {
+  ...basePlr,
+  metadata: {
+    ...basePlr.metadata,
+    name: 'other-run-xyz',
+    labels: {
+      ...basePlr.metadata.labels,
+      [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.TEST as string,
     },
   },
-  {
-    ...mockPipelineRuns[0],
-    metadata: {
-      ...mockPipelineRuns[0].metadata,
-      labels: {
-        ...mockPipelineRuns[0].metadata.labels,
-        [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'test',
-      },
-    },
-  },
-];
+  status: {
+    conditions: [],
+  } as PipelineRunStatus,
+};
+
+const runs = [plrBuildSucceeded, plrTestPending];
 
 describe('filter-utils', () => {
-  describe('createFilterObj', () => {
-    it('should count pipelinerun keys for filter options', () => {
-      const result = createFilterObj(
-        pipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
-        ['build', 'test'],
-        (plr) => plr.kind === 'PipelineRun',
-      );
-      const expected = {
-        build: 2,
-        test: 1,
-      };
-
-      expect(result).toStrictEqual(expected);
+  describe('filterPipelineRuns', () => {
+    it('throws when name is not a string', () => {
+      expect(() =>
+        filterPipelineRuns(runs, { name: [] as unknown as string, status: [], type: [] }),
+      ).toThrow('Invalid filter');
     });
 
-    it('should order keys by descending count', () => {
-      const runs = [
-        ...pipelineRuns.slice(0, 2).map((plr) => ({
-          ...plr,
-          metadata: {
-            ...plr.metadata,
-            labels: {
-              ...plr.metadata.labels,
-              [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'test',
-            },
-          },
-        })),
-        {
-          ...pipelineRuns[0],
-          metadata: {
-            ...pipelineRuns[0].metadata,
-            labels: {
-              ...pipelineRuns[0].metadata.labels,
-              [PipelineRunLabel.COMMIT_TYPE_LABEL]: 'build',
-            },
-          },
-        },
-      ];
+    it('throws when status is not an array', () => {
+      expect(() =>
+        filterPipelineRuns(runs, { name: '', status: 'bad' as unknown as string[], type: [] }),
+      ).toThrow('Invalid filter');
+    });
 
-      const result = createFilterObj(
+    it('throws when type is not an array', () => {
+      expect(() =>
+        filterPipelineRuns(runs, { name: '', status: [], type: 'bad' as unknown as string[] }),
+      ).toThrow('Invalid filter');
+    });
+
+    it('returns all runs when filters are empty', () => {
+      expect(filterPipelineRuns(runs, { name: '', status: [], type: [] })).toHaveLength(2);
+    });
+
+    it('filters by pipeline run name substring', () => {
+      const result = filterPipelineRuns(runs, { name: '942fq', status: [], type: [] });
+      expect(result).toEqual([plrBuildSucceeded]);
+    });
+
+    it('filters by component label substring (case-insensitive query)', () => {
+      const result = filterPipelineRuns(runs, { name: '  BASIC-node ', status: [], type: [] });
+      expect(result).toEqual([plrBuildSucceeded, plrTestPending]);
+    });
+
+    it('filters by status', () => {
+      const result = filterPipelineRuns(runs, { name: '', status: ['Pending'], type: [] });
+      expect(result).toEqual([plrTestPending]);
+    });
+
+    it('filters by pipeline type label', () => {
+      const result = filterPipelineRuns(runs, {
+        name: '',
+        status: [],
+        type: [PipelineRunType.TEST],
+      });
+      expect(result).toEqual([plrTestPending]);
+    });
+
+    it('applies customFilter when provided', () => {
+      const result = filterPipelineRuns(
         runs,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
-        ['build', 'test'],
-        (plr) => plr.kind === 'PipelineRun',
+        { name: '', status: [], type: [] },
+        (plr) => plr.metadata.name === 'other-run-xyz',
       );
-
-      expect(Object.keys(result)).toEqual(['test', 'build']);
-      expect(result).toEqual({ test: 2, build: 1 });
+      expect(result).toEqual([plrTestPending]);
     });
 
-    it('counts keys dynamically when validKeys is omitted', () => {
-      const result = createFilterObj(
-        pipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
-      );
-      expect(result).toEqual({ build: 2, test: 1 });
+    it('combines name, status, and type filters', () => {
+      const result = filterPipelineRuns(runs, {
+        name: 'other',
+        status: ['Pending'],
+        type: [PipelineRunType.TEST],
+      });
+      expect(result).toEqual([plrTestPending]);
     });
   });
 });

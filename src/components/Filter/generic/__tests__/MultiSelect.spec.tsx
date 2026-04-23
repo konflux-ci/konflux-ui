@@ -20,7 +20,7 @@ describe('MultiSelect', () => {
     filterKey: 'version',
     values: [] as string[],
     setValues: jest.fn(),
-    options: { main: 0, 'release-1.0': 0 },
+    options: ['main', 'release-1.0'],
   };
 
   it('should render options with raw keys when optionLabels is not provided', async () => {

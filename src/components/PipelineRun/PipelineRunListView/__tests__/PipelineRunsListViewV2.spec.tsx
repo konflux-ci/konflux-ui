@@ -227,16 +227,16 @@ describe('PipelineRunsListViewV2', () => {
     });
   });
 
-  it('should not render Name/Version search dropdown when not scoped to a version', () => {
+  it('should not render Name/Version search type dropdown when not scoped to a version', () => {
     renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.queryByRole('button', { name: 'Name' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'name filter' })).toBeVisible();
   });
 
-  it('should render Name/Version search dropdown when scoped to a component version', () => {
+  it('should render Name/Version search type dropdown when scoped to a component version', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(screen.getByRole('button', { name: 'Name' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Filter by name...')).toBeVisible();
   });
 
   it('should show loading spinner when fetching next page', () => {
@@ -265,15 +265,15 @@ describe('PipelineRunsListViewV2', () => {
     );
   });
 
-  it('should include component version label in selector when versionName is provided', () => {
+  it('should query pipeline runs by component label only when versionName is provided', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: expect.objectContaining({
-          matchLabels: expect.objectContaining({
-            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
-          }),
+          matchLabels: {
+            'appstudio.openshift.io/component': 'sample-component',
+          },
         }),
       }),
     );

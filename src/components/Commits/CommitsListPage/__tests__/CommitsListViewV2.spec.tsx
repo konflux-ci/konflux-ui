@@ -1,5 +1,6 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with-commits';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { runStatus } from '~/consts/pipelinerun';
@@ -146,15 +147,12 @@ describe('CommitsListViewV2', () => {
     await waitFor(() => screen.getAllByPlaceholderText<HTMLInputElement>('Filter by name...'));
   });
 
-  it('should match the commit if it is filtered by name', () => {
+  it('should match the commit if it is filtered by name', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     const view = renderWithQueryClient(<CommitsListV2 />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-    act(() => {
-      fireEvent.change(filter, {
-        target: { value: 'test-title' },
-      });
-    });
+    await user.type(filter, 'test-title');
     act(() => {
       jest.advanceTimersByTime(700);
     });
@@ -164,6 +162,7 @@ describe('CommitsListViewV2', () => {
   });
 
   it('should show Name/Version search mode dropdown when versionName is provided', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     renderWithQueryClient(<CommitsListV2 versionName="main" />);
 
     const searchModeToggle = screen
@@ -173,10 +172,8 @@ describe('CommitsListViewV2', () => {
       throw new Error('Expected Name/Version search mode menu toggle');
     }
 
-    act(() => {
-      fireEvent.click(searchModeToggle);
-    });
-    expect(await screen.findByRole('menuitem', { name: 'Version' })).toBeInTheDocument();
+    await user.click(searchModeToggle);
+    expect(screen.getByRole('menuitem', { name: 'Version' })).toBeInTheDocument();
   });
 
   it('should hide Name/Version search mode dropdown when versionName is not provided', () => {

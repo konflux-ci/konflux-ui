@@ -17,7 +17,6 @@ import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmpt
 import { FilterContext } from '../Filter/generic/FilterContext';
 import { MultiSelect } from '../Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '../Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '../Filter/utils/filter-utils';
 import { ConformaTable } from './ConformaTable/ConformaTable';
 import SecurityTabEmptyState from './SecurityTabEmptyState';
 import { useConformaResult } from './useConformaResult';
@@ -47,6 +46,10 @@ export const SecurityConformaTab: React.FC<
   React.PropsWithChildren<{ pipelineRunName: string }>
 > = ({ pipelineRunName }) => {
   const [conformaResult, crLoaded, crError] = useConformaResult(pipelineRunName);
+  const filterOptions = React.useMemo(
+    () => Array.from(new Set(conformaResult?.map((cr) => cr.component) ?? [])),
+    [conformaResult],
+  );
 
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
@@ -56,19 +59,6 @@ export const SecurityConformaTab: React.FC<
   });
 
   const { rule: ruleFilter, status: statusFilter, component: componentFilter } = filters;
-
-  const statusFilterObj = React.useMemo(
-    () =>
-      crLoaded && conformaResult
-        ? createFilterObj(conformaResult, (cr) => cr.status, statuses)
-        : {},
-    [conformaResult, crLoaded],
-  );
-
-  const componentFilterObj = React.useMemo(
-    () => (crLoaded && conformaResult ? createFilterObj(conformaResult, (cr) => cr.component) : {}),
-    [conformaResult, crLoaded],
-  );
 
   // filter data in table
   const filteredCRResult = React.useMemo(() => {
@@ -102,14 +92,14 @@ export const SecurityConformaTab: React.FC<
         values={componentFilter}
         filterKey="component"
         setValues={(component) => setFilters({ ...filters, component })}
-        options={componentFilterObj}
+        options={filterOptions}
       />
       <MultiSelect
         label="Status"
         values={statusFilter}
         filterKey="status"
         setValues={(status) => setFilters({ ...filters, status })}
-        options={statusFilterObj}
+        options={statuses}
       />
     </BaseTextFilterToolbar>
   );
