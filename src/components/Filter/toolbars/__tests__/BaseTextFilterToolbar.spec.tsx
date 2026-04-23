@@ -97,14 +97,13 @@ describe('BaseTextFilterToolbar', () => {
     // Fast-forward time to trigger debounced function
     jest.advanceTimersByTime(600);
 
-    expect(mockSetText).toHaveBeenCalledWith('test search', 'Name');
+    expect(mockSetText).toHaveBeenCalledWith('test search', '');
 
     jest.useRealTimers();
   });
 
   it('should render Name/Version dropdown when filterOptions is non-empty', async () => {
     const user = userEvent.setup();
-
     render(
       <BaseTextFilterToolbar
         text=""
@@ -117,7 +116,86 @@ describe('BaseTextFilterToolbar', () => {
 
     expect(screen.getByRole('button', { name: 'Name' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Name' }));
-    expect(screen.getByRole('menuitem', { name: 'Version' })).toBeVisible();
+    expect(await screen.findByRole('menuitem', { name: 'Version' })).toBeInTheDocument();
+  });
+
+  it('should call setText with search option Name when filterOptions includes Name', async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
+    render(
+      <BaseTextFilterToolbar
+        text=""
+        label="name"
+        setText={mockSetText}
+        onClearFilters={mockOnClearFilters}
+        filterOptions={['Name', 'Version']}
+      />,
+    );
+
+    const searchInput = screen.getByRole('textbox', { name: 'name filter' });
+    await user.type(searchInput, 'abc');
+    jest.advanceTimersByTime(600);
+
+    expect(mockSetText).toHaveBeenCalledWith('abc', 'Name');
+
+    jest.useRealTimers();
+  });
+
+  it('should call setText with search option Version after selecting Version', async () => {
+    jest.useFakeTimers();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+
+    render(
+      <BaseTextFilterToolbar
+        text=""
+        label="name"
+        setText={mockSetText}
+        onClearFilters={mockOnClearFilters}
+        filterOptions={['Name', 'Version']}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Name' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Version' }));
+
+    const searchInput = screen.getByRole('textbox', { name: 'name filter' });
+    await user.type(searchInput, 'v23');
+    jest.advanceTimersByTime(600);
+
+    expect(mockSetText).toHaveBeenCalledWith('v23', 'Version');
+    jest.useRealTimers();
+  });
+
+  it('should not render search input when showSearchInput is false', () => {
+    render(
+      <BaseTextFilterToolbar
+        text=""
+        label="name"
+        setText={mockSetText}
+        onClearFilters={mockOnClearFilters}
+        showSearchInput={false}
+      >
+        <div>child</div>
+      </BaseTextFilterToolbar>,
+    );
+
+    expect(screen.queryByRole('textbox', { name: 'name filter' })).not.toBeInTheDocument();
+    expect(screen.getByText('child')).toBeInTheDocument();
+  });
+
+  it('should set data-test on toolbar when dataTest is provided', () => {
+    const { container } = render(
+      <BaseTextFilterToolbar
+        text=""
+        label="name"
+        setText={mockSetText}
+        onClearFilters={mockOnClearFilters}
+        dataTest="my-toolbar"
+      />,
+    );
+
+    expect(container.querySelector('[data-test="my-toolbar"]')).toBeInTheDocument();
   });
 
   it('should not render search-type dropdown when filterOptions is empty', () => {

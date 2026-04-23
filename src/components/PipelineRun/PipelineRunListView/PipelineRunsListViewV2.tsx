@@ -2,12 +2,11 @@ import * as React from 'react';
 import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import PipelineRunsFilterToolbar from '~/components/Filter/toolbars/PipelineRunsFilterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import {
   filterPipelineRuns,
   PipelineRunsFilterState,
 } from '~/components/Filter/utils/pipelineruns-filter-utils';
-import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { useComponent } from '~/hooks/useComponents';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -26,7 +25,6 @@ import ColumnManagement from '../../../shared/components/table/ColumnManagement'
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunEmptyStateV2 from '../PipelineRunEmptyStateV2';
 import { getPipelineRunListHeader } from './PipelineRunListHeader';
@@ -90,29 +88,9 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     );
   }, [pipelineRuns]);
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
-    [sortedPipelineRuns],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        sortedPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-      ),
-    [sortedPipelineRuns],
-  );
-
-  const effectiveFilters = React.useMemo(
-    () => (versionName ? { ...filters, version: '' } : filters),
-    [filters, versionName],
-  );
-
   const filteredPLRs = React.useMemo(
-    () => filterPipelineRuns(sortedPipelineRuns, effectiveFilters, undefined, componentName),
-    [sortedPipelineRuns, effectiveFilters, componentName],
+    () => filterPipelineRuns(sortedPipelineRuns, filters, undefined, componentName),
+    [sortedPipelineRuns, filters, componentName],
   );
 
   const vulnerabilities = usePLRVulnerabilities(nameFilter ? filteredPLRs : sortedPipelineRuns);
@@ -129,7 +107,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     nameFilter.length > 0 ||
     typeFilter.length > 0 ||
     statusFilter.length > 0 ||
-    (!versionName && versionFilter.length > 0);
+    versionFilter.length > 0;
 
   return (
     <Flex direction={{ default: 'column' }}>
@@ -138,9 +116,9 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}
-          typeOptions={typeFilterObj}
-          statusOptions={statusFilterObj}
-          filterOptions={versionName ? ['Name', 'Version'] : []}
+          typeOptions={pipelineRunTypes}
+          statusOptions={statuses}
+          filterOptions={versionName ? [...TEXT_SEARCH_TYPES] : []}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />

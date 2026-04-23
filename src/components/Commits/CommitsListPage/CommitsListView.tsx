@@ -4,7 +4,6 @@ import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
@@ -243,7 +242,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         filterKey="status"
         values={statusFilter}
         setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
-        options={statusFilterObj}
+        options={statuses}
       />
     </BaseTextFilterToolbar>
   );

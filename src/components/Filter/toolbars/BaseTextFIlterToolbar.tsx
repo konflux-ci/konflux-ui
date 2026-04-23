@@ -30,6 +30,8 @@ type BaseTextFilterToolbarProps = {
   filterOptions?: string[];
 };
 
+const EMPTY_FILTER_OPTIONS: string[] = [];
+
 export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   text,
   label,
@@ -41,7 +43,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
   totalColumns = 0,
   showSearchInput = true,
   noLeftPadding = false,
-  filterOptions = [],
+  filterOptions = EMPTY_FILTER_OPTIONS,
 }) => {
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
   const [searchOption, setSearchOption] = React.useState<string>(filterOptions?.[0] ?? '');
@@ -71,7 +73,9 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
           <Dropdown
             isOpen={isOpen}
             onSelect={(_, value) => {
-              setSearchOption(value as string);
+              const selected = String(value ?? '');
+              setSearchOption(selected);
+              setText('', selected);
               setIsOpen(false);
             }}
             toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
@@ -92,7 +96,7 @@ export const BaseTextFilterToolbar: React.FC<BaseTextFilterToolbarProps> = ({
         <InputGroupItem isFill>{searchInput}</InputGroupItem>
       </InputGroup>
     ),
-    [filterOptions, isOpen, searchInput, searchOption],
+    [filterOptions, isOpen, searchInput, searchOption, setText],
   );
 
   return (

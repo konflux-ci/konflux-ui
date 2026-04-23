@@ -15,6 +15,10 @@ import PipelineRunsListViewV2 from '../PipelineRunsListViewV2';
 jest.useFakeTimers();
 const useNamespaceMock = mockUseNamespaceHook('test-ns');
 
+afterAll(() => {
+  jest.useRealTimers();
+});
+
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
@@ -227,16 +231,16 @@ describe('PipelineRunsListViewV2', () => {
     });
   });
 
-  it('should not render Name/Version search dropdown when not scoped to a version', () => {
+  it('should not render Name/Version search type dropdown when not scoped to a version', () => {
     renderWithQueryClient(<TestedComponentV2 />);
     expect(screen.queryByRole('button', { name: 'Name' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'name filter' })).toBeVisible();
   });
 
-  it('should render Name/Version search dropdown when scoped to a component version', () => {
+  it('should render Name/Version search type dropdown when scoped to a component version', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(screen.getByRole('button', { name: 'Name' })).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Filter by name...')).toBeVisible();
   });
 
   it('should show loading spinner when fetching next page', () => {
@@ -265,15 +269,15 @@ describe('PipelineRunsListViewV2', () => {
     );
   });
 
-  it('should include component version label in selector when versionName is provided', () => {
+  it('should query pipeline runs by component label only when versionName is provided', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: expect.objectContaining({
-          matchLabels: expect.objectContaining({
-            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
-          }),
+          matchLabels: {
+            'appstudio.openshift.io/component': 'sample-component',
+          },
         }),
       }),
     );
@@ -291,7 +295,7 @@ describe('PipelineRunsListViewV2', () => {
     screen.getByTestId('data-table-skeleton');
   });
 
-  it('should ignore stale version filter on fixed-version pages', async () => {
+  it('applies version filter from context when scoped to a component version', async () => {
     renderWithQueryClient(
       <FilterContext.Provider
         value={{
@@ -304,8 +308,11 @@ describe('PipelineRunsListViewV2', () => {
       </FilterContext.Provider>,
     );
     await waitFor(() => {
-      expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
-      expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
+      expect(
+        screen.getByText('No results match this filter criteria. Clear all filters and try again.'),
+      ).toBeInTheDocument();
     });
+    expect(screen.queryByText('basic-node-js-first')).not.toBeInTheDocument();
+    expect(screen.queryByText('basic-node-js-second')).not.toBeInTheDocument();
   });
 });
