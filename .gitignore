@@ -23,6 +23,7 @@ node_modules
 dist
 dist-ssr
 *.local
+*.local.*
 tsconfig.tsbuildinfo
 
 # Editor directories and files
@@ -39,7 +40,6 @@ tsconfig.tsbuildinfo
 **/.gitconfig*
 
 # Personal local claude settings
-.claude/*
 CLAUDE.local.md
 
 # Snyk Security Extension - AI Rules (auto-generated)
