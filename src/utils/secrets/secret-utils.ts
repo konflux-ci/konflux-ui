@@ -23,6 +23,7 @@ import {
   Source,
   KeyValueEntry,
 } from '../../types';
+import type { Patch } from '../../types/k8s';
 
 export { SecretForComponentOption };
 
@@ -71,6 +72,25 @@ export const isPartnerTask = (
   arr: { [key: string]: BuildTimeSecret } = supportedPartnerTasksSecrets,
 ) => {
   return !!Object.values(arr).find((secret) => secret.name === secretName);
+};
+
+export const getAuthType = (
+  type: SecretType,
+): ImagePullSecretType | SourceSecretType | SecretTypeDropdownLabel | undefined => {
+  switch (type) {
+    case SecretType.dockerconfigjson:
+      return ImagePullSecretType.ImageRegistryCreds;
+    case SecretType.dockercfg:
+      return ImagePullSecretType.UploadConfigFile;
+    case SecretType.basicAuth:
+      return SourceSecretType.basic;
+    case SecretType.sshAuth:
+      return SourceSecretType.ssh;
+    case SecretType.opaque:
+      return SecretTypeDropdownLabel.opaque;
+    default:
+      return undefined;
+  }
 };
 
 export const getSupportedPartnerTaskKeyValuePairs = (
@@ -177,6 +197,37 @@ export const getSecretFormData = (values: AddSecretFormValues, namespace: string
   return secretResource;
 };
 
+const REGISTRY_CREDS_DEFAULT = [{ registry: '', username: '', password: '', email: '' }];
+
+export const getRegistryCreds = (secretData: SecretKind) => {
+  if ((secretData.type as SecretType) !== SecretType.dockerconfigjson) {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+
+  const encoded = secretData.data?.['.dockerconfigjson'];
+  if (!encoded) {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+
+  try {
+    const parsed = JSON.parse(Base64.decode(encoded)) as {
+      auths?: { [key: string]: { username: string; password: string; email: string } };
+    };
+    if (parsed?.auths && typeof parsed.auths === 'object') {
+      const creds = Object.entries(parsed.auths).map(([registryName, authData]) => ({
+        registry: registryName,
+        username: authData.username,
+        password: authData.password,
+        email: authData.email ?? '',
+      }));
+      return creds.length > 0 ? creds : REGISTRY_CREDS_DEFAULT;
+    }
+  } catch {
+    return REGISTRY_CREDS_DEFAULT;
+  }
+  return REGISTRY_CREDS_DEFAULT;
+};
+
 export const getTargetLabelsForRemoteSecret = (
   values: AddSecretFormValues,
 ): { [key: string]: string } => {
@@ -235,6 +286,29 @@ export const getAnnotationForSecret = (values: SecretLabelInput): { [key: string
   return { [SecretLabels.REPO_ANNOTATION]: values.source.repo };
 };
 
+export const createK8sSecretResource = (
+  values: AddSecretFormValues,
+  secretResource: SecretKind,
+): SecretKind => {
+  const labels = getLabelsForSecret(values);
+  const annotations = getAnnotationForSecret(values);
+
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels: {
+        ...labels,
+      },
+      annotations: {
+        ...annotations,
+      },
+    },
+  };
+
+  return k8sSecretResource;
+};
+
 export const statusFromConditions = (
   conditions: SecretCondition[],
 ): RemoteSecretStatusReason | string => {
@@ -286,10 +360,71 @@ export const createSecretResource = async (
     resource: secretResource,
   });
 
-export const getAddSecretBreadcrumbs = (namespace) => {
+/** Ensures JSON Patch always receives an object; `null`/missing maps become `{}` to clear metadata on the server. */
+const metadataMapForPatch = (
+  map: Record<string, string> | null | undefined,
+): Record<string, string> => (map && typeof map === 'object' && !Array.isArray(map) ? map : {});
+
+const updateSecretResource = async (newK8sSecretResource: SecretKind) => {
+  const patches: Patch[] = [
+    {
+      op: 'add',
+      path: '/metadata/labels',
+      value: metadataMapForPatch(newK8sSecretResource.metadata?.labels),
+    },
+    {
+      op: 'add',
+      path: '/metadata/annotations',
+      value: metadataMapForPatch(newK8sSecretResource.metadata?.annotations),
+    },
+    {
+      op: 'replace',
+      path: '/data',
+      value: newK8sSecretResource.data,
+    },
+  ];
+
+  return await K8sQueryPatchResource({
+    model: SecretModel,
+    queryOptions: {
+      name: newK8sSecretResource.metadata.name,
+      ns: newK8sSecretResource.metadata.namespace,
+    },
+    patches,
+  });
+};
+
+export const editSecretResource = (
+  updatedSecret: AddSecretFormValues,
+  namespace: string,
+  existingSecret?: SecretKind,
+) => {
+  const secretResource: SecretKind = getSecretFormData(updatedSecret, namespace);
+  let newK8sSecretResource = createK8sSecretResource(updatedSecret, secretResource);
+
+  // Preserve annotations not represented in the form (e.g. kubectl/CLI), while applying UI-driven keys.
+  if (existingSecret) {
+    const existingAnnotations = metadataMapForPatch(existingSecret.metadata?.annotations);
+    const formAnnotations = metadataMapForPatch(newK8sSecretResource.metadata?.annotations);
+    newK8sSecretResource = {
+      ...newK8sSecretResource,
+      metadata: {
+        ...newK8sSecretResource.metadata,
+        annotations: {
+          ...existingAnnotations,
+          ...formAnnotations,
+        },
+      },
+    };
+  }
+
+  return updateSecretResource(newK8sSecretResource);
+};
+
+export const getSecretBreadcrumbs = (namespace: string, operation: string) => {
   return [
     { path: SECRET_LIST_PATH.createPath({ workspaceName: namespace }), name: 'Secrets' },
-    { path: '#', name: 'Add secret' },
+    { path: '#', name: `${operation} secret` },
   ];
 };
 
