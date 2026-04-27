@@ -13,6 +13,16 @@ export function expandRoleBindingsToTableRows(roleBindings: RoleBinding[]): User
     const roleRefName = roleBinding.roleRef?.name ?? 'unknown';
     const subjects = roleBinding.subjects;
 
+    if (!subjects?.length) {
+      return [
+        {
+          roleBinding,
+          subject: null,
+          rowKey: `${roleRefName}__0__-__-`,
+        },
+      ];
+    }
+
     return subjects.map((subject, index) => ({
       roleBinding,
       subject,
