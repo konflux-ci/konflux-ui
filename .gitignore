@@ -41,6 +41,7 @@ tsconfig.tsbuildinfo
 
 # Personal local claude settings
 CLAUDE.local.md
+.claude/worktrees/**/*
 
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc
