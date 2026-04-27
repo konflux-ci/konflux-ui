@@ -10,6 +10,7 @@
 ## Issue Types
 - Bug
 - Task
+- Story
 
 ## Required Fields (all types)
 - Summary (title)
@@ -31,12 +32,27 @@ Not yet configured — skip in interview.
 ## Priority Defaults
 - Bug: infer from severity (Critical→Blocker, Major→Major, default→Normal, cosmetic→Minor)
 - Task: default Normal unless user specifies otherwise
+- Story: default Normal unless user specifies otherwise
 
-## Epic Linking
-Not required.
+## Epic / Parent Linking
+Optional. When the user provides a parent ticket ID (e.g., an epic key like `KFLUXUI-1234`), the new issue should be created as a child of that parent.
+
+**Jira Cloud field:** Use `"parent": "<PARENT_KEY>"` in `additional_fields`. Do NOT use the legacy `customfield_10014` epic link field.
 
 ## Task Template
 Title + description with bullet points summarizing the work.
+
+## Story Template
+```
+## Acceptance Criteria
+
+- [ ] As a <user>, I can <action> so that <outcome>
+- [ ] ...
+
+## Notes
+
+<Developer notes, links to design docs, references to related documentation, or any additional context>
+```
 
 ## Bug Template
 ```
