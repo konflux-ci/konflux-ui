@@ -1,21 +1,12 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Alert,
-  AlertVariant,
   Bullseye,
-  Button,
-  capitalize,
   Divider,
   EmptyStateActions,
   EmptyStateBody,
   Flex,
-  FlexItem,
-  List,
-  ListItem,
   MenuToggle,
-  Modal,
-  ModalVariant,
   Select,
   SelectList,
   SelectOption,
@@ -23,7 +14,6 @@ import {
   Text,
 } from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
-import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 // import { mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
@@ -32,7 +22,6 @@ import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlt
 import { getErrorState } from '~/shared/utils/error-utils';
 import { textMatch } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
-import { useRoleMap } from '../../hooks/useRole';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
 import { useDeepCompareMemoize } from '../../shared';
@@ -43,6 +32,7 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { UserAccessTableHeaderRow } from './RBListHeader';
 import { UserAccessTableBodyRow } from './RBListRow';
+import { UserAccessChangeRoleModal } from './UserAccessChangeRoleModal';
 import {
   expandRoleBindingsToTableRows,
   filterUserAccessRows,
@@ -57,12 +47,6 @@ enum UserAccessFilterTypes {
 const USER_ACCESS_FILTER_TYPE_LABELS: Record<UserAccessFilterTypes, string> = {
   [UserAccessFilterTypes.username]: 'Username',
   [UserAccessFilterTypes.roleBindingName]: 'Role binding',
-};
-
-const KONFLUX_ROLE_ORDER: Record<string, number> = {
-  'konflux-admin-user-actions': 3,
-  'konflux-maintainer-user-actions': 2,
-  'konflux-contributor-user-actions': 1,
 };
 
 const UserAccessEmptyState: React.FC<
@@ -133,14 +117,6 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<Set<string>>(() => new Set());
   const [isChangeAccessModalOpen, setChangeAccessModalOpen] = React.useState(false);
-  const [roleMap, roleMapLoaded] = useRoleMap();
-  const [isRoleSelectOpen, setRoleSelectOpen] = React.useState(false);
-  const [modalSelectedRoleRef, setModalSelectedRoleRef] = React.useState<string | undefined>();
-
-  const roleSelectOptions = React.useMemo(
-    () => Object.entries(roleMap?.roleMap ?? {}).sort(([a], [b]) => a.localeCompare(b)),
-    [roleMap],
-  );
 
   React.useEffect(() => {
     const allowed = new Set(filterRBs.map((r) => r.rowKey));
@@ -185,54 +161,16 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     });
   }, []);
 
-  const handleModalClose = () => {
-    setChangeAccessModalOpen(false);
-    setModalSelectedRoleRef(undefined);
-    setRoleSelectOpen(false);
-  };
-
   const handleModalSave = () => {
     // console.log('modal save');
     // console.log('selectedRowKeys', [...selectedRowKeys]);
-    handleModalClose();
-
+    setChangeAccessModalOpen(false);
     // Row-key format: roleRefName__index__SubjectKind__subjectName
   };
 
   const selectedCount = selectedRowKeys.size;
   const allVisibleSelected =
     filterRBs.length > 0 && filterRBs.every((r) => selectedRowKeys.has(r.rowKey));
-
-  const splitRowKey = (rowKey: string) => {
-    const segments = rowKey.split('__');
-    return {
-      roleRefName: segments[0],
-      roleName: segments[0].split('-')[1],
-      index: segments[1],
-      role: segments[2],
-      name: segments[3],
-    };
-  };
-
-  const isModalSaveDisabled = React.useMemo(() => {
-    if (!modalSelectedRoleRef) {
-      return true;
-    }
-
-    const selectedRoleWeight = KONFLUX_ROLE_ORDER[modalSelectedRoleRef];
-    if (selectedRoleWeight === undefined) {
-      return true;
-    }
-
-    // Readabilty
-    const downgradeExists = [...selectedRowKeys].some((rowKey) => {
-      const { roleRefName } = splitRowKey(rowKey);
-      const currentRoleWeight = KONFLUX_ROLE_ORDER[roleRefName];
-      return currentRoleWeight !== undefined && currentRoleWeight > selectedRoleWeight;
-    });
-
-    return downgradeExists;
-  }, [modalSelectedRoleRef, selectedRowKeys]);
 
   const errorState = getErrorState(error, loaded, 'role bindings');
   if (errorState) {
@@ -370,110 +308,15 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       ) : (
         <FilteredEmptyState onClearFilters={() => onClearFilters()} />
       )}
-      <Modal
+      <UserAccessChangeRoleModal
         isOpen={isChangeAccessModalOpen}
-        title="Change role"
-        variant={ModalVariant.medium}
-        onClose={handleModalClose}
-        appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
-        actions={[
-          <ButtonWithAccessTooltip
-            key="save"
-            variant="primary"
-            onClick={handleModalSave}
-            isDisabled={isModalSaveDisabled}
-            tooltip={
-              !modalSelectedRoleRef
-                ? 'No role selected. Select a role to save the changes.'
-                : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
-            }
-          >
-            Save
-          </ButtonWithAccessTooltip>,
-          <Button key="cancel" variant="link" onClick={handleModalClose}>
-            Cancel
-          </Button>,
-        ]}
-      >
-        <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
-          <FlexItem>
-            <Text>
-              Change role for {selectedCount} user{selectedCount !== 1 ? 's' : ''}
-            </Text>
-          </FlexItem>
-          <FlexItem>
-            <Alert variant={AlertVariant.info} title="Role information" isInline>
-              TODO: Add role changes information here.
-            </Alert>
-          </FlexItem>
-          <FlexItem>
-            <List style={{ marginLeft: 'var(--pf-v5-global--spacer--md)' }}>
-              {[...selectedRowKeys].map((rowKey) => {
-                const { name: username, role, roleName: currentRoleName } = splitRowKey(rowKey);
-
-                return (
-                  <ListItem key={rowKey}>
-                    <span className={textStyles.fontWeightBold}>
-                      {username} ({role})
-                    </span>
-                    : {capitalize(currentRoleName)}
-                  </ListItem>
-                );
-              })}
-            </List>
-          </FlexItem>
-
-          <FlexItem>
-            <Flex direction={{ default: 'column' }}>
-              <FlexItem style={{ marginBottom: 'var(--pf-v5-global--spacer--xs)' }}>
-                <Text data-test="user-access-change-role-label">New role*</Text>
-              </FlexItem>
-              <FlexItem>
-                {roleMapLoaded && roleMap ? (
-                  <Select
-                    toggle={(toggleRef) => (
-                      <MenuToggle
-                        ref={toggleRef}
-                        data-test="user-access-change-role-select"
-                        isExpanded={isRoleSelectOpen}
-                        onClick={() => setRoleSelectOpen(!isRoleSelectOpen)}
-                        isDisabled={roleSelectOptions.length === 0}
-                        isFullWidth
-                      >
-                        {modalSelectedRoleRef
-                          ? roleMap.roleMap[modalSelectedRoleRef] ?? modalSelectedRoleRef
-                          : 'Select a role'}
-                      </MenuToggle>
-                    )}
-                    onSelect={(_, val) => {
-                      setModalSelectedRoleRef(val as string);
-                      setRoleSelectOpen(false);
-                    }}
-                    selected={modalSelectedRoleRef}
-                    isOpen={isRoleSelectOpen}
-                    onOpenChange={setRoleSelectOpen}
-                  >
-                    <SelectList>
-                      {roleSelectOptions.map(([refName, displayName]) => (
-                        <SelectOption key={refName} value={refName}>
-                          {displayName}
-                        </SelectOption>
-                      ))}
-                    </SelectList>
-                  </Select>
-                ) : (
-                  <Spinner size="sm" />
-                )}
-              </FlexItem>
-            </Flex>
-          </FlexItem>
-          {/* <FlexItem>
-          <Alert title="Tasks running in background" variant={AlertVariant.warning} isInline>
-            <p>Please keep this window open while we link secrets to the service accounts.</p>
-          </Alert>
-          </FlexItem> */}
-        </Flex>
-      </Modal>
+        onClose={() => {
+          setChangeAccessModalOpen(false);
+          // setSelectedRowKeys(new Set()); // ! ???????
+        }}
+        selectedRowKeys={selectedRowKeys}
+        onSave={handleModalSave}
+      />
     </>
   );
 };
