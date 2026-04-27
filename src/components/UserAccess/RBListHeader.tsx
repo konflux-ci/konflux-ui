@@ -56,34 +56,3 @@ export const UserAccessTableHeaderRow: React.FC<UserAccessTableHeaderRowProps> =
     <Th className={rbTableColumnClasses.kebab} screenReaderText="Row actions" />
   </Tr>
 );
-
-// export const RBListHeader = () => [
-//   {
-//     title: <>Username </>,
-//     props: {
-//       className: rbTableColumnClasses.username,
-//       info: {
-//         popover: usernameColumnInfoPopover,
-//       },
-//     },
-//   },
-//   {
-//     title: 'Role',
-//     props: { className: rbTableColumnClasses.role },
-//   },
-//   {
-//     title: <>Role Binding </>,
-//     props: {
-//       className: rbTableColumnClasses.rolebinding,
-//       info: {
-//         popover: roleBindingColumnInfoPopover,
-//       },
-//     },
-//   },
-//   {
-//     title: ' ',
-//     props: {
-//       className: rbTableColumnClasses.kebab,
-//     },
-//   },
-// ];
