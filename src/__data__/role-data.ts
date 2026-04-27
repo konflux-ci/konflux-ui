@@ -16,6 +16,12 @@ export const defaultKonfluxRoleMap = {
   },
 };
 
+export const KONFLUX_ROLE_WEIGHT: Record<string, number> = {
+  'konflux-admin-user-actions': 3,
+  'konflux-maintainer-user-actions': 2,
+  'konflux-contributor-user-actions': 1,
+};
+
 export const mockConfigMap = {
   kind: 'ConfigMap',
   apiVersion: 'v1',
