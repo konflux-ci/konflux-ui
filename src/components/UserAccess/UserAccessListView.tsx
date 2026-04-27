@@ -376,14 +376,19 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         onClose={handleModalClose}
         appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
         actions={[
-          <Button
+          <ButtonWithAccessTooltip
             key="save"
             variant="primary"
             onClick={handleModalSave}
             isDisabled={isModalSaveDisabled}
+            tooltip={
+              !modalSelectedRoleRef
+                ? 'No role selected. Select a role to save the changes.'
+                : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
+            }
           >
             Save
-          </Button>,
+          </ButtonWithAccessTooltip>,
           <Button key="cancel" variant="link" onClick={handleModalClose}>
             Cancel
           </Button>,
@@ -461,6 +466,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
               </FlexItem>
             </Flex>
           </FlexItem>
+          {/* <FlexItem>
+          <Alert title="Tasks running in background" variant={AlertVariant.warning} isInline>
+            <p>Please keep this window open while we link secrets to the service accounts.</p>
+          </Alert>
+          </FlexItem> */}
         </Flex>
       </Modal>
     </>
