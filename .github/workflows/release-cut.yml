@@ -61,10 +61,8 @@ jobs:
         run: |
           extract_sha() {
             local file_path="$1"
-            curl -sf \
-              -H "Authorization: token $GH_TOKEN" \
-              -H "Accept: application/vnd.github.v3.raw" \
-              "https://api.github.com/repos/${INFRA_REPO}/contents/${file_path}" \
+            gh api "repos/${INFRA_REPO}/contents/${file_path}" \
+              --header "Accept: application/vnd.github.v3.raw" \
               | grep -E 'newTag:\s*[0-9a-fA-F]{40}' \
               | sed -nE 's/.*newTag:\s*([0-9a-fA-F]{40}).*/\1/p' \
               | head -n1
