@@ -1,0 +1,41 @@
+name: PR Title Lint
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+
+          # Release PRs are exempt from scope requirement
+          if [[ "$TITLE" =~ ^chore\(release\): ]]; then
+            echo "Release PR — scope exempted."
+            exit 0
+          fi
+
+          # Conventional commit format: type(scope)!: description
+          # type is required, scope is optional, ! for breaking changes
+          PATTERN='^(feat|fix|chore|docs|test|ci|refactor|perf|style|build|revert)(\([A-Za-z0-9#_-]+\))?!?: .+'
+
+          if [[ ! "$TITLE" =~ $PATTERN ]]; then
+            echo "::error::PR title does not match conventional commit format."
+            echo ""
+            echo "Expected: type(scope): description"
+            echo "  type:  feat|fix|chore|docs|test|ci|refactor|perf|style|build|revert"
+            echo "  scope: KFLUXUI-123, #456, or descriptive word (optional)"
+            echo ""
+            echo "Examples:"
+            echo "  feat(KFLUXUI-1234): add pipeline detail view"
+            echo "  fix(#567): resolve modal dismiss on escape"
+            echo "  chore: upgrade dependencies"
+            echo ""
+            echo "Got: $TITLE"
+            exit 1
+          fi
+
+          echo "PR title is valid: $TITLE"

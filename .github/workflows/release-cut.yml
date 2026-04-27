@@ -1,0 +1,384 @@
+name: Release Cut
+
+on:
+  schedule:
+    # 9:00 AM IST = 3:30 AM UTC, every Monday
+    - cron: '30 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Skip week parity check (force release this week)'
+        type: boolean
+        default: false
+      custom_sha:
+        description: 'Override: deploy this specific SHA instead of the staging SHA'
+        type: string
+        default: ''
+
+jobs:
+  # -------------------------------------------------------------------
+  # Preflight: check week parity and read SHAs from infra-deployments
+  # -------------------------------------------------------------------
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.decide.outputs.should_release }}
+      old_sha: ${{ steps.shas.outputs.old_sha }}
+      new_sha: ${{ steps.shas.outputs.new_sha }}
+      release_date: ${{ steps.shas.outputs.release_date }}
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+      INFRA_REPO: redhat-appstudio/infra-deployments
+      PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
+      STG_SHA_FILE: components/konflux-ui/staging/base/kustomization.yaml
+
+    steps:
+      - name: Check if this is a release week
+        id: parity
+        run: |
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            echo "is_release_week=true" >> "$GITHUB_OUTPUT"
+            echo "Force flag set — skipping parity check."
+            exit 0
+          fi
+
+          # 2026-05-04 is ISO week 19 and is a release Monday
+          ANCHOR_WEEK=19
+          CURRENT_WEEK=$(date +%V)
+          DIFF=$(( (CURRENT_WEEK - ANCHOR_WEEK) % 2 ))
+
+          if [[ $DIFF -ne 0 ]]; then
+            echo "is_release_week=false" >> "$GITHUB_OUTPUT"
+            echo "Not a release week (current: $CURRENT_WEEK, anchor: $ANCHOR_WEEK). Skipping."
+          else
+            echo "is_release_week=true" >> "$GITHUB_OUTPUT"
+            echo "This is a release week (current: $CURRENT_WEEK, anchor: $ANCHOR_WEEK)."
+          fi
+
+      - name: Read SHAs from infra-deployments
+        id: shas
+        if: steps.parity.outputs.is_release_week == 'true'
+        run: |
+          extract_sha() {
+            local file_path="$1"
+            curl -sf \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github.v3.raw" \
+              "https://api.github.com/repos/${INFRA_REPO}/contents/${file_path}" \
+              | grep -E 'newTag:\s*[0-9a-fA-F]{40}' \
+              | sed -nE 's/.*newTag:\s*([0-9a-fA-F]{40}).*/\1/p' \
+              | head -n1
+          }
+
+          OLD_SHA=$(extract_sha "$PROD_SHA_FILE")
+          if [[ -z "$OLD_SHA" ]]; then
+            echo "::error::Failed to extract production SHA from $PROD_SHA_FILE"
+            exit 1
+          fi
+          echo "Production SHA: $OLD_SHA"
+
+          if [[ -n "${{ github.event.inputs.custom_sha }}" ]]; then
+            NEW_SHA="${{ github.event.inputs.custom_sha }}"
+            echo "Using custom SHA override: $NEW_SHA"
+          else
+            NEW_SHA=$(extract_sha "$STG_SHA_FILE")
+            if [[ -z "$NEW_SHA" ]]; then
+              echo "::error::Failed to extract staging SHA from $STG_SHA_FILE"
+              exit 1
+            fi
+          fi
+          echo "Staging SHA: $NEW_SHA"
+
+          echo "old_sha=$OLD_SHA" >> "$GITHUB_OUTPUT"
+          echo "new_sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
+          echo "release_date=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Decide whether to proceed
+        id: decide
+        if: steps.parity.outputs.is_release_week == 'true' && steps.shas.conclusion == 'success'
+        run: |
+          OLD_SHA="${{ steps.shas.outputs.old_sha }}"
+          NEW_SHA="${{ steps.shas.outputs.new_sha }}"
+
+          if [[ -z "$OLD_SHA" || -z "$NEW_SHA" ]]; then
+            echo "::error::SHA extraction returned empty values"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          if [[ "$OLD_SHA" == "$NEW_SHA" ]]; then
+            echo "No changes since last release (both SHAs: $OLD_SHA). Skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Changes detected: $OLD_SHA → $NEW_SHA"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Notify Slack — no changes
+        if: |
+          steps.parity.outputs.is_release_week == 'true' &&
+          steps.decide.outputs.should_release == 'false'
+        run: |
+          RELEASE_DATE="${{ steps.shas.outputs.release_date }}"
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -n --arg date "$RELEASE_DATE" '{
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ("*Release check — " + $date + "*\nNo new changes between staging and production. Skipping release.")
+                  }
+                }
+              ]
+            }')" || echo "::warning::Failed to send Slack notification"
+
+  # -------------------------------------------------------------------
+  # Release: changelog PR, infra PR, tracking issue, notifications
+  # -------------------------------------------------------------------
+  release-cut:
+    needs: preflight
+    if: needs.preflight.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+      KONFLUX_UI_REPO: konflux-ci/konflux-ui
+      INFRA_REPO: redhat-appstudio/infra-deployments
+      INFRA_FORK: sahil143/infra-deployments
+      PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
+      JIRA_BASE_URL: https://issues.redhat.com
+      OLD_SHA: ${{ needs.preflight.outputs.old_sha }}
+      NEW_SHA: ${{ needs.preflight.outputs.new_sha }}
+      RELEASE_DATE: ${{ needs.preflight.outputs.release_date }}
+
+    steps:
+      # --- Checkout konflux-ui with full history ---
+      - name: Checkout konflux-ui
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      # --- Generate changelog ---
+      - name: Generate changelog
+        id: changelog
+        run: |
+          chmod +x .github/scripts/generate-release-changelog.sh
+          CHANGELOG_OUTPUT=$(.github/scripts/generate-release-changelog.sh \
+            "$OLD_SHA" "$NEW_SHA" "$RELEASE_DATE")
+
+          # Split body from JIRA_IDS footer
+          CHANGELOG_BODY=$(echo "$CHANGELOG_OUTPUT" | sed '/^---$/,$d')
+          JIRA_IDS=$(echo "$CHANGELOG_OUTPUT" | grep '<!-- JIRA_IDS:' | sed 's/.*JIRA_IDS: //;s/ -->//')
+
+          echo "$CHANGELOG_BODY" > /tmp/changelog-body.md
+          echo "$JIRA_IDS" > /tmp/jira-ids.json
+
+          TOTAL_PRS=$(echo "$CHANGELOG_BODY" | grep -c '^- ' || echo "0")
+          echo "total_prs=$TOTAL_PRS" >> "$GITHUB_OUTPUT"
+
+      # --- Create changelog PR in konflux-ui ---
+      - name: Create changelog PR
+        id: changelog_pr
+        run: |
+          BRANCH="release/${RELEASE_DATE}"
+          TAG="v${RELEASE_DATE}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH"
+
+          if [[ -f CHANGELOG.md ]]; then
+            EXISTING=$(cat CHANGELOG.md)
+            cat /tmp/changelog-body.md > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            echo "$EXISTING" >> CHANGELOG.md
+          else
+            cp /tmp/changelog-body.md CHANGELOG.md
+          fi
+
+          git add CHANGELOG.md
+          git commit -m "chore(release): ${RELEASE_DATE} production rollout changelog"
+          git push origin "$BRANCH"
+
+          PR_URL=$(gh pr create \
+            --repo "$KONFLUX_UI_REPO" \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore(release): ${RELEASE_DATE} production rollout" \
+            --body "$(cat <<PRBODY
+          ## Release changelog for ${RELEASE_DATE}
+
+          This PR adds the changelog for the production release promoting staging commit \`${NEW_SHA:0:7}\` to production.
+
+          $(cat /tmp/changelog-body.md)
+
+          ---
+          Merge this PR alongside or before the infra-deployments SHA-bump PR.
+          PRBODY
+          )")
+
+          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      # --- Create SHA-bump PR in infra-deployments (fork-based) ---
+      - name: Create infra-deployments PR
+        id: infra_pr
+        run: |
+          BRANCH="konflux-ui-release/${RELEASE_DATE}"
+          SHORT_OLD="${OLD_SHA:0:12}"
+          SHORT_NEW="${NEW_SHA:0:12}"
+
+          # Clone upstream
+          git clone --depth=1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/${INFRA_REPO}.git" \
+            /tmp/infra-clone
+          cd /tmp/infra-clone
+
+          # Set up fork remote and create branch
+          git remote add fork \
+            "https://x-access-token:${GH_TOKEN}@github.com/${INFRA_FORK}.git"
+          git checkout -b "$BRANCH"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Update production SHA (staging → production promotion)
+          sed -i "s/${OLD_SHA}/${NEW_SHA}/g" "$PROD_SHA_FILE"
+
+          if git diff --quiet -- "$PROD_SHA_FILE"; then
+            echo "::error::No changes after SHA replacement — aborting"
+            exit 1
+          fi
+
+          git add "$PROD_SHA_FILE"
+          git commit -m "chore: bump konflux-ui (production) ${SHORT_OLD} => ${SHORT_NEW}"
+          git push fork "$BRANCH"
+
+          INFRA_PR_URL=$(gh pr create \
+            --repo "$INFRA_REPO" \
+            --base main \
+            --head "sahil143:${BRANCH}" \
+            --title "chore: bump konflux-ui ${SHORT_OLD} => ${SHORT_NEW}" \
+            --body "$(cat <<PRBODY
+          Update konflux-ui production image to staging commit \`${NEW_SHA}\`.
+
+          **Changelog PR:** ${{ steps.changelog_pr.outputs.pr_url }}
+
+          <details>
+          <summary>What's in this release</summary>
+
+          $(cat /tmp/changelog-body.md)
+
+          </details>
+          PRBODY
+          )")
+
+          INFRA_PR_NUMBER=$(echo "$INFRA_PR_URL" | grep -oE '[0-9]+$')
+          echo "pr_url=$INFRA_PR_URL" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$INFRA_PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      # --- Create tracking issue ---
+      - name: Create tracking issue
+        id: tracking
+        run: |
+          ISSUE_URL=$(gh issue create \
+            --repo "$KONFLUX_UI_REPO" \
+            --title "Release ${RELEASE_DATE} — tracking" \
+            --label "release-tracking" \
+            --body "$(cat <<ISSUEBODY
+          ## Release ${RELEASE_DATE} — Tracking
+
+          This issue tracks the production release lifecycle.
+          It will auto-close when the infra-deployments PR is merged.
+
+          \`\`\`yaml
+          release_date: ${RELEASE_DATE}
+          new_sha: ${NEW_SHA}
+          old_sha: ${OLD_SHA}
+          infra_pr: ${{ steps.infra_pr.outputs.pr_number }}
+          infra_pr_url: ${{ steps.infra_pr.outputs.pr_url }}
+          changelog_pr: ${{ steps.changelog_pr.outputs.pr_number }}
+          changelog_pr_url: ${{ steps.changelog_pr.outputs.pr_url }}
+          jira_ids: $(cat /tmp/jira-ids.json)
+          tag: v${RELEASE_DATE}
+          \`\`\`
+
+          ### Status
+          - [ ] Changelog PR merged
+          - [ ] Infra-deployments PR merged (closes this issue)
+          - [ ] GitHub release created (automated)
+          - [ ] Jira tickets transitioned (automated)
+          - [ ] Slack notification sent (automated)
+          ISSUEBODY
+          )")
+
+          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+          echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+
+      # --- Link tracking issue to infra PR via Fixes keyword ---
+      - name: Link tracking issue to infra PR
+        run: |
+          CURRENT_BODY=$(gh pr view "${{ steps.infra_pr.outputs.pr_number }}" \
+            --repo "$INFRA_REPO" --json body -q '.body')
+
+          UPDATED_BODY="${CURRENT_BODY}
+
+          ---
+          Fixes ${KONFLUX_UI_REPO}#${{ steps.tracking.outputs.issue_number }}"
+
+          gh pr edit "${{ steps.infra_pr.outputs.pr_number }}" \
+            --repo "$INFRA_REPO" \
+            --body "$UPDATED_BODY"
+
+      # --- Cross-link changelog PR ---
+      - name: Cross-link changelog PR
+        run: |
+          gh pr comment "${{ steps.changelog_pr.outputs.pr_number }}" \
+            --repo "$KONFLUX_UI_REPO" \
+            --body "Infra-deployments PR: ${{ steps.infra_pr.outputs.pr_url }}
+          Tracking issue: ${{ steps.tracking.outputs.issue_url }}"
+
+      # --- Slack notification ---
+      - name: Notify Slack — release cut
+        run: |
+          SHORT_SHA="${NEW_SHA:0:7}"
+
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -n \
+              --arg date "$RELEASE_DATE" \
+              --arg sha "$SHORT_SHA" \
+              --arg prs "${{ steps.changelog.outputs.total_prs }}" \
+              --arg cl_url "${{ steps.changelog_pr.outputs.pr_url }}" \
+              --arg infra_url "${{ steps.infra_pr.outputs.pr_url }}" \
+              --arg issue_url "${{ steps.tracking.outputs.issue_url }}" \
+              '{
+                "blocks": [
+                  {
+                    "type": "header",
+                    "text": { "type": "plain_text", "text": ("Release cut — " + $date) }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": ("*Deploying:* `" + $sha + "`\n*PRs included:* " + $prs + "\n\n<" + $cl_url + "|Changelog PR>\n<" + $infra_url + "|Infra-deployments PR>\n<" + $issue_url + "|Tracking issue>")
+                    }
+                  },
+                  {
+                    "type": "context",
+                    "elements": [
+                      { "type": "mrkdwn", "text": "Review and merge both PRs to deploy to production." }
+                    ]
+                  }
+                ]
+              }')" || echo "::warning::Failed to send Slack notification"

@@ -1,0 +1,203 @@
+name: Release Publish
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  publish:
+    # Only run for release-tracking issues closed as "completed" (by merged PR Fixes keyword)
+    if: |
+      contains(github.event.issue.labels.*.name, 'release-tracking') &&
+      github.event.issue.state_reason == 'completed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+      KONFLUX_UI_REPO: konflux-ci/konflux-ui
+      INFRA_REPO: redhat-appstudio/infra-deployments
+      JIRA_URL: https://issues.redhat.com
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+
+    steps:
+      # --- Parse tracking issue metadata ---
+      - name: Parse tracking issue
+        id: meta
+        run: |
+          # Read issue body from the event JSON to avoid shell injection
+          BODY=$(jq -r '.issue.body' "$GITHUB_EVENT_PATH")
+
+          # Extract YAML from the fenced code block
+          YAML_BLOCK=$(echo "$BODY" | sed -n '/^```yaml/,/^```/p' | sed '1d;$d')
+
+          parse_field() {
+            echo "$YAML_BLOCK" | grep "^${1}:" | sed "s/^${1}: //"
+          }
+
+          RELEASE_DATE=$(parse_field "release_date")
+          NEW_SHA=$(parse_field "new_sha")
+          OLD_SHA=$(parse_field "old_sha")
+          INFRA_PR=$(parse_field "infra_pr")
+          INFRA_PR_URL=$(parse_field "infra_pr_url")
+          CHANGELOG_PR=$(parse_field "changelog_pr")
+          TAG=$(parse_field "tag")
+          JIRA_IDS=$(parse_field "jira_ids")
+
+          # Validate required fields
+          for field in RELEASE_DATE NEW_SHA OLD_SHA INFRA_PR TAG; do
+            if [[ -z "${!field}" ]]; then
+              echo "::error::Missing required field in tracking issue: $field"
+              exit 1
+            fi
+          done
+
+          echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
+          echo "new_sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
+          echo "old_sha=$OLD_SHA" >> "$GITHUB_OUTPUT"
+          echo "infra_pr=$INFRA_PR" >> "$GITHUB_OUTPUT"
+          echo "infra_pr_url=$INFRA_PR_URL" >> "$GITHUB_OUTPUT"
+          echo "changelog_pr=$CHANGELOG_PR" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          # Write Jira IDs to file (one per line)
+          echo "$JIRA_IDS" | jq -r '.[]' 2>/dev/null > /tmp/jira-ids.txt || true
+          echo "jira_count=$(wc -l < /tmp/jira-ids.txt | xargs)" >> "$GITHUB_OUTPUT"
+
+      # --- Verify infra-deployments PR is actually merged ---
+      - name: Verify infra PR merged
+        run: |
+          MERGED=$(gh pr view "${{ steps.meta.outputs.infra_pr }}" \
+            --repo "$INFRA_REPO" --json merged -q '.merged')
+
+          if [[ "$MERGED" != "true" ]]; then
+            echo "::error::Infra-deployments PR #${{ steps.meta.outputs.infra_pr }} is NOT merged."
+            echo "Tracking issue was closed without a valid merge. Aborting."
+            exit 1
+          fi
+          echo "Verified: infra-deployments PR is merged."
+
+      # --- Checkout and create tag ---
+      - name: Checkout konflux-ui
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Create and push tag
+        id: tag
+        run: |
+          TAG="${{ steps.meta.outputs.tag }}"
+          SHA="${{ steps.meta.outputs.new_sha }}"
+
+          # Handle same-day re-releases (append .1, .2, etc.)
+          BASE_TAG="$TAG"
+          COUNTER=0
+          while git rev-parse "$TAG" >/dev/null 2>&1; do
+            COUNTER=$((COUNTER + 1))
+            TAG="${BASE_TAG}.${COUNTER}"
+          done
+
+          git tag -a "$TAG" "$SHA" -m "Production release $TAG"
+          git push origin "$TAG"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # --- Create GitHub release ---
+      - name: Create GitHub release
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          RELEASE_DATE="${{ steps.meta.outputs.release_date }}"
+          NEW_SHA="${{ steps.meta.outputs.new_sha }}"
+          OLD_SHA="${{ steps.meta.outputs.old_sha }}"
+          CHANGELOG_PR="${{ steps.meta.outputs.changelog_pr }}"
+
+          # Try to extract changelog from the changelog PR body
+          CHANGELOG=""
+          if [[ -n "$CHANGELOG_PR" ]]; then
+            CHANGELOG=$(gh pr view "$CHANGELOG_PR" \
+              --repo "$KONFLUX_UI_REPO" --json body -q '.body' 2>/dev/null \
+              | sed -n '/^## \[v/,$p' || true)
+          fi
+
+          # Fallback: minimal release body
+          if [[ -z "$CHANGELOG" ]]; then
+            CHANGELOG="Production release deploying [\`${NEW_SHA:0:7}\`](https://github.com/${KONFLUX_UI_REPO}/commit/${NEW_SHA}).
+
+          **Full diff:** [\`${OLD_SHA:0:7}...${NEW_SHA:0:7}\`](https://github.com/${KONFLUX_UI_REPO}/compare/${OLD_SHA}...${NEW_SHA})"
+          fi
+
+          # Idempotency: skip if release already exists
+          if gh release view "$TAG" --repo "$KONFLUX_UI_REPO" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping creation."
+          else
+            gh release create "$TAG" \
+              --repo "$KONFLUX_UI_REPO" \
+              --title "Production release ${RELEASE_DATE}" \
+              --notes "$CHANGELOG"
+          fi
+
+      # --- Close Jira tickets ---
+      - name: Transition Jira tickets to Done
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          RELEASE_URL="https://github.com/${KONFLUX_UI_REPO}/releases/tag/${TAG}"
+
+          chmod +x .github/scripts/close-release-issues.sh
+
+          # Create a file with the Jira IDs for the script to parse
+          cp /tmp/jira-ids.txt /tmp/jira-changelog.txt
+
+          .github/scripts/close-release-issues.sh \
+            --changelog /tmp/jira-changelog.txt \
+            --version "$TAG" \
+            --jira-url "$JIRA_URL" || echo "::warning::Some Jira transitions failed (see logs above)"
+
+      # --- Update tracking issue with completion status ---
+      - name: Update tracking issue
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          RELEASE_URL="https://github.com/${KONFLUX_UI_REPO}/releases/tag/${TAG}"
+
+          gh issue comment "${{ github.event.issue.number }}" \
+            --repo "$KONFLUX_UI_REPO" \
+            --body "**Release published**
+
+          - Tag: [\`${TAG}\`](${RELEASE_URL})
+          - GitHub Release: [View release](${RELEASE_URL})
+          - Jira tickets transitioned to Done
+          - Slack notification sent"
+
+      # --- Slack shipped notification ---
+      - name: Notify Slack — shipped
+        run: |
+          RELEASE_DATE="${{ steps.meta.outputs.release_date }}"
+          TAG="${{ steps.tag.outputs.tag }}"
+          RELEASE_URL="https://github.com/${KONFLUX_UI_REPO}/releases/tag/${TAG}"
+          SHORT_SHA="${{ steps.meta.outputs.new_sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          JIRA_COUNT="${{ steps.meta.outputs.jira_count }}"
+
+          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-Type: application/json' \
+            -d "$(jq -n \
+              --arg date "$RELEASE_DATE" \
+              --arg tag "$TAG" \
+              --arg sha "$SHORT_SHA" \
+              --arg jira "$JIRA_COUNT" \
+              --arg url "$RELEASE_URL" \
+              '{
+                "blocks": [
+                  {
+                    "type": "header",
+                    "text": { "type": "plain_text", "text": ("Shipped to production — " + $date) }
+                  },
+                  {
+                    "type": "section",
+                    "text": {
+                      "type": "mrkdwn",
+                      "text": ("*Tag:* `" + $tag + "`\n*Commit:* `" + $sha + "`\n*Jira tickets closed:* " + $jira + "\n\n<" + $url + "|View GitHub Release>")
+                    }
+                  }
+                ]
+              }')" || echo "::warning::Failed to send Slack notification"
