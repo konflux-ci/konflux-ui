@@ -120,8 +120,10 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
           </Text>
         </FlexItem>
         <FlexItem>
-          <Alert variant={AlertVariant.info} title="Role information" isInline>
-            TODO: Add role changes information here.
+          <Alert variant={AlertVariant.warning} title="Role change information" isInline>
+            When changing access, the user will be removed from all role bindings from current
+            namespace and then added to the new role binding. If any role rinding remains empty, it
+            will be deleted.
           </Alert>
         </FlexItem>
         <FlexItem>
