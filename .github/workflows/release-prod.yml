@@ -143,7 +143,7 @@ jobs:
       issues: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      KONFLUX_UI_REPO: sahil143/konflux-ui
+      KONFLUX_UI_REPO: konflux-ci/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
       INFRA_FORK: sahil143/infra-deployments
       PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
