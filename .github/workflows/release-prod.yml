@@ -1,4 +1,4 @@
-name: Release Cut
+name: Release Prod
 
 on:
   schedule:

@@ -87,6 +87,8 @@ if [[ "$OUT_FILE" == *".."* ]]; then
   exit 2
 fi
 
+JIRA_BASE_URL="${JIRA_BASE_URL:-https://issues.redhat.com}"
+
 # --- Check Dependencies ---
 for cmd in git gh jq; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -165,17 +167,33 @@ while IFS= read -r subject; do
     pr_title="$subject"
   fi
 
-  # Parse conventional commit type from PR title
-  cc_regex='^(feat|fix|chore|docs|test|ci|refactor|perf|style|build|revert)(\([^)]*\))?(!)?: (.+)$'
+  # Parse conventional commit type and scope from PR title
+  cc_regex='^(feat|fix|chore|docs|test|ci|refactor|perf|style|build|revert)(\(([^)]*)\))?(!)?: (.+)$'
   if [[ "$pr_title" =~ $cc_regex ]]; then
     cc_type="${BASH_REMATCH[1]}"
-    description="${BASH_REMATCH[4]}"
+    cc_scope="${BASH_REMATCH[3]:-}"
+    description="${BASH_REMATCH[5]}"
   else
     cc_type=""
+    cc_scope=""
     description="$pr_title"
   fi
 
-  entry="- ${description} (${REPO}#${pr_num})"
+  # Build scope reference: Jira ticket → markdown link, GitHub issue → repo#NNN
+  scope_ref=""
+  if [[ -n "$cc_scope" ]]; then
+    if [[ "$cc_scope" =~ ^[A-Z][A-Z0-9]+-[0-9]+$ ]]; then
+      scope_ref="[${cc_scope}](${JIRA_BASE_URL}/browse/${cc_scope})"
+    elif [[ "$cc_scope" =~ ^#([0-9]+)$ ]]; then
+      scope_ref="${REPO}#${BASH_REMATCH[1]}"
+    fi
+  fi
+
+  if [[ -n "$scope_ref" ]]; then
+    entry="- ${description} ${scope_ref} (${REPO}#${pr_num})"
+  else
+    entry="- ${description} (${REPO}#${pr_num})"
+  fi
 
   case "$cc_type" in
     feat)     echo "$entry" >> "$TMPDIR/features.md" ;;
