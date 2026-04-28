@@ -16,7 +16,6 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
-// import { mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -98,7 +97,6 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   });
   const { username: usernameFilter, roleBindingName: roleBindingNameFilter } = filters;
   const [roleBindings, loaded, error] = useRoleBindings(namespace);
-  // const roleBindings = mockRoleBindingsWithMultipleUsers;
 
   const tableRows = React.useMemo(
     () => expandRoleBindingsToTableRows(roleBindings),
@@ -116,6 +114,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<Set<string>>(() => new Set());
   const [isChangeAccessModalOpen, setChangeAccessModalOpen] = React.useState(false);
+
+  // console.log("roleBindings", roleBindings);
 
   React.useEffect(() => {
     const allowed = new Set(filterRBs.map((r) => r.rowKey));
@@ -160,11 +160,17 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     });
   }, []);
 
-  const handleModalSave = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleModalSave = (newRoleRef: string) => {
     // console.log('modal save');
+    // console.log('newRoleRef', newRoleRef);
     // console.log('selectedRowKeys', [...selectedRowKeys]);
-    setChangeAccessModalOpen(false);
-    // Row-key format: roleRefName__index__SubjectKind__subjectName
+    // TODO
+    // Filter all rolebindings, which will be affected (subject contains user from selectedRowKeys)
+    // Remove the user from all affected role bindings in the current namespace
+    // ? If there is only one subject in the role binging and the role is the same, keep it
+    // Add the user to the new role binding
+    // If any role binding remains empty, delete it (pred editem mozna subjects.length == 1 && ten subject = user)
   };
 
   const selectedCount = selectedRowKeys.size;
@@ -309,12 +315,9 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       )}
       <UserAccessChangeRoleModal
         isOpen={isChangeAccessModalOpen}
-        onClose={() => {
-          setChangeAccessModalOpen(false);
-          // setSelectedRowKeys(new Set()); // ! ???????
-        }}
+        onClose={() => setChangeAccessModalOpen(false)}
         selectedRowKeys={selectedRowKeys}
-        onSave={handleModalSave}
+        onSave={(newRoleRef) => handleModalSave(newRoleRef)}
       />
     </>
   );
