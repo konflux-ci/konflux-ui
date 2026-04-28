@@ -133,7 +133,7 @@ jobs:
             }')" || echo "::warning::Failed to send Slack notification"
 
   # -------------------------------------------------------------------
-  # Release: changelog PR, infra PR, tracking issue, notifications
+  # Release: infra PR, tracking issue, notifications
   # -------------------------------------------------------------------
   release-cut:
     needs: preflight
@@ -149,7 +149,6 @@ jobs:
       INFRA_REPO: redhat-appstudio/infra-deployments
       INFRA_FORK: sahil143/infra-deployments
       PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
-      JIRA_BASE_URL: https://issues.redhat.com
       OLD_SHA: ${{ needs.preflight.outputs.old_sha }}
       NEW_SHA: ${{ needs.preflight.outputs.new_sha }}
       RELEASE_DATE: ${{ needs.preflight.outputs.release_date }}
@@ -163,67 +162,14 @@ jobs:
 
       # --- Generate changelog ---
       - name: Generate changelog
-        id: changelog
         run: |
           chmod +x .github/scripts/generate-release-changelog.sh
-          CHANGELOG_OUTPUT=$(.github/scripts/generate-release-changelog.sh \
-            "$OLD_SHA" "$NEW_SHA" "$RELEASE_DATE")
-
-          # Split body from JIRA_IDS footer
-          CHANGELOG_BODY=$(echo "$CHANGELOG_OUTPUT" | sed '/^---$/,$d')
-          JIRA_IDS=$(echo "$CHANGELOG_OUTPUT" | grep '<!-- JIRA_IDS:' | sed 's/.*JIRA_IDS: //;s/ -->//')
-
-          echo "$CHANGELOG_BODY" > /tmp/changelog-body.md
-          echo "$JIRA_IDS" > /tmp/jira-ids.json
-
-          TOTAL_PRS=$(echo "$CHANGELOG_BODY" | grep -c '^- ' || echo "0")
-          echo "total_prs=$TOTAL_PRS" >> "$GITHUB_OUTPUT"
-
-      # --- Create changelog PR in konflux-ui ---
-      - name: Create changelog PR
-        id: changelog_pr
-        run: |
-          BRANCH="release/${RELEASE_DATE}"
-          TAG="v${RELEASE_DATE}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git checkout -b "$BRANCH"
-
-          if [[ -f CHANGELOG.md ]]; then
-            EXISTING=$(cat CHANGELOG.md)
-            cat /tmp/changelog-body.md > CHANGELOG.md
-            echo "" >> CHANGELOG.md
-            echo "$EXISTING" >> CHANGELOG.md
-          else
-            cp /tmp/changelog-body.md CHANGELOG.md
-          fi
-
-          git add CHANGELOG.md
-          git commit -m "chore(release): ${RELEASE_DATE} production rollout changelog"
-          git push origin "$BRANCH"
-
-          PR_URL=$(gh pr create \
-            --repo "$KONFLUX_UI_REPO" \
-            --base main \
-            --head "$BRANCH" \
-            --title "chore(release): ${RELEASE_DATE} production rollout" \
-            --body "$(cat <<PRBODY
-          ## Release changelog for ${RELEASE_DATE}
-
-          This PR adds the changelog for the production release promoting staging commit \`${NEW_SHA:0:7}\` to production.
-
-          $(cat /tmp/changelog-body.md)
-
-          ---
-          Merge this PR alongside or before the infra-deployments SHA-bump PR.
-          PRBODY
-          )")
-
-          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
-          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
-          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          .github/scripts/generate-release-changelog.sh \
+            -r "$KONFLUX_UI_REPO" \
+            -b "$OLD_SHA" \
+            -t "$NEW_SHA" \
+            -d "$(pwd)" \
+            -o /tmp/changelog.md
 
       # --- Create tracking issue (before infra PR so we can include Fixes link) ---
       - name: Create tracking issue
@@ -243,14 +189,10 @@ jobs:
           release_date: ${RELEASE_DATE}
           new_sha: ${NEW_SHA}
           old_sha: ${OLD_SHA}
-          changelog_pr: ${{ steps.changelog_pr.outputs.pr_number }}
-          changelog_pr_url: ${{ steps.changelog_pr.outputs.pr_url }}
-          jira_ids: $(cat /tmp/jira-ids.json)
           tag: v${RELEASE_DATE}
           \`\`\`
 
           ### Status
-          - [ ] Changelog PR merged
           - [ ] Infra-deployments PR merged (closes this issue)
           - [ ] GitHub release created (automated)
           - [ ] Jira tickets transitioned (automated)
@@ -306,12 +248,10 @@ jobs:
             --body "$(cat <<PRBODY
           Update konflux-ui production image to staging commit \`${NEW_SHA}\`.
 
-          **Changelog PR:** ${{ steps.changelog_pr.outputs.pr_url }}
-
           <details>
           <summary>What's in this release</summary>
 
-          $(cat /tmp/changelog-body.md)
+          $(cat /tmp/changelog.md)
 
           </details>
 
@@ -332,21 +272,13 @@ jobs:
 
           # Insert infra PR fields into the YAML block
           UPDATED_BODY=$(echo "$CURRENT_BODY" | sed \
-            "/^changelog_pr:/i\\
+            "/^tag:/i\\
           infra_pr: ${{ steps.infra_pr.outputs.pr_number }}\\
           infra_pr_url: ${{ steps.infra_pr.outputs.pr_url }}")
 
           gh issue edit "${{ steps.tracking.outputs.issue_number }}" \
             --repo "$KONFLUX_UI_REPO" \
             --body "$UPDATED_BODY"
-
-      # --- Cross-link changelog PR ---
-      - name: Cross-link changelog PR
-        run: |
-          gh pr comment "${{ steps.changelog_pr.outputs.pr_number }}" \
-            --repo "$KONFLUX_UI_REPO" \
-            --body "Infra-deployments PR: ${{ steps.infra_pr.outputs.pr_url }}
-          Tracking issue: ${{ steps.tracking.outputs.issue_url }}"
 
       # --- Slack notification ---
       - name: Notify Slack — release cut
@@ -358,8 +290,6 @@ jobs:
             -d "$(jq -n \
               --arg date "$RELEASE_DATE" \
               --arg sha "$SHORT_SHA" \
-              --arg prs "${{ steps.changelog.outputs.total_prs }}" \
-              --arg cl_url "${{ steps.changelog_pr.outputs.pr_url }}" \
               --arg infra_url "${{ steps.infra_pr.outputs.pr_url }}" \
               --arg issue_url "${{ steps.tracking.outputs.issue_url }}" \
               '{
@@ -372,13 +302,13 @@ jobs:
                     "type": "section",
                     "text": {
                       "type": "mrkdwn",
-                      "text": ("*Deploying:* `" + $sha + "`\n*PRs included:* " + $prs + "\n\n<" + $cl_url + "|Changelog PR>\n<" + $infra_url + "|Infra-deployments PR>\n<" + $issue_url + "|Tracking issue>")
+                      "text": ("*Deploying:* `" + $sha + "`\n\n<" + $infra_url + "|Infra-deployments PR>\n<" + $issue_url + "|Tracking issue>")
                     }
                   },
                   {
                     "type": "context",
                     "elements": [
-                      { "type": "mrkdwn", "text": "Review and merge both PRs to deploy to production." }
+                      { "type": "mrkdwn", "text": "Review and merge the infra-deployments PR to deploy to production." }
                     ]
                   }
                 ]
