@@ -3,7 +3,9 @@ set -euo pipefail
 
 # generate-release-changelog.sh
 #
-# Generates a changelog between two SHAs in a git repository.
+# Generates a categorized changelog of merged PRs between two SHAs.
+# PRs are categorized into Features, Bug Fixes, and Other Changes
+# based on conventional commit prefixes in the PR title.
 #
 # Usage:
 #   generate-release-changelog.sh -r <owner/repo> -b <base_sha> -t <target_sha> [-d <repo_dir>] -o <out_file>
@@ -86,7 +88,7 @@ if [[ "$OUT_FILE" == *".."* ]]; then
 fi
 
 # --- Check Dependencies ---
-for cmd in git sed awk; do
+for cmd in git gh jq; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     log_error "Missing required dependency: $cmd"
     exit 1
@@ -121,7 +123,7 @@ if [[ -n "$OUT_DIR" && "$OUT_DIR" != "." ]]; then
   mkdir -p "$OUT_DIR"
 fi
 
-# --- Generate Changelog ---
+# --- Fetch git history ---
 pushd "$WORK_DIR" >/dev/null
 
 log_info "Fetching commits..."
@@ -134,45 +136,89 @@ for sha in "$BASE_SHA" "$TARGET_SHA"; do
   fi
 done
 
-log_info "Generating changelog from $BASE_SHA to $TARGET_SHA"
+# --- Extract PR numbers from git log ---
+log_info "Extracting PRs from $BASE_SHA to $TARGET_SHA"
 
+TMPDIR=$(mktemp -d)
+trap 'rm -rf "$TMPDIR"; [[ "$CLEANUP_CLONE" == true ]] && rm -rf "$WORK_DIR" 2>/dev/null || true' EXIT
+
+touch "$TMPDIR/features.md" "$TMPDIR/bugs.md" "$TMPDIR/other.md"
+declare -A SEEN_PRS=()
+
+while IFS= read -r subject; do
+  pr_num=""
+  if [[ "$subject" =~ \(#([0-9]+)\)$ ]]; then
+    pr_num="${BASH_REMATCH[1]}"
+  elif [[ "$subject" =~ Merge\ pull\ request\ #([0-9]+) ]]; then
+    pr_num="${BASH_REMATCH[1]}"
+  fi
+
+  [[ -z "$pr_num" ]] && continue
+  [[ -n "${SEEN_PRS[$pr_num]:-}" ]] && continue
+  SEEN_PRS[$pr_num]=1
+
+  # Fetch PR title via GitHub API
+  pr_title=""
+  if pr_title=$(gh api "repos/${REPO}/pulls/${pr_num}" --jq '.title' 2>/dev/null); then
+    [[ -z "$pr_title" ]] && continue
+  else
+    pr_title="$subject"
+  fi
+
+  # Parse conventional commit type from PR title
+  cc_regex='^(feat|fix|chore|docs|test|ci|refactor|perf|style|build|revert)(\([^)]*\))?(!)?: (.+)$'
+  if [[ "$pr_title" =~ $cc_regex ]]; then
+    cc_type="${BASH_REMATCH[1]}"
+    description="${BASH_REMATCH[4]}"
+  else
+    cc_type=""
+    description="$pr_title"
+  fi
+
+  entry="- ${description} (${REPO}#${pr_num})"
+
+  case "$cc_type" in
+    feat)     echo "$entry" >> "$TMPDIR/features.md" ;;
+    fix)      echo "$entry" >> "$TMPDIR/bugs.md" ;;
+    *)        echo "$entry" >> "$TMPDIR/other.md" ;;
+  esac
+done < <(git log --first-parent --format='%s' "${BASE_SHA}..${TARGET_SHA}" 2>/dev/null)
+
+popd >/dev/null
+
+# --- Render markdown ---
 CHANGELOG_FILE="$(mktemp)"
 
 {
-  echo "# Changelog"
-  echo ""
-  echo "**Repository:** ${REPO}"
-  echo "**Range:** \`$(echo "$BASE_SHA" | head -c 12)..$(echo "$TARGET_SHA" | head -c 12)\`"
-  echo ""
-  echo "## Commits"
-  echo ""
+  echo "**Full diff:** [\`${BASE_SHA:0:7}..${TARGET_SHA:0:7}\`](https://github.com/${REPO}/compare/${BASE_SHA}...${TARGET_SHA})"
 
-  if git log --oneline "${BASE_SHA}..${TARGET_SHA}" >/dev/null 2>&1; then
-    git log --no-merges --pretty=format:'- `%h` %s (%an, %ad)' --date=short "${BASE_SHA}..${TARGET_SHA}" 2>/dev/null || true
-
+  if [[ -s "$TMPDIR/features.md" ]]; then
     echo ""
+    echo "### Features"
     echo ""
-    echo "### Merged PRs"
-    echo ""
-    git log --merges --pretty=format:'- %s' "${BASE_SHA}..${TARGET_SHA}" 2>/dev/null | \
-      grep -E 'Merge pull request|#[0-9]+' || echo "_No merge commits found_"
-  else
-    log_warn "Could not generate commit log, commits may not be available"
-    echo "_Could not retrieve commit history. Please check the SHA range._"
+    cat "$TMPDIR/features.md"
   fi
 
-  echo ""
-  echo ""
-  echo "## Compare"
-  echo ""
-  echo "[View full diff on GitHub](https://github.com/${REPO}/compare/${BASE_SHA}...${TARGET_SHA})"
-  echo ""
-  echo "---"
-  echo ""
-  echo "_Generated on $(date '+%Y-%m-%d %H:%M:%S UTC')_"
-} > "$CHANGELOG_FILE"
+  if [[ -s "$TMPDIR/bugs.md" ]]; then
+    echo ""
+    echo "### Bug Fixes"
+    echo ""
+    cat "$TMPDIR/bugs.md"
+  fi
 
-popd >/dev/null
+  if [[ -s "$TMPDIR/other.md" ]]; then
+    echo ""
+    echo "### Other Changes"
+    echo ""
+    cat "$TMPDIR/other.md"
+  fi
+
+  # If no PRs were found at all
+  if [[ ! -s "$TMPDIR/features.md" && ! -s "$TMPDIR/bugs.md" && ! -s "$TMPDIR/other.md" ]]; then
+    echo ""
+    echo "_No PRs found in this range._"
+  fi
+} > "$CHANGELOG_FILE"
 
 # --- Write Output ---
 if [[ -s "$CHANGELOG_FILE" ]]; then
