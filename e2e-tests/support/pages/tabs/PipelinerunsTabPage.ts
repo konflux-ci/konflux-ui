@@ -111,7 +111,7 @@ export class DetailsTab {
     interval: number = 60000, // 60 seconds
     retries: number = 7, // number of retries before failing the test
   ) {
-    if (retries <= 0) {
+    if (retries < 0) {
       assert.fail('Pipelinerun is still running after maximum retries');
     }
 
