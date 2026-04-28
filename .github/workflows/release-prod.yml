@@ -202,7 +202,7 @@ jobs:
       - name: Create infra-deployments PR
         id: infra_pr
         env:
-          GH_TOKEN: ${{ secrets.INFRA_PAT }}
+          GH_TOKEN: ${{ secrets.INFRA_PR_PAT }}
         run: |
           BRANCH="konflux-ui-release/${RELEASE_DATE}"
           SHORT_OLD="${OLD_SHA:0:12}"
