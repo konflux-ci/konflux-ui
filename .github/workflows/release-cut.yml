@@ -27,7 +27,7 @@ jobs:
       new_sha: ${{ steps.shas.outputs.new_sha }}
       release_date: ${{ steps.shas.outputs.release_date }}
     env:
-      GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       INFRA_REPO: redhat-appstudio/infra-deployments
       PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
       STG_SHA_FILE: components/konflux-ui/staging/base/kustomization.yaml
@@ -144,7 +144,7 @@ jobs:
       issues: write
       pull-requests: write
     env:
-      GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KONFLUX_UI_REPO: konflux-ci/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
       INFRA_FORK: sahil143/infra-deployments
@@ -160,7 +160,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_PAT }}
 
       # --- Generate changelog ---
       - name: Generate changelog
@@ -226,9 +225,48 @@ jobs:
           echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
-      # --- Create SHA-bump PR in infra-deployments (fork-based) ---
+      # --- Create tracking issue (before infra PR so we can include Fixes link) ---
+      - name: Create tracking issue
+        id: tracking
+        run: |
+          ISSUE_URL=$(gh issue create \
+            --repo "$KONFLUX_UI_REPO" \
+            --title "Release ${RELEASE_DATE} — tracking" \
+            --label "release-tracking" \
+            --body "$(cat <<ISSUEBODY
+          ## Release ${RELEASE_DATE} — Tracking
+
+          This issue tracks the production release lifecycle.
+          It will auto-close when the infra-deployments PR is merged.
+
+          \`\`\`yaml
+          release_date: ${RELEASE_DATE}
+          new_sha: ${NEW_SHA}
+          old_sha: ${OLD_SHA}
+          changelog_pr: ${{ steps.changelog_pr.outputs.pr_number }}
+          changelog_pr_url: ${{ steps.changelog_pr.outputs.pr_url }}
+          jira_ids: $(cat /tmp/jira-ids.json)
+          tag: v${RELEASE_DATE}
+          \`\`\`
+
+          ### Status
+          - [ ] Changelog PR merged
+          - [ ] Infra-deployments PR merged (closes this issue)
+          - [ ] GitHub release created (automated)
+          - [ ] Jira tickets transitioned (automated)
+          - [ ] Slack notification sent (automated)
+          ISSUEBODY
+          )")
+
+          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+          echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
+          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
+
+      # --- Create SHA-bump PR in infra-deployments (fork-based, requires PAT) ---
       - name: Create infra-deployments PR
         id: infra_pr
+        env:
+          GH_TOKEN: ${{ secrets.INFRA_PAT }}
         run: |
           BRANCH="konflux-ui-release/${RELEASE_DATE}"
           SHORT_OLD="${OLD_SHA:0:12}"
@@ -276,6 +314,9 @@ jobs:
           $(cat /tmp/changelog-body.md)
 
           </details>
+
+          ---
+          Fixes ${KONFLUX_UI_REPO}#${{ steps.tracking.outputs.issue_number }}
           PRBODY
           )")
 
@@ -283,58 +324,20 @@ jobs:
           echo "pr_url=$INFRA_PR_URL" >> "$GITHUB_OUTPUT"
           echo "pr_number=$INFRA_PR_NUMBER" >> "$GITHUB_OUTPUT"
 
-      # --- Create tracking issue ---
-      - name: Create tracking issue
-        id: tracking
+      # --- Update tracking issue with infra PR info ---
+      - name: Update tracking issue
         run: |
-          ISSUE_URL=$(gh issue create \
+          CURRENT_BODY=$(gh issue view "${{ steps.tracking.outputs.issue_number }}" \
+            --repo "$KONFLUX_UI_REPO" --json body -q '.body')
+
+          # Insert infra PR fields into the YAML block
+          UPDATED_BODY=$(echo "$CURRENT_BODY" | sed \
+            "/^changelog_pr:/i\\
+          infra_pr: ${{ steps.infra_pr.outputs.pr_number }}\\
+          infra_pr_url: ${{ steps.infra_pr.outputs.pr_url }}")
+
+          gh issue edit "${{ steps.tracking.outputs.issue_number }}" \
             --repo "$KONFLUX_UI_REPO" \
-            --title "Release ${RELEASE_DATE} — tracking" \
-            --label "release-tracking" \
-            --body "$(cat <<ISSUEBODY
-          ## Release ${RELEASE_DATE} — Tracking
-
-          This issue tracks the production release lifecycle.
-          It will auto-close when the infra-deployments PR is merged.
-
-          \`\`\`yaml
-          release_date: ${RELEASE_DATE}
-          new_sha: ${NEW_SHA}
-          old_sha: ${OLD_SHA}
-          infra_pr: ${{ steps.infra_pr.outputs.pr_number }}
-          infra_pr_url: ${{ steps.infra_pr.outputs.pr_url }}
-          changelog_pr: ${{ steps.changelog_pr.outputs.pr_number }}
-          changelog_pr_url: ${{ steps.changelog_pr.outputs.pr_url }}
-          jira_ids: $(cat /tmp/jira-ids.json)
-          tag: v${RELEASE_DATE}
-          \`\`\`
-
-          ### Status
-          - [ ] Changelog PR merged
-          - [ ] Infra-deployments PR merged (closes this issue)
-          - [ ] GitHub release created (automated)
-          - [ ] Jira tickets transitioned (automated)
-          - [ ] Slack notification sent (automated)
-          ISSUEBODY
-          )")
-
-          ISSUE_NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
-          echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
-          echo "issue_number=$ISSUE_NUMBER" >> "$GITHUB_OUTPUT"
-
-      # --- Link tracking issue to infra PR via Fixes keyword ---
-      - name: Link tracking issue to infra PR
-        run: |
-          CURRENT_BODY=$(gh pr view "${{ steps.infra_pr.outputs.pr_number }}" \
-            --repo "$INFRA_REPO" --json body -q '.body')
-
-          UPDATED_BODY="${CURRENT_BODY}
-
-          ---
-          Fixes ${KONFLUX_UI_REPO}#${{ steps.tracking.outputs.issue_number }}"
-
-          gh pr edit "${{ steps.infra_pr.outputs.pr_number }}" \
-            --repo "$INFRA_REPO" \
             --body "$UPDATED_BODY"
 
       # --- Cross-link changelog PR ---

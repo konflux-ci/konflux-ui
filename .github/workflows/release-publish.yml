@@ -15,7 +15,7 @@ jobs:
       contents: write
       issues: write
     env:
-      GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KONFLUX_UI_REPO: konflux-ci/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
       JIRA_URL: https://issues.redhat.com
@@ -83,7 +83,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create and push tag
         id: tag
