@@ -44,8 +44,8 @@ jobs:
 
           # 2026-05-04 is ISO week 19 and is a release Monday
           ANCHOR_WEEK=19
-          CURRENT_WEEK=$(date +%V)
-          DIFF=$(( (CURRENT_WEEK - ANCHOR_WEEK) % 2 ))
+          CURRENT_WEEK=$((10#$(date +%V)))
+          DIFF=$(((CURRENT_WEEK - ANCHOR_WEEK) % 2))
 
           if [[ $DIFF -ne 0 ]]; then
             echo "is_release_week=false" >> "$GITHUB_OUTPUT"
@@ -140,6 +140,7 @@ jobs:
     if: needs.preflight.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -81,16 +81,27 @@ jobs:
           TAG="${{ steps.meta.outputs.tag }}"
           SHA="${{ steps.meta.outputs.new_sha }}"
 
-          # Handle same-day re-releases (append .1, .2, etc.)
-          BASE_TAG="$TAG"
-          COUNTER=0
-          while git rev-parse "$TAG" >/dev/null 2>&1; do
-            COUNTER=$((COUNTER + 1))
-            TAG="${BASE_TAG}.${COUNTER}"
-          done
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git tag -a "$TAG" "$SHA" -m "Production release $TAG"
-          git push origin "$TAG"
+          # Reuse existing tag if it points to the same SHA, otherwise suffix
+          BASE_TAG="$TAG"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            if [[ "$(git rev-list -n1 "$TAG")" == "$SHA" ]]; then
+              echo "Reusing existing tag $TAG"
+            else
+              COUNTER=0
+              while git rev-parse "$TAG" >/dev/null 2>&1; do
+                COUNTER=$((COUNTER + 1))
+                TAG="${BASE_TAG}.${COUNTER}"
+              done
+              git tag -a "$TAG" "$SHA" -m "Production release $TAG"
+              git push origin "$TAG"
+            fi
+          else
+            git tag -a "$TAG" "$SHA" -m "Production release $TAG"
+            git push origin "$TAG"
+          fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       # --- Generate changelog and create GitHub release ---

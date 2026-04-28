@@ -136,6 +136,10 @@ for sha in "$BASE_SHA" "$TARGET_SHA"; do
   if ! git cat-file -t "$sha" >/dev/null 2>&1; then
     git fetch --unshallow 2>/dev/null || git fetch --depth=1000 2>/dev/null || true
   fi
+  if ! git cat-file -t "$sha" >/dev/null 2>&1; then
+    log_error "Commit not found after fetch: $sha"
+    exit 1
+  fi
 done
 
 # --- Extract PR numbers from git log ---
