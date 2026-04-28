@@ -37,7 +37,7 @@ export type UserAccessChangeRoleModalProps = {
   isOpen: boolean;
   onClose: () => void;
   selectedRowKeys: Set<string>;
-  onSave: () => void;
+  onSave: (newRoleRef: string) => void;
 };
 
 export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps> = ({
@@ -61,8 +61,8 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     setRoleSelectOpen(false);
   };
 
-  const handleSave = () => {
-    onSave();
+  const handleSave = (newRoleRef: string) => {
+    onSave(newRoleRef);
     handleClose();
   };
 
@@ -98,7 +98,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
         <ButtonWithAccessTooltip
           key="save"
           variant="primary"
-          onClick={handleSave}
+          onClick={() => handleSave(modalSelectedRoleRef)}
           isDisabled={isModalSaveDisabled}
           tooltip={
             !modalSelectedRoleRef
