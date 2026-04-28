@@ -123,12 +123,11 @@ export class DetailsTab {
         .invoke('text')
         .then((statusText) => {
           if (!statusText.includes('Pending') && !statusText.includes('Running')) {
-            expect(statusText).to.not.include('Running');
             return;
           }
           if (attempt >= maxAttempts) {
             cy.log(
-              `Status still running. Reloading page (${retries - 1} ${retries - 1 === 1 ? 'retry' : 'retries'} remaining).`,
+              `Status is "${statusText}". Reloading page (${retries - 1} ${retries - 1 === 1 ? 'retry' : 'retries'} remaining).`,
             );
             cy.reload();
             // 180000 ms = 3 minutes
