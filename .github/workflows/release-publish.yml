@@ -16,7 +16,7 @@ jobs:
       issues: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      KONFLUX_UI_REPO: konflux-ci/konflux-ui
+      KONFLUX_UI_REPO: sahil143/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
       JIRA_URL: https://issues.redhat.com
       JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
