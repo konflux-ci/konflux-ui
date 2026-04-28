@@ -140,9 +140,7 @@ jobs:
     if: needs.preflight.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       issues: write
-      pull-requests: write
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KONFLUX_UI_REPO: sahil143/konflux-ui
@@ -154,11 +152,8 @@ jobs:
       RELEASE_DATE: ${{ needs.preflight.outputs.release_date }}
 
     steps:
-      # --- Checkout konflux-ui with full history ---
-      - name: Checkout konflux-ui
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       # --- Generate changelog ---
       - name: Generate changelog
@@ -168,7 +163,6 @@ jobs:
             -r "$KONFLUX_UI_REPO" \
             -b "$OLD_SHA" \
             -t "$NEW_SHA" \
-            -d "$(pwd)" \
             -o /tmp/changelog.md
 
       # --- Create tracking issue (before infra PR so we can include Fixes link) ---
