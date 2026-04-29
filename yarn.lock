@@ -3131,15 +3131,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@segment/analytics-core@npm:1.8.2":
-  version: 1.8.2
-  resolution: "@segment/analytics-core@npm:1.8.2"
+"@segment/analytics-core@npm:1.8.3":
+  version: 1.8.3
+  resolution: "@segment/analytics-core@npm:1.8.3"
   dependencies:
     "@lukeed/uuid": "npm:^2.0.0"
     "@segment/analytics-generic-utils": "npm:1.2.0"
     dset: "npm:^3.1.4"
     tslib: "npm:^2.4.1"
-  checksum: 10/2f32e4bffe74750d7a48c579e05e6286804730a3cb4399ffcc99706d4af474faeee60b4649c2de958746354f784dc9ee4f9d7a04c4846f7ea2d2be76d631b70a
+  checksum: 10/815b9997ebda6ac2fe03b234e20096bdb8252ac91dc2e95172bc03b8ce9749da5e39a52865d5c46f61919cf902054863797cbcd255e4bfb90ed8c6cee47f9147
   languageName: node
   linkType: hard
 
@@ -3153,11 +3153,11 @@ __metadata:
   linkType: hard
 
 "@segment/analytics-next@npm:^1.81.1":
-  version: 1.81.1
-  resolution: "@segment/analytics-next@npm:1.81.1"
+  version: 1.84.0
+  resolution: "@segment/analytics-next@npm:1.84.0"
   dependencies:
     "@lukeed/uuid": "npm:^2.0.0"
-    "@segment/analytics-core": "npm:1.8.2"
+    "@segment/analytics-core": "npm:1.8.3"
     "@segment/analytics-generic-utils": "npm:1.2.0"
     "@segment/analytics-page-tools": "npm:1.0.0"
     "@segment/analytics.js-video-plugins": "npm:^0.2.1"
@@ -3167,7 +3167,7 @@ __metadata:
     node-fetch: "npm:^2.6.7"
     tslib: "npm:^2.4.1"
     unfetch: "npm:^4.1.0"
-  checksum: 10/e470f247578ff15ac1094b83607a037e2b82fa8b33d32ec60cb13eee5e920e5f97208cb376022b5f98447654dfbeadbb2857b8808b38dd1e5b89494c63c96bb1
+  checksum: 10/03243457fb37450c302cf7c58c991c0b15040400630f0f5e6c8de8804e9a6ab1f952da01068a05325e2ac502e18fbd22b6f4783ab14af26f8287e543d3cc57b7
   languageName: node
   linkType: hard
 
