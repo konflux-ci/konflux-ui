@@ -1,7 +1,7 @@
 import * as React from 'react';
+import { ColoredStatusIcon } from '~/components/topology/StatusIcon';
 import { runStatus } from '~/consts/pipelinerun';
 import { AggregatedTestResult } from '~/hooks/usePipelineRunTestOutputResult';
-import { ColoredStatusIcon } from '../../topology/StatusIcon';
 
 import './PipelineRunTestOutputResult.scss';
 
