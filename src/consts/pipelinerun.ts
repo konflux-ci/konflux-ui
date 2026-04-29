@@ -123,11 +123,3 @@ export const UNFINISHED_PLR_STATUSES = [
   runStatus.Idle,
   runStatus.Cancelling,
 ];
-
-export enum TestOutputResult {
-  SUCCESS = 'SUCCESS',
-  FAILURE = 'FAILURE',
-  ERROR = 'ERROR',
-  WARNING = 'WARNING',
-  SKIPPED = 'SKIPPED',
-}
