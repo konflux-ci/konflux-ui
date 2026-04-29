@@ -224,9 +224,9 @@ export const taskTestResultStatus = (
     return {
       result: outputValues.result,
       note: outputValues.note ?? undefined,
-      successes: outputValues.successes ?? undefined,
-      failures: outputValues.failures ?? undefined,
-      warnings: outputValues.warnings ?? undefined,
+      successes: typeof outputValues.successes === 'number' ? outputValues.successes : undefined,
+      failures: typeof outputValues.failures === 'number' ? outputValues.failures : undefined,
+      warnings: typeof outputValues.warnings === 'number' ? outputValues.warnings : undefined,
     };
   } catch (e) {
     // eslint-disable-next-line no-console
