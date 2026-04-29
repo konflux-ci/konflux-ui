@@ -7,6 +7,7 @@ import {
   Checkbox,
   Flex,
   FlexItem,
+  Popover,
   Spinner,
   Toolbar,
   ToolbarContent,
@@ -18,6 +19,7 @@ import {
   CompressIcon,
   DownloadIcon,
   ExpandIcon,
+  OutlinedKeyboardIcon,
   OutlinedPlayCircleIcon,
 } from '@patternfly/react-icons/dist/esm/icons';
 import {
@@ -30,6 +32,10 @@ import { saveAs } from 'file-saver';
 import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import {
+  KeyboardShortcutHint,
+  type ShortcutEntry,
+} from '~/shared/components/keyboard-shortcut-hint';
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
@@ -40,6 +46,15 @@ import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
 
 import './LogViewer.scss';
+
+const LOG_VIEWER_SHORTCUTS: ShortcutEntry[] = [
+  { keys: 'Arrow Up', macKeys: 'Arrow Up', description: 'Scroll up one line' },
+  { keys: 'Arrow Down', macKeys: 'Arrow Down', description: 'Scroll down one line' },
+  { keys: 'PageUp', macKeys: 'Fn + Arrow Up', description: 'Scroll up one page' },
+  { keys: 'PageDown', macKeys: 'Fn + Arrow Down', description: 'Scroll down one page' },
+  { keys: 'Home', macKeys: 'Fn + Arrow Left', description: 'Scroll to top' },
+  { keys: 'End', macKeys: 'Fn + Arrow Right', description: 'Scroll to bottom' },
+];
 
 // ANSI escape code regex for removing color codes from terminal output
 // ESC character (\u001b) is a control character but necessary for ANSI escape sequences
@@ -101,6 +116,7 @@ const LogViewer: React.FC<Props> = ({
   const [isFullscreen, fullscreenRef, fullscreenToggle, isFullscreenSupported] =
     useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
+  const [showShortcutHint, setShowShortcutHint] = React.useState(false);
 
   const downloadLogs = () => {
     if (!data) return;
@@ -242,6 +258,30 @@ const LogViewer: React.FC<Props> = ({
                       </Button>
                     </ToolbarItem>
                   )}
+                  <ToolbarItem variant="separator" className="log-viewer__divider" />
+                  <ToolbarItem>
+                    <Popover
+                      aria-label="Keyboard shortcuts"
+                      isVisible={showShortcutHint}
+                      shouldClose={() => setShowShortcutHint(false)}
+                      bodyContent={
+                        <KeyboardShortcutHint
+                          shortcuts={LOG_VIEWER_SHORTCUTS}
+                          title="Keyboard shortcuts"
+                          helperText="Click the log area to enable these shortcuts."
+                        />
+                      }
+                      hasAutoWidth
+                    >
+                      <Button
+                        variant="plain"
+                        aria-label="Show keyboard shortcuts"
+                        onClick={() => setShowShortcutHint((prev) => !prev)}
+                      >
+                        <OutlinedKeyboardIcon />
+                      </Button>
+                    </Popover>
+                  </ToolbarItem>
                 </ToolbarGroup>
               </ToolbarContent>
             </Toolbar>
