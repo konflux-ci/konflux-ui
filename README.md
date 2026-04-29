@@ -7,6 +7,15 @@ UI for [Konflux](https://github.com/konflux-ci/konflux-ci)
 We welcome contributions! Please read our [Contributing Guidelines](./CONTRIBUTING.md) to get started.
 If you find a bug or want to request a feature, feel free to open an issue as well.
 
+## Quick Start
+
+**Prerequisites:** Node.js >= 20
+
+```bash
+git clone https://github.com/konflux-ci/konflux-ui.git && cd konflux-ui
+./setup.sh
+```
+
 ## Setting up development environment
 
 This project contains a DevContainer which has all dependencies for developing Konflux UI pre-installed. You can find out more information for how to configure your environment to use the DevContainer in the included [README.md](.devcontainer/README.md).
