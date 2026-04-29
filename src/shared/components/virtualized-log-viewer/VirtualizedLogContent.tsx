@@ -42,7 +42,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   searchText = '',
   currentSearchMatch,
 }) => {
-  const parentRef = React.useRef<HTMLDivElement>(null);
+  const parentRef = React.useRef<HTMLDivElement | null>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
   // Fallback values for when DOM measurement is unavailable (SSR, Canvas API failure, etc.)
   const avgCharWidthRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH);
@@ -143,11 +143,21 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const { highlightedLines, handleLineClick, isLineHighlighted } = useLineNumberNavigation();
 
   // Enable keyboard navigation (PageUp, PageDown, Home, End)
-  useKeyboardNavigation({
-    virtualizer,
+  const navRef = useKeyboardNavigation({
     scrollElementRef: parentRef,
+    lineHeight: itemSize,
     enabled: true,
   });
+
+  const scrollContainerRef = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      parentRef.current = node;
+      if (navRef && 'current' in navRef) {
+        (navRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [navRef],
+  );
 
   // Scroll to highlighted lines when hash changes or on initial load
   React.useEffect(() => {
@@ -211,7 +221,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
 
       {/* Scrollable container with gutter */}
       <div
-        ref={parentRef}
+        ref={scrollContainerRef}
         className="log-content__list log-content__with-gutter"
         tabIndex={0}
         style={{
@@ -220,9 +230,6 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
           overflow: 'auto',
         }}
         onClick={() => {
-          // Ensure the container gets focus when clicked
-          // This is necessary because child elements with absolute positioning
-          // prevent clicks from reaching the parent
           parentRef.current?.focus();
         }}
       >
