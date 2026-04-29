@@ -54,6 +54,7 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.3.1",
+    "react-hotkeys-hook": "^5.2.4",
     "react-i18next": "15.0.1",
     "react-router-dom": "6.25.1",
     "sanitize-html": "^2.13.0",
