@@ -639,6 +639,30 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
+  describe('Keyboard shortcuts popover', () => {
+    it('should render the keyboard shortcut button', () => {
+      render(<LogViewer {...defaultProps} />);
+
+      const button = screen.getByRole('button', { name: /show keyboard shortcuts/i });
+      expect(button).toBeInTheDocument();
+    });
+
+    it('should toggle the shortcuts popover on button click', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      const button = screen.getByRole('button', { name: /show keyboard shortcuts/i });
+      await user.click(button);
+
+      expect(screen.getByText('Keyboard shortcuts')).toBeInTheDocument();
+      expect(screen.getByText('Scroll up one line')).toBeInTheDocument();
+      expect(screen.getByText('Scroll down one line')).toBeInTheDocument();
+      expect(screen.getByText('Scroll to top')).toBeInTheDocument();
+      expect(screen.getByText('Scroll to bottom')).toBeInTheDocument();
+      expect(screen.getByText('Click the log area to enable these shortcuts.')).toBeInTheDocument();
+    });
+  });
+
   describe('Edge cases', () => {
     it('should handle null taskRun gracefully', () => {
       expect(() => {
