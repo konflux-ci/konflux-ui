@@ -27,7 +27,6 @@ import {
   editSecretResource,
   getAnnotationForSecret,
   getKubernetesSecretType,
-  getLabelsForImportSecret,
   getLabelsForSecret,
   getRegistryCreds,
   getSecretFormData,
@@ -516,33 +515,10 @@ describe('getLabelsForSecret', () => {
       [SecretLabels.HOST_LABEL]: 'www.github.com',
     });
   });
-});
-
-describe('getLabelsForImportSecret', () => {
-  it('returns null when there are no user labels, host, or common-secret option', () => {
-    expect(
-      getLabelsForImportSecret({
-        secretName: 's',
-        type: SecretTypeDropdownLabel.opaque,
-      }),
-    ).toBeNull();
-  });
-
-  it('returns user-defined labels', () => {
-    expect(
-      getLabelsForImportSecret({
-        secretName: 's',
-        type: SecretTypeDropdownLabel.opaque,
-        labels: [{ key: 'team', value: 'konflux' }],
-      }),
-    ).toEqual({ team: 'konflux' });
-  });
 
   it('adds common-secret label when linking to all components', () => {
     expect(
-      getLabelsForImportSecret({
-        secretName: 's',
-        type: SecretTypeDropdownLabel.opaque,
+      getLabelsForSecret({
         secretForComponentOption: SecretForComponentOption.all,
       }),
     ).toEqual({

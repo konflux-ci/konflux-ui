@@ -304,33 +304,6 @@ export const getLabelsForSecret = (values: SecretLabelInput): { [key: string]: s
   return labels;
 };
 
-/** Labels for secrets created via import / build-secret modal (`ImportSecret`). */
-export const getLabelsForImportSecret = (values: ImportSecret): Record<string, string> | null => {
-  const addCommonSecretLabel = values?.secretForComponentOption === SecretForComponentOption.all;
-  const hasUserLabels = values.labels?.some(({ key, value }) => Boolean(key && value));
-
-  if (!values.source?.host && !hasUserLabels && !addCommonSecretLabel) {
-    return null;
-  }
-
-  const labels: Record<string, string> = {};
-  if (values.labels?.length) {
-    values.labels.forEach(({ key, value }) => {
-      if (key && value) {
-        labels[key] = value;
-      }
-    });
-  }
-  if (values.source?.host) {
-    labels[SecretLabels.CREDENTIAL_LABEL] = SecretLabels.CREDENTIAL_VALUE;
-    labels[SecretLabels.HOST_LABEL] = values.source.host;
-  }
-  if (addCommonSecretLabel) {
-    labels[SecretLabels.COMMON_SECRET_LABEL] = 'true';
-  }
-  return labels;
-};
-
 export const getAnnotationForSecret = (
   values: AddSecretFormValues | ImportSecret,
 ): { [key: string]: string } => {

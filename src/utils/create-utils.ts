@@ -42,7 +42,6 @@ import {
 import {
   createK8sSecretResource,
   getAnnotationForSecret,
-  getLabelsForImportSecret,
   getLabelsForSecret,
   getSecretFormData,
   normalizeDockerConfigForDockerconfigjson,
@@ -373,7 +372,8 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
       return acc;
     }, {});
   }
-  const importLabels = getLabelsForImportSecret(values);
+
+  const importLabels = getLabelsForSecret(values);
   const secretResource: SecretKind = {
     apiVersion: SecretModel.apiVersion,
     kind: SecretModel.kind,
