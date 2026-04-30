@@ -33,7 +33,7 @@ import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
-import { VirtualizedLogViewer, LogSection } from '~/shared/components/virtualized-log-viewer';
+import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
@@ -124,7 +124,7 @@ const LogViewer: React.FC<Props> = ({
     if (processedSections) {
       return processedSections.map((s) => `${s.containerName}\n${s.lines.join('\n')}`).join('\n\n');
     }
-    return data;
+    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
   }, [data, processedSections]);
 
   const downloadLogs = () => {
