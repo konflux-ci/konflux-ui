@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Base64 } from 'js-base64';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { KUBEARCHIVE_PATH_PREFIX } from '~/kubearchive/const';
-import { LogSection } from '~/shared/components/virtualized-log-viewer';
+import { type LogSection } from '~/shared/components/virtualized-log-viewer';
 import { ResourceSource } from '~/types/k8s';
 import { commonFetchText } from '../../../../k8s';
 import { getK8sResourceURL, getWebsocketSubProtocolAndPathPrefix } from '../../../../k8s/k8s-utils';
@@ -196,8 +196,8 @@ const Logs: React.FC<LogsProps> = ({
     return containers
       .filter((c) => logSources[c.name])
       .map((c) => ({
-        containerName: c.name,
-        lines: logSources[c.name].split('\n'),
+        containerName: c.name.toUpperCase(),
+        lines: logSources[c.name].split('\n').map((line) => `  ${line}`),
       }));
   }, [logSources, containers]);
 

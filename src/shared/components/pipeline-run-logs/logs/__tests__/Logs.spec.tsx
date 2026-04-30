@@ -230,8 +230,8 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenLastCalledWith(
         expect.objectContaining({
           sections: expect.arrayContaining([
-            { containerName: 'container1', lines: ['log line 1', 'log line 2'] },
-            { containerName: 'container2', lines: ['log line 3', 'log line 4'] },
+            { containerName: 'CONTAINER1', lines: ['  log line 1', '  log line 2'] },
+            { containerName: 'CONTAINER2', lines: ['  log line 3', '  log line 4'] },
           ]),
         }),
       );
@@ -279,8 +279,8 @@ describe('Logs', () => {
       });
 
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
-      expect(lastCall.sections[0].containerName).toBe('container2');
-      expect(lastCall.sections[1].containerName).toBe('container1');
+      expect(lastCall.sections[0].containerName).toBe('CONTAINER2');
+      expect(lastCall.sections[1].containerName).toBe('CONTAINER1');
     });
 
     it('should skip containers without log sources', async () => {
@@ -327,7 +327,7 @@ describe('Logs', () => {
       // container2 has empty logs, so it should be filtered out by the sections memo
       const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
       expect(lastCall.sections).toHaveLength(1);
-      expect(lastCall.sections[0].containerName).toBe('container1');
+      expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
     });
 
     it('should pass empty sections when no containers have logs', () => {
