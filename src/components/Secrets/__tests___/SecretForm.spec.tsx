@@ -1,4 +1,5 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
 import KeyValueFileInputField, {
   InternalKeyValueFileInputField,
 } from '../../../shared/components/formik-fields/key-value-file-input-field/KeyValueFileInputField';
@@ -41,12 +42,15 @@ describe('SecretForm', () => {
   });
 
   it('should set correct values', async () => {
+    const user = userEvent.setup();
     formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
     await waitFor(() => {
       expect(screen.getByTestId('key-0')).toBeInTheDocument();
       expect(screen.getByTestId('key-0').getAttribute('value')).toBe('test');
     });
-    fireEvent.input(screen.getByTestId('key-0'), { target: { value: 'key1' } });
+    const keyInput = screen.getByTestId('key-0');
+    await user.clear(keyInput);
+    await user.type(keyInput, 'key1');
     await waitFor(() => {
       expect(screen.getByTestId('key-0').getAttribute('name')).toBe('opaque.keyValues.0.key');
       expect(screen.getByTestId('key-0').getAttribute('value')).toBe('key1');
@@ -61,11 +65,12 @@ describe('SecretForm', () => {
   });
 
   it('should add new Key value pair', async () => {
+    const user = userEvent.setup();
     formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
     await waitFor(() => {
       expect(screen.getByText('Add key/value')).toBeInTheDocument();
     });
-    fireEvent.click(screen.getByText('Add key/value'));
+    await user.click(screen.getByText('Add key/value'));
     await waitFor(() => {
       expect(screen.getByTestId('key-1')).toBeInTheDocument();
     });
@@ -103,13 +108,14 @@ describe('SecretForm labels', () => {
   });
 
   it('allows editing label key and value fields', async () => {
+    const user = userEvent.setup();
     formikRenderer(<SecretForm existingSecrets={existingSecrets} />, secretFormValues);
     await waitFor(() => {
       expect(screen.getByTestId('pairs-list-name')).toBeInTheDocument();
     });
 
-    fireEvent.input(screen.getByTestId('pairs-list-name'), { target: { value: 'team' } });
-    fireEvent.input(screen.getByTestId('pairs-list-value'), { target: { value: 'konflux' } });
+    await user.type(screen.getByTestId('pairs-list-name'), 'team');
+    await user.type(screen.getByTestId('pairs-list-value'), 'konflux');
 
     await waitFor(() => {
       expect(screen.getByTestId('pairs-list-name')).toHaveValue('team');
@@ -150,6 +156,7 @@ describe('SecretForm SourceSecret', () => {
   });
 
   it('should load update correct input values', async () => {
+    const user = userEvent.setup();
     formikRenderer(
       <SecretForm existingSecrets={existingSecrets} />,
       secretFormValuesForSourceSecret,
@@ -161,13 +168,12 @@ describe('SecretForm SourceSecret', () => {
       expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
     });
 
-    fireEvent.input(screen.getByTestId('secret-source-username'), {
-      target: { value: 'username-changed' },
-    });
-
-    fireEvent.input(screen.getByTestId('secret-source-password'), {
-      target: { value: 'password-changed' },
-    });
+    const usernameInput = screen.getByTestId('secret-source-username');
+    const passwordInput = screen.getByTestId('secret-source-password');
+    await user.clear(usernameInput);
+    await user.type(usernameInput, 'username-changed');
+    await user.clear(passwordInput);
+    await user.type(passwordInput, 'password-changed');
 
     await waitFor(() => {
       expect(screen.getByTestId('secret-form')).toBeInTheDocument();
