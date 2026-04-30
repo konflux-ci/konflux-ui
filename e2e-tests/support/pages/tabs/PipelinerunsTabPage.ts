@@ -105,7 +105,11 @@ export class DetailsTab {
     UIhelper.clickTab('Details');
   }
 
-  // wait for status to be not running, if it is still running after retries, throw error to fail the test
+  // Polls the pipeline run status until it's no longer "Pending" or "Running".
+  // If the status doesn't change after repeated checks, reloads the page and
+  // retries, since the UI may not update without a refresh. Uses recursion
+  // instead of a loop because Cypress commands are asynchronous and don't
+  // support try/catch for flow control.
   static waitUntilStatusIsNotRunning(
     timeoutDuration: number = 1800000, // 30 minutes
     interval: number = 60000, // 60 seconds
