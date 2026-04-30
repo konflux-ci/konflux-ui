@@ -553,6 +553,55 @@ describe('LogViewer Integration Tests', () => {
     });
   });
 
+  describe('Sections support', () => {
+    const sectionProps = {
+      ...defaultProps,
+      data: undefined,
+      sections: [
+        { containerName: 'step-build', lines: ['building...', 'done'] },
+        { containerName: 'step-test', lines: ['testing...', 'passed'] },
+      ],
+    };
+
+    it('should render log content from sections', () => {
+      const { container } = render(<LogViewer {...sectionProps} />);
+
+      const logList = container.querySelector('.log-content__list');
+      expect(logList).toBeInTheDocument();
+      expect(logList?.textContent).toContain('building...');
+      expect(logList?.textContent).toContain('testing...');
+    });
+
+    it('should strip ANSI codes from section lines', () => {
+      const sectionsWithAnsi = {
+        ...defaultProps,
+        data: undefined,
+        sections: [
+          {
+            containerName: 'step-build',
+            lines: ['\x1b[32mSuccess\x1b[0m', 'plain line'],
+          },
+        ],
+      };
+
+      const { container } = render(<LogViewer {...sectionsWithAnsi} />);
+
+      const logList = container.querySelector('.log-content__list');
+      expect(logList?.textContent).not.toContain('\x1b');
+      expect(logList?.textContent).toContain('Success');
+    });
+
+    it('should support download when using sections', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...sectionProps} />);
+
+      const downloadButton = screen.getByRole('button', { name: /^Download$/i });
+      await user.click(downloadButton);
+
+      expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), 'test-task.log');
+    });
+  });
+
   describe('Task information display', () => {
     it('should display task name with truncation', () => {
       const longTaskName = 'very-long-task-name-that-should-be-truncated-in-the-ui';
