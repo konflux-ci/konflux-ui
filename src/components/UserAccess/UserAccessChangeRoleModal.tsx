@@ -18,18 +18,27 @@ import {
   Text,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
-import { KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
+import { NamespaceRole } from '~/types';
+import { defaultKonfluxRoleMap, KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
 import { useRoleMap } from '../../hooks/useRole';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
-const splitRowKey = (rowKey: string) => {
+export const splitRowKey = (
+  rowKey: string,
+): {
+  roleRefName: string;
+  roleName: string;
+  index: string;
+  role: string;
+  username: string;
+} => {
   const segments = rowKey.split('__');
   return {
     roleRefName: segments[0],
     roleName: segments[0].split('-')[1],
     index: segments[1],
     role: segments[2],
-    name: segments[3],
+    username: segments[3],
   };
 };
 
@@ -37,7 +46,7 @@ export type UserAccessChangeRoleModalProps = {
   isOpen: boolean;
   onClose: () => void;
   selectedRowKeys: Set<string>;
-  onSave: (newRoleRef: string) => void;
+  onSave: (newRole: NamespaceRole) => void;
 };
 
 export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps> = ({
@@ -62,7 +71,8 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
   };
 
   const handleSave = (newRoleRef: string) => {
-    onSave(newRoleRef);
+    const newRole: NamespaceRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
+    onSave(newRole);
     handleClose();
   };
 
@@ -78,6 +88,11 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       return true;
     }
 
+    // One user selected -> allow downgrade
+    if (selectedCount === 1) {
+      return false;
+    }
+
     const downgradeExists = [...selectedRowKeys].some((rowKey) => {
       const { roleRefName } = splitRowKey(rowKey);
       const currentRoleWeight = KONFLUX_ROLE_WEIGHT[roleRefName];
@@ -85,7 +100,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     });
 
     return downgradeExists;
-  }, [modalSelectedRoleRef, selectedRowKeys]);
+  }, [modalSelectedRoleRef, selectedRowKeys, selectedCount]);
 
   return (
     <Modal
@@ -129,7 +144,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
         <FlexItem>
           <List style={{ marginLeft: 'var(--pf-v5-global--spacer--md)' }}>
             {[...selectedRowKeys].map((rowKey) => {
-              const { name: username, role, roleName: currentRoleName } = splitRowKey(rowKey);
+              const { username, role, roleName: currentRoleName } = splitRowKey(rowKey);
 
               return (
                 <ListItem key={rowKey}>

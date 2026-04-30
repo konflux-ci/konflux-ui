@@ -16,9 +16,11 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
+// import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { NamespaceRole } from '~/types';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
@@ -31,6 +33,7 @@ import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { UserAccessTableHeaderRow } from './RBListHeader';
 import { UserAccessTableBodyRow } from './RBListRow';
 import { UserAccessChangeRoleModal } from './UserAccessChangeRoleModal';
+// import { editRB } from './UserAccessForm/form-utils';
 import {
   expandRoleBindingsToTableRows,
   filterUserAccessRows,
@@ -160,17 +163,24 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     });
   }, []);
 
+  // const handleModalSave = async (newRole: NamespaceRole) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleModalSave = (newRoleRef: string) => {
-    // console.log('modal save');
-    // console.log('newRoleRef', newRoleRef);
+  const handleModalSave = (newRole: NamespaceRole) => {
+    // console.log('newRole', newRole);
     // console.log('selectedRowKeys', [...selectedRowKeys]);
+    // const selectedUsers = [...selectedRowKeys].map((rowKey) => splitRowKey(rowKey).username);
+    // const uniqueSelectedUsers = [...new Set(selectedUsers)];
+    // console.log('uniqueSelectedUsers', uniqueSelectedUsers);
+    // const affectedRoleBindings = ...
     // TODO
     // Filter all rolebindings, which will be affected (subject contains user from selectedRowKeys)
-    // Remove the user from all affected role bindings in the current namespace
-    // ? If there is only one subject in the role binging and the role is the same, keep it
-    // Add the user to the new role binding
-    // If any role binding remains empty, delete it (pred editem mozna subjects.length == 1 && ten subject = user)
+    // ! Each edited rolebinding will be deleted
+    // -> untouched subjects need to be recreated with the same role
+    // Udelat pole:
+    // vsech users co jsou selected (bez duplicit), a namapovat si to na ten await dole -> udelat si asi custom type??
+    // rolebindings, ktery by mely zustat untouched, a vytahnout ty, ktery jsou potreba udelat znovu (stejny roles) a zase si vytahnout ty nejvyssi role, at tam nikdo neni vickrat
+    // const newRoleBindings = await editRB({usernames: ["userb"], role: newRole, roleMap: defaultKonfluxRoleMap}, roleBindings[3], true);
+    // console.log('newRoleBindings', newRoleBindings);
   };
 
   const selectedCount = selectedRowKeys.size;
@@ -317,7 +327,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         isOpen={isChangeAccessModalOpen}
         onClose={() => setChangeAccessModalOpen(false)}
         selectedRowKeys={selectedRowKeys}
-        onSave={(newRoleRef) => handleModalSave(newRoleRef)}
+        onSave={(newRole) => handleModalSave(newRole)}
       />
     </>
   );
