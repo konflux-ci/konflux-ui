@@ -60,4 +60,23 @@ describe('SecretTypeSubForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Select or enter secret name' }));
     expect(screen.getByText('snyk-secret')).toBeVisible();
   });
+
+  it('should render secret name field with required indicator for non-partner-task types', () => {
+    const initialValues = {
+      secretFor: SecretFor.Build,
+      type: SecretTypeDropdownLabel.image,
+      opaque: {
+        keyValues: [{ key: '', value: '' }],
+      },
+    };
+    formikRenderer(<SecretTypeSubForm />, initialValues);
+
+    const secretNameLabel = screen.getByText('Secret name');
+    expect(secretNameLabel).toBeVisible();
+    // FormGroup renders a required indicator (asterisk span) when isRequired is set
+    const formGroup = secretNameLabel.closest('.pf-v5-c-form__group');
+    expect(formGroup).toBeTruthy();
+    const requiredIndicator = formGroup.querySelector('.pf-v5-c-form__label-required');
+    expect(requiredIndicator).toBeTruthy();
+  });
 });
