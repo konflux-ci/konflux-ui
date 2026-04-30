@@ -37,6 +37,10 @@ type PipelineRunsListViewProps = {
   customFilter?: (plr: PipelineRunKind) => boolean;
 };
 
+/**
+ * @deprecated
+ * Replaced by PipelineRunsListViewV2 with new component model
+ */
 const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListViewProps>> = ({
   applicationName,
   componentName,

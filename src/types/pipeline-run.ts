@@ -119,6 +119,15 @@ export type PipelineRunParam = {
   resource?: object;
 };
 
+export type ChildReference = {
+  apiVersion?: string;
+  kind?: string;
+  name?: string;
+  pipelineTaskName?: string;
+  displayName?: string;
+  whenExpressions?: WhenExpression[];
+};
+
 export type PipelineRunStatus = {
   succeededCondition?: string;
   creationTimestamp?: string;
@@ -126,6 +135,7 @@ export type PipelineRunStatus = {
   startTime?: string;
   completionTime?: string;
   taskRuns?: PLRTaskRuns;
+  childReferences?: ChildReference[];
   pipelineSpec: PipelineSpec;
   skippedTasks?: {
     name: string;
@@ -175,6 +185,7 @@ export type PipelineRunStatusV1Beta1 = {
   startTime?: string;
   completionTime?: string;
   taskRuns?: PLRTaskRunsV1Beta1;
+  childReferences?: ChildReference[];
   pipelineSpec: PipelineSpec;
   skippedTasks?: {
     name: string;

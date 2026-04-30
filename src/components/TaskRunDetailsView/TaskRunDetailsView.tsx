@@ -4,11 +4,12 @@ import { Bullseye, Spinner } from '@patternfly/react-core';
 import { RouterParams } from '@routes/utils';
 import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { CONFORMA_TASK } from '~/consts/security';
+import { usePipelineRunV2 } from '~/hooks/usePipelineRunsV2';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { TektonResourceLabel } from '~/types';
 import { downloadYamlAction } from '~/utils/common-utils';
 import { isResourceEnterpriseContract } from '~/utils/conforma-utils';
-import { taskRunStatus } from '~/utils/pipeline-utils';
+import { getDisplayNameFromChildReferences, taskRunStatus } from '~/utils/pipeline-utils';
 import { FeatureFlagIndicator } from '../../feature-flags/FeatureFlagIndicator';
 import { useTaskRunV2 } from '../../hooks/useTaskRunsV2';
 import {
@@ -49,13 +50,15 @@ export const TaskRunDetailsView: React.FC = () => {
     }
   }, [activeTab, baseURL, navigate, trStatus]);
 
+  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
+  const [pipelineRun] = usePipelineRunV2(namespace, plrName || '');
+  const taskDisplayName = getDisplayNameFromChildReferences(pipelineRun, taskRunName);
+
   if (error) {
     return getErrorState(error, loaded, 'task run');
   }
 
-  const plrName = taskRun?.metadata?.labels?.[TektonResourceLabel.pipelinerun];
-
-  if (!loaded || !plrName) {
+  if (!loaded) {
     return (
       <Bullseye>
         <Spinner />
@@ -104,7 +107,10 @@ export const TaskRunDetailsView: React.FC = () => {
       title={
         <>
           <FeatureFlagIndicator flags={['taskruns-kubearchive']} />
-          <span className="pf-v5-u-mr-sm">{taskRunName}</span>
+          <span className="pf-v5-u-mr-sm">
+            {taskRunName}
+            {taskDisplayName ? ` (${taskDisplayName})` : ''}
+          </span>
           <StatusIconWithTextLabel status={trStatus} />
         </>
       }

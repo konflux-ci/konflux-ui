@@ -27,7 +27,7 @@ clean_github() {
     fi
     
     echo "Cleaning up GitHub repositories and bots..."
-    gh auth login --with-token <<< $GH_TOKEN
+    # Skipping the login as gh cli automatically uses the token from the environment variable
     
     # We create approximately 20 repositories per working day (100 per week). 
     # The repositories from successful PRs should removed after the test.

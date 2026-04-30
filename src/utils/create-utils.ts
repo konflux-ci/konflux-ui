@@ -40,6 +40,7 @@ import {
   GIT_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
 import {
+  createK8sSecretResource,
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
@@ -461,21 +462,7 @@ export const createSecretResourceWithLinkingComponents = async (
   dryRun: boolean,
 ) => {
   const secretResource: SecretKind = getSecretFormData(values, namespace);
-  const labels = {
-    secret: getLabelsForSecret(values),
-  };
-
-  const annotations = getAnnotationForSecret(values);
-  const k8sSecretResource = {
-    ...secretResource,
-    metadata: {
-      ...secretResource.metadata,
-      labels: {
-        ...labels?.secret,
-      },
-      annotations,
-    },
-  };
+  const k8sSecretResource = createK8sSecretResource(values, secretResource);
 
   const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
@@ -514,9 +501,22 @@ export const createSecretWithLinkingComponents = async (
 ) => {
   const secretResource = getSecretObject(secret, namespace);
 
+  const labels = getLabelsForSecret(secret);
+
+  const annotations = getAnnotationForSecret(secret);
+
+  const k8sSecretResource = {
+    ...secretResource,
+    metadata: {
+      ...secretResource.metadata,
+      labels,
+      annotations,
+    },
+  };
+
   const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,
-    resource: secretResource,
+    resource: k8sSecretResource,
     queryOptions: { ns: namespace, ...(dryRun && { queryParams: { dryRun: 'All' } }) },
   });
 
