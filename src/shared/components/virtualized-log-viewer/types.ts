@@ -16,3 +16,9 @@ export type TokenizedLine = {
 
 /** Range representing start and end positions of a match */
 export type MatchRange = { start: number; end: number };
+
+/** A section of log output from a single container */
+export interface LogSection {
+  containerName: string;
+  lines: string[];
+}
