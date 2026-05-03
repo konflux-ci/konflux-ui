@@ -1696,8 +1696,8 @@ __metadata:
   linkType: hard
 
 "@dotenvx/dotenvx@npm:^1.7.0":
-  version: 1.52.0
-  resolution: "@dotenvx/dotenvx@npm:1.52.0"
+  version: 1.64.0
+  resolution: "@dotenvx/dotenvx@npm:1.64.0"
   dependencies:
     commander: "npm:^11.1.0"
     dotenv: "npm:^17.2.1"
@@ -1706,11 +1706,12 @@ __metadata:
     fdir: "npm:^6.2.0"
     ignore: "npm:^5.3.0"
     object-treeify: "npm:1.1.33"
-    picomatch: "npm:^4.0.2"
+    picomatch: "npm:^4.0.4"
     which: "npm:^4.0.0"
+    yocto-spinner: "npm:^1.1.0"
   bin:
     dotenvx: src/cli/dotenvx.js
-  checksum: 10/f54195dfe8c83a5476781d6de1f24aa7005af6b02662ec7d2a19b00d996783e2cb19e274290fc328119ec6716521d211bfde33ee0eb96ca949b6fff21c09ae87
+  checksum: 10/b3787cc4038f6909b62d19023767a0ca2e774875f006fa9b1543dd00efd1805f0be0e61a25113596da596d9b9d0eadaf0ee41e39bf9f78f79f40979985075e26
   languageName: node
   linkType: hard
 
@@ -12387,6 +12388,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"picomatch@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "picomatch@npm:4.0.4"
+  checksum: 10/f6ef80a3590827ce20378ae110ac78209cc4f74d39236370f1780f957b7ee41c12acde0e4651b90f39983506fd2f5e449994716f516db2e9752924aff8de93ce
+  languageName: node
+  linkType: hard
+
 "pidtree@npm:^0.6.0":
   version: 0.6.0
   resolution: "pidtree@npm:0.6.0"
@@ -16379,6 +16387,22 @@ __metadata:
   version: 1.2.2
   resolution: "yocto-queue@npm:1.2.2"
   checksum: 10/92dd9880c324dbc94ff4b677b7d350ba8d835619062b7102f577add7a59ab4d87f40edc5a03d77d369dfa9d11175b1b2ec4a06a6f8a5d8ce5d1306713f66ee41
+  languageName: node
+  linkType: hard
+
+"yocto-spinner@npm:^1.1.0":
+  version: 1.2.0
+  resolution: "yocto-spinner@npm:1.2.0"
+  dependencies:
+    yoctocolors: "npm:^2.1.1"
+  checksum: 10/29728e568e92959ed5400266d9b5901521199a0aa853d0f4fb2f1a69ac53e83da1797bf64c30d52ff35c51f9f875b3150a48d19f3964911516f11d85e371d26e
+  languageName: node
+  linkType: hard
+
+"yoctocolors@npm:^2.1.1":
+  version: 2.1.2
+  resolution: "yoctocolors@npm:2.1.2"
+  checksum: 10/6ee42d665a4cc161c7de3f015b2a65d6c65d2808bfe3b99e228bd2b1b784ef1e54d1907415c025fc12b400f26f372bfc1b71966c6c738d998325ca422eb39363
   languageName: node
   linkType: hard
 
