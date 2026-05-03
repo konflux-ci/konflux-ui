@@ -3,6 +3,7 @@ import { ActivityTab } from '~/components/Activity';
 import { ApplicationDetails, ApplicationOverviewTab } from '~/components/ApplicationDetails';
 import { applicationPageLoader, ApplicationListView } from '~/components/Applications';
 import { ComponentListTab, componentsTabLoader } from '~/components/Components/ComponentsListView';
+import { ConformaResultsTab } from '~/components/Conforma/ConformaResultsTab/ConformaResultsTab';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import {
   integrationListPageLoader,
@@ -75,6 +76,11 @@ const applicationRoutes = [
             <ReleaseListViewTab />
           </FilterContextProvider>
         ),
+      },
+      {
+        path: 'conforma-results',
+        errorElement: <RouteErrorBoundry />,
+        element: <ConformaResultsTab />,
       },
     ],
   },
