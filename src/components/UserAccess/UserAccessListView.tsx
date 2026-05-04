@@ -16,11 +16,11 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
-// import { defaultKonfluxRoleMap } from '~/__data__/role-data';
+import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
-import { NamespaceRole } from '~/types';
+import type { NamespaceRole } from '~/types';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
@@ -32,8 +32,8 @@ import { useAccessReviewForModel } from '../../utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { UserAccessTableHeaderRow } from './RBListHeader';
 import { UserAccessTableBodyRow } from './RBListRow';
-import { UserAccessChangeRoleModal } from './UserAccessChangeRoleModal';
-// import { editRB } from './UserAccessForm/form-utils';
+import { splitRowKey, UserAccessChangeRoleModal } from './UserAccessChangeRoleModal';
+import { createRBs, deleteRB } from './UserAccessForm/form-utils';
 import {
   expandRoleBindingsToTableRows,
   filterUserAccessRows,
@@ -163,23 +163,80 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     });
   }, []);
 
-  // const handleModalSave = async (newRole: NamespaceRole) => {
+  const getUniqueSelectedUsers = React.useCallback(() => {
+    const allSelectedUsers = [...selectedRowKeys].map((rowKey) => splitRowKey(rowKey).username);
+    return new Set(allSelectedUsers);
+  }, [selectedRowKeys]);
+
+  const getAllAffectedRoleBindings = React.useCallback(() => {
+    return roleBindings.filter((rb) => {
+      return rb.subjects?.some((subject) => getUniqueSelectedUsers().has(subject.name));
+    });
+  }, [roleBindings, getUniqueSelectedUsers]);
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleModalSave = (newRole: NamespaceRole) => {
-    // console.log('newRole', newRole);
-    // console.log('selectedRowKeys', [...selectedRowKeys]);
-    // const selectedUsers = [...selectedRowKeys].map((rowKey) => splitRowKey(rowKey).username);
-    // const uniqueSelectedUsers = [...new Set(selectedUsers)];
-    // console.log('uniqueSelectedUsers', uniqueSelectedUsers);
-    // const affectedRoleBindings = ...
-    // TODO
-    // Filter all rolebindings, which will be affected (subject contains user from selectedRowKeys)
-    // ! Each edited rolebinding will be deleted
-    // -> untouched subjects need to be recreated with the same role
-    // Udelat pole:
-    // vsech users co jsou selected (bez duplicit), a namapovat si to na ten await dole -> udelat si asi custom type??
-    // rolebindings, ktery by mely zustat untouched, a vytahnout ty, ktery jsou potreba udelat znovu (stejny roles) a zase si vytahnout ty nejvyssi role, at tam nikdo neni vickrat
+  const handleModalSave = async (newRoleRef: string) => {
+    const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
+
+    const uniqueSelectedUsers = getUniqueSelectedUsers();
+    const allAffectedRoleBindings = getAllAffectedRoleBindings();
+
+    // Users on multi-subject bindings who were not selected must keep their current role
+    const notSelectedUsersFromMultiSubjectRbs = allAffectedRoleBindings
+      .filter((rb) => rb.subjects?.length > 1)
+      .flatMap((rb) => {
+        const currentRole = defaultKonfluxRoleMap.roleMap[rb.roleRef.name];
+        return (
+          rb.subjects
+            ?.filter((subject) => !uniqueSelectedUsers.has(subject.name))
+            .map((subject): [string, NamespaceRole] => [subject.name, currentRole]) ?? []
+        );
+      });
+    // console.log('notSelectedUsersFromMultiSubjectRbs', notSelectedUsersFromMultiSubjectRbs);
+
+    const applyChange = async (dryRun?: boolean) => {
+      // Delete all affected RBs, dryRun doesn't affect deleteRB (always deleted)
+      if (!dryRun) {
+        await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb, dryRun)));
+      }
+
+      // Create new role bindings for the selected users
+      const newRoleBindings = await createRBs(
+        { usernames: [...uniqueSelectedUsers], role: newRole, roleMap: defaultKonfluxRoleMap },
+        namespace,
+        dryRun,
+      );
+      // eslint-disable-next-line no-console
+      console.log('newRoleBindings', newRoleBindings);
+
+      // Recreate RBs from multi-subject RBs that should not be affected
+      const preservedRoleBindings = [];
+      for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
+        preservedRoleBindings.push(
+          await createRBs(
+            {
+              usernames: [username],
+              role: preservedRole,
+              roleMap: defaultKonfluxRoleMap,
+            },
+            namespace,
+            dryRun,
+          ),
+        );
+      }
+      // console.log('preservedRoleBindings', preservedRoleBindings);
+    };
+
+    try {
+      await applyChange(true);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.log('error picooooooo', err);
+    }
+
     // const newRoleBindings = await editRB({usernames: ["userb"], role: newRole, roleMap: defaultKonfluxRoleMap}, roleBindings[3], true);
+    // console.log('newRoleBindings', newRoleBindings);
+    // const newRoleBindings = await editRB({usernames: ["1pepik"], role: newRole, roleMap: defaultKonfluxRoleMap}, roleBindings[1], true);
     // console.log('newRoleBindings', newRoleBindings);
   };
 
@@ -327,7 +384,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         isOpen={isChangeAccessModalOpen}
         onClose={() => setChangeAccessModalOpen(false)}
         selectedRowKeys={selectedRowKeys}
-        onSave={(newRole) => handleModalSave(newRole)}
+        allAffectedRoleBindings={getAllAffectedRoleBindings()}
+        onSave={(newRoleRef) => handleModalSave(newRoleRef)}
       />
     </>
   );

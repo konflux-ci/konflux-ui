@@ -18,8 +18,8 @@ import {
   Text,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
-import { NamespaceRole } from '~/types';
-import { defaultKonfluxRoleMap, KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
+import type { RoleBinding } from '~/types';
+import { KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
 import { useRoleMap } from '../../hooks/useRole';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
@@ -46,13 +46,15 @@ export type UserAccessChangeRoleModalProps = {
   isOpen: boolean;
   onClose: () => void;
   selectedRowKeys: Set<string>;
-  onSave: (newRole: NamespaceRole) => void;
+  allAffectedRoleBindings: RoleBinding[];
+  onSave: (newRoleRef: string) => void;
 };
 
 export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps> = ({
   isOpen,
   onClose,
   selectedRowKeys,
+  allAffectedRoleBindings,
   onSave,
 }) => {
   const [roleMap, roleMapLoaded] = useRoleMap();
@@ -71,14 +73,17 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
   };
 
   const handleSave = (newRoleRef: string) => {
-    const newRole: NamespaceRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
-    onSave(newRole);
+    onSave(newRoleRef);
     handleClose();
   };
 
   const selectedCount = selectedRowKeys.size;
 
   const isModalSaveDisabled = React.useMemo(() => {
+    // eslint-disable-next-line no-console
+    console.log('allAffectedRoleBindings from modal', allAffectedRoleBindings);
+
+    // TODO: je potreba jeste najit nejvyssi role u uzivatelu selected (mtakac - contributor by sel upravit na maintainera a prislo by se o admina)
     if (!modalSelectedRoleRef) {
       return true;
     }
@@ -100,7 +105,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     });
 
     return downgradeExists;
-  }, [modalSelectedRoleRef, selectedRowKeys, selectedCount]);
+  }, [modalSelectedRoleRef, selectedRowKeys, selectedCount, allAffectedRoleBindings]);
 
   return (
     <Modal
