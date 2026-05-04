@@ -4,6 +4,7 @@ import {
   mockPublicImageRepository,
 } from '~/__data__/image-repository-data';
 import { ImageRepositoryLabel } from '~/consts/imagerepo';
+import { ImageRepositoryKind } from '~/types';
 import { createK8sWatchResourceMock } from '~/utils/test-utils';
 import { useImageRepository } from '../useImageRepository';
 
@@ -14,205 +15,201 @@ describe('useImageRepository', () => {
     jest.clearAllMocks();
   });
 
-  describe('Primary fetch (by name)', () => {
-    it('should return null when primary call is inflight', () => {
-      useK8sWatchResourceMock.mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: undefined,
-      });
-
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
-
-      expect(imageRepository).toBeNull();
-      expect(loaded).toBe(false);
-      expect(error).toBeNull();
+  it('should return null while loading', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: undefined,
     });
 
-    it('should return image repository when primary fetch succeeds', () => {
-      useK8sWatchResourceMock.mockReturnValue({
-        data: mockPublicImageRepository,
-        isLoading: false,
-        error: undefined,
-      });
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded, error] = result.current;
 
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
-
-      expect(imageRepository).toEqual(mockPublicImageRepository);
-      expect(loaded).toBe(true);
-      expect(error).toBeNull();
-    });
-
-    it('should handle private image repository from primary fetch', () => {
-      useK8sWatchResourceMock.mockReturnValue({
-        data: mockPrivateImageRepository,
-        isLoading: false,
-        error: undefined,
-      });
-
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
-
-      expect(imageRepository).toEqual(mockPrivateImageRepository);
-      expect(loaded).toBe(true);
-      expect(error).toBeNull();
-    });
-
-    it('should pass watch parameter correctly to primary fetch', () => {
-      useK8sWatchResourceMock.mockReturnValue({
-        data: mockPublicImageRepository,
-        isLoading: false,
-        error: undefined,
-      });
-
-      renderHook(() => useImageRepository('test-ns', 'test-component', true));
-
-      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          watch: true,
-          name: 'test-component',
-          namespace: 'test-ns',
-        }),
-        expect.any(Object),
-      );
-    });
+    expect(imageRepository).toBeNull();
+    expect(loaded).toBe(false);
+    expect(error).toBeNull();
   });
 
-  describe('Fetch by label', () => {
-    it('should fallback to label selector when primary fetch fails', () => {
-      const mockError = { code: 404, message: 'Not found' };
+  it('should fetch with label selector and isList', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [mockPublicImageRepository],
+      isLoading: false,
+      error: undefined,
+    });
 
-      // First call (primary) returns error
-      // Second call (fallback) returns success
-      useK8sWatchResourceMock
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: false,
-          error: mockError,
-        })
-        .mockReturnValueOnce({
-          data: [mockPublicImageRepository],
-          isLoading: false,
-          error: undefined,
-        });
+    renderHook(() => useImageRepository('test-ns', 'test-component', undefined, true));
 
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
-
-      expect(imageRepository).toEqual(mockPublicImageRepository);
-      expect(loaded).toBe(true);
-      expect(error).toBeNull();
-
-      // Verify fallback was called with label selector
-      expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          isList: true,
-          selector: {
-            matchLabels: {
-              [ImageRepositoryLabel.COMPONENT]: 'test-component',
-            },
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isList: true,
+        watch: true,
+        namespace: 'test-ns',
+        selector: {
+          matchLabels: {
+            [ImageRepositoryLabel.COMPONENT]: 'test-component',
           },
-        }),
-        expect.any(Object),
-      );
+        },
+      }),
+      expect.any(Object),
+    );
+  });
+
+  it('should fetch with application label when applicationName is provided', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [mockPublicImageRepository],
+      isLoading: false,
+      error: undefined,
     });
 
-    it('should return null when fallback is still loading', () => {
-      const mockError = { code: 404, message: 'Not found' };
+    renderHook(() => useImageRepository('test-ns', 'test-component', 'test-app'));
 
-      useK8sWatchResourceMock
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: false,
-          error: mockError,
-        })
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: true,
-          error: undefined,
-        });
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isList: true,
+        namespace: 'test-ns',
+        selector: {
+          matchLabels: {
+            [ImageRepositoryLabel.APPLICATION]: 'test-app',
+          },
+        },
+      }),
+      expect.any(Object),
+    );
+  });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
-
-      expect(imageRepository).toBeNull();
-      expect(loaded).toBe(false);
-      expect(error).toBeNull();
+  it('should return image repository matching component ownerReference', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [mockPublicImageRepository],
+      isLoading: false,
+      error: undefined,
     });
 
-    it('should return first repository when fallback returns multiple', () => {
-      const mockError = { code: 404, message: 'Not found' };
-      const anotherImageRepo = { ...mockPublicImageRepository, metadata: { name: 'another-repo' } };
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded, error] = result.current;
 
-      useK8sWatchResourceMock
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: false,
-          error: mockError,
-        })
-        .mockReturnValueOnce({
-          data: [mockPublicImageRepository, anotherImageRepo],
-          isLoading: false,
-          error: undefined,
-        });
+    expect(imageRepository).toEqual(mockPublicImageRepository);
+    expect(loaded).toBe(true);
+    expect(error).toBeNull();
+  });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
-
-      expect(imageRepository).toEqual(mockPublicImageRepository);
-      expect(loaded).toBe(true);
-      expect(error).toBeNull();
+  it('should return private image repository matching component ownerReference', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [mockPrivateImageRepository],
+      isLoading: false,
+      error: undefined,
     });
 
-    it('should return primary error when both primary and fallback fail', () => {
-      const primaryError = { code: 404, message: 'Not found' };
-      const fallbackError = { code: 500, message: 'Internal server error' };
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded, error] = result.current;
 
-      useK8sWatchResourceMock
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: false,
-          error: primaryError,
-        })
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: false,
-          error: fallbackError,
-        });
+    expect(imageRepository).toEqual(mockPrivateImageRepository);
+    expect(loaded).toBe(true);
+    expect(error).toBeNull();
+  });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
+  it('should return null when no ownerReference matches the component', () => {
+    const repoWithDifferentOwner: ImageRepositoryKind = {
+      ...mockPublicImageRepository,
+      metadata: {
+        ...mockPublicImageRepository.metadata,
+        ownerReferences: [
+          {
+            apiVersion: 'appstudio.redhat.com/v1alpha1',
+            kind: 'Component',
+            name: 'other-component',
+            uid: 'other-uid',
+          },
+        ],
+      },
+    };
 
-      expect(imageRepository).toBeNull();
-      expect(loaded).toBe(true);
-      // Returns primary error since it happens first
-      expect(error).toEqual(primaryError);
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [repoWithDifferentOwner],
+      isLoading: false,
+      error: undefined,
     });
 
-    it('should return primary error when fallback returns empty array', () => {
-      const primaryError = { code: 404, message: 'Not found' };
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded] = result.current;
 
-      useK8sWatchResourceMock
-        .mockReturnValueOnce({
-          data: undefined,
-          isLoading: false,
-          error: primaryError,
-        })
-        .mockReturnValueOnce({
-          data: [],
-          isLoading: false,
-          error: undefined,
-        });
+    expect(imageRepository).toBeNull();
+    expect(loaded).toBe(true);
+  });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
-      const [imageRepository, loaded, error] = result.current;
+  it('should return first match when multiple repos have matching ownerReference', () => {
+    const secondRepo: ImageRepositoryKind = {
+      ...mockPublicImageRepository,
+      metadata: {
+        ...mockPublicImageRepository.metadata,
+        name: 'second-repo',
+      },
+    };
 
-      expect(imageRepository).toBeNull();
-      expect(loaded).toBe(true);
-      expect(error).toEqual(primaryError);
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [mockPublicImageRepository, secondRepo],
+      isLoading: false,
+      error: undefined,
     });
+
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded, error] = result.current;
+
+    expect(imageRepository).toEqual(mockPublicImageRepository);
+    expect(loaded).toBe(true);
+    expect(error).toBeNull();
+  });
+
+  it('should handle repos without ownerReferences gracefully', () => {
+    const repoWithoutOwnerRef: ImageRepositoryKind = {
+      ...mockPublicImageRepository,
+      metadata: {
+        name: 'no-owner-repo',
+        namespace: 'test-ns',
+      },
+    };
+
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [repoWithoutOwnerRef],
+      isLoading: false,
+      error: undefined,
+    });
+
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded] = result.current;
+
+    expect(imageRepository).toBeNull();
+    expect(loaded).toBe(true);
+  });
+
+  it('should return error when fetch fails', () => {
+    const mockError = { code: 500, message: 'Internal server error' };
+
+    useK8sWatchResourceMock.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: mockError,
+    });
+
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded, error] = result.current;
+
+    expect(imageRepository).toBeNull();
+    expect(loaded).toBe(true);
+    expect(error).toEqual(mockError);
+  });
+
+  it('should return null when empty list is returned', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: undefined,
+    });
+
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded] = result.current;
+
+    expect(imageRepository).toBeNull();
+    expect(loaded).toBe(true);
   });
 
   describe('Edge cases', () => {
@@ -223,7 +220,7 @@ describe('useImageRepository', () => {
         error: undefined,
       });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', null, false));
+      const { result } = renderHook(() => useImageRepository('test-ns', null));
       const [imageRepository, loaded, error] = result.current;
 
       expect(imageRepository).toBeNull();
@@ -238,7 +235,7 @@ describe('useImageRepository', () => {
         error: undefined,
       });
 
-      const { result } = renderHook(() => useImageRepository(null, 'test-component', false));
+      const { result } = renderHook(() => useImageRepository(null, 'test-component'));
       const [imageRepository, loaded, error] = result.current;
 
       expect(imageRepository).toBeNull();
@@ -253,7 +250,7 @@ describe('useImageRepository', () => {
         error: undefined,
       });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', '', false));
+      const { result } = renderHook(() => useImageRepository('test-ns', ''));
       const [imageRepository, loaded, error] = result.current;
 
       expect(imageRepository).toBeNull();
