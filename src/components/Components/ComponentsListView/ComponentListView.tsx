@@ -289,7 +289,9 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
               >
                 Manage build pipelines
               </AlertActionLink>
-              <ExternalLink href={prURL}>View all pull requests in Github</ExternalLink>
+              {prURL !== '' && (
+                <ExternalLink href={prURL}>View all pull requests in Github</ExternalLink>
+              )}
             </>
           }
           data-test="components-unmerged-build-pr"
