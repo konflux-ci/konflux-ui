@@ -94,7 +94,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       JOB_TYPE: 'on-pr'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.repository }}
           ref: '${{ github.event.pull_request.head.sha }}'
