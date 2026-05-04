@@ -1,6 +1,6 @@
 import { RunStatus } from '@patternfly/react-topology';
 import { curry, merge } from 'lodash-es';
-import { runStatus, SucceedConditionReason, TestOutputResult } from '~/consts/pipelinerun';
+import { runStatus, SucceedConditionReason } from '~/consts/pipelinerun';
 import { preferredNameAnnotation } from '../consts/pipeline';
 import { PipelineRunModel } from '../models';
 import {
@@ -202,9 +202,12 @@ export const conditionsRunStatus = (conditions: Condition[], specStatus?: string
   }
 };
 
-type TaskTestResult = {
+export type TaskTestResult = {
   result: string;
   note?: string;
+  successes?: number;
+  failures?: number;
+  warnings?: number;
 };
 export const taskTestResultStatus = (
   taskResults: TektonResultsRun[],
@@ -218,7 +221,13 @@ export const taskTestResultStatus = (
   try {
     const outputValues = JSON.parse(testOutput.value);
     if (!outputValues.result) return;
-    return { result: outputValues.result, note: outputValues.note ?? undefined };
+    return {
+      result: outputValues.result,
+      note: outputValues.note ?? undefined,
+      successes: typeof outputValues.successes === 'number' ? outputValues.successes : undefined,
+      failures: typeof outputValues.failures === 'number' ? outputValues.failures : undefined,
+      warnings: typeof outputValues.warnings === 'number' ? outputValues.warnings : undefined,
+    };
   } catch (e) {
     // eslint-disable-next-line no-console
     console.warn('Error when trying to parse testOutput.value');
@@ -373,27 +382,6 @@ export const runStatusToRunStatus = (status: runStatus): RunStatus => {
       return RunStatus.Idle;
     default:
       return RunStatus.Pending;
-  }
-};
-
-export const testOutputResultToRunStatus = (
-  testOutputResult?: TestOutputResult,
-): runStatus | null => {
-  if (!testOutputResult) return null;
-
-  switch (testOutputResult) {
-    case TestOutputResult.SUCCESS:
-      return runStatus.Succeeded;
-    case TestOutputResult.FAILURE:
-      return runStatus.TestFailed;
-    case TestOutputResult.ERROR:
-      return runStatus.TestFailed;
-    case TestOutputResult.WARNING:
-      return runStatus.TestWarning;
-    case TestOutputResult.SKIPPED:
-      return runStatus.Skipped;
-    default:
-      return runStatus.Unknown;
   }
 };
 

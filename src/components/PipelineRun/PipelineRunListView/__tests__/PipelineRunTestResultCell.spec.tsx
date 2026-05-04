@@ -1,7 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
-import { runStatus } from '~/consts/pipelinerun';
-import { usePipelineRunTestOutputResult } from '~/hooks/usePipelineRunTestOutputResult';
+import {
+  AggregatedTestResult,
+  usePipelineRunTestOutputResult,
+} from '~/hooks/usePipelineRunTestOutputResult';
 import { PipelineRunKind } from '~/types';
 import { PipelineRunTestResultCell } from '../PipelineRunTestResultCell';
 
@@ -27,11 +29,11 @@ const renderCell = (plr: PipelineRunKind, namespace?: string) =>
 describe('PipelineRunTestResultCell', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    usePipelineRunTestOutputResultMock.mockReturnValue([null, false, undefined]);
+    usePipelineRunTestOutputResultMock.mockReturnValue([null, false]);
   });
 
   it('renders loading skeleton when test result is loading', () => {
-    usePipelineRunTestOutputResultMock.mockReturnValue([null, true, undefined]);
+    usePipelineRunTestOutputResultMock.mockReturnValue([null, true]);
     const plr = testPipelineRuns[
       DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
     ] as unknown as PipelineRunKind;
@@ -40,7 +42,7 @@ describe('PipelineRunTestResultCell', () => {
   });
 
   it('renders "-" when there is no test result', () => {
-    usePipelineRunTestOutputResultMock.mockReturnValue([null, false, undefined]);
+    usePipelineRunTestOutputResultMock.mockReturnValue([null, false]);
     const plr = testPipelineRuns[
       DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO
     ] as unknown as PipelineRunKind;
@@ -48,30 +50,16 @@ describe('PipelineRunTestResultCell', () => {
     expect(screen.getByText('-')).toBeInTheDocument();
   });
 
-  it('renders status text when test result is Succeeded', () => {
-    usePipelineRunTestOutputResultMock.mockReturnValue([
-      runStatus.Succeeded,
-      false,
-      'All tests passed',
-    ]);
+  it('renders aggregated test output counts when result is available', () => {
+    const aggregated: AggregatedTestResult = { successes: 3, failures: 1, warnings: 2 };
+    usePipelineRunTestOutputResultMock.mockReturnValue([aggregated, false]);
     const plr = testPipelineRuns[
       DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
     ] as unknown as PipelineRunKind;
     renderCell(plr, 'test-ns');
-    expect(screen.getByText(runStatus.Succeeded)).toBeInTheDocument();
-  });
-
-  it('renders status text when test result is TestFailed', () => {
-    usePipelineRunTestOutputResultMock.mockReturnValue([
-      runStatus.TestFailed,
-      false,
-      'Tests failed',
-    ]);
-    const plr = testPipelineRuns[
-      DataState.STATUS_WITH_TEST_OUTPUT_ERROR
-    ] as unknown as PipelineRunKind;
-    renderCell(plr, 'test-ns');
-    expect(screen.getByText(runStatus.TestFailed)).toBeInTheDocument();
+    expect(screen.getByLabelText('1 failure')).toBeInTheDocument();
+    expect(screen.getByLabelText('2 warnings')).toBeInTheDocument();
+    expect(screen.getByLabelText('3 successes')).toBeInTheDocument();
   });
 
   it('passes namespace to usePipelineRunTestOutputResult when PLR is finished', () => {

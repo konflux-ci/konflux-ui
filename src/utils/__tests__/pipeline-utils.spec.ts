@@ -1,5 +1,5 @@
 import { mockPipelineRuns } from '~/components/ApplicationDetails/__data__/mock-pipeline-run';
-import { runStatus, TestOutputResult } from '~/consts/pipelinerun';
+import { runStatus } from '~/consts/pipelinerun';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
 import {
@@ -14,7 +14,6 @@ import {
   isPipelineV1Beta1,
   isTaskV1Beta1,
   taskTestResultStatus,
-  testOutputResultToRunStatus,
   isTaskRunInPipelineRun,
   getDisplayNameFromChildReferences,
 } from '../pipeline-utils';
@@ -255,12 +254,15 @@ describe('isPipelineV1Beta1', () => {
 });
 
 describe('taskTestResultStatus', () => {
-  it('should return ERROR status', () => {
+  it('should return ERROR status with numeric fields', () => {
     const resultsWithTestOutputError =
       testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_ERROR].status.results;
     expect(taskTestResultStatus(resultsWithTestOutputError as TektonResultsRun[])).toMatchObject({
       result: 'ERROR',
       note: 'Simulated failure for testing TEST_OUTPUT reporting',
+      successes: 0,
+      failures: 1,
+      warnings: 0,
     });
   });
 
@@ -280,12 +282,15 @@ describe('taskTestResultStatus', () => {
     ).toBeUndefined();
   });
 
-  it('should return SUCCESS for a successful TEST_OUTPUT result', () => {
+  it('should return SUCCESS with numeric fields for a successful TEST_OUTPUT result', () => {
     const resultsWithTestOutputSuccess =
       testPipelineRuns[DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS].status.results;
     expect(taskTestResultStatus(resultsWithTestOutputSuccess as TektonResultsRun[])).toMatchObject({
       note: 'Simulated success for testing TEST_OUTPUT reporting',
       result: 'SUCCESS',
+      successes: 1,
+      failures: 0,
+      warnings: 0,
     });
   });
 
@@ -296,39 +301,22 @@ describe('taskTestResultStatus', () => {
       taskTestResultStatus(resultsWithInvalidTestOutputJsonValue as TektonResultsRun[]),
     ).toBeUndefined();
   });
-});
 
-describe('testOutputResultToRunStatus', () => {
-  it('should return null when testOutputResult is undefined', () => {
-    expect(testOutputResultToRunStatus(undefined)).toBeNull();
-  });
-
-  it('should return null when testOutputResult is empty string', () => {
-    expect(testOutputResultToRunStatus('' as TestOutputResult)).toBeNull();
-  });
-
-  it('should return Succeeded for SUCCESS', () => {
-    expect(testOutputResultToRunStatus(TestOutputResult.SUCCESS)).toBe(runStatus.Succeeded);
-  });
-
-  it('should return TestFailed for FAILURE', () => {
-    expect(testOutputResultToRunStatus(TestOutputResult.FAILURE)).toBe(runStatus.TestFailed);
-  });
-
-  it('should return TestFailed for ERROR', () => {
-    expect(testOutputResultToRunStatus(TestOutputResult.ERROR)).toBe(runStatus.TestFailed);
-  });
-
-  it('should return TestWarning for WARNING', () => {
-    expect(testOutputResultToRunStatus(TestOutputResult.WARNING)).toBe(runStatus.TestWarning);
-  });
-
-  it('should return Skipped for SKIPPED', () => {
-    expect(testOutputResultToRunStatus(TestOutputResult.SKIPPED)).toBe(runStatus.Skipped);
-  });
-
-  it('should return Unknown for unknown test output result', () => {
-    expect(testOutputResultToRunStatus('UNKNOWN' as TestOutputResult)).toBe(runStatus.Unknown);
+  it('should return undefined numeric fields when TEST_OUTPUT has no counts', () => {
+    const results: TektonResultsRun[] = [
+      {
+        name: 'TEST_OUTPUT',
+        value: '{"result": "SUCCESS", "note": "old format"}',
+      },
+    ];
+    const status = taskTestResultStatus(results);
+    expect(status).toEqual({
+      result: 'SUCCESS',
+      note: 'old format',
+      successes: undefined,
+      failures: undefined,
+      warnings: undefined,
+    });
   });
 });
 

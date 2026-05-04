@@ -78,12 +78,12 @@ const createPipelineRunListHeader =
       ...(showTestResult
         ? [
             {
-              title: <div>Test result</div>,
+              title: <div>Test output</div>,
               props: {
                 className: pipelineRunTableColumnClasses.testResultStatus,
                 info: {
                   popover:
-                    'Pipeline run TEST_OUTPUT when available; otherwise the worst TEST_OUTPUT among task runs.',
+                    'Pipeline run TEST_OUTPUT when available; aggregate TEST_OUTPUT results among task runs (failures, warnings, successes).',
                 },
               },
             },
@@ -214,12 +214,12 @@ export const getPipelineRunListHeader = (visibleColumns: Set<PipelineRunColumnKe
 
   if (visibleColumns.has('testResult')) {
     columns.push({
-      title: <div>Test result</div>,
+      title: <div>Test output</div>,
       props: {
         className: dynamicClasses.testResultStatus,
         info: {
           popover:
-            'Pipeline run TEST_OUTPUT when available; otherwise the worst TEST_OUTPUT among task runs.',
+            'Pipeline run TEST_OUTPUT when available; aggregate TEST_OUTPUT results among task runs (failures, warnings, successes).',
         },
       },
     });
