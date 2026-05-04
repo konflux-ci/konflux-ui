@@ -44,17 +44,17 @@ jobs:
             exit 0
           fi
 
-          # 2026-05-04 is ISO week 19 and is a release Monday
-          ANCHOR_WEEK=19
-          CURRENT_WEEK=$((10#$(date +%V)))
-          DIFF=$(((CURRENT_WEEK - ANCHOR_WEEK) % 2))
+          # 2026-05-04 is a release Monday (epoch day 20577)
+          ANCHOR_DAY=20577
+          CURRENT_DAY=$(( $(date +%s) / 86400 ))
+          WEEKS_SINCE=$(( (CURRENT_DAY - ANCHOR_DAY) / 7 ))
 
-          if [[ $DIFF -ne 0 ]]; then
+          if (( WEEKS_SINCE % 2 != 0 )); then
             echo "is_release_week=false" >> "$GITHUB_OUTPUT"
-            echo "Not a release week (current: $CURRENT_WEEK, anchor: $ANCHOR_WEEK). Skipping."
+            echo "Not a release week (weeks since anchor: $WEEKS_SINCE). Skipping."
           else
             echo "is_release_week=true" >> "$GITHUB_OUTPUT"
-            echo "This is a release week (current: $CURRENT_WEEK, anchor: $ANCHOR_WEEK)."
+            echo "This is a release week (weeks since anchor: $WEEKS_SINCE)."
           fi
 
       - name: Read SHAs from infra-deployments
@@ -276,11 +276,11 @@ jobs:
           CURRENT_BODY=$(gh issue view "$TRACKING_ISSUE_NUMBER" \
             --repo "$KONFLUX_UI_REPO" --json body -q '.body')
 
-          # Insert infra PR fields into the YAML block
-          UPDATED_BODY=$(echo "$CURRENT_BODY" | sed \
-            "/^tag:/i\\
-          infra_pr: ${INFRA_PR_NUMBER}\\
-          infra_pr_url: ${INFRA_PR_URL}")
+          # Insert infra PR fields into the YAML block using awk to avoid sed-special characters
+          UPDATED_BODY=$(echo "$CURRENT_BODY" | awk \
+            -v pr="$INFRA_PR_NUMBER" \
+            -v url="$INFRA_PR_URL" \
+            '/^tag:/ { print "infra_pr: " pr; print "infra_pr_url: " url } { print }')
 
           gh issue edit "$TRACKING_ISSUE_NUMBER" \
             --repo "$KONFLUX_UI_REPO" \
