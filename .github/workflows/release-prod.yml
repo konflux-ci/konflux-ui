@@ -152,7 +152,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KONFLUX_UI_REPO: konflux-ci/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
-      INFRA_FORK: ${{ vars.INFRA_FORK || 'sahil143/infra-deployments' }}
+      INFRA_FORK: ${{ vars.INFRA_FORK }}
       PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
       OLD_SHA: ${{ needs.preflight.outputs.old_sha }}
       NEW_SHA: ${{ needs.preflight.outputs.new_sha }}
@@ -170,6 +170,7 @@ jobs:
             -r "$KONFLUX_UI_REPO" \
             -b "$OLD_SHA" \
             -t "$NEW_SHA" \
+            -d "$(pwd)" \
             -o /tmp/changelog.md
 
       # --- Create tracking issue (before infra PR so we can include Fixes link) ---

@@ -50,6 +50,14 @@ jobs:
             fi
           done
 
+          # Validate SHA format
+          for sha_field in NEW_SHA OLD_SHA; do
+            if [[ ! "${!sha_field}" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+              echo "::error::Invalid SHA format for $sha_field: '${!sha_field}'"
+              exit 1
+            fi
+          done
+
           echo "release_date=$RELEASE_DATE" >> "$GITHUB_OUTPUT"
           echo "new_sha=$NEW_SHA" >> "$GITHUB_OUTPUT"
           echo "old_sha=$OLD_SHA" >> "$GITHUB_OUTPUT"
