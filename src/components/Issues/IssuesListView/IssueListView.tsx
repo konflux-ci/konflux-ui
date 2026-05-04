@@ -5,7 +5,6 @@ import emptyStateImgUrl from '~/assets/success.svg';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Issue, IssueSeverity, IssueState } from '~/kite/issue-type';
@@ -87,20 +86,10 @@ const IssueListView = () => {
     sortPaths,
   );
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(issues, (issue) => issue.state, [IssueState.ACTIVE, IssueState.RESOLVED]),
-    [issues],
-  );
-
-  const severityFilterObj = React.useMemo(
-    () =>
-      createFilterObj(issues, (issue) => issue.severity, [
-        IssueSeverity.INFO,
-        IssueSeverity.MINOR,
-        IssueSeverity.MAJOR,
-        IssueSeverity.CRITICAL,
-      ]),
-    [issues],
+  const statusOptions = React.useMemo(() => [IssueState.ACTIVE, IssueState.RESOLVED], []);
+  const severityOptions = React.useMemo(
+    () => [IssueSeverity.INFO, IssueSeverity.MINOR, IssueSeverity.MAJOR, IssueSeverity.CRITICAL],
+    [],
   );
 
   const EmptyMessage = () => (
@@ -123,14 +112,14 @@ const IssueListView = () => {
         filterKey="status"
         values={statusFilter}
         setValues={(status) => setFilters({ ...filters, status })}
-        options={statusFilterObj}
+        options={statusOptions}
       />
       <MultiSelect
         label="Severity"
         filterKey="severity"
         values={severityFilter}
         setValues={(severity) => setFilters({ ...filters, severity })}
-        options={severityFilterObj}
+        options={severityOptions}
       />
     </BaseTextFilterToolbar>
   );

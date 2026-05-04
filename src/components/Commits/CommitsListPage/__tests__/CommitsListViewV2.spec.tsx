@@ -1,5 +1,6 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with-commits';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { runStatus } from '~/consts/pipelinerun';
@@ -146,15 +147,12 @@ describe('CommitsListViewV2', () => {
     await waitFor(() => screen.getAllByPlaceholderText<HTMLInputElement>('Filter by name...'));
   });
 
-  it('should match the commit if it is filtered by name', () => {
+  it('should match the commit if it is filtered by name', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     const view = renderWithQueryClient(<CommitsListV2 />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
-    act(() => {
-      fireEvent.change(filter, {
-        target: { value: 'test-title' },
-      });
-    });
+    await user.type(filter, 'test-title');
     act(() => {
       jest.advanceTimersByTime(700);
     });
@@ -163,15 +161,27 @@ describe('CommitsListViewV2', () => {
     expect(screen.getByText('#12 test-title-3')).toBeInTheDocument();
   });
 
-  it('should show version filter when versionName is not provided', () => {
-    renderWithQueryClient(<CommitsListV2 />);
-    const versionButtons = screen.getAllByRole('button', { name: 'Version filter menu' });
-    expect(versionButtons.length).toBeGreaterThan(0);
+  it('should show Name/Version search mode dropdown when versionName is provided', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    const searchModeToggle = screen
+      .getAllByRole('button', { name: 'Name' })
+      .find((el) => el.classList.contains('pf-v5-c-menu-toggle'));
+    if (!searchModeToggle) {
+      throw new Error('Expected Name/Version search mode menu toggle');
+    }
+
+    await user.click(searchModeToggle);
+    expect(screen.getByRole('menuitem', { name: 'Version' })).toBeInTheDocument();
   });
 
-  it('should hide version filter when versionName is provided', () => {
-    renderWithQueryClient(<CommitsListV2 versionName="main" />);
-    expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
+  it('should hide Name/Version search mode dropdown when versionName is not provided', () => {
+    renderWithQueryClient(<CommitsListV2 />);
+    const searchModeMenuToggle = screen
+      .queryAllByRole('button', { name: 'Name' })
+      .find((el) => el.classList.contains('pf-v5-c-menu-toggle'));
+    expect(searchModeMenuToggle).toBeUndefined();
   });
 
   it('should show loader if next page is loading', () => {

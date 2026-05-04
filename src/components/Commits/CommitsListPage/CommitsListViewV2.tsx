@@ -4,8 +4,7 @@ import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
-import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
 import {
   PipelineRunLabel,
   PipelineRunType,
@@ -69,7 +68,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
-    version: unparsedFilters.version ? (unparsedFilters.version as string[]) : [],
+    version: unparsedFilters.version ? (unparsedFilters.version as string) : '',
   });
 
   const { name: nameFilter, status: statusFilter, version: versionFilter } = filters;
@@ -83,11 +82,10 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName ? { [PipelineRunLabel.COMPONENT_VERSION]: versionName } : {}),
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, versionName],
+        [component?.metadata?.creationTimestamp, componentName],
       ),
     );
 
@@ -105,11 +103,6 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     [component?.spec?.source?.versions],
   );
   const allVersionBranches = React.useMemo(() => allVersions.map((v) => v.revision), [allVersions]);
-
-  const versionLabelMap = React.useMemo(
-    () => Object.fromEntries(allVersions.map((v) => [v.revision, v.name])),
-    [allVersions],
-  );
 
   // used in CommitListRow to calculate the correct latest PLR status
   const allPipelineRunsFilteredByVersions = React.useMemo(
@@ -155,14 +148,6 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     [commitPipelineRunMap],
   );
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(commits, (c) => commitStatusMap[c.sha] || runStatus.Unknown, statuses),
-    [commits, commitStatusMap],
-  );
-
-  // TODO: temporary until item count is not removed from MultiSelect
-  const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
-
   const filteredCommits = React.useMemo(
     () =>
       commits.filter((commit) => {
@@ -178,7 +163,7 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
               .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
             commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
           (!statusFilter.length || statusFilter.includes(commitStatus)) &&
-          (!versionFilter.length || versionFilter.includes(commit.branch))
+          (!versionFilter || commit.branch.toLowerCase().includes(versionFilter.toLowerCase()))
         );
       }),
     [commits, nameFilter, statusFilter, versionFilter, commitStatusMap],
@@ -218,10 +203,19 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
 
   const DataToolbar = (
     <BaseTextFilterToolbar
-      text={nameFilter}
+      text={nameFilter || versionFilter}
       label="name"
-      setText={(name) => setFilters({ ...filters, name })}
+      setText={(newSearchValue, searchType) => {
+        switch (searchType) {
+          case 'Version':
+            return setFilters({ ...filters, version: newSearchValue, name: '' });
+          case 'Name':
+          default:
+            return setFilters({ ...filters, name: newSearchValue, version: '' });
+        }
+      }}
       onClearFilters={onClearFilters}
+      filterOptions={versionName ? [...TEXT_SEARCH_TYPES] : []}
       data-test="commit-list-toolbar"
       totalColumns={COMMIT_COLUMNS_DEFINITIONS.length}
       openColumnManagement={() => setIsColumnManagementOpen(true)}
@@ -231,18 +225,8 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
         filterKey="status"
         values={statusFilter}
         setValues={(newFilters) => setFilters({ ...filters, status: newFilters })}
-        options={statusFilterObj}
+        options={statuses}
       />
-      {!versionName && (
-        <MultiSelect
-          label="Version"
-          filterKey="version"
-          values={versionFilter}
-          setValues={(newFilters) => setFilters({ ...filters, version: newFilters })}
-          options={versionFilterObj}
-          optionLabels={versionLabelMap}
-        />
-      )}
     </BaseTextFilterToolbar>
   );
 

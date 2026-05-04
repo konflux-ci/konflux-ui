@@ -2,16 +2,15 @@ import * as React from 'react';
 import { Flex, FlexItem, Label, pluralize } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect.tsx';
+import { MENU_DIVIDER } from '~/components/Filter/generic/MultiSelect';
 import MonitoredReleasesFilterToolbar from '~/components/Filter/toolbars/MonitoredReleasesFilterToolbar';
-import { createFilterObj, FilterType } from '~/components/Filter/utils/filter-utils';
+import { FilterType } from '~/components/Filter/utils/filter-utils';
 import {
   filterMonitoredReleases,
   MonitoredReleasesFilterState,
 } from '~/components/Filter/utils/monitoredreleases-filter-utils';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { PipelineRunLabel } from '~/consts/pipelinerun';
-import { getReleaseStatus } from '~/hooks/useReleaseStatus';
 import { useSortedResources } from '~/hooks/useSortedResources';
 import { Table } from '~/shared';
 import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
@@ -223,79 +222,62 @@ const ReleaseMonitorListView: React.FunctionComponent = () => {
   const filterOptions = React.useMemo(() => {
     if (releases.length === 0 && namespaces.length === 0) {
       return {
-        statusOptions: {},
-        applicationOptions: {},
-        releasePlanOptions: {},
-        namespaceOptions: {},
-        componentOptions: {},
-        productOptions: {},
-        productVersionOptions: {},
+        statusOptions: [],
+        applicationOptions: [],
+        releasePlanOptions: [],
+        namespaceOptions: [],
+        componentOptions: [],
+        productOptions: [],
+        productVersionOptions: [],
       };
     }
     const nsKeys = namespaces.map((ns) => ns.metadata.name);
-    const applicationOptions = createFilterObj(
-      releases,
-      (mr) => mr?.metadata.labels[PipelineRunLabel.APPLICATION],
+
+    const applicationNames = releases.map(
+      (mr) => mr?.metadata?.labels?.[PipelineRunLabel.APPLICATION],
     );
-    const noApplication = applicationOptions.undefined;
-    delete applicationOptions.undefined;
+    const hasNoApplication = applicationNames.some((app) => !app);
+    const uniqueApplications = [
+      ...new Set(applicationNames.filter((a): a is string => Boolean(a))),
+    ];
+    const applicationFilterOptions: string[] = hasNoApplication
+      ? ['No application', MENU_DIVIDER, ...uniqueApplications]
+      : uniqueApplications;
 
-    const applicationFilterOptions =
-      noApplication > 0
-        ? {
-            'No application': noApplication,
-            [MENU_DIVIDER]: 1,
-            ...applicationOptions,
-          }
-        : applicationOptions;
+    const componentNames = releases.map((mr) => mr?.metadata?.labels?.[PipelineRunLabel.COMPONENT]);
+    const hasNoComponent = componentNames.some((comp) => !comp);
+    const uniqueComponents = [...new Set(componentNames.filter((a): a is string => Boolean(a)))];
+    const componentFilterOptions: string[] = hasNoComponent
+      ? ['No component', MENU_DIVIDER, ...uniqueComponents]
+      : uniqueComponents;
 
-    const componentOptions = createFilterObj(
-      releases,
-      (mr) => mr?.metadata.labels[PipelineRunLabel.COMPONENT],
-    );
-    const noComponent = componentOptions.undefined;
-    delete componentOptions.undefined;
+    const productNames = releases.map((mr) => mr?.product);
+    const hasNoProduct = productNames.some((prodName) => !prodName);
+    const uniqueProducts = [...new Set(productNames.filter((a): a is string => Boolean(a)))];
+    const productFilterOptions: string[] = hasNoProduct
+      ? ['No product', MENU_DIVIDER, ...uniqueProducts]
+      : uniqueProducts;
 
-    const componentFilterOptions =
-      noComponent > 0
-        ? {
-            'No component': noComponent,
-            [MENU_DIVIDER]: 1,
-            ...componentOptions,
-          }
-        : componentOptions;
+    const productVersionNames = releases.map((mr) => mr?.productVersion);
+    const hasNoProductVersion = productVersionNames.some((prodVerName) => !prodVerName);
+    const uniqueProductVersions = [
+      ...new Set(productVersionNames.filter((a): a is string => Boolean(a))),
+    ];
+    const productVersionFilterOptions: string[] = hasNoProductVersion
+      ? ['No product version', MENU_DIVIDER, ...uniqueProductVersions]
+      : uniqueProductVersions;
 
-    const productOptions = createFilterObj(releases, (mr) => mr?.product);
-    const noProduct = productOptions.undefined;
-    delete productOptions.undefined;
-
-    const productFilterOptions =
-      noProduct > 0
-        ? {
-            'No product': noProduct,
-            [MENU_DIVIDER]: 1,
-            ...productOptions,
-          }
-        : productOptions;
-
-    const productVersionOptions = createFilterObj(releases, (mr) => mr?.productVersion);
-    const noProductVersion = productVersionOptions.undefined;
-    delete productVersionOptions.undefined;
-
-    const productVersionFilterOptions =
-      noProductVersion > 0
-        ? {
-            'No product version': noProductVersion,
-            [MENU_DIVIDER]: 1,
-            ...productVersionOptions,
-          }
-        : productVersionOptions;
+    const releasePlanOptions = [
+      ...new Set(
+        releases.map((mr) => mr?.spec.releasePlan).filter((rp): rp is string => Boolean(rp)),
+      ),
+    ];
 
     return {
-      statusOptions: createFilterObj(releases, (mr) => getReleaseStatus(mr), statuses),
+      statusOptions: statuses,
       applicationOptions: applicationFilterOptions,
-      releasePlanOptions: createFilterObj(releases, (mr) => mr?.spec.releasePlan),
-      namespaceOptions: createFilterObj(releases, (mr) => mr?.metadata.namespace, nsKeys),
+      releasePlanOptions,
+      namespaceOptions: nsKeys,
       componentOptions: componentFilterOptions,
       productOptions: productFilterOptions,
       productVersionOptions: productVersionFilterOptions,

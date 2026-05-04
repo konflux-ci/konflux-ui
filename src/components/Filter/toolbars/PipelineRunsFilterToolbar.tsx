@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import { MultiSelect } from '../generic/MultiSelect';
 import { PipelineRunsFilterState } from '../utils/pipelineruns-filter-utils';
 import { BaseTextFilterToolbar } from './BaseTextFIlterToolbar';
@@ -6,10 +7,9 @@ type PipelineRunsFilterToolbarProps = {
   filters: PipelineRunsFilterState;
   setFilters: (filters: PipelineRunsFilterState) => void;
   onClearFilters: () => void;
-  typeOptions: { [key: string]: number };
-  statusOptions: { [key: string]: number };
-  versionOptions?: { [key: string]: number };
-  versionLabels?: Record<string, string>;
+  typeOptions: string[];
+  statusOptions: string[];
+  filterOptions?: string[];
   openColumnManagement?: () => void;
   totalColumns?: number;
 };
@@ -20,21 +20,35 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   onClearFilters,
   typeOptions,
   statusOptions,
-  versionOptions,
-  versionLabels,
+  filterOptions,
   openColumnManagement,
   totalColumns,
 }: PipelineRunsFilterToolbarProps) => {
-  const { name, status, type, version } = filters;
+  const { name, status, type } = filters;
+  const typeOptionLabels = useMemo(() => {
+    return typeOptions.reduce<Record<string, string>>((acc, label) => {
+      acc[label] = label.charAt(0).toUpperCase() + label.slice(1);
+      return acc;
+    }, {});
+  }, [typeOptions]);
 
   return (
     <BaseTextFilterToolbar
       text={name}
       label="name"
-      setText={(newName) => setFilters({ ...filters, name: newName })}
+      setText={(newSearchValue, searchType) => {
+        switch (searchType) {
+          case 'Version':
+            return setFilters({ ...filters, version: newSearchValue, name: '' });
+          case 'Name':
+          default:
+            return setFilters({ ...filters, name: newSearchValue, version: '' });
+        }
+      }}
       onClearFilters={onClearFilters}
       openColumnManagement={openColumnManagement}
       totalColumns={totalColumns}
+      filterOptions={filterOptions}
     >
       <MultiSelect
         label="Status"
@@ -49,17 +63,8 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
         values={type}
         setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
         options={typeOptions}
+        optionLabels={typeOptionLabels}
       />
-      {versionOptions && (
-        <MultiSelect
-          label="Version"
-          filterKey="version"
-          values={version ?? []}
-          setValues={(newFilters) => setFilters({ ...filters, version: newFilters })}
-          options={versionOptions}
-          optionLabels={versionLabels}
-        />
-      )}
     </BaseTextFilterToolbar>
   );
 };

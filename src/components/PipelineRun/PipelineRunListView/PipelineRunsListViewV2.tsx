@@ -2,12 +2,11 @@ import * as React from 'react';
 import { Bullseye, Flex, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import PipelineRunsFilterToolbar from '~/components/Filter/toolbars/PipelineRunsFilterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import {
   filterPipelineRuns,
   PipelineRunsFilterState,
 } from '~/components/Filter/utils/pipelineruns-filter-utils';
-import { SESSION_STORAGE_KEYS } from '~/consts/constants';
+import { SESSION_STORAGE_KEYS, TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { useComponent } from '~/hooks/useComponents';
 import { useVisibleColumns } from '~/hooks/useVisibleColumns';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -26,7 +25,6 @@ import ColumnManagement from '../../../shared/components/table/ColumnManagement'
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunEmptyStateV2 from '../PipelineRunEmptyStateV2';
 import { getPipelineRunListHeader } from './PipelineRunListHeader';
@@ -47,7 +45,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',
     status: unparsedFilters.status ? (unparsedFilters.status as string[]) : [],
     type: unparsedFilters.type ? (unparsedFilters.type as string[]) : [],
-    version: unparsedFilters.version ? (unparsedFilters.version as string[]) : [],
+    version: unparsedFilters.version ? (unparsedFilters.version as string) : '',
   });
 
   const {
@@ -75,13 +73,10 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
             filterByName: nameFilter || undefined,
             matchLabels: {
               [PipelineRunLabel.COMPONENT]: componentName,
-              ...(versionName && {
-                [PipelineRunLabel.COMPONENT_VERSION]: versionName,
-              }),
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionName],
+        [component?.metadata?.creationTimestamp, componentName, nameFilter],
       ),
     );
 
@@ -93,38 +88,8 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
     );
   }, [pipelineRuns]);
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
-    [sortedPipelineRuns],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        sortedPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-      ),
-    [sortedPipelineRuns],
-  );
-
-  const allVersions = React.useMemo(
-    () => component?.spec?.source?.versions ?? [],
-    [component?.spec?.source?.versions],
-  );
-
-  const allVersionBranches = React.useMemo(() => allVersions.map((v) => v.revision), [allVersions]);
-
-  const versionLabelMap = React.useMemo(
-    () => Object.fromEntries(allVersions.map((v) => [v.revision, v.name])),
-    [allVersions],
-  );
-
-  // TODO: temporary until item count is not removed from MultiSelect
-  const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
-
   const effectiveFilters = React.useMemo(
-    () => (versionName ? { ...filters, version: [] } : filters),
+    () => (versionName ? { ...filters, version: '' } : filters),
     [filters, versionName],
   );
 
@@ -156,10 +121,9 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}
-          typeOptions={typeFilterObj}
-          statusOptions={statusFilterObj}
-          versionOptions={!versionName ? versionFilterObj : undefined}
-          versionLabels={!versionName ? versionLabelMap : undefined}
+          typeOptions={pipelineRunTypes}
+          statusOptions={statuses}
+          filterOptions={versionName ? [...TEXT_SEARCH_TYPES] : []}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />

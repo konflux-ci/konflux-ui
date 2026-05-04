@@ -8,13 +8,13 @@ type MonitoredReleasesFilterToolbarProps = {
   filters: MonitoredReleasesFilterState;
   setFilters: (filters: MonitoredReleasesFilterState) => void;
   onClearFilters: () => void;
-  statusOptions: { [key: string]: number };
-  applicationOptions: { [key: string]: number };
-  releasePlanOptions: { [key: string]: number };
-  namespaceOptions: { [key: string]: number };
-  componentOptions: { [key: string]: number };
-  productOptions: { [key: string]: number };
-  productVersionOptions: { [key: string]: number };
+  statusOptions: string[];
+  applicationOptions: string[];
+  releasePlanOptions: string[];
+  namespaceOptions: string[];
+  componentOptions: string[];
+  productOptions: string[];
+  productVersionOptions: string[];
 };
 
 const MonitoredReleasesFilterToolbar: React.FC<MonitoredReleasesFilterToolbarProps> = ({

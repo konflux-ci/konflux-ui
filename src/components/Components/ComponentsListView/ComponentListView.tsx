@@ -19,7 +19,6 @@ import { capitalize } from 'lodash-es';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { MultiSelect } from '~/components/Filter/generic/MultiSelect';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { statuses } from '~/utils/commits-utils';
 import { pipelineRunStatus } from '~/utils/pipeline-utils';
@@ -121,16 +120,6 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
     [componentsWithLatestBuild, statusFilter, nameFilter],
   );
 
-  const statusFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        componentsWithLatestBuild,
-        (c) => pipelineRunStatus(c.latestBuildPipelineRun),
-        statuses,
-      ),
-    [componentsWithLatestBuild],
-  );
-
   const NoDataEmptyMessage = () => (
     <AppEmptyState emptyStateImg={emptyStateImgUrl} title="Bring your application to life">
       <EmptyStateBody>
@@ -219,7 +208,7 @@ const ComponentListView: React.FC<React.PropsWithChildren<ComponentListViewProps
         filterKey="status"
         values={statusFilter}
         setValues={(status) => setFilters({ ...filters, status })}
-        options={statusFilterObj}
+        options={statuses}
       />
       <ButtonWithAccessTooltip
         variant="secondary"
