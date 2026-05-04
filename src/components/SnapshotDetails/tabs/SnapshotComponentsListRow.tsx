@@ -29,6 +29,7 @@ const SnapshotComponentsListRow: React.FC<
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     obj.name,
+    obj.application,
     false,
   );
 

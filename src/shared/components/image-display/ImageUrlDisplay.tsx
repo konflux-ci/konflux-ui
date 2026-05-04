@@ -14,6 +14,8 @@ export interface ImageUrlDisplayProps {
   namespace: string;
   /** Component name */
   componentName: string;
+  /** Application name */
+  applicationName?: string;
 }
 
 const getContainerImageLink = (url: string) => {
@@ -25,12 +27,14 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
   imageUrl,
   namespace,
   componentName,
+  applicationName,
 }) => {
   const [urlInfo, proxyLoaded, proxyError] = useImageProxy();
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     componentName,
-    false,
+    applicationName,
+    false
   );
 
   const visibility = imageRepository?.spec?.image?.visibility ?? null;

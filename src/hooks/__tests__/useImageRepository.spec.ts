@@ -22,7 +22,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded, error] = result.current;
 
     expect(imageRepository).toBeNull();
@@ -37,7 +37,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    renderHook(() => useImageRepository('test-ns', 'test-component', true));
+    renderHook(() => useImageRepository('test-ns', 'test-component', undefined, true));
 
     expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -54,6 +54,29 @@ describe('useImageRepository', () => {
     );
   });
 
+  it('should fetch with application label when applicationName is provided', () => {
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [mockPublicImageRepository],
+      isLoading: false,
+      error: undefined,
+    });
+
+    renderHook(() => useImageRepository('test-ns', 'test-component', 'test-app'));
+
+    expect(useK8sWatchResourceMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isList: true,
+        namespace: 'test-ns',
+        selector: {
+          matchLabels: {
+            [ImageRepositoryLabel.APPLICATION]: 'test-app',
+          },
+        },
+      }),
+      expect.any(Object),
+    );
+  });
+
   it('should return image repository matching component ownerReference', () => {
     useK8sWatchResourceMock.mockReturnValue({
       data: [mockPublicImageRepository],
@@ -61,7 +84,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded, error] = result.current;
 
     expect(imageRepository).toEqual(mockPublicImageRepository);
@@ -76,7 +99,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded, error] = result.current;
 
     expect(imageRepository).toEqual(mockPrivateImageRepository);
@@ -106,7 +129,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded] = result.current;
 
     expect(imageRepository).toBeNull();
@@ -128,7 +151,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded, error] = result.current;
 
     expect(imageRepository).toEqual(mockPublicImageRepository);
@@ -151,7 +174,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded] = result.current;
 
     expect(imageRepository).toBeNull();
@@ -167,7 +190,7 @@ describe('useImageRepository', () => {
       error: mockError,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded, error] = result.current;
 
     expect(imageRepository).toBeNull();
@@ -182,7 +205,7 @@ describe('useImageRepository', () => {
       error: undefined,
     });
 
-    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component', false));
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
     const [imageRepository, loaded] = result.current;
 
     expect(imageRepository).toBeNull();
@@ -197,7 +220,7 @@ describe('useImageRepository', () => {
         error: undefined,
       });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', null, false));
+      const { result } = renderHook(() => useImageRepository('test-ns', null));
       const [imageRepository, loaded, error] = result.current;
 
       expect(imageRepository).toBeNull();
@@ -212,7 +235,7 @@ describe('useImageRepository', () => {
         error: undefined,
       });
 
-      const { result } = renderHook(() => useImageRepository(null, 'test-component', false));
+      const { result } = renderHook(() => useImageRepository(null, 'test-component'));
       const [imageRepository, loaded, error] = result.current;
 
       expect(imageRepository).toBeNull();
@@ -227,7 +250,7 @@ describe('useImageRepository', () => {
         error: undefined,
       });
 
-      const { result } = renderHook(() => useImageRepository('test-ns', '', false));
+      const { result } = renderHook(() => useImageRepository('test-ns', ''));
       const [imageRepository, loaded, error] = result.current;
 
       expect(imageRepository).toBeNull();

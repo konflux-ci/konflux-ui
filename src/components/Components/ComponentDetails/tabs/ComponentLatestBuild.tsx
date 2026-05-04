@@ -52,6 +52,7 @@ const ComponentLatestBuild: React.FC<React.PropsWithChildren<ComponentLatestBuil
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     component.metadata.namespace,
     component.metadata.name,
+    null,
     false,
   );
 

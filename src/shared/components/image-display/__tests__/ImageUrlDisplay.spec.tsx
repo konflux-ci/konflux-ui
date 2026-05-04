@@ -15,8 +15,7 @@ jest.mock('~/hooks/useImageProxy', () => ({
 // Mock useImageRepository hook
 const mockUseImageRepository = jest.fn();
 jest.mock('~/hooks/useImageRepository', () => ({
-  useImageRepository: (namespace: string, name: string, watch: boolean) =>
-    mockUseImageRepository(namespace, name, watch),
+  useImageRepository: (...args: unknown[]) => mockUseImageRepository(...args),
 }));
 
 const testImageUrl = 'quay.io/test-namespace/test-image@sha256:abc123';
@@ -173,7 +172,12 @@ describe('ImageUrlDisplay', () => {
       />,
     );
 
-    expect(mockUseImageRepository).toHaveBeenCalledWith(testNamespace, testComponentName, false);
+    expect(mockUseImageRepository).toHaveBeenCalledWith(
+      testNamespace,
+      testComponentName,
+      undefined,
+      false,
+    );
   });
 
   it('should ensure the image link can be selected', () => {

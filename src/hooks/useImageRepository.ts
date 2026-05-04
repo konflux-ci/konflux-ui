@@ -7,9 +7,14 @@ import { ImageRepositoryKind } from '~/types';
 export const useImageRepository = (
   namespace: string | null,
   componentName: string | null,
+  applicationName?: string | null,
   watch?: boolean,
 ): [ImageRepositoryKind | null, boolean, unknown] => {
   const enabled = Boolean(namespace && componentName);
+
+  const matchLabels = applicationName
+    ? { [ImageRepositoryLabel.APPLICATION]: applicationName }
+    : { [ImageRepositoryLabel.COMPONENT]: componentName };
 
   const {
     data: imageRepositories,
@@ -21,11 +26,7 @@ export const useImageRepository = (
           groupVersionKind: ImageRepositoryGroupVersionKind,
           namespace,
           isList: true,
-          selector: {
-            matchLabels: {
-              [ImageRepositoryLabel.COMPONENT]: componentName,
-            },
-          },
+          selector: { matchLabels },
           watch,
         }
       : undefined,
