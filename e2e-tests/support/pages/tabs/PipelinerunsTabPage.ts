@@ -105,12 +105,45 @@ export class DetailsTab {
     UIhelper.clickTab('Details');
   }
 
-  // Setting timeout to 50 minutes (Builds sometimes taking slightly longer than 40 minutes).
-  static waitUntilStatusIsNotRunning() {
-    cy.get(pipelinerunsTabPO.statusPO).scrollIntoView();
-    cy.get(pipelinerunsTabPO.statusPO, { timeout: 3000000 })
-      .should('not.have.text', 'Pending')
-      .and('not.have.text', 'Running');
+  // Polls the pipeline run status until it's no longer "Pending" or "Running".
+  // If the status doesn't change after repeated checks, reloads the page and
+  // retries, since the UI may not update without a refresh. Uses recursion
+  // instead of a loop because Cypress commands are asynchronous and don't
+  // support try/catch for flow control.
+  static waitUntilStatusIsNotRunning(
+    timeoutDuration: number = 1800000, // 30 minutes
+    interval: number = 60000, // 60 seconds
+    retries: number = 7, // number of retries before failing the test
+  ) {
+    if (retries < 0) {
+      assert.fail('Pipelinerun is still running after maximum retries');
+    }
+
+    const maxAttempts = Math.max(1, Math.floor(timeoutDuration / interval));
+
+    const checkStatus = (attempt: number) => {
+      cy.get(pipelinerunsTabPO.statusPO)
+        .scrollIntoView()
+        .invoke('text')
+        .then((statusText) => {
+          if (!statusText.includes('Pending') && !statusText.includes('Running')) {
+            return;
+          }
+          if (attempt >= maxAttempts) {
+            cy.log(
+              `Status is "${statusText}". Reloading page (${retries - 1} ${retries - 1 === 1 ? 'retry' : 'retries'} remaining).`,
+            );
+            cy.reload();
+            // 180000 ms = 3 minutes
+            this.waitUntilStatusIsNotRunning(180000, interval, retries - 1);
+            return;
+          }
+          cy.wait(interval);
+          checkStatus(attempt + 1);
+        });
+    };
+
+    checkStatus(0);
   }
 
   static clickOnNode(nodeId: string) {
