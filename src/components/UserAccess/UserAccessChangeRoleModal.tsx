@@ -72,18 +72,17 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     setRoleSelectOpen(false);
   };
 
-  const handleSave = (newRoleRef: string) => {
-    onSave(newRoleRef);
+  const handleSave = () => {
+    if (!modalSelectedRoleRef) {
+      return;
+    }
+    onSave(modalSelectedRoleRef);
     handleClose();
   };
 
   const selectedCount = selectedRowKeys.size;
 
   const isModalSaveDisabled = React.useMemo(() => {
-    // eslint-disable-next-line no-console
-    console.log('allAffectedRoleBindings from modal', allAffectedRoleBindings);
-
-    // TODO: je potreba jeste najit nejvyssi role u uzivatelu selected (mtakac - contributor by sel upravit na maintainera a prislo by se o admina)
     if (!modalSelectedRoleRef) {
       return true;
     }
@@ -98,14 +97,14 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       return false;
     }
 
-    const downgradeExists = [...selectedRowKeys].some((rowKey) => {
-      const { roleRefName } = splitRowKey(rowKey);
-      const currentRoleWeight = KONFLUX_ROLE_WEIGHT[roleRefName];
-      return currentRoleWeight !== undefined && currentRoleWeight > selectedRoleWeight;
-    });
+    const weightsFromAffectedBindings = allAffectedRoleBindings
+      .map((rb) => KONFLUX_ROLE_WEIGHT[rb.roleRef?.name ?? ''])
+      .filter((weight): weight is number => weight !== undefined);
 
-    return downgradeExists;
-  }, [modalSelectedRoleRef, selectedRowKeys, selectedCount, allAffectedRoleBindings]);
+    const highestAffectedRoleWeight = Math.max(...weightsFromAffectedBindings);
+
+    return highestAffectedRoleWeight > selectedRoleWeight;
+  }, [modalSelectedRoleRef, selectedCount, allAffectedRoleBindings]);
 
   return (
     <Modal
@@ -118,7 +117,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
         <ButtonWithAccessTooltip
           key="save"
           variant="primary"
-          onClick={() => handleSave(modalSelectedRoleRef)}
+          onClick={() => handleSave()}
           isDisabled={isModalSaveDisabled}
           tooltip={
             !modalSelectedRoleRef
