@@ -52,7 +52,7 @@ const IntegrationTestsEmptyState: React.FC<
           onClick={handleAddTest}
           isDisabled={!canCreateIntegrationTest}
           tooltip="You don't have access to add an integration test"
-          data-test="add-integration-test"
+          data-test="add-integration-test-empty"
         >
           Add integration test
         </ButtonWithAccessTooltip>
@@ -110,7 +110,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
         onClick={handleAddTest}
         isDisabled={!canCreateIntegrationTest}
         tooltip="You don't have access to add an integration test"
-        data-test="add-integration-test"
+        data-test="add-integration-test-toolbar"
       >
         Add integration test
       </ButtonWithAccessTooltip>

@@ -9,7 +9,8 @@ import {
   createKubearchiveWatchResource,
   KubearchiveFilterTransformSelector,
 } from '~/utils/kubearchive-filter-transform';
-import { EQ } from '~/utils/tekton-results';
+import { pipelineRunMatchesCommitSearch } from '~/utils/pipeline-run-commit-search';
+import { AND, commitSearchFilter, EQ, type TektonResultsOptions } from '~/utils/tekton-results';
 import { useK8sWatchResource } from '../k8s';
 import { PipelineRunGroupVersionKind, PipelineRunModel } from '../models';
 import { useDeepCompareMemoize } from '../shared';
@@ -20,8 +21,11 @@ import { has404Error } from '../utils/common-utils';
 import { GetNextPage, NextPageProps, useTRPipelineRuns } from './useTektonResults';
 
 interface UsePipelineRunsV2Options
-  extends Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'fieldSelector'>> {
+  extends Partial<Pick<WatchK8sResource, 'watch' | 'limit' | 'fieldSelector'>>,
+    Partial<Pick<TektonResultsOptions, 'pageSize' | 'filter'>> {
   selector?: KubearchiveFilterTransformSelector;
+  /** Same semantics as commits list Tekton search; TR uses CEL, KubeArchive/cluster filter in memory. */
+  commitSearchTerm?: string;
 }
 
 type UsePipelineRunsV2Result = [
@@ -78,12 +82,27 @@ export const usePipelineRunsV2 = (
       return [];
     }
 
-    if (!optionsMemo?.selector?.filterByCommit) {
-      return resources;
+    let filtered = resources;
+
+    if (optionsMemo?.selector?.filterByCommit) {
+      filtered = filtered.filter(
+        (plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit,
+      );
     }
 
-    return resources.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
-  }, [optionsMemo?.selector?.filterByCommit, resources, isLoading, error]);
+    const searchTerm = optionsMemo?.commitSearchTerm?.trim();
+    if (searchTerm) {
+      filtered = filtered.filter((plr) => pipelineRunMatchesCommitSearch(plr, searchTerm));
+    }
+
+    return filtered;
+  }, [
+    optionsMemo?.selector?.filterByCommit,
+    optionsMemo?.commitSearchTerm,
+    resources,
+    isLoading,
+    error,
+  ]);
 
   // Preserve removed etcd runs (cache), then sort and apply limit
   const runs = React.useMemo((): PipelineRunKind[] => {
@@ -125,6 +144,11 @@ export const usePipelineRunsV2 = (
       return false;
     }
 
+    // Commits-style search must always hit archive (TR or KubeArchive), not only when etcd is short.
+    if (optionsMemo?.commitSearchTerm?.trim()) {
+      return true;
+    }
+
     if (!options?.limit) {
       return true;
     }
@@ -138,13 +162,27 @@ export const usePipelineRunsV2 = (
     }
 
     return false;
-  }, [namespace, options?.limit, processedClusterData.length, error]);
+  }, [
+    namespace,
+    options?.limit,
+    optionsMemo?.commitSearchTerm,
+    processedClusterData.length,
+    error,
+  ]);
 
   const queryTr = !kubearchiveEnabled && shouldQueryExternalSources;
 
+  const trPipelineRunsOptions = React.useMemo(() => {
+    if (!optionsMemo) return optionsMemo;
+    const { commitSearchTerm, filter: existingFilter, ...rest } = optionsMemo;
+    const term = commitSearchTerm?.trim();
+    const filter = term ? AND(existingFilter, commitSearchFilter(term)) : existingFilter;
+    return { ...rest, filter };
+  }, [optionsMemo]);
+
   const [trResources, trLoaded, trError, trGetNextPage, nextPageProps] = useTRPipelineRuns(
     queryTr ? namespace : null,
-    optionsMemo,
+    trPipelineRunsOptions,
   );
 
   // KubeArchive query config when enabled
@@ -176,6 +214,11 @@ export const usePipelineRunsV2 = (
       data = data.filter((plr) => getCommitSha(plr) === optionsMemo.selector.filterByCommit);
     }
 
+    const searchTerm = optionsMemo?.commitSearchTerm?.trim();
+    if (searchTerm) {
+      data = data.filter((plr) => pipelineRunMatchesCommitSearch(plr, searchTerm));
+    }
+
     const creationTimestamp = (tr?: PipelineRunKind) => tr?.metadata?.creationTimestamp ?? '';
     const sorted = data.sort((a, b) => creationTimestamp(b).localeCompare(creationTimestamp(a)));
 
@@ -187,6 +230,7 @@ export const usePipelineRunsV2 = (
     shouldQueryKubearchive,
     optionsMemo?.limit,
     optionsMemo?.selector?.filterByCommit,
+    optionsMemo?.commitSearchTerm,
   ]);
 
   // Merge cluster with external source, dedupe by UID, sort, and limit
