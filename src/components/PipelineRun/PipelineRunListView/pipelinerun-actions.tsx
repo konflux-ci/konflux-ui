@@ -74,6 +74,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
   );
 
   const snapShotLabel = pipelineRun?.metadata?.labels?.[PipelineRunLabel.SNAPSHOT];
+  const status = pipelineRunStatus(pipelineRun);
 
   const [snapshot, , snapshotError] = useSnapshot(namespace, snapShotLabel);
 
@@ -126,7 +127,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
                 }),
               );
             }),
-          isDisabled: false,
+          isDisabled: status === runStatus.Cancelling,
           disabledTooltip: null,
         };
       }
@@ -151,7 +152,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
                 }),
               );
             }),
-          isDisabled: false,
+          isDisabled: status === runStatus.Cancelling,
           disabledTooltip: null,
         };
       }
@@ -186,6 +187,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     isIntegrationTestsPage,
     isSnapshotsPage,
     isPR,
+    status
   ]);
 };
 
@@ -250,6 +252,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
   const isPR = eventType === PipelineRunEventType.PULL;
   const isPushBuildType =
     eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.INCOMING;
+  const status = pipelineRunStatus(pipelineRun);
 
   return useLazyActionMenu({
     loadContext: async () => {
@@ -336,7 +339,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                     }),
                   );
                 }),
-              disabled: false,
+              disabled: status === runStatus.Cancelling,
               disabledTooltip: undefined,
             },
           ];
@@ -367,7 +370,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                     }),
                   );
                 }),
-              disabled: false,
+              disabled: status === runStatus.Cancelling,
               disabledTooltip: undefined,
             },
           ];
