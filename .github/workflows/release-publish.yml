@@ -61,10 +61,10 @@ jobs:
         env:
           INFRA_PR: ${{ steps.meta.outputs.infra_pr }}
         run: |
-          MERGED=$(gh pr view "$INFRA_PR" \
-            --repo "$INFRA_REPO" --json merged -q '.merged')
+          STATE=$(gh pr view "$INFRA_PR" \
+            --repo "$INFRA_REPO" --json state -q '.state')
 
-          if [[ "$MERGED" != "true" ]]; then
+          if [[ "$STATE" != "MERGED" ]]; then
             echo "::error::Infra-deployments PR #${INFRA_PR} is NOT merged."
             echo "Tracking issue was closed without a valid merge. Aborting."
             exit 1
