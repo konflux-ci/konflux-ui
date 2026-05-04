@@ -1,48 +1,35 @@
-import React from 'react';
-import { Virtualizer } from '@tanstack/react-virtual';
+import type { RefObject } from 'react';
+import { useHotkeys } from 'react-hotkeys-hook';
+
+const DEFAULT_LINE_HEIGHT = 20;
 
 interface UseKeyboardNavigationParams {
-  virtualizer: Virtualizer<HTMLDivElement, Element>;
-  scrollElementRef: React.RefObject<HTMLDivElement>;
+  scrollElementRef: RefObject<HTMLDivElement>;
+  lineHeight?: number;
   enabled?: boolean;
 }
 
-const NAV_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
-
 export const useKeyboardNavigation = ({
-  virtualizer,
   scrollElementRef,
+  lineHeight = DEFAULT_LINE_HEIGHT,
   enabled = true,
-}: UseKeyboardNavigationParams) => {
-  React.useEffect(() => {
-    if (!enabled) return;
-
-    const scrollElement = scrollElementRef.current;
-    if (!scrollElement) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const active = document.activeElement;
-
-      if (!active || (active !== scrollElement && !scrollElement.contains(active))) {
-        return;
-      }
-
-      const { key } = event;
-      if (!NAV_KEYS.has(key)) return;
+}: UseKeyboardNavigationParams): RefObject<HTMLDivElement | null> => {
+  return useHotkeys<HTMLDivElement>(
+    'up,down,pageup,pagedown,home,end',
+    (event) => {
+      const scrollElement = scrollElementRef.current;
+      if (!scrollElement) return;
 
       event.preventDefault();
       event.stopPropagation();
 
       const current = scrollElement.scrollTop;
       const viewport = scrollElement.clientHeight;
-      const total = virtualizer.getTotalSize();
-      const lineHeight = virtualizer.options.estimateSize?.(0) ?? 20;
-
-      const maxScroll = Math.max(0, total - viewport);
+      const total = scrollElement.scrollHeight;
 
       let next = current;
 
-      switch (key) {
+      switch (event.key) {
         case 'ArrowUp':
           next = current - lineHeight;
           break;
@@ -62,23 +49,11 @@ export const useKeyboardNavigation = ({
           next = total;
           break;
         default:
-          // do nothing
           break;
       }
 
-      if (key === 'End') {
-        scrollElement.scrollTop = total;
-      } else if (key === 'PageDown') {
-        scrollElement.scrollTop = Math.min(total, next);
-      } else {
-        scrollElement.scrollTop = Math.min(maxScroll, Math.max(0, next));
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [enabled, scrollElementRef, virtualizer]);
+      scrollElement.scrollTop = Math.max(0, next);
+    },
+    { enabled },
+  );
 };
