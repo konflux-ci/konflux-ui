@@ -1,4 +1,10 @@
 import {
+  createGitBranchURL,
+  createGitCommitURL,
+  createGitPullRequestURL,
+  createHostedRepoURL,
+} from '~/utils/git-utils';
+import {
   PipelineRunEventType,
   PipelineRunLabel,
   PipelineRunType,
@@ -48,16 +54,16 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_REPO_ORG_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_REPO_ORG_LABEL];
-  const shaURL =
-    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
-  const shaTitle =
-    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL];
+  const shaURL =
+    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
+    createGitCommitURL(repoURL, commitSHA, gitProvider);
+  const shaTitle =
+    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const pullRequestNumber = plr.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
   const eventType =
     plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
@@ -178,22 +184,22 @@ export const showPLRMessage = (plr: PipelineRunKind): string => {
 };
 
 export const createRepoUrl = (commit: Commit): string | null => {
-  if (commit.gitProvider !== 'github') {
-    return null;
-  }
+  // Prioritize repoURL if available (works for all providers including self-hosted)
   if (commit.repoURL) {
     return commit.repoURL;
   }
-  if (commit.repoName && commit.repoOrg) {
-    return `https://github.com/${commit.repoOrg}/${commit.repoName}`;
+
+  if (commit.repoName && commit.repoOrg && commit.gitProvider) {
+    return createHostedRepoURL(commit.repoOrg, commit.repoName, commit.gitProvider);
   }
+
   return null;
 };
 
 export const createRepoBranchURL = (commit: Commit): string | null => {
   const repoUrl = createRepoUrl(commit);
   if (commit.branch && repoUrl) {
-    return `${repoUrl}/tree/${commit.branch}`;
+    return createGitBranchURL(repoUrl, commit.branch, commit.gitProvider);
   }
   return null;
 };
@@ -201,7 +207,7 @@ export const createRepoBranchURL = (commit: Commit): string | null => {
 export const createRepoPullRequestURL = (commit: Commit): string | null => {
   const repoURL = createRepoUrl(commit);
   if (commit.pullRequestNumber && repoURL) {
-    return `${repoURL}/pull/${commit.pullRequestNumber}`;
+    return createGitPullRequestURL(repoURL, commit.pullRequestNumber, commit.gitProvider);
   }
   return null;
 };
@@ -247,14 +253,14 @@ export const createCommitObjectFromSnapshot = (snapshot: Snapshot): Commit => {
   const repoOrg =
     snapshot.metadata.labels?.[SnapshotLabels.PAC_URL_ORG_LABEL] ||
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_URL_ORG_LABEL];
-  const shaURL =
-    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
-  const shaTitle =
-    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
     snapshot.metadata.labels?.[SnapshotLabels.PAC_GIT_PROVIDER] ||
     snapshot.metadata.annotations?.[SnapshotLabels.PAC_GIT_PROVIDER];
+  const shaURL =
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_URL_ANNOTATION] ||
+    createGitCommitURL(repoURL, commitSHA, gitProvider);
+  const shaTitle =
+    snapshot.metadata.annotations?.[SnapshotLabels.PAC_SHA_TITLE_ANNOTATION] || 'manual build';
   const pullRequestNumber = snapshot.metadata.labels?.[SnapshotLabels.PAC_PULL_REQUEST_LABEL] ?? '';
   const eventType = snapshot.metadata.labels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL];
   const isPullRequest =
