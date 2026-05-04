@@ -25,8 +25,10 @@ import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
+import { PipelineRunReferenceCell } from './PipelineRunReferenceCell';
 import { PipelineRunTestResultCell } from './PipelineRunTestResultCell';
 import { ScanStatus } from './ScanStatus';
+import './PipelineRunListView.scss';
 
 type PipelineRunListRowProps = RowFunctionArgs<
   PipelineRunKind,
@@ -471,8 +473,8 @@ const DynamicPipelineRunListRow: React.FC<
         </TableData>
       )}
       {visibleColumns.has('reference') && (
-        <TableData className={dynamicClasses.reference}>
-          <TriggerColumnData
+        <TableData className={`${dynamicClasses.reference} pipeline-run-list__reference-td`}>
+          <PipelineRunReferenceCell
             repoOrg={commit?.repoOrg}
             repoName={commit?.repoName}
             repoURL={commit?.repoURL}
