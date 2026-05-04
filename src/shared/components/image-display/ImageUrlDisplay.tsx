@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { ClipboardCopy, Skeleton } from '@patternfly/react-core';
+import { Skeleton } from '@patternfly/react-core';
 import { useImageProxy } from '~/hooks/useImageProxy';
 import { useImageRepository } from '~/hooks/useImageRepository';
+import { CopyIconButton } from '~/shared/components/CopyIconButton';
 import ExternalLink from '~/shared/components/links/ExternalLink';
 import { ImageRepositoryVisibility } from '~/types';
 import { getImageUrlForVisibility } from '~/utils/component-utils';
@@ -15,22 +16,11 @@ export interface ImageUrlDisplayProps {
   componentName: string;
 }
 
-/**
- * Default formatter — ensures URL starts with https://
- */
 const getContainerImageLink = (url: string) => {
   const imageUrl = url.includes('@sha') ? url.split('@sha')[0] : url;
   return imageUrl.startsWith('http') ? imageUrl : `https://${imageUrl}`;
 };
 
-/**
- * Renders an image URL using:
- * - `ClipboardCopy` for private images (shows proxy URL when available, original URL as fallback)
- * - `ExternalLink` for public or unspecified visibility
- * - `Skeleton` while loading image repository or image proxy information
- *
- * Uses dynamic image proxy and visibility from Konflux public info and image repository.
- */
 export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
   imageUrl,
   namespace,
@@ -53,26 +43,32 @@ export const ImageUrlDisplay: React.FC<ImageUrlDisplayProps> = ({
   }
 
   if (isPrivate) {
-    // If proxy has error or urlInfo is null, fallback to original URL
-    const displayImageUrl = getImageUrlForVisibility(
-      imageUrl,
-      visibility,
-      proxyError || !urlInfo ? null : urlInfo.hostname,
-    );
+    const displayImageUrl =
+      getImageUrlForVisibility(
+        imageUrl,
+        visibility,
+        proxyError || !urlInfo ? null : urlInfo.hostname,
+      ) || imageUrl;
     return (
-      <ClipboardCopy isReadOnly hoverTip="Copy" clickTip="Copied" variant="inline-compact">
-        {displayImageUrl}
-      </ClipboardCopy>
+      <>
+        <ExternalLink
+          href={getContainerImageLink(displayImageUrl)}
+          text={displayImageUrl}
+          style={{ userSelect: 'auto' }}
+        />
+        <CopyIconButton text={displayImageUrl} />
+      </>
     );
   }
 
   return (
-    <ExternalLink
-      href={getContainerImageLink(imageUrl)}
-      text={imageUrl}
-      /** by default patternfly button disable text selection on Button component
-     this enables it on <a /> tag */
-      style={{ userSelect: 'auto' }}
-    />
+    <>
+      <ExternalLink
+        href={getContainerImageLink(imageUrl)}
+        text={imageUrl}
+        style={{ userSelect: 'auto' }}
+      />
+      <CopyIconButton text={imageUrl} />
+    </>
   );
 };
