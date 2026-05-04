@@ -163,9 +163,12 @@ while IFS= read -r subject; do
   [[ -n "${SEEN_PRS[$pr_num]:-}" ]] && continue
   SEEN_PRS[$pr_num]=1
 
-  # Fetch PR title via GitHub API
+  # Fetch PR title and author via GitHub API
   pr_title=""
-  if pr_title=$(gh api "repos/${REPO}/pulls/${pr_num}" --jq '.title' 2>/dev/null); then
+  pr_author=""
+  if pr_json=$(gh api "repos/${REPO}/pulls/${pr_num}" 2>/dev/null); then
+    pr_title=$(echo "$pr_json" | jq -r '.title')
+    pr_author=$(echo "$pr_json" | jq -r '.user.login')
     [[ -z "$pr_title" ]] && continue
   else
     pr_title="$subject"
@@ -183,6 +186,9 @@ while IFS= read -r subject; do
     description="$pr_title"
   fi
 
+  # Strip trailing (#NNN) from description (redundant with the repo PR link)
+  description=$(echo "$description" | sed 's/ *(#[0-9]*)$//')
+
   # Build scope reference: Jira ticket → markdown link, GitHub issue → repo#NNN
   scope_ref=""
   if [[ -n "$cc_scope" ]]; then
@@ -193,10 +199,16 @@ while IFS= read -r subject; do
     fi
   fi
 
+  # Format: [<ticket>] <description> (<PR link>) @author
+  author_suffix=""
+  if [[ -n "$pr_author" ]]; then
+    author_suffix=" @${pr_author}"
+  fi
+
   if [[ -n "$scope_ref" ]]; then
-    entry="- ${description} ${scope_ref} (${REPO}#${pr_num})"
+    entry="- [${scope_ref}] ${description} (${REPO}#${pr_num})${author_suffix}"
   else
-    entry="- ${description} (${REPO}#${pr_num})"
+    entry="- ${description} (${REPO}#${pr_num})${author_suffix}"
   fi
 
   case "$cc_type" in
