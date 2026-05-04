@@ -25,6 +25,7 @@ export type ImportSecret = {
     }[];
   };
   image?: Image;
+  labels?: KeyValueEntry[];
   currentComponent?: null | CurrentComponentRef;
   relatedComponents?: [];
   secretForComponentOption?: null | SecretForComponentOption;
@@ -140,6 +141,7 @@ export type BuildTimeSecret = {
     }[];
   };
   image?: Image;
+  labels?: KeyValueEntry[];
 };
 
 export type SecretFormValues = ImportSecret & {
@@ -194,6 +196,12 @@ export enum SourceSecretType {
   basic = 'Basic authentication',
   ssh = 'SSH Key',
 }
+/**
+ * For image pull, `ImageRegistryCreds` vs `UploadConfigFile` intentionally differ so callers
+ * (e.g. edit secret) can tell manual registry creds from an uploaded config. The Kubernetes
+ * Secret `type` for both when creating/updating normalized pull secrets is
+ * `kubernetes.io/dockerconfigjson` — use `getKubernetesSecretType()` from secret-utils for that.
+ */
 export const K8sSecretType = {
   [SecretTypeDropdownLabel.opaque]: SecretType.opaque,
   [SecretTypeDropdownLabel.image]: SecretType.dockerconfigjson,

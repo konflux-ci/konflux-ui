@@ -184,6 +184,7 @@ export const secretFormValues: SecretFormValues = {
   relatedComponents: [],
   secretForComponentOption: null,
   existingSecrets,
+  labels: [{ key: '', value: '' }],
 };
 
 export const secretFormValuesForSourceSecret: SecretFormValues = {
@@ -197,6 +198,7 @@ export const secretFormValuesForSourceSecret: SecretFormValues = {
   relatedComponents: [],
   secretForComponentOption: null,
   existingSecrets,
+  labels: [{ key: '', value: '' }],
 };
 
 // Mock secrets for EditSecretForm tests (all secret types and auth variants)

@@ -59,6 +59,7 @@ function createEmptySecretModalValues(
     existingSecrets,
     currentComponent,
     relatedComponents: [],
+    labels: [{ key: '', value: '' }],
     secretForComponentOption: SecretForComponentOption.none,
   };
 }
