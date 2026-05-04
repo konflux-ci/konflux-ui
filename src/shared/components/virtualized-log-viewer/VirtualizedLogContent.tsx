@@ -1,7 +1,7 @@
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
-import type { SearchedWord } from './types';
+import type { SearchedWord, LogSection } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
@@ -19,6 +19,27 @@ import {
 
 import './VirtualizedLogContent.scss';
 
+type LogVirtualItem =
+  | {
+      type: 'header';
+      containerName: string;
+    }
+  | {
+      type: 'line';
+      text: string;
+    };
+
+const buildFlatItems = (sections: LogSection[]): LogVirtualItem[] => {
+  const items: LogVirtualItem[] = [];
+  for (const section of sections) {
+    items.push({ type: 'header', containerName: section.containerName });
+    for (const line of section.lines) {
+      items.push({ type: 'line', text: line });
+    }
+  }
+  return items;
+};
+
 export interface VirtualizedLogContentProps {
   data: string;
   height: number;
@@ -31,6 +52,7 @@ export interface VirtualizedLogContentProps {
   }) => void;
   searchText?: string;
   currentSearchMatch?: SearchedWord;
+  sections?: LogSection[];
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
@@ -41,6 +63,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   onScroll,
   searchText = '',
   currentSearchMatch,
+  sections,
 }) => {
   const parentRef = React.useRef<HTMLDivElement>(null);
   const [itemSize, setItemSize] = React.useState(VIRTUALIZATION_CONFIG.FALLBACK_LINE_HEIGHT);
@@ -48,8 +71,18 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const avgCharWidthRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
-  // Split data into lines
-  const lines = React.useMemo(() => data.split('\n'), [data]);
+  const flatItems = React.useMemo(
+    () => (sections ? buildFlatItems(sections) : undefined),
+    [sections],
+  );
+
+  // Lines for the virtualizer: either from sections' flat items or from splitting data
+  const lines = React.useMemo(() => {
+    if (flatItems) {
+      return flatItems.map((item) => (item.type === 'header' ? item.containerName : item.text));
+    }
+    return data.split('\n');
+  }, [data, flatItems]);
 
   // Suppress harmless ResizeObserver errors from virtualizer
   useResizeObserverFix();
