@@ -12,6 +12,7 @@ import { FieldArray, useField } from 'formik';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useDeepCompareMemoize } from '~/shared';
+import { textMatch } from '~/utils/text-filter-utils';
 import FilteredEmptyState from '../../../../../shared/components/empty-state/FilteredEmptyState';
 import { AddIssueModal, IssueType } from './AddIssueModal';
 import './AddIssueSection.scss';
@@ -44,7 +45,7 @@ export const AddIssueSection: React.FC<React.PropsWithChildren<AddIssueSectionPr
       issues && Array.isArray(issues)
         ? issues?.filter((bug) => {
             const key = isBug ? (bug as BugObject).id : (bug as CVEObject).key;
-            return !nameFilter || key?.toLowerCase().indexOf(nameFilter.toLowerCase()) >= 0;
+            return textMatch(key, nameFilter);
           })
         : [],
     [issues, nameFilter, isBug],

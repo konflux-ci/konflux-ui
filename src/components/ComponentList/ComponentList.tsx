@@ -10,6 +10,7 @@ import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptySta
 import { useNamespace } from '~/shared/providers/Namespace/useNamespaceInfo';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentKind } from '~/types';
+import { filterByText } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../assets/Components.svg';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import ComponentsListHeader from './ComponentListHeader';
@@ -33,10 +34,7 @@ const ComponentList: React.FC = () => {
   );
 
   const filteredComponents = React.useMemo(
-    () =>
-      components.filter((component) => {
-        return !nameFilter || component.metadata.name.indexOf(nameFilter) !== -1;
-      }),
+    () => filterByText(components, nameFilter, (c) => c.metadata.name),
     [components, nameFilter],
   );
 

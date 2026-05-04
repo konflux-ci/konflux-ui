@@ -22,6 +22,7 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { ExternalLink, useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import emptySnapshotImgUrl from '../../../assets/Snapshots.svg';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
@@ -103,13 +104,15 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       ) {
         return false;
       }
-      if (nameFilter && !s.metadata.name.toLowerCase().includes(nameFilter.toLowerCase())) {
+      if (!textMatch(s.metadata.name, nameFilter)) {
         return false;
       }
-
-      const commitTitle =
-        s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE]?.toLowerCase() ?? '';
-      if (commitMessageFilter && !commitTitle.includes(commitMessageFilter.toLowerCase())) {
+      if (
+        !textMatch(
+          s.metadata.annotations?.[PipelineRunLabel.TEST_SERVICE_COMMIT_TITLE],
+          commitMessageFilter,
+        )
+      ) {
         return false;
       }
       return true;

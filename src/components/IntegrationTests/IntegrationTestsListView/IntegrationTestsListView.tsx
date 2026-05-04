@@ -12,6 +12,7 @@ import {
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import emptyStateImgUrl from '../../../assets/Integration-test.svg';
 import { useIntegrationTestScenarios } from '../../../hooks/useIntegrationTestScenarios';
 import { IntegrationTestScenarioModel } from '../../../models';
@@ -79,10 +80,7 @@ const IntegrationTestsListView: React.FC<React.PropsWithChildren> = () => {
   const { name: nameFilter } = filters;
 
   const filteredIntegrationTests = React.useMemo(
-    () =>
-      nameFilter
-        ? integrationTests.filter((test) => test.metadata.name.indexOf(nameFilter) !== -1)
-        : integrationTests,
+    () => filterByText(integrationTests, nameFilter, (t) => t.metadata.name),
     [nameFilter, integrationTests],
   );
 

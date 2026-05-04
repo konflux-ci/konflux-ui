@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, debounce, Spinner, Stack, StackItem, Title } from '@patternfly/react-core';
 import { SortByDirection } from '@patternfly/react-table';
+import { filterByText } from '~/utils/text-filter-utils';
 import { useRelease } from '../../../hooks/useReleases';
 import { useSearchParam } from '../../../hooks/useSearchParam';
 import { useSortedResources } from '../../../hooks/useSortedResources';
@@ -64,12 +65,10 @@ const ReleaseArtifactsTab: React.FC = () => {
     setNameFilter(n);
   }, 600);
 
-  const filteredArtifactsImages = React.useMemo(() => {
-    const lowerCaseNameFilter = nameFilter.toLowerCase();
-    return sortedArtifactsImages?.filter((image) =>
-      image.name?.toLowerCase().includes(lowerCaseNameFilter),
-    );
-  }, [nameFilter, sortedArtifactsImages]);
+  const filteredArtifactsImages = React.useMemo(
+    () => filterByText(sortedArtifactsImages ?? [], nameFilter, (image) => image.name),
+    [nameFilter, sortedArtifactsImages],
+  );
 
   if (!releaseLoaded) {
     return (

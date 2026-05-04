@@ -23,6 +23,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { Commit, PipelineRunKind } from '~/types';
 import { getCommitsFromPLRs, getCommitSha, statuses } from '~/utils/commits-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import { getCommitStatusFromPipelineRuns } from '../commit-status';
 import CommitsEmptyStateV2 from '../CommitsEmptyStateV2';
 import {
@@ -167,16 +168,13 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     () =>
       commits.filter((commit) => {
         const commitStatus = commitStatusMap[commit.sha] || runStatus.Unknown;
+        const strippedFilter = nameFilter?.trim().replace('#', '');
         return (
           (!nameFilter ||
-            commit.sha.indexOf(nameFilter) !== -1 ||
-            commit.components.some(
-              (c) => c.toLowerCase().indexOf(nameFilter.trim().toLowerCase()) !== -1,
-            ) ||
-            commit.pullRequestNumber
-              .toLowerCase()
-              .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
-            commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
+            textMatch(commit.sha, nameFilter) ||
+            commit.components.some((c) => textMatch(c, nameFilter)) ||
+            textMatch(commit.pullRequestNumber, strippedFilter) ||
+            textMatch(commit.shaTitle, nameFilter)) &&
           (!statusFilter.length || statusFilter.includes(commitStatus)) &&
           (!versionFilter.length || versionFilter.includes(commit.branch))
         );

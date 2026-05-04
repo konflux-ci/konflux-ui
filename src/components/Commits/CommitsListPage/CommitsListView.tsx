@@ -7,6 +7,7 @@ import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlt
 import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import ColumnManagement from '~/shared/components/table/ColumnManagement';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { textMatch } from '~/utils/text-filter-utils';
 import { SESSION_STORAGE_KEYS } from '../../../consts/constants';
 import {
   PipelineRunLabel,
@@ -190,16 +191,13 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     () =>
       commits.filter((commit) => {
         const commitStatus = commitStatusMap[commit.sha] || runStatus.Unknown;
+        const strippedFilter = nameFilter?.trim().replace('#', '');
         return (
           (!nameFilter ||
-            commit.sha.indexOf(nameFilter) !== -1 ||
-            commit.components.some(
-              (c) => c.toLowerCase().indexOf(nameFilter.trim().toLowerCase()) !== -1,
-            ) ||
-            commit.pullRequestNumber
-              .toLowerCase()
-              .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
-            commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
+            textMatch(commit.sha, nameFilter) ||
+            commit.components.some((c) => textMatch(c, nameFilter)) ||
+            textMatch(commit.pullRequestNumber, strippedFilter) ||
+            textMatch(commit.shaTitle, nameFilter)) &&
           (!statusFilter.length || statusFilter.includes(commitStatus))
         );
       }),

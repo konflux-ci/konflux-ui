@@ -9,6 +9,7 @@ import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptySta
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { ComponentVersion } from '~/types/component';
+import { filterByText } from '~/utils/text-filter-utils';
 import getVersionListHeader, { SortableHeaders } from './ComponentVersionListHeader';
 import { ComponentVersionListRow, VersionListRowCustomData } from './ComponentVersionListRow';
 
@@ -40,7 +41,7 @@ const ComponentVersionListView: React.FC<
   const versions = component?.spec?.source?.versions ?? EMPTY_VERSIONS;
 
   const filteredVersions = React.useMemo(
-    () => versions.filter((v) => v.name.toLowerCase().includes(nameFilter.trim().toLowerCase())),
+    () => filterByText(versions, nameFilter, (v) => v.name),
     [versions, nameFilter],
   );
 
