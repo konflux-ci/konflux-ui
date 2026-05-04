@@ -55,9 +55,83 @@ Fill the PR template from `.github/PULL_REQUEST_TEMPLATE.md` using **all availab
 - **Fixes**: extract Jira ticket ID from branch name or commit messages (pattern: `KFLUXUI-\d+` or `KONFLUX-\d+`). Format as `Fixes: https://redhat.atlassian.net/browse/<TICKET-ID>`. If no ticket ID found, leave the placeholder comment.
 - **Description**: 2-3 sentences summarizing the change and motivation. Pull from conversation context — what problem was being solved, what approach was chosen, and why. Do not just restate the commit messages.
 - **Type of change**: check the applicable box(es) based on the diff.
-- **Screen shots / Gifs**: leave the placeholder comment if no UI changes. If UI was changed, note that screenshots should be added.
+- **Screen shots / Gifs**: if automated screenshots were captured in Step 4a, embed them here (see Step 4a output). Otherwise, note that screenshots should be added manually.
 - **How to test or reproduce**: list concrete steps to verify the change. Pull from conversation context — if the user described testing steps or verified behavior during the session, include those.
 - **Browser conformance**: leave unchecked (manual verification).
+
+### Step 4a — Capture UI Screenshots
+
+Automatically capture before/after screenshots for UI changes. This step uses the `screenshot` skill (`.claude/skills/screenshot/SKILL.md`) for the actual capture work.
+
+#### 4a.1 — Check for user override
+
+If the user passed `--screenshots` or `--no-screenshots` as part of the `/create-pr` invocation:
+- `--no-screenshots` → skip this entire step
+- `--screenshots` → force screenshot capture (skip detection, go to 4a.3)
+- No flag → continue to 4a.2
+
+#### 4a.2 — Detect UI changes
+
+Analyze the diff content (`git diff origin/main...HEAD`) for visual UI impact. Do **not** rely solely on file extensions.
+
+**Strong UI signals** (capture screenshots):
+- JSX/TSX markup changes, CSS/SCSS changes
+- PatternFly component additions/removals/prop changes
+- Changes to component return statements or render functions
+
+**Weak/no UI signals** (skip):
+- Type-only changes, test files, hook logic not affecting render, build config, docs
+
+**Ambiguous**: trace usage of shared hooks/utilities; ask user if genuinely unclear.
+
+If no UI change detected, skip the rest of Step 4a.
+
+#### 4a.3 — Capture "after" screenshots
+
+Read the `screenshot` skill (`.claude/skills/screenshot/SKILL.md`) and follow steps 1–6. You already have the diff from Step 4a.2, so pass that context forward — don't re-analyze from scratch. Specifically:
+
+1. From the diff, identify the **view-level component** to render (step 1 in screenshot skill)
+2. Skip step 2 (diff analysis) — you already did this in 4a.2
+3. Follow steps 3–6: research data deps, choose scenarios, write render file, run capture with `--prefix after`
+
+If capture fails, do **not** block PR creation — note "Automated screenshots failed — add manually" and continue to Step 5.
+
+#### 4a.4 — Capture "before" screenshots (for existing files)
+
+Check if the changed component exists on main: `git cat-file -e origin/main:<path> 2>/dev/null`
+
+If it does:
+1. Verify clean working tree: `git status --porcelain` should be empty
+2. `BRANCH=$(git rev-parse --abbrev-ref HEAD)`
+3. `git switch origin/main --detach`
+4. Run capture with `--prefix before` using the **same render file** from 4a.3
+5. `git switch "$BRANCH"`
+
+If the component is new (does not exist on main), skip — only "after" screenshots are produced. If before-capture fails, continue without them.
+
+**Note**: The render file from 4a.3 lives in `scripts/screenshots/tmp/` and is not tracked by git. It will persist across the branch switch. The mock data and scenario structure remain valid for the "before" state — only the component source code changes.
+
+#### 4a.5 — Embed screenshot references in the PR body
+
+The capture script outputs a JSON array with `{ scenarioId, label, filePath }` for each screenshot. Use the `label` field as the description — it tells the reviewer what the screenshot shows and what to look for.
+
+List captured screenshots in the PR body under "Screen shots / Gifs for design review":
+
+```markdown
+### Screen shots / Gifs for design review
+
+Screenshots were captured automatically. After the PR is created, drag and drop these files into this section:
+
+**<ComponentName>**
+| Screenshot | What to look for |
+|---|---|
+| `<path-to-after-screenshot.png>` | <label from capture output — e.g. "Populated table showing the new Status column with varied values"> |
+| `<path-to-before-screenshot.png>` | Before: <label> (main branch) |
+```
+
+Each row pairs the screenshot file with the scenario label so the reviewer immediately knows what is important in that screenshot without having to guess.
+
+For new components, list only the "after" screenshots. Also print file paths to the console in Step 5.
 
 ### Step 5 — Show and confirm (MANDATORY GATE)
 
