@@ -7,6 +7,7 @@ import {
   COMPONENTS_PATH,
   ISSUES_PATH,
   NAMESPACE_LIST_PATH,
+  POLICY_PATH,
   RELEASE_MONITOR_PATH,
   RELEASE_SERVICE_PATH,
   SECRET_LIST_PATH,
@@ -72,6 +73,19 @@ export const AppSideBar: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
                   to={namespace ? ISSUES_PATH.createPath({ workspaceName: namespace }) : undefined}
                 >
                   Issues <FeatureFlagIndicator flags={['issues-dashboard']} />
+                </Link>
+              </NavItem>
+            </IfFeature>
+
+            <IfFeature flag="conforma-policy">
+              <NavItem
+                className={css({ 'app-side-bar__nav-item--disabled': disabled })}
+                isActive={isActive(POLICY_PATH.path)}
+              >
+                <Link
+                  to={namespace ? POLICY_PATH.createPath({ workspaceName: namespace }) : undefined}
+                >
+                  Policy <FeatureFlagIndicator flags={['conforma-policy']} />
                 </Link>
               </NavItem>
             </IfFeature>
