@@ -8,7 +8,7 @@ jobs:
   publish:
     # Only run for release-tracking issues closed as "completed" (by merged PR Fixes keyword)
     if: |
-      github.event.issue.user.login == 'github-actions[bot]' ||
+      github.event.issue.user.login == 'github-actions[bot]' &&
       contains(github.event.issue.labels.*.name, 'release-tracking') &&
       github.event.issue.state_reason == 'completed'
     runs-on: ubuntu-latest

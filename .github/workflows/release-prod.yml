@@ -212,7 +212,7 @@ jobs:
           GH_TOKEN: ${{ secrets.INFRA_PR_PAT }}
           TRACKING_ISSUE_NUMBER: ${{ steps.tracking.outputs.issue_number }}
         run: |
-          BRANCH="konflux-ui-release/${RELEASE_DATE}"
+          BRANCH="konflux-ui-release/${RELEASE_DATE}-$(date +%H%M%S)"
           SHORT_OLD="${OLD_SHA:0:12}"
           SHORT_NEW="${NEW_SHA:0:12}"
 
