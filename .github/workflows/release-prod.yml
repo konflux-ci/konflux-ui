@@ -35,8 +35,10 @@ jobs:
     steps:
       - name: Check if this is a release week
         id: parity
+        env:
+          FORCE_FLAG: ${{ github.event.inputs.force }}
         run: |
-          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+          if [[ "$FORCE_FLAG" == "true" ]]; then
             echo "is_release_week=true" >> "$GITHUB_OUTPUT"
             echo "Force flag set — skipping parity check."
             exit 0
@@ -58,6 +60,8 @@ jobs:
       - name: Read SHAs from infra-deployments
         id: shas
         if: steps.parity.outputs.is_release_week == 'true'
+        env:
+          CUSTOM_SHA: ${{ github.event.inputs.custom_sha }}
         run: |
           extract_sha() {
             local file_path="$1"
@@ -75,8 +79,8 @@ jobs:
           fi
           echo "Production SHA: $OLD_SHA"
 
-          if [[ -n "${{ github.event.inputs.custom_sha }}" ]]; then
-            NEW_SHA="${{ github.event.inputs.custom_sha }}"
+          if [[ -n "$CUSTOM_SHA" ]]; then
+            NEW_SHA="$CUSTOM_SHA"
             echo "Using custom SHA override: $NEW_SHA"
           else
             NEW_SHA=$(extract_sha "$STG_SHA_FILE")
@@ -94,10 +98,10 @@ jobs:
       - name: Decide whether to proceed
         id: decide
         if: steps.parity.outputs.is_release_week == 'true' && steps.shas.conclusion == 'success'
+        env:
+          OLD_SHA: ${{ steps.shas.outputs.old_sha }}
+          NEW_SHA: ${{ steps.shas.outputs.new_sha }}
         run: |
-          OLD_SHA="${{ steps.shas.outputs.old_sha }}"
-          NEW_SHA="${{ steps.shas.outputs.new_sha }}"
-
           if [[ -z "$OLD_SHA" || -z "$NEW_SHA" ]]; then
             echo "::error::SHA extraction returned empty values"
             echo "should_release=false" >> "$GITHUB_OUTPUT"
@@ -116,9 +120,11 @@ jobs:
         if: |
           steps.parity.outputs.is_release_week == 'true' &&
           steps.decide.outputs.should_release == 'false'
+        env:
+          RELEASE_DATE: ${{ steps.shas.outputs.release_date }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          RELEASE_DATE="${{ steps.shas.outputs.release_date }}"
-          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
             -d "$(jq -n --arg date "$RELEASE_DATE" '{
               "blocks": [
@@ -146,7 +152,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       KONFLUX_UI_REPO: konflux-ci/konflux-ui
       INFRA_REPO: redhat-appstudio/infra-deployments
-      INFRA_FORK: sahil143/infra-deployments
+      INFRA_FORK: ${{ vars.INFRA_FORK || 'sahil143/infra-deployments' }}
       PROD_SHA_FILE: components/konflux-ui/production/base/kustomization.yaml
       OLD_SHA: ${{ needs.preflight.outputs.old_sha }}
       NEW_SHA: ${{ needs.preflight.outputs.new_sha }}
@@ -204,6 +210,7 @@ jobs:
         id: infra_pr
         env:
           GH_TOKEN: ${{ secrets.INFRA_PR_PAT }}
+          TRACKING_ISSUE_NUMBER: ${{ steps.tracking.outputs.issue_number }}
         run: |
           BRANCH="konflux-ui-release/${RELEASE_DATE}"
           SHORT_OLD="${OLD_SHA:0:12}"
@@ -238,7 +245,7 @@ jobs:
           INFRA_PR_URL=$(gh pr create \
             --repo "$INFRA_REPO" \
             --base main \
-            --head "sahil143:${BRANCH}" \
+            --head "${INFRA_FORK%%/*}:${BRANCH}" \
             --title "chore: bump konflux-ui ${SHORT_OLD} => ${SHORT_NEW}" \
             --body "$(cat <<PRBODY
           Update konflux-ui production image to staging commit \`${NEW_SHA}\`.
@@ -251,7 +258,7 @@ jobs:
           </details>
 
           ---
-          Fixes ${KONFLUX_UI_REPO}#${{ steps.tracking.outputs.issue_number }}
+          Fixes ${KONFLUX_UI_REPO}#${TRACKING_ISSUE_NUMBER}
           PRBODY
           )")
 
@@ -261,32 +268,40 @@ jobs:
 
       # --- Update tracking issue with infra PR info ---
       - name: Update tracking issue
+        env:
+          TRACKING_ISSUE_NUMBER: ${{ steps.tracking.outputs.issue_number }}
+          INFRA_PR_NUMBER: ${{ steps.infra_pr.outputs.pr_number }}
+          INFRA_PR_URL: ${{ steps.infra_pr.outputs.pr_url }}
         run: |
-          CURRENT_BODY=$(gh issue view "${{ steps.tracking.outputs.issue_number }}" \
+          CURRENT_BODY=$(gh issue view "$TRACKING_ISSUE_NUMBER" \
             --repo "$KONFLUX_UI_REPO" --json body -q '.body')
 
           # Insert infra PR fields into the YAML block
           UPDATED_BODY=$(echo "$CURRENT_BODY" | sed \
             "/^tag:/i\\
-          infra_pr: ${{ steps.infra_pr.outputs.pr_number }}\\
-          infra_pr_url: ${{ steps.infra_pr.outputs.pr_url }}")
+          infra_pr: ${INFRA_PR_NUMBER}\\
+          infra_pr_url: ${INFRA_PR_URL}")
 
-          gh issue edit "${{ steps.tracking.outputs.issue_number }}" \
+          gh issue edit "$TRACKING_ISSUE_NUMBER" \
             --repo "$KONFLUX_UI_REPO" \
             --body "$UPDATED_BODY"
 
       # --- Slack notification ---
       - name: Notify Slack — release cut
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          INFRA_PR_URL: ${{ steps.infra_pr.outputs.pr_url }}
+          TRACKING_ISSUE_URL: ${{ steps.tracking.outputs.issue_url }}
         run: |
           SHORT_SHA="${NEW_SHA:0:7}"
 
-          curl -sf -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
             -d "$(jq -n \
               --arg date "$RELEASE_DATE" \
               --arg sha "$SHORT_SHA" \
-              --arg infra_url "${{ steps.infra_pr.outputs.pr_url }}" \
-              --arg issue_url "${{ steps.tracking.outputs.issue_url }}" \
+              --arg infra_url "$INFRA_PR_URL" \
+              --arg issue_url "$TRACKING_ISSUE_URL" \
               '{
                 "blocks": [
                   {
