@@ -118,18 +118,16 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<Set<string>>(() => new Set());
   const [isChangeAccessModalOpen, setChangeAccessModalOpen] = React.useState(false);
 
-  // console.log("roleBindings", roleBindings);
-
   React.useEffect(() => {
-    const allowed = new Set(filterRBs.map((r) => r.rowKey));
+    const allowed = new Set(filterRBs.map((row) => row.rowKey));
     setSelectedRowKeys((prev) => {
       const next = new Set<string>();
-      prev.forEach((k) => {
-        if (allowed.has(k)) {
-          next.add(k);
+      prev.forEach((key) => {
+        if (allowed.has(key)) {
+          next.add(key);
         }
       });
-      if (next.size === prev.size && [...prev].every((k) => next.has(k))) {
+      if (next.size === prev.size && [...prev].every((key) => next.has(key))) {
         return prev;
       }
       return next;
@@ -141,9 +139,9 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       setSelectedRowKeys((prev) => {
         const next = new Set(prev);
         if (isSelecting) {
-          filterRBs.forEach((r) => next.add(r.rowKey));
+          filterRBs.forEach((row) => next.add(row.rowKey));
         } else {
-          filterRBs.forEach((r) => next.delete(r.rowKey));
+          filterRBs.forEach((row) => next.delete(row.rowKey));
         }
         return next;
       });
@@ -174,7 +172,6 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     });
   }, [roleBindings, getUniqueSelectedUsers]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleModalSave = async (newRoleRef: string) => {
     const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
 
@@ -231,7 +228,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       await applyChange(true);
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.log('error picooooooo', err);
+      console.log('error while applying change in UserAccessListView', err);
     }
 
     // const newRoleBindings = await editRB({usernames: ["userb"], role: newRole, roleMap: defaultKonfluxRoleMap}, roleBindings[3], true);

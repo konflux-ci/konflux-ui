@@ -3,7 +3,6 @@ import {
   Alert,
   AlertVariant,
   Button,
-  capitalize,
   Flex,
   FlexItem,
   List,
@@ -19,7 +18,7 @@ import {
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import type { RoleBinding } from '~/types';
-import { KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
+import { defaultKonfluxRoleMap, KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
 import { useRoleMap } from '../../hooks/useRole';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
@@ -82,6 +81,31 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
 
   const selectedCount = selectedRowKeys.size;
 
+  const highestAffectedRoleWeight = React.useMemo(() => {
+    const weights = allAffectedRoleBindings
+      .map((rb) => KONFLUX_ROLE_WEIGHT[rb.roleRef?.name ?? ''])
+      .filter((weight): weight is number => weight !== undefined);
+
+    return weights.length === 0 ? undefined : Math.max(...weights);
+  }, [allAffectedRoleBindings]);
+
+  const getUserHighestRole = React.useMemo(() => {
+    const roleLabels = defaultKonfluxRoleMap.roleMap as Record<string, string>;
+
+    return (username: string): string => {
+      const userRoleBindings = allAffectedRoleBindings.filter((rb) =>
+        rb.subjects?.some((subject) => subject.name === username),
+      );
+      const allUserRoles = userRoleBindings.map((rb) => rb.roleRef.name);
+
+      const highestRole = allUserRoles.reduce((max, role) => {
+        return KONFLUX_ROLE_WEIGHT[role] > KONFLUX_ROLE_WEIGHT[max] ? role : max;
+      }, allUserRoles[0]);
+
+      return roleLabels[highestRole];
+    };
+  }, [allAffectedRoleBindings]);
+
   const isModalSaveDisabled = React.useMemo(() => {
     if (!modalSelectedRoleRef) {
       return true;
@@ -97,14 +121,13 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       return false;
     }
 
-    const weightsFromAffectedBindings = allAffectedRoleBindings
-      .map((rb) => KONFLUX_ROLE_WEIGHT[rb.roleRef?.name ?? ''])
-      .filter((weight): weight is number => weight !== undefined);
+    if (highestAffectedRoleWeight === undefined) {
+      return false;
+    }
 
-    const highestAffectedRoleWeight = Math.max(...weightsFromAffectedBindings);
-
+    // Downgrade exists?
     return highestAffectedRoleWeight > selectedRoleWeight;
-  }, [modalSelectedRoleRef, selectedCount, allAffectedRoleBindings]);
+  }, [modalSelectedRoleRef, selectedCount, highestAffectedRoleWeight]);
 
   return (
     <Modal
@@ -135,7 +158,8 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       <Flex direction={{ default: 'column' }} gap={{ default: 'gapMd' }}>
         <FlexItem>
           <Text>
-            Change role for {selectedCount} user{selectedCount !== 1 ? 's' : ''}
+            Change role for {selectedCount} user{selectedCount !== 1 ? 's' : ''} (highest role
+            displayed)
           </Text>
         </FlexItem>
         <FlexItem>
@@ -148,14 +172,14 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
         <FlexItem>
           <List style={{ marginLeft: 'var(--pf-v5-global--spacer--md)' }}>
             {[...selectedRowKeys].map((rowKey) => {
-              const { username, role, roleName: currentRoleName } = splitRowKey(rowKey);
+              const { username, role } = splitRowKey(rowKey);
 
               return (
                 <ListItem key={rowKey}>
                   <span className={textStyles.fontWeightBold}>
                     {username} ({role})
                   </span>
-                  : {capitalize(currentRoleName)}
+                  : {getUserHighestRole(username)}
                 </ListItem>
               );
             })}
