@@ -150,10 +150,17 @@ export const useURLForComponentPRs = (components: ComponentKind[]): string => {
   const { name: PR_BOT_NAME } = useApplicationPipelineGitHubApp();
   const repos = components.reduce((acc, component) => {
     const gitURL = component.spec.source?.git?.url;
-    if (gitURL && isPACEnabled(component) && gitURL.startsWith(GIT_URL_PREFIX)) {
+    if (
+      gitURL &&
+      isPACEnabled(component) &&
+      !component.status &&
+      gitURL.startsWith(GIT_URL_PREFIX)
+    ) {
       acc = `${acc}+repo:${gitURL.replace(GIT_URL_PREFIX, '').replace(/.git$/i, '')}`;
     }
     return acc;
   }, '');
-  return `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
+  return repos === ''
+    ? ''
+    : `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
 };
