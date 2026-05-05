@@ -21,6 +21,8 @@ on:
 
 jobs:
   add-fullsend-label:
+    permissions:
+      pull-requests: write
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'pull_request_target'
