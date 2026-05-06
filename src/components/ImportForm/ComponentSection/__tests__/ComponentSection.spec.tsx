@@ -15,7 +15,8 @@ describe('ComponentSection', () => {
     expect(
       screen.getByText('Supports GitHub, GitLab, and Forgejo repositories'),
     ).toBeInTheDocument();
-    expect(screen.getByTestId('git-reference')).toBeInTheDocument();
+    expect(screen.getByLabelText(/git reference/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/should the image produced be private\?/i)).toBeInTheDocument();
   });
 
   it('should render git options by default', async () => {
@@ -53,7 +54,7 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+      expect((screen.getByLabelText(/git url annotation/i) as HTMLInputElement).value).toBe(
         'https://gitlab.com',
       ),
     );
@@ -70,9 +71,13 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+      expect((screen.getByLabelText(/git url annotation/i) as HTMLInputElement).value).toBe(
         'https://code.forgejo.org',
       ),
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+    expect((screen.getByLabelText(/git provider annotation/i) as HTMLInputElement).value).toBe(
+      'forgejo',
     );
   });
 
