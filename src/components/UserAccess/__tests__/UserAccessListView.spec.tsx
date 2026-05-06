@@ -1,17 +1,26 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import type { RoleBinding } from '~/types';
 import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
 import {
   mockRoleBinding,
   mockRoleBindings,
   mockRoleBindingsWithMultipleUsers,
+  mockSingleSubjectRoleBinding,
 } from '../../../__data__/rolebinding-data';
 import { useRoleMap } from '../../../hooks/useRole';
 import { useRoleBindings } from '../../../hooks/useRoleBindings';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
+import { createRBs, deleteRB } from '../UserAccessForm/form-utils';
 import { UserAccessListView } from '../UserAccessListView';
+
+jest.mock('../UserAccessForm/form-utils', () => ({
+  ...jest.requireActual('../UserAccessForm/form-utils'),
+  createRBs: jest.fn().mockResolvedValue([]),
+  deleteRB: jest.fn().mockResolvedValue(undefined),
+}));
 
 jest.useFakeTimers();
 
@@ -28,11 +37,17 @@ jest.mock('../../../hooks/useRole');
 
 const UserAccessList = (
   <MemoryRouter>
-    <FilterContextProvider filterParams={['username', 'roleBindingName']}>
-      <UserAccessListView />
-    </FilterContextProvider>
+    <div>
+      <div id="hacDev-modal-container" />
+      <FilterContextProvider filterParams={['username', 'roleBindingName']}>
+        <UserAccessListView />
+      </FilterContextProvider>
+    </div>
   </MemoryRouter>
 );
+
+const createRBsMock = jest.mocked(createRBs);
+const deleteRBMock = jest.mocked(deleteRB);
 
 describe('UserAccessListView', () => {
   const mockNamespace = 'test-ns';
@@ -46,6 +61,8 @@ describe('UserAccessListView', () => {
     useAccessReviewModalMock.mockReturnValue([true]);
     useRoleBindingsMock.mockReturnValue([mockRoleBindings, true]);
     useRoleMapMock.mockReturnValue([defaultKonfluxRoleMap, true]);
+    createRBsMock.mockResolvedValue([]);
+    deleteRBMock.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -219,5 +236,256 @@ describe('UserAccessListView', () => {
     expect(screen.getByText('user1')).toBeInTheDocument();
 
     expect(screen.queryByText('rb-no-subjects')).not.toBeInTheDocument();
+  });
+
+  describe('Change role save (handleModalSave)', () => {
+    const ns = 'test-ns';
+
+    beforeAll(() => {
+      jest.useRealTimers();
+    });
+
+    afterAll(() => {
+      jest.useFakeTimers();
+    });
+
+    async function selectNewRoleInModalAndSave(roleDisplayName: string) {
+      fireEvent.click(screen.getByRole('button', { name: 'Change access' }));
+      await waitFor(() => {
+        expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByTestId('user-access-change-role-select'));
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: roleDisplayName })).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByRole('option', { name: roleDisplayName }));
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: 'Change role' })).not.toBeInTheDocument();
+      });
+    }
+
+    it('one selected user in a single binding: deletes that binding and creates the new role only', async () => {
+      const rbs = [
+        mockSingleSubjectRoleBinding(
+          'rb-alice-contrib',
+          'alice',
+          'konflux-contributor-user-actions',
+        ),
+      ];
+      useRoleBindingsMock.mockReturnValue([rbs, true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave('Maintainer');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(rbs[0], false);
+      expect(createRBsMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          usernames: ['alice'],
+          role: 'Maintainer',
+          roleMap: defaultKonfluxRoleMap,
+        }),
+        ns,
+        false,
+      );
+    });
+
+    it('one user across multiple single-subject bindings: deletes every binding and creates one new binding', async () => {
+      const rbs = [
+        mockSingleSubjectRoleBinding('rb-alice-admin', 'alice', 'konflux-admin-user-actions'),
+        mockSingleSubjectRoleBinding(
+          'rb-alice-contrib',
+          'alice',
+          'konflux-contributor-user-actions',
+        ),
+      ];
+      useRoleBindingsMock.mockReturnValue([rbs, true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave('Maintainer');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(2);
+      expect(deleteRBMock.mock.calls.map(([binding]) => binding.metadata?.name)).toEqual(
+        expect.arrayContaining(['rb-alice-admin', 'rb-alice-contrib']),
+      );
+      expect(createRBsMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ usernames: ['alice'], role: 'Maintainer' }),
+        ns,
+        false,
+      );
+    });
+
+    it('selected subject on a multi-user binding: deletes shared binding, assigns new role, recreates unselected users with prior role', async () => {
+      const shared: RoleBinding = {
+        ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-contributor-user-actions'),
+        subjects: [
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'alice' },
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'bob' },
+        ],
+      };
+      useRoleBindingsMock.mockReturnValue([[shared], true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave('Admin');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(shared, false);
+      expect(createRBsMock).toHaveBeenCalledTimes(2);
+      expect(createRBsMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ usernames: ['alice'], role: 'Admin' }),
+        ns,
+        false,
+      );
+      expect(createRBsMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ usernames: ['bob'], role: 'Contributor' }),
+        ns,
+        false,
+      );
+    });
+
+    it('downgrade for a single selected user: still performs delete and create with lower role', async () => {
+      const rbs = [
+        mockSingleSubjectRoleBinding('rb-alice-admin', 'alice', 'konflux-admin-user-actions'),
+      ];
+      useRoleBindingsMock.mockReturnValue([rbs, true]);
+      render(UserAccessList);
+
+      fireEvent.click(screen.getAllByRole('checkbox')[1]);
+      await selectNewRoleInModalAndSave('Contributor');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ usernames: ['alice'], role: 'Contributor' }),
+        ns,
+        false,
+      );
+    });
+
+    it('multiple selected users each in one binding: deletes all touched bindings and recreates other users from multi-subject bindings as single-user bindings', async () => {
+      const rbs = [
+        mockSingleSubjectRoleBinding(
+          'rb-alice-contrib',
+          'alice',
+          'konflux-contributor-user-actions',
+        ),
+        mockSingleSubjectRoleBinding('rb-bob-contrib', 'bob', 'konflux-contributor-user-actions'),
+      ];
+      useRoleBindingsMock.mockReturnValue([rbs, true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[0]);
+      await selectNewRoleInModalAndSave('Maintainer');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(2);
+      expect(createRBsMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          usernames: expect.arrayContaining(['alice', 'bob']),
+          role: 'Maintainer',
+        }),
+        ns,
+        false,
+      );
+      expect(createRBsMock.mock.calls[0][0].usernames).toHaveLength(2);
+    });
+
+    it('multi-user binding plus single-user binding for selected user removes both bindings and preserves unrelated subject on single-user binding', async () => {
+      const shared: RoleBinding = {
+        ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-maintainer-user-actions'),
+        subjects: [
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'alice' },
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'bob' },
+        ],
+      };
+      const aliceOnly = mockSingleSubjectRoleBinding(
+        'rb-alice-admin',
+        'alice',
+        'konflux-admin-user-actions',
+      );
+      useRoleBindingsMock.mockReturnValue([[shared, aliceOnly], true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave('Contributor');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(2);
+      expect(createRBsMock).toHaveBeenCalledTimes(2);
+      expect(createRBsMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ usernames: ['alice'], role: 'Contributor' }),
+        ns,
+        false,
+      );
+      expect(createRBsMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ usernames: ['bob'], role: 'Maintainer' }),
+        ns,
+        false,
+      );
+    });
+
+    it('clears table selection after a successful save', async () => {
+      const rbs = [
+        mockSingleSubjectRoleBinding(
+          'rb-alice-contrib',
+          'alice',
+          'konflux-contributor-user-actions',
+        ),
+      ];
+      useRoleBindingsMock.mockReturnValue([rbs, true]);
+      render(UserAccessList);
+
+      fireEvent.click(screen.getAllByRole('checkbox')[1]);
+      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
+      await selectNewRoleInModalAndSave('Maintainer');
+      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent(
+        '0 users selected',
+      );
+    });
+
+    it('two users selected (contributor + maintainer in separate single-subject RBs): new role Maintainer deletes only differing binding; user already on target role is not recreated', async () => {
+      const aliceContrib = mockSingleSubjectRoleBinding(
+        'rb-alice-contrib',
+        'alice',
+        'konflux-contributor-user-actions',
+      );
+      const bobMaintainer = mockSingleSubjectRoleBinding(
+        'rb-bob-maintainer',
+        'bob',
+        'konflux-maintainer-user-actions',
+      );
+      useRoleBindingsMock.mockReturnValue([[aliceContrib, bobMaintainer], true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+      fireEvent.click(checkboxes[2]);
+      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent(
+        '2 users selected',
+      );
+      await selectNewRoleInModalAndSave('Maintainer');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(aliceContrib, false);
+      expect(createRBsMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ usernames: ['alice'], role: 'Maintainer' }),
+        ns,
+        false,
+      );
+    });
   });
 });

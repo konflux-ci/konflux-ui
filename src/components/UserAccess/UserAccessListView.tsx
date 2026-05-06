@@ -19,6 +19,7 @@ import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
 import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { logger } from '~/monitoring/logger';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { NamespaceRole } from '~/types';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
@@ -170,8 +171,6 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   };
 
   const handleModalSave = async (newRoleRef: string) => {
-    // TODO: oznac userb a user-many na admin
-
     const uniqueSelectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
     const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(uniqueSelectedUsernames);
 
@@ -202,24 +201,18 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
     const applyChange = async (dryRun?: boolean) => {
       // Delete all affected RBs, dryRun doesn't affect deleteRB (always deleted)
-      // console.log("will delete RBs:", allAffectedRoleBindings);
-
       if (!dryRun) {
         await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb, dryRun)));
       }
 
       // Selected users
       const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
-
-      // console.log("will create RBs:", { usernames: [...uniqueSelectedUsernames], role: newRole, roleMap: defaultKonfluxRoleMap });
-
       await createRBs(
         { usernames: [...uniqueSelectedUsernames], role: newRole, roleMap: defaultKonfluxRoleMap },
         namespace,
         dryRun,
       );
 
-      // console.log("will create RBs for not selected users in multi-subject RBs:", notSelectedUsersFromMultiSubjectRbs);
       for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
         await createRBs(
           {
@@ -234,12 +227,15 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     };
 
     try {
-      await applyChange(true);
+      // await applyChange(true);
       await applyChange(false);
       setSelectedRowKeys(new Set());
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.log('error while applying change in UserAccessListView', err);
+    } catch (err: unknown) {
+      logger.error(
+        'Error while applying user access change in UserAccessListView',
+        err instanceof Error ? err : new Error(String(err)),
+        { namespace },
+      );
     }
   };
 

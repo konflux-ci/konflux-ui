@@ -1,5 +1,24 @@
 import { RoleBinding } from '../types';
 
+export const mockSingleSubjectRoleBinding = (
+  metadataName: string,
+  username: string,
+  roleRefName: string,
+  namespace = 'test-ns',
+): RoleBinding => {
+  return {
+    apiVersion: 'rbac.authorization.k8s.io/v1',
+    kind: 'RoleBinding',
+    metadata: { name: metadataName, namespace },
+    subjects: [{ apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: username }],
+    roleRef: {
+      apiGroup: 'rbac.authorization.k8s.io',
+      kind: 'ClusterRole',
+      name: roleRefName,
+    },
+  };
+};
+
 export const mockRoleBinding: RoleBinding = {
   apiVersion: 'rbac.authorization.k8s.io/v1',
   kind: 'RoleBinding',

@@ -22,6 +22,14 @@ import { defaultKonfluxRoleMap, KONFLUX_ROLE_WEIGHT } from '../../__data__/role-
 import { useRoleMap } from '../../hooks/useRole';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
+export type UserAccessChangeRoleModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  selectedRowKeys: Set<string>;
+  allAffectedRoleBindings: RoleBinding[];
+  onSave: (newRoleRef: string) => void;
+};
+
 export const splitRowKey = (
   rowKey: string,
 ): {
@@ -39,14 +47,6 @@ export const splitRowKey = (
     role: segments[2],
     username: segments[3],
   };
-};
-
-export type UserAccessChangeRoleModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  selectedRowKeys: Set<string>;
-  allAffectedRoleBindings: RoleBinding[];
-  onSave: (newRoleRef: string) => void;
 };
 
 export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps> = ({
