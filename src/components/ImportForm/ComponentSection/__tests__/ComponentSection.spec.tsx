@@ -12,7 +12,7 @@ describe('ComponentSection', () => {
       source: { git: { url: '' } },
     });
     screen.getByPlaceholderText('Enter a Git repository URL');
-    expect(screen.queryByTestId('git-reference')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/git reference/i)).toBeInTheDocument();
   });
 
   it('should render git options by default', async () => {
@@ -50,7 +50,7 @@ describe('ComponentSection', () => {
     await user.tab();
     await waitFor(() =>
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-      expect((screen.getByTestId('url-annotation') as HTMLInputElement).value).toBe(
+      expect((screen.getByLabelText(/git url annotation/i) as HTMLInputElement).value).toBe(
         'https://gitlab.com',
       ),
     );
