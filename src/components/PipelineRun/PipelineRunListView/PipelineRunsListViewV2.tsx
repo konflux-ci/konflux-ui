@@ -73,10 +73,13 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
             filterByName: nameFilter || undefined,
             matchLabels: {
               [PipelineRunLabel.COMPONENT]: componentName,
+              ...(versionName && {
+                [PipelineRunLabel.COMPONENT_VERSION]: versionName,
+              }),
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName, nameFilter],
+        [component?.metadata?.creationTimestamp, componentName, nameFilter, versionName],
       ),
     );
 

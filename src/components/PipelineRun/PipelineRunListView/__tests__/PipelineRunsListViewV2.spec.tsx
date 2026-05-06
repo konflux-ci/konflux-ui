@@ -269,15 +269,16 @@ describe('PipelineRunsListViewV2', () => {
     );
   });
 
-  it('should query pipeline runs by component label only when versionName is provided', () => {
+  it('should include component version in selector matchLabels when versionName is provided', () => {
     renderWithQueryClient(<TestedComponentV2 versionName="main" />);
     expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
       'test-ns',
       expect.objectContaining({
         selector: expect.objectContaining({
-          matchLabels: {
-            'appstudio.openshift.io/component': 'sample-component',
-          },
+          matchLabels: expect.objectContaining({
+            [PipelineRunLabel.COMPONENT]: 'sample-component',
+            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
+          }),
         }),
       }),
     );

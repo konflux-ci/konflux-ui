@@ -82,10 +82,13 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
             filterByCreationTimestampAfter: component?.metadata?.creationTimestamp,
             matchLabels: {
               [PipelineRunLabel.COMPONENT]: componentName,
+              ...(versionName && {
+                [PipelineRunLabel.COMPONENT_VERSION]: versionName,
+              }),
             },
           },
         }),
-        [component?.metadata?.creationTimestamp, componentName],
+        [component?.metadata?.creationTimestamp, componentName, versionName],
       ),
     );
 

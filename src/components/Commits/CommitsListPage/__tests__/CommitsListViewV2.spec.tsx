@@ -3,7 +3,7 @@ import { act, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { pipelineWithCommits } from '~/components/Commits/__data__/pipeline-with-commits';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { runStatus } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { useComponent } from '~/hooks/useComponents';
 import { usePipelineRunsV2 } from '~/hooks/usePipelineRunsV2';
 import * as dateTime from '~/shared/components/timestamp/datetime';
@@ -15,6 +15,10 @@ import CommitsListRow from '../CommitsListRow';
 import CommitsListViewV2 from '../CommitsListViewV2';
 
 jest.useFakeTimers();
+
+afterAll(() => {
+  jest.useRealTimers();
+});
 
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
@@ -206,7 +210,23 @@ describe('CommitsListViewV2', () => {
       expect.objectContaining({
         selector: expect.objectContaining({
           matchLabels: expect.objectContaining({
-            'appstudio.openshift.io/component': 'sample-component',
+            [PipelineRunLabel.COMPONENT]: 'sample-component',
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('should include component version in selector matchLabels when versionName is provided', () => {
+    renderWithQueryClient(<CommitsListV2 versionName="main" />);
+
+    expect(usePipelineRunsV2Mock).toHaveBeenCalledWith(
+      'test-ns',
+      expect.objectContaining({
+        selector: expect.objectContaining({
+          matchLabels: expect.objectContaining({
+            [PipelineRunLabel.COMPONENT]: 'sample-component',
+            [PipelineRunLabel.COMPONENT_VERSION]: 'main',
           }),
         }),
       }),

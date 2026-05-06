@@ -181,11 +181,6 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [commitPipelineRunMap],
   );
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(commits, (c) => commitStatusMap[c.sha] || runStatus.Unknown, statuses),
-    [commits, commitStatusMap],
-  );
-
   // Name / commit matching is handled by usePipelineRunsV2 (cluster watch + Tekton Results CEL or
   // KubeArchive list + pipelineRunMatchesCommitSearch). Avoid a second client-only name pass that
   // could hide rows the backends already matched.
