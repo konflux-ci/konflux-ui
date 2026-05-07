@@ -141,7 +141,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       setSelectedRowKeys((prev) => {
         const next = new Set(prev);
         if (isSelecting) {
-          filterRBs.forEach((row) => next.add(row.rowKey));
+          filterRBs.forEach((row) => {
+            if (row.subject) {
+              next.add(row.rowKey);
+            }
+          });
         } else {
           filterRBs.forEach((row) => next.delete(row.rowKey));
         }
@@ -235,8 +239,12 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   };
 
   const selectedCount = selectedRowKeys.size;
+
+  /** Rows with a selectable checkbox (bindings without subjects are shown but cannot be selected). */
+  const selectableVisibleRows = filterRBs.filter((r) => r.subject);
   const allVisibleSelected =
-    filterRBs.length > 0 && filterRBs.every((r) => selectedRowKeys.has(r.rowKey));
+    selectableVisibleRows.length > 0 &&
+    selectableVisibleRows.every((r) => selectedRowKeys.has(r.rowKey));
 
   const canModifyAllSelectedUsers = React.useMemo(() => {
     if (!canCreateRB || !canDeleteRB) {
@@ -375,7 +383,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
             <UserAccessTableHeaderRow
               headerSelect={{
                 isAllSelected: allVisibleSelected,
-                isDisabled: filterRBs.length === 0,
+                isDisabled: selectableVisibleRows.length === 0,
                 onSelectAll,
               }}
             />

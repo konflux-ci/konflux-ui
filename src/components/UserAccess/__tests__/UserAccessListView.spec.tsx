@@ -187,6 +187,24 @@ describe('UserAccessListView', () => {
     expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
   });
 
+  it('should toggle select all off when disabled rows are visible (no subjects row)', () => {
+    const roleBindings: RoleBinding[] = [
+      ...mockRoleBindingsWithMultipleUsers,
+      {
+        ...mockRoleBinding,
+        metadata: { ...mockRoleBinding.metadata, name: 'rb-no-subjects' },
+        subjects: undefined,
+      },
+    ];
+    useRoleBindingsMock.mockReturnValue([roleBindings, true]);
+    render(UserAccessList);
+    const selectAll = screen.getByRole('checkbox', { name: /select all rows/i });
+    fireEvent.click(selectAll);
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
+    fireEvent.click(selectAll);
+    expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('0 users selected');
+  });
+
   it('should prune selection to visible rows when the username filter changes', async () => {
     useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
     render(UserAccessList);

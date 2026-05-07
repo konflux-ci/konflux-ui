@@ -64,6 +64,7 @@ export const UserAccessTableBodyRow: React.FC<UserAccessTableBodyRowProps> = ({
         rowIndex,
         variant: 'checkbox',
         isSelected,
+        isDisabled: !obj.subject,
         onSelect: (_event, selected) => onSelectRow(obj.rowKey, selected),
       }}
     />
