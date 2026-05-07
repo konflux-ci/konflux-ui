@@ -90,6 +90,7 @@ const UserAccessEmptyState: React.FC<
 export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = () => {
   const namespace = useNamespace();
   const [canCreateRB] = useAccessReviewForModel(RoleBindingModel, 'create');
+  const [canDeleteRB] = useAccessReviewForModel(RoleBindingModel, 'delete');
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const [filterDropdownOpen, setFilterDropdownOpen] = React.useState(false);
   const [activeFilter, setActiveFilter] = React.useState(UserAccessFilterTypes.username);
@@ -237,6 +238,23 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   const allVisibleSelected =
     filterRBs.length > 0 && filterRBs.every((r) => selectedRowKeys.has(r.rowKey));
 
+  const canModifyAllSelectedUsers = React.useMemo(() => {
+    if (!canCreateRB || !canDeleteRB) {
+      return false;
+    }
+
+    const selected = new Set(selectedRowKeys);
+    for (const row of tableRows) {
+      if (!selected.has(row.rowKey)) {
+        continue;
+      }
+      if (!row.subject || row.subject.kind !== 'User') {
+        return false;
+      }
+    }
+    return true;
+  }, [canCreateRB, canDeleteRB, selectedRowKeys, tableRows]);
+
   const errorState = getErrorState(error, loaded, 'role bindings');
   if (errorState) {
     return errorState;
@@ -314,8 +332,12 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
             variant="secondary"
             type="button"
             onClick={() => setChangeAccessModalOpen(true)}
-            isDisabled={selectedCount === 0}
-            tooltip="No users selected. Select at least one user to change access."
+            isDisabled={selectedCount === 0 || !canModifyAllSelectedUsers}
+            tooltip={
+              selectedCount === 0
+                ? 'No users selected. Select at least one user to change access.'
+                : "You don't have permission to change access for some selected users."
+            }
             analytics={{
               link_name: 'change-access',
               namespace,
