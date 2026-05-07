@@ -18,7 +18,8 @@ import {
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import type { RoleBinding } from '~/types';
-import { defaultKonfluxRoleMap, KONFLUX_ROLE_WEIGHT } from '../../__data__/role-data';
+import { KONFLUX_ROLE_WEIGHT } from '~/utils/rbac';
+import { defaultKonfluxRoleMap } from '../../__data__/role-data';
 import { useRoleMap } from '../../hooks/useRole';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
@@ -98,6 +99,10 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       );
       const allUserRoles = userRoleBindings.map((rb) => rb.roleRef.name);
 
+      if (allUserRoles.length === 0) {
+        return 'Unknown';
+      }
+
       const highestRole = allUserRoles.reduce((max, role) => {
         return KONFLUX_ROLE_WEIGHT[role] > KONFLUX_ROLE_WEIGHT[max] ? role : max;
       }, allUserRoles[0]);
@@ -164,9 +169,10 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
         </FlexItem>
         <FlexItem>
           <Alert variant={AlertVariant.warning} title="Role change information" isInline>
-            When changing access, the user will be removed from all role bindings from current
-            namespace and then added to the new role binding. If any role rinding remains empty, it
-            will be deleted.
+            When changing access, the user will be removed from all role bindings in the current
+            namespace and then added to the new role binding in the namespace. If any selected role
+            binding contains multiple users, the role binding will be split and the users not
+            selected will be added to the new role binding with the same role.
           </Alert>
         </FlexItem>
         <FlexItem>

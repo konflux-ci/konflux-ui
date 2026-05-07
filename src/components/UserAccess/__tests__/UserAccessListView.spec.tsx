@@ -30,6 +30,7 @@ jest.mock('react-router-dom', () => ({
 }));
 
 jest.mock('../../../utils/rbac', () => ({
+  ...jest.requireActual('../../../utils/rbac'),
   useAccessReviewForModel: jest.fn(),
 }));
 jest.mock('../../../hooks/useRoleBindings');
@@ -281,7 +282,7 @@ describe('UserAccessListView', () => {
       await selectNewRoleInModalAndSave('Maintainer');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
-      expect(deleteRBMock).toHaveBeenCalledWith(rbs[0], false);
+      expect(deleteRBMock).toHaveBeenCalledWith(rbs[0]);
       expect(createRBsMock).toHaveBeenCalledTimes(1);
       expect(createRBsMock).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -290,7 +291,6 @@ describe('UserAccessListView', () => {
           roleMap: defaultKonfluxRoleMap,
         }),
         ns,
-        false,
       );
     });
 
@@ -318,7 +318,6 @@ describe('UserAccessListView', () => {
       expect(createRBsMock).toHaveBeenCalledWith(
         expect.objectContaining({ usernames: ['alice'], role: 'Maintainer' }),
         ns,
-        false,
       );
     });
 
@@ -338,19 +337,17 @@ describe('UserAccessListView', () => {
       await selectNewRoleInModalAndSave('Admin');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
-      expect(deleteRBMock).toHaveBeenCalledWith(shared, false);
+      expect(deleteRBMock).toHaveBeenCalledWith(shared);
       expect(createRBsMock).toHaveBeenCalledTimes(2);
       expect(createRBsMock).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({ usernames: ['alice'], role: 'Admin' }),
         ns,
-        false,
       );
       expect(createRBsMock).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({ usernames: ['bob'], role: 'Contributor' }),
         ns,
-        false,
       );
     });
 
@@ -368,7 +365,6 @@ describe('UserAccessListView', () => {
       expect(createRBsMock).toHaveBeenCalledWith(
         expect.objectContaining({ usernames: ['alice'], role: 'Contributor' }),
         ns,
-        false,
       );
     });
 
@@ -396,7 +392,6 @@ describe('UserAccessListView', () => {
           role: 'Maintainer',
         }),
         ns,
-        false,
       );
       expect(createRBsMock.mock.calls[0][0].usernames).toHaveLength(2);
     });
@@ -427,13 +422,11 @@ describe('UserAccessListView', () => {
         1,
         expect.objectContaining({ usernames: ['alice'], role: 'Contributor' }),
         ns,
-        false,
       );
       expect(createRBsMock).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({ usernames: ['bob'], role: 'Maintainer' }),
         ns,
-        false,
       );
     });
 
@@ -479,12 +472,11 @@ describe('UserAccessListView', () => {
       await selectNewRoleInModalAndSave('Maintainer');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
-      expect(deleteRBMock).toHaveBeenCalledWith(aliceContrib, false);
+      expect(deleteRBMock).toHaveBeenCalledWith(aliceContrib);
       expect(createRBsMock).toHaveBeenCalledTimes(1);
       expect(createRBsMock).toHaveBeenCalledWith(
         expect.objectContaining({ usernames: ['alice'], role: 'Maintainer' }),
         ns,
-        false,
       );
     });
   });
