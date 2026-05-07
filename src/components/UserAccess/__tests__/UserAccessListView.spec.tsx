@@ -239,6 +239,19 @@ describe('UserAccessListView', () => {
     expect(screen.queryByText('rb-no-subjects')).not.toBeInTheDocument();
   });
 
+  it('should disable Change access when user lacks permission to modify role bindings', () => {
+    useAccessReviewModalMock.mockReturnValue([false]);
+    useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
+    render(UserAccessList);
+
+    fireEvent.click(screen.getAllByRole('checkbox')[1]);
+
+    expect(screen.getByRole('button', { name: 'Change access' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  });
+
   describe('Change role save (handleModalSave)', () => {
     const ns = 'test-ns';
 
