@@ -11,6 +11,7 @@ export * from './mock-application-hooks';
 export * from './mock-browser';
 export * from './mock-konflux-public-info';
 export * from './mock-console';
+export * from './mock-analytics';
 export * from './test-helpers';
 
 export * from './rendering-utils';

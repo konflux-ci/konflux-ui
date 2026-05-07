@@ -23,6 +23,7 @@ jest.mock('../../../../feature-flags/hooks', () => {
   return {
     useIsOnFeatureFlag: useIsOnFeatureFlagMock,
     useFeatureFlags: useFeatureFlagsMock,
+    createConditionsHook: jest.fn(() => jest.fn()),
     IfFeature: ({
       flag,
       children,

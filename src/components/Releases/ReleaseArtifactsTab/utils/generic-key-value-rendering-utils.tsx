@@ -3,6 +3,8 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   DescriptionListDescription,
+  Stack,
+  StackItem,
 } from '@patternfly/react-core';
 import { isObject } from 'lodash-es';
 import ExternalLink from '../../../../shared/components/links/ExternalLink';
@@ -41,48 +43,42 @@ function renderFinalValue(value: unknown): React.ReactNode {
   return str;
 }
 
-function renderValue(value: unknown): React.ReactNode {
+function renderValue(value: unknown, level: number = 0): React.ReactNode {
   if (value === null || value === undefined) {
     return <span>—</span>;
   }
 
   if (Array.isArray(value)) {
-    if (value.every((v) => isObject(v) && v !== null && !Array.isArray(v))) {
-      // Array of objects
-      return (
-        <ul style={{ margin: 0 }}>
-          {value.map((obj, idx) => (
-            <li key={idx} style={{ marginBottom: 'var(--pf-v5-global--spacer--sm)' }}>
-              {Object.entries(obj as Record<string, unknown>).map(([k, v]) => (
-                <div key={k}>
-                  <strong>{humanizeKey(k)}:</strong> {renderFinalValue(v)}
-                </div>
-              ))}
-            </li>
-          ))}
-        </ul>
-      );
-    }
-
-    // Array of simple values
-    return (
-      <ul style={{ margin: 0 }}>
-        {value.map((v, i) => (
-          <li key={i}>{renderFinalValue(v)}</li>
+    return value.length === 0 ? (
+      <span>—</span>
+    ) : (
+      <Stack hasGutter={level === 0}>
+        {value.map((item, idx) => (
+          <StackItem key={idx}>{renderValue(item, level + 1)}</StackItem>
         ))}
-      </ul>
+      </Stack>
     );
   }
 
   if (typeof value === 'object') {
-    return (
-      <div>
-        {Object.entries(value).map(([k, v]) => (
-          <div key={k} style={{ marginBottom: 'var(--pf-v5-global--spacer--sm)' }}>
-            <strong>{humanizeKey(k)}:</strong> {renderFinalValue(v)}
-          </div>
+    const entries = Object.entries(value as Record<string, unknown>);
+    return entries.length === 0 ? (
+      <span>—</span>
+    ) : (
+      <Stack
+        hasGutter={level === 0}
+        style={
+          level > 0
+            ? { paddingLeft: `var(--pf-v5-global--spacer--${level > 1 ? 'xl' : 'md'})` }
+            : undefined
+        }
+      >
+        {entries.map(([k, v]) => (
+          <StackItem key={k}>
+            <strong>{humanizeKey(k)}:</strong> {renderValue(v, level + 1)}
+          </StackItem>
         ))}
-      </div>
+      </Stack>
     );
   }
 

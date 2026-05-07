@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
-import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunLabel, runStatus } from '~/consts/pipelinerun';
 import { useReleaseStatus } from '~/hooks/useReleaseStatus';
 import {
   APPLICATION_DETAILS_PATH,
@@ -8,14 +8,17 @@ import {
   COMPONENT_DETAILS_PATH,
   RELEASEPLAN_PATH,
 } from '../../routes/paths';
+import ActionMenu from '../../shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '../../shared/components/table';
 import { Timestamp } from '../../shared/components/timestamp/Timestamp';
 import { MonitoredReleaseKind } from '../../types';
+import { useReleaseActions } from '../Releases/release-actions';
 import { StatusIconWithText } from '../StatusIcon/StatusIcon';
 import { releaseTableColumnClasses } from './ReleaseListHeader';
 
 const ReleaseListRow: React.FC<RowFunctionArgs<MonitoredReleaseKind>> = ({ obj }) => {
   const status = useReleaseStatus(obj);
+  const actions = useReleaseActions(obj);
 
   return (
     <>
@@ -76,6 +79,10 @@ const ReleaseListRow: React.FC<RowFunctionArgs<MonitoredReleaseKind>> = ({ obj }
 
       <TableData className={releaseTableColumnClasses.productVersion}>
         {obj.productVersion}
+      </TableData>
+
+      <TableData className={releaseTableColumnClasses.kebab}>
+        {status === runStatus.Failed && <ActionMenu actions={actions} />}
       </TableData>
     </>
   );

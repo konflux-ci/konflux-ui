@@ -13,6 +13,7 @@ export const releaseTableColumnClasses = {
   product: 'pf-m-width-20  pf-m-width-10-on-xl',
   productVersion: 'pf-m-width-20  pf-m-width-10-on-xl',
   namespace: 'pf-m-width-20  pf-m-width-10-on-xl',
+  kebab: 'pf-v5-c-table__action',
 } as const;
 
 export type ReleaseMonitorColumnKey = keyof typeof releaseTableColumnClasses;
@@ -77,6 +78,10 @@ const releaseColumns = [
       </>
     ),
     className: releaseTableColumnClasses.productVersion,
+  },
+  {
+    title: ' ',
+    className: releaseTableColumnClasses.kebab,
   },
 ] satisfies Parameters<typeof createTableHeaders>[0];
 

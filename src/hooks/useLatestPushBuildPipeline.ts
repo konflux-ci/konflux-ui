@@ -12,6 +12,8 @@ import { usePipelineRunsV2 } from './usePipelineRunsV2';
 export const useLatestBuildPipelineRunForComponentV2 = (
   namespace: string,
   componentName: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _version?: string,
 ): [PipelineRunKind, boolean, unknown] => {
   const result = usePipelineRunsV2(
     namespace,
@@ -21,6 +23,8 @@ export const useLatestBuildPipelineRunForComponentV2 = (
           matchLabels: {
             [PipelineRunLabel.PIPELINE_TYPE]: PipelineRunType.BUILD,
             [PipelineRunLabel.COMPONENT]: componentName,
+            // TODO: use when version label is added to pipeline run
+            // ...(version && {[PipelineRunLabel.COMPONENT_VERSION]: version})
           },
         },
         limit: 1,

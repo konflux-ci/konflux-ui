@@ -29,7 +29,9 @@ import FilteredEmptyState from '../../../shared/components/empty-state/FilteredE
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { SecretKind } from '../../../types';
 import { useApplicationBreadcrumbs } from '../../Applications/breadcrumbs/breadcrumb-utils';
+import { useModalLauncher } from '../../modal/ModalProvider';
 import PageLayout from '../../PageLayout/PageLayout';
+import { createLinkSecretModalLauncher } from '../LinkSecret/LinkSecret';
 import getListHeader, { SortableHeaders } from './LinkedSecretsListHeader';
 import { LinkedSecretsListRow } from './LinkedSecretsListRow';
 import { LinkedSecretsToolbar } from './LinkedSecretsToolbar';
@@ -51,6 +53,8 @@ export const LinkedSecretsListView: React.FC = () => {
     namespace,
     componentName,
   );
+
+  const showModal = useModalLauncher();
 
   const [nameFilter, setNameFilter] = useSearchParam('name', '');
 
@@ -112,9 +116,7 @@ export const LinkedSecretsListView: React.FC = () => {
       </EmptyStateBody>
       <Button
         variant="primary"
-        // TODO: the "link secrets" functionality will be implemented in another ticket
-        // eslint-disable-next-line no-alert
-        onClick={() => alert('TODO')}
+        onClick={() => showModal(createLinkSecretModalLauncher()())}
         style={{ marginTop: 'var(--pf-v5-global--spacer--md)' }}
       >
         Link secrets

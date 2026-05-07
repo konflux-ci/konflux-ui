@@ -654,7 +654,7 @@ describe('useTaskRunsV2', () => {
       expect(loaded).toBe(false);
       expect(error).toBeNull();
 
-      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object), { enabled: '' });
+      expect(mockUseTRTaskRuns).toHaveBeenCalledWith(null, expect.any(Object), { enabled: false });
     });
   });
 

@@ -1,5 +1,5 @@
 import { mockPipelineRuns } from '~/components/ApplicationDetails/__data__/mock-pipeline-run';
-import { runStatus } from '~/consts/pipelinerun';
+import { runStatus, TestOutputResult } from '~/consts/pipelinerun';
 import { DataState, testPipelineRuns } from '../../__data__/pipelinerun-data';
 import { PipelineRunKind, TaskRunKind, TektonResultsRun } from '../../types';
 import {
@@ -14,7 +14,9 @@ import {
   isPipelineV1Beta1,
   isTaskV1Beta1,
   taskTestResultStatus,
+  testOutputResultToRunStatus,
   isTaskRunInPipelineRun,
+  getDisplayNameFromChildReferences,
 } from '../pipeline-utils';
 
 const samplePipelineRun = testPipelineRuns[DataState.SUCCEEDED];
@@ -296,6 +298,40 @@ describe('taskTestResultStatus', () => {
   });
 });
 
+describe('testOutputResultToRunStatus', () => {
+  it('should return null when testOutputResult is undefined', () => {
+    expect(testOutputResultToRunStatus(undefined)).toBeNull();
+  });
+
+  it('should return null when testOutputResult is empty string', () => {
+    expect(testOutputResultToRunStatus('' as TestOutputResult)).toBeNull();
+  });
+
+  it('should return Succeeded for SUCCESS', () => {
+    expect(testOutputResultToRunStatus(TestOutputResult.SUCCESS)).toBe(runStatus.Succeeded);
+  });
+
+  it('should return TestFailed for FAILURE', () => {
+    expect(testOutputResultToRunStatus(TestOutputResult.FAILURE)).toBe(runStatus.TestFailed);
+  });
+
+  it('should return TestFailed for ERROR', () => {
+    expect(testOutputResultToRunStatus(TestOutputResult.ERROR)).toBe(runStatus.TestFailed);
+  });
+
+  it('should return TestWarning for WARNING', () => {
+    expect(testOutputResultToRunStatus(TestOutputResult.WARNING)).toBe(runStatus.TestWarning);
+  });
+
+  it('should return Skipped for SKIPPED', () => {
+    expect(testOutputResultToRunStatus(TestOutputResult.SKIPPED)).toBe(runStatus.Skipped);
+  });
+
+  it('should return Unknown for unknown test output result', () => {
+    expect(testOutputResultToRunStatus('UNKNOWN' as TestOutputResult)).toBe(runStatus.Unknown);
+  });
+});
+
 describe('isTaskRunInPipelineRun', () => {
   it('should return false if pipeline run is undefined', () => {
     expect(isTaskRunInPipelineRun(undefined, 'taskrun')).toBe(false);
@@ -311,5 +347,53 @@ describe('isTaskRunInPipelineRun', () => {
     expect(isTaskRunInPipelineRun(mockPipelineRuns[0] as PipelineRunKind, 'clone-repository')).toBe(
       true,
     );
+  });
+});
+
+describe('getDisplayNameFromChildReferences', () => {
+  const pipelineRunWithChildRefs = {
+    status: {
+      childReferences: [
+        { name: 'build-task-run-1', pipelineTaskName: 'build', displayName: 'Build linux/amd64' },
+        { name: 'build-task-run-2', pipelineTaskName: 'build', displayName: 'Build linux/arm64' },
+        { name: 'test-task-run', pipelineTaskName: 'test' },
+      ],
+    },
+  } as PipelineRunKind;
+
+  it('should return displayName when childReference matches', () => {
+    expect(getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'build-task-run-1')).toBe(
+      'Build linux/amd64',
+    );
+    expect(getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'build-task-run-2')).toBe(
+      'Build linux/arm64',
+    );
+  });
+
+  it('should return undefined when childReference has no displayName', () => {
+    expect(
+      getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'test-task-run'),
+    ).toBeUndefined();
+  });
+
+  it('should return undefined when taskRunName does not match any childReference', () => {
+    expect(
+      getDisplayNameFromChildReferences(pipelineRunWithChildRefs, 'non-existent'),
+    ).toBeUndefined();
+  });
+
+  it('should return undefined when pipelineRun is undefined', () => {
+    expect(getDisplayNameFromChildReferences(undefined, 'build-task-run-1')).toBeUndefined();
+  });
+
+  it('should return undefined when taskRunName is undefined', () => {
+    expect(getDisplayNameFromChildReferences(pipelineRunWithChildRefs, undefined)).toBeUndefined();
+  });
+
+  it('should return undefined when pipelineRun has no childReferences', () => {
+    const pipelineRunNoRefs = { status: {} } as PipelineRunKind;
+    expect(
+      getDisplayNameFromChildReferences(pipelineRunNoRefs, 'build-task-run-1'),
+    ).toBeUndefined();
   });
 });

@@ -3,7 +3,7 @@ import { NavItem, pageTitles } from '../support/constants/PageTitle';
 import { localKonfluxLoginPO, stageLoginPO } from '../support/pageObjects/login-po';
 import { GetStartedPage, GetAppStartedPage } from '../support/pages/GetStartedPage';
 import { Common } from './Common';
-import { goToApplicationsPagePo } from '../support/pageObjects/pages-po';
+import { goToApplicationsPagePo, namespacesPagePO } from '../support/pageObjects/pages-po';
 
 export class Login {
   static login(
@@ -69,6 +69,10 @@ export class Login {
     Common.waitForLoad();
     cy.testA11y(`${pageTitles.namespaces}`);
     // Go to https://localhost:8080/ns/your-tenant/applications
+    cy.get(namespacesPagePO.title).should('be.visible');
+    cy.get(namespacesPagePO.filterNamespaceInput)
+      .clear()
+      .type(`${Cypress.env('HAC_NAMESPACE')}`);
     cy.get(
       goToApplicationsPagePo(`${Cypress.env('HAC_NAMESPACE')}`).goToApplicationsPagePo,
     ).click();

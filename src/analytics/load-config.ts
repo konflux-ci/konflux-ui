@@ -10,14 +10,16 @@ const DEFAULT_ANALYTICS_CONFIG: AnalyticsConfig = {
   apiUrl: undefined,
 };
 
+function isPlainText(response: Response): boolean {
+  const contentType = response.headers.get('content-type') || '';
+  return contentType.includes('text/plain');
+}
+
 /**
  * Load analytics configuration from window.KONFLUX_RUNTIME
- * Values are injected at runtime via runtime-config.js
- *
- * In local development: defaults from public/runtime-config.js (analytics disabled)
- * In staging/production: values from ConfigMap via init container
+ * Used as fallback for local development where /segment/* APIs are unavailable.
  */
-export function loadAnalyticsConfig(): AnalyticsConfig {
+function loadAnalyticsConfigFromRuntime(): AnalyticsConfig {
   if (typeof window === 'undefined' || !window.KONFLUX_RUNTIME) {
     return DEFAULT_ANALYTICS_CONFIG;
   }
@@ -25,15 +27,39 @@ export function loadAnalyticsConfig(): AnalyticsConfig {
   const runtime = window.KONFLUX_RUNTIME;
   const enabled = parseBoolean(runtime.ANALYTICS_ENABLED, false);
 
-  // If analytics is disabled, return noop config
   if (!enabled) {
     return DEFAULT_ANALYTICS_CONFIG;
   }
 
-  // analytics is enabled, return config
   return {
     enabled: true,
     writeKey: runtime.ANALYTICS_WRITE_KEY || '',
     apiUrl: runtime.ANALYTICS_API_URL || '',
   };
+}
+
+/**
+ * Fetch Segment config from backend APIs (/segment/key and /segment/url).
+ * Falls back to window.KONFLUX_RUNTIME values for local development.
+ */
+export async function loadAnalyticsConfig(): Promise<AnalyticsConfig> {
+  try {
+    const [keyResponse, urlResponse] = await Promise.all([
+      fetch('/segment/key'),
+      fetch('/segment/url'),
+    ]);
+
+    if (keyResponse.ok && urlResponse.ok && isPlainText(keyResponse) && isPlainText(urlResponse)) {
+      const writeKey = (await keyResponse.text()).trim();
+      const apiUrl = (await urlResponse.text()).trim();
+
+      if (writeKey) {
+        return { enabled: true, writeKey, apiUrl };
+      }
+    }
+  } catch {
+    // API fetch failed, fall through to runtime config
+  }
+
+  return loadAnalyticsConfigFromRuntime();
 }

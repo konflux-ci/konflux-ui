@@ -1,3 +1,4 @@
+import { checkIfAnalyticsIsEnabled } from '~/analytics/conditional-checks';
 import { checkIfSystemNotificationsAccessible } from '~/components/KonfluxSystemNotifications/conditional-checks';
 import { getKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { KonfluxInstanceEnvironments } from '~/types/konflux-public-info';
@@ -10,6 +11,7 @@ registerCondition('isKubearchiveEnabled', checkIfKubeArchiveIsEnabled);
 registerCondition('isKiteServiceEnabled', checkIfKiteServiceIsEnabled);
 registerCondition('isImageControllerEnabled', checkIfImageControllerIsEnabled);
 registerCondition('isSystemNotificationsAccessible', checkIfSystemNotificationsAccessible);
+registerCondition('isAnalyticsEnabled', checkIfAnalyticsIsEnabled);
 
 registerCondition('isStagingCluster', async () => {
   try {

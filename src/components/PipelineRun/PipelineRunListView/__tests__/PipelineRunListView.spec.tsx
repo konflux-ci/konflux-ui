@@ -1,9 +1,10 @@
 import * as React from 'react';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { useSearchParamBatch } from '~/hooks/useSearchParam';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
 import { useComponents } from '../../../../hooks/useComponents';
@@ -228,7 +229,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponent name={appName} />);
+    renderWithQueryClient(<TestedComponent name={appName} />);
     screen.getByTestId('data-table-skeleton');
   });
 
@@ -240,7 +241,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponent name={appName} />);
+    renderWithQueryClient(<TestedComponent name={appName} />);
     screen.queryByText(/Keep tabs on components and activity/);
     screen.queryByText(/Monitor your components with pipelines and oversee CI\/CD activity./);
     const button = screen.queryByText('Add component');
@@ -258,7 +259,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponent name="purple-mermaid-app" />);
+    renderWithQueryClient(<TestedComponent name="purple-mermaid-app" />);
     screen.getByText('Unable to load pipeline runs');
   });
 
@@ -270,7 +271,7 @@ describe('Pipeline run List', () => {
       () => {},
       { isFetchingNextPage: false, hasNextPage: false },
     ]);
-    render(<TestedComponent name={appName} />);
+    renderWithQueryClient(<TestedComponent name={appName} />);
     screen.queryByText('Name');
     screen.queryByText('Started');
     screen.queryByText('Duration');
@@ -281,7 +282,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
-    render(<TestedComponent name={appName} />);
+    renderWithQueryClient(<TestedComponent name={appName} />);
     expect(screen.queryByText('basic-node-js-first')).toBeInTheDocument();
     expect(screen.queryByText('basic-node-js-second')).toBeInTheDocument();
     expect(screen.queryByText('basic-node-js-third')).toBeInTheDocument();
@@ -290,7 +291,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render filtered pipelinerun list by name', async () => {
-    const r = render(<TestedComponent name={appName} />);
+    const r = renderWithQueryClient(<TestedComponent name={appName} />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -322,7 +323,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render filtered pipelinerun list by status', async () => {
-    const r = render(<TestedComponent name={appName} />);
+    const r = renderWithQueryClient(<TestedComponent name={appName} />);
 
     const statusFilter = screen.getByRole('button', {
       name: /status filter menu/i,
@@ -357,7 +358,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should render filtered pipelinerun list by type', async () => {
-    const r = render(<TestedComponent name={appName} />);
+    const r = renderWithQueryClient(<TestedComponent name={appName} />);
 
     const typeFilter = screen.getByRole('button', {
       name: /type filter menu/i,
@@ -392,7 +393,7 @@ describe('Pipeline run List', () => {
   });
 
   it('should clear the filters and render the list again in the table', async () => {
-    const r = render(<TestedComponent name={appName} />);
+    const r = renderWithQueryClient(<TestedComponent name={appName} />);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 

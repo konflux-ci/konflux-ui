@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Popover, Skeleton, Tooltip } from '@patternfly/react-core';
+import { Skeleton, Tooltip } from '@patternfly/react-core';
 import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipboard-check-icon';
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
@@ -21,15 +21,11 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
 import { createCommitObjectFromPLR } from '~/utils/commits-utils';
-import {
-  calculateDuration,
-  getPipelineRunStatusResults,
-  pipelineRunStatus,
-  taskTestResultStatus,
-} from '~/utils/pipeline-utils';
+import { calculateDuration, pipelineRunStatus } from '~/utils/pipeline-utils';
 import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
+import { PipelineRunTestResultCell } from './PipelineRunTestResultCell';
 import { ScanStatus } from './ScanStatus';
 
 type PipelineRunListRowProps = RowFunctionArgs<
@@ -177,11 +173,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
   const commit = createCommitObjectFromPLR(obj);
 
-  const testStatus = React.useMemo(() => {
-    const results = getPipelineRunStatusResults(obj);
-    return taskTestResultStatus(results);
-  }, [obj]);
-
   const queryString = releaseName
     ? `?releaseName=${encodeURIComponent(releaseName)}`
     : integrationTestName
@@ -236,16 +227,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         <StatusIconWithText status={status} />
       </TableData>
       {showTestResult ? (
-        <TableData className={pipelineRunTableColumnClasses.testResultStatus}>
-          <Popover
-            triggerAction="hover"
-            aria-label="error popover"
-            bodyContent={testStatus?.note}
-            isVisible={testStatus?.note ? undefined : false}
-          >
-            <div>{testStatus?.result ? testStatus.result : '-'}</div>
-          </Popover>
-        </TableData>
+        <PipelineRunTestResultCell
+          plr={obj}
+          className={pipelineRunTableColumnClasses.testResultStatus}
+          namespace={namespace}
+        />
       ) : null}
       <TableData className={pipelineRunTableColumnClasses.type}>
         {capitalize(obj.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE])}
@@ -367,11 +353,6 @@ const DynamicPipelineRunListRow: React.FC<
   const applicationName = labels?.[PipelineRunLabel.APPLICATION];
   const commit = createCommitObjectFromPLR(obj);
 
-  const testStatus = React.useMemo(() => {
-    const results = getPipelineRunStatusResults(obj);
-    return taskTestResultStatus(results);
-  }, [obj]);
-
   const queryString = releaseName
     ? `?releaseName=${encodeURIComponent(releaseName)}`
     : integrationTestName
@@ -431,16 +412,11 @@ const DynamicPipelineRunListRow: React.FC<
         </TableData>
       )}
       {visibleColumns.has('testResult') && (
-        <TableData className={dynamicClasses.testResultStatus}>
-          <Popover
-            triggerAction="hover"
-            aria-label="error popover"
-            bodyContent={testStatus?.note}
-            isVisible={testStatus?.note ? undefined : false}
-          >
-            <div>{testStatus?.result ? testStatus.result : '-'}</div>
-          </Popover>
-        </TableData>
+        <PipelineRunTestResultCell
+          plr={obj}
+          className={dynamicClasses.testResultStatus}
+          namespace={namespace}
+        />
       )}
       {visibleColumns.has('type') && (
         <TableData className={dynamicClasses.type}>

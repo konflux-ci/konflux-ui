@@ -1,8 +1,9 @@
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunListRow } from '~/components/PipelineRun/PipelineRunListView/PipelineRunListRow';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { mockUseSearchParamBatch } from '~/unit-test-utils/mock-useSearchParam';
 import { mockPipelineRuns } from '../../../../components/Components/__data__/mock-pipeline-run';
 import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
@@ -181,12 +182,12 @@ describe('SnapshotPipelinerunslist', () => {
   });
 
   it('should render spinner if pipeline data is not loaded', () => {
-    render(<TestedComponent name={appName} pipelineruns={[]} loaded={false} />);
+    renderWithQueryClient(<TestedComponent name={appName} pipelineruns={[]} loaded={false} />);
     screen.getByRole('progressbar');
   });
 
   it('should render empty state if no pipelinerun is present', () => {
-    render(<TestedComponent name={appName} pipelineruns={[]} loaded={true} />);
+    renderWithQueryClient(<TestedComponent name={appName} pipelineruns={[]} loaded={true} />);
     screen.queryAllByText(/Not found/);
     const button = screen.queryByText('Add component');
     expect(button).toBeInTheDocument();
@@ -196,12 +197,16 @@ describe('SnapshotPipelinerunslist', () => {
   });
 
   it('should render pipelineruns with snapshot labels instead of annotations', () => {
-    render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
+    renderWithQueryClient(
+      <TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />,
+    );
     expect(screen.queryByText('plr-with snapshot-label-only')).toBeInTheDocument();
   });
 
   it('should render entire pipelineRuns list when no filter value', () => {
-    render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
+    renderWithQueryClient(
+      <TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />,
+    );
     expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-vvs')).toBeInTheDocument();
@@ -210,7 +215,9 @@ describe('SnapshotPipelinerunslist', () => {
   });
 
   it('should render filtered pipelinerun list and should call nextPage', async () => {
-    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
+    const r = renderWithQueryClient(
+      <TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />,
+    );
     expect(screen.queryByText('python-sample-942fq')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-s2f4f')).toBeInTheDocument();
     expect(screen.queryByText('go-sample-vvs')).toBeInTheDocument();
@@ -234,7 +241,9 @@ describe('SnapshotPipelinerunslist', () => {
   });
 
   it('should render filtered pipelinerun list by name', async () => {
-    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
+    const r = renderWithQueryClient(
+      <TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />,
+    );
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by name...');
 
@@ -264,7 +273,9 @@ describe('SnapshotPipelinerunslist', () => {
   });
 
   it('should render filtered pipelinerun list by status', async () => {
-    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
+    const r = renderWithQueryClient(
+      <TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />,
+    );
 
     const statusFilter = screen.getByRole('button', {
       name: /status filter menu/i,
@@ -293,7 +304,9 @@ describe('SnapshotPipelinerunslist', () => {
   });
 
   it('should render filtered pipelinerun list by type', async () => {
-    const r = render(<TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />);
+    const r = renderWithQueryClient(
+      <TestedComponent name={appName} pipelineruns={snapShotPLRs} loaded={true} />,
+    );
 
     const typeFilter = screen.getByRole('button', {
       name: /type filter menu/i,

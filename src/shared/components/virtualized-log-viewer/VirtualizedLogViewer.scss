@@ -1,7 +1,17 @@
-// Minimal overrides for virtualized log viewer
-// PatternFly's log-viewer.css provides all other styles including search highlighting
+// Minimal overrides for PatternFly log viewer in virtualized context
+// Overrides PatternFly's default styles to support virtualization
+
+.pf-v5-c-log-viewer__main {
+  margin-bottom: var(--pf-v5-global--spacer--md) !important;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // Prevent scroll chaining and double scrollbars
+  box-sizing: border-box; // Include padding/border in width calculation
+}
 
 .pf-v5-c-log-viewer__text {
   white-space: pre-wrap; // Allow long lines to wrap while preserving spaces and line breaks
-  word-break: break-word; // Break long words/URLs to prevent horizontal overflow
 }
+

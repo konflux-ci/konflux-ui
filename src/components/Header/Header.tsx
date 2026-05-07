@@ -33,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({ isDrawerExpanded, toggleDrawer }
                 variant="plain"
                 onClick={() => showModal(createFeatureFlagPanelModal())}
                 aria-label="Experimental Features"
+                data-testid="experimental-features-icon"
               >
                 <FlaskIcon />
               </Button>

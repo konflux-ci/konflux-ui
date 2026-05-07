@@ -6,6 +6,7 @@
 export enum PipelineRunLabel {
   APPLICATION = 'appstudio.openshift.io/application',
   COMPONENT = 'appstudio.openshift.io/component',
+  COMPONENT_VERSION = '', // TODO: add component version label, when it's defined
   PIPELINE_USED_BY = 'pipelines.openshift.io/used-by',
   PIPELINE_TYPE = 'pipelines.appstudio.openshift.io/type',
   PIPELINE_NAME = 'tekton.dev/pipeline',
@@ -122,3 +123,11 @@ export const UNFINISHED_PLR_STATUSES = [
   runStatus.Idle,
   runStatus.Cancelling,
 ];
+
+export enum TestOutputResult {
+  SUCCESS = 'SUCCESS',
+  FAILURE = 'FAILURE',
+  ERROR = 'ERROR',
+  WARNING = 'WARNING',
+  SKIPPED = 'SKIPPED',
+}
