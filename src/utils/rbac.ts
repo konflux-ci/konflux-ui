@@ -195,3 +195,9 @@ export const createLoaderWithAccessCheck =
     }
     return defer({ accessCheck: allowed, data: loader(args) });
   };
+
+export const KONFLUX_ROLE_WEIGHT: Record<string, number> = {
+  'konflux-admin-user-actions': 3,
+  'konflux-maintainer-user-actions': 2,
+  'konflux-contributor-user-actions': 1,
+};

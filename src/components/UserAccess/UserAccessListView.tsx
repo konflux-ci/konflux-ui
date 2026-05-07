@@ -199,18 +199,14 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         );
       });
 
-    const applyChange = async (dryRun?: boolean) => {
-      // Delete all affected RBs, dryRun doesn't affect deleteRB (always deleted)
-      if (!dryRun) {
-        await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb, dryRun)));
-      }
+    const applyChange = async () => {
+      await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb)));
 
       // Selected users
       const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
       await createRBs(
         { usernames: [...uniqueSelectedUsernames], role: newRole, roleMap: defaultKonfluxRoleMap },
         namespace,
-        dryRun,
       );
 
       for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
@@ -221,14 +217,12 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
             roleMap: defaultKonfluxRoleMap,
           },
           namespace,
-          dryRun,
         );
       }
     };
 
     try {
-      // await applyChange(true);
-      await applyChange(false);
+      await applyChange();
       setSelectedRowKeys(new Set());
     } catch (err: unknown) {
       logger.error(

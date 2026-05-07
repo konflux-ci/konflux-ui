@@ -17,9 +17,9 @@ export function useUserAccessRowDisplay(obj: UserAccessTableRow) {
     roleNode: !loaded ? (
       <Skeleton width="200px" height="20px" />
     ) : (
-      roleMap?.roleMap[roleBinding.roleRef.name]
+      roleMap?.roleMap[roleBinding.roleRef.name] ?? roleBinding.roleRef.name
     ),
-    bindingName: roleBinding.metadata.name,
+    bindingName: roleBinding.metadata?.name,
     actionMenu: <ActionMenu actions={actions} />,
   };
 }

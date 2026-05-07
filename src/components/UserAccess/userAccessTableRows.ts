@@ -11,6 +11,7 @@ export type UserAccessTableRow = {
 export function expandRoleBindingsToTableRows(roleBindings: RoleBinding[]): UserAccessTableRow[] {
   return roleBindings.flatMap((roleBinding) => {
     const roleRefName = roleBinding.roleRef?.name ?? 'unknown';
+    const bindingName = roleBinding.metadata?.name ?? 'unknown-binding';
     const subjects = roleBinding.subjects;
 
     if (!subjects?.length) {
@@ -18,7 +19,7 @@ export function expandRoleBindingsToTableRows(roleBindings: RoleBinding[]): User
         {
           roleBinding,
           subject: null,
-          rowKey: `${roleRefName}__0__-__-`,
+          rowKey: `${roleRefName}__0__-__-__${bindingName}`,
         },
       ];
     }
@@ -26,7 +27,7 @@ export function expandRoleBindingsToTableRows(roleBindings: RoleBinding[]): User
     return subjects.map((subject, index) => ({
       roleBinding,
       subject,
-      rowKey: `${roleRefName}__${index}__${subject.kind}__${subject.name}`,
+      rowKey: `${roleRefName}__${index}__${subject.kind}__${subject.name}__${bindingName}`,
     }));
   });
 }
