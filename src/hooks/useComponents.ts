@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { GIT_PROVIDER_ANNOTATION, GIT_PROVIDER_ANNOTATION_VALUE } from '~/utils/component-utils';
 import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
 import { useNamespace } from '../shared/providers/Namespace';
@@ -142,19 +141,4 @@ export const useSortedGroupComponents = (
   }, [groupedComponents]);
 
   return [sortedGroupedComponents, allCompsLoaded, allCompsError];
-};
-
-export const useURLForComponentPR = (component: ComponentKind): string | undefined => {
-  const gitProvider = component.metadata.annotations?.[GIT_PROVIDER_ANNOTATION];
-  const url = component.spec.source?.git?.url?.replace(/\.git$/i, '');
-  if (!url) return undefined;
-  switch (gitProvider) {
-    case GIT_PROVIDER_ANNOTATION_VALUE.GITHUB:
-    case GIT_PROVIDER_ANNOTATION_VALUE.FORGEJO:
-      return `${url}/pulls`;
-    case GIT_PROVIDER_ANNOTATION_VALUE.GITLAB:
-      return `${url}/-/merge_requests`;
-    default:
-      return undefined;
-  }
 };
