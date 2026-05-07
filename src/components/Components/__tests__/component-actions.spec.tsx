@@ -1,15 +1,20 @@
 import { useNavigate } from 'react-router-dom';
 import { renderHook, waitFor } from '@testing-library/react';
+import { useURLForComponentPR } from '../../../hooks/useComponents';
 import { COMPONENT_LIST_PATH } from '../../../routes/paths';
 import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 import { useModalLauncher } from '../../modal/ModalProvider';
 import { componentDeleteModal } from '../../modal/resource-modals';
-import { componentCRMocks, mockedActions } from '../__data__/mock-data';
+import { componentCRMocks } from '../__data__/mock-data';
 import { useComponentActions } from '../component-actions';
 
 jest.mock('../../../utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(() => [true, true]),
+}));
+jest.mock('../../../hooks/useComponents', () => ({
+  ...jest.requireActual('../../../hooks/useComponents'),
+  useURLForComponentPR: jest.fn(),
 }));
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
@@ -37,28 +42,25 @@ jest.mock('../../modal/ModalProvider', () => ({
 }));
 
 const useAccessReviewForModelMock = useAccessReviewForModel as jest.Mock;
+const useURLForComponentPRMock = useURLForComponentPR as jest.Mock;
 const componentDeleteModalMock = componentDeleteModal as jest.Mock;
 const useNavigateMock = useNavigate as jest.Mock;
 const useModalLauncherMock = useModalLauncher as jest.Mock;
 
 const mockedComponent = componentCRMocks[0];
 
-const normalizeCta = (cta) =>
-  typeof cta === 'function'
-    ? expect.any(Function)
-    : expect.objectContaining({ href: expect.any(String) });
-
-const normalizeMockedActions = (disabled = false, includeManagedLinkedSecrets = true) =>
-  mockedActions
-    .filter((ma) => includeManagedLinkedSecrets || ma.label !== 'Manage linked secrets')
-    .map(({ cta, ...rest }) =>
-      expect.objectContaining({ ...rest, cta: normalizeCta(cta), disabled }),
-    );
+const normalizeAction = (label: string, disabled = false) =>
+  expect.objectContaining({
+    label,
+    cta: expect.anything(),
+    disabled,
+  });
 
 describe('component-actions', () => {
   describe('useComponentActions', () => {
     beforeEach(() => {
       useAccessReviewForModelMock.mockReturnValue([true, true]);
+      useURLForComponentPRMock.mockReturnValue('https://github.com/org/repo/pulls');
     });
 
     it('should contain all actions', () => {
@@ -66,7 +68,15 @@ describe('component-actions', () => {
         useComponentActions(mockedComponent, mockedComponent.metadata.name),
       );
       const actions = result.current;
-      expect(actions).toEqual(expect.arrayContaining(normalizeMockedActions()));
+      expect(actions).toEqual(
+        expect.arrayContaining([
+          normalizeAction('Edit build pipeline plan'),
+          normalizeAction('Start new build'),
+          normalizeAction('Manage linked secrets'),
+          normalizeAction('View all pull requests'),
+          normalizeAction('Delete component'),
+        ]),
+      );
     });
 
     it('actions should be disabled when user does not have access rights', () => {
@@ -75,23 +85,40 @@ describe('component-actions', () => {
         useComponentActions(mockedComponent, mockedComponent.metadata.name),
       );
       const actions = result.current;
-      expect(actions).toEqual(expect.arrayContaining(normalizeMockedActions(true)));
+      expect(actions).toEqual(
+        expect.arrayContaining([
+          normalizeAction('Edit build pipeline plan', true),
+          normalizeAction('Start new build', true),
+          normalizeAction('Manage linked secrets', true),
+          normalizeAction('View all pull requests', true),
+          normalizeAction('Delete component', true),
+        ]),
+      );
     });
 
-    it('should hide "Manage linked secrets" action if feature flag is disabled', () => {
+    it('should include "Manage linked secrets" action', () => {
       const { result } = renderHook(() =>
         useComponentActions(mockedComponent, mockedComponent.metadata.name),
       );
       const actions = result.current;
-      expect(actions).toEqual(expect.arrayContaining(normalizeMockedActions(false, false)));
+      expect(actions.find((a) => a.label === 'Manage linked secrets')).toBeDefined();
     });
 
-    it('should return empty array if component is null or undefined', () => {
+    it('should set external cta for "View all pull requests"', () => {
       const { result } = renderHook(() =>
-        useComponentActions(undefined, mockedComponent.metadata.name),
+        useComponentActions(mockedComponent, mockedComponent.metadata.name),
       );
-      const actions = result.current;
-      expect(actions).toEqual([]);
+      const prAction = result.current.find((a) => a.label === 'View all pull requests');
+      expect(prAction?.cta).toEqual({ href: 'https://github.com/org/repo/pulls', external: true });
+    });
+
+    it('should disable "View all pull requests" when prURL is undefined', () => {
+      useURLForComponentPRMock.mockReturnValue(undefined);
+      const { result } = renderHook(() =>
+        useComponentActions(mockedComponent, mockedComponent.metadata.name),
+      );
+      const prAction = result.current.find((a) => a.label === 'View all pull requests');
+      expect(prAction?.disabled).toBe(true);
     });
 
     it('should navigate to component list when delete modal closes with submitClicked true', async () => {

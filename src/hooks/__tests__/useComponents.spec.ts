@@ -1,18 +1,11 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { ComponentKind } from '~/types';
-import { BUILD_STATUS_ANNOTATION } from '~/utils/component-utils';
+import { GIT_PROVIDER_ANNOTATION, GIT_PROVIDER_ANNOTATION_VALUE } from '~/utils/component-utils';
 import { mockComponentsData } from '../../components/ApplicationDetails/__data__/WorkflowComponentsData';
 import { createK8sWatchResourceMock } from '../../utils/test-utils';
-import { useApplicationPipelineGitHubApp } from '../useApplicationPipelineGitHubApp';
-import { useAllComponents, useComponents, useURLForComponentPRs } from '../useComponents';
+import { useAllComponents, useComponents, useURLForComponentPR } from '../useComponents';
 
 const useK8sWatchResourceMock = createK8sWatchResourceMock();
-
-jest.mock('../useApplicationPipelineGitHubApp', () => ({
-  useApplicationPipelineGitHubApp: jest.fn(),
-}));
-
-const useApplicationPipelineGitHubAppMock = useApplicationPipelineGitHubApp as jest.Mock;
 
 describe('useComponents', () => {
   it('should return empty array when call is inflight', () => {
@@ -56,49 +49,70 @@ describe('useAllComponents', () => {
   });
 });
 
-describe('useURLForComponentPRs', () => {
-  it('should create git URL for component PRs', () => {
-    useApplicationPipelineGitHubAppMock.mockReturnValue({
-      name: 'appstudio-staging-ci',
-      url: 'https://github.com/apps/appstudio-staging-ci.git',
-    });
-    const createComponent = (url: string, pacEnabled = true): ComponentKind =>
-      ({
-        metadata: {
-          annotations: {
-            [BUILD_STATUS_ANNOTATION]: pacEnabled && JSON.stringify({ pac: { state: 'enabled' } }),
+describe('useURLForComponentPR', () => {
+  const createComponent = (gitProvider: string, url: string): ComponentKind =>
+    ({
+      metadata: {
+        annotations: {
+          [GIT_PROVIDER_ANNOTATION]: gitProvider,
+        },
+      },
+      spec: {
+        source: {
+          git: {
+            url,
           },
         },
-        spec: {
-          source: {
-            git: {
-              url,
-            },
-          },
-        },
-      }) as unknown as ComponentKind;
+      },
+    }) as unknown as ComponentKind;
 
-    expect(renderHook(() => useURLForComponentPRs([])).result.current).toBe(
-      'https://github.com/pulls?q=is:pr+is:open+author:app/appstudio-staging-ci',
-    );
+  it('should create GitHub pull requests URL', () => {
     expect(
-      renderHook(() =>
-        useURLForComponentPRs([
-          createComponent('test', false),
-          createComponent('https://github.com/org/repo', false),
-        ]),
-      ).result.current,
-    ).toBe('https://github.com/pulls?q=is:pr+is:open+author:app/appstudio-staging-ci');
+      useURLForComponentPR(
+        createComponent(GIT_PROVIDER_ANNOTATION_VALUE.GITHUB, 'https://github.com/org/repo.git'),
+      ),
+    ).toBe('https://github.com/org/repo/pulls');
+  });
+
+  it('should create Forgejo pull requests URL', () => {
     expect(
-      renderHook(() =>
-        useURLForComponentPRs([
-          createComponent('test', true),
-          createComponent('https://github.com/org/repo1', true),
-          createComponent('https://github.com/org/repo2', true),
-        ]),
-      ).result.current,
-    ).toBe(
-      'https://github.com/pulls?q=is:pr+is:open+author:app/appstudio-staging-ci+repo:org/repo1+repo:org/repo2',
-    );
+      useURLForComponentPR(
+        createComponent(
+          GIT_PROVIDER_ANNOTATION_VALUE.FORGEJO,
+          'https://code.forgejo.org/org/repo.git',
+        ),
+      ),
+    ).toBe('https://code.forgejo.org/org/repo/pulls');
+  });
+
+  it('should create GitLab merge requests URL', () => {
+    expect(
+      useURLForComponentPR(
+        createComponent(GIT_PROVIDER_ANNOTATION_VALUE.GITLAB, 'https://gitlab.com/org/repo.git'),
+      ),
+    ).toBe('https://gitlab.com/org/repo/-/merge_requests');
+  });
+
+  it('should return undefined for unsupported providers', () => {
+    expect(
+      useURLForComponentPR(createComponent('bitbucket', 'https://bitbucket.org/org/repo.git')),
+    ).toBeUndefined();
+  });
+
+  it('should return undefined when git URL is missing', () => {
+    const component = {
+      metadata: {
+        annotations: {
+          [GIT_PROVIDER_ANNOTATION]: GIT_PROVIDER_ANNOTATION_VALUE.GITHUB,
+        },
+      },
+      spec: {
+        source: {
+          git: {},
+        },
+      },
+    } as unknown as ComponentKind;
+
+    expect(useURLForComponentPR(component)).toBeUndefined();
   });
 });

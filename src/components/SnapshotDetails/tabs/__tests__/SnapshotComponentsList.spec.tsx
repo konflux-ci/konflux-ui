@@ -21,14 +21,6 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../../../utils/component-utils', () => {
-  const actual = jest.requireActual('../../../../utils/component-utils');
-  return {
-    ...actual,
-    useURLForComponentPRs: jest.fn(),
-  };
-});
-
 jest.mock('react-i18next', () => ({
   useTranslation: jest.fn(() => ({ t: (x) => x })),
 }));
