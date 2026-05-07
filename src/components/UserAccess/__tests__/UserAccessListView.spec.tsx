@@ -1,5 +1,6 @@
 import { MemoryRouter } from 'react-router-dom';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { logger } from '~/monitoring/logger';
 import type { RoleBinding } from '~/types';
@@ -97,10 +98,11 @@ describe('UserAccessListView', () => {
   });
 
   it('should display empty state if no role bindings match the filter', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(UserAccessList);
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
+    await user.type(filter, 'no-match');
     act(() => {
-      fireEvent.change(filter, { target: { value: 'no-match' } });
       jest.advanceTimersByTime(700);
     });
     await waitFor(() => {
@@ -108,29 +110,26 @@ describe('UserAccessListView', () => {
     });
   });
 
-  it('should filter rows by role binding name', () => {
+  it('should filter rows by role binding name', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(UserAccessList);
-    act(() => {
-      fireEvent.click(screen.getByTestId('user-access-list-filter-dropdown'));
-    });
-    const roleBindingOption = screen.getByRole('option', { name: 'Role binding' });
-    act(() => {
-      fireEvent.click(roleBindingOption);
-    });
+    await user.click(screen.getByTestId('user-access-list-filter-dropdown'));
+    await user.click(screen.getByRole('option', { name: 'Role binding' }));
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by role binding name...');
+    await user.type(filter, 'konflux-maintainer-user2');
     act(() => {
-      fireEvent.change(filter, { target: { value: 'konflux-maintainer-user2' } });
       jest.advanceTimersByTime(700);
     });
     expect(screen.getByText('user2')).toBeInTheDocument();
     expect(screen.queryByText('user1')).not.toBeInTheDocument();
   });
 
-  it('should filter role bindings by username', () => {
+  it('should filter role bindings by username', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(UserAccessList);
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
+    await user.type(filter, 'user1');
     act(() => {
-      fireEvent.change(filter, { target: { value: 'user1' } });
       jest.advanceTimersByTime(700);
     });
     expect(screen.getByText('user1')).toBeInTheDocument();
@@ -172,23 +171,26 @@ describe('UserAccessListView', () => {
     expect(checkboxes.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('should show selected count when a row checkbox is toggled', () => {
+  it('should show selected count when a row checkbox is toggled', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
     render(UserAccessList);
     const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[1]);
+    await user.click(checkboxes[1]);
     expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
   });
 
-  it('should select all visible rows from the header checkbox', () => {
+  it('should select all visible rows from the header checkbox', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
     render(UserAccessList);
     const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[0]);
+    await user.click(checkboxes[0]);
     expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
   });
 
-  it('should toggle select all off when disabled rows are visible (no subjects row)', () => {
+  it('should toggle select all off when disabled rows are visible (no subjects row)', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     const roleBindings: RoleBinding[] = [
       ...mockRoleBindingsWithMultipleUsers,
       {
@@ -200,22 +202,23 @@ describe('UserAccessListView', () => {
     useRoleBindingsMock.mockReturnValue([roleBindings, true]);
     render(UserAccessList);
     const selectAll = screen.getByRole('checkbox', { name: /select all rows/i });
-    fireEvent.click(selectAll);
+    await user.click(selectAll);
     expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
-    fireEvent.click(selectAll);
+    await user.click(selectAll);
     expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('0 users selected');
   });
 
   it('should prune selection to visible rows when the username filter changes', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
     render(UserAccessList);
     const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[0]);
+    await user.click(checkboxes[0]);
     expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('2 users selected');
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
+    await user.type(filter, 'user1');
     act(() => {
-      fireEvent.change(filter, { target: { value: 'user1' } });
       jest.advanceTimersByTime(700);
     });
 
@@ -225,6 +228,7 @@ describe('UserAccessListView', () => {
   });
 
   it('should exclude role bindings with undefined subjects when filtering by username', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     useRoleBindingsMock.mockReturnValue([
       [
         {
@@ -244,8 +248,8 @@ describe('UserAccessListView', () => {
     render(UserAccessList);
 
     const filter = screen.getByPlaceholderText<HTMLInputElement>('Filter by username...');
+    await user.type(filter, 'user1');
     act(() => {
-      fireEvent.change(filter, { target: { value: 'user1' } });
       jest.advanceTimersByTime(700);
     });
 
@@ -258,12 +262,13 @@ describe('UserAccessListView', () => {
     expect(screen.queryByText('rb-no-subjects')).not.toBeInTheDocument();
   });
 
-  it('should disable Change access when user lacks permission to modify role bindings', () => {
+  it('should disable Change access when user lacks permission to modify role bindings', async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     useAccessReviewModalMock.mockReturnValue([false]);
     useRoleBindingsMock.mockReturnValue([mockRoleBindingsWithMultipleUsers, true]);
     render(UserAccessList);
 
-    fireEvent.click(screen.getAllByRole('checkbox')[1]);
+    await user.click(screen.getAllByRole('checkbox')[1]);
 
     expect(screen.getByRole('button', { name: 'Change access' })).toHaveAttribute(
       'aria-disabled',
@@ -282,23 +287,27 @@ describe('UserAccessListView', () => {
       jest.useFakeTimers();
     });
 
-    async function selectNewRoleInModalAndSave(roleDisplayName: string) {
-      fireEvent.click(screen.getByRole('button', { name: 'Change access' }));
+    async function selectNewRoleInModalAndSave(
+      user: ReturnType<typeof userEvent.setup>,
+      roleDisplayName: string,
+    ) {
+      await user.click(screen.getByRole('button', { name: 'Change access' }));
       await waitFor(() => {
         expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
       });
-      fireEvent.click(screen.getByTestId('user-access-change-role-select'));
+      await user.click(screen.getByTestId('user-access-change-role-select'));
       await waitFor(() => {
         expect(screen.getByRole('option', { name: roleDisplayName })).toBeInTheDocument();
       });
-      fireEvent.click(screen.getByRole('option', { name: roleDisplayName }));
-      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+      await user.click(screen.getByRole('option', { name: roleDisplayName }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
       await waitFor(() => {
         expect(screen.queryByRole('dialog', { name: 'Change role' })).not.toBeInTheDocument();
       });
     }
 
     it('one selected user in a single binding: deletes that binding and creates the new role only', async () => {
+      const user = userEvent.setup();
       const rbs = [
         mockSingleSubjectRoleBinding(
           'rb-alice-contrib',
@@ -310,8 +319,8 @@ describe('UserAccessListView', () => {
       render(UserAccessList);
 
       const checkboxes = screen.getAllByRole('checkbox');
-      fireEvent.click(checkboxes[1]);
-      await selectNewRoleInModalAndSave('Maintainer');
+      await user.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave(user, 'Maintainer');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
       expect(deleteRBMock).toHaveBeenCalledWith(rbs[0]);
@@ -327,6 +336,7 @@ describe('UserAccessListView', () => {
     });
 
     it('one user across multiple single-subject bindings: deletes every binding and creates one new binding', async () => {
+      const user = userEvent.setup();
       const rbs = [
         mockSingleSubjectRoleBinding('rb-alice-admin', 'alice', 'konflux-admin-user-actions'),
         mockSingleSubjectRoleBinding(
@@ -339,8 +349,8 @@ describe('UserAccessListView', () => {
       render(UserAccessList);
 
       const checkboxes = screen.getAllByRole('checkbox');
-      fireEvent.click(checkboxes[1]);
-      await selectNewRoleInModalAndSave('Maintainer');
+      await user.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave(user, 'Maintainer');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(2);
       expect(deleteRBMock.mock.calls.map(([binding]) => binding.metadata?.name)).toEqual(
@@ -354,6 +364,7 @@ describe('UserAccessListView', () => {
     });
 
     it('rolls back partially created bindings when a later createRBs fails (old RBs stay)', async () => {
+      const user = userEvent.setup();
       const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
       const shared: RoleBinding = {
         ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-contributor-user-actions'),
@@ -375,8 +386,8 @@ describe('UserAccessListView', () => {
         .mockRejectedValueOnce(new Error('create failed'));
 
       render(UserAccessList);
-      fireEvent.click(screen.getAllByRole('checkbox')[1]);
-      await selectNewRoleInModalAndSave('Admin');
+      await user.click(screen.getAllByRole('checkbox')[1]);
+      await selectNewRoleInModalAndSave(user, 'Admin');
 
       expect(createRBsMock).toHaveBeenCalledTimes(2);
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
@@ -389,6 +400,7 @@ describe('UserAccessListView', () => {
     });
 
     it('selected subject on a multi-user binding: deletes shared binding, assigns new role, recreates unselected users with prior role', async () => {
+      const user = userEvent.setup();
       const shared: RoleBinding = {
         ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-contributor-user-actions'),
         subjects: [
@@ -400,8 +412,8 @@ describe('UserAccessListView', () => {
       render(UserAccessList);
 
       const checkboxes = screen.getAllByRole('checkbox');
-      fireEvent.click(checkboxes[1]);
-      await selectNewRoleInModalAndSave('Admin');
+      await user.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave(user, 'Admin');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
       expect(deleteRBMock).toHaveBeenCalledWith(shared);
@@ -419,14 +431,15 @@ describe('UserAccessListView', () => {
     });
 
     it('downgrade for a single selected user: still performs delete and create with lower role', async () => {
+      const user = userEvent.setup();
       const rbs = [
         mockSingleSubjectRoleBinding('rb-alice-admin', 'alice', 'konflux-admin-user-actions'),
       ];
       useRoleBindingsMock.mockReturnValue([rbs, true]);
       render(UserAccessList);
 
-      fireEvent.click(screen.getAllByRole('checkbox')[1]);
-      await selectNewRoleInModalAndSave('Contributor');
+      await user.click(screen.getAllByRole('checkbox')[1]);
+      await selectNewRoleInModalAndSave(user, 'Contributor');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
       expect(createRBsMock).toHaveBeenCalledWith(
@@ -436,6 +449,7 @@ describe('UserAccessListView', () => {
     });
 
     it('multiple selected users each in one binding: deletes all touched bindings and recreates other users from multi-subject bindings as single-user bindings', async () => {
+      const user = userEvent.setup();
       const rbs = [
         mockSingleSubjectRoleBinding(
           'rb-alice-contrib',
@@ -448,8 +462,8 @@ describe('UserAccessListView', () => {
       render(UserAccessList);
 
       const checkboxes = screen.getAllByRole('checkbox');
-      fireEvent.click(checkboxes[0]);
-      await selectNewRoleInModalAndSave('Maintainer');
+      await user.click(checkboxes[0]);
+      await selectNewRoleInModalAndSave(user, 'Maintainer');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(2);
       expect(createRBsMock).toHaveBeenCalledTimes(1);
@@ -464,6 +478,7 @@ describe('UserAccessListView', () => {
     });
 
     it('multi-user binding plus single-user binding for selected user removes both bindings and preserves unrelated subject on single-user binding', async () => {
+      const user = userEvent.setup();
       const shared: RoleBinding = {
         ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-maintainer-user-actions'),
         subjects: [
@@ -480,8 +495,8 @@ describe('UserAccessListView', () => {
       render(UserAccessList);
 
       const checkboxes = screen.getAllByRole('checkbox');
-      fireEvent.click(checkboxes[1]);
-      await selectNewRoleInModalAndSave('Contributor');
+      await user.click(checkboxes[1]);
+      await selectNewRoleInModalAndSave(user, 'Contributor');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(2);
       expect(createRBsMock).toHaveBeenCalledTimes(2);
@@ -498,6 +513,7 @@ describe('UserAccessListView', () => {
     });
 
     it('clears table selection after a successful save', async () => {
+      const user = userEvent.setup();
       const rbs = [
         mockSingleSubjectRoleBinding(
           'rb-alice-contrib',
@@ -508,15 +524,16 @@ describe('UserAccessListView', () => {
       useRoleBindingsMock.mockReturnValue([rbs, true]);
       render(UserAccessList);
 
-      fireEvent.click(screen.getAllByRole('checkbox')[1]);
+      await user.click(screen.getAllByRole('checkbox')[1]);
       expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
-      await selectNewRoleInModalAndSave('Maintainer');
+      await selectNewRoleInModalAndSave(user, 'Maintainer');
       expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent(
         '0 users selected',
       );
     });
 
     it('two users selected (contributor + maintainer in separate single-subject RBs): new role Maintainer deletes only differing binding; user already on target role is not recreated', async () => {
+      const user = userEvent.setup();
       const aliceContrib = mockSingleSubjectRoleBinding(
         'rb-alice-contrib',
         'alice',
@@ -531,12 +548,12 @@ describe('UserAccessListView', () => {
       render(UserAccessList);
 
       const checkboxes = screen.getAllByRole('checkbox');
-      fireEvent.click(checkboxes[1]);
-      fireEvent.click(checkboxes[2]);
+      await user.click(checkboxes[1]);
+      await user.click(checkboxes[2]);
       expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent(
         '2 users selected',
       );
-      await selectNewRoleInModalAndSave('Maintainer');
+      await selectNewRoleInModalAndSave(user, 'Maintainer');
 
       expect(deleteRBMock).toHaveBeenCalledTimes(1);
       expect(deleteRBMock).toHaveBeenCalledWith(aliceContrib);
