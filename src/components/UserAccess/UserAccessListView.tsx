@@ -205,24 +205,53 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       });
 
     const applyChange = async () => {
-      await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb)));
+      const createdForRollback: Awaited<ReturnType<typeof createRBs>> = [];
 
-      // Selected users
-      const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
-      await createRBs(
-        { usernames: [...uniqueSelectedUsernames], role: newRole, roleMap: defaultKonfluxRoleMap },
-        namespace,
-      );
+      try {
+        const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
+        const selectedUserList = [...uniqueSelectedUsernames];
 
-      for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
-        await createRBs(
-          {
-            usernames: [username],
-            role: preservedRole,
-            roleMap: defaultKonfluxRoleMap,
-          },
-          namespace,
+        if (selectedUserList.length > 0) {
+          createdForRollback.push(
+            ...(await createRBs(
+              { usernames: selectedUserList, role: newRole, roleMap: defaultKonfluxRoleMap },
+              namespace,
+            )),
+          );
+        }
+
+        for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
+          createdForRollback.push(
+            ...(await createRBs(
+              {
+                usernames: [username],
+                role: preservedRole,
+                roleMap: defaultKonfluxRoleMap,
+              },
+              namespace,
+            )),
+          );
+        }
+
+        await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb)));
+      } catch (err: unknown) {
+        await Promise.all(
+          createdForRollback.map(async (rb) => {
+            try {
+              await deleteRB(rb);
+            } catch (rollbackErr: unknown) {
+              logger.warn(
+                'Failed to roll back partially created RoleBinding after user access change failure',
+                {
+                  namespace,
+                  roleBindingName: rb.metadata?.name,
+                  error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+                },
+              );
+            }
+          }),
         );
+        throw err;
       }
     };
 

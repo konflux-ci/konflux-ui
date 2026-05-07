@@ -1,6 +1,7 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { logger } from '~/monitoring/logger';
 import type { RoleBinding } from '~/types';
 import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
 import {
@@ -350,6 +351,41 @@ describe('UserAccessListView', () => {
         expect.objectContaining({ usernames: ['alice'], role: 'Maintainer' }),
         ns,
       );
+    });
+
+    it('rolls back partially created bindings when a later createRBs fails (old RBs stay)', async () => {
+      const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
+      const shared: RoleBinding = {
+        ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-contributor-user-actions'),
+        subjects: [
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'alice' },
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'bob' },
+        ],
+      };
+      const partialNewBinding = mockSingleSubjectRoleBinding(
+        'new-alice-admin',
+        'alice',
+        'konflux-admin-user-actions',
+      );
+
+      useRoleBindingsMock.mockReturnValue([[shared], true]);
+      createRBsMock.mockReset();
+      createRBsMock
+        .mockResolvedValueOnce([partialNewBinding])
+        .mockRejectedValueOnce(new Error('create failed'));
+
+      render(UserAccessList);
+      fireEvent.click(screen.getAllByRole('checkbox')[1]);
+      await selectNewRoleInModalAndSave('Admin');
+
+      expect(createRBsMock).toHaveBeenCalledTimes(2);
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(partialNewBinding);
+      expect(deleteRBMock).not.toHaveBeenCalledWith(shared);
+      expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
+      expect(errorSpy).toHaveBeenCalled();
+
+      errorSpy.mockRestore();
     });
 
     it('selected subject on a multi-user binding: deletes shared binding, assigns new role, recreates unselected users with prior role', async () => {
