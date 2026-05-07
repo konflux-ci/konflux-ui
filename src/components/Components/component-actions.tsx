@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useURLForComponentPR } from '../../hooks/useComponents';
 import { ComponentModel, ServiceAccountModel } from '../../models';
 import { COMPONENT_LINKED_SECRETS_PATH, COMPONENT_LIST_PATH } from '../../routes/paths';
 import { Action } from '../../shared/components/action-menu/types';
@@ -17,8 +18,10 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   const navigate = useNavigate();
   const applicationName = component?.spec.application;
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
+  const [canViewComponent] = useAccessReviewForModel(ComponentModel, 'get');
   const [canDeleteComponent] = useAccessReviewForModel(ComponentModel, 'delete');
   const [canManageLinkedSecrets] = useAccessReviewForModel(ServiceAccountModel, 'patch');
+  const prURL = useURLForComponentPR(component);
 
   const actions: Action[] = React.useMemo(() => {
     if (!component) {
@@ -72,6 +75,22 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
         disabled: !canManageLinkedSecrets,
         disabledTooltip: "You don't have access to manage linked secrets",
       },
+      {
+        cta: { href: prURL, external: true },
+        id: `view-all-prs-${name.toLowerCase()}`,
+        label: 'View all pull requests',
+        disabled: !canViewComponent || !prURL,
+        disabledTooltip: !prURL
+          ? 'Pull request URL is not available for this component'
+          : "You don't have access to view all pull requests",
+        analytics: {
+          link_name: 'view-all-prs',
+          link_location: 'component-actions',
+          component_name: name,
+          app_name: applicationName,
+          namespace,
+        },
+      },
     ];
 
     updatedActions.push({
@@ -94,11 +113,13 @@ export const useComponentActions = (component: ComponentKind, name: string): Act
   }, [
     component,
     canPatchComponent,
+    canViewComponent,
     name,
     applicationName,
     namespace,
     canManageLinkedSecrets,
     canDeleteComponent,
+    prURL,
     showModal,
     navigate,
   ]);
