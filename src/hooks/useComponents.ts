@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { isPACEnabled } from '~/utils/component-utils';
+import { GIT_PROVIDER_ANNOTATION, GIT_PROVIDER_ANNOTATION_VALUE } from '~/utils/component-utils';
 import { useK8sWatchResource } from '../k8s';
 import { ComponentGroupVersionKind, ComponentModel } from '../models';
 import { useNamespace } from '../shared/providers/Namespace';
 import { ComponentKind } from '../types';
-import { useApplicationPipelineGitHubApp } from './useApplicationPipelineGitHubApp';
 
 export const useComponent = (
   namespace: string,
@@ -145,15 +144,17 @@ export const useSortedGroupComponents = (
   return [sortedGroupedComponents, allCompsLoaded, allCompsError];
 };
 
-export const useURLForComponentPRs = (components: ComponentKind[]): string => {
-  const GIT_URL_PREFIX = 'https://github.com/';
-  const { name: PR_BOT_NAME } = useApplicationPipelineGitHubApp();
-  const repos = components.reduce((acc, component) => {
-    const gitURL = component.spec.source?.git?.url;
-    if (gitURL && isPACEnabled(component) && gitURL.startsWith(GIT_URL_PREFIX)) {
-      acc = `${acc}+repo:${gitURL.replace(GIT_URL_PREFIX, '').replace(/.git$/i, '')}`;
-    }
-    return acc;
-  }, '');
-  return `https://github.com/pulls?q=is:pr+is:open+author:app/${PR_BOT_NAME}${repos}`;
+export const useURLForComponentPR = (component: ComponentKind): string | undefined => {
+  const gitProvider = component.metadata.annotations?.[GIT_PROVIDER_ANNOTATION];
+  const url = component.spec.source?.git?.url?.replace(/\.git$/i, '');
+  if (!url) return undefined;
+  switch (gitProvider) {
+    case GIT_PROVIDER_ANNOTATION_VALUE.GITHUB:
+    case GIT_PROVIDER_ANNOTATION_VALUE.FORGEJO:
+      return `${url}/pulls`;
+    case GIT_PROVIDER_ANNOTATION_VALUE.GITLAB:
+      return `${url}/-/merge_requests`;
+    default:
+      return undefined;
+  }
 };

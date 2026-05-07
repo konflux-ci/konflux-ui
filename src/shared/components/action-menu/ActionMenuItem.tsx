@@ -39,6 +39,8 @@ const ActionItem: React.FC<
       } else if (isObject(cta)) {
         if (!cta.external) {
           navigate(cta.href);
+        } else {
+          window.open(cta.href, '_blank', 'noopener,noreferrer');
         }
       }
       onClick && onClick();
