@@ -48,14 +48,6 @@ jest.mock('../../../../hooks/usePipelineRuns', () => ({
   useLatestBuildPipelineRunForComponent: () => [mockPipelineRuns[0], true],
 }));
 
-jest.mock('../../../../utils/component-utils', () => {
-  const actual = jest.requireActual('../../../../utils/component-utils');
-  return {
-    ...actual,
-    useURLForComponentPRs: jest.fn(),
-  };
-});
-
 jest.mock('../../../../hooks/usePACStatesForComponents', () => {
   const actual = jest.requireActual('../../../../hooks/usePACState');
   return {
