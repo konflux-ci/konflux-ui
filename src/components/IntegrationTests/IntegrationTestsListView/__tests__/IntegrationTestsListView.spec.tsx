@@ -103,7 +103,7 @@ describe('IntegrationTestsListView', () => {
   it('should show button to add integration test and it should redirect to add integration page', async () => {
     useK8sWatchResourceMock.mockReturnValue([MockIntegrationTests, true, undefined]);
     const integrationListView = render(IntegrationTestsList);
-    fireEvent.click(integrationListView.getByTestId('add-integration-test'));
+    fireEvent.click(integrationListView.getByTestId('add-integration-test-toolbar'));
 
     await waitFor(() =>
       expect(navigateMock).toHaveBeenCalledWith(
@@ -115,7 +115,7 @@ describe('IntegrationTestsListView', () => {
   it('should show the add integration test page on Add action', async () => {
     useK8sWatchResourceMock.mockReturnValue([[], true, undefined]);
     const wrapper = render(IntegrationTestsList);
-    const addButton = wrapper.getByTestId('add-integration-test');
+    const addButton = wrapper.getByTestId('add-integration-test-empty');
     fireEvent.click(addButton);
 
     await waitFor(() =>
