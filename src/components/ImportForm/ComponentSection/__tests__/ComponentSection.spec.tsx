@@ -69,16 +69,14 @@ describe('ComponentSection', () => {
 
     await user.type(source, 'https://code.forgejo.org/abcd/repo.git');
     await user.tab();
-    await waitFor(() =>
+    await waitFor(() => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       expect((screen.getByLabelText(/git url annotation/i) as HTMLInputElement).value).toBe(
         'https://code.forgejo.org',
-      ),
-    );
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    expect((screen.getByLabelText(/git provider annotation/i) as HTMLInputElement).value).toBe(
-      'forgejo',
-    );
+      );
+      // Git provider is a Select/MenuToggle; PF FormGroup does not associate the label for getByLabelText.
+      expect(screen.getByTestId('dropdown-toggle')).toHaveTextContent('forgejo');
+    });
   });
 
   it('should render helper text for component name', () => {
