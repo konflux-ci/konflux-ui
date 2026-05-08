@@ -260,7 +260,7 @@ const LogViewer: React.FC<Props> = ({
               </FlexItem>
             </Flex>
             {isLoading && (
-              <Bullseye>
+              <Bullseye className="log-viewer__bullseye">
                 <Spinner size="lg" />
               </Bullseye>
             )}

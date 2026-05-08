@@ -20,6 +20,22 @@ on:
     types: [opened, synchronize, ready_for_review]
 
 jobs:
+  add-fullsend-label:
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request_target'
+      && github.event.action == 'opened'
+      && github.event.pull_request.user.login == 'konflux-ci-coder[bot]'
+    steps:
+      - name: Add fullsend label
+        run: gh pr edit "$PR_NUMBER" --add-label "fullsend"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
   dispatch-triage:
     runs-on: ubuntu-latest
     concurrency:
