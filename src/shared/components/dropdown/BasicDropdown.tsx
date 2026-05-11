@@ -199,19 +199,16 @@ const BasicDropdown: React.FC<BasicDropdownProps> = ({
                 key={key}
                 value={value}
                 role="menuitem"
-                description={value}
+                description={description}
                 ref={null}
                 isDisabled={isDisabled}
               >
-                <div>
-                  {label}
-                  {value === recommended && (
-                    <>
-                      &nbsp;<Badge isRead>Recommended</Badge>
-                    </>
-                  )}
-                </div>
-                {description && <div className="dropdown-item-description">{description}</div>}
+                {label ?? value}
+                {value === recommended && (
+                  <>
+                    &nbsp;<Badge isRead>Recommended</Badge>
+                  </>
+                )}
               </SelectOption>
             ),
           )}
