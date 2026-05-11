@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - patternfly-v6
 
 # Cancel in-progress runs when new commits are pushed to main
 concurrency:
