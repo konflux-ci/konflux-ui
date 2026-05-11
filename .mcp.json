@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "patternfly": {
+      "command": "npx",
+      "args": ["-y", "@patternfly/patternfly-mcp@latest"]
+    }
+  }
+}
