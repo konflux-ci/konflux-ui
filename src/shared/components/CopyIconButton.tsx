@@ -11,7 +11,11 @@ export const CopyIconButton: React.FC<CopyIconButtonProps> = ({ text, tooltip = 
   const id = React.useId();
 
   const handleClick = React.useCallback(() => {
-    navigator.clipboard?.writeText(text).then(
+    if (!navigator.clipboard) {
+      setCopied(false);
+      return;
+    }
+    navigator.clipboard.writeText(text).then(
       () => setCopied(true),
       () => setCopied(false),
     );

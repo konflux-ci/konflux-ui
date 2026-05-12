@@ -107,6 +107,29 @@ describe('useImageRepository', () => {
     expect(error).toBeNull();
   });
 
+  it('should return image repository when ownerReference matches and resource name differs', () => {
+    const repoWithDifferentName: ImageRepositoryKind = {
+      ...mockPublicImageRepository,
+      metadata: {
+        ...mockPublicImageRepository.metadata,
+        name: 'generated-image-repository',
+      },
+    };
+
+    useK8sWatchResourceMock.mockReturnValue({
+      data: [repoWithDifferentName],
+      isLoading: false,
+      error: undefined,
+    });
+
+    const { result } = renderHook(() => useImageRepository('test-ns', 'test-component'));
+    const [imageRepository, loaded, error] = result.current;
+
+    expect(imageRepository).toEqual(repoWithDifferentName);
+    expect(loaded).toBe(true);
+    expect(error).toBeNull();
+  });
+
   it('should return null when no ownerReference matches the component', () => {
     const repoWithDifferentOwner: ImageRepositoryKind = {
       ...mockPublicImageRepository,
