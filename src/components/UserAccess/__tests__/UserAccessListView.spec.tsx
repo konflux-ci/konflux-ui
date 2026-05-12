@@ -1,20 +1,20 @@
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
-import { logger } from '~/monitoring/logger';
-import type { RoleBinding } from '~/types';
-import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
+import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import {
   mockRoleBinding,
   mockRoleBindings,
   mockRoleBindingsWithMultipleUsers,
   mockSingleSubjectRoleBinding,
-} from '../../../__data__/rolebinding-data';
-import { useRoleMap } from '../../../hooks/useRole';
-import { useRoleBindings } from '../../../hooks/useRoleBindings';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
-import { useAccessReviewForModel } from '../../../utils/rbac';
+} from '~/__data__/rolebinding-data';
+import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { useRoleMap } from '~/hooks/useRole';
+import { useRoleBindings } from '~/hooks/useRoleBindings';
+import { logger } from '~/monitoring/logger';
+import type { RoleBinding } from '~/types';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { createRBs, deleteRB } from '../UserAccessForm/form-utils';
 import { UserAccessListView } from '../UserAccessListView';
 
