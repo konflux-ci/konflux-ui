@@ -16,9 +16,9 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
-import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useRoleMap } from '~/hooks/useRole';
 import { logger } from '~/monitoring/logger';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { NamespaceRole } from '~/types';
@@ -102,6 +102,12 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   });
   const { username: usernameFilter, roleBindingName: roleBindingNameFilter } = filters;
   const [roleBindings, loaded, error] = useRoleBindings(namespace);
+  const [roleMap, roleMapLoaded] = useRoleMap();
+
+  const currentRoleMap = React.useMemo(
+    () => (roleMapLoaded && roleMap ? roleMap?.roleMap : {}),
+    [roleMap, roleMapLoaded],
+  );
 
   const tableRows = React.useMemo(
     () => expandRoleBindingsToTableRows(roleBindings),
@@ -196,11 +202,14 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     const notSelectedUsersFromMultiSubjectRbs = allAffectedRoleBindings
       .filter((rb) => rb.subjects?.length > 1)
       .flatMap((rb) => {
-        const currentRole = defaultKonfluxRoleMap.roleMap[rb.roleRef.name];
+        const currentRole = currentRoleMap[rb.roleRef.name];
         return (
           rb.subjects
             ?.filter((subject) => !uniqueSelectedUsernames.has(subject.name))
-            .map((subject): [string, NamespaceRole] => [subject.name, currentRole]) ?? []
+            .map((subject): [string, NamespaceRole] => [
+              subject.name,
+              currentRole as NamespaceRole,
+            ]) ?? []
         );
       });
 
@@ -208,13 +217,13 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       const createdForRollback: Awaited<ReturnType<typeof createRBs>> = [];
 
       try {
-        const newRole = defaultKonfluxRoleMap.roleMap[newRoleRef];
+        const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
         const selectedUserList = [...uniqueSelectedUsernames];
 
         if (selectedUserList.length > 0) {
           createdForRollback.push(
             ...(await createRBs(
-              { usernames: selectedUserList, role: newRole, roleMap: defaultKonfluxRoleMap },
+              { usernames: selectedUserList, role: newRole, roleMap },
               namespace,
             )),
           );
@@ -226,7 +235,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
               {
                 usernames: [username],
                 role: preservedRole,
-                roleMap: defaultKonfluxRoleMap,
+                roleMap,
               },
               namespace,
             )),

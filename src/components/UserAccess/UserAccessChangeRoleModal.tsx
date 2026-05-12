@@ -101,8 +101,8 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       }
 
       const highestRole = allUserRoles.reduce((max, role) => {
-        const roleWeight = ROLE_WEIGHT_MAP[role] ?? 0;
-        const maxWeight = ROLE_WEIGHT_MAP[max] ?? 0;
+        const roleWeight = ROLE_WEIGHT_MAP[roleLabels[role]] ?? 0;
+        const maxWeight = ROLE_WEIGHT_MAP[roleLabels[max]] ?? 0;
         return roleWeight > maxWeight ? role : max;
       }, allUserRoles[0]);
 
