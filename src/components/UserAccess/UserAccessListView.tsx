@@ -327,7 +327,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           onSelect={(_, val) => {
             const newFilter = val as string;
             setActiveFilter(newFilter as UserAccessFilterTypes);
-            setFilters({ ...unparsedFilters, [activeFilter]: '', [newFilter]: '' });
+            setFilters({
+              ...unparsedFilters,
+              [activeFilter]: '',
+              [newFilter]: unparsedFilters[activeFilter],
+            });
             setFilterDropdownOpen(false);
           }}
           selected={activeFilter}

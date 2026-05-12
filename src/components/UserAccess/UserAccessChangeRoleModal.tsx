@@ -17,10 +17,10 @@ import {
   Text,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
+import { defaultKonfluxRoleMap } from '~/__data__/role-data';
+import { useRoleMap } from '~/hooks/useRole';
 import type { RoleBinding } from '~/types';
 import { KONFLUX_ROLE_WEIGHT } from '~/utils/rbac';
-import { defaultKonfluxRoleMap } from '../../__data__/role-data';
-import { useRoleMap } from '../../hooks/useRole';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
 export type UserAccessChangeRoleModalProps = {
