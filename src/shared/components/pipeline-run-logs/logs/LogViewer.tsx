@@ -46,6 +46,8 @@ import './LogViewer.scss';
 // eslint-disable-next-line no-control-regex
 const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
+const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
+
 export type Props = {
   showSearch?: boolean;
 
@@ -97,7 +99,7 @@ const LogViewer: React.FC<Props> = ({
     if (!sections) return undefined;
     return sections.map((section) => ({
       containerName: section.containerName,
-      lines: section.lines.map((line) => line.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '')),
+      lines: section.lines.map((line) => normalizeLineEndings(line).replace(ANSI_ESCAPE_REGEX, '')),
     }));
   }, [sections]);
 
@@ -105,7 +107,7 @@ const LogViewer: React.FC<Props> = ({
     if (processedSections) {
       return processedSections.flatMap((s) => [s.containerName, ...s.lines]).join('\n');
     }
-    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
+    return normalizeLineEndings(data).replace(ANSI_ESCAPE_REGEX, '');
   }, [data, processedSections]);
 
   const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
@@ -124,7 +126,7 @@ const LogViewer: React.FC<Props> = ({
     if (processedSections) {
       return processedSections.map((s) => `${s.containerName}\n${s.lines.join('\n')}`).join('\n\n');
     }
-    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
+    return normalizeLineEndings(data).replace(ANSI_ESCAPE_REGEX, '');
   }, [data, processedSections]);
 
   const downloadLogs = () => {
