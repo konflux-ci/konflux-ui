@@ -42,7 +42,7 @@ export class WebSocketFactory {
 
   private messageBuffer: MessageDataType[] = [];
 
-  private connectionAttempt = -1;
+  private connectionAttempt = 0;
 
   private ws: WebSocket | null = null;
 
@@ -81,12 +81,12 @@ export class WebSocketFactory {
     const attempt = () => {
       if (!this.options.reconnect || this.state === WebSocketState.OPENED) {
         window.clearTimeout(this.connectionAttempt);
-        this.connectionAttempt = -1;
+        this.connectionAttempt = 0;
         return;
       }
       if (this.options.timeout && duration > this.options.timeout) {
         window.clearTimeout(this.connectionAttempt);
-        this.connectionAttempt = -1;
+        this.connectionAttempt = 0;
         this.destroy();
         return;
       }
@@ -120,7 +120,7 @@ export class WebSocketFactory {
       this.triggerEvent('open', undefined);
       if (this.connectionAttempt) {
         window.clearTimeout(this.connectionAttempt);
-        this.connectionAttempt = -1;
+        this.connectionAttempt = 0;
       }
     };
     this.ws.onclose = (evt) => {
