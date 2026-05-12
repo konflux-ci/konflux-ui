@@ -17,10 +17,9 @@ import {
   Text,
 } from '@patternfly/react-core';
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
-import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import { useRoleMap } from '~/hooks/useRole';
 import type { RoleBinding } from '~/types';
-import { KONFLUX_ROLE_WEIGHT } from '~/utils/rbac';
+import { ROLE_WEIGHT_MAP } from '~/utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
 export type UserAccessChangeRoleModalProps = {
@@ -60,11 +59,9 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
   const [roleMap, roleMapLoaded] = useRoleMap();
   const [isRoleSelectOpen, setRoleSelectOpen] = React.useState(false);
   const [modalSelectedRoleRef, setModalSelectedRoleRef] = React.useState<string | undefined>();
+  const currentRoleMap = React.useMemo(() => roleMap?.roleMap ?? {}, [roleMap]);
 
-  const roleSelectOptions = React.useMemo(
-    () => Object.entries(roleMap?.roleMap ?? {}).sort(([a], [b]) => a.localeCompare(b)),
-    [roleMap],
-  );
+  const roleSelectOptions = React.useMemo(() => Object.entries(currentRoleMap), [currentRoleMap]);
 
   const handleClose = () => {
     onClose();
@@ -84,14 +81,14 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
 
   const highestAffectedRoleWeight = React.useMemo(() => {
     const weights = allAffectedRoleBindings
-      .map((rb) => KONFLUX_ROLE_WEIGHT[rb.roleRef?.name ?? ''])
+      .map((rb) => ROLE_WEIGHT_MAP[currentRoleMap[rb.roleRef?.name ?? ''] ?? ''])
       .filter((weight): weight is number => weight !== undefined);
 
     return weights.length === 0 ? undefined : Math.max(...weights);
-  }, [allAffectedRoleBindings]);
+  }, [allAffectedRoleBindings, currentRoleMap]);
 
   const getUserHighestRole = React.useMemo(() => {
-    const roleLabels = defaultKonfluxRoleMap.roleMap as Record<string, string>;
+    const roleLabels = currentRoleMap as Record<string, string>;
 
     return (username: string): string => {
       const userRoleBindings = allAffectedRoleBindings.filter((rb) =>
@@ -104,19 +101,21 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       }
 
       const highestRole = allUserRoles.reduce((max, role) => {
-        return KONFLUX_ROLE_WEIGHT[role] > KONFLUX_ROLE_WEIGHT[max] ? role : max;
+        const roleWeight = ROLE_WEIGHT_MAP[role] ?? 0;
+        const maxWeight = ROLE_WEIGHT_MAP[max] ?? 0;
+        return roleWeight > maxWeight ? role : max;
       }, allUserRoles[0]);
 
       return roleLabels[highestRole];
     };
-  }, [allAffectedRoleBindings]);
+  }, [allAffectedRoleBindings, currentRoleMap]);
 
   const isModalSaveDisabled = React.useMemo(() => {
     if (!modalSelectedRoleRef) {
       return true;
     }
 
-    const selectedRoleWeight = KONFLUX_ROLE_WEIGHT[modalSelectedRoleRef];
+    const selectedRoleWeight = ROLE_WEIGHT_MAP[currentRoleMap[modalSelectedRoleRef] ?? ''];
     if (selectedRoleWeight === undefined) {
       return true;
     }
@@ -132,7 +131,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
 
     // Downgrade exists?
     return highestAffectedRoleWeight > selectedRoleWeight;
-  }, [modalSelectedRoleRef, selectedCount, highestAffectedRoleWeight]);
+  }, [modalSelectedRoleRef, selectedCount, highestAffectedRoleWeight, currentRoleMap]);
 
   return (
     <Modal
