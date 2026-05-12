@@ -191,5 +191,26 @@ describe('DetailsPage', () => {
 
       expect(onClick).toHaveBeenCalled();
     });
+
+    it('should render actions with a component element correctly', async () => {
+      const componentActions = [
+        {
+          key: 'link-action',
+          label: 'Link Action',
+          component: <a href="/test">Link Text</a>,
+        },
+      ];
+
+      routerRenderer(<DetailsPage {...defaultProps} actions={componentActions} />);
+
+      const actionsButton = screen.getByRole('button', { name: /Actions/i });
+      await act(async () => {
+        await userEvent.click(actionsButton);
+      });
+
+      const link = screen.getByText('Link Text');
+      expect(link).toBeInTheDocument();
+      expect(screen.getByRole('menuitem', { name: 'Link Text' })).toBeInTheDocument();
+    });
   });
 });
