@@ -151,10 +151,10 @@ const DetailsPage: React.FC<React.PropsWithChildren<DetailsPageProps>> = ({
             {actions?.length ? (
               <FlexItem>
                 <Dropdown
-                  data-test="details__actions"
                   popperProps={{ position: 'right' }}
                   toggle={(toggleRef) => (
                     <MenuToggle
+                      data-test="details__actions"
                       ref={toggleRef}
                       onClick={() => setIsOpen(!isOpen)}
                       isExpanded={isOpen}
