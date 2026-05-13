@@ -8,7 +8,9 @@ on:
       - main
   merge_group:
     types: [checks_requested]
-
+  # Triggers the workflow on manual dispatch
+  workflow_dispatch:
+  
 # Cancel in-progress runs when new commits are pushed
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
