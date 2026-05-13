@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Skeleton } from '@patternfly/react-core';
 import { Td, Tr } from '@patternfly/react-table';
 import { useRoleMap } from '~/hooks/useRole';
-import ActionMenu from '../../shared/components/action-menu/ActionMenu';
+import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { rbTableColumnClasses } from './RBListHeader';
 import { useRBActions } from './user-access-actions';
 import { UserAccessTableRow } from './userAccessTableRows';
