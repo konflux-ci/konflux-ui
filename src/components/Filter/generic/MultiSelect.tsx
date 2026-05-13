@@ -84,7 +84,7 @@ export const MultiSelect = ({
           <SelectList>
             {Object.keys(options).map((filter) =>
               filter.startsWith(MENU_DIVIDER) ? (
-                <Divider key={filter} />
+                <Divider component="li" key={filter} />
               ) : (
                 <SelectOption
                   hasCheckbox
