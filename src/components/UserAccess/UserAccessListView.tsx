@@ -185,8 +185,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     (rb.subjects ?? []).some((subject) => subject.kind !== 'User');
 
   const handleModalSave = async (newRoleRef: string) => {
-    const uniqueSelectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
-    const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(uniqueSelectedUsernames);
+    const selectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
+    const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(selectedUsernames);
 
     if (allAffectedRoleBindingsRaw.some(roleBindingHasNonUserSubject)) {
       throw new Error(
@@ -194,18 +194,23 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       );
     }
 
+    const usernamesSkippingTargetRoleCreate = new Set<string>();
     // Filter out affected rows not requiring changes (single subject and same role)
     const allAffectedRoleBindings = allAffectedRoleBindingsRaw.filter((rb) => {
       const ok = !(rb.subjects?.length === 1 && rb.roleRef?.name === newRoleRef);
       const username = rb.subjects?.[0]?.name;
 
       // Has target role, will not be recreated, only rest of RBs deleted
-      if (!ok) {
-        uniqueSelectedUsernames.delete(username);
+      if (!ok && username) {
+        usernamesSkippingTargetRoleCreate.add(username);
       }
 
       return ok;
     });
+
+    const usernamesNeedingTargetRoleCreate = [...selectedUsernames].filter(
+      (username) => !usernamesSkippingTargetRoleCreate.has(username),
+    );
 
     // Users on multi-subject bindings who were not selected preserve their current role
     const notSelectedUsersFromMultiSubjectRbs = allAffectedRoleBindings
@@ -214,7 +219,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         const currentRole = currentRoleMap[rb.roleRef.name];
         return (
           rb.subjects
-            ?.filter((subject) => !uniqueSelectedUsernames.has(subject.name))
+            ?.filter((subject) => !selectedUsernames.has(subject.name))
             .map((subject): [string, NamespaceRole] => [
               subject.name,
               currentRole as NamespaceRole,
@@ -227,7 +232,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
 
       try {
         const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
-        const selectedUserList = [...uniqueSelectedUsernames];
+        const selectedUserList = usernamesNeedingTargetRoleCreate;
 
         if (selectedUserList.length > 0) {
           createdForRollback.push(

@@ -478,6 +478,37 @@ describe('UserAccessListView', () => {
       );
     });
 
+    it('selected user already has standalone target role on another binding: multi-RB preserves only unselected subjects (no duplicate role for selected user)', async () => {
+      const user = userEvent.setup();
+      const aliceContrib = mockSingleSubjectRoleBinding(
+        'rb-alice-contrib',
+        'alice',
+        'konflux-contributor-user-actions',
+      );
+      const shared: RoleBinding = {
+        ...mockSingleSubjectRoleBinding('rb-shared', 'alice', 'konflux-maintainer-user-actions'),
+        subjects: [
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'alice' },
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'bob' },
+        ],
+      };
+      useRoleBindingsMock.mockReturnValue([[aliceContrib, shared], true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      // Rows: select-all, alice Contributor, alice on shared Maintainer, bob on shared Maintainer
+      await user.click(checkboxes[2]);
+      await selectNewRoleInModalAndSave(user, 'Contributor');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(shared);
+      expect(createRBsMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ usernames: ['bob'], role: 'Maintainer' }),
+        ns,
+      );
+    });
+
     it('downgrade for a single selected user: still performs delete and create with lower role', async () => {
       const user = userEvent.setup();
       const rbs = [
