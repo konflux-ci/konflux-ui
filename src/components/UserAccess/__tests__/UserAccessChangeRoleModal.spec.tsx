@@ -169,4 +169,31 @@ describe('UserAccessChangeRoleModal', () => {
     });
     expect(screen.getByRole('listitem')).toHaveTextContent('alice (User): Contributor');
   });
+
+  it('closes the modal after onSave resolves successfully', async () => {
+    const user = userEvent.setup();
+    const onSave = jest.fn().mockResolvedValue(undefined);
+    const { onClose } = renderModal({ onSave });
+    await chooseRole(user, 'Maintainer');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalled();
+      expect(onClose).toHaveBeenCalled();
+    });
+  });
+
+  it('keeps the modal open and shows an error when onSave rejects', async () => {
+    const user = userEvent.setup();
+    const onSave = jest.fn().mockRejectedValue(new Error('API failed'));
+    const { onClose } = renderModal({ onSave });
+    await chooseRole(user, 'Maintainer');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('user-access-change-role-save-error')).toHaveTextContent(
+        'API failed',
+      );
+    });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
+  });
 });

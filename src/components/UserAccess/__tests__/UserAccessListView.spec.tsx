@@ -387,7 +387,22 @@ describe('UserAccessListView', () => {
 
       render(UserAccessList);
       await user.click(screen.getAllByRole('checkbox')[1]);
-      await selectNewRoleInModalAndSave(user, 'Admin');
+      await user.click(screen.getByRole('button', { name: 'Change access' }));
+      await waitFor(() => {
+        expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId('user-access-change-role-select'));
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Admin' })).toBeInTheDocument();
+      });
+      await user.click(screen.getByRole('option', { name: 'Admin' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => {
+        expect(screen.getByTestId('user-access-change-role-save-error')).toHaveTextContent(
+          'create failed',
+        );
+      });
+      expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
 
       expect(createRBsMock).toHaveBeenCalledTimes(2);
       expect(deleteRBMock).toHaveBeenCalledTimes(1);

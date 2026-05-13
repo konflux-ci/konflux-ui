@@ -22,12 +22,19 @@ import type { RoleBinding } from '~/types';
 import { ROLE_WEIGHT_MAP } from '~/utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 
+const saveErrorMessage = (err: unknown): string => {
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+  return 'Unable to change roles. Please try again.';
+};
+
 export type UserAccessChangeRoleModalProps = {
   isOpen: boolean;
   onClose: () => void;
   selectedRowKeys: Set<string>;
   allAffectedRoleBindings: RoleBinding[];
-  onSave: (newRoleRef: string) => void;
+  onSave: (newRoleRef: string) => Promise<void>;
 };
 
 export const splitRowKey = (
@@ -59,22 +66,33 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
   const [roleMap, roleMapLoaded] = useRoleMap();
   const [isRoleSelectOpen, setRoleSelectOpen] = React.useState(false);
   const [modalSelectedRoleRef, setModalSelectedRoleRef] = React.useState<string | undefined>();
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [saveError, setSaveError] = React.useState<string | null>(null);
   const currentRoleMap = React.useMemo(() => roleMap?.roleMap ?? {}, [roleMap]);
 
   const roleSelectOptions = React.useMemo(() => Object.entries(currentRoleMap), [currentRoleMap]);
 
-  const handleClose = () => {
-    onClose();
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsSaving(false);
+      setSaveError(null);
+      setModalSelectedRoleRef(undefined);
+      setRoleSelectOpen(false);
+    }
+  }, [isOpen]);
+
+  const resetModalFields = () => {
     setModalSelectedRoleRef(undefined);
     setRoleSelectOpen(false);
+    setSaveError(null);
   };
 
-  const handleSave = () => {
-    if (!modalSelectedRoleRef) {
+  const handleClose = () => {
+    if (isSaving) {
       return;
     }
-    onSave(modalSelectedRoleRef);
-    handleClose();
+    onClose();
+    resetModalFields();
   };
 
   const selectedCount = selectedRowKeys.size;
@@ -133,6 +151,23 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     return highestAffectedRoleWeight > selectedRoleWeight;
   }, [modalSelectedRoleRef, selectedCount, highestAffectedRoleWeight, currentRoleMap]);
 
+  const handleSave = async () => {
+    if (!modalSelectedRoleRef || isModalSaveDisabled) {
+      return;
+    }
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      await onSave(modalSelectedRoleRef);
+      onClose();
+      resetModalFields();
+    } catch (err: unknown) {
+      setSaveError(saveErrorMessage(err));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -141,20 +176,26 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       onClose={handleClose}
       appendTo={() => document.querySelector('#hacDev-modal-container') ?? document.body}
       actions={[
-        <ButtonWithAccessTooltip
-          key="save"
-          variant="primary"
-          onClick={() => handleSave()}
-          isDisabled={isModalSaveDisabled}
-          tooltip={
-            !modalSelectedRoleRef
-              ? 'No role selected. Select a role to save the changes.'
-              : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
-          }
-        >
-          Save
-        </ButtonWithAccessTooltip>,
-        <Button key="cancel" variant="link" onClick={handleClose}>
+        isSaving ? (
+          <Button key="save" variant="primary" isDisabled isLoading>
+            Save
+          </Button>
+        ) : (
+          <ButtonWithAccessTooltip
+            key="save"
+            variant="primary"
+            onClick={() => void handleSave()}
+            isDisabled={isModalSaveDisabled}
+            tooltip={
+              !modalSelectedRoleRef
+                ? 'No role selected. Select a role to save the changes.'
+                : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
+            }
+          >
+            Save
+          </ButtonWithAccessTooltip>
+        ),
+        <Button key="cancel" variant="link" onClick={handleClose} isDisabled={isSaving}>
           Cancel
         </Button>,
       ]}
@@ -205,7 +246,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
                       data-test="user-access-change-role-select"
                       isExpanded={isRoleSelectOpen}
                       onClick={() => setRoleSelectOpen(!isRoleSelectOpen)}
-                      isDisabled={roleSelectOptions.length === 0}
+                      isDisabled={roleSelectOptions.length === 0 || isSaving}
                       isFullWidth
                     >
                       {modalSelectedRoleRef
@@ -216,6 +257,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
                   onSelect={(_, val) => {
                     setModalSelectedRoleRef(val as string);
                     setRoleSelectOpen(false);
+                    setSaveError(null);
                   }}
                   selected={modalSelectedRoleRef}
                   isOpen={isRoleSelectOpen}
@@ -233,6 +275,19 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
                 <Spinner size="sm" />
               )}
             </FlexItem>
+
+            {saveError ? (
+              <FlexItem>
+                <Alert
+                  variant={AlertVariant.danger}
+                  title="Unable to change roles"
+                  isInline
+                  data-test="user-access-change-role-save-error"
+                >
+                  {saveError}
+                </Alert>
+              </FlexItem>
+            ) : null}
           </Flex>
         </FlexItem>
       </Flex>

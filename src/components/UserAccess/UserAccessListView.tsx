@@ -273,6 +273,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         err instanceof Error ? err : new Error(String(err)),
         { namespace },
       );
+      throw err;
     }
   };
 
