@@ -64,7 +64,7 @@ describe('ComponentSelector', () => {
 
     const componentSelectMenu = screen.getByTestId('component-select-menu');
     expect(componentSelectMenu).toBeInTheDocument();
-    expect(screen.getByText('Selecting')).toBeInTheDocument();
+    expect(screen.getByText('Select components')).toBeInTheDocument();
   });
 
   it('displays grouped options in ComponentSelectMenu', async () => {
@@ -74,7 +74,7 @@ describe('ComponentSelector', () => {
       </TestWrapper>,
     );
 
-    fireEvent.click(screen.getByText('Selecting'));
+    fireEvent.click(screen.getByText('Select components'));
     await waitFor(() => {
       expect(screen.getByText('Group1')).toBeInTheDocument();
       expect(screen.getByText('Group2')).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe('ComponentSelector', () => {
       </TestWrapper>,
     );
 
-    fireEvent.click(screen.getByText('Selecting'));
+    fireEvent.click(screen.getByText('Select components'));
     fireEvent.click(screen.getByText('Select all'));
     await waitFor(() => {
       expect(screen.getByText('3')).toBeInTheDocument();
@@ -105,7 +105,7 @@ describe('ComponentSelector', () => {
       </TestWrapper>,
     );
 
-    fireEvent.click(screen.getByText('Selecting'));
+    fireEvent.click(screen.getByText('Select components'));
     fireEvent.click(screen.getByText('ComponentA'));
     fireEvent.click(screen.getByText('ComponentC'));
     await waitFor(() => {

@@ -51,7 +51,7 @@ export const ComponentSelector: React.FC<ComponentSelectorProps> = ({ currentCom
       <div className="title">Components</div>
       <div className="component-select-menu" data-test="component-select-menu">
         <ComponentSelectMenu
-          defaultToggleText="Selecting"
+          defaultToggleText="Select components"
           selectedToggleText="Component"
           name="relatedComponents"
           defaultSelected={[currentComponent]}

@@ -73,7 +73,7 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
           <div className="title">Select Secrets:</div>
           <div className="component-select-menu" data-test="secret-select-menu">
             <ComponentSelectMenu
-              defaultToggleText="Selecting"
+              defaultToggleText="Select secrets"
               selectedToggleText="Secrets"
               name="relatedSecrets"
               options={filterUnlinkSecrets}
