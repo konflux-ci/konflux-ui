@@ -15,13 +15,14 @@ import { logger } from '~/monitoring/logger';
 import type { RoleBinding } from '~/types';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { useAccessReviewForModel } from '~/utils/rbac';
-import { createRBs, deleteRB } from '../UserAccessForm/form-utils';
+import { createRBs, deleteRB, restoreRB } from '../UserAccessForm/form-utils';
 import { UserAccessListView } from '../UserAccessListView';
 
 jest.mock('../UserAccessForm/form-utils', () => ({
   ...jest.requireActual('../UserAccessForm/form-utils'),
   createRBs: jest.fn().mockResolvedValue([]),
   deleteRB: jest.fn().mockResolvedValue(undefined),
+  restoreRB: jest.fn().mockResolvedValue(undefined),
 }));
 
 jest.useFakeTimers();
@@ -51,6 +52,7 @@ const UserAccessList = (
 
 const createRBsMock = jest.mocked(createRBs);
 const deleteRBMock = jest.mocked(deleteRB);
+const restoreRBMock = jest.mocked(restoreRB);
 
 describe('UserAccessListView', () => {
   const mockNamespace = 'test-ns';
@@ -66,6 +68,7 @@ describe('UserAccessListView', () => {
     useRoleMapMock.mockReturnValue([defaultKonfluxRoleMap, true]);
     createRBsMock.mockResolvedValue([]);
     deleteRBMock.mockResolvedValue(undefined);
+    restoreRBMock.mockResolvedValue(mockRoleBinding);
   });
 
   afterEach(() => {
@@ -438,9 +441,15 @@ describe('UserAccessListView', () => {
       expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
 
       expect(createRBsMock).toHaveBeenCalledTimes(2);
-      expect(deleteRBMock).toHaveBeenCalledTimes(1);
-      expect(deleteRBMock).toHaveBeenCalledWith(partialNewBinding);
-      expect(deleteRBMock).not.toHaveBeenCalledWith(shared);
+      expect(deleteRBMock).toHaveBeenCalledTimes(2);
+      expect(deleteRBMock).toHaveBeenNthCalledWith(1, shared);
+      expect(deleteRBMock).toHaveBeenNthCalledWith(2, partialNewBinding);
+      expect(restoreRBMock).toHaveBeenCalledTimes(1);
+      expect(restoreRBMock.mock.calls[0][0]).toEqual(
+        expect.objectContaining({
+          metadata: expect.objectContaining({ name: shared.metadata?.name }),
+        }),
+      );
       expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
       expect(errorSpy).toHaveBeenCalled();
 

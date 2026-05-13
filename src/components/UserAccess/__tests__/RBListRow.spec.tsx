@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
-import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
-import { mockRoleBinding } from '../../../__data__/rolebinding-data';
-import { useRoleMap } from '../../../hooks/useRole';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
-import { useAccessReviewForModel } from '../../../utils/rbac';
+import { defaultKonfluxRoleMap } from '~/__data__/role-data';
+import { mockRoleBinding } from '~/__data__/rolebinding-data';
+import { useRoleMap } from '~/hooks/useRole';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { UserAccessTableBodyRow } from '../RBListRow';
 import { UserAccessTableRow } from '../userAccessTableRows';
 
