@@ -21,7 +21,7 @@ import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlt
 import { useRoleMap } from '~/hooks/useRole';
 import { logger } from '~/monitoring/logger';
 import { getErrorState } from '~/shared/utils/error-utils';
-import type { NamespaceRole } from '~/types';
+import type { NamespaceRole, RoleBinding } from '~/types';
 import emptyStateImgUrl from '../../assets/Integration-test.svg';
 import { useRoleBindings } from '../../hooks/useRoleBindings';
 import { RoleBindingModel } from '../../models';
@@ -181,9 +181,18 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     return roleBindings.filter((rb) => rb.subjects?.some((subject) => users.has(subject.name)));
   };
 
+  const roleBindingHasNonUserSubject = (rb: RoleBinding) =>
+    (rb.subjects ?? []).some((subject) => subject.kind !== 'User');
+
   const handleModalSave = async (newRoleRef: string) => {
     const uniqueSelectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
     const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(uniqueSelectedUsernames);
+
+    if (allAffectedRoleBindingsRaw.some(roleBindingHasNonUserSubject)) {
+      throw new Error(
+        'Cannot change roles when a selected subject shares a role binding with a non-User subject (Group or ServiceAccount). Edit or split that role binding in the cluster, then try again.',
+      );
+    }
 
     // Filter out affected rows not requiring changes (single subject and same role)
     const allAffectedRoleBindings = allAffectedRoleBindingsRaw.filter((rb) => {

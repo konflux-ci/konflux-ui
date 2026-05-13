@@ -363,6 +363,39 @@ describe('UserAccessListView', () => {
       );
     });
 
+    it('blocks save when an affected binding includes a non-User subject (split/recreate would drop kind)', async () => {
+      const user = userEvent.setup();
+      const mixed: RoleBinding = {
+        ...mockSingleSubjectRoleBinding('rb-mixed', 'alice', 'konflux-contributor-user-actions'),
+        subjects: [
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'alice' },
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'Group', name: 'developers' },
+        ],
+      };
+      useRoleBindingsMock.mockReturnValue([[mixed], true]);
+      render(UserAccessList);
+
+      await user.click(screen.getAllByRole('checkbox')[1]);
+      await user.click(screen.getByRole('button', { name: 'Change access' }));
+      await waitFor(() => {
+        expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
+      });
+      await user.click(screen.getByTestId('user-access-change-role-select'));
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Admin' })).toBeInTheDocument();
+      });
+      await user.click(screen.getByRole('option', { name: 'Admin' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => {
+        expect(screen.getByTestId('user-access-change-role-save-error')).toHaveTextContent(
+          'non-User subject',
+        );
+      });
+      expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
+      expect(createRBsMock).not.toHaveBeenCalled();
+      expect(deleteRBMock).not.toHaveBeenCalled();
+    });
+
     it('rolls back partially created bindings when a later createRBs fails (old RBs stay)', async () => {
       const user = userEvent.setup();
       const errorSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
