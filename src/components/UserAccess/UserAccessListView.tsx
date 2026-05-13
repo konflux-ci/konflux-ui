@@ -16,25 +16,25 @@ import {
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 import { Table, TableGridBreakpoint, Tbody, Thead } from '@patternfly/react-table';
 import { USER_ACCESS_GRANT_PAGE } from '@routes/paths';
+import emptyStateImgUrl from '~/assets/Integration-test.svg';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useRoleMap } from '~/hooks/useRole';
+import { useRoleBindings } from '~/hooks/useRoleBindings';
+import { RoleBindingModel } from '~/models';
 import { logger } from '~/monitoring/logger';
+import { useDeepCompareMemoize } from '~/shared';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import type { NamespaceRole, RoleBinding } from '~/types';
-import emptyStateImgUrl from '../../assets/Integration-test.svg';
-import { useRoleBindings } from '../../hooks/useRoleBindings';
-import { RoleBindingModel } from '../../models';
-import { useDeepCompareMemoize } from '../../shared';
-import AppEmptyState from '../../shared/components/empty-state/AppEmptyState';
-import FilteredEmptyState from '../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '../../shared/providers/Namespace';
-import { useAccessReviewForModel } from '../../utils/rbac';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { UserAccessTableHeaderRow } from './RBListHeader';
 import { UserAccessTableBodyRow } from './RBListRow';
 import { splitRowKey, UserAccessChangeRoleModal } from './UserAccessChangeRoleModal';
-import { createRBs, deleteRB } from './UserAccessForm/form-utils';
+import { createRBs, deleteRB, restoreRB } from './UserAccessForm/form-utils';
 import {
   expandRoleBindingsToTableRows,
   filterUserAccessRows,
@@ -61,6 +61,50 @@ function getAllAffectedRoleBindings(users: Set<string>, bindings: RoleBinding[])
 
 function roleBindingHasNonUserSubject(rb: RoleBinding): boolean {
   return (rb.subjects ?? []).some((subject) => subject.kind !== 'User');
+}
+
+/** Deep clone for rollback (Jest/jsdom may not expose `structuredClone`). */
+function cloneRoleBindingSnapshot(rb: RoleBinding): RoleBinding {
+  return JSON.parse(JSON.stringify(rb)) as RoleBinding;
+}
+
+async function deleteBindingsBestEffort(
+  bindings: RoleBinding[],
+  namespace: string,
+  logMessage: string,
+): Promise<void> {
+  await Promise.all(
+    bindings.map(async (rb) => {
+      try {
+        await deleteRB(rb);
+      } catch (rollbackErr: unknown) {
+        logger.warn(logMessage, {
+          namespace,
+          roleBindingName: rb.metadata?.name,
+          error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+        });
+      }
+    }),
+  );
+}
+
+/** Restore in reverse deletion order so dependent bindings behave predictably. */
+async function restoreBindingsBestEffort(
+  snapshots: RoleBinding[],
+  namespace: string,
+): Promise<void> {
+  for (let i = snapshots.length - 1; i >= 0; i -= 1) {
+    const snap = snapshots[i];
+    try {
+      await restoreRB(snap);
+    } catch (rollbackErr: unknown) {
+      logger.warn('Failed to restore RoleBinding during rollback', {
+        namespace,
+        roleBindingName: snap.metadata?.name,
+        error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+      });
+    }
+  }
 }
 
 const UserAccessEmptyState: React.FC<
@@ -188,105 +232,78 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   const handleModalSave = React.useCallback(
     async (newRoleRef: string) => {
       const selectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
-      const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(
-        selectedUsernames,
-        roleBindings,
-      );
+      const rawBindings = getAllAffectedRoleBindings(selectedUsernames, roleBindings);
 
-      if (allAffectedRoleBindingsRaw.some(roleBindingHasNonUserSubject)) {
+      if (rawBindings.some(roleBindingHasNonUserSubject)) {
         throw new Error(
           'Cannot change roles when a selected subject shares a role binding with a non-User subject (Group or ServiceAccount). Edit or split that role binding in the cluster, then try again.',
         );
       }
 
-      const usernamesSkippingTargetRoleCreate = new Set<string>();
       // Filter out affected rows not requiring changes (single subject and same role)
-      const allAffectedRoleBindings = allAffectedRoleBindingsRaw.filter((rb) => {
-        const ok = !(rb.subjects?.length === 1 && rb.roleRef?.name === newRoleRef);
+      const usernamesSkippingTargetRoleCreate = new Set<string>();
+      const toDelete = rawBindings.filter((rb) => {
+        const hasSingleTargetRole = rb.subjects?.length === 1 && rb.roleRef?.name === newRoleRef;
         const username = rb.subjects?.[0]?.name;
 
-        // Has target role, will not be recreated, only rest of RBs deleted
-        if (!ok && username) {
+        if (hasSingleTargetRole && username) {
           usernamesSkippingTargetRoleCreate.add(username);
         }
-
-        return ok;
+        return !hasSingleTargetRole;
       });
 
       const usernamesNeedingTargetRoleCreate = [...selectedUsernames].filter(
         (username) => !usernamesSkippingTargetRoleCreate.has(username),
       );
 
-      // Users on multi-subject bindings who were not selected preserve their current role
-      const notSelectedUsersFromMultiSubjectRbs = allAffectedRoleBindings
-        .filter((rb) => rb.subjects?.length > 1)
+      const preservedFromMultiSubject = toDelete
+        .filter((rb) => (rb.subjects?.length ?? 0) > 1)
         .flatMap((rb) => {
-          const currentRole = currentRoleMap[rb.roleRef.name];
+          const currentRole = currentRoleMap[rb.roleRef.name] as NamespaceRole;
           return (
             rb.subjects
               ?.filter((subject) => !selectedUsernames.has(subject.name))
-              .map((subject): [string, NamespaceRole] => [
-                subject.name,
-                currentRole as NamespaceRole,
-              ]) ?? []
+              .map((subject): [string, NamespaceRole] => [subject.name, currentRole]) ?? []
           );
         });
 
-      const applyChange = async () => {
-        const createdForRollback: Awaited<ReturnType<typeof createRBs>> = [];
-
-        try {
-          const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
-          const selectedUserList = usernamesNeedingTargetRoleCreate;
-
-          if (selectedUserList.length > 0) {
-            createdForRollback.push(
-              ...(await createRBs(
-                { usernames: selectedUserList, role: newRole, roleMap },
-                namespace,
-              )),
-            );
-          }
-
-          for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
-            createdForRollback.push(
-              ...(await createRBs(
-                {
-                  usernames: [username],
-                  role: preservedRole,
-                  roleMap,
-                },
-                namespace,
-              )),
-            );
-          }
-
-          await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb)));
-        } catch (err: unknown) {
-          await Promise.all(
-            createdForRollback.map(async (rb) => {
-              try {
-                await deleteRB(rb);
-              } catch (rollbackErr: unknown) {
-                logger.warn(
-                  'Failed to roll back partially created RoleBinding after user access change failure',
-                  {
-                    namespace,
-                    roleBindingName: rb.metadata?.name,
-                    error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
-                  },
-                );
-              }
-            }),
-          );
-          throw err;
-        }
-      };
+      const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
+      const deletionSnapshots: RoleBinding[] = [];
+      const createdBindings: RoleBinding[] = [];
 
       try {
-        await applyChange();
+        for (const rb of toDelete) {
+          const snap = cloneRoleBindingSnapshot(rb);
+          await deleteRB(rb);
+          deletionSnapshots.push(snap);
+        }
+
+        if (usernamesNeedingTargetRoleCreate.length > 0) {
+          createdBindings.push(
+            ...(await createRBs(
+              { usernames: usernamesNeedingTargetRoleCreate, role: newRole, roleMap },
+              namespace,
+            )),
+          );
+        }
+
+        for (const [username, preservedRole] of preservedFromMultiSubject) {
+          createdBindings.push(
+            ...(await createRBs(
+              { usernames: [username], role: preservedRole, roleMap },
+              namespace,
+            )),
+          );
+        }
+
         setSelectedRowKeys(new Set());
       } catch (err: unknown) {
+        await deleteBindingsBestEffort(
+          createdBindings,
+          namespace,
+          'Failed to delete partially created RoleBinding after user access change failure',
+        );
+        await restoreBindingsBestEffort(deletionSnapshots, namespace);
         logger.error(
           'Error while applying user access change in UserAccessListView',
           err instanceof Error ? err : new Error(String(err)),
