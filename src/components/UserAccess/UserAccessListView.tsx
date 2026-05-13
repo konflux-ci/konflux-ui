@@ -51,6 +51,18 @@ const USER_ACCESS_FILTER_TYPE_LABELS: Record<UserAccessFilterTypes, string> = {
   [UserAccessFilterTypes.roleBindingName]: 'Role binding',
 };
 
+function getUniqueSelectedUsers(rowKeys: Set<string>): Set<string> {
+  return new Set([...rowKeys].map((rowKey) => splitRowKey(rowKey).username));
+}
+
+function getAllAffectedRoleBindings(users: Set<string>, bindings: RoleBinding[]): RoleBinding[] {
+  return bindings.filter((rb) => rb.subjects?.some((subject) => users.has(subject.name)));
+}
+
+function roleBindingHasNonUserSubject(rb: RoleBinding): boolean {
+  return (rb.subjects ?? []).some((subject) => subject.kind !== 'User');
+}
+
 const UserAccessEmptyState: React.FC<
   React.PropsWithChildren<{
     canCreateRB: boolean;
@@ -173,123 +185,123 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     });
   }, []);
 
-  const getUniqueSelectedUsers = (rowKeys: Set<string>) => {
-    return new Set([...rowKeys].map((rowKey) => splitRowKey(rowKey).username));
-  };
-
-  const getAllAffectedRoleBindings = (users: Set<string>) => {
-    return roleBindings.filter((rb) => rb.subjects?.some((subject) => users.has(subject.name)));
-  };
-
-  const roleBindingHasNonUserSubject = (rb: RoleBinding) =>
-    (rb.subjects ?? []).some((subject) => subject.kind !== 'User');
-
-  const handleModalSave = async (newRoleRef: string) => {
-    const selectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
-    const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(selectedUsernames);
-
-    if (allAffectedRoleBindingsRaw.some(roleBindingHasNonUserSubject)) {
-      throw new Error(
-        'Cannot change roles when a selected subject shares a role binding with a non-User subject (Group or ServiceAccount). Edit or split that role binding in the cluster, then try again.',
+  const handleModalSave = React.useCallback(
+    async (newRoleRef: string) => {
+      const selectedUsernames = getUniqueSelectedUsers(selectedRowKeys);
+      const allAffectedRoleBindingsRaw = getAllAffectedRoleBindings(
+        selectedUsernames,
+        roleBindings,
       );
-    }
 
-    const usernamesSkippingTargetRoleCreate = new Set<string>();
-    // Filter out affected rows not requiring changes (single subject and same role)
-    const allAffectedRoleBindings = allAffectedRoleBindingsRaw.filter((rb) => {
-      const ok = !(rb.subjects?.length === 1 && rb.roleRef?.name === newRoleRef);
-      const username = rb.subjects?.[0]?.name;
-
-      // Has target role, will not be recreated, only rest of RBs deleted
-      if (!ok && username) {
-        usernamesSkippingTargetRoleCreate.add(username);
+      if (allAffectedRoleBindingsRaw.some(roleBindingHasNonUserSubject)) {
+        throw new Error(
+          'Cannot change roles when a selected subject shares a role binding with a non-User subject (Group or ServiceAccount). Edit or split that role binding in the cluster, then try again.',
+        );
       }
 
-      return ok;
-    });
+      const usernamesSkippingTargetRoleCreate = new Set<string>();
+      // Filter out affected rows not requiring changes (single subject and same role)
+      const allAffectedRoleBindings = allAffectedRoleBindingsRaw.filter((rb) => {
+        const ok = !(rb.subjects?.length === 1 && rb.roleRef?.name === newRoleRef);
+        const username = rb.subjects?.[0]?.name;
 
-    const usernamesNeedingTargetRoleCreate = [...selectedUsernames].filter(
-      (username) => !usernamesSkippingTargetRoleCreate.has(username),
-    );
+        // Has target role, will not be recreated, only rest of RBs deleted
+        if (!ok && username) {
+          usernamesSkippingTargetRoleCreate.add(username);
+        }
 
-    // Users on multi-subject bindings who were not selected preserve their current role
-    const notSelectedUsersFromMultiSubjectRbs = allAffectedRoleBindings
-      .filter((rb) => rb.subjects?.length > 1)
-      .flatMap((rb) => {
-        const currentRole = currentRoleMap[rb.roleRef.name];
-        return (
-          rb.subjects
-            ?.filter((subject) => !selectedUsernames.has(subject.name))
-            .map((subject): [string, NamespaceRole] => [
-              subject.name,
-              currentRole as NamespaceRole,
-            ]) ?? []
-        );
+        return ok;
       });
 
-    const applyChange = async () => {
-      const createdForRollback: Awaited<ReturnType<typeof createRBs>> = [];
+      const usernamesNeedingTargetRoleCreate = [...selectedUsernames].filter(
+        (username) => !usernamesSkippingTargetRoleCreate.has(username),
+      );
+
+      // Users on multi-subject bindings who were not selected preserve their current role
+      const notSelectedUsersFromMultiSubjectRbs = allAffectedRoleBindings
+        .filter((rb) => rb.subjects?.length > 1)
+        .flatMap((rb) => {
+          const currentRole = currentRoleMap[rb.roleRef.name];
+          return (
+            rb.subjects
+              ?.filter((subject) => !selectedUsernames.has(subject.name))
+              .map((subject): [string, NamespaceRole] => [
+                subject.name,
+                currentRole as NamespaceRole,
+              ]) ?? []
+          );
+        });
+
+      const applyChange = async () => {
+        const createdForRollback: Awaited<ReturnType<typeof createRBs>> = [];
+
+        try {
+          const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
+          const selectedUserList = usernamesNeedingTargetRoleCreate;
+
+          if (selectedUserList.length > 0) {
+            createdForRollback.push(
+              ...(await createRBs(
+                { usernames: selectedUserList, role: newRole, roleMap },
+                namespace,
+              )),
+            );
+          }
+
+          for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
+            createdForRollback.push(
+              ...(await createRBs(
+                {
+                  usernames: [username],
+                  role: preservedRole,
+                  roleMap,
+                },
+                namespace,
+              )),
+            );
+          }
+
+          await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb)));
+        } catch (err: unknown) {
+          await Promise.all(
+            createdForRollback.map(async (rb) => {
+              try {
+                await deleteRB(rb);
+              } catch (rollbackErr: unknown) {
+                logger.warn(
+                  'Failed to roll back partially created RoleBinding after user access change failure',
+                  {
+                    namespace,
+                    roleBindingName: rb.metadata?.name,
+                    error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+                  },
+                );
+              }
+            }),
+          );
+          throw err;
+        }
+      };
 
       try {
-        const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
-        const selectedUserList = usernamesNeedingTargetRoleCreate;
-
-        if (selectedUserList.length > 0) {
-          createdForRollback.push(
-            ...(await createRBs(
-              { usernames: selectedUserList, role: newRole, roleMap },
-              namespace,
-            )),
-          );
-        }
-
-        for (const [username, preservedRole] of notSelectedUsersFromMultiSubjectRbs) {
-          createdForRollback.push(
-            ...(await createRBs(
-              {
-                usernames: [username],
-                role: preservedRole,
-                roleMap,
-              },
-              namespace,
-            )),
-          );
-        }
-
-        await Promise.all(allAffectedRoleBindings.map((rb) => deleteRB(rb)));
+        await applyChange();
+        setSelectedRowKeys(new Set());
       } catch (err: unknown) {
-        await Promise.all(
-          createdForRollback.map(async (rb) => {
-            try {
-              await deleteRB(rb);
-            } catch (rollbackErr: unknown) {
-              logger.warn(
-                'Failed to roll back partially created RoleBinding after user access change failure',
-                {
-                  namespace,
-                  roleBindingName: rb.metadata?.name,
-                  error: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
-                },
-              );
-            }
-          }),
+        logger.error(
+          'Error while applying user access change in UserAccessListView',
+          err instanceof Error ? err : new Error(String(err)),
+          { namespace },
         );
         throw err;
       }
-    };
+    },
+    [currentRoleMap, namespace, roleBindings, roleMap, selectedRowKeys],
+  );
 
-    try {
-      await applyChange();
-      setSelectedRowKeys(new Set());
-    } catch (err: unknown) {
-      logger.error(
-        'Error while applying user access change in UserAccessListView',
-        err instanceof Error ? err : new Error(String(err)),
-        { namespace },
-      );
-      throw err;
-    }
-  };
+  const allAffectedRoleBindingsForModal = React.useMemo(
+    () => getAllAffectedRoleBindings(getUniqueSelectedUsers(selectedRowKeys), roleBindings),
+    [roleBindings, selectedRowKeys],
+  );
 
   const selectedCount = selectedRowKeys.size;
 
@@ -464,10 +476,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         isOpen={isChangeAccessModalOpen}
         onClose={() => setChangeAccessModalOpen(false)}
         selectedRowKeys={selectedRowKeys}
-        allAffectedRoleBindings={getAllAffectedRoleBindings(
-          getUniqueSelectedUsers(selectedRowKeys),
-        )}
-        onSave={(newRoleRef) => handleModalSave(newRoleRef)}
+        allAffectedRoleBindings={allAffectedRoleBindingsForModal}
+        onSave={handleModalSave}
       />
     </>
   );
