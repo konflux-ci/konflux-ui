@@ -121,7 +121,7 @@ export const restoreRB = async (snapshot: RoleBinding): Promise<RoleBinding> => 
   return K8sQueryCreateResource({
     model: RoleBindingModel,
     queryOptions: {
-      ns: md.namespace ?? '',
+      ns: md.namespace,
     },
     resource,
   });
