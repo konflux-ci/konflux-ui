@@ -26,6 +26,7 @@ import emptySnapshotImgUrl from '../../../assets/Snapshots.svg';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
 import { SnapshotLabels } from '../../../consts/snapshots';
+import { Selector } from '../../../types/k8s';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
@@ -67,14 +68,22 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
   const releasableFilter = filters.releasable ?? false;
 
-  const matchLabels = React.useMemo(() => {
-    const labels: Record<string, string> = {
-      [PipelineRunLabel.APPLICATION]: applicationName,
+  const selector = React.useMemo<Selector>(() => {
+    const sel: Selector = {
+      matchLabels: {
+        [PipelineRunLabel.APPLICATION]: applicationName,
+      },
     };
     if (showMergedOnly) {
-      labels[SnapshotLabels.PAC_EVENT_TYPE_LABEL] = PipelineRunEventType.PUSH;
+      sel.matchExpressions = [
+        {
+          key: SnapshotLabels.PAC_EVENT_TYPE_LABEL,
+          operator: 'NotIn',
+          values: [PipelineRunEventType.PULL],
+        },
+      ];
     }
-    return labels;
+    return sel;
   }, [applicationName, showMergedOnly]);
 
   const {
@@ -91,9 +100,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       groupVersionKind: SnapshotGroupVersionKind,
       namespace,
       isList: true,
-      selector: {
-        matchLabels,
-      },
+      selector,
     },
     SnapshotModel,
     undefined,

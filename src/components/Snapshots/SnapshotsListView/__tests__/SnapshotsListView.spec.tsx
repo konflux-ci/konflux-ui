@@ -160,7 +160,7 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(switchElement).toBeChecked();
   });
 
-  it('should pass event-type=push label selector when hide PR snapshots toggle is enabled', () => {
+  it('should pass NotIn matchExpression to exclude pull_request events when hide PR snapshots toggle is enabled', () => {
     useMockSnapshots.mockReturnValue({
       data: mockSnapshots,
       getSource: () => ResourceSource.Cluster,
@@ -172,11 +172,9 @@ describe('SnapshotsListView - Column Headers', () => {
       renderWithQueryClientAndRouter(createWrappedComponent());
     });
 
-    // Initially, no event-type filter should be in the selector
+    // Initially, no matchExpressions should be in the selector
     const initialCall = useMockSnapshots.mock.calls[0];
-    expect(
-      initialCall[0].selector.matchLabels[SnapshotLabels.PAC_EVENT_TYPE_LABEL],
-    ).toBeUndefined();
+    expect(initialCall[0].selector.matchExpressions).toBeUndefined();
 
     // Toggle "Hide Pull Request Snapshots"
     const switchElement = screen.getByRole('checkbox', {
@@ -187,13 +185,17 @@ describe('SnapshotsListView - Column Headers', () => {
       fireEvent.click(switchElement);
     });
 
-    // After toggling, the selector should include event-type=push
-    const callsWithEventType = useMockSnapshots.mock.calls.filter(
-      (call) =>
-        call[0]?.selector?.matchLabels?.[SnapshotLabels.PAC_EVENT_TYPE_LABEL] ===
-        PipelineRunEventType.PUSH,
-    );
-    expect(callsWithEventType.length).toBeGreaterThan(0);
+    // After toggling, the selector should exclude pull_request via NotIn matchExpression
+    const callsWithNotIn = useMockSnapshots.mock.calls.filter((call) => {
+      const expressions = call[0]?.selector?.matchExpressions;
+      return expressions?.some(
+        (expr) =>
+          expr.key === SnapshotLabels.PAC_EVENT_TYPE_LABEL &&
+          expr.operator === 'NotIn' &&
+          expr.values?.includes(PipelineRunEventType.PULL),
+      );
+    });
+    expect(callsWithNotIn.length).toBeGreaterThan(0);
   });
 
   it('should show filter dashboard if no results but filters are applied', () => {
