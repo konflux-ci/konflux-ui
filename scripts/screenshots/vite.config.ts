@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
+import svgr from 'vite-plugin-svgr';
 import { defineConfig, type Plugin } from 'vite';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -43,7 +44,13 @@ function screenshotMocks(): Plugin {
 
 export default defineConfig({
   root: __dirname,
-  plugins: [react(), screenshotMocks()],
+  plugins: [
+    react(),
+    svgr({
+      include: '**/*.svg',
+    }),
+    screenshotMocks(),
+  ],
   resolve: {
     alias: {
       '~': path.resolve(projectRoot, 'src'),

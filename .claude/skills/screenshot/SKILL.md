@@ -434,6 +434,7 @@ render: () => {
 - **Logger**: Uses `console.*`, no setup needed.
 - **RBAC hooks**: Automatically mocked to return `[true, true]`.
 - **`useTaskStore` (Zustand)**: Starts empty, only affects background task indicators.
+- **SVG imports** (e.g. `import Icon from '../../assets/icon.svg'`): Handled by `vite-plugin-svgr` — transforms SVGs into React components, matching the Webpack `@svgr/webpack` behavior.
 
 ## Troubleshooting
 
