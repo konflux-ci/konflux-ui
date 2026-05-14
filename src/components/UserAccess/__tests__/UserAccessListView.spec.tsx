@@ -32,12 +32,12 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../../utils/rbac', () => ({
-  ...jest.requireActual('../../../utils/rbac'),
+jest.mock('~/utils/rbac', () => ({
+  ...jest.requireActual('~/utils/rbac'),
   useAccessReviewForModel: jest.fn(),
 }));
-jest.mock('../../../hooks/useRoleBindings');
-jest.mock('../../../hooks/useRole');
+jest.mock('~/hooks/useRoleBindings');
+jest.mock('~/hooks/useRole');
 
 const UserAccessList = (
   <MemoryRouter>

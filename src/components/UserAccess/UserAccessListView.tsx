@@ -40,6 +40,7 @@ import {
   filterUserAccessRows,
   type UserAccessTableRow,
 } from './userAccessTableRows';
+import './UserAccess.scss';
 
 enum UserAccessFilterTypes {
   username = 'username',
@@ -458,7 +459,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           </ButtonWithAccessTooltip>
         </BaseTextFilterToolbar>
       </Flex>
-      <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
+      <Divider className="user-access-list-view__toolbar-divider" />
       {filterRBs.length ? (
         <Table
           aria-label="User access list"
