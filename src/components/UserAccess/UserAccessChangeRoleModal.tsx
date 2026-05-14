@@ -21,6 +21,7 @@ import { useRoleMap } from '~/hooks/useRole';
 import type { RoleBinding } from '~/types';
 import { ROLE_WEIGHT_MAP } from '~/utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import './UserAccess.scss';
 
 const saveErrorMessage = (err: unknown): string => {
   if (err instanceof Error && err.message) {
@@ -43,7 +44,7 @@ export const splitRowKey = (
   roleRefName: string;
   roleName: string;
   index: string;
-  role: string;
+  subjectKind: string;
   username: string;
 } => {
   const segments = rowKey.split('__');
@@ -51,7 +52,7 @@ export const splitRowKey = (
     roleRefName: segments[0],
     roleName: segments[0].split('-')[1],
     index: segments[1],
-    role: segments[2],
+    subjectKind: segments[2],
     username: segments[3],
   };
 };
@@ -216,14 +217,14 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
           </Alert>
         </FlexItem>
         <FlexItem>
-          <List style={{ marginLeft: 'var(--pf-v5-global--spacer--md)' }}>
+          <List className="user-access-change-role-modal__user-list">
             {[...selectedRowKeys].map((rowKey) => {
-              const { username, role } = splitRowKey(rowKey);
+              const { username, subjectKind } = splitRowKey(rowKey);
 
               return (
                 <ListItem key={rowKey}>
                   <span className={textStyles.fontWeightBold}>
-                    {username} ({role})
+                    {username} ({subjectKind})
                   </span>
                   : {getUserHighestRole(username)}
                 </ListItem>
@@ -234,7 +235,7 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
 
         <FlexItem>
           <Flex direction={{ default: 'column' }}>
-            <FlexItem style={{ marginBottom: 'var(--pf-v5-global--spacer--xs)' }}>
+            <FlexItem className="user-access-change-role-modal__role-label">
               <Text data-test="user-access-change-role-label">New role*</Text>
             </FlexItem>
             <FlexItem>

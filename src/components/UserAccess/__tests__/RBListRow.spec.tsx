@@ -11,15 +11,15 @@ jest.mock('react-router-dom', () => ({
   Link: (props) => <a href={props.to}>{props.children}</a>,
 }));
 
-jest.mock('../../../hooks/useRole', () => ({
+jest.mock('~/hooks/useRole', () => ({
   useRoleMap: jest.fn(),
 }));
 
-jest.mock('../../../utils/rbac', () => ({
+jest.mock('~/utils/rbac', () => ({
   useAccessReviewForModel: jest.fn(),
 }));
 
-jest.mock('../../modal/ModalProvider', () => ({
+jest.mock('~/components/modal/ModalProvider', () => ({
   useModalLauncher: () => jest.fn(),
 }));
 

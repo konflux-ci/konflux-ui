@@ -2,11 +2,11 @@ import type { ComponentProps } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultKonfluxRoleMap } from '~/__data__/role-data';
-import { mockSingleSubjectRoleBinding } from '../../../__data__/rolebinding-data';
-import { useRoleMap } from '../../../hooks/useRole';
+import { mockSingleSubjectRoleBinding } from '~/__data__/rolebinding-data';
+import { useRoleMap } from '~/hooks/useRole';
 import { splitRowKey, UserAccessChangeRoleModal } from '../UserAccessChangeRoleModal';
 
-jest.mock('../../../hooks/useRole', () => ({
+jest.mock('~/hooks/useRole', () => ({
   useRoleMap: jest.fn(),
 }));
 
@@ -19,7 +19,7 @@ describe('UserAccessChangeRoleModal', () => {
         roleRefName: 'konflux-contributor-user-actions',
         roleName: 'contributor',
         index: '0',
-        role: 'User',
+        subjectKind: 'User',
         username: 'alice',
       });
     });
