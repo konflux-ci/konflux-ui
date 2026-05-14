@@ -261,6 +261,11 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         .filter((rb) => (rb.subjects?.length ?? 0) > 1)
         .flatMap((rb) => {
           const currentRole = currentRoleMap[rb.roleRef.name] as NamespaceRole;
+          if (!currentRole) {
+            throw new Error(
+              `Role "${rb.roleRef.name}" not found in role map. Cannot preserve access.`,
+            );
+          }
           return (
             rb.subjects
               ?.filter((subject) => !selectedUsernames.has(subject.name))
@@ -269,6 +274,9 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
         });
 
       const newRole = currentRoleMap[newRoleRef] as NamespaceRole;
+      if (!newRole) {
+        throw new Error(`Target role "${newRoleRef}" not found in role map.`);
+      }
       const deletionSnapshots: RoleBinding[] = [];
       const createdBindings: RoleBinding[] = [];
 
