@@ -2,7 +2,6 @@ import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { DataState, testPipelineRuns } from '~/__data__/pipelinerun-data';
-import { runStatus } from '~/consts/pipelinerun';
 import { PipelineRunKind } from '~/types';
 import { TaskRunKind } from '~/types/task-run';
 import { createTestQueryClient } from '~/unit-test-utils/mock-react-query';
@@ -41,30 +40,22 @@ describe('usePipelineRunTestOutputResult', () => {
   });
 
   describe('when pipeline run has TEST_OUTPUT in status.results', () => {
-    it('returns Succeeded and note when result is SUCCESS and namespace is null', () => {
+    it('returns aggregated counts from PLR-level TEST_OUTPUT and namespace is null', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITH_TEST_OUTPUT_SUCCESS
       ] as unknown as PipelineRunKind;
       const { result } = renderHookWithQueryClient(plr, null);
 
-      expect(result.current).toEqual([
-        runStatus.Succeeded,
-        false,
-        'Simulated success for testing TEST_OUTPUT reporting',
-      ]);
+      expect(result.current).toEqual([{ successes: 1, failures: 0, warnings: 0 }, false]);
     });
 
-    it('returns TestFailed and note when result is ERROR and namespace is null', () => {
+    it('returns aggregated counts from PLR-level TEST_OUTPUT with ERROR result', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITH_TEST_OUTPUT_ERROR
       ] as unknown as PipelineRunKind;
       const { result } = renderHookWithQueryClient(plr, null);
 
-      expect(result.current).toEqual([
-        runStatus.TestFailed,
-        false,
-        'Simulated failure for testing TEST_OUTPUT reporting',
-      ]);
+      expect(result.current).toEqual([{ successes: 0, failures: 1, warnings: 0 }, false]);
     });
 
     it('uses PLR status over task runs when both are available', () => {
@@ -81,7 +72,8 @@ describe('usePipelineRunTestOutputResult', () => {
             results: [
               {
                 name: 'TEST_OUTPUT',
-                value: '{"result": "FAILURE", "note": "From task run"}',
+                value:
+                  '{"result": "FAILURE", "note": "From task run", "successes": 0, "failures": 1, "warnings": 0}',
               },
             ],
           },
@@ -97,8 +89,8 @@ describe('usePipelineRunTestOutputResult', () => {
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
 
-      expect(result.current[0]).toBe(runStatus.Succeeded);
-      expect(result.current[2]).toBe('Simulated success for testing TEST_OUTPUT reporting');
+      // PLR-level result takes priority
+      expect(result.current[0]).toEqual({ successes: 1, failures: 0, warnings: 0 });
     });
 
     it('bypasses TaskRun query when PLR already has TEST_OUTPUT (calls hook with null namespace)', () => {
@@ -131,7 +123,7 @@ describe('usePipelineRunTestOutputResult', () => {
   });
 
   describe('when pipeline run has no TEST_OUTPUT and task runs are used', () => {
-    it('returns Succeeded and note from task run results when namespace is set', () => {
+    it('returns aggregated counts from task run results when namespace is set', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO
       ] as unknown as PipelineRunKind;
@@ -162,14 +154,14 @@ describe('usePipelineRunTestOutputResult', () => {
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
 
-      expect(result.current).toEqual([runStatus.Succeeded, false, 'All tests passed']);
+      expect(result.current).toEqual([{ successes: 1, failures: 0, warnings: 0 }, false]);
     });
 
-    it('returns TestFailed from task run results', () => {
+    it('aggregates counts across multiple task runs', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO
       ] as unknown as PipelineRunKind;
-      const taskRunsWithFailure: TaskRunKind[] = [
+      const multipleTaskRuns: TaskRunKind[] = [
         {
           apiVersion: 'tekton.dev/v1',
           kind: 'TaskRun',
@@ -179,14 +171,28 @@ describe('usePipelineRunTestOutputResult', () => {
             results: [
               {
                 name: 'TEST_OUTPUT',
-                value: '{"result": "FAILURE", "note": "Tests failed"}',
+                value: '{"result": "SUCCESS", "successes": 5, "failures": 0, "warnings": 1}',
+              },
+            ],
+          },
+        },
+        {
+          apiVersion: 'tekton.dev/v1',
+          kind: 'TaskRun',
+          metadata: { name: 'tr-2', namespace: 'ns', uid: '2', creationTimestamp: '' },
+          spec: {},
+          status: {
+            results: [
+              {
+                name: 'TEST_OUTPUT',
+                value: '{"result": "FAILURE", "successes": 2, "failures": 3, "warnings": 0}',
               },
             ],
           },
         },
       ];
       useTaskRunsForPipelineRunsMock.mockReturnValue([
-        taskRunsWithFailure,
+        multipleTaskRuns,
         true,
         null,
         defaultGetNextPage,
@@ -195,15 +201,14 @@ describe('usePipelineRunTestOutputResult', () => {
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
 
-      expect(result.current[0]).toBe(runStatus.TestFailed);
-      expect(result.current[2]).toBe('Tests failed');
+      expect(result.current[0]).toEqual({ successes: 7, failures: 3, warnings: 1 });
     });
 
-    it('returns TestWarning from task run results', () => {
+    it('returns null when task runs have no numeric fields', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO
       ] as unknown as PipelineRunKind;
-      const taskRunsWithWarning: TaskRunKind[] = [
+      const taskRunsWithNoNumericFields: TaskRunKind[] = [
         {
           apiVersion: 'tekton.dev/v1',
           kind: 'TaskRun',
@@ -213,14 +218,14 @@ describe('usePipelineRunTestOutputResult', () => {
             results: [
               {
                 name: 'TEST_OUTPUT',
-                value: '{"result": "WARNING", "note": "Some warnings"}',
+                value: '{"result": "SUCCESS", "note": "old format without counts"}',
               },
             ],
           },
         },
       ];
       useTaskRunsForPipelineRunsMock.mockReturnValue([
-        taskRunsWithWarning,
+        taskRunsWithNoNumericFields,
         true,
         null,
         defaultGetNextPage,
@@ -229,56 +234,7 @@ describe('usePipelineRunTestOutputResult', () => {
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
 
-      expect(result.current[0]).toBe(runStatus.TestWarning);
-      expect(result.current[2]).toBe('Some warnings');
-    });
-
-    it('resolves mixed TaskRun results to the worst status (FAILURE over SUCCESS)', () => {
-      const plr = testPipelineRuns[
-        DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO
-      ] as unknown as PipelineRunKind;
-      const mixedTaskRuns: TaskRunKind[] = [
-        {
-          apiVersion: 'tekton.dev/v1',
-          kind: 'TaskRun',
-          metadata: {
-            name: 'tr-success',
-            namespace: 'ns',
-            uid: '1',
-            creationTimestamp: '2025-01-01T00:00:00Z',
-          },
-          spec: {},
-          status: {
-            results: [{ name: 'TEST_OUTPUT', value: '{"result": "SUCCESS", "note": "Passed"}' }],
-          },
-        },
-        {
-          apiVersion: 'tekton.dev/v1',
-          kind: 'TaskRun',
-          metadata: {
-            name: 'tr-failure',
-            namespace: 'ns',
-            uid: '2',
-            creationTimestamp: '2025-01-01T00:00:01Z',
-          },
-          spec: {},
-          status: {
-            results: [{ name: 'TEST_OUTPUT', value: '{"result": "FAILURE", "note": "Failed"}' }],
-          },
-        },
-      ];
-      useTaskRunsForPipelineRunsMock.mockReturnValue([
-        mixedTaskRuns,
-        true,
-        null,
-        defaultGetNextPage,
-        defaultNextPageProps,
-      ]);
-
-      const { result } = renderHookWithQueryClient(plr, 'test-ns');
-
-      expect(result.current[0]).toBe(runStatus.TestFailed);
-      expect(result.current[2]).toBe('Failed');
+      expect(result.current[0]).toBeNull();
     });
   });
 
@@ -353,7 +309,6 @@ describe('usePipelineRunTestOutputResult', () => {
 
       expect(result.current[1]).toBe(false);
       expect(result.current[0]).toBe(null);
-      expect(result.current[2]).toBeUndefined();
     });
 
     it('does not show loading when TaskRun fetch errors and loaded is false', () => {
@@ -375,7 +330,7 @@ describe('usePipelineRunTestOutputResult', () => {
   });
 
   describe('when no test result is available', () => {
-    it('returns [null, false, undefined] when PLR has no TEST_OUTPUT and task runs are empty', () => {
+    it('returns [null, false] when PLR has no TEST_OUTPUT and task runs are empty', () => {
       const plr = testPipelineRuns[
         DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO
       ] as unknown as PipelineRunKind;
@@ -389,10 +344,10 @@ describe('usePipelineRunTestOutputResult', () => {
 
       const { result } = renderHookWithQueryClient(plr, 'test-ns');
 
-      expect(result.current).toEqual([null, false, undefined]);
+      expect(result.current).toEqual([null, false]);
     });
 
-    it('returns [null, false, undefined] for PLR with null status', () => {
+    it('returns [null, false] for PLR with null status', () => {
       const plr = {
         ...testPipelineRuns[DataState.STATUS_WITHOUT_TEST_OUTPUT_INFO],
         status: null,
@@ -407,7 +362,7 @@ describe('usePipelineRunTestOutputResult', () => {
 
       const { result } = renderHookWithQueryClient(plr, null);
 
-      expect(result.current).toEqual([null, false, undefined]);
+      expect(result.current).toEqual([null, false]);
     });
   });
 });
