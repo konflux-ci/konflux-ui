@@ -69,7 +69,10 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
   const [modalSelectedRoleRef, setModalSelectedRoleRef] = React.useState<string | undefined>();
   const [isSaving, setIsSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
-  const currentRoleMap = React.useMemo(() => roleMap?.roleMap ?? {}, [roleMap]);
+  const currentRoleMap = React.useMemo(
+    (): Record<string, string> => roleMap?.roleMap ?? {},
+    [roleMap],
+  );
 
   const roleSelectOptions = React.useMemo(() => Object.entries(currentRoleMap), [currentRoleMap]);
 
@@ -107,8 +110,6 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
   }, [allAffectedRoleBindings, currentRoleMap]);
 
   const getUserHighestRole = React.useMemo(() => {
-    const roleLabels = currentRoleMap as Record<string, string>;
-
     return (username: string): string => {
       const userRoleBindings = allAffectedRoleBindings.filter((rb) =>
         rb.subjects?.some((subject) => subject.name === username),
@@ -120,12 +121,12 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       }
 
       const highestRole = allUserRoles.reduce((max, role) => {
-        const roleWeight = ROLE_WEIGHT_MAP[roleLabels[role]] ?? 0;
-        const maxWeight = ROLE_WEIGHT_MAP[roleLabels[max]] ?? 0;
+        const roleWeight = ROLE_WEIGHT_MAP[currentRoleMap[role]] ?? 0;
+        const maxWeight = ROLE_WEIGHT_MAP[currentRoleMap[max]] ?? 0;
         return roleWeight > maxWeight ? role : max;
       }, allUserRoles[0]);
 
-      return roleLabels[highestRole];
+      return currentRoleMap[highestRole];
     };
   }, [allAffectedRoleBindings, currentRoleMap]);
 
