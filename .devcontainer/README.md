@@ -64,7 +64,7 @@ While this documentation highlights the installation process for VS Code and oth
 
 ## What's Included
 
-- **Node.js 20**: Latest LTS version as required by the project
+- **Node.js 22**: Latest LTS version as required by the project
 - **Yarn 1.22.22**: Package manager as specified in the project requirements
 - **VS Code Extensions**: Pre-configured with useful extensions for React/TypeScript development
 - **Development Tools**: ESLint, Prettier, Stylelint, and more
