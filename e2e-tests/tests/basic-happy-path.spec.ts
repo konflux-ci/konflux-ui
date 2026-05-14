@@ -165,28 +165,24 @@ describe('Basic Happy Path', () => {
       DetailsTab.waitForPLRAndDownloadAllLogs(false);
     });
 
-    // Skipping unstable test
-    it.skip('Verify vulnerabilities column exists in Pipeline runs table', () => {
+    it('Verify vulnerabilities column exists in Pipeline runs table', () => {
       Applications.clickBreadcrumbLink('Pipeline runs');
       PipelinerunsTabPage.verifyVulnerabilityColumn();
     });
 
-    // Skipping unstable test
-    it.skip('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
+    it('Verify vulnerability indicators are displayed for on-push pipeline run', () => {
       PipelinerunsTabPage.verifyVulnerabilityIndicators(
         `${componentName}-on-push`,
         /(-|N\/A|Critical\d+High\d+Medium\d+Low\d+Unknown\d+)/,
       );
     });
 
-    // Skipping unstable test
-    it.skip('Verify vulnerability indicators for on-pull-request pipeline run', () => {
+    it('Verify vulnerability indicators for on-pull-request pipeline run', () => {
       // Test passed for a page that was not fully loaded, test this functionality to prove it works as expected
       PipelinerunsTabPage.verifyVulnerabilityCellVisibility(`${componentName}-on-pull-request`);
     });
 
-    // Skipping unstable test
-    it.skip('Verify vulnerability scan details when available', () => {
+    it('Verify vulnerability scan details when available', () => {
       PipelinerunsTabPage.verifyVulnerabilityScanDetails(`${componentName}-on-push`);
     });
   });

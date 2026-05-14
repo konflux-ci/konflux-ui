@@ -107,6 +107,25 @@ export const commitShaFilter = (commitSha: string): string =>
     EQ(`data.metadata.annotations["${PipelineRunLabel.COMMIT_ANNOTATION}"]`, commitSha),
   );
 
+const CONTAINS = (field: string, value: string) => `${field}.contains("${value}")`;
+
+export const commitSearchFilter = (searchTerm: string): string => {
+  const term = searchTerm.trim().toLowerCase();
+  if (!term) return '';
+
+  return OR(
+    CONTAINS(`data.metadata.labels["${PipelineRunLabel.COMMIT_LABEL}"]`, term),
+    CONTAINS(`data.metadata.labels["${PipelineRunLabel.TEST_SERVICE_COMMIT}"]`, term),
+    CONTAINS(`data.metadata.annotations["${PipelineRunLabel.COMMIT_ANNOTATION}"]`, term),
+    CONTAINS(`data.metadata.annotations["${PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION}"]`, term),
+    CONTAINS(`data.metadata.labels["${PipelineRunLabel.COMPONENT}"]`, term),
+    CONTAINS(
+      `data.metadata.labels["${PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL}"]`,
+      term.replace('#', ''),
+    ),
+  );
+};
+
 export const creationTimestampFilterAfter = (creationTimestamp: string): string => {
   return Date.parse(creationTimestamp)
     ? EXP(`data.metadata.creationTimestamp`, `"${creationTimestamp}"`, '>')
