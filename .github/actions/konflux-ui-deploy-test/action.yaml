@@ -16,12 +16,22 @@ runs:
         tool-cache: false
         docker-images: false
 
-    - name: Checkout Repository
+    - name: Get latest konflux-ci release tag
+      id: get-konflux-release
+      run: |
+        LATEST_TAG=$(gh release view --repo konflux-ci/konflux-ci --json tagName -q .tagName)
+        echo "tag=${LATEST_TAG}" >> "$GITHUB_OUTPUT"
+        echo "Latest konflux-ci release: ${LATEST_TAG}"
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Checkout konflux-ci at release tag
       uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       with:
         repository: 'konflux-ci/konflux-ci'
         path: 'konflux-ci'
-        ref: 'main'
+        ref: ${{ steps.get-konflux-release.outputs.tag }}
 
     - name: Disable AppArmor
       # works around a change in ubuntu 24.04 that restricts Linux namespace access
@@ -49,6 +59,7 @@ runs:
         QUAY_TOKEN: ${{ env.QUAY_TOKEN_TEST }}
         QUAY_ORGANIZATION: ${{ env.QUAY_TEST_ORG }}
         SMEE_CHANNEL: ${{ env.SMEE_URL }}
+        OPERATOR_INSTALL_METHOD: release
       run: |
         : Deploy Konflux using operator-based deployment
         cd konflux-ci
