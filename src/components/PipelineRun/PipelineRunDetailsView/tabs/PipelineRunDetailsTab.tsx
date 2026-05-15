@@ -97,6 +97,7 @@ const PipelineRunDetailsTab: React.FC = () => {
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     namespace,
     componentName,
+    null,
     false,
   );
 

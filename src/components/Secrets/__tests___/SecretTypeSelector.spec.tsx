@@ -31,6 +31,16 @@ describe('SecretForm', () => {
     screen.getByText('Key/value secret');
   });
 
+  it('should provide correct helper text in edit mode', () => {
+    const onChange = jest.fn();
+    formikRenderer(
+      <SecretTypeSelector dropdownItems={dropdownItems} onChange={onChange} isEditMode={true} />,
+      initialValues,
+    );
+
+    expect(screen.getByText('You cannot edit the secret type in edit mode')).toBeInTheDocument();
+  });
+
   it('should call onChange handler with selected value', async () => {
     const onChange = jest.fn();
     formikRenderer(

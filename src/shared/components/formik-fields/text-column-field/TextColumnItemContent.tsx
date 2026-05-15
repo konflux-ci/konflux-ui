@@ -105,7 +105,7 @@ const TextColumnItemContent: React.FC<TextColumntItemContentProps> = ({
         )}
         <FlexItem grow={{ default: 'grow' }}>
           {children(
-            { name: `${name}.${idx}`, isReadOnly, placeholder, onChange, removeButton },
+            { name: `${name}.${idx}`, isReadOnly, placeholder, onChange, removeButton, idx },
             mergeNewValue,
           )}
         </FlexItem>

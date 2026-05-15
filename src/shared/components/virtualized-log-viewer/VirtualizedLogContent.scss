@@ -7,6 +7,16 @@
     padding-top: var(--pf-v5-global--spacer--xs);
     padding-bottom: var(--pf-v5-global--spacer--xs);
     box-sizing: border-box;
+
+    // Enable keyboard navigation
+    &:focus {
+      outline: 2px solid var(--pf-v5-global--primary-color--100);
+      outline-offset: -2px;
+    }
+    // Remove focus outline in dark mode (use border instead for better contrast)
+    .pf-m-dark &:focus {
+      outline-color: var(--pf-v5-global--primary-color--200);
+    }
   }
 }
 
