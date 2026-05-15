@@ -2,24 +2,24 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bullseye, EmptyStateBody, Spinner } from '@patternfly/react-core';
 import { SECRET_CREATE_PATH } from '@routes/paths';
+import secretEmptyStateIcon from '~/assets/secret.svg';
+import { ButtonWithAccessTooltip } from '~/components/ButtonWithAccessTooltip';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
+import { useSecrets } from '~/hooks/useSecrets';
+import { SecretModel } from '~/models';
 import { useDeepCompareMemoize } from '~/shared';
+import AppEmptyState from '~/shared/components/empty-state/AppEmptyState';
+import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptyState';
+import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
-import secretEmptyStateIcon from '../../../assets/secret.svg';
-import { useSecrets } from '../../../hooks/useSecrets';
-import { SecretModel } from '../../../models';
-import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
-import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
-import { useNamespace } from '../../../shared/providers/Namespace';
-import { useAccessReviewForModel } from '../../../utils/rbac';
-import { ButtonWithAccessTooltip } from '../../ButtonWithAccessTooltip';
+import { useAccessReviewForModel } from '~/utils/rbac';
 import SecretsList from './SecretsList';
 
 const SecretsListView: React.FC = () => {
   const namespace = useNamespace();
 
-  const [secrets, secretsLoaded, error] = useSecrets(namespace, true);
+  const [secrets, secretsLoaded, error] = useSecrets(namespace, true, { metadataOnly: true });
   const { filters: unparsedFilters, setFilters, onClearFilters } = React.useContext(FilterContext);
   const filters = useDeepCompareMemoize({
     name: unparsedFilters.name ? (unparsedFilters.name as string) : '',

@@ -5,6 +5,7 @@ import { FileUploadField } from 'formik-pf';
 import { Base64 } from 'js-base64';
 import attempt from 'lodash-es/attempt';
 import isError from 'lodash-es/isError';
+import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
 
 type EncodedFileUploadFieldProps = {
   id: string;
@@ -13,6 +14,8 @@ type EncodedFileUploadFieldProps = {
   helpText?: string;
   required?: boolean;
   onValidate?: (decodedContent: string, filename?: string) => void;
+  /** When set (edit secret + sensitive context), blur clears this field and drops cached full secret. */
+  sensitiveFieldPath?: string;
 };
 
 const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUploadFieldProps>> = ({
@@ -22,11 +25,13 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
   helpText,
   required,
   onValidate,
+  sensitiveFieldPath,
 }) => {
   const [filename, setFilename] = React.useState<string>();
   const filenameRef = React.useRef<string>();
   const [, { value, error, touched }, { setValue, setTouched }] = useField<string>(name);
   const isValid = !(touched && error);
+  const sensitive = useOptionalSecretEditSensitive();
 
   const onChange = React.useCallback(
     (data: string, fileUploaded?: boolean) => {
@@ -64,7 +69,12 @@ const EncodedFileUploadField: React.FC<React.PropsWithChildren<EncodedFileUpload
         setFilename(file.name);
         filenameRef.current = file.name;
       }}
-      onBlur={() => setTouched(true)}
+      onBlur={() => {
+        void setTouched(true);
+        if (sensitiveFieldPath && sensitive && value) {
+          void sensitive.onSensitiveFieldBlur(sensitiveFieldPath);
+        }
+      }}
       onTextChange={(_ev, updated) => onChange(updated)}
       onDataChange={(_ev, updated) => onChange(updated, true)}
       onClearClick={() => {

@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bullseye, Form, PageSection, PageSectionVariants, Spinner } from '@patternfly/react-core';
-import { logger } from '@sentry/react';
-import { Formik } from 'formik';
+import { Formik, FormikProps } from 'formik';
 import { isEmpty } from 'lodash-es';
 import PageLayout from '~/components/PageLayout/PageLayout';
 import { LEARN_MORE_ABOUT_SECRETS_CREATION } from '~/consts/documentation';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useSearchParam } from '~/hooks/useSearchParam';
-import { useSecret } from '~/hooks/useSecrets';
+import { useSecretMetadata } from '~/hooks/useSecretMetadata';
+import { logger } from '~/monitoring/logger';
 import { SECRET_LIST_PATH } from '~/routes/paths';
 import FormFooter from '~/shared/components/form-components/FormFooter';
 import ExternalLink from '~/shared/components/links/ExternalLink';
@@ -16,6 +16,7 @@ import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
   AddSecretFormValues,
+  ImagePullSecretType,
   KeyValueEntry,
   SecretFor,
   SecretKind,
@@ -25,12 +26,18 @@ import {
 } from '~/types';
 import {
   editSecretResource,
+  fetchFullSecret,
   getAuthType,
   getRegistryCreds,
+  getResolvedKubernetesSecretType,
   getSecretBreadcrumbs,
   typeToDropdownLabel,
 } from '~/utils/secrets/secret-utils';
 import { secretFormValidationSchema } from '../utils/secret-validation';
+import {
+  SecretEditSensitiveContextValue,
+  SecretEditSensitiveProvider,
+} from './SecretEditSensitiveContext';
 import { SecretTypeSubForm } from './SecretTypeSubForm';
 
 const isUnset = (value: unknown): boolean => value === '' || value === undefined;
@@ -43,6 +50,9 @@ function preserveUnsetSensitiveSecretValues(
   typeFromLabels: SecretType,
   parsedRegistryCreds: ReturnType<typeof getRegistryCreds>,
 ): void {
+  if (!secretData.data) {
+    return;
+  }
   switch (typeFromLabels) {
     case SecretType.sshAuth:
       if (isUnset(values.source['ssh-privatekey'])) {
@@ -58,6 +68,7 @@ function preserveUnsetSensitiveSecretValues(
         values.source.password = atob(secretData.data.password);
       }
       break;
+    case SecretType.dockercfg:
     case SecretType.dockerconfigjson:
       if (secretType === SecretTypeDropdownLabel.image) {
         values.image.registryCreds.forEach((cred, idx) => {
@@ -70,12 +81,82 @@ function preserveUnsetSensitiveSecretValues(
   }
 }
 
+function editRequiresFullSecretPayload(
+  values: AddSecretFormValues,
+  typeFromLabels: SecretType,
+  secretType: SecretTypeDropdownLabel,
+): boolean {
+  switch (typeFromLabels) {
+    case SecretType.sshAuth:
+      return (
+        secretType === SecretTypeDropdownLabel.source && isUnset(values.source['ssh-privatekey'])
+      );
+    case SecretType.basicAuth:
+      return secretType === SecretTypeDropdownLabel.source && isUnset(values.source.password);
+    case SecretType.dockerconfigjson:
+    case SecretType.dockercfg: {
+      if (secretType !== SecretTypeDropdownLabel.image) {
+        return false;
+      }
+      if (values.image?.authType === ImagePullSecretType.UploadConfigFile) {
+        return isUnset(values.image?.dockerconfig);
+      }
+      return values.image.registryCreds.some((c) => isUnset(c.password));
+    }
+    case SecretType.opaque:
+      return secretType === SecretTypeDropdownLabel.opaque;
+    default:
+      return false;
+  }
+}
+
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
   const [secretName] = useSearchParam('secretName');
 
-  const [secretData, secretLoaded, error] = useSecret(namespace, secretName);
+  const [secretMeta, secretLoaded, error] = useSecretMetadata(namespace, secretName);
+  const [fullSecret, setFullSecret] = React.useState<SecretKind | null>(null);
+  const [isLoadingFullSecret, setIsLoadingFullSecret] = React.useState(false);
+
+  const clearSensitiveMemory = React.useCallback(() => {
+    setFullSecret(null);
+  }, []);
+
+  React.useEffect(() => {
+    clearSensitiveMemory();
+  }, [namespace, secretName, clearSensitiveMemory]);
+
+  React.useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        clearSensitiveMemory();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [clearSensitiveMemory]);
+
+  const requestFullSecret = React.useCallback(async () => {
+    if (fullSecret) {
+      return fullSecret;
+    }
+    setIsLoadingFullSecret(true);
+
+    try {
+      const s = await fetchFullSecret(namespace, secretName);
+      setFullSecret(s);
+      return s;
+    } catch (e) {
+      logger.error('Failed to load full secret', e instanceof Error ? e : undefined, {
+        namespace,
+        secretName,
+      });
+      return undefined;
+    } finally {
+      setIsLoadingFullSecret(false);
+    }
+  }, [fullSecret, namespace, secretName]);
 
   if (!secretLoaded) {
     return (
@@ -85,31 +166,29 @@ const EditSecretForm: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || !secretMeta) {
     return getErrorState(error, secretLoaded, 'secret');
   }
 
-  const typeFromLabels = secretData.type as SecretType;
+  const typeFromLabels = getResolvedKubernetesSecretType(secretMeta);
   const secretType = typeToDropdownLabel(typeFromLabels) as SecretTypeDropdownLabel;
   const authTypeFromLabels = getAuthType(typeFromLabels);
 
-  const readLabels = secretData.metadata.labels
-    ? Object.entries(secretData.metadata.labels).map(([key, value]) => ({ key, value }))
+  const readLabels = secretMeta.metadata.labels
+    ? Object.entries(secretMeta.metadata.labels).map(([key, value]) => ({ key, value }))
     : [];
 
-  const opaqueSecret = Object.entries(secretData.data ?? {}).map(([key, value]) => ({
+  const opaqueSecret = Object.entries(secretMeta.data ?? {}).map(([key, value]) => ({
     key,
     value,
   }));
-
-  const registryCreds = getRegistryCreds(secretData);
 
   const imageSecret =
     secretType === SecretTypeDropdownLabel.image
       ? {
           authType: authTypeFromLabels,
-          registryCreds: registryCreds.map((cred) => ({ ...cred, password: '' })),
-          dockerconfig: secretData.data?.['.dockercfg'],
+          registryCreds: [{ registry: '', username: '', password: '', email: '' }],
+          dockerconfig: undefined,
         }
       : undefined;
 
@@ -117,20 +196,17 @@ const EditSecretForm: React.FC = () => {
     secretType === SecretTypeDropdownLabel.source
       ? {
           authType: authTypeFromLabels,
-          username:
-            typeFromLabels === SecretType.basicAuth && secretData.data?.username
-              ? atob(secretData.data.username)
-              : '',
-          password: '', // Intentionally not displayed, password is sensitive
-          host: secretData.metadata.labels?.[SecretLabels.HOST_LABEL] || '',
-          repo: secretData.metadata.annotations?.[SecretLabels.REPO_ANNOTATION] || '',
+          username: '',
+          password: '',
+          host: secretMeta.metadata.labels?.[SecretLabels.HOST_LABEL] || '',
+          repo: secretMeta.metadata.annotations?.[SecretLabels.REPO_ANNOTATION] || '',
           ...(typeFromLabels === SecretType.sshAuth && { 'ssh-privatekey': '' }),
         }
       : undefined;
 
   const initialValues: AddSecretFormValues = {
     type: secretType,
-    name: secretData.metadata.name,
+    name: secretMeta.metadata.name,
     secretFor: SecretFor.Build,
     opaque: {
       keyValues: opaqueSecret,
@@ -140,6 +216,33 @@ const EditSecretForm: React.FC = () => {
     labels: [...readLabels] as KeyValueEntry[],
   };
 
+  const buildSensitiveContext = (
+    formik: FormikProps<AddSecretFormValues>,
+  ): SecretEditSensitiveContextValue => ({
+    fullSecret,
+    isLoadingFullSecret,
+    requestFullSecret: async () => {
+      const s = await requestFullSecret();
+      return s;
+    },
+    clearFullSecretAndSensitiveFields: () => {
+      clearSensitiveMemory();
+      const { setFieldValue, values: v } = formik;
+      void setFieldValue('source.password', '');
+      void setFieldValue('source.ssh-privatekey', '');
+      v.image?.registryCreds?.forEach((_c, idx) => {
+        void setFieldValue(`image.registryCreds.${idx}.password`, '');
+      });
+      v.opaque?.keyValues?.forEach((_kv, idx) => {
+        void setFieldValue(`opaque.keyValues.${idx}.value`, '');
+      });
+    },
+    onSensitiveFieldBlur: (fieldPath: string) => {
+      void formik.setFieldValue(fieldPath, '');
+      clearSensitiveMemory();
+    },
+  });
+
   return (
     <Formik
       initialValues={initialValues}
@@ -147,58 +250,76 @@ const EditSecretForm: React.FC = () => {
         navigate(-1);
       }}
       onSubmit={(values, actions) => {
+        const payloadSecret = fullSecret ?? secretMeta;
+        if (
+          editRequiresFullSecretPayload(values, typeFromLabels, secretType) &&
+          !payloadSecret.data
+        ) {
+          actions.setStatus({
+            submitError:
+              'Reveal sensitive fields (eye icon) or secret values to load data from the cluster before saving.',
+          });
+          actions.setSubmitting(false);
+          return;
+        }
+
         preserveUnsetSensitiveSecretValues(
           values,
-          secretData,
+          payloadSecret,
           secretType,
           typeFromLabels,
-          registryCreds,
+          getRegistryCreds(payloadSecret),
         );
 
-        editSecretResource(values, secretData.metadata.namespace, secretData)
+        editSecretResource(values, secretMeta.metadata.namespace, payloadSecret)
           .then(() => {
+            clearSensitiveMemory();
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((editError) => {
-            logger.warn('Error while submitting secret form:', { editError });
+            logger.warn('Error while submitting secret form', {
+              message: editError,
+            });
             actions.setSubmitting(false);
             actions.setStatus({ submitError: editError.message });
           });
       }}
       validationSchema={secretFormValidationSchema({ isEditMode: true })}
     >
-      {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
-        <PageLayout
-          breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
-          title={
-            <>
-              Edit secret
-              <FeatureFlagIndicator flags={['edit-secret-page']} />
-            </>
-          }
-          description={
-            <>
-              Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}
-              <ExternalLink href={LEARN_MORE_ABOUT_SECRETS_CREATION}>Learn more</ExternalLink>
-            </>
-          }
-          footer={
-            <FormFooter
-              submitLabel="Edit secret"
-              handleSubmit={handleSubmit}
-              errorMessage={status && status.submitError}
-              handleCancel={handleReset}
-              isSubmitting={isSubmitting}
-              disableSubmit={!dirty || !isEmpty(errors) || isSubmitting}
-            />
-          }
-        >
-          <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
-            <Form style={{ maxWidth: '70%' }}>
-              <SecretTypeSubForm isEditMode={true} />
-            </Form>
-          </PageSection>
-        </PageLayout>
+      {(formik) => (
+        <SecretEditSensitiveProvider value={buildSensitiveContext(formik)}>
+          <PageLayout
+            breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
+            title={
+              <>
+                Edit secret
+                <FeatureFlagIndicator flags={['edit-secret-page']} />
+              </>
+            }
+            description={
+              <>
+                Edit a secret that is stored using AWS Secret Manager to keep your data private.{' '}
+                <ExternalLink href={LEARN_MORE_ABOUT_SECRETS_CREATION}>Learn more</ExternalLink>
+              </>
+            }
+            footer={
+              <FormFooter
+                submitLabel="Edit secret"
+                handleSubmit={formik.handleSubmit}
+                errorMessage={formik.status && formik.status.submitError}
+                handleCancel={formik.handleReset}
+                isSubmitting={formik.isSubmitting}
+                disableSubmit={!formik.dirty || !isEmpty(formik.errors) || formik.isSubmitting}
+              />
+            }
+          >
+            <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
+              <Form style={{ maxWidth: '70%' }}>
+                <SecretTypeSubForm isEditMode={true} />
+              </Form>
+            </PageSection>
+          </PageLayout>
+        </SecretEditSensitiveProvider>
       )}
     </Formik>
   );

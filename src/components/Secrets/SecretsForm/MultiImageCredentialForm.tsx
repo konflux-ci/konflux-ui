@@ -1,15 +1,20 @@
 import React from 'react';
 import {
   Button,
+  Flex,
+  FlexItem,
   FormFieldGroupExpandable,
   FormFieldGroupHeader,
   TextInputTypes,
 } from '@patternfly/react-core';
+import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
-import { FieldArray, useField } from 'formik';
+import { FieldArray, useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';
+import { getRegistryCreds } from '~/utils/secrets/secret-utils';
+import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
 
 type MultiImageCredentialFormProps = {
   name: string;
@@ -28,6 +33,29 @@ export const MultiImageCredentialForm: React.FC<
 > = ({ name, isEditMode = false }) => {
   const [{ value: fieldValues }] = useField<RegistryCredential[]>(name);
   const [uniqId, setUniqId] = React.useState(uniqueId());
+  const { setFieldValue, getFieldProps } = useFormikContext();
+  const sensitive = useOptionalSecretEditSensitive();
+
+  const revealRegistryCredentialRow = React.useCallback(async () => {
+    if (!sensitive) {
+      return;
+    }
+    const s = await sensitive.requestFullSecret();
+    if (!s) {
+      return;
+    }
+    const creds = getRegistryCreds(s);
+    const rows =
+      creds.length > 0
+        ? creds.map((row) => ({
+            registry: row.registry,
+            username: row.username,
+            password: row.password,
+            email: row.email,
+          }))
+        : [{ registry: '', username: '', password: '', email: '' }];
+    void setFieldValue(name, rows);
+  }, [name, sensitive, setFieldValue]);
 
   return (
     <FieldArray
@@ -74,14 +102,41 @@ export const MultiImageCredentialForm: React.FC<
                 helperText="For image registry authentication"
                 isRequired
               />
-              <InputField
-                name={`${name}.${idx.toString()}.password`}
-                label="Password"
-                type={TextInputTypes.password}
-                helperText="For image registry authentication"
-                placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}
-                isRequired={!isEditMode}
-              />
+              <Flex
+                alignItems={{ default: 'alignItemsFlexEnd' }}
+                gap={{ default: 'gapMd' }}
+                className="pf-v5-u-mb-md"
+              >
+                <FlexItem grow={{ default: 'grow' }}>
+                  <InputField
+                    name={`${name}.${idx.toString()}.password`}
+                    label="Password"
+                    type={TextInputTypes.password}
+                    helperText="For image registry authentication"
+                    placeholder={
+                      isEditMode ? 'To keep the same password, leave this field blank' : ''
+                    }
+                    isRequired={!isEditMode}
+                    onBlur={(e) => {
+                      const fieldPath = `${name}.${idx.toString()}.password`;
+                      getFieldProps(fieldPath).onBlur(e);
+                      sensitive?.onSensitiveFieldBlur(fieldPath);
+                    }}
+                  />
+                </FlexItem>
+                {isEditMode && sensitive ? (
+                  <FlexItem>
+                    <Button
+                      type="button"
+                      variant="plain"
+                      aria-label={`Reveal password for credentials ${idx + 1}`}
+                      icon={<EyeIcon />}
+                      isLoading={sensitive.isLoadingFullSecret}
+                      onClick={() => void revealRegistryCredentialRow()}
+                    />
+                  </FlexItem>
+                ) : null}
+              </Flex>
               <InputField
                 name={`${name}.${idx.toString()}.email`}
                 label="Email"

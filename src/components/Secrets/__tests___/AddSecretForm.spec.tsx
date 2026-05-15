@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { act, fireEvent, render, screen, waitFor, configure } from '@testing-library/react';
+import { useApplications } from '~/hooks/useApplications';
 import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
-import { useApplications } from '../../../hooks/useApplications';
 import AddSecretForm from '../SecretsForm/AddSecretForm';
 
 configure({ testIdAttribute: 'data-test' });
 
-jest.mock('../../../hooks/useApplications', () => ({
+jest.mock('~/hooks/useApplications', () => ({
   useApplications: jest.fn(),
 }));
 
@@ -118,11 +118,13 @@ describe('AddSecretForm', () => {
 
     fireEvent.click(screen.getByTestId('dropdown-toggle'));
     fireEvent.click(screen.getByText('Source secret'));
-    fireEvent.input(screen.getByTestId('secret-source-password'), { target: { value: '' } });
-    fireEvent.blur(screen.getByTestId('secret-source-password'));
+
+    const passwordInput = await screen.findByTestId('secret-source-password');
+    fireEvent.input(passwordInput, { target: { value: '' } });
+    fireEvent.blur(passwordInput);
 
     await waitFor(() => {
-      screen.getByText('Required');
+      expect(screen.getByText('Required')).toBeInTheDocument();
     });
   });
 

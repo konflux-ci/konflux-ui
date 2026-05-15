@@ -1,10 +1,12 @@
 import React from 'react';
-import { TextInputTypes } from '@patternfly/react-core';
-import { useField } from 'formik';
+import { Button, Flex, FlexItem, TextInputTypes } from '@patternfly/react-core';
+import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
 import { SourceSecretType } from '~/types/secret';
 import EncodedFileUploadField from './EncodedFileUploadField';
+import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
 
 type SourceSecretFormProps = {
   onAuthTypeChange?: (type: SourceSecretType) => void;
@@ -16,10 +18,45 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
   isEditMode = false,
 }) => {
   const [{ value: type }] = useField<SourceSecretType>('source.authType');
+  const [usernameField] = useField('source.username');
+  const [passwordField] = useField('source.password');
+  const { setFieldValue } = useFormikContext();
+  const sensitive = useOptionalSecretEditSensitive();
 
   React.useEffect(() => {
     onAuthTypeChange?.(type);
   }, [type, onAuthTypeChange]);
+
+  const revealUsername = React.useCallback(async () => {
+    if (!sensitive) {
+      return;
+    }
+    const s = await sensitive.requestFullSecret();
+    if (s?.data?.username) {
+      void setFieldValue('source.username', atob(s.data.username));
+    }
+  }, [sensitive, setFieldValue]);
+
+  const revealPassword = React.useCallback(async () => {
+    if (!sensitive) {
+      return;
+    }
+    const s = await sensitive.requestFullSecret();
+    if (s?.data?.password) {
+      void setFieldValue('source.password', atob(s.data.password));
+    }
+  }, [sensitive, setFieldValue]);
+
+  const revealSshKey = React.useCallback(async () => {
+    if (!sensitive) {
+      return;
+    }
+    const s = await sensitive.requestFullSecret();
+    const key = s?.data?.['ssh-privatekey'];
+    if (key) {
+      void setFieldValue('source.ssh-privatekey', key);
+    }
+  }, [sensitive, setFieldValue]);
 
   return (
     <>
@@ -43,34 +80,104 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
       <InputField name="source.repo" label="Repository" helperText="Repository for the secret" />
       {type === SourceSecretType.basic ? (
         <>
-          <InputField
-            name="source.username"
-            data-test="secret-source-username"
-            label="Username"
-            helperText="For Git authentication"
-          />
-          <InputField
-            name="source.password"
-            data-test="secret-source-password"
-            label="Password"
-            type={TextInputTypes.password}
-            helperText="For Git authentication"
-            placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}
-            required={!isEditMode}
-          />
+          <Flex
+            alignItems={{ default: 'alignItemsFlexEnd' }}
+            gap={{ default: 'gapMd' }}
+            className="pf-v5-u-mb-md"
+          >
+            <FlexItem grow={{ default: 'grow' }}>
+              <InputField
+                name="source.username"
+                data-test="secret-source-username"
+                label="Username"
+                helperText="For Git authentication"
+                onBlur={(e) => {
+                  usernameField.onBlur(e);
+                  sensitive?.onSensitiveFieldBlur('source.username');
+                }}
+              />
+            </FlexItem>
+            {isEditMode && sensitive ? (
+              <FlexItem>
+                <Button
+                  type="button"
+                  variant="plain"
+                  aria-label="Reveal username from cluster"
+                  icon={<EyeIcon />}
+                  isLoading={sensitive.isLoadingFullSecret}
+                  onClick={() => void revealUsername()}
+                />
+              </FlexItem>
+            ) : null}
+          </Flex>
+          <Flex
+            alignItems={{ default: 'alignItemsFlexEnd' }}
+            gap={{ default: 'gapMd' }}
+            className="pf-v5-u-mb-md"
+          >
+            <FlexItem grow={{ default: 'grow' }}>
+              <InputField
+                name="source.password"
+                data-test="secret-source-password"
+                label="Password"
+                type={TextInputTypes.password}
+                helperText="For Git authentication"
+                placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}
+                required={!isEditMode}
+                onBlur={(e) => {
+                  passwordField.onBlur(e);
+                  sensitive?.onSensitiveFieldBlur('source.password');
+                }}
+              />
+            </FlexItem>
+            {isEditMode && sensitive ? (
+              <FlexItem>
+                <Button
+                  type="button"
+                  variant="plain"
+                  aria-label="Reveal password from cluster"
+                  icon={<EyeIcon />}
+                  isLoading={sensitive.isLoadingFullSecret}
+                  onClick={() => void revealPassword()}
+                />
+              </FlexItem>
+            ) : null}
+          </Flex>
         </>
       ) : (
-        <EncodedFileUploadField
-          name="source.ssh-privatekey"
-          id="text-file-ssh"
-          label="SSH private key"
-          helpText={
-            isEditMode
-              ? 'If you want to keep the same SSH private key, leave this field blank'
-              : 'For Git authentication'
-          }
-          required={!isEditMode}
-        />
+        <Flex
+          alignItems={{ default: 'alignItemsFlexStart' }}
+          gap={{ default: 'gapMd' }}
+          className="pf-v5-u-mb-md"
+        >
+          <FlexItem grow={{ default: 'grow' }}>
+            <EncodedFileUploadField
+              name="source.ssh-privatekey"
+              id="text-file-ssh"
+              label="SSH private key"
+              helpText={
+                isEditMode
+                  ? 'If you want to keep the same SSH private key, leave this field blank'
+                  : 'For Git authentication'
+              }
+              required={!isEditMode}
+              sensitiveFieldPath={isEditMode && sensitive ? 'source.ssh-privatekey' : undefined}
+            />
+          </FlexItem>
+          {isEditMode && sensitive ? (
+            <FlexItem>
+              <Button
+                type="button"
+                variant="plain"
+                className="pf-v5-u-mt-xl"
+                aria-label="Reveal SSH private key from cluster"
+                icon={<EyeIcon />}
+                isLoading={sensitive.isLoadingFullSecret}
+                onClick={() => void revealSshKey()}
+              />
+            </FlexItem>
+          ) : null}
+        </Flex>
       )}
     </>
   );

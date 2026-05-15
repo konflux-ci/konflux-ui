@@ -1,11 +1,22 @@
 import React from 'react';
-import { Alert, HelperText, HelperTextItem, Title, TitleSizes } from '@patternfly/react-core';
-import { useField } from 'formik';
+import {
+  Alert,
+  Button,
+  Flex,
+  FlexItem,
+  HelperText,
+  HelperTextItem,
+  Title,
+  TitleSizes,
+} from '@patternfly/react-core';
+import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { useField, useFormikContext } from 'formik';
 import { Base64 } from 'js-base64';
-import DropdownField from '../../../shared/components/formik-fields/DropdownField';
-import { ImagePullSecretType } from '../../../types';
+import DropdownField from '~/shared/components/formik-fields/DropdownField';
+import { ImagePullSecretType } from '~/types';
 import EncodedFileUploadField from './EncodedFileUploadField';
 import { MultiImageCredentialForm } from './MultiImageCredentialForm';
+import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
 
 type RegistryValidation = {
   registry: string;
@@ -26,6 +37,8 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
   isEditMode = false,
 }) => {
   const [{ value: type }] = useField<ImagePullSecretType>('image.authType');
+  const { setFieldValue } = useFormikContext();
+  const sensitive = useOptionalSecretEditSensitive();
   const [registryValidations, setRegistryValidations] = React.useState<RegistryValidation[]>([]);
   const [fileTypeError, setFileTypeError] = React.useState<string>();
 
@@ -73,6 +86,17 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
     }
   }, []);
 
+  const revealDockerConfig = React.useCallback(async () => {
+    if (!sensitive) {
+      return;
+    }
+    const s = await sensitive.requestFullSecret();
+    const raw = s?.data?.['.dockerconfigjson'] ?? s?.data?.['.dockercfg'];
+    if (raw) {
+      void setFieldValue('image.dockerconfig', raw);
+    }
+  }, [sensitive, setFieldValue]);
+
   return (
     <>
       <DropdownField
@@ -106,14 +130,36 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
         </>
       ) : (
         <>
-          <EncodedFileUploadField
-            name="image.dockerconfig"
-            id="text-file-docker-config"
-            label="Upload a .dockercfg or .docker/config.json file"
-            helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
-            required
-            onValidate={validateDockerConfig}
-          />
+          <Flex
+            alignItems={{ default: 'alignItemsFlexStart' }}
+            gap={{ default: 'gapMd' }}
+            className="pf-v5-u-mb-md"
+          >
+            <FlexItem grow={{ default: 'grow' }}>
+              <EncodedFileUploadField
+                name="image.dockerconfig"
+                id="text-file-docker-config"
+                label="Upload a .dockercfg or .docker/config.json file"
+                helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
+                required
+                onValidate={validateDockerConfig}
+                sensitiveFieldPath={isEditMode && sensitive ? 'image.dockerconfig' : undefined}
+              />
+            </FlexItem>
+            {isEditMode && sensitive ? (
+              <FlexItem>
+                <Button
+                  type="button"
+                  variant="plain"
+                  className="pf-v5-u-mt-xl"
+                  aria-label="Reveal docker config from cluster"
+                  icon={<EyeIcon />}
+                  isLoading={sensitive.isLoadingFullSecret}
+                  onClick={() => void revealDockerConfig()}
+                />
+              </FlexItem>
+            ) : null}
+          </Flex>
           {fileTypeError && (
             <Alert variant="danger" isInline title={fileTypeError} style={{ marginTop: '1rem' }} />
           )}
