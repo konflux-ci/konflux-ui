@@ -22,20 +22,30 @@ describe('Basic Happy Path', () => {
   const integrationTestsTab = new IntegrationTestsTabPage();
   const componentPage = new ComponentPage();
 
-  const sourceOwner = 'hac-test';
-  const sourceRepo = 'devfile-sample-code-with-quarkus';
+  const sourceOwner = Cypress.env('SOURCE_REPO_OWNER');
+  const sourceRepo = Cypress.env('SOURCE_REPO_NAME');
   const repoName = Common.generateAppName(sourceRepo);
   const repoOwner = Cypress.env('GH_REPO_OWNER');
   const publicRepo = `https://github.com/${repoOwner}/${repoName}`;
   const componentName: string = Common.generateAppName('java-quarkus');
-  const piplinerunlogsTasks = [
-    'init',
-    'clone-repository',
-    'build-container',
-    'apply-tags',
-    'push-dockerfile',
-  ];
-  const pipeline = 'docker-build-oci-ta';
+
+  const pipelineConfigs: Record<string, { tasks: string[]; logCheckTask: string }> = {
+    'docker-build-oci-ta': {
+      tasks: ['init', 'clone-repository', 'build-container', 'apply-tags', 'push-dockerfile'],
+      logCheckTask: 'push-dockerfile',
+    },
+    'docker-build-oci-ta-min': {
+      tasks: ['init', 'clone-repository', 'build-container', 'build-image-index'],
+      logCheckTask: 'build-container',
+    },
+  };
+
+  const pipeline: string = Cypress.env('PIPELINE');
+  const pipelineConfig = pipelineConfigs[pipeline];
+  if (!pipelineConfig) {
+    throw new Error(`Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`);
+  }
+  const piplinerunlogsTasks = pipelineConfig.tasks;
 
   // Track if any test has failed - used to skip deletion on failure
   let hasTestFailed = false;
@@ -200,7 +210,7 @@ describe('Basic Happy Path', () => {
       applicationDetailPage.openBuildLog(componentName);
       applicationDetailPage.verifyBuildLogTaskslist(piplinerunlogsTasks); //TO DO : Fetch the piplinerunlogsTasks from cluster using api At runtime.
       applicationDetailPage.verifyFailedLogTasksNotExists();
-      applicationDetailPage.checkBuildLog('push-dockerfile', 'Using token for quay.io');
+      applicationDetailPage.checkBuildLog(pipelineConfig.logCheckTask, 'Using token for quay.io');
       applicationDetailPage.closeBuildLog();
     });
   });
