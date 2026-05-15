@@ -195,3 +195,9 @@ export const createLoaderWithAccessCheck =
     }
     return defer({ accessCheck: allowed, data: loader(args) });
   };
+
+export const ROLE_WEIGHT_MAP: Record<string, number> = {
+  Admin: 3,
+  Maintainer: 2,
+  Contributor: 1,
+};

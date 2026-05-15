@@ -35,7 +35,7 @@ const UserAccessPage: React.FunctionComponent = () => {
     >
       <Divider style={{ paddingTop: 'var(--pf-v5-global--spacer--md)' }} />
       <PageSection variant={PageSectionVariants.light} isFilled>
-        <FilterContextProvider filterParams={['username']}>
+        <FilterContextProvider filterParams={['username', 'roleBindingName']}>
           <UserAccessListView />
         </FilterContextProvider>
       </PageSection>
