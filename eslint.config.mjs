@@ -56,6 +56,9 @@ export default tseslint.config(
     },
     settings: {
       'import-x/extensions': ['.js', '.jsx', '.ts', '.tsx'],
+      // The typescript resolver reads path aliases (~/*, @routes/*) from tsconfig.json.
+      // If tsconfig.json paths drift from the webpack alias config, import linting
+      // may silently miss unresolved aliases. Keep both configs in sync.
       'import-x/resolver': {
         typescript: {},
       },
