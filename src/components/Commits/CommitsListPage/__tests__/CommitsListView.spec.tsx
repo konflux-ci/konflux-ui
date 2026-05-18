@@ -1,4 +1,4 @@
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { PipelineRunLabel, PipelineRunType, runStatus } from '~/consts/pipelinerun';
@@ -50,16 +50,22 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
     const columns = props.Header(cProps);
 
     return (
-      <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-        <TableHeader role="rowgroup" />
-        <tbody>
+      <Table role="table" aria-label="table" variant="compact" borders={false}>
+        <Thead>
+          <Tr>
+            {columns.map((col, idx) => (
+              <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+            ))}
+          </Tr>
+        </Thead>
+        <Tbody>
           {props.data.map((d, i) => (
-            <tr key={i}>
+            <Tr key={i}>
               <CommitsListRow obj={d} status={runStatus.Pending} />
-            </tr>
+            </Tr>
           ))}
-        </tbody>
-      </PfTable>
+        </Tbody>
+      </Table>
     );
   };
 });
