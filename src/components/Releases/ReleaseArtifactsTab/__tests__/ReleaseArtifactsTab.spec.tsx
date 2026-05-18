@@ -39,9 +39,9 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         </Thead>
         <Tbody>
           {props.data.map((d, i) => (
-            <tr key={i}>
+            <Tr key={i}>
               <ReleaseArtifactsListRow columns={columns} obj={d} />
-            </tr>
+            </Tr>
           ))}
         </Tbody>
       </Table>

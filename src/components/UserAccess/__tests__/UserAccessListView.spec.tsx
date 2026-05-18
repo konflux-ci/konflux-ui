@@ -42,9 +42,9 @@ jest.mock('../../../shared/components/table', () => {
           </Thead>
           <Tbody>
             {props.data.map((d, i) => (
-              <tr key={i}>
+              <Tr key={i}>
                 <RBListRow columns={null} obj={d} />
-              </tr>
+              </Tr>
             ))}
           </Tbody>
         </Table>
