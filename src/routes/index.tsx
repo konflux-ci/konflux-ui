@@ -15,6 +15,7 @@ import integrationTestRoutes from './page-routes/integration-test';
 import issuesRoutes from './page-routes/issues';
 import workspaceRoutes from './page-routes/namespace';
 import pipelineRoutes from './page-routes/pipeline';
+import policyRoutes from './page-routes/policy';
 import releaseRoutes from './page-routes/release';
 import releaseMonitorRoutes from './page-routes/release-monitor';
 import releaseServiceRoutes from './page-routes/release-service';
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
       ...releaseServiceRoutes,
       ...secretRoutes,
       ...issuesRoutes,
+      ...policyRoutes,
       ...integrationTestRoutes,
       ...snapshotRoutes,
       ...commitRoutes,
