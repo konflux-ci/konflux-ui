@@ -1,9 +1,13 @@
 import { fireEvent, waitFor } from '@testing-library/react';
 import { PipelineRunColumnKeys } from '~/consts/pipeline';
+import { PipelineRunLabel } from '~/consts/pipelinerun';
+import { PipelineRunKind } from '~/types';
 import { renderWithQueryClient } from '~/unit-test-utils/mock-react-query';
 import { DataState, testPipelineRuns } from '../../../../__data__/pipelinerun-data';
 import { createK8sWatchResourceMock } from '../../../../utils/test-utils';
+import { pipelineWithCommits } from '../../../Commits/__data__/pipeline-with-commits';
 import {
+  PipelineRunListRow,
   PipelineRunListRowWithColumns,
   PipelineRunListRowWithVulnerabilities,
 } from '../PipelineRunListRow';
@@ -203,5 +207,87 @@ describe('Pipeline run Row', () => {
     );
 
     expect(row.getByTestId('attestation-unsigned')).toBeDefined();
+  });
+
+  describe('merged trigger cell', () => {
+    const triggerOnlyColumns = new Set<PipelineRunColumnKeys>(['trigger']);
+
+    it('renders event label and commit reference in one trigger column for pull request', () => {
+      const plr = pipelineWithCommits[0];
+
+      const row = renderWithQueryClient(
+        <PipelineRunListRowWithColumns
+          obj={plr}
+          customData={{ fetchedPipelineRuns: [], vulnerabilities: {} }}
+          columns={['trigger']}
+          visibleColumns={triggerOnlyColumns}
+        />,
+      );
+
+      expect(row.getByText('Pull Request')).toBeInTheDocument();
+      expect(row.getByRole('link', { name: 'commit1' })).toHaveAttribute(
+        'href',
+        'https://github.com/devfile-samples/devfile-sample-java-springboot-basic',
+      );
+      const pullRequestLink = row
+        .getAllByRole('link')
+        .find((link) => link.getAttribute('href') === 'https://github.com/test/test-repo/pull/11');
+      expect(pullRequestLink).toBeDefined();
+    });
+
+    it('renders push event label and commit link without a pull request link', () => {
+      const pushPlr: PipelineRunKind = {
+        ...pipelineWithCommits[0],
+        metadata: {
+          ...pipelineWithCommits[0].metadata,
+          labels: {
+            ...pipelineWithCommits[0].metadata.labels,
+            [PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL]: 'push',
+            [PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL]: '',
+          },
+        },
+      };
+
+      const row = renderWithQueryClient(
+        <PipelineRunListRowWithColumns
+          obj={pushPlr}
+          customData={{ fetchedPipelineRuns: [], vulnerabilities: {} }}
+          columns={['trigger']}
+          visibleColumns={triggerOnlyColumns}
+        />,
+      );
+
+      expect(row.getByText('Push')).toBeInTheDocument();
+      expect(row.getByRole('link', { name: 'commit1' })).toBeInTheDocument();
+      expect(
+        row.queryAllByRole('link').some((link) => link.getAttribute('href')?.includes('/pull/')),
+      ).toBe(false);
+    });
+
+    it('renders commit reference only in the trigger column', () => {
+      const plr = pipelineWithCommits[0];
+      const visibleColumns = new Set<PipelineRunColumnKeys>(['trigger']);
+
+      const row = renderWithQueryClient(
+        <PipelineRunListRowWithColumns
+          obj={plr}
+          customData={{ fetchedPipelineRuns: [], vulnerabilities: {} }}
+          columns={['trigger']}
+          visibleColumns={visibleColumns}
+        />,
+      );
+
+      expect(row.getAllByRole('link', { name: 'commit1' })).toHaveLength(1);
+      expect(row.getByText('Pull Request')).toBeInTheDocument();
+    });
+
+    it('renders merged trigger cell in the legacy row variant', () => {
+      const plr = pipelineWithCommits[0];
+
+      const row = renderWithQueryClient(<PipelineRunListRow obj={plr} columns={[]} />);
+
+      expect(row.getByText('Pull Request')).toBeInTheDocument();
+      expect(row.getByRole('link', { name: 'commit1' })).toBeInTheDocument();
+    });
   });
 });
