@@ -32,8 +32,7 @@ export const pipelineRunTableColumnClasses = {
   component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   workspace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
-  reference: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
+  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
   kebab: 'pf-v5-c-table__action',
 };
 
@@ -45,7 +44,6 @@ const createPipelineRunListHeader =
     showComponent: boolean,
     showSnapshot: boolean,
     showTrigger: boolean = true,
-    showReference: boolean = true,
   ) =>
   () => {
     return [
@@ -125,14 +123,6 @@ const createPipelineRunListHeader =
             },
           ]
         : []),
-      ...(showReference
-        ? [
-            {
-              title: 'Reference',
-              props: { className: pipelineRunTableColumnClasses.reference },
-            },
-          ]
-        : []),
       {
         title: ' ',
         props: { className: pipelineRunTableColumnClasses.kebab },
@@ -147,7 +137,6 @@ export const PipelineRunListHeader = createPipelineRunListHeader(
   true,
   false,
   true,
-  true,
 );
 
 export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHeader(
@@ -157,7 +146,6 @@ export const PipelineRunListHeaderWithVulnerabilities = createPipelineRunListHea
   false,
   false,
   true,
-  true,
 );
 
 export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
@@ -166,7 +154,6 @@ export const PipelineRunListHeaderForRelease = createPipelineRunListHeader(
   false,
   false,
   true,
-  false,
   false,
 );
 
@@ -257,13 +244,6 @@ export const getPipelineRunListHeader = (visibleColumns: Set<PipelineRunColumnKe
     columns.push({
       title: 'Trigger',
       props: { className: dynamicClasses.trigger },
-    });
-  }
-
-  if (visibleColumns.has('reference')) {
-    columns.push({
-      title: 'Reference',
-      props: { className: dynamicClasses.reference },
     });
   }
 
