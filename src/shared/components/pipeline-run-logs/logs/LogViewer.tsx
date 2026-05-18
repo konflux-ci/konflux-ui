@@ -36,6 +36,7 @@ import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
+import { FoldableLogView } from './FoldableLogView';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
 
@@ -46,9 +47,12 @@ import './LogViewer.scss';
 // eslint-disable-next-line no-control-regex
 const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
+export type LogSection = { readonly name: string; readonly data: string };
+
 export type Props = {
   showSearch?: boolean;
-  data: string;
+  data?: string;
+  logSections?: LogSection[];
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
@@ -65,7 +69,8 @@ export type Props = {
 const LogViewer: React.FC<Props> = ({
   showSearch = true,
   allowAutoScroll,
-  data = '',
+  data: dataProp = '',
+  logSections,
   downloadAllLabel,
   onDownloadAll,
   taskRun,
@@ -76,6 +81,19 @@ const LogViewer: React.FC<Props> = ({
   const taskName = taskRun?.spec.taskRef?.name ?? taskRun?.metadata.name;
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
+
+  // dataProp wins: if raw data is provided directly, use single-stream mode (VirtualizedLogViewer).
+  // Only switch to foldable mode when logSections is the sole source.
+  const hasLogSections = !dataProp && (logSections?.length ?? 0) > 0;
+
+  // Combined data for search and download — same precedence as the render decision above.
+  const data = React.useMemo(() => {
+    if (dataProp) return dataProp;
+    if (logSections?.length) {
+      return logSections.map((s) => `${s.name.toUpperCase()}\n${s.data}`).join('\n\n');
+    }
+    return '';
+  }, [dataProp, logSections]);
 
   // Auto-scroll and resume button logic
   const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
@@ -123,7 +141,7 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
-  // Use containerRef to measure actual height for VirtualizedLogViewer
+  // Measure content area height — used by both VirtualizedLogViewer and FoldableLogView
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
 
@@ -267,17 +285,25 @@ const LogViewer: React.FC<Props> = ({
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
 
-          {/* Log Viewer */}
+          {/* Log content — foldable sections (VS Code style) or single viewer */}
           <div ref={containerRef} className="log-viewer__content">
-            {viewerHeight && (
-              <VirtualizedLogViewer
-                key={taskRun?.metadata?.uid || 'default'}
-                data={processedData}
-                height={viewerHeight}
-                scrollToRow={scrolledRow}
-                onScroll={handleScroll}
-              />
-            )}
+            {viewerHeight &&
+              (hasLogSections ? (
+                <FoldableLogView
+                  logSections={logSections}
+                  height={viewerHeight}
+                  scrollToRow={scrolledRow}
+                  onScroll={handleScroll}
+                />
+              ) : (
+                <VirtualizedLogViewer
+                  key={taskRun?.metadata?.uid || 'default'}
+                  data={processedData}
+                  height={viewerHeight}
+                  scrollToRow={scrolledRow}
+                  onScroll={handleScroll}
+                />
+              ))}
           </div>
 
           {/* Footer */}

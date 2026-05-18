@@ -11,11 +11,12 @@ import { TaskRunKind } from '../../../../../types';
 import { ContainerStatus, PodKind, ContainerSpec } from '../../../types';
 import { containerToLogSourceStatus } from '../../utils';
 import Logs, { processLogs } from '../Logs';
+import type { LogSection } from '../LogViewer';
 
 const mockLogViewer = jest.fn();
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    data: string;
+    logSections?: LogSection[];
     allowAutoScroll: boolean;
     isLoading?: boolean;
     onScroll?: () => void;
@@ -136,7 +137,7 @@ describe('Logs', () => {
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.any(String),
+          logSections: expect.any(Array),
           allowAutoScroll: true,
           onScroll: undefined,
         }),
@@ -169,7 +170,7 @@ describe('Logs', () => {
         expect(screen.getByTestId('mock-log-viewer')).toBeInTheDocument();
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: '',
+            logSections: [],
           }),
         );
       });
@@ -383,11 +384,15 @@ describe('Logs', () => {
 
       expect(commonFetchText as jest.Mock).toHaveBeenCalled();
 
-      // Should show error message in LogViewer
+      // Should show error message in LogViewer section data
       await waitFor(() => {
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.stringContaining('LOG FETCH ERROR'),
+            logSections: expect.arrayContaining([
+              expect.objectContaining({
+                data: expect.stringContaining('LOG FETCH ERROR'),
+              }),
+            ]),
           }),
         );
       });
@@ -425,13 +430,12 @@ describe('Logs', () => {
 
       expect(commonFetchText as jest.Mock).toHaveBeenCalled();
 
-      // Should NOT show error message for 404 (missing logs) - should remain empty
+      // For 404, appendLog is never called, so logSections stays empty.
+      // Assert the positive: the viewer is called with an empty sections array.
       await waitFor(() => {
-        expect(mockLogViewer).toHaveBeenCalledWith(
-          expect.objectContaining({
-            data: expect.not.stringContaining('LOG FETCH ERROR'),
-          }),
-        );
+        const calls = mockLogViewer.mock.calls;
+        const lastProps = calls[calls.length - 1]?.[0];
+        expect(lastProps?.logSections).toEqual([]);
       });
     });
 
@@ -525,7 +529,11 @@ describe('Logs', () => {
       await waitFor(() => {
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: expect.stringContaining('decoded-aGVsbG8gd29ybGQ='),
+            logSections: expect.arrayContaining([
+              expect.objectContaining({
+                data: expect.stringContaining('decoded-aGVsbG8gd29ybGQ='),
+              }),
+            ]),
           }),
         );
       });
@@ -739,7 +747,7 @@ describe('Logs', () => {
 
     expect(mockLogViewer).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowAutoScroll: false, // Should be false when all containers terminated
+        allowAutoScroll: false, // false when all containers are terminated
       }),
     );
   });
@@ -852,7 +860,11 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenLastCalledWith(
         expect.objectContaining({
           isLoading: false,
-          data: expect.stringContaining('some log output'),
+          logSections: expect.arrayContaining([
+            expect.objectContaining({
+              data: expect.stringContaining('some log output'),
+            }),
+          ]),
         }),
       );
 
@@ -865,7 +877,7 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
           isLoading: false,
-          data: '',
+          logSections: [],
         }),
       );
     });

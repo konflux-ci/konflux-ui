@@ -13,12 +13,13 @@ import { PodModel } from '../../../../models/pod';
 import { TaskRunKind } from '../../../../types';
 import { PodKind, ContainerSpec, ContainerStatus } from '../../types';
 import { containerToLogSourceStatus, LOG_SOURCE_TERMINATED } from '../utils';
-import LogViewer, { type Props as LogViewerProps } from './LogViewer';
+import LogViewer, { type LogSection, type Props as LogViewerProps } from './LogViewer';
 
 type LogSources = { [containerName: string]: string };
 
 const WEB_SOCKET_RETRY_COUNT = 5;
 
+// Kept exported for backward compat with existing tests
 export const processLogs = (logSources: LogSources, containers: ContainerSpec[]): string => {
   let allLogs = '';
   for (const container of containers) {
@@ -181,20 +182,25 @@ const Logs: React.FC<LogsProps> = ({
     };
   }, [containers, resource, resName, resNamespace, appendLog, source, isKubearchiveEnabled]);
 
-  const [formattedLogs, setFormattedLogs] = React.useState('');
+  const [logSections, setLogSections] = React.useState<LogSection[]>([]);
   const [processingLogs, setProcessingLogs] = React.useState(false);
   const containersRef = React.useRef(containers);
   containersRef.current = containers;
+  const logSourcesRef = React.useRef(logSources);
+  logSourcesRef.current = logSources;
 
   const processAndSetLogs = useDebounceCallback(() => {
-    const result = processLogs(logSources, containersRef.current);
-    setFormattedLogs(result);
+    const result = containersRef.current.map((c) => ({
+      name: c.name,
+      data: logSourcesRef.current[c.name] || '',
+    }));
+    setLogSections(result);
     setProcessingLogs(false);
   }, 300);
 
   React.useEffect(() => {
     if (Object.keys(logSources).length === 0) {
-      setFormattedLogs('');
+      setLogSections([]);
       return;
     }
 
@@ -229,7 +235,7 @@ const Logs: React.FC<LogsProps> = ({
 
   return (
     <LogViewer
-      data={formattedLogs}
+      logSections={logSections}
       allowAutoScroll={allowAutoScroll && !allLogsTerminated}
       onScroll={onScroll}
       downloadAllLabel={downloadAllLabel}
