@@ -25,12 +25,14 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import emptySnapshotImgUrl from '../../../assets/Snapshots.svg';
 import { LEARN_MORE_SNAPSHOTS } from '../../../consts/documentation';
 import { PipelineRunEventType, PipelineRunLabel } from '../../../consts/pipelinerun';
+import { SnapshotLabels } from '../../../consts/snapshots';
 import { useK8sAndKarchResources } from '../../../hooks/useK8sAndKarchResources';
 import { SnapshotGroupVersionKind, SnapshotModel } from '../../../models';
 import AppEmptyState from '../../../shared/components/empty-state/AppEmptyState';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { Snapshot } from '../../../types/coreBuildService';
+import { Selector } from '../../../types/k8s';
 import SnapshotsList from './SnapshotsList';
 import { snapshotColumns } from './SnapshotsListHeader';
 import { SnapshotsListViewProps } from './types';
@@ -66,6 +68,24 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
   const { name: nameFilter, commitMessage: commitMessageFilter, showMergedOnly } = filters;
   const releasableFilter = filters.releasable ?? false;
 
+  const selector = React.useMemo<Selector>(() => {
+    const sel: Selector = {
+      matchLabels: {
+        [PipelineRunLabel.APPLICATION]: applicationName,
+      },
+    };
+    if (showMergedOnly) {
+      sel.matchExpressions = [
+        {
+          key: SnapshotLabels.PAC_EVENT_TYPE_LABEL,
+          operator: 'NotIn',
+          values: [PipelineRunEventType.PULL],
+        },
+      ];
+    }
+    return sel;
+  }, [applicationName, showMergedOnly]);
+
   const {
     data: snapshots,
     getSource,
@@ -80,11 +100,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       groupVersionKind: SnapshotGroupVersionKind,
       namespace,
       isList: true,
-      selector: {
-        matchLabels: {
-          [PipelineRunLabel.APPLICATION]: applicationName,
-        },
-      },
+      selector,
     },
     SnapshotModel,
     undefined,
@@ -96,13 +112,6 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
 
   const filteredSnapshots = React.useMemo(() => {
     return (snapshots || []).filter((s) => {
-      if (
-        showMergedOnly &&
-        s.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ===
-          PipelineRunEventType.PULL
-      ) {
-        return false;
-      }
       if (nameFilter && !s.metadata.name.toLowerCase().includes(nameFilter.toLowerCase())) {
         return false;
       }
@@ -114,7 +123,7 @@ const SnapshotsListView: React.FC<React.PropsWithChildren<SnapshotsListViewProps
       }
       return true;
     });
-  }, [snapshots, nameFilter, showMergedOnly, commitMessageFilter]);
+  }, [snapshots, nameFilter, commitMessageFilter]);
 
   if (isLoading) {
     return (

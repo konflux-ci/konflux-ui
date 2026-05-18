@@ -2,6 +2,8 @@ import '@testing-library/jest-dom';
 import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
 import { screen, act, fireEvent } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
+import { PipelineRunEventType } from '~/consts/pipelinerun';
+import { SnapshotLabels } from '~/consts/snapshots';
 import { useK8sAndKarchResources } from '~/hooks/useK8sAndKarchResources';
 import { ResourceSource } from '~/types/k8s';
 import { mockSnapshots } from '../../../../__data__/mock-snapshots';
@@ -156,6 +158,44 @@ describe('SnapshotsListView - Column Headers', () => {
     expect(screen.queryByText('archive-snapshot')).not.toBeInTheDocument();
 
     expect(switchElement).toBeChecked();
+  });
+
+  it('should pass NotIn matchExpression to exclude pull_request events when hide PR snapshots toggle is enabled', () => {
+    useMockSnapshots.mockReturnValue({
+      data: mockSnapshots,
+      getSource: () => ResourceSource.Cluster,
+      isLoading: false,
+      hasError: false,
+    });
+
+    act(() => {
+      renderWithQueryClientAndRouter(createWrappedComponent());
+    });
+
+    // Initially, no matchExpressions should be in the selector
+    const initialCall = useMockSnapshots.mock.calls[0];
+    expect(initialCall[0].selector.matchExpressions).toBeUndefined();
+
+    // Toggle "Hide Pull Request Snapshots"
+    const switchElement = screen.getByRole('checkbox', {
+      name: /hide pull request snapshots/i,
+    });
+
+    act(() => {
+      fireEvent.click(switchElement);
+    });
+
+    // After toggling, the selector should exclude pull_request via NotIn matchExpression
+    const callsWithNotIn = useMockSnapshots.mock.calls.filter((call) => {
+      const expressions = call[0]?.selector?.matchExpressions;
+      return expressions?.some(
+        (expr) =>
+          expr.key === SnapshotLabels.PAC_EVENT_TYPE_LABEL &&
+          expr.operator === 'NotIn' &&
+          expr.values?.includes(PipelineRunEventType.PULL),
+      );
+    });
+    expect(callsWithNotIn.length).toBeGreaterThan(0);
   });
 
   it('should show filter dashboard if no results but filters are applied', () => {
