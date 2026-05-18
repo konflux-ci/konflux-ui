@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": ".cursor/hooks/track-edited-files.sh"
+      }
+    ],
+    "stop": [
+      {
+        "command": ".cursor/hooks/post-edit-checks.sh",
+        "failClosed": true,
+        "loop_limit": 5
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": ".cursor/hooks/guard-hooks.sh",
+        "matcher": "Write|Delete",
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": ".cursor/hooks/guard-hooks.sh",
+        "matcher": "\\.cursor/hooks|\\.claude/settings",
+        "failClosed": true
+      }
+    ]
+  }
+}
