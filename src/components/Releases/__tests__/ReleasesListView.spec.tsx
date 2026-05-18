@@ -46,13 +46,13 @@ jest.mock('../../../shared/components/table', () => {
           </Thead>
           <Tbody>
             {props.data.map((obj, i) => (
-              <tr key={i}>
+              <Tr key={i}>
                 <ReleasesListRow
                   obj={obj}
                   columns={null}
                   customData={{ applicationName: 'test-app' }}
                 />
-              </tr>
+              </Tr>
             ))}
           </Tbody>
         </Table>

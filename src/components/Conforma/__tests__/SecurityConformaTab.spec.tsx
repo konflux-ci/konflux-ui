@@ -46,14 +46,14 @@ jest.mock('../../../shared/components/table/TableComponent', () => {
         </Thead>
         <Tbody>
           {props.data.map((d, i) => (
-            <tr key={i}>
+            <Tr key={i}>
               <WrappedConformaRow
                 obj={d}
                 customData={{
                   sortedConformaResult: data,
                 }}
               />
-            </tr>
+            </Tr>
           ))}
         </Tbody>
       </Table>

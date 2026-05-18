@@ -52,9 +52,9 @@ jest.mock('~/shared/components/table/TableComponent', () => {
         </Thead>
         <Tbody>
           {props.data.map((d, i) => (
-            <tr key={i}>
+            <Tr key={i}>
               <CommitsListRow obj={d} status={runStatus.Pending} />
-            </tr>
+            </Tr>
           ))}
         </Tbody>
       </Table>

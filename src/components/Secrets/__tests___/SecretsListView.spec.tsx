@@ -55,13 +55,13 @@ jest.mock('../../../shared/components/table', () => {
           </Thead>
           <Tbody>
             {data.map((d, i) => (
-              <tr key={i}>
+              <Tr key={i}>
                 <SecretsListRowWithComponents
                   columns={columns}
                   obj={d}
                   customData={props.customData}
                 />
-              </tr>
+              </Tr>
             ))}
           </Tbody>
         </Table>
