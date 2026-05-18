@@ -2,7 +2,6 @@ import * as React from 'react';
 import { useParams } from 'react-router-dom';
 import { Bullseye, Spinner, Stack, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { usePipelineRunsForCommitV2 } from '~/hooks/usePipelineRunsForCommitV2';
 import { useDeepCompareMemoize } from '~/k8s/hooks/useK8sQueryWatch';
 import { getErrorState } from '~/shared/utils/error-utils';
@@ -12,7 +11,7 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
-import { PipelineRunLabel, PipelineRunType } from '../../../../consts/pipelinerun';
+import { PipelineRunType } from '../../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../../hooks/useScanResults';
 import { RouterParams } from '../../../../routes/utils';
 import { Table } from '../../../../shared';
@@ -22,7 +21,6 @@ import { useLocalStorage } from '../../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../../types';
 import { statuses } from '../../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../../utils/pipelinerun-utils';
 import PipelineRunsFilterToolbar from '../../../Filter/toolbars/PipelineRunsFilterToolbar';
 import {
@@ -99,21 +97,6 @@ const CommitsPipelineRunTab: React.FC = () => {
   const pipelineRunsLoaded = testPlrLoaded && (shouldFetchBuildPlr ? buildPlrLoaded : true);
   const pipelineRunsError = testPlrError ?? buildPlrError;
 
-  const statusFilterObj = React.useMemo(
-    () => createFilterObj(pipelineRuns, (plr) => pipelineRunStatus(plr), statuses),
-    [pipelineRuns],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        pipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-      ),
-    [pipelineRuns],
-  );
-
   const filteredPLRs = React.useMemo(
     () => filterPipelineRuns(pipelineRuns, filters),
     [pipelineRuns, filters],
@@ -147,8 +130,8 @@ const CommitsPipelineRunTab: React.FC = () => {
             filters={filters}
             setFilters={setFilters}
             onClearFilters={onClearFilters}
-            typeOptions={typeFilterObj}
-            statusOptions={statusFilterObj}
+            typeOptions={pipelineRunTypes}
+            statusOptions={statuses}
             openColumnManagement={() => setIsColumnManagementOpen(true)}
             totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
           />

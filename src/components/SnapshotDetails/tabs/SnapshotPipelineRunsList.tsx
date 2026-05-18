@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Title } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
@@ -9,7 +8,6 @@ import {
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../consts/pipeline';
-import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { usePLRVulnerabilities } from '../../../hooks/useScanResults';
 import { Table, useDeepCompareMemoize } from '../../../shared';
 import FilteredEmptyState from '../../../shared/components/empty-state/FilteredEmptyState';
@@ -17,7 +15,6 @@ import ColumnManagement from '../../../shared/components/table/ColumnManagement'
 import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunsFilterToolbar from '../../Filter/toolbars/PipelineRunsFilterToolbar';
 import {
@@ -64,28 +61,6 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT);
   }, [visibleColumnKeys]);
 
-  const statusFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        snapshotPipelineRuns,
-        (plr) => pipelineRunStatus(plr),
-        statuses,
-        customFilter,
-      ),
-    [snapshotPipelineRuns, customFilter],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        snapshotPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
-        pipelineRunTypes,
-        customFilter,
-      ),
-    [snapshotPipelineRuns, customFilter],
-  );
-
   const filteredPLRs: PipelineRunKind[] = React.useMemo(
     () => filterPipelineRuns(snapshotPipelineRuns, filters, customFilter),
     [snapshotPipelineRuns, filters, customFilter],
@@ -127,8 +102,8 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}
-          typeOptions={typeFilterObj}
-          statusOptions={statusFilterObj}
+          typeOptions={pipelineRunTypes}
+          statusOptions={statuses}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />

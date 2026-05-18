@@ -179,39 +179,21 @@ const PipelineRunsListView = ({ applicationName, componentName, customFilter }) 
   
   const { name, status, type } = filters;
 
-  // 3. Manual filter option generation
-  const statusFilterObj = React.useMemo(
-    () =>
-      createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses, customFilter),
-    [sortedPipelineRuns, customFilter],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        sortedPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-        customFilter,
-      ),
-    [sortedPipelineRuns, customFilter],
-  );
-
-  // 4. Manual filtering logic
+  // 3. Manual filtering logic
   const filteredPLRs = React.useMemo(
     () => filterPipelineRuns(sortedPipelineRuns, filters, customFilter, componentName),
     [sortedPipelineRuns, filters, customFilter, componentName],
   );
 
-  // 5. Custom filter toolbar with manual props
+  // 4. Custom filter toolbar with manual props
   return (
     <>
       <PipelineRunsFilterToolbar
         filters={filters}
         setFilters={setFilters}
         onClearFilters={onClearFilters}
-        typeOptions={typeFilterObj}
-        statusOptions={statusFilterObj}
+        typeOptions={pipelineRunTypes}
+        statusOptions={statuses}
       />
       <Table data={filteredPLRs} /* ... other props */ />
     </>
@@ -221,7 +203,6 @@ const PipelineRunsListView = ({ applicationName, componentName, customFilter }) 
 Supporting components and utilities needed:
  - FilterContext wrapping component in parent
  - PipelineRunsFilterToolbar component
- - createFilterObj utility function
  - filterPipelineRuns utility function
  - PipelineRunsFilterState type definition
  - Can't be used for other list views

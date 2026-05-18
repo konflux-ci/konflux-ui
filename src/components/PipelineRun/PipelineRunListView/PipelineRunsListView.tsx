@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Bullseye, Spinner, Stack } from '@patternfly/react-core';
 import { FilterContext } from '~/components/Filter/generic/FilterContext';
-import { createFilterObj } from '~/components/Filter/utils/filter-utils';
 import { getErrorState } from '~/shared/utils/error-utils';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
@@ -20,7 +19,6 @@ import { useLocalStorage } from '../../../shared/hooks/useLocalStorage';
 import { useNamespace } from '../../../shared/providers/Namespace';
 import { PipelineRunKind } from '../../../types';
 import { statuses } from '../../../utils/commits-utils';
-import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { pipelineRunTypes } from '../../../utils/pipelinerun-utils';
 import PipelineRunsFilterToolbar from '../../Filter/toolbars/PipelineRunsFilterToolbar';
 import {
@@ -105,23 +103,6 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     ) as PipelineRunKind[];
   }, [pipelineRuns]);
 
-  const statusFilterObj = React.useMemo(
-    () =>
-      createFilterObj(sortedPipelineRuns, (plr) => pipelineRunStatus(plr), statuses, customFilter),
-    [sortedPipelineRuns, customFilter],
-  );
-
-  const typeFilterObj = React.useMemo(
-    () =>
-      createFilterObj(
-        sortedPipelineRuns,
-        (plr) => plr?.metadata.labels[PipelineRunLabel.PIPELINE_TYPE],
-        pipelineRunTypes,
-        customFilter,
-      ),
-    [sortedPipelineRuns, customFilter],
-  );
-
   const filteredPLRs = React.useMemo(
     () => filterPipelineRuns(sortedPipelineRuns, filters, customFilter, componentName),
     [sortedPipelineRuns, filters, customFilter, componentName],
@@ -145,8 +126,8 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
           filters={filters}
           setFilters={setFilters}
           onClearFilters={onClearFilters}
-          typeOptions={typeFilterObj}
-          statusOptions={statusFilterObj}
+          typeOptions={pipelineRunTypes}
+          statusOptions={statuses}
           openColumnManagement={() => setIsColumnManagementOpen(true)}
           totalColumns={PIPELINE_RUN_COLUMNS_DEFINITIONS.length}
         />
