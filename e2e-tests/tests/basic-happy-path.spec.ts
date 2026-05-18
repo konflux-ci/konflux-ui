@@ -31,7 +31,15 @@ describe('Basic Happy Path', () => {
 
   const pipelineConfigs: Record<string, { tasks: string[]; logCheckTask: string }> = {
     'docker-build-oci-ta': {
-      tasks: ['init', 'clone-repository', 'build-container', 'apply-tags', 'push-dockerfile'],
+      tasks: [
+        'init',
+        'clone-repository',
+        'prefetch-dependencies',
+        'build-container',
+        'build-image-index',
+        'apply-tags',
+        'push-dockerfile',
+      ],
       logCheckTask: 'push-dockerfile',
     },
     'docker-build-oci-ta-min': {
