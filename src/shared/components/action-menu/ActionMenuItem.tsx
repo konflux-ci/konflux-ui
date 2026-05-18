@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MenuItem, Tooltip, MenuItemProps } from '@patternfly/react-core';
-import { DropdownItemProps } from '@patternfly/react-core/deprecated';
+import { DropdownItemProps, MenuItem, Tooltip, MenuItemProps } from '@patternfly/react-core';
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
 import AnalyticsButton from '../../../components/AnalyticsButton/AnalyticsButton';
