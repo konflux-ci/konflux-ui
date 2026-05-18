@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { Form } from '@patternfly/react-core';
-import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
 import KeyValueInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
@@ -128,10 +127,9 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
         label="Select or enter secret name"
         helpText="Unique name of the new secret."
         isCreatable
-        isInputValuePersisted
         hasOnCreateOption
         options={options}
-        variant={SelectVariant.typeahead}
+        variant="typeahead"
         toggleId="secret-name-toggle"
         toggleAriaLabel="secret-name-dropdown"
         onClear={() => {
