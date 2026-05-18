@@ -31,8 +31,14 @@ describe('Basic Happy Path', () => {
 
   const pipelineConfigs: Record<string, { tasks: string[]; logCheckTask: string }> = {
     'docker-build-oci-ta': {
-      tasks: ['init', 'clone-repository', 'build-container', 'apply-tags', 'push-dockerfile'],
-      logCheckTask: 'push-dockerfile',
+      tasks: [
+        'init',
+        'clone-repository',
+        'prefetch-dependencies',
+        'build-container',
+        'build-image-index',
+      ],
+      logCheckTask: 'build-container',
     },
     'docker-build-oci-ta-min': {
       tasks: ['init', 'clone-repository', 'build-container', 'build-image-index'],
@@ -43,7 +49,9 @@ describe('Basic Happy Path', () => {
   const pipeline: string = Cypress.env('PIPELINE');
   const pipelineConfig = pipelineConfigs[pipeline];
   if (!pipelineConfig) {
-    throw new Error(`Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`);
+    throw new Error(
+      `Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`,
+    );
   }
   const piplinerunlogsTasks = pipelineConfig.tasks;
 
