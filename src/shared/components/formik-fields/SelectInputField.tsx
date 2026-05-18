@@ -119,10 +119,12 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
     onSelectCallback?.(_event as unknown as SyntheticEvent<HTMLElement>, selection);
   };
 
-  const onClearSelection = () => {
+  const onClearSelection = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     void setFieldValue(name, isMulti ? [] : '');
     void setFieldTouched(name, true);
     setFilterValue('');
+    setIsOpen(false);
     onClearCallback?.();
   };
 
