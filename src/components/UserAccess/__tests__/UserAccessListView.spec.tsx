@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
-import { Table as PfTable, TableHeader } from '@patternfly/react-table/deprecated';
+import { Table, Thead, Tr, Th, Tbody } from '@patternfly/react-table';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { defaultKonfluxRoleMap } from '../../../__data__/role-data';
@@ -32,16 +32,22 @@ jest.mock('../../../shared/components/table', () => {
       const cProps = { data, filters, selected, match, kindObj };
       const columns = props.Header(cProps);
       return (
-        <PfTable role="table" aria-label="table" cells={columns} variant="compact" borders={false}>
-          <TableHeader role="rowgroup" />
-          <tbody>
+        <Table role="table" aria-label="table" variant="compact" borders={false}>
+          <Thead>
+            <Tr>
+              {columns.map((col, idx) => (
+                <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+              ))}
+            </Tr>
+          </Thead>
+          <Tbody>
             {props.data.map((d, i) => (
               <tr key={i}>
                 <RBListRow columns={null} obj={d} />
               </tr>
             ))}
-          </tbody>
-        </PfTable>
+          </Tbody>
+        </Table>
       );
     },
   };
