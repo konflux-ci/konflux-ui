@@ -33,7 +33,7 @@ import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/logs/useAutoScrollWithResume';
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
-import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
+import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
@@ -46,9 +46,17 @@ import './LogViewer.scss';
 // eslint-disable-next-line no-control-regex
 const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
 
+const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
+
 export type Props = {
   showSearch?: boolean;
-  data: string;
+
+  // Either data or sections should be provided, not both.
+  // data: single string when logs come pre-aggregated (TektonTaskRunLog)
+  // sections: structured per-container data when fetched individually (Logs.tsx)
+  data?: string;
+  sections?: LogSection[];
+
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
@@ -66,6 +74,7 @@ const LogViewer: React.FC<Props> = ({
   showSearch = true,
   allowAutoScroll,
   data = '',
+  sections,
   downloadAllLabel,
   onDownloadAll,
   taskRun,
@@ -86,9 +95,20 @@ const LogViewer: React.FC<Props> = ({
 
   // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
   // Remove ANSI escape codes for plain text display
+  const processedSections = React.useMemo<LogSection[] | undefined>(() => {
+    if (!sections) return undefined;
+    return sections.map((section) => ({
+      containerName: section.containerName,
+      lines: section.lines.map((line) => normalizeLineEndings(line).replace(ANSI_ESCAPE_REGEX, '')),
+    }));
+  }, [sections]);
+
   const processedData = React.useMemo(() => {
-    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
-  }, [data]);
+    if (processedSections) {
+      return processedSections.flatMap((s) => [s.containerName, ...s.lines]).join('\n');
+    }
+    return normalizeLineEndings(data).replace(ANSI_ESCAPE_REGEX, '');
+  }, [data, processedSections]);
 
   const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
 
@@ -102,9 +122,16 @@ const LogViewer: React.FC<Props> = ({
     useFullscreen<HTMLDivElement>();
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
+  const downloadData = React.useMemo(() => {
+    if (processedSections) {
+      return processedSections.map((s) => `${s.containerName}\n${s.lines.join('\n')}`).join('\n\n');
+    }
+    return normalizeLineEndings(data).replace(ANSI_ESCAPE_REGEX, '');
+  }, [data, processedSections]);
+
   const downloadLogs = () => {
-    if (!data) return;
-    const blob = new Blob([data], {
+    if (!downloadData) return;
+    const blob = new Blob([downloadData], {
       type: 'text/plain;charset=utf-8',
     });
     saveAs(blob, `${taskName || `task-run-${uuidv4()}`}.log`);
@@ -112,7 +139,7 @@ const LogViewer: React.FC<Props> = ({
 
   const startDownloadAll = () => {
     setDownloadAllStatus(true);
-    onDownloadAll()
+    onDownloadAll?.()
       .then(() => {
         setDownloadAllStatus(false);
       })
@@ -273,6 +300,7 @@ const LogViewer: React.FC<Props> = ({
               <VirtualizedLogViewer
                 key={taskRun?.metadata?.uid || 'default'}
                 data={processedData}
+                sections={processedSections}
                 height={viewerHeight}
                 scrollToRow={scrolledRow}
                 onScroll={handleScroll}

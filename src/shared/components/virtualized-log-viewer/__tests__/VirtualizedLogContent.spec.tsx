@@ -697,4 +697,68 @@ Another short line`;
       window.requestAnimationFrame = originalRAF;
     });
   });
+
+  describe('Sections support', () => {
+    const sectionProps = {
+      data: '',
+      sections: [
+        { containerName: 'step-build', lines: ['building...', 'done'] },
+        { containerName: 'step-test', lines: ['testing...', 'passed'] },
+      ],
+      height: 600,
+      width: '100%' as string | number,
+    };
+
+    it('should render container names as log lines', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...sectionProps} />,
+      );
+
+      const logContent = container.querySelector('.log-content__content-column');
+      expect(logContent?.textContent).toContain('step-build');
+      expect(logContent?.textContent).toContain('step-test');
+    });
+
+    it('should render log lines from all sections', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...sectionProps} />,
+      );
+
+      const logContent = container.querySelector('.log-content__content-column');
+      expect(logContent?.textContent).toContain('building...');
+      expect(logContent?.textContent).toContain('done');
+      expect(logContent?.textContent).toContain('testing...');
+      expect(logContent?.textContent).toContain('passed');
+    });
+
+    it('should use continuous line numbering across sections including headers', () => {
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...sectionProps} />);
+
+      const lineNumbers = document.querySelectorAll('.line-number__line-number');
+      const numbers = Array.from(lineNumbers).map((el) => Number(el.textContent));
+      // 2 headers + 4 log lines = 6 sequential line numbers
+      expect(numbers).toEqual([1, 2, 3, 4, 5, 6]);
+    });
+
+    it('should highlight search matches across sections', () => {
+      const searchSectionProps = {
+        ...sectionProps,
+        searchText: 'done',
+      };
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...searchSectionProps} />);
+
+      const marks = document.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      expect(marks.length).toBe(1);
+    });
+
+    it('should fall back to data prop when sections is not provided', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent data="fallback line" height={600} width="100%" />,
+      );
+
+      const logContent = container.querySelector('.log-content__content-column');
+      expect(logContent?.textContent).toContain('fallback line');
+    });
+  });
 });

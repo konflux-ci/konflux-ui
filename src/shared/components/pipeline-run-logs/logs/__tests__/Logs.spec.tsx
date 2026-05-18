@@ -10,12 +10,19 @@ import {
 import { TaskRunKind } from '../../../../../types';
 import { ContainerStatus, PodKind, ContainerSpec } from '../../../types';
 import { containerToLogSourceStatus } from '../../utils';
-import Logs, { processLogs } from '../Logs';
+import Logs from '../Logs';
 
 const mockLogViewer = jest.fn();
+
+const getLastSectionsLines = (): string[] => {
+  const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+  return (lastCall.sections || []).flatMap((s: { lines: string[] }) => s.lines);
+};
+
 jest.mock('../LogViewer', () => {
   return function MockLogViewer(props: {
-    data: string;
+    sections?: Array<{ containerName: string; lines: string[] }>;
+    data?: string;
     allowAutoScroll: boolean;
     isLoading?: boolean;
     onScroll?: () => void;
@@ -136,7 +143,7 @@ describe('Logs', () => {
 
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.any(String),
+          sections: expect.any(Array),
           allowAutoScroll: true,
           onScroll: undefined,
         }),
@@ -169,94 +176,168 @@ describe('Logs', () => {
         expect(screen.getByTestId('mock-log-viewer')).toBeInTheDocument();
         expect(mockLogViewer).toHaveBeenCalledWith(
           expect.objectContaining({
-            data: '',
+            sections: [],
           }),
         );
       });
     });
   });
 
-  describe('processLogs function', () => {
-    it('should format logs with container headers and indentation', () => {
-      const logSources = {
-        container1: 'log line 1\nlog line 2',
-        container2: 'log line 3\nlog line 4',
+  describe('sections prop', () => {
+    it('should pass sections with correct container names and pre-split lines', async () => {
+      const terminatedContainer1: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
       };
-      const containers: ContainerSpec[] = [{ name: 'container1' }, { name: 'container2' }];
-
-      const result = processLogs(logSources, containers);
-
-      // should contain container headers and indented logs
-      expect(result).toContain('CONTAINER1'); // Header should be uppercase
-      expect(result).toContain('CONTAINER2');
-      expect(result).toContain('  log line 1'); // Logs should be indented
-      expect(result).toContain('  log line 2');
-      expect(result).toContain('  log line 3');
-      expect(result).toContain('  log line 4');
-    });
-
-    it('should handle containers with no logs', () => {
-      const logSources = {};
-      const containers: ContainerSpec[] = [{ name: 'container1' }];
-
-      const result = processLogs(logSources, containers);
-
-      expect(result).toBe('');
-    });
-
-    it('should handle empty containers array', () => {
-      const logSources = { container1: 'some logs' };
-      const containers: ContainerSpec[] = [];
-
-      const result = processLogs(logSources, containers);
-
-      expect(result).toBe('');
-    });
-
-    it('should process containers in specific order', () => {
-      const logSources = {
-        container1: 'first container logs',
-        container2: 'second container logs',
+      const terminatedContainer2: ContainerStatus = {
+        name: 'container2',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
       };
-      const containers: ContainerSpec[] = [{ name: 'container2' }, { name: 'container1' }];
 
-      const result = processLogs(logSources, containers);
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer1, terminatedContainer2],
+        },
+      };
 
-      const container2Index = result.indexOf('CONTAINER2');
-      const container1Index = result.indexOf('CONTAINER1');
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock)
+        .mockResolvedValueOnce('log line 1\nlog line 2')
+        .mockResolvedValueOnce('log line 3\nlog line 4');
 
-      // container2 should appear first since it's first in the containers array
-      expect(container2Index).toBeLessThan(container1Index);
-      expect(container2Index).toBeGreaterThanOrEqual(0);
-      expect(container1Index).toBeGreaterThanOrEqual(0);
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }, { name: 'container2' }]}
+        />,
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      expect(mockLogViewer).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sections: expect.arrayContaining([
+            { containerName: 'CONTAINER1', lines: ['  log line 1', '  log line 2'] },
+            { containerName: 'CONTAINER2', lines: ['  log line 3', '  log line 4'] },
+          ]),
+        }),
+      );
     });
 
-    it('should skip containers without log sources', () => {
-      const logSources = {
-        container1: 'has logs',
-        // container2 has no logs
+    it('should preserve container ordering from containers prop', async () => {
+      const terminatedContainer1: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
       };
-      const containers: ContainerSpec[] = [{ name: 'container1' }, { name: 'container2' }];
+      const terminatedContainer2: ContainerStatus = {
+        name: 'container2',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
 
-      const result = processLogs(logSources, containers);
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer1, terminatedContainer2],
+        },
+      };
 
-      expect(result).toContain('CONTAINER1');
-      expect(result).not.toContain('CONTAINER2');
-      expect(result).toContain('  has logs');
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock).mockResolvedValueOnce('first').mockResolvedValueOnce('second');
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container2' }, { name: 'container1' }]}
+        />,
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+      expect(lastCall.sections[0].containerName).toBe('CONTAINER2');
+      expect(lastCall.sections[1].containerName).toBe('CONTAINER1');
     });
 
-    it('should handle multi-line logs with proper indentation', () => {
-      const logSources = {
-        'test-container': 'line 1\nline 2\nline 3',
+    it('should skip containers without log sources', async () => {
+      const terminatedContainer1: ContainerStatus = {
+        name: 'container1',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
       };
-      const containers: ContainerSpec[] = [{ name: 'test-container' }];
+      const terminatedContainer2: ContainerStatus = {
+        name: 'container2',
+        state: { terminated: { exitCode: 0 } },
+        ready: false,
+        restartCount: 0,
+        image: 'test-image',
+        imageID: 'test-image-id',
+      };
 
-      const result = processLogs(logSources, containers);
+      const resourceWithStatus: PodKind = {
+        ...mockResource,
+        status: {
+          phase: 'Succeeded',
+          containerStatuses: [terminatedContainer1, terminatedContainer2],
+        },
+      };
 
-      expect(result).toContain('TEST-CONTAINER');
-      expect(result).toContain('  line 1');
-      expect(result).toContain('  line 2');
-      expect(result).toContain('  line 3');
+      (containerToLogSourceStatus as jest.Mock).mockReturnValue('terminated');
+      (commonFetchText as jest.Mock).mockResolvedValueOnce('has logs').mockResolvedValueOnce(''); // container2 returns empty string (no logs)
+
+      render(
+        <Logs
+          {...defaultProps}
+          resource={resourceWithStatus}
+          containers={[{ name: 'container1' }, { name: 'container2' }]}
+        />,
+      );
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+
+      // container2 has empty logs, so it should be filtered out by the sections memo
+      const lastCall = mockLogViewer.mock.calls[mockLogViewer.mock.calls.length - 1][0];
+      expect(lastCall.sections).toHaveLength(1);
+      expect(lastCall.sections[0].containerName).toBe('CONTAINER1');
+    });
+
+    it('should pass empty sections when no containers have logs', () => {
+      render(<Logs {...defaultProps} containers={[]} />);
+
+      expect(mockLogViewer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sections: [],
+        }),
+      );
     });
   });
 
@@ -385,11 +466,7 @@ describe('Logs', () => {
 
       // Should show error message in LogViewer
       await waitFor(() => {
-        expect(mockLogViewer).toHaveBeenCalledWith(
-          expect.objectContaining({
-            data: expect.stringContaining('LOG FETCH ERROR'),
-          }),
-        );
+        expect(getLastSectionsLines().join('\n')).toContain('LOG FETCH ERROR');
       });
     });
 
@@ -427,11 +504,7 @@ describe('Logs', () => {
 
       // Should NOT show error message for 404 (missing logs) - should remain empty
       await waitFor(() => {
-        expect(mockLogViewer).toHaveBeenCalledWith(
-          expect.objectContaining({
-            data: expect.not.stringContaining('LOG FETCH ERROR'),
-          }),
-        );
+        expect(getLastSectionsLines().join('\n')).not.toContain('LOG FETCH ERROR');
       });
     });
 
@@ -523,11 +596,7 @@ describe('Logs', () => {
       });
 
       await waitFor(() => {
-        expect(mockLogViewer).toHaveBeenCalledWith(
-          expect.objectContaining({
-            data: expect.stringContaining('decoded-aGVsbG8gd29ybGQ='),
-          }),
-        );
+        expect(getLastSectionsLines().join('\n')).toContain('decoded-aGVsbG8gd29ybGQ=');
       });
     });
   });
@@ -802,9 +871,7 @@ describe('Logs', () => {
   });
 
   describe('loading indicator while processing logs', () => {
-    it('should show loading while logs are being debounced', async () => {
-      jest.useFakeTimers();
-
+    it('should not add processingLogs to isLoading', () => {
       const terminatedContainer: ContainerStatus = {
         name: 'container1',
         state: { terminated: { exitCode: 0 } },
@@ -833,30 +900,12 @@ describe('Logs', () => {
         />,
       );
 
-      // After fetch resolves but before debounce fires, isLoading should be true
-      await act(async () => {
-        await Promise.resolve(); // let fetch resolve
-      });
-
+      // isLoading should only reflect the prop, not internal processing
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
-          isLoading: true,
-        }),
-      );
-
-      // After debounce fires, isLoading should be false
-      act(() => {
-        jest.advanceTimersByTime(300);
-      });
-
-      expect(mockLogViewer).toHaveBeenLastCalledWith(
-        expect.objectContaining({
           isLoading: false,
-          data: expect.stringContaining('some log output'),
         }),
       );
-
-      jest.useRealTimers();
     });
 
     it('should not show loading when there are no log sources', () => {
@@ -865,7 +914,7 @@ describe('Logs', () => {
       expect(mockLogViewer).toHaveBeenCalledWith(
         expect.objectContaining({
           isLoading: false,
-          data: '',
+          sections: [],
         }),
       );
     });
