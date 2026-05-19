@@ -553,6 +553,132 @@ Another short line`;
     });
   });
 
+  describe('Sections mode (foldable steps)', () => {
+    const twoSections = [
+      { name: 'step-init', data: 'init line 1\ninit line 2', isCompleted: true },
+      { name: 'step-build', data: 'build line 1\nbuild line 2', isCompleted: false },
+    ];
+
+    it('renders section-header buttons for each section', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={twoSections} />,
+      );
+
+      const headers = container.querySelectorAll('.log-content__section-header');
+      expect(headers.length).toBeGreaterThan(0);
+    });
+
+    it('renders the section name inside each header', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={twoSections} />,
+      );
+
+      const text = container.textContent ?? '';
+      expect(text).toContain('step-init');
+      expect(text).toContain('step-build');
+    });
+
+    it('renders log content for expanded sections', () => {
+      // step-build is not completed → starts expanded
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={twoSections} />,
+      );
+
+      expect(container.textContent).toContain('build line 1');
+    });
+
+    it('renders fold-indicator for completed (collapsed) sections', () => {
+      // step-init isCompleted=true → starts collapsed
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={twoSections} />,
+      );
+
+      const indicator = container.querySelector('.log-content__fold-indicator');
+      expect(indicator).toBeInTheDocument();
+    });
+
+    it('shows "N lines hidden" in the fold indicator', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={twoSections} />,
+      );
+
+      const indicator = container.querySelector('.log-content__fold-indicator');
+      expect(indicator?.textContent).toMatch(/\d+ lines hidden/);
+    });
+
+    it('section headers are accessible buttons with aria-expanded', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={twoSections} />,
+      );
+
+      const buttons = container.querySelectorAll('button.log-content__section-header');
+      expect(buttons.length).toBeGreaterThan(0);
+      buttons.forEach((btn) => {
+        expect(btn).toHaveAttribute('aria-expanded');
+      });
+    });
+
+    it('gutter shows global line numbers for content rows (not virtualizer index)', () => {
+      const singleSection = [{ name: 'step', data: 'line a\nline b', isCompleted: false }];
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={singleSection} />,
+      );
+
+      const lineNumbers = Array.from(container.querySelectorAll('.line-number__line-number')).map(
+        (el) => el.textContent,
+      );
+
+      // Header = global line 1 (no gutter cell); content = lines 2, 3
+      expect(lineNumbers).toContain('2');
+      expect(lineNumbers).toContain('3');
+      expect(lineNumbers).not.toContain('1');
+    });
+
+    it('gutter has no cell for section-header rows', () => {
+      const singleSection = [{ name: 'step', data: 'x\ny', isCompleted: false }];
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={singleSection} />,
+      );
+
+      const gutterCells = container.querySelectorAll('.line-number__gutter-cell');
+      const contentItems = container.querySelectorAll(
+        '.log-content__content-column .pf-v5-c-log-viewer__list-item',
+      );
+
+      // Content items: 1 section-header + 2 content rows = 3
+      // Gutter cells: only for content rows = 2 (no cell for the header)
+      expect(contentItems.length).toBe(3);
+      expect(gutterCells.length).toBe(2);
+    });
+
+    it('renders in plain mode when sections prop is omitted', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} />,
+      );
+
+      expect(container.querySelector('.log-content__section-header')).not.toBeInTheDocument();
+      expect(container.querySelector('.log-content__fold-indicator')).not.toBeInTheDocument();
+    });
+
+    it('renders in plain mode when sections is an empty array', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={[]} />,
+      );
+
+      expect(container.querySelector('.log-content__section-header')).not.toBeInTheDocument();
+    });
+
+    it('highlights search matches inside expanded section content', () => {
+      const sections = [{ name: 'step', data: 'error in log\nnormal line', isCompleted: false }];
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogContent {...defaultProps} sections={sections} searchText="error" />,
+      );
+
+      const marks = container.querySelectorAll('mark.pf-v5-c-log-viewer__string.pf-m-match');
+      expect(marks.length).toBeGreaterThan(0);
+    });
+  });
+
   describe('Hash Navigation and Auto-scroll', () => {
     beforeEach(() => {
       window.location.hash = '';

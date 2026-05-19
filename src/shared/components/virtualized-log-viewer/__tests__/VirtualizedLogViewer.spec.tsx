@@ -229,6 +229,96 @@ describe('VirtualizedLogViewer Integration Tests', () => {
     });
   });
 
+  describe('Sections mode (foldable steps)', () => {
+    const mockSections = [
+      { name: 'step-init', data: 'init log line 1\ninit log line 2', isCompleted: true },
+      { name: 'step-build', data: 'build log line 1\nbuild log line 2', isCompleted: false },
+    ];
+
+    it('renders section headers for each section', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={mockSections} />,
+      );
+
+      // Section header buttons should be present
+      const headers = container.querySelectorAll('.log-content__section-header');
+      expect(headers.length).toBeGreaterThan(0);
+    });
+
+    it('renders section names in headers', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={mockSections} />,
+      );
+
+      const content = container.textContent ?? '';
+      expect(content).toContain('step-init');
+      expect(content).toContain('step-build');
+    });
+
+    it('renders log lines for expanded sections', () => {
+      // step-build is not completed so it starts expanded
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={mockSections} />,
+      );
+
+      const content = container.textContent ?? '';
+      expect(content).toContain('build log line 1');
+    });
+
+    it('renders a fold-indicator for collapsed (completed) sections', () => {
+      // step-init isCompleted=true → starts collapsed → shows fold-indicator
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={mockSections} />,
+      );
+
+      const foldIndicator = container.querySelector('.log-content__fold-indicator');
+      expect(foldIndicator).toBeInTheDocument();
+    });
+
+    it('falls back to plain data when sections is undefined', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={undefined} />,
+      );
+
+      // Should not render section-header buttons in plain mode
+      const headers = container.querySelectorAll('.log-content__section-header');
+      expect(headers.length).toBe(0);
+
+      // Plain log lines should be rendered
+      expect(container.textContent).toContain('line 1');
+    });
+
+    it('falls back to plain data when sections is an empty array', () => {
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={[]} />,
+      );
+
+      const headers = container.querySelectorAll('.log-content__section-header');
+      expect(headers.length).toBe(0);
+    });
+
+    it('renders gutter line numbers from global line counter (not virtualizer index)', () => {
+      // With a single section of 2 lines, the section header is line 1
+      // and content lines are 2 and 3.  The gutter should NOT show "1" for the
+      // section-header row; it should start showing numbers from the content rows.
+      const singleSection = [{ name: 'my-step', data: 'log a\nlog b', isCompleted: false }];
+
+      const { container } = renderWithQueryClientAndRouter(
+        <VirtualizedLogViewer {...defaultProps} sections={singleSection} />,
+      );
+
+      const lineNumbers = Array.from(container.querySelectorAll('.line-number__line-number')).map(
+        (el) => el.textContent,
+      );
+
+      // Content lines are global lines 2 and 3 (header occupies line 1)
+      expect(lineNumbers).toContain('2');
+      expect(lineNumbers).toContain('3');
+      // Line 1 belongs to the section header which has no gutter cell
+      expect(lineNumbers).not.toContain('1');
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle very long data efficiently with virtualization', () => {
       const longData = Array.from({ length: 1000 }, (_, i) => `line ${i + 1}`).join('\n');

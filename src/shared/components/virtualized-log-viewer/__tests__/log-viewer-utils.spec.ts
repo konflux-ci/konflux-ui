@@ -1,7 +1,47 @@
 import Prism from 'prismjs';
-import { flattenTokenText, getLineMatches, isMatchCurrent } from '../log-viewer-utils';
+import {
+  ANSI_ESCAPE_REGEX,
+  flattenTokenText,
+  getLineMatches,
+  isMatchCurrent,
+} from '../log-viewer-utils';
 
 describe('log-viewer-utils', () => {
+  describe('ANSI_ESCAPE_REGEX', () => {
+    const strip = (s: string) => s.replace(ANSI_ESCAPE_REGEX, '');
+
+    it('strips a basic colour code', () => {
+      expect(strip('\u001b[32mGreen\u001b[0m')).toBe('Green');
+    });
+
+    it('strips multiple sequential codes', () => {
+      expect(strip('\u001b[1m\u001b[31mBold Red\u001b[0m')).toBe('Bold Red');
+    });
+
+    it('strips codes with multi-number params', () => {
+      expect(strip('\u001b[38;5;200mPink\u001b[0m')).toBe('Pink');
+    });
+
+    it('leaves plain text unchanged', () => {
+      expect(strip('no ansi here')).toBe('no ansi here');
+    });
+
+    it('strips codes mid-string', () => {
+      expect(strip('before\u001b[31merror\u001b[0mafter')).toBe('beforeerrorafter');
+    });
+
+    it('handles empty string', () => {
+      expect(strip('')).toBe('');
+    });
+
+    it('does not strip non-ANSI escape sequences', () => {
+      const s = '\u001b[?25h'; // DEC private mode — not a CSI colour code
+      // The regex only matches \u001b[ followed by digits/semicolons and then 'm',
+      // so this sequence is NOT stripped
+      expect(strip(s)).toBe(s);
+    });
+  });
+
   describe('flattenTokenText', () => {
     it('should return string as-is when token is a string', () => {
       expect(flattenTokenText('hello world')).toBe('hello world');

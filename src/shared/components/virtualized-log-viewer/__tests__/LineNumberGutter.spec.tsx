@@ -272,6 +272,81 @@ describe('LineNumberGutter', () => {
     });
   });
 
+  describe('getLineNumber prop (sectioned mode)', () => {
+    it('renders the number returned by getLineNumber instead of index+1', () => {
+      // Items 0, 1, 2 map to global line numbers 3, 4, 5
+      const getLineNumber = (idx: number) => idx + 3;
+      render(<LineNumberGutter {...defaultProps} getLineNumber={getLineNumber} />);
+
+      expect(screen.getByText('3')).toBeInTheDocument();
+      expect(screen.getByText('4')).toBeInTheDocument();
+      expect(screen.getByText('5')).toBeInTheDocument();
+      expect(screen.queryByText('1')).not.toBeInTheDocument();
+    });
+
+    it('skips rendering a gutter cell when getLineNumber returns null', () => {
+      // Item 0 = section-header (no gutter), items 1 and 2 = content
+      const getLineNumber = (idx: number) => (idx === 0 ? null : idx);
+      const { container } = render(
+        <LineNumberGutter {...defaultProps} getLineNumber={getLineNumber} />,
+      );
+
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
+      // Item 0 produces no cell; items 1 and 2 each produce one
+      expect(cells.length).toBe(2);
+    });
+
+    it('uses the returned line number in the href and aria-label', () => {
+      const getLineNumber = (idx: number) => (idx === 0 ? null : idx + 10);
+      render(<LineNumberGutter {...defaultProps} getLineNumber={getLineNumber} />);
+
+      const link = screen.getByText('11').closest('a');
+      expect(link).toHaveAttribute('href', '#L11');
+      expect(link).toHaveAttribute('aria-label', 'Jump to line 11');
+    });
+
+    it('calls isLineHighlighted with the mapped line number', () => {
+      const getLineNumber = (idx: number) => idx + 5;
+      const isLineHighlighted = jest.fn(() => false);
+      render(
+        <LineNumberGutter
+          {...defaultProps}
+          getLineNumber={getLineNumber}
+          isLineHighlighted={isLineHighlighted}
+        />,
+      );
+
+      expect(isLineHighlighted).toHaveBeenCalledWith(5);
+      expect(isLineHighlighted).toHaveBeenCalledWith(6);
+      expect(isLineHighlighted).toHaveBeenCalledWith(7);
+      expect(isLineHighlighted).not.toHaveBeenCalledWith(1);
+    });
+
+    it('calls onLineClick with the mapped line number', () => {
+      const getLineNumber = (idx: number) => idx + 5;
+      const onLineClick = jest.fn();
+      render(
+        <LineNumberGutter
+          {...defaultProps}
+          getLineNumber={getLineNumber}
+          onLineClick={onLineClick}
+        />,
+      );
+
+      fireEvent.click(screen.getByText('5'));
+      expect(onLineClick).toHaveBeenCalledWith(5, expect.any(Object));
+    });
+
+    it('handles all-null getLineNumber (e.g. fold-indicator-only window)', () => {
+      const { container } = render(
+        <LineNumberGutter {...defaultProps} getLineNumber={() => null} />,
+      );
+
+      const cells = container.querySelectorAll('.line-number__gutter-cell');
+      expect(cells.length).toBe(0);
+    });
+  });
+
   describe('Integration with Virtual Scrolling', () => {
     it('should handle non-contiguous virtual items', () => {
       // Simulate virtualization where only items 0, 5, and 10 are visible
