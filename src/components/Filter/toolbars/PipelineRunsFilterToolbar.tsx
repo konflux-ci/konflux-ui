@@ -4,10 +4,12 @@ import { BaseTextFilterToolbar } from './BaseTextFIlterToolbar';
 
 type PipelineRunsFilterToolbarProps = {
   filters: PipelineRunsFilterState;
-  setFilters: (PipelineRunsFilterState) => void;
+  setFilters: (filters: PipelineRunsFilterState) => void;
   onClearFilters: () => void;
   typeOptions: { [key: string]: number };
   statusOptions: { [key: string]: number };
+  versionOptions?: { [key: string]: number };
+  versionLabels?: Record<string, string>;
   openColumnManagement?: () => void;
   totalColumns?: number;
 };
@@ -18,10 +20,12 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   onClearFilters,
   typeOptions,
   statusOptions,
+  versionOptions,
+  versionLabels,
   openColumnManagement,
   totalColumns,
 }: PipelineRunsFilterToolbarProps) => {
-  const { name, status, type } = filters;
+  const { name, status, type, version } = filters;
 
   return (
     <BaseTextFilterToolbar
@@ -46,6 +50,16 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
         setValues={(newFilters) => setFilters({ ...filters, type: newFilters })}
         options={typeOptions}
       />
+      {versionOptions && (
+        <MultiSelect
+          label="Version"
+          filterKey="version"
+          values={version ?? []}
+          setValues={(newFilters) => setFilters({ ...filters, version: newFilters })}
+          options={versionOptions}
+          optionLabels={versionLabels}
+        />
+      )}
     </BaseTextFilterToolbar>
   );
 };

@@ -53,6 +53,29 @@ describe('Prism Log Language', () => {
       expect(timeToken).toBeDefined();
       expect(timeToken).toHaveProperty('content', '100ms');
     });
+    it('should tokenize relative time with "d" (days) unit', () => {
+      const tokens = Prism.tokenize('uptime: 2d', Prism.languages.log);
+
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '2d');
+    });
+
+    it('should tokenize composite relative time (e.g., 1h30m5s)', () => {
+      const tokens = Prism.tokenize('duration 1h30m5s', Prism.languages.log);
+
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '1h30m5s');
+    });
+
+    it('should tokenize composite time with decimals and spaces', () => {
+      const tokens = Prism.tokenize('delay 1.5s 200ms', Prism.languages.log);
+
+      const timeToken = tokens.find((t) => typeof t !== 'string' && t.type === 'time');
+      expect(timeToken).toBeDefined();
+      expect(timeToken).toHaveProperty('content', '1.5s 200ms');
+    });
   });
 
   describe('Log Levels', () => {

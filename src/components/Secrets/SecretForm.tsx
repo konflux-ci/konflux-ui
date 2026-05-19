@@ -3,6 +3,7 @@ import { Form } from '@patternfly/react-core';
 import { SelectVariant } from '@patternfly/react-core/deprecated';
 import { useField, useFormikContext } from 'formik';
 import { FIELD_SECRET_FOR_COMPONENT_OPTION, SecretLinkOptionLabels } from '~/consts/secrets';
+import KeyValueInputField from '~/shared/components/formik-fields/key-value-input-field/KeyValueInputField';
 import {
   supportedPartnerTasksSecrets,
   getSupportedPartnerTaskKeyValuePairs,
@@ -37,6 +38,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
 }) => {
   const { values, setFieldValue } = useFormikContext<SecretFormValues>();
   const [currentType, setCurrentType] = useState(values.type);
+
   const defaultKeyValues = [{ key: '', value: '', readOnlyKey: false }];
   const defaultImageKeyValues = [{ key: '.dockerconfigjson', value: '', readOnlyKey: true }];
   const [{ value: secretForComponentOption }, , { setValue }] = useField<SecretForComponentOption>(
@@ -101,7 +103,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
         dropdownItems={dropdownItems}
         onChange={(type) => {
           setCurrentType(type);
-          void setValue(null);
+          void setValue(SecretForComponentOption.none);
           if (type === SecretTypeDropdownLabel.image) {
             resetKeyValues();
             values.secretName &&
@@ -154,7 +156,7 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           currentComponent={currentComponent}
           secretForComponentOption={secretForComponentOption}
           onOptionChange={(option) => setValue(option)}
-          radioLabels={SecretLinkOptionLabels.forImportSecret}
+          radioLabels={SecretLinkOptionLabels.default}
         />
       )}
       {currentType === SecretTypeDropdownLabel.source && <SourceSecretForm />}
@@ -167,6 +169,13 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
           disableRemoveAction={values.opaque.keyValues.length === 1}
         />
       )}
+
+      <KeyValueInputField
+        name="labels"
+        label="Labels"
+        entries={[{ key: '', value: '' }]}
+        description="You can add labels to provide more context or tag your secret."
+      />
     </Form>
   );
 };

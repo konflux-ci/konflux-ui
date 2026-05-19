@@ -13,7 +13,11 @@ type CommitsEmptyStateProps = {
   applicationName: string;
 };
 
-const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps>> = ({
+/**
+ * @deprecated
+ * Replaced by CommitsEmptyStateV2 with new component model
+ */
+export const CommitsEmptyState: React.FC<React.PropsWithChildren<CommitsEmptyStateProps>> = ({
   applicationName,
 }) => {
   const namespace = useNamespace();

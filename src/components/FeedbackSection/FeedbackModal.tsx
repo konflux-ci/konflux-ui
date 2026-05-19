@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { ModalVariant, Flex, FlexItem, Panel } from '@patternfly/react-core';
+import { TrackEvents } from '~/analytics/gen/analytics-types';
+import { useTrackAnalyticsEvent } from '~/analytics/hooks';
 import { ComponentProps, createModalLauncher } from '~/components/modal/createModalLauncher';
 import { useKonfluxPublicInfo } from '~/hooks/useKonfluxPublicInfo';
 import { THEME_DARK, useTheme } from '~/shared';
@@ -40,6 +42,7 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     setCurrentSection(FeedbackSections.BeginningSection);
   };
   const [konfluxInfo] = useKonfluxPublicInfo();
+  const trackEvent = useTrackAnalyticsEvent();
 
   const handleBugSubmit = React.useCallback(
     (values: { description: string; title: string; additionalInfo?: boolean }) => {
@@ -60,12 +63,17 @@ const FeedbackModal: React.FC<React.PropsWithChildren<ComponentProps>> = ({ onCl
     [onClose],
   );
 
-  const handleFeedbackSubmit = (values: FeedbackValues) => {
-    // eslint-disable-next-line no-console
-    console.log(values);
-    // segment integration to go here
-    onClose(null, { submitClicked: true });
-  };
+  const handleFeedbackSubmit = React.useCallback(
+    (values: FeedbackValues) => {
+      trackEvent(TrackEvents.feedback_submitted_event, {
+        email: values.email || undefined,
+        rating: values.scale || undefined,
+        feedback: values.description,
+      });
+      onClose(null, { submitClicked: true });
+    },
+    [onClose, trackEvent],
+  );
 
   return (
     <Flex

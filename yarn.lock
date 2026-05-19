@@ -10944,6 +10944,7 @@ __metadata:
     react-dnd: "npm:^16.0.1"
     react-dnd-html5-backend: "npm:^16.0.1"
     react-dom: "npm:^18.3.1"
+    react-hotkeys-hook: "npm:^5.2.4"
     react-i18next: "npm:15.0.1"
     react-refresh: "npm:^0.14.2"
     react-router-dom: "npm:6.25.1"
@@ -13189,6 +13190,16 @@ __metadata:
   version: 3.2.2
   resolution: "react-fast-compare@npm:3.2.2"
   checksum: 10/a6826180ba75cefba1c8d3ac539735f9b627ca05d3d307fe155487f5d0228d376dac6c9708d04a283a7b9f9aee599b637446635b79c8c8753d0b4eece56c125c
+  languageName: node
+  linkType: hard
+
+"react-hotkeys-hook@npm:^5.2.4":
+  version: 5.2.4
+  resolution: "react-hotkeys-hook@npm:5.2.4"
+  peerDependencies:
+    react: ">=16.8.0"
+    react-dom: ">=16.8.0"
+  checksum: 10/118ffdc15e8932e0c67d2f0479d088ba50d759b4f5974e2394bc720286918530291bbde317b39cbde7ee1239813038ae7b90f6eb24794783036944b3fa2a1ba2
   languageName: node
   linkType: hard
 

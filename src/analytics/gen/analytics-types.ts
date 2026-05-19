@@ -38,10 +38,6 @@ export type UserLogoutEvent = CommonFields & {
  */
 export type FeedbackSubmittedEvent = CommonFields & {
   /**
-   * Unique identifier of the user. Obfuscated via sha256 with `clusterId` as salt.
-   */
-  userId: SHA256Hash;
-  /**
    * User satisfaction rating, typically on a 1-5 scale
    */
   rating: number;

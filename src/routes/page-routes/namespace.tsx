@@ -1,6 +1,7 @@
+import { redirect } from 'react-router-dom';
 import { FilterContextProvider } from '~/components/Filter/generic/FilterContext';
 import { importPageLoader, ImportForm } from '../../components/ImportForm';
-import { IMPORT_PATH, NAMESPACE_LIST_PATH } from '../paths';
+import { IMPORT_PATH, NAMESPACE_LIST_PATH, WORKSPACE_PATH } from '../paths';
 import { RouteErrorBoundry } from '../RouteErrorBoundary';
 
 const workspaceRoutes = [
@@ -25,6 +26,13 @@ const workspaceRoutes = [
     loader: importPageLoader,
     errorElement: <RouteErrorBoundry />,
     element: <ImportForm />,
+  },
+  {
+    path: WORKSPACE_PATH.path,
+    loader: () => {
+      return redirect('applications');
+    },
+    errorElement: <RouteErrorBoundry />,
   },
 ];
 
