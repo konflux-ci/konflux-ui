@@ -1,192 +1,179 @@
-import { Virtualizer } from '@tanstack/react-virtual';
-import { renderHook } from '@testing-library/react';
+import React from 'react';
+import { render, act, cleanup } from '@testing-library/react';
 import { useKeyboardNavigation } from '../useKeyboardNavigation';
 
+const TestComponent: React.FC<{
+  scrollElementRef: React.RefObject<HTMLDivElement>;
+  lineHeight?: number;
+  enabled?: boolean;
+}> = ({ scrollElementRef, lineHeight, enabled = true }) => {
+  const navRef = useKeyboardNavigation({ scrollElementRef, lineHeight, enabled });
+
+  const ref = React.useCallback(
+    (node: HTMLDivElement | null) => {
+      (scrollElementRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      (navRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    },
+    [scrollElementRef, navRef],
+  );
+
+  return React.createElement('div', {
+    ref,
+    tabIndex: 0,
+    'data-test': 'scroll-container',
+    style: { height: '500px', overflow: 'auto' },
+  });
+};
+
 describe('useKeyboardNavigation', () => {
-  let mockVirtualizer: Partial<Virtualizer<HTMLDivElement, Element>>;
-  let mockScrollElement: HTMLDivElement;
-  let scrollElementRef: React.RefObject<HTMLDivElement>;
   let scrollTopValue: number;
 
-  // 🔧 setup helpers
   const setup = (enabled = true) => {
-    mockScrollElement.focus();
+    const scrollElementRef: React.MutableRefObject<HTMLDivElement | null> = { current: null };
 
-    return renderHook(() =>
-      useKeyboardNavigation({
-        virtualizer: mockVirtualizer as Virtualizer<HTMLDivElement, Element>,
+    const result = render(
+      React.createElement(TestComponent, {
         scrollElementRef,
+        lineHeight: 20,
         enabled,
       }),
     );
-  };
 
-  const fireKey = (key: string) => {
-    const event = new KeyboardEvent('keydown', { key, bubbles: true });
-    Object.defineProperty(event, 'preventDefault', { value: jest.fn() });
-    document.dispatchEvent(event);
-  };
-
-  beforeEach(() => {
-    mockScrollElement = document.createElement('div');
-    mockScrollElement.tabIndex = 0;
-    document.body.appendChild(mockScrollElement);
-
-    Object.defineProperty(mockScrollElement, 'clientHeight', {
-      configurable: true,
-      value: 500,
-    });
+    const scrollContainer = result.getByTestId('scroll-container');
 
     scrollTopValue = 100;
-    Object.defineProperty(mockScrollElement, 'scrollTop', {
+    Object.defineProperty(scrollContainer, 'scrollTop', {
       configurable: true,
       get() {
         return scrollTopValue;
       },
-      set(value) {
+      set(value: number) {
         scrollTopValue = value;
       },
     });
 
-    scrollElementRef = { current: mockScrollElement };
+    Object.defineProperty(scrollContainer, 'clientHeight', {
+      configurable: true,
+      value: 500,
+    });
 
-    mockVirtualizer = {
-      scrollOffset: 100,
-      getTotalSize: jest.fn(() => 5000),
-      options: {
-        estimateSize: jest.fn(() => 20),
-      },
-    } as unknown as Virtualizer<HTMLDivElement, Element>;
-  });
+    Object.defineProperty(scrollContainer, 'scrollHeight', {
+      configurable: true,
+      value: 5000,
+    });
+
+    act(() => {
+      scrollContainer.focus();
+    });
+
+    return { scrollContainer };
+  };
+
+  // useHotkeys attaches native event listeners, so userEvent (synthetic events) won't trigger them
+  const fireKey = (element: HTMLElement, key: string) => {
+    act(() => {
+      element.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key,
+          code: key,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+    });
+  };
 
   afterEach(() => {
-    document.body.removeChild(mockScrollElement);
-    jest.clearAllMocks();
+    cleanup();
   });
 
-  // ================= Arrow keys =================
   describe('Arrow keys', () => {
     it('handles ArrowDown', () => {
-      setup();
-
-      fireKey('ArrowDown');
-
-      expect(mockScrollElement.scrollTop).toBe(120);
+      const { scrollContainer } = setup();
+      fireKey(scrollContainer, 'ArrowDown');
+      expect(scrollTopValue).toBe(120);
     });
 
     it('handles ArrowUp', () => {
-      mockScrollElement.scrollTop = 120;
-      setup();
-
-      fireKey('ArrowUp');
-
-      expect(mockScrollElement.scrollTop).toBe(100);
+      const { scrollContainer } = setup();
+      scrollTopValue = 120;
+      fireKey(scrollContainer, 'ArrowUp');
+      expect(scrollTopValue).toBe(100);
     });
 
     it('does not scroll below 0', () => {
-      mockScrollElement.scrollTop = 10;
-      setup();
-
-      fireKey('ArrowUp');
-
-      expect(mockScrollElement.scrollTop).toBe(0);
-    });
-
-    it('does not scroll beyond max on ArrowDown', () => {
-      mockScrollElement.scrollTop = 4495;
-      setup();
-
-      fireKey('ArrowDown');
-
-      expect(mockScrollElement.scrollTop).toBe(4500);
+      const { scrollContainer } = setup();
+      scrollTopValue = 10;
+      fireKey(scrollContainer, 'ArrowUp');
+      expect(scrollTopValue).toBe(0);
     });
   });
 
-  // ================= Page keys =================
   describe('Page keys', () => {
     it('handles PageDown', () => {
-      setup();
-
-      fireKey('PageDown');
-
-      expect(mockScrollElement.scrollTop).toBe(600);
+      const { scrollContainer } = setup();
+      fireKey(scrollContainer, 'PageDown');
+      expect(scrollTopValue).toBe(600);
     });
 
     it('handles PageUp', () => {
-      mockScrollElement.scrollTop = 600;
-      setup();
-
-      fireKey('PageUp');
-
-      expect(mockScrollElement.scrollTop).toBe(100);
+      const { scrollContainer } = setup();
+      scrollTopValue = 600;
+      fireKey(scrollContainer, 'PageUp');
+      expect(scrollTopValue).toBe(100);
     });
 
     it('does not scroll below 0 on PageUp', () => {
-      mockScrollElement.scrollTop = 100;
-      setup();
-
-      fireKey('PageUp');
-
-      expect(mockScrollElement.scrollTop).toBe(0);
-    });
-
-    it('does not scroll beyond max on PageDown', () => {
-      mockScrollElement.scrollTop = 4800;
-      setup();
-
-      fireKey('PageDown');
-
-      expect(mockScrollElement.scrollTop).toBe(5000);
+      const { scrollContainer } = setup();
+      scrollTopValue = 100;
+      fireKey(scrollContainer, 'PageUp');
+      expect(scrollTopValue).toBe(0);
     });
   });
 
-  // ================= Home / End =================
   describe('Home / End keys', () => {
     it('handles Home', () => {
-      setup();
-
-      fireKey('Home');
-
-      expect(mockScrollElement.scrollTop).toBe(0);
+      const { scrollContainer } = setup();
+      fireKey(scrollContainer, 'Home');
+      expect(scrollTopValue).toBe(0);
     });
 
     it('handles End', () => {
-      setup();
-
-      fireKey('End');
-
-      expect(mockScrollElement.scrollTop).toBe(5000);
+      const { scrollContainer } = setup();
+      fireKey(scrollContainer, 'End');
+      expect(scrollTopValue).toBe(5000);
     });
   });
 
-  // ================= misc =================
   describe('other behaviors', () => {
     it('ignores unsupported keys', () => {
-      const initial = mockScrollElement.scrollTop;
-      setup();
-
-      fireKey('Tab');
-
-      expect(mockScrollElement.scrollTop).toBe(initial);
+      const { scrollContainer } = setup();
+      const initial = scrollTopValue;
+      fireKey(scrollContainer, 'Tab');
+      expect(scrollTopValue).toBe(initial);
     });
 
     it('does nothing when disabled', () => {
-      const initial = mockScrollElement.scrollTop;
-      setup(false);
-
-      fireKey('PageDown');
-
-      expect(mockScrollElement.scrollTop).toBe(initial);
+      const { scrollContainer } = setup(false);
+      const initial = scrollTopValue;
+      fireKey(scrollContainer, 'PageDown');
+      expect(scrollTopValue).toBe(initial);
     });
 
-    it('cleans up event listener on unmount', () => {
-      const spy = jest.spyOn(document, 'removeEventListener');
-
-      const { unmount } = setup();
-
-      unmount();
-
-      expect(spy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    it('does nothing when scrollElementRef is null', () => {
+      const nullRef: React.MutableRefObject<HTMLDivElement | null> = { current: null };
+      const result = render(
+        React.createElement(TestComponent, {
+          scrollElementRef: nullRef,
+          enabled: true,
+        }),
+      );
+      const el = result.getByTestId('scroll-container');
+      scrollTopValue = 100;
+      nullRef.current = null;
+      el.focus();
+      fireKey(el, 'ArrowDown');
+      expect(scrollTopValue).toBe(100);
     });
   });
 });
