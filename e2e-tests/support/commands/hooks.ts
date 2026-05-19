@@ -18,7 +18,9 @@ before(() => {
     JSON.stringify({ 'application-list-getting-started-modal': true }),
   );
 
-  if (Cypress.env('LOCAL_CLUSTER')) {
+  if (Cypress.env('LOGIN_PROVIDER') === 'openshift') {
+    Login.openshiftLogin();
+  } else if (Cypress.env('LOCAL_CLUSTER')) {
     Login.localKonfluxLogin();
   } else if (Cypress.env('PERIODIC_RUN_STAGE')) {
     Login.stageKonfluxLogin();
