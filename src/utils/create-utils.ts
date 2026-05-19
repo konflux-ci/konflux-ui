@@ -44,6 +44,7 @@ import {
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
+  normalizeDockerConfigForDockerconfigjson,
   SecretForComponentOption,
 } from './secrets/secret-utils';
 import {
@@ -354,8 +355,12 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
     } else {
       data = values.image.dockerconfig
         ? {
-            ['.dockercfg']: Base64.encode(
-              JSON.stringify(JSON.parse(Base64.decode(values.image.dockerconfig))),
+            ['.dockerconfigjson']: Base64.encode(
+              JSON.stringify(
+                normalizeDockerConfigForDockerconfigjson(
+                  JSON.parse(Base64.decode(values.image.dockerconfig)),
+                ),
+              ),
             ),
           }
         : '';
@@ -367,12 +372,15 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
       return acc;
     }, {});
   }
+
+  const importLabels = getLabelsForSecret(values);
   const secretResource: SecretKind = {
     apiVersion: SecretModel.apiVersion,
     kind: SecretModel.kind,
     metadata: {
       name: values.secretName,
       namespace,
+      ...(importLabels && Object.keys(importLabels).length > 0 ? { labels: importLabels } : {}),
     },
     type:
       values.type === SecretTypeDropdownLabel.source
