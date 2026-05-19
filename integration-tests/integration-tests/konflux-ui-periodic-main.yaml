@@ -1,0 +1,46 @@
+apiVersion: appstudio.redhat.com/v1beta2
+kind: IntegrationTestScenario
+metadata:
+  labels:
+    test.appstudio.openshift.io/optional: 'false'
+  name: konflux-ui-periodic-main
+spec:
+  application: konflux-e2e
+  contexts:
+    - description: execute the integration test in all cases - this would be the default state
+      name: application
+    - description: execute the integration test for a Snapshot created for a `pull request` event
+      name: pull_request
+  params:
+    - name: konflux-test-infra-secret
+      value: konflux-test-infra
+    - name: cloud-credential-key
+      value: rhtap-cloud-credentials-us-east-1
+    - name: oci-container-repo
+      value: 'quay.io/konflux_ui_qe/konflux-ui-tests'
+    - name: e2e-artifacts-repo
+      value: 'quay.io/konflux_ui_qe/pr-check-artefacts'
+    - name: github-credentials-secret
+      value: 'github-credentials'
+    - name: cypress-credentials-secret
+      default: 'cypress-credentials'
+    - name: cypress-cloud-secret
+      default: 'cypress-cloud-credentials'
+    - name: slack-credentials-secret
+      default: 'slack-credentials'
+    - name: oci-credentials-secret
+      default: 'quay-secret'
+    - name: build-credentials-secret
+      default: build-credentials
+    - name: e2e-spec-file
+      default: 'tests/basic-happy-path.spec.ts'
+  resolverRef:
+    params:
+      - name: url
+        value: https://github.com/konflux-ci/konflux-ui/
+      - name: revision
+        value: main
+      - name: pathInRepo
+        value: integration-test/pipelines/e2e-periodic-main-pipeline.yaml
+    resolver: git
+    resourceKind: pipeline

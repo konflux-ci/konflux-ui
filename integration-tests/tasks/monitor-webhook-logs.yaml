@@ -1,0 +1,134 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: monitor-webhook-logs
+  annotations:
+    tekton.dev/displayName: 'Monitor Webhook Logs'
+    tekton.dev/categories: 'Monitoring'
+    tekton.dev/tags: 'logs,debug,webhook'
+spec:
+  description: >-
+    Monitors smee-client and pipelines-as-code controller logs during E2E test execution.
+    Runs in background and outputs logs to help debug webhook forwarding issues.
+  params:
+    - name: monitoring-duration
+      type: string
+      default: '10m'
+      description: 'How long to monitor (e.g., 5m, 10m, 30m)'
+  steps:
+    - name: setup-monitoring
+      image: bitnami/kubectl:latest
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "=== Getting PipelineRun name and kubeconfig ==="
+
+        # Get PipelineRun name and namespace from environment variables
+        PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
+        NAMESPACE="${TEKTON_NAMESPACE}"
+        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
+        echo "Namespace: ${NAMESPACE}"
+
+        # Construct the secret name
+        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
+        echo "Looking for secret: ${SECRET_NAME}"
+
+        # Extract kubeconfig from the secret
+        kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o jsonpath='{.data.kubeconfig}' | base64 -d > /tmp/kubeconfig
+
+        # Switch to Kind cluster context
+        export KUBECONFIG=/tmp/kubeconfig
+
+        echo "=== Starting log monitoring ==="
+        echo "Monitoring duration: $(params.monitoring-duration)"
+        echo "Poll interval: 2 minutes"
+        echo "=========================================="
+
+        # Parse monitoring duration
+        DURATION=$(params.monitoring-duration)
+        DURATION_NUM=${DURATION//[!0-9]/}
+        DURATION_UNIT=${DURATION//[0-9]/}
+
+        case ${DURATION_UNIT} in
+          m|M)
+            TOTAL_SECONDS=$((DURATION_NUM * 60))
+            ;;
+          s|S)
+            TOTAL_SECONDS=${DURATION_NUM}
+            ;;
+          h|H)
+            TOTAL_SECONDS=$((DURATION_NUM * 3600))
+            ;;
+          *)
+            echo "Unknown time unit: ${DURATION_UNIT}, defaulting to minutes"
+            TOTAL_SECONDS=$((DURATION_NUM * 60))
+            ;;
+        esac
+
+        echo "Total monitoring time: ${TOTAL_SECONDS} seconds"
+        echo ""
+
+        # Poll interval: 2 minutes
+        POLL_INTERVAL=120
+        ELAPSED=0
+        ITERATION=1
+
+        while [ ${ELAPSED} -lt ${TOTAL_SECONDS} ]; do
+          echo "=========================================="
+          echo "=== Poll #${ITERATION} - $(date '+%Y-%m-%d %H:%M:%S') ==="
+          echo "=========================================="
+
+          # Get smee-client logs
+          echo ""
+          echo "### SMEE-CLIENT Logs (last 30 lines) ###"
+          SMEE_POD=$(kubectl get pod -n smee-client -l app=gosmee-client -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+          if [[ -n "${SMEE_POD}" ]]; then
+            echo "Pod: ${SMEE_POD}"
+            kubectl logs -n smee-client ${SMEE_POD} --tail=30 --timestamps 2>&1 | sed 's/^/[SMEE] /'
+          else
+            echo "⚠️  No smee-client pod found"
+          fi
+
+          # Get pipelines-as-code controller logs
+          echo ""
+          echo "### PIPELINES-AS-CODE Controller Logs (last 30 lines) ###"
+          PAC_POD=$(kubectl get pod -n pipelines-as-code -l app.kubernetes.io/name=controller -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+          if [[ -n "${PAC_POD}" ]]; then
+            echo "Pod: ${PAC_POD}"
+            kubectl logs -n pipelines-as-code ${PAC_POD} --tail=30 --timestamps 2>&1 | sed 's/^/[PAC] /'
+          else
+            echo "⚠️  No pipelines-as-code controller pod found"
+          fi
+
+          echo ""
+          echo "=========================================="
+
+          # Sleep for 2 minutes unless we're done
+          REMAINING=$((TOTAL_SECONDS - ELAPSED))
+          if [ ${REMAINING} -gt ${POLL_INTERVAL} ]; then
+            echo "Next poll in ${POLL_INTERVAL} seconds..."
+            sleep ${POLL_INTERVAL}
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          else
+            echo "Final wait for ${REMAINING} seconds..."
+            sleep ${REMAINING}
+            ELAPSED=${TOTAL_SECONDS}
+          fi
+
+          ITERATION=$((ITERATION + 1))
+        done
+
+        echo ""
+        echo "=========================================="
+        echo "✓ Monitoring complete after ${ITERATION} polls"
+        echo "=========================================="
+      env:
+        - name: TEKTON_PIPELINE_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
+        - name: TEKTON_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace

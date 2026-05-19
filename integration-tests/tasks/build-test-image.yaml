@@ -1,0 +1,123 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-test-image
+  annotations:
+    tekton.dev/displayName: 'Build E2E Test Image'
+    tekton.dev/categories: 'Build'
+    tekton.dev/tags: 'build,e2e,docker'
+spec:
+  description: >-
+    Check if e2e-tests directory has changes and rebuild the test image if needed.
+    If no changes, use the default image from quay.io.
+  params:
+    - name: git-url
+      type: string
+      description: 'Git repository URL'
+    - name: git-revision
+      type: string
+      description: 'Git revision (commit SHA)'
+    - name: target-branch
+      type: string
+      default: 'main'
+      description: 'Target branch to compare against'
+    - name: pull-request-number
+      type: string
+      description: 'Pull request number'
+    - name: default-test-image
+      type: string
+      default: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
+      description: 'Default test image to use if no changes detected'
+    - name: test-image-repo
+      type: string
+      default: 'quay.io/konflux_ui_qe/konflux-ui-tests'
+      description: 'Repository to push the built test image'
+    - name: quay-secret
+      type: string
+      default: 'quay-secret'
+      description: 'Secret containing Quay.io credentials'
+  results:
+    - name: test-image
+      description: 'The test image to use for E2E tests'
+  workspaces:
+    - name: source
+      description: 'Workspace for cloning git repo and building'
+      optional: true
+  volumes:
+    - name: quay-auth
+      secret:
+        secretName: $(params.quay-secret)
+        optional: true
+  steps:
+    - name: clone-and-check
+      image: alpine/git:latest
+      script: |
+        #!/bin/sh
+        set -eu
+
+        echo "=== Cloning repository and checking for changes ==="
+
+        # Clone to /workspace/source
+        git clone $(params.git-url) /workspace/source
+        cd /workspace/source
+        git checkout $(params.git-revision)
+
+        # Check if e2e-tests directory has changes compared to target branch
+        git fetch origin $(params.target-branch)
+
+        if git diff --name-only origin/$(params.target-branch)...HEAD | grep -q "^e2e-tests/"; then
+          echo "✅ Changes detected in e2e-tests/"
+          echo "true" > /workspace/build-needed
+        else
+          echo "ℹ️  No changes in e2e-tests/"
+          echo "false" > /workspace/build-needed
+          echo -n "$(params.default-test-image)" > $(results.test-image.path)
+        fi
+
+    - name: build-with-kaniko
+      image: gcr.io/kaniko-project/executor:debug
+      volumeMounts:
+        - name: quay-auth
+          mountPath: /secrets/quay
+          readOnly: true
+      command:
+        - /bin/sh
+      args:
+        - -c
+        - |
+          BUILD_NEEDED=$(cat /workspace/build-needed)
+
+          if [ "$BUILD_NEEDED" = "false" ]; then
+            echo "⏭️  Skipping build (no changes in e2e-tests/)"
+            echo "    Using default image: $(params.default-test-image)"
+            exit 0
+          fi
+
+          echo "=== Building test image with Kaniko ==="
+
+          # Prepare authentication
+          mkdir -p /kaniko/.docker
+          if [ -f /secrets/quay/.dockerconfigjson ]; then
+            cp /secrets/quay/.dockerconfigjson /kaniko/.docker/config.json
+            echo "✅ Quay credentials configured"
+          fi
+
+          # Build and push
+          /kaniko/executor \
+            --context=/workspace/source/e2e-tests \
+            --dockerfile=/workspace/source/e2e-tests/Containerfile \
+            --destination=$(params.test-image-repo):pr-$(params.pull-request-number) \
+            --cache=false \
+            --verbosity=info \
+            --skip-tls-verify
+
+          echo -n "$(params.test-image-repo):pr-$(params.pull-request-number)" > $(results.test-image.path)
+          echo "✅ Image built and pushed: $(params.test-image-repo):pr-$(params.pull-request-number)"
+
+    - name: show-result
+      image: alpine:latest
+      script: |
+        #!/bin/sh
+        echo ""
+        echo "📦 Final test image: $(cat $(results.test-image.path))"

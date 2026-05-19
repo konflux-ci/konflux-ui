@@ -1,0 +1,325 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: run-e2e-periodic-konflux-ui
+  annotations:
+    tekton.dev/displayName: 'konflux-ui-periodic-e2e-tests'
+    tekton.dev/categories: 'Pipeline'
+    tekton.dev/tags: 'e2e,cypress,konflux-ui'
+spec:
+  description: >-
+    A clean, native Tekton Task to run Konflux UI periodic tests. 
+    No Podman, no sidecars, kaniko build being run
+  params:
+    - name: job-type
+      type: string
+      default: 'pr-check'
+    - name: test-image
+      type: string
+      default: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
+      description: 'Test image to use for E2E tests'
+    - name: cypress-credentials-secret
+      type: string
+      default: 'cypress-credentials'
+    - name: cypress-cloud-secret
+      type: string
+      default: 'cypress-cloud-credentials'
+    - name: github-credentials-secret
+      type: string
+      default: 'github-credentials'
+    - name: spec-file
+      type: string
+      default: 'tests/basic-happy-path.spec.ts'
+    - name: oci-storage
+      type: string
+      description: 'OCI repository to store test artifacts'
+    - name: oci-credentials-secret
+      type: string
+      description: 'Secret containing OCI registry credentials'
+    - name: oci-credentials
+      type: string
+      default: 'quay-secret'
+      description: 'Secret name for OCI registry authentication'
+  volumes:
+    - name: dshm
+      emptyDir:
+        medium: Memory
+    - name: kubeconfig-data
+      emptyDir: {}
+    - name: test-artifacts
+      emptyDir: {}
+    - name: oci-credentials
+      secret:
+        secretName: $(params.oci-credentials)
+        optional: true
+  steps:
+    - name: fix-smee-client
+      image: bitnami/kubectl:latest
+      workingDir: /workspace
+      volumeMounts:
+        - name: kubeconfig-data
+          mountPath: /shared
+      env:
+        - name: TEKTON_PIPELINE_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
+        - name: TEKTON_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+      script: |
+        #!/usr/bin/env bash
+        set -euo pipefail
+
+        echo "=== Getting PipelineRun name and kubeconfig ==="
+
+        # Get PipelineRun name and namespace from environment variables set by Tekton
+        PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
+        NAMESPACE="${TEKTON_NAMESPACE}"
+        echo "PipelineRun name: ${PIPELINE_RUN_NAME}"
+        echo "Namespace: ${NAMESPACE}"
+
+        # Construct the secret name
+        SECRET_NAME="kfg-${PIPELINE_RUN_NAME}"
+        echo "Looking for secret: ${SECRET_NAME}"
+
+        # Extract kubeconfig from the secret (this runs in Konflux cluster context)
+        kubectl get secret ${SECRET_NAME} -n ${NAMESPACE} -o jsonpath='{.data.kubeconfig}' | base64 -d > /shared/kubeconfig
+
+        # Switch to Kind cluster context
+        export KUBECONFIG=/shared/kubeconfig
+
+        echo "=== Extracting Konflux base URL from kubeconfig ==="
+
+        # Extract the server URL from kubeconfig
+        KUBE_SERVER=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')
+        echo "Kubernetes API server: ${KUBE_SERVER}"
+
+        # Extract IP address (remove https:// prefix and :6443 port)
+        KUBE_IP=$(echo "${KUBE_SERVER}" | sed -E 's|https?://([^:]+):.*|\1|')
+        echo "Extracted IP: ${KUBE_IP}"
+
+        # Construct Konflux base URL with port 9443
+        CYPRESS_KONFLUX_BASE_URL="https://${KUBE_IP}:9443"
+        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+        # Save to shared volume for next step
+        echo "${CYPRESS_KONFLUX_BASE_URL}" > /shared/base-url
+
+        echo "=== Fixing smee-client configuration ==="
+
+        # Get the current smee.io URL from the deployment
+        SMEE_URL=$(kubectl get deployment gosmee-client -n smee-client -o jsonpath='{.spec.template.spec.containers[0].args[1]}')
+        echo "Current smee.io URL: ${SMEE_URL}"
+
+        # Fix smee-client by patching args and liveness probe
+        echo "Updating smee-client deployment..."
+        kubectl patch deployment gosmee-client -n smee-client --type='json' -p='[
+          {"op": "replace", "path": "/spec/template/spec/containers/0/args", "value": ["client", "'"${SMEE_URL}"'", "http://pipelines-as-code-controller.pipelines-as-code.svc.cluster.local:8180"]},
+          {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/failureThreshold", "value": 5},
+          {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/initialDelaySeconds", "value": 60},
+          {"op": "replace", "path": "/spec/template/spec/containers/0/livenessProbe/timeoutSeconds", "value": 30}
+        ]'
+
+        # Wait for smee-client to be ready
+        echo "Waiting for smee-client deployment to be ready..."
+        kubectl rollout status deployment/gosmee-client -n smee-client --timeout=5m
+
+        # Verify smee-client is running
+        SMEE_POD=$(kubectl get pod -n smee-client -l app=gosmee-client -o jsonpath='{.items[0].metadata.name}')
+        echo "smee-client pod: ${SMEE_POD}"
+        kubectl get pod ${SMEE_POD} -n smee-client
+
+        echo "smee-client is ready!"
+        echo "Setup complete. Ready for E2E tests."
+    - name: run-e2e-test
+      image: $(params.test-image)
+      workingDir: /tmp/e2e
+      resources:
+        limits:
+          memory: 8Gi
+          cpu: '2'
+        requests:
+          memory: 8Gi
+          cpu: '1'
+      volumeMounts:
+        - name: dshm
+          mountPath: /dev/shm
+        - name: kubeconfig-data
+          mountPath: /shared
+          readOnly: true
+        - name: test-artifacts
+          mountPath: /artifacts
+        - name: oci-credentials
+          mountPath: /secrets/oci-credentials
+          readOnly: true
+      env:
+        - name: CYPRESS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-credentials-secret)
+              key: username
+        - name: CYPRESS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-credentials-secret)
+              key: password
+        - name: CYPRESS_GH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.github-credentials-secret)
+              key: token
+        - name: CYPRESS_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-cloud-secret)
+              key: project-id
+        - name: CYPRESS_RECORD_KEY
+          valueFrom:
+            secretKeyRef:
+              name: $(params.cypress-cloud-secret)
+              key: record-key
+        - name: TEKTON_PIPELINE_RUN
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tekton.dev/pipelineRun']
+      script: |
+        #!/usr/bin/env bash
+        # Note: NOT using 'set -e' so script continues after test failure
+        set -uo pipefail
+
+        echo "=== Loading configuration from setup step ==="
+
+        # Read base URL from shared volume
+        export CYPRESS_KONFLUX_BASE_URL=$(cat /shared/base-url)
+        echo "Konflux base URL: ${CYPRESS_KONFLUX_BASE_URL}"
+
+        echo "=== Running E2E tests ==="
+        SPEC_FILE="$(params.spec-file)"
+        echo "Running test spec: ${SPEC_FILE}"
+
+        # Run tests and capture exit code (don't exit on failure)
+        set +e
+        CYPRESS_GH_TOKEN=${CYPRESS_GH_TOKEN} CYPRESS_LOCAL_CLUSTER=true CYPRESS_KONFLUX_BASE_URL=${CYPRESS_KONFLUX_BASE_URL} yarn run cy:run --spec "${SPEC_FILE}"
+        TEST_RESULT=$?
+        set -e
+
+        echo ""
+        echo "=========================================="
+        echo "Test completed with exit code: ${TEST_RESULT}"
+        echo "=========================================="
+        echo ""
+
+        echo "=== Collecting test artifacts ==="
+        mkdir -p /artifacts
+
+        # Copy Cypress artifacts if they exist
+        if [ -d "cypress/videos" ]; then
+          echo "Copying videos..."
+          cp -r cypress/videos /artifacts/ || true
+        fi
+
+        if [ -d "cypress/screenshots" ]; then
+          echo "Copying screenshots..."
+          cp -r cypress/screenshots /artifacts/ || true
+        fi
+
+        # Copy test reports
+        if [ -f "cypress/results/junit.xml" ]; then
+          echo "Copying JUnit report..."
+          cp cypress/results/junit.xml /artifacts/e2e-report.xml || true
+        fi
+
+        # Create a simple test log
+        echo "Test execution completed with exit code: ${TEST_RESULT}" > /artifacts/e2e-tests.log
+        echo "Timestamp: $(date)" >> /artifacts/e2e-tests.log
+        echo "Base URL: ${CYPRESS_KONFLUX_BASE_URL}" >> /artifacts/e2e-tests.log
+
+        # Save test result for later steps
+        echo "${TEST_RESULT}" > /artifacts/test-exit-code
+
+        # List collected artifacts
+        echo "Artifacts collected:"
+        ls -lah /artifacts/
+
+        # Don't exit with failure here - let upload-artifacts run first
+        if [ ${TEST_RESULT} -ne 0 ]; then
+          echo "⚠️  Tests failed with exit code: ${TEST_RESULT}"
+          echo "Continuing to upload artifacts..."
+        else
+          echo "✅ Tests passed"
+        fi
+
+        echo ""
+        echo "=== Uploading test artifacts to OCI registry ==="
+
+        PIPELINE_RUN_NAME="${TEKTON_PIPELINE_RUN}"
+        OCI_REPO="$(params.oci-storage)"
+        OCI_REF="${OCI_REPO}:${PIPELINE_RUN_NAME}"
+
+        echo "Uploading to: ${OCI_REF}"
+
+        # Check if there are any artifacts to upload
+        if [ -z "$(ls -A /artifacts)" ]; then
+          echo "⚠️  No artifacts found to upload"
+        else
+          echo "Artifacts to upload:"
+          ls -lah /artifacts/
+
+          # Upload artifacts using ORAS (install oras first)
+          echo "Installing ORAS..."
+          cd /tmp
+          curl -LO https://github.com/oras-project/oras/releases/download/v1.1.0/oras_1.1.0_linux_amd64.tar.gz
+          tar -xzf oras_1.1.0_linux_amd64.tar.gz
+          chmod +x oras
+          ORAS_BIN=/tmp/oras
+
+          echo "Verifying ORAS installation..."
+          ${ORAS_BIN} version
+          echo "ORAS binary location: ${ORAS_BIN}"
+          ls -lh ${ORAS_BIN}
+
+          echo "Setting up authentication..."
+
+          # Check if OCI credentials secret is mounted
+          if [ -f /secrets/oci-credentials/.dockerconfigjson ]; then
+            echo "✓ Found OCI credentials secret"
+            mkdir -p ~/.docker
+            cp /secrets/oci-credentials/.dockerconfigjson ~/.docker/config.json
+            export DOCKER_CONFIG=~/.docker
+            echo "DOCKER_CONFIG=${DOCKER_CONFIG}"
+            echo "Docker config created successfully"
+          elif [ -f /tekton/home/.docker/config.json ]; then
+            echo "✓ Using Tekton Docker config"
+            export DOCKER_CONFIG=/tekton/home/.docker
+            echo "DOCKER_CONFIG=${DOCKER_CONFIG}"
+          else
+            echo "⚠️ No Docker config found"
+            echo "Available credential files:"
+            ls -la /secrets/oci-credentials/ 2>/dev/null || echo "  No OCI credentials mounted"
+            ls -la /tekton/home/.docker/ 2>/dev/null || echo "  No Tekton Docker config"
+          fi
+
+          echo "Uploading artifacts with ORAS..."
+          cd /artifacts
+          ${ORAS_BIN} push "${OCI_REF}" \
+            --annotation "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --annotation "org.opencontainers.image.title=E2E Test Artifacts" \
+            --annotation "pipeline.run=${PIPELINE_RUN_NAME}" \
+            ./:application/vnd.oci.image.layer.v1.tar+gzip || echo "⚠️ Failed to upload artifacts"
+
+          echo "✅ Artifacts uploaded successfully to ${OCI_REF}"
+          echo "Download artifacts with: oras pull ${OCI_REF}"
+        fi
+
+        # Now exit with the test result
+        echo ""
+        echo "=== Final Result ==="
+        if [ ${TEST_RESULT} -ne 0 ]; then
+          echo "❌ E2E tests failed with exit code: ${TEST_RESULT}"
+          exit ${TEST_RESULT}
+        else
+          echo "✅ E2E tests passed"
+          exit 0
+        fi
