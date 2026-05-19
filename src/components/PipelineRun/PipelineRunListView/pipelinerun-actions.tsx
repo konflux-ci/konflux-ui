@@ -128,7 +128,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
               );
             }),
           isDisabled: status === runStatus.Cancelling,
-          disabledTooltip: null,
+          disabledTooltip:
+            status === runStatus.Cancelling
+              ? 'Cannot rerun while the pipeline run is being cancelled'
+              : null,
         };
       }
 
@@ -153,7 +156,10 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
               );
             }),
           isDisabled: status === runStatus.Cancelling,
-          disabledTooltip: null,
+          disabledTooltip:
+            status === runStatus.Cancelling
+              ? 'Cannot rerun while the pipeline run is being cancelled'
+              : null,
         };
       }
 
@@ -187,7 +193,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
     isIntegrationTestsPage,
     isSnapshotsPage,
     isPR,
-    status
+    status,
   ]);
 };
 
@@ -340,7 +346,10 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                   );
                 }),
               disabled: status === runStatus.Cancelling,
-              disabledTooltip: undefined,
+              disabledTooltip:
+                status === runStatus.Cancelling
+                  ? 'Cannot rerun while the pipeline run is being cancelled'
+                  : null,
             },
           ];
         }
