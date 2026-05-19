@@ -26,4 +26,13 @@ describe('MultiImageCredentialForm', () => {
     expect(screen.getByRole('button', { name: 'Remove credentials 1' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Remove credentials 2' })).toBeVisible();
   });
+
+  it('shows keep-password placeholder in edit mode', () => {
+    formikRenderer(<MultiImageCredentialForm name="test" isEditMode />, {
+      test: [{ registry: 'registry.io', username: 'user', password: '', email: '' }],
+    });
+    expect(
+      screen.getByPlaceholderText('To keep the same password, leave this field blank'),
+    ).toBeVisible();
+  });
 });
