@@ -156,7 +156,6 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
         <>
           <SelectInputField
             name="name"
-            data-test="secret-name"
             label="Select or enter secret name"
             toggleAriaLabel="Select or enter secret name"
             helpText={secretNameHelperText}
@@ -164,7 +163,6 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
             variant="typeahead"
             options={options}
             isCreatable
-            className="secret-type-subform__dropdown"
             hasOnCreateOption
             isDisabled={isEditMode}
             required

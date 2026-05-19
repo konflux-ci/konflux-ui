@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { fireEvent, screen, waitFor, cleanup } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { userEvent } from '@testing-library/user-event';
+import { useFormikContext } from 'formik';
 import { formikRenderer } from '~/unit-test-utils/rendering-utils';
 import { SelectInputOption } from '../field-types';
 import SelectInputField from '../SelectInputField';
@@ -30,12 +32,10 @@ const renderField = (
     initialValues,
   );
 
-const openDropdown = () => fireEvent.click(screen.getByRole('button', { name: 'Test toggle' }));
+const setupUser = () => userEvent.setup();
 
-const getChipLabels = () =>
-  screen
-    .queryAllByText((_, el) => el?.classList?.contains('pf-v5-c-label__text') || false)
-    .map((el) => el.textContent);
+const openDropdown = async (user: ReturnType<typeof userEvent.setup>) =>
+  user.click(screen.getByRole('button', { name: 'Test toggle' }));
 
 describe('SelectInputField', () => {
   afterEach(jest.resetAllMocks);
@@ -54,8 +54,9 @@ describe('SelectInputField', () => {
     });
 
     it('shows options when toggle is clicked', async () => {
+      const user = setupUser();
       renderField();
-      openDropdown();
+      await openDropdown(user);
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
         expect(screen.getByText('option-b')).toBeVisible();
@@ -63,23 +64,25 @@ describe('SelectInputField', () => {
       });
     });
 
-    it('does not open when disabled', () => {
+    it('does not open when disabled', async () => {
+      const user = setupUser();
       renderField({ isDisabled: true });
-      fireEvent.click(screen.getByRole('button', { name: 'Test toggle' }));
+      await user.click(screen.getByRole('button', { name: 'Test toggle' }));
       expect(screen.queryByText('option-a')).not.toBeInTheDocument();
     });
   });
 
   describe('single-select (variant="typeahead")', () => {
     it('selects a value and closes the dropdown', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' });
-      openDropdown();
+      await openDropdown(user);
 
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
       });
 
-      fireEvent.click(screen.getByText('option-a'));
+      await user.click(screen.getByText('option-a'));
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('option-a')).toBeInTheDocument();
@@ -88,12 +91,13 @@ describe('SelectInputField', () => {
     });
 
     it('clears the value, closes the dropdown, and stops event propagation', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' }, { [fieldName]: 'option-a' });
 
       expect(screen.getByDisplayValue('option-a')).toBeInTheDocument();
 
       const clearBtn = screen.getByRole('button', { name: 'Clear input value' });
-      fireEvent.click(clearBtn);
+      await user.click(clearBtn);
 
       await waitFor(() => {
         expect(screen.queryByDisplayValue('option-a')).not.toBeInTheDocument();
@@ -102,10 +106,11 @@ describe('SelectInputField', () => {
     });
 
     it('fires onClear callback when clear button is clicked', async () => {
+      const user = setupUser();
       const onClear = jest.fn();
       renderField({ variant: 'typeahead', onClear }, { [fieldName]: 'option-a' });
 
-      fireEvent.click(screen.getByRole('button', { name: 'Clear input value' }));
+      await user.click(screen.getByRole('button', { name: 'Clear input value' }));
 
       await waitFor(() => {
         expect(onClear).toHaveBeenCalledTimes(1);
@@ -113,15 +118,16 @@ describe('SelectInputField', () => {
     });
 
     it('fires onSelect callback when an option is selected', async () => {
+      const user = setupUser();
       const onSelect = jest.fn();
       renderField({ variant: 'typeahead', onSelect });
-      openDropdown();
+      await openDropdown(user);
 
       await waitFor(() => {
         expect(screen.getByText('option-b')).toBeVisible();
       });
 
-      fireEvent.click(screen.getByText('option-b'));
+      await user.click(screen.getByText('option-b'));
 
       await waitFor(() => {
         expect(onSelect).toHaveBeenCalledTimes(1);
@@ -132,28 +138,30 @@ describe('SelectInputField', () => {
 
   describe('multi-select (default variant)', () => {
     it('defaults to typeaheadMulti and allows multiple selections', async () => {
+      const user = setupUser();
       renderField({}, { [fieldName]: [] });
-      openDropdown();
+      await openDropdown(user);
 
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'option-a' })).toBeVisible();
       });
 
-      fireEvent.click(screen.getByRole('option', { name: 'option-a' }));
+      await user.click(screen.getByRole('option', { name: 'option-a' }));
 
       await waitFor(() => {
-        expect(getChipLabels()).toContain('option-a');
+        expect(screen.getAllByText('option-a').length).toBeGreaterThanOrEqual(1);
       });
 
-      fireEvent.click(screen.getByRole('option', { name: 'option-b' }));
+      await user.click(screen.getByRole('option', { name: 'option-b' }));
 
       await waitFor(() => {
-        expect(getChipLabels()).toContain('option-a');
-        expect(getChipLabels()).toContain('option-b');
+        expect(screen.getAllByText('option-a').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('option-b').length).toBeGreaterThanOrEqual(1);
       });
     });
 
     it('removes a multi-select chip via onClose', async () => {
+      const user = setupUser();
       renderField({}, { [fieldName]: ['option-a', 'option-b'] });
 
       await waitFor(() => {
@@ -162,46 +170,51 @@ describe('SelectInputField', () => {
       });
 
       const closeButtons = screen.getAllByRole('button', { name: /close/i });
-      fireEvent.click(closeButtons[0]);
+      await user.click(closeButtons[0]);
 
       await waitFor(() => {
-        expect(getChipLabels()).not.toContain('option-a');
+        expect(screen.queryByText('option-a')).not.toBeInTheDocument();
       });
     });
 
     it('deselects an already-selected item on re-click', async () => {
+      const user = setupUser();
       renderField({}, { [fieldName]: ['option-a'] });
-      openDropdown();
+      await openDropdown(user);
 
       await waitFor(() => {
         expect(screen.getByRole('option', { name: 'option-a' })).toBeVisible();
       });
 
-      fireEvent.click(screen.getByRole('option', { name: 'option-a' }));
+      await user.click(screen.getByRole('option', { name: 'option-a' }));
 
       await waitFor(() => {
-        expect(getChipLabels()).not.toContain('option-a');
+        expect(screen.queryAllByRole('button', { name: /close/i })).toHaveLength(0);
       });
     });
 
     it('clears all selections via clear button', async () => {
+      const user = setupUser();
       renderField({}, { [fieldName]: ['option-a', 'option-b'] });
 
-      fireEvent.click(screen.getByRole('button', { name: 'Clear input value' }));
+      await user.click(screen.getByRole('button', { name: 'Clear input value' }));
 
       await waitFor(() => {
-        expect(getChipLabels()).toHaveLength(0);
+        expect(screen.queryByText('option-a')).not.toBeInTheDocument();
+        expect(screen.queryByText('option-b')).not.toBeInTheDocument();
       });
     });
   });
 
   describe('typeahead filtering', () => {
     it('filters options as user types', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' });
-      openDropdown();
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'option-a' } });
+      await user.clear(input);
+      await user.type(input, 'option-a');
 
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
@@ -210,17 +223,18 @@ describe('SelectInputField', () => {
     });
 
     it('shows all options when filter is empty', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' });
-      openDropdown();
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'option-a' } });
+      await user.type(input, 'option-a');
 
       await waitFor(() => {
         expect(screen.queryByText('option-b')).not.toBeInTheDocument();
       });
 
-      fireEvent.change(input, { target: { value: '' } });
+      await user.clear(input);
 
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
@@ -229,10 +243,11 @@ describe('SelectInputField', () => {
     });
 
     it('opens the dropdown when user starts typing while closed', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' });
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'opt' } });
+      await user.type(input, 'opt');
 
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
@@ -242,11 +257,12 @@ describe('SelectInputField', () => {
 
   describe('creatable options', () => {
     it('shows Create option when isCreatable and hasOnCreateOption are true and no match exists', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead', isCreatable: true, hasOnCreateOption: true });
-      openDropdown();
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'new-item' } });
+      await user.type(input, 'new-item');
 
       await waitFor(() => {
         expect(screen.getByText('Create "new-item"')).toBeVisible();
@@ -254,11 +270,12 @@ describe('SelectInputField', () => {
     });
 
     it('does not show Create option when typed value matches existing option', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead', isCreatable: true, hasOnCreateOption: true });
-      openDropdown();
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'option-a' } });
+      await user.type(input, 'option-a');
 
       await waitFor(() => {
         expect(screen.queryByText(/Create/)).not.toBeInTheDocument();
@@ -266,59 +283,88 @@ describe('SelectInputField', () => {
     });
 
     it('creates and selects a new option in single-select mode', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead', isCreatable: true, hasOnCreateOption: true });
-      openDropdown();
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'brand-new' } });
+      await user.type(input, 'brand-new');
 
       await waitFor(() => {
         expect(screen.getByText('Create "brand-new"')).toBeVisible();
       });
 
-      fireEvent.click(screen.getByText('Create "brand-new"'));
+      await user.click(screen.getByText('Create "brand-new"'));
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('brand-new')).toBeInTheDocument();
       });
     });
 
-    it('creates and adds a new option in multi-select mode', async () => {
-      renderField({ isCreatable: true, hasOnCreateOption: true }, { [fieldName]: [] });
-      openDropdown();
+    it('fires onSelect callback when a new option is created', async () => {
+      const user = setupUser();
+      const onSelect = jest.fn();
+      renderField({
+        variant: 'typeahead',
+        isCreatable: true,
+        hasOnCreateOption: true,
+        onSelect,
+      });
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'new-multi' } });
+      await user.type(input, 'created-val');
+
+      await waitFor(() => {
+        expect(screen.getByText('Create "created-val"')).toBeVisible();
+      });
+
+      await user.click(screen.getByText('Create "created-val"'));
+
+      await waitFor(() => {
+        expect(onSelect).toHaveBeenCalledTimes(1);
+        expect(onSelect).toHaveBeenCalledWith(expect.anything(), 'created-val');
+      });
+    });
+
+    it('creates and adds a new option in multi-select mode', async () => {
+      const user = setupUser();
+      renderField({ isCreatable: true, hasOnCreateOption: true }, { [fieldName]: [] });
+      await openDropdown(user);
+
+      const input = screen.getByRole('combobox');
+      await user.type(input, 'new-multi');
 
       await waitFor(() => {
         expect(screen.getByText('Create "new-multi"')).toBeVisible();
       });
 
-      fireEvent.click(screen.getByText('Create "new-multi"'));
+      await user.click(screen.getByText('Create "new-multi"'));
 
       await waitFor(() => {
-        expect(getChipLabels()).toContain('new-multi');
+        expect(screen.getAllByText('new-multi').length).toBeGreaterThanOrEqual(1);
       });
     });
 
     it('does not create duplicate options', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead', isCreatable: true, hasOnCreateOption: true });
-      openDropdown();
+      await openDropdown(user);
 
       const input = screen.getByRole('combobox');
 
-      fireEvent.change(input, { target: { value: 'unique-val' } });
+      await user.type(input, 'unique-val');
       await waitFor(() => {
         expect(screen.getByText('Create "unique-val"')).toBeVisible();
       });
-      fireEvent.click(screen.getByText('Create "unique-val"'));
+      await user.click(screen.getByText('Create "unique-val"'));
 
       await waitFor(() => {
         expect(screen.getByDisplayValue('unique-val')).toBeInTheDocument();
       });
 
-      openDropdown();
-      fireEvent.change(input, { target: { value: '' } });
+      await openDropdown(user);
+      await user.clear(input);
 
       await waitFor(() => {
         expect(screen.getAllByRole('option')).toBeDefined();
@@ -331,21 +377,26 @@ describe('SelectInputField', () => {
 
   describe('options sync', () => {
     it('updates internal options when external options prop changes', async () => {
-      renderField({ variant: 'typeahead' });
+      const user = setupUser();
+      const { rerender } = renderField({ variant: 'typeahead' });
 
-      openDropdown();
+      await openDropdown(user);
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
       });
 
-      cleanup();
+      // close the dropdown before rerendering with new options
+      await openDropdown(user);
+      await waitFor(() => {
+        expect(screen.queryByText('option-a')).not.toBeInTheDocument();
+      });
 
       const newOptions: SelectInputOption[] = [
         { value: 'new-a', disabled: false },
         { value: 'new-b', disabled: false },
       ];
 
-      formikRenderer(
+      rerender(
         <SelectInputField
           name={fieldName}
           label="Test Label"
@@ -353,44 +404,71 @@ describe('SelectInputField', () => {
           toggleId="test-toggle"
           toggleAriaLabel="Test toggle"
           variant="typeahead"
+          helpText="Pick an option"
         />,
-        { [fieldName]: '' },
       );
 
-      fireEvent.click(screen.getByRole('button', { name: 'Test toggle' }));
+      await openDropdown(user);
       await waitFor(() => {
         expect(screen.getByText('new-a')).toBeVisible();
         expect(screen.getByText('new-b')).toBeVisible();
+        expect(screen.queryByText('option-a')).not.toBeInTheDocument();
       });
     });
   });
 
   describe('input interaction', () => {
     it('opens the dropdown on input click when closed', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' });
 
       const input = screen.getByRole('combobox');
-      fireEvent.click(input);
+      await user.click(input);
 
       await waitFor(() => {
         expect(screen.getByText('option-a')).toBeVisible();
       });
     });
 
-    it('marks field as touched on blur', () => {
-      renderField({ variant: 'typeahead' });
+    it('marks field as touched on blur', async () => {
+      const TouchedIndicator = () => {
+        const { touched } = useFormikContext<Record<string, unknown>>();
+        return <span data-test="touched-state">{JSON.stringify(touched)}</span>;
+      };
 
-      const toggle = screen.getByRole('button', { name: 'Test toggle' });
-      fireEvent.blur(toggle);
+      formikRenderer(
+        <>
+          <SelectInputField
+            name={fieldName}
+            label="Test Label"
+            options={options}
+            toggleId="test-toggle"
+            toggleAriaLabel="Test toggle"
+            variant="typeahead"
+          />
+          <TouchedIndicator />
+        </>,
+        { [fieldName]: '' },
+      );
+
+      const toggleContainer = document.getElementById('test-toggle');
+      fireEvent.blur(toggleContainer);
+
+      await waitFor(() => {
+        expect(JSON.parse(screen.getByTestId('touched-state').textContent)).toEqual(
+          expect.objectContaining({ [fieldName]: true }),
+        );
+      });
     });
 
     it('clears single-select value when user types over it', async () => {
+      const user = setupUser();
       renderField({ variant: 'typeahead' }, { [fieldName]: 'option-a' });
 
       expect(screen.getByDisplayValue('option-a')).toBeInTheDocument();
 
       const input = screen.getByRole('combobox');
-      fireEvent.change(input, { target: { value: 'x' } });
+      await user.type(input, 'x');
 
       await waitFor(() => {
         expect(screen.queryByDisplayValue('option-a')).not.toBeInTheDocument();

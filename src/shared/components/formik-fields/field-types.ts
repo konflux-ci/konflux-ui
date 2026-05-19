@@ -173,7 +173,7 @@ export interface SelectInputFieldProps extends FieldProps {
   variant?: 'typeahead' | 'typeaheadMulti';
   toggleId?: string;
   toggleAriaLabel?: string;
-  onSelect?: (e: React.SyntheticEvent<HTMLElement>, selectedValue: unknown) => void;
+  onSelect?: (e: React.MouseEvent<Element> | undefined, selectedValue: unknown) => void;
   onClear?: () => void;
   options: SelectInputOption[];
   placeholderText?: React.ReactNode;

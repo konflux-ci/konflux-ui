@@ -122,7 +122,6 @@ const SecretForm: React.FC<React.PropsWithChildren<SecretFormProps>> = ({
       <SelectInputField
         required
         key={values.type}
-        data-test="secret-name"
         name="secretName"
         label="Select or enter secret name"
         helpText="Unique name of the new secret."

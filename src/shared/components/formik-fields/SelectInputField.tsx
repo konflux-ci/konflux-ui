@@ -1,4 +1,4 @@
-import React, { SyntheticEvent } from 'react';
+import React from 'react';
 import {
   Button,
   FormGroup,
@@ -13,11 +13,11 @@ import {
 } from '@patternfly/react-core';
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { useField, useFormikContext, FormikValues } from 'formik';
-import { pull } from 'lodash-es';
 import { useDeepCompareMemoize } from '../../hooks';
 import { SelectInputFieldProps, SelectInputOption } from './field-types';
 import { getFieldId } from './field-utils';
 import FieldHelperText from './FieldHelperText';
+import './SelectInputField.scss';
 
 const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>> = ({
   name,
@@ -77,7 +77,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
 
     const selection = String(value);
 
-    if (selection === `create:${filterValue}`) {
+    if (selection === `__create_new__:${filterValue}`) {
       const newVal = filterValue;
       const hasDuplicate = newOptions.find((op) => op.value === newVal);
 
@@ -98,12 +98,16 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
       if (!isMulti) {
         setIsOpen(false);
       }
+      onSelectCallback?.(_event, newVal);
       return;
     }
 
     if (isMulti) {
       if (selections.includes(selection)) {
-        void setFieldValue(name, pull([...selections], selection));
+        void setFieldValue(
+          name,
+          selections.filter((s) => s !== selection),
+        );
       } else {
         void setFieldValue(name, [...selections, selection]);
       }
@@ -116,7 +120,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
     if (!isMulti) {
       setIsOpen(false);
     }
-    onSelectCallback?.(_event as unknown as SyntheticEvent<HTMLElement>, selection);
+    onSelectCallback?.(_event, selection);
   };
 
   const onClearSelection = (e?: React.MouseEvent) => {
@@ -201,7 +205,10 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
                 onClose={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  void setFieldValue(name, pull([...selections], val));
+                  void setFieldValue(
+                    name,
+                    selections.filter((s) => s !== val),
+                  );
                   void setFieldTouched(name, true);
                 }}
               >
@@ -209,7 +216,9 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
               </Label>
             ))}
         </TextInputGroupMain>
-        <TextInputGroupUtilities {...(!hasValue ? { style: { display: 'none' } } : {})}>
+        <TextInputGroupUtilities
+          {...(!hasValue ? { className: 'select-input-field__utilities--hidden' } : {})}
+        >
           <Button variant="plain" onClick={onClearSelection} aria-label="Clear input value">
             <TimesIcon aria-hidden />
           </Button>
@@ -235,7 +244,9 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
             </SelectOption>
           ))}
           {showCreateOption && (
-            <SelectOption value={`create:${filterValue}`}>{`Create "${filterValue}"`}</SelectOption>
+            <SelectOption
+              value={`__create_new__:${filterValue}`}
+            >{`Create "${filterValue}"`}</SelectOption>
           )}
         </SelectList>
       </Select>
