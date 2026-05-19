@@ -6,6 +6,14 @@ export const mockPublicImageRepository: ImageRepositoryKind = {
   metadata: {
     name: 'test-component',
     namespace: 'test-ns',
+    ownerReferences: [
+      {
+        apiVersion: 'appstudio.redhat.com/v1alpha1',
+        kind: 'Component',
+        name: 'test-component',
+        uid: 'test-uid',
+      },
+    ],
   },
   spec: {
     image: {
