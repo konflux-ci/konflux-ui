@@ -1,6 +1,13 @@
 import Prism from 'prismjs';
 import type { MatchRange } from './types';
 
+/**
+ * Matches ANSI CSI colour/style escape sequences (ESC [ … m).
+ * Used to strip terminal colour codes before search indexing and line display.
+ */
+// eslint-disable-next-line no-control-regex
+export const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
+
 /** Recursively flattens nested Prism tokens into plain text */
 export function flattenTokenText(token: string | Prism.Token): string {
   if (typeof token === 'string') return token;

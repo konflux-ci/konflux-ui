@@ -13,6 +13,13 @@ export interface LineNumberGutterProps {
   onLineClick: (lineNumber: number, event: React.MouseEvent) => void;
   /** Function to check if a line is highlighted */
   isLineHighlighted: (lineNumber: number) => boolean;
+  /**
+   * Optional override for the line number shown next to a virtual item.
+   * Return a number to display that value, or null to render no gutter cell
+   * (used for section-header and fold-indicator rows in sectioned mode).
+   * When omitted, falls back to virtualItem.index + 1.
+   */
+  getLineNumber?: (virtualItemIndex: number) => number | null;
 }
 
 /**
@@ -26,11 +33,14 @@ export const LineNumberGutter: React.FC<LineNumberGutterProps> = ({
   itemSize,
   onLineClick,
   isLineHighlighted,
+  getLineNumber,
 }) => {
   return (
     <Flex className="line-number__gutter" direction={{ default: 'column' }}>
       {virtualItems.map((virtualItem) => {
-        const lineNumber = virtualItem.index + 1;
+        const lineNumber = getLineNumber ? getLineNumber(virtualItem.index) : virtualItem.index + 1;
+        // null means this row (e.g. section header, fold indicator) has no gutter cell
+        if (lineNumber === null) return null;
         const isHighlighted = isLineHighlighted(lineNumber);
         return (
           <div

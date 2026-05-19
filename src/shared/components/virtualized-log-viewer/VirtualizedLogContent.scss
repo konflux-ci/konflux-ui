@@ -33,3 +33,81 @@
     background-color: var(--pf-v5-global--palette--gold-700);
   }
 }
+
+// ── Sectioned mode ────────────────────────────────────────────────────────────
+
+// Sticky section-header overlay — sits above the scroll container
+.log-content__sticky-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  // Offset left to clear the gutter column (matches --pf-v5-global--spacer--3xl)
+  margin-left: var(--pf-v5-global--spacer--3xl);
+  box-shadow: var(--pf-v5-global--BoxShadow--sm);
+}
+
+// Section-header rows and the sticky overlay share this button style
+.log-content__section-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0 var(--pf-v5-global--spacer--sm);
+  border: none;
+  border-top: var(--pf-v5-global--BorderWidth--sm) solid var(--pf-v5-global--BorderColor--100);
+  cursor: pointer;
+  background: var(--pf-v5-c-log-viewer__main--BackgroundColor, var(--pf-v5-global--BackgroundColor--200));
+  color: var(--pf-v5-c-log-viewer__text--Color, var(--pf-v5-global--Color--100));
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  text-align: left;
+
+  &:first-child {
+    border-top: none;
+  }
+
+  &:hover {
+    filter: brightness(0.9);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--pf-v5-global--active-color--100);
+    outline-offset: -1px;
+  }
+}
+
+.log-content__section-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--pf-v5-global--spacer--xs);
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+
+.log-content__section-name {
+  flex: 1;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.log-content__section-line-count {
+  margin-left: var(--pf-v5-global--spacer--sm);
+  font-weight: normal;
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+// Fold-indicator row shown when a section is collapsed
+.log-content__fold-indicator {
+  padding-left: var(--pf-v5-global--spacer--sm);
+  font-style: italic;
+  font-size: 0.85em;
+  opacity: 0.65;
+  white-space: nowrap;
+}

@@ -34,25 +34,24 @@ import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/l
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import { VirtualizedLogViewer } from '~/shared/components/virtualized-log-viewer';
+import { ANSI_ESCAPE_REGEX } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
+import type { LogSection } from '~/shared/components/virtualized-log-viewer/types';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
-import { FoldableLogView } from './FoldableLogView';
 import LogsTaskDuration from './LogsTaskDuration';
 import { useLogViewerTheme } from './useLogViewerTheme';
 
 import './LogViewer.scss';
 
-// ANSI escape code regex for removing color codes from terminal output
-// ESC character (\u001b) is a control character but necessary for ANSI escape sequences
-// eslint-disable-next-line no-control-regex
-const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
-
-export type LogSection = { readonly name: string; readonly data: string };
+// Re-export so existing callers (Logs.tsx, tests) don't need to change imports
+export type { LogSection };
 
 export type Props = {
   showSearch?: boolean;
+  /** Raw log string — used by TektonTaskRunLog (single-stream, no folding) */
   data?: string;
-  logSections?: LogSection[];
+  /** Per-container sections — used by Logs.tsx (multi-stream, foldable steps) */
+  logSections?: readonly LogSection[];
   allowAutoScroll?: boolean;
   downloadAllLabel?: string;
   onDownloadAll?: () => Promise<Error>;
@@ -82,12 +81,10 @@ const LogViewer: React.FC<Props> = ({
   const [logTheme, setLogTheme] = useLogViewerTheme();
   const themeCheckboxId = React.useId();
 
-  // dataProp wins: if raw data is provided directly, use single-stream mode (VirtualizedLogViewer).
-  // Only switch to foldable mode when logSections is the sole source.
-  const hasLogSections = !dataProp && (logSections?.length ?? 0) > 0;
-
-  // Combined data for search and download — same precedence as the render decision above.
-  const data = React.useMemo(() => {
+  // Build a flat string for the search index.
+  // In sections mode: join section-name + content per section so search
+  // covers all steps. In plain mode: use dataProp directly.
+  const searchData = React.useMemo(() => {
     if (dataProp) return dataProp;
     if (logSections?.length) {
       return logSections.map((s) => `${s.name.toUpperCase()}\n${s.data}`).join('\n\n');
@@ -95,22 +92,17 @@ const LogViewer: React.FC<Props> = ({
     return '';
   }, [dataProp, logSections]);
 
-  // Auto-scroll and resume button logic
-  const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
-    useAutoScrollWithResume({
-      allowAutoScroll,
-      onScroll: onScrollProp,
-    });
-
-  // Console rewind action adds \r to the logs, this replaces them not to cause line overlap
-  // Remove ANSI escape codes for plain text display
-  const processedData = React.useMemo(() => {
-    return data.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, '');
-  }, [data]);
+  // Strip ANSI + normalise line endings for the search index
+  const processedData = React.useMemo(
+    () => searchData.replace(/\r/g, '\n').replace(ANSI_ESCAPE_REGEX, ''),
+    [searchData],
+  );
 
   const lines = React.useMemo(() => processedData.split('\n'), [processedData]);
 
-  // Search state and context management
+  const { autoScroll, showResumeStreamButton, handleScroll, handleResumeClick } =
+    useAutoScrollWithResume({ allowAutoScroll, onScroll: onScrollProp });
+
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
     lines,
     autoScroll,
@@ -121,19 +113,15 @@ const LogViewer: React.FC<Props> = ({
   const [downloadAllStatus, setDownloadAllStatus] = React.useState(false);
 
   const downloadLogs = () => {
-    if (!data) return;
-    const blob = new Blob([data], {
-      type: 'text/plain;charset=utf-8',
-    });
+    if (!searchData) return;
+    const blob = new Blob([searchData], { type: 'text/plain;charset=utf-8' });
     saveAs(blob, `${taskName || `task-run-${uuidv4()}`}.log`);
   };
 
   const startDownloadAll = () => {
     setDownloadAllStatus(true);
     onDownloadAll()
-      .then(() => {
-        setDownloadAllStatus(false);
-      })
+      .then(() => setDownloadAllStatus(false))
       .catch((err: Error) => {
         setDownloadAllStatus(false);
         // eslint-disable-next-line no-console
@@ -141,7 +129,6 @@ const LogViewer: React.FC<Props> = ({
       });
   };
 
-  // Measure content area height — used by both VirtualizedLogViewer and FoldableLogView
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [viewerHeight, setViewerHeight] = React.useState<number | undefined>(undefined);
 
@@ -151,25 +138,16 @@ const LogViewer: React.FC<Props> = ({
         const measured = containerRef.current.clientHeight;
         if (measured > 0) {
           if (immediate) {
-            // Immediate update for fullscreen toggle and initial mount
             setViewerHeight(measured);
           } else {
-            // Use requestAnimationFrame for resize events to avoid ResizeObserver warnings
-            requestAnimationFrame(() => {
-              setViewerHeight(measured);
-            });
+            requestAnimationFrame(() => setViewerHeight(measured));
           }
         }
       }
     };
 
-    // Update immediately on mount and fullscreen changes
     updateHeight(true);
-
-    // Debounced resize handler for better performance (150ms delay)
     const debouncedUpdateHeight = debounce(() => updateHeight(false), 150);
-
-    // Update on window resize
     window.addEventListener('resize', debouncedUpdateHeight);
     return () => {
       window.removeEventListener('resize', debouncedUpdateHeight);
@@ -192,9 +170,7 @@ const LogViewer: React.FC<Props> = ({
           <div className="pf-v5-c-log-viewer__header">
             <Toolbar>
               <ToolbarContent
-                className={classNames({
-                  'log-viewer--fullscreen': isFullscreen,
-                })}
+                className={classNames({ 'log-viewer--fullscreen': isFullscreen })}
                 alignItems="center"
               >
                 <ToolbarGroup>
@@ -285,25 +261,18 @@ const LogViewer: React.FC<Props> = ({
             {errorMessage && <Alert variant="danger" isInline title={errorMessage} />}
           </Banner>
 
-          {/* Log content — foldable sections (VS Code style) or single viewer */}
+          {/* Log content — single VirtualizedLogViewer handles both plain and sectioned data */}
           <div ref={containerRef} className="log-viewer__content">
-            {viewerHeight &&
-              (hasLogSections ? (
-                <FoldableLogView
-                  logSections={logSections}
-                  height={viewerHeight}
-                  scrollToRow={scrolledRow}
-                  onScroll={handleScroll}
-                />
-              ) : (
-                <VirtualizedLogViewer
-                  key={taskRun?.metadata?.uid || 'default'}
-                  data={processedData}
-                  height={viewerHeight}
-                  scrollToRow={scrolledRow}
-                  onScroll={handleScroll}
-                />
-              ))}
+            {viewerHeight && (
+              <VirtualizedLogViewer
+                key={taskRun?.metadata?.uid || 'default'}
+                data={processedData}
+                sections={logSections?.length ? logSections : undefined}
+                height={viewerHeight}
+                scrollToRow={scrolledRow}
+                onScroll={handleScroll}
+              />
+            )}
           </div>
 
           {/* Footer */}

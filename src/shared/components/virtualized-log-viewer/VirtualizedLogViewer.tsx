@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogViewerToolbarContext } from '@patternfly/react-log-viewer';
+import type { LogSection } from './types';
 import { VirtualizedLogContent } from './VirtualizedLogContent';
 import '@patternfly/react-styles/css/components/LogViewer/log-viewer.css';
 
@@ -7,7 +8,14 @@ import './VirtualizedLogViewer.scss';
 
 export interface VirtualizedLogViewerProps {
   data: string;
-  height: number; // Required: height in pixels for virtualization
+  /**
+   * When provided, the viewer renders in sectioned mode: each LogSection becomes
+   * a foldable step with a sticky header, continuous line numbers, ANSI colours,
+   * keyboard navigation, and URL-hash line linking — all from the existing
+   * VirtualizedLogContent infrastructure.
+   */
+  sections?: readonly LogSection[];
+  height: number;
   width?: string | number;
   scrollToRow?: number;
   onScroll?: (props: {
@@ -17,38 +25,27 @@ export interface VirtualizedLogViewerProps {
   }) => void;
 }
 
-/**
- * Virtualized log viewer using @tanstack/react-virtual
- *
- * Features:
- * - Uses @tanstack/react-virtual for virtualization
- * - Renders plain text (no syntax highlighting yet)
- * - Drop-in replacement for PatternFly LogViewer
- */
 export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
   data,
+  sections,
   height,
   width = '100%',
   scrollToRow,
   onScroll,
 }) => {
-  // Get search context from parent
   const toolbarContext = React.useContext(LogViewerToolbarContext);
   const searchedInput = toolbarContext?.searchedInput || '';
   const currentMatchIndex = toolbarContext?.currentSearchedItemCount || 0;
   const searchedWordIndexes = toolbarContext?.searchedWordIndexes || [];
 
-  // Prioritize toolbarContext.rowInFocus if it has a valid rowIndex (>= 0)
-  // This allows programmatic navigation via scrollToRow() to work correctly
   const rowInFocus =
     toolbarContext?.rowInFocus && toolbarContext.rowInFocus.rowIndex >= 0
       ? toolbarContext.rowInFocus
       : searchedWordIndexes[currentMatchIndex];
 
-  // Determine effective scroll row based on search or prop
   const effectiveScrollToRow = React.useMemo(() => {
     if (rowInFocus && rowInFocus.rowIndex >= 0) {
-      return rowInFocus.rowIndex + 1; // +1 because scrollToRow is 1-indexed
+      return rowInFocus.rowIndex + 1;
     }
     return scrollToRow;
   }, [rowInFocus, scrollToRow]);
@@ -57,6 +54,7 @@ export const VirtualizedLogViewer: React.FC<VirtualizedLogViewerProps> = ({
     <div className="pf-v5-c-log-viewer__main">
       <VirtualizedLogContent
         data={data}
+        sections={sections}
         height={height}
         width={width}
         scrollToRow={effectiveScrollToRow}

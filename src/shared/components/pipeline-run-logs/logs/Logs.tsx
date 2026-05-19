@@ -19,19 +19,6 @@ type LogSources = { [containerName: string]: string };
 
 const WEB_SOCKET_RETRY_COUNT = 5;
 
-// Kept exported for backward compat with existing tests
-export const processLogs = (logSources: LogSources, containers: ContainerSpec[]): string => {
-  let allLogs = '';
-  for (const container of containers) {
-    const containerName = container.name;
-    if (logSources[containerName]) {
-      allLogs += `\n\n${containerName.toUpperCase()}\n`;
-      allLogs += `  ${logSources[containerName].replace(/\n/g, '\n  ')}`;
-    }
-  }
-  return allLogs.trim();
-};
-
 const retryWebSocket = (
   watchURL: string,
   wsOpts: WebSocketOptions,
@@ -188,12 +175,19 @@ const Logs: React.FC<LogsProps> = ({
   containersRef.current = containers;
   const logSourcesRef = React.useRef(logSources);
   logSourcesRef.current = logSources;
+  const resourceRef = React.useRef(resource);
+  resourceRef.current = resource;
 
   const processAndSetLogs = useDebounceCallback(() => {
-    const result = containersRef.current.map((c) => ({
-      name: c.name,
-      data: logSourcesRef.current[c.name] || '',
-    }));
+    const allStatuses: ContainerStatus[] = resourceRef.current?.status?.containerStatuses ?? [];
+    const result = containersRef.current.map((c) => {
+      const status = allStatuses.find((s) => s.name === c.name);
+      return {
+        name: c.name,
+        data: logSourcesRef.current[c.name] || '',
+        isCompleted: containerToLogSourceStatus(status) === LOG_SOURCE_TERMINATED,
+      };
+    });
     setLogSections(result);
     setProcessingLogs(false);
   }, 300);

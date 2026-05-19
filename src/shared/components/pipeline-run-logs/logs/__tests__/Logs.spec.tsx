@@ -10,7 +10,7 @@ import {
 import { TaskRunKind } from '../../../../../types';
 import { ContainerStatus, PodKind, ContainerSpec } from '../../../types';
 import { containerToLogSourceStatus } from '../../utils';
-import Logs, { processLogs } from '../Logs';
+import Logs from '../Logs';
 import type { LogSection } from '../LogViewer';
 
 const mockLogViewer = jest.fn();
@@ -174,90 +174,6 @@ describe('Logs', () => {
           }),
         );
       });
-    });
-  });
-
-  describe('processLogs function', () => {
-    it('should format logs with container headers and indentation', () => {
-      const logSources = {
-        container1: 'log line 1\nlog line 2',
-        container2: 'log line 3\nlog line 4',
-      };
-      const containers: ContainerSpec[] = [{ name: 'container1' }, { name: 'container2' }];
-
-      const result = processLogs(logSources, containers);
-
-      // should contain container headers and indented logs
-      expect(result).toContain('CONTAINER1'); // Header should be uppercase
-      expect(result).toContain('CONTAINER2');
-      expect(result).toContain('  log line 1'); // Logs should be indented
-      expect(result).toContain('  log line 2');
-      expect(result).toContain('  log line 3');
-      expect(result).toContain('  log line 4');
-    });
-
-    it('should handle containers with no logs', () => {
-      const logSources = {};
-      const containers: ContainerSpec[] = [{ name: 'container1' }];
-
-      const result = processLogs(logSources, containers);
-
-      expect(result).toBe('');
-    });
-
-    it('should handle empty containers array', () => {
-      const logSources = { container1: 'some logs' };
-      const containers: ContainerSpec[] = [];
-
-      const result = processLogs(logSources, containers);
-
-      expect(result).toBe('');
-    });
-
-    it('should process containers in specific order', () => {
-      const logSources = {
-        container1: 'first container logs',
-        container2: 'second container logs',
-      };
-      const containers: ContainerSpec[] = [{ name: 'container2' }, { name: 'container1' }];
-
-      const result = processLogs(logSources, containers);
-
-      const container2Index = result.indexOf('CONTAINER2');
-      const container1Index = result.indexOf('CONTAINER1');
-
-      // container2 should appear first since it's first in the containers array
-      expect(container2Index).toBeLessThan(container1Index);
-      expect(container2Index).toBeGreaterThanOrEqual(0);
-      expect(container1Index).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should skip containers without log sources', () => {
-      const logSources = {
-        container1: 'has logs',
-        // container2 has no logs
-      };
-      const containers: ContainerSpec[] = [{ name: 'container1' }, { name: 'container2' }];
-
-      const result = processLogs(logSources, containers);
-
-      expect(result).toContain('CONTAINER1');
-      expect(result).not.toContain('CONTAINER2');
-      expect(result).toContain('  has logs');
-    });
-
-    it('should handle multi-line logs with proper indentation', () => {
-      const logSources = {
-        'test-container': 'line 1\nline 2\nline 3',
-      };
-      const containers: ContainerSpec[] = [{ name: 'test-container' }];
-
-      const result = processLogs(logSources, containers);
-
-      expect(result).toContain('TEST-CONTAINER');
-      expect(result).toContain('  line 1');
-      expect(result).toContain('  line 2');
-      expect(result).toContain('  line 3');
     });
   });
 
