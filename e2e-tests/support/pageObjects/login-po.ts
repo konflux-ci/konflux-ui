@@ -13,3 +13,11 @@ export const localKonfluxLoginPO = {
   grantAccessClass: `.dex-btn-text`,
   grantAccessText: 'Grant Access',
 };
+
+export const openshiftLoginPO = {
+  username: '#inputUsername',
+  password: '#inputPassword',
+  loginButton: 'button[type="submit"]',
+  approveButton: 'input[name="approve"]',
+  sidebar: '[id="page-sidebar"]',
+};
