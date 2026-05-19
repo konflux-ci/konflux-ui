@@ -24,6 +24,7 @@ import {
   TektonResultsRun,
 } from '../../../../../types';
 import {
+  getDisplayNameFromChildReferences,
   pipelineRunStatus,
   taskRunStatus,
   isTaskV1Beta1,
@@ -312,7 +313,8 @@ export const appendStatus = (
           .filter((v) => v !== null && v !== '');
 
         const displayName: string =
-          paramValues.length > 0 ? paramValues.join(', ') : `Instance ${index + 1}`;
+          getDisplayNameFromChildReferences(pipelineRun, taskRun.metadata?.name) ||
+          (paramValues.length > 0 ? paramValues.join(', ') : `Instance ${index + 1}`);
 
         const matrixTask = createMatrixTaskEntry(task, taskRun, displayName);
         result.push(matrixTask);

@@ -38,6 +38,7 @@ const ComponentImageRepositoryVisibility: React.FC<
   const [imageRepository, imageRepoLoaded, imageRepoError] = useImageRepository(
     component?.metadata?.namespace,
     component?.metadata?.name,
+    null,
     false,
   );
 

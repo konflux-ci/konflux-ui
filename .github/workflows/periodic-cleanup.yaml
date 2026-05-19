@@ -62,9 +62,9 @@ jobs:
         run: |
           # Get the same version OC with stage konflux
           DOMAIN=$(echo "$KONFLUX_API_SERVER" | sed -E 's#https://api\.([^:]+).*#\1#')
-          curl -kLo oc.tar.gz \
-            https://downloads-openshift-console.apps.${DOMAIN}/amd64/linux/oc.tar.gz
-          tar -xzf oc.tar.gz oc
+          curl -kLo oc.tar \
+            https://downloads-openshift-console.apps.${DOMAIN}/amd64/linux/oc.tar
+          tar -xf oc.tar oc
           chmod +x oc
           sudo mv oc /usr/local/bin/
           oc version --client

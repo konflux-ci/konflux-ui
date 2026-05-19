@@ -1,6 +1,6 @@
 FROM quay.io/fedora/fedora:44
 
-# Install Node.js 20 and development tools
+# Install Node.js 22 and development tools
 RUN dnf update -y && \
     dnf install -y \
     nodejs \

@@ -25,7 +25,7 @@ import { useNamespace } from '../../../shared/providers/Namespace';
 import { Commit, PipelineRunKind } from '../../../types';
 import { getCommitsFromPLRs, getCommitSha, statuses } from '../../../utils/commits-utils';
 import { getCommitStatusFromPipelineRuns } from '../commit-status';
-import CommitsEmptyState from '../CommitsEmptyState';
+import { CommitsEmptyState } from '../CommitsEmptyState';
 import {
   CommitColumnKeys,
   COMMIT_COLUMNS_DEFINITIONS,
@@ -68,6 +68,10 @@ const getSortCommitFunction = (
   }
 };
 
+/**
+ * @deprecated
+ * Replaced by CommitsListViewV2 with new component model
+ */
 const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> = ({
   applicationName,
   componentName,
@@ -113,8 +117,9 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
               ...(componentName ? { [PipelineRunLabel.COMPONENT]: componentName } : {}),
             },
           },
+          ...(nameFilter.trim() ? { commitSearchTerm: nameFilter } : {}),
         }),
-        [application?.metadata?.creationTimestamp, applicationName, componentName],
+        [application?.metadata?.creationTimestamp, applicationName, componentName, nameFilter],
       ),
     );
 
@@ -182,24 +187,16 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
     [commits, commitStatusMap],
   );
 
+  // Name / commit matching is handled by usePipelineRunsV2 (cluster watch + Tekton Results CEL or
+  // KubeArchive list + pipelineRunMatchesCommitSearch). Avoid a second client-only name pass that
+  // could hide rows the backends already matched.
   const filteredCommits = React.useMemo(
     () =>
       commits.filter((commit) => {
         const commitStatus = commitStatusMap[commit.sha] || runStatus.Unknown;
-        return (
-          (!nameFilter ||
-            commit.sha.indexOf(nameFilter) !== -1 ||
-            commit.components.some(
-              (c) => c.toLowerCase().indexOf(nameFilter.trim().toLowerCase()) !== -1,
-            ) ||
-            commit.pullRequestNumber
-              .toLowerCase()
-              .indexOf(nameFilter.trim().replace('#', '').toLowerCase()) !== -1 ||
-            commit.shaTitle.toLowerCase().includes(nameFilter.trim().toLowerCase())) &&
-          (!statusFilter.length || statusFilter.includes(commitStatus))
-        );
+        return !statusFilter.length || statusFilter.includes(commitStatus);
       }),
-    [commits, nameFilter, statusFilter, commitStatusMap],
+    [commits, statusFilter, commitStatusMap],
   );
 
   // Default sorted commits using useSortedResources for standard columns
@@ -334,7 +331,7 @@ const CommitsListView: React.FC<React.PropsWithChildren<CommitsListViewProps>> =
         title="Manage commit columns"
         description="Selected columns will be displayed in the commits table."
       />
-      {isFetchingNextPage ? (
+      {isFetchingNextPage && sortedCommits.length > 0 ? (
         <div
           style={{
             marginTop: 'var(--pf-v5-global--spacer--2xl)',

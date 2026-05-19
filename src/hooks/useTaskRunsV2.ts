@@ -248,7 +248,10 @@ export const useTaskRunsForPipelineRuns = (
       selector,
       watch,
     },
-    { staleTime: Infinity, enabled: !!(namespace && pipelineRunName) },
+    {
+      enabled: !!(namespace && pipelineRunName),
+      staleTime: (query) => (query?.state?.data?.pages?.flat()?.length ? Infinity : 0),
+    },
   );
 
   const sortedTaskRuns = React.useMemo(() => sortTaskRunsByTime(taskRuns), [taskRuns]);
