@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - patternfly-v6
 
 # Cancel in-progress runs when new commits are pushed to main
 concurrency:
@@ -65,7 +66,12 @@ jobs:
           QUAY_BOT_USERNAME: ${{ secrets.QUAY_BOT_USERNAME }}
         run: |
           podman login -u="$QUAY_BOT_USERNAME" -p="$QUAY_BOT_TOKEN" quay.io
-          TEST_IMAGE="quay.io/konflux_ui_qe/konflux-ui-tests:latest"
+
+          TAG="latest"
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          TEST_IMAGE="quay.io/konflux_ui_qe/konflux-ui-tests:${TAG}"
 
           cd e2e-tests
           podman build -t ${TEST_IMAGE} -f Containerfile
