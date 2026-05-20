@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Bullseye, FormGroup, HelperText, Spinner } from '@patternfly/react-core';
 import { FieldArray, useField, FieldArrayRenderProps } from 'formik';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import { getFieldId } from '../../../src/shared/components/formik-fields/field-utils';
 import { useComponents } from '../../hooks/useComponents';
 import { useNamespace } from '../../shared/providers/Namespace';
@@ -42,9 +43,7 @@ const ContextsField: React.FC<IntegrationTestContextProps> = ({ heading, fieldNa
   // This holds the contexts that are filtered using the user input value.
   const filteredContexts = React.useMemo(() => {
     if (inputValue) {
-      const filtered = allContexts.filter((ctx) =>
-        ctx.name.toLowerCase().includes(inputValue.toLowerCase()),
-      );
+      const filtered = filterByText(allContexts, inputValue, (ctx) => ctx.name);
       return filtered.length
         ? filtered
         : [{ name: 'No results found', description: 'Please try another value.', selected: false }];

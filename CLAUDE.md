@@ -13,6 +13,10 @@ Read and follow `CONTRIBUTING.md` — section "Commit Guidelines" — before cre
 
 Read `.github/PULL_REQUEST_TEMPLATE.md` and fill every section when creating a PR.
 
+## Setup
+
+- One-command setup: `./setup.sh` (checks Node.js >= 20, enables Corepack, installs dependencies, starts dev server)
+
 ## Architecture
 
 - **Framework:** React 18 with TypeScript
