@@ -197,14 +197,12 @@ async function resolveConformaResultFromTaskRun(
 
 async function fetchConformaForPipeline(
   namespace: string,
-  ql: QualifyingPipeline,
+  pipelineRunName: string,
+  securityTaskName: QualifyingPipeline['securityTaskName'],
   isKubearchiveLogsEnabled: boolean,
 ): Promise<ComponentConformaResult[]> {
-  const pipelineRunName = ql.pipelineRun.metadata?.name;
-  if (!pipelineRunName) return [];
-
   const listed = sortTaskRunsByTime(
-    await listSecurityTaskRuns(namespace, pipelineRunName, ql.securityTaskName),
+    await listSecurityTaskRuns(namespace, pipelineRunName, securityTaskName),
   );
   const taskRun = listed[0];
   if (!taskRun) return [];
@@ -348,7 +346,7 @@ export const useApplicationConformaResults = (
   React.useEffect(() => {
     if (!readyToFetch) return;
 
-    if (latestQualifyingPerComponent.length === 0) {
+    if (!stableQualifiers?.length) {
       setConformaByComponent({});
       setConformaBatchFinished(true);
       return;
@@ -361,24 +359,26 @@ export const useApplicationConformaResults = (
       const next: Record<string, ConformaByComponentEntry | undefined> = {};
 
       await Promise.all(
-        latestQualifyingPerComponent.map(async (ql) => {
-          const prName = ql.pipelineRun.metadata?.name;
+        stableQualifiers.map(async (sq) => {
+          const prName = sq.pipelineRunName;
+          if (!prName) return;
           try {
             const components = await fetchConformaForPipeline(
               namespace,
-              ql,
+              prName,
+              sq.securityTaskName,
               isKubearchiveLogsEnabled,
             );
             if (!aborted) {
-              next[ql.componentName] = {
+              next[sq.componentName] = {
                 state: 'ok',
                 components,
-                pipelineRunName: prName ?? '',
+                pipelineRunName: prName,
               };
             }
           } catch (e) {
             if (!aborted) {
-              next[ql.componentName] = { state: 'error', err: e, pipelineRunName: prName };
+              next[sq.componentName] = { state: 'error', err: e, pipelineRunName: prName };
             }
           }
         }),
@@ -393,9 +393,6 @@ export const useApplicationConformaResults = (
     return () => {
       aborted = true;
     };
-    // Use stableQualifiers (deep-compared) to prevent re-fetching when the
-    // watch hook emits a new array reference with the same pipeline run names.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readyToFetch, stableQualifiers, namespace, isKubearchiveLogsEnabled]);
 
   const loaded = Boolean(
