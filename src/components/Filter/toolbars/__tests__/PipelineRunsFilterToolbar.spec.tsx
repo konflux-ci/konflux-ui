@@ -2,6 +2,17 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PipelineRunsFilterToolbar from '../PipelineRunsFilterToolbar';
 
+const typeOptions = [
+  { key: 'build', count: 2 },
+  { key: 'test', count: 2 },
+];
+const statusOptions = [{ key: 'Succeeded', count: 4 }];
+const versionOptions = [{ key: 'main' }, { key: 'release-1.0' }];
+const versionOptionsWithLabels = [
+  { key: 'main', label: 'Main Branch' },
+  { key: 'release-1.0', label: 'Release 1.0' },
+];
+
 describe('PipelineRunsFilterToolbar', () => {
   it('it should render filter tooblar accurately', () => {
     render(
@@ -13,8 +24,8 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -36,8 +47,8 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -61,8 +72,8 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -99,8 +110,8 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -134,8 +145,8 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
       />,
     );
 
@@ -153,9 +164,9 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
+        versionOptions={versionOptions}
       />,
     );
 
@@ -176,9 +187,9 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
+        versionOptions={versionOptions}
       />,
     );
 
@@ -202,7 +213,7 @@ describe('PipelineRunsFilterToolbar', () => {
     });
   });
 
-  it('should display optionLabels instead of keys when versionLabels is provided', async () => {
+  it('should display labels instead of keys when version options include labels', async () => {
     const user = userEvent.setup();
 
     render(
@@ -215,10 +226,9 @@ describe('PipelineRunsFilterToolbar', () => {
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
-        typeOptions={{ build: 2, test: 2 }}
-        statusOptions={{ Succeeded: 4 }}
-        versionOptions={{ main: 0, 'release-1.0': 0 }}
-        versionLabels={{ main: 'Main Branch', 'release-1.0': 'Release 1.0' }}
+        typeOptions={typeOptions}
+        statusOptions={statusOptions}
+        versionOptions={versionOptionsWithLabels}
       />,
     );
 

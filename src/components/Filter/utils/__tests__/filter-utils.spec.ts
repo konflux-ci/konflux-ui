@@ -43,14 +43,50 @@ describe('filter-utils', () => {
         pipelineRuns,
         (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
         pipelineRunTypes,
+        undefined,
+        true,
         (plr) => plr.kind === 'PipelineRun',
       );
-      const expected = {
-        build: 2,
-        test: 1,
-      };
 
-      expect(result).toStrictEqual(expected);
+      expect(result).toStrictEqual([
+        { key: 'build', count: 2, label: undefined },
+        { key: 'release', count: 0, label: undefined },
+        { key: 'test', count: 1, label: undefined },
+        { key: 'tenant', count: 0, label: undefined },
+        { key: 'managed', count: 0, label: undefined },
+        { key: 'final', count: 0, label: undefined },
+      ]);
+    });
+
+    it('should return unique keys without counts when count is false', () => {
+      const result = createFilterObj(
+        pipelineRuns,
+        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
+        undefined,
+        undefined,
+        false,
+        (plr) => plr.kind === 'PipelineRun',
+      );
+
+      expect(result).toStrictEqual([
+        { key: 'build', label: undefined },
+        { key: 'test', label: undefined },
+      ]);
+    });
+
+    it('should include labels when provided', () => {
+      const labels = { build: 'Build', test: 'Test' };
+      const result = createFilterObj(
+        pipelineRuns,
+        (plr) => plr?.metadata.labels[PipelineRunLabel.COMMIT_TYPE_LABEL],
+        ['build', 'test'],
+        labels,
+      );
+
+      expect(result).toStrictEqual([
+        { key: 'build', count: undefined, label: 'Build' },
+        { key: 'test', count: undefined, label: 'Test' },
+      ]);
     });
   });
 });
