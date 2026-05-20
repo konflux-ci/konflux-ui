@@ -4,27 +4,13 @@ import userEvent from '@testing-library/user-event';
 import { defaultKonfluxRoleMap } from '~/__data__/role-data';
 import { mockSingleSubjectRoleBinding } from '~/__data__/rolebinding-data';
 import { useRoleMap } from '~/hooks/useRole';
-import { splitRowKey, UserAccessChangeRoleModal } from '../UserAccessChangeRoleModal';
+import { UserAccessChangeRoleModal } from '../UserAccessChangeRoleModal';
 
 jest.mock('~/hooks/useRole', () => ({
   useRoleMap: jest.fn(),
 }));
 
 describe('UserAccessChangeRoleModal', () => {
-  describe('splitRowKey', () => {
-    it('parses segments from an expandRoleBindingsToTableRows row key', () => {
-      expect(
-        splitRowKey('konflux-contributor-user-actions__0__User__alice__konflux-contributor-alice'),
-      ).toEqual({
-        roleRefName: 'konflux-contributor-user-actions',
-        roleName: 'contributor',
-        index: '0',
-        subjectKind: 'User',
-        username: 'alice',
-      });
-    });
-  });
-
   const useRoleMapMock = useRoleMap as jest.Mock;
 
   beforeEach(() => {
@@ -86,7 +72,7 @@ describe('UserAccessChangeRoleModal', () => {
   it('allows downgrade when exactly one user is selected', async () => {
     const user = userEvent.setup();
     renderModal({
-      selectedRowKeys: new Set(['konflux-admin-user-actions__0__User__alice']),
+      selectedRowKeys: new Set(['konflux-admin-user-actions__0__User__alice__rb1']),
       allAffectedRoleBindings: [
         mockSingleSubjectRoleBinding('rb1', 'alice', 'konflux-admin-user-actions'),
       ],
@@ -100,12 +86,23 @@ describe('UserAccessChangeRoleModal', () => {
     });
   });
 
+  it('disables save and shows an error when an affected role is not in konflux-public-info', async () => {
+    const user = userEvent.setup();
+    renderModal({
+      selectedRowKeys: new Set(['unknown-role__0__User__alice__rb1']),
+      allAffectedRoleBindings: [mockSingleSubjectRoleBinding('rb1', 'alice', 'unknown-role')],
+    });
+    expect(screen.getByText(/cannot evaluate role changes for: unknown-role/i)).toBeInTheDocument();
+    await chooseRole(user, 'Maintainer');
+    expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-disabled', 'true');
+  });
+
   it('blocks downgrade for multiple users when the new role is below the highest affected role', async () => {
     const user = userEvent.setup();
     renderModal({
       selectedRowKeys: new Set([
-        'konflux-admin-user-actions__0__User__alice',
-        'konflux-contributor-user-actions__0__User__bob',
+        'konflux-admin-user-actions__0__User__alice__rba',
+        'konflux-contributor-user-actions__0__User__bob__rbb',
       ]),
       allAffectedRoleBindings: [
         mockSingleSubjectRoleBinding('rba', 'alice', 'konflux-admin-user-actions'),
@@ -122,8 +119,8 @@ describe('UserAccessChangeRoleModal', () => {
     const user = userEvent.setup();
     renderModal({
       selectedRowKeys: new Set([
-        'konflux-maintainer-user-actions__0__User__alice',
-        'konflux-contributor-user-actions__0__User__bob',
+        'konflux-maintainer-user-actions__0__User__alice__rba',
+        'konflux-contributor-user-actions__0__User__bob__rbb',
       ]),
       allAffectedRoleBindings: [
         mockSingleSubjectRoleBinding('rba', 'alice', 'konflux-maintainer-user-actions'),
@@ -139,12 +136,42 @@ describe('UserAccessChangeRoleModal', () => {
     });
   });
 
+  it('blocks downgrade for multiple users when a new role from rbac config is below the highest affected role', async () => {
+    const user = userEvent.setup();
+    const roleMapWithViewer = {
+      ...defaultKonfluxRoleMap,
+      roleMap: {
+        ...defaultKonfluxRoleMap.roleMap,
+        'konflux-viewer-user-actions': 'Viewer',
+      },
+      roleRefWeights: {
+        ...defaultKonfluxRoleMap.roleRefWeights,
+        'konflux-viewer-user-actions': 1,
+      },
+    };
+    useRoleMapMock.mockReturnValue([roleMapWithViewer, true]);
+    renderModal({
+      selectedRowKeys: new Set([
+        'konflux-admin-user-actions__0__User__alice__rba',
+        'konflux-contributor-user-actions__0__User__bob__rbb',
+      ]),
+      allAffectedRoleBindings: [
+        mockSingleSubjectRoleBinding('rba', 'alice', 'konflux-admin-user-actions'),
+        mockSingleSubjectRoleBinding('rbb', 'bob', 'konflux-contributor-user-actions'),
+      ],
+    });
+    await chooseRole(user, 'Viewer');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Save' })).toHaveAttribute('aria-disabled', 'true');
+    });
+  });
+
   it('allows upgrade for multiple users when the new role is not below any user peak role', async () => {
     const user = userEvent.setup();
     renderModal({
       selectedRowKeys: new Set([
-        'konflux-contributor-user-actions__0__User__alice',
-        'konflux-contributor-user-actions__0__User__bob',
+        'konflux-contributor-user-actions__0__User__alice__rba',
+        'konflux-contributor-user-actions__0__User__bob__rbb',
       ]),
       allAffectedRoleBindings: [
         mockSingleSubjectRoleBinding('rba', 'alice', 'konflux-contributor-user-actions'),
@@ -162,7 +189,7 @@ describe('UserAccessChangeRoleModal', () => {
 
   it('renders each selected row as "username (kind): highest role", e.g. alice (User): Contributor', () => {
     renderModal({
-      selectedRowKeys: new Set(['konflux-contributor-user-actions__0__User__alice']),
+      selectedRowKeys: new Set(['konflux-contributor-user-actions__0__User__alice__rb']),
       allAffectedRoleBindings: [
         mockSingleSubjectRoleBinding('rb', 'alice', 'konflux-contributor-user-actions'),
       ],

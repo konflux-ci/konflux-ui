@@ -3,6 +3,7 @@ import { mockSingleSubjectRoleBinding } from '~/__data__/rolebinding-data';
 import { createK8sUtilMock } from '~/unit-test-utils';
 import {
   performUserAccessRoleChange,
+  snapshotChangeAccessSaveContext,
   userHasRoleBindingOutsideDeletions,
 } from '../userAccessChangeAccessSave';
 
@@ -11,6 +12,32 @@ const k8sDeleteMock = createK8sUtilMock('K8sQueryDeleteResource');
 
 afterEach(() => {
   jest.clearAllMocks();
+});
+
+describe('snapshotChangeAccessSaveContext', () => {
+  it('copies selection and bindings so later mutations do not affect the snapshot', () => {
+    const binding = mockSingleSubjectRoleBinding(
+      'konflux-contributor-alice-user-actions',
+      'alice',
+      'konflux-contributor-user-actions',
+    );
+    const rowKey = 'konflux-contributor-user-actions__0__User__alice__rb-alice';
+    const selectedRowKeys = new Set([rowKey]);
+    const roleBindings = [binding];
+
+    const snapshot = snapshotChangeAccessSaveContext(selectedRowKeys, roleBindings);
+
+    selectedRowKeys.add('other-key');
+    binding.subjects?.push({
+      apiGroup: 'rbac.authorization.k8s.io',
+      kind: 'User',
+      name: 'bob',
+    });
+
+    expect(snapshot.selectedRowKeys).toEqual(new Set([rowKey]));
+    expect(snapshot.roleBindings[0].subjects).toHaveLength(1);
+    expect(snapshot.roleBindings[0].subjects?.[0]?.name).toBe('alice');
+  });
 });
 
 describe('userHasRoleBindingOutsideDeletions', () => {
@@ -77,7 +104,7 @@ describe('performUserAccessRoleChange', () => {
     const onSuccessClearSelection = jest.fn();
     await performUserAccessRoleChange({
       newRoleRef: 'konflux-admin-user-actions',
-      selectedRowKeys: new Set(['konflux-contributor-user-actions__0__User__alice']),
+      selectedRowKeys: new Set(['konflux-contributor-user-actions__0__User__alice__rb-alice']),
       roleBindings: [oldBinding],
       currentRoleMap,
       roleMap: defaultKonfluxRoleMap,
@@ -105,7 +132,7 @@ describe('performUserAccessRoleChange', () => {
     await expect(
       performUserAccessRoleChange({
         newRoleRef: 'konflux-admin-user-actions',
-        selectedRowKeys: new Set(['konflux-contributor-user-actions__0__User__alice']),
+        selectedRowKeys: new Set(['konflux-contributor-user-actions__0__User__alice__rb-alice']),
         roleBindings: [oldBinding],
         currentRoleMap,
         roleMap: defaultKonfluxRoleMap,
@@ -138,7 +165,7 @@ describe('performUserAccessRoleChange', () => {
 
     await performUserAccessRoleChange({
       newRoleRef: 'konflux-maintainer-user-actions',
-      selectedRowKeys: new Set([`${contributorRef}__1__User__bob`]),
+      selectedRowKeys: new Set([`${contributorRef}__1__User__bob__rb-shared`]),
       roleBindings: [aliceStandalone, shared],
       currentRoleMap,
       roleMap: defaultKonfluxRoleMap,

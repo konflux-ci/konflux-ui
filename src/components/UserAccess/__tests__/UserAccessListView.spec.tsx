@@ -309,6 +309,41 @@ describe('UserAccessListView', () => {
       });
     }
 
+    it('save uses role bindings snapshotted at modal open, not later watch updates', async () => {
+      const user = userEvent.setup();
+      const original = [
+        mockSingleSubjectRoleBinding('rb-old', 'alice', 'konflux-contributor-user-actions'),
+      ];
+      const updated = [
+        mockSingleSubjectRoleBinding('rb-new', 'alice', 'konflux-admin-user-actions'),
+      ];
+
+      useRoleBindingsMock.mockReturnValue([original, true]);
+      const { rerender } = render(UserAccessList);
+
+      await user.click(screen.getAllByRole('checkbox')[1]);
+      await user.click(screen.getByRole('button', { name: 'Change access' }));
+      await waitFor(() => {
+        expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
+      });
+
+      useRoleBindingsMock.mockReturnValue([updated, true]);
+      rerender(UserAccessList);
+
+      await user.click(screen.getByTestId('user-access-change-role-select'));
+      await waitFor(() => {
+        expect(screen.getByRole('option', { name: 'Maintainer' })).toBeInTheDocument();
+      });
+      await user.click(screen.getByRole('option', { name: 'Maintainer' }));
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+      await waitFor(() => {
+        expect(deleteRBMock).toHaveBeenCalled();
+      });
+
+      expect(deleteRBMock).toHaveBeenCalledWith(original[0]);
+      expect(deleteRBMock).not.toHaveBeenCalledWith(updated[0]);
+    });
+
     it('one selected user in a single binding: deletes that binding and creates the new role only', async () => {
       const user = userEvent.setup();
       const rbs = [

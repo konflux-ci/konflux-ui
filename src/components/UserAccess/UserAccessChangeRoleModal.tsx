@@ -19,9 +19,20 @@ import {
 import textStyles from '@patternfly/react-styles/css/utilities/Text/text.mjs';
 import { useRoleMap } from '~/hooks/useRole';
 import type { RoleBinding } from '~/types';
-import { ROLE_WEIGHT_MAP } from '~/utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
+import { splitRowKey } from './userAccessTableRows';
 import './UserAccess.scss';
+
+const getRoleRefWeight = (
+  roleRefName: string | undefined,
+  roleRefWeights: Record<string, number>,
+): number | undefined => {
+  if (!roleRefName) {
+    return undefined;
+  }
+  const weight = roleRefWeights[roleRefName];
+  return weight === undefined ? undefined : weight;
+};
 
 const saveErrorMessage = (err: unknown): string => {
   if (err instanceof Error && err.message) {
@@ -36,25 +47,6 @@ export type UserAccessChangeRoleModalProps = {
   selectedRowKeys: Set<string>;
   allAffectedRoleBindings: RoleBinding[];
   onSave: (newRoleRef: string) => Promise<void>;
-};
-
-export const splitRowKey = (
-  rowKey: string,
-): {
-  roleRefName: string;
-  roleName: string;
-  index: string;
-  subjectKind: string;
-  username: string;
-} => {
-  const segments = rowKey.split('__');
-  return {
-    roleRefName: segments[0],
-    roleName: segments[0].split('-')[1],
-    index: segments[1],
-    subjectKind: segments[2],
-    username: segments[3],
-  };
 };
 
 export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps> = ({
@@ -73,8 +65,31 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     (): Record<string, string> => roleMap?.roleMap ?? {},
     [roleMap],
   );
+  const roleRefWeights = React.useMemo(
+    (): Record<string, number> => roleMap?.roleRefWeights ?? {},
+    [roleMap],
+  );
 
   const roleSelectOptions = React.useMemo(() => Object.entries(currentRoleMap), [currentRoleMap]);
+
+  const unrankedRoleRefs = React.useMemo(() => {
+    const refs = new Set<string>();
+    for (const rb of allAffectedRoleBindings) {
+      const roleRef = rb.roleRef?.name;
+      if (roleRef && getRoleRefWeight(roleRef, roleRefWeights) === undefined) {
+        refs.add(roleRef);
+      }
+    }
+    if (
+      modalSelectedRoleRef &&
+      getRoleRefWeight(modalSelectedRoleRef, roleRefWeights) === undefined
+    ) {
+      refs.add(modalSelectedRoleRef);
+    }
+    return [...refs];
+  }, [allAffectedRoleBindings, modalSelectedRoleRef, roleRefWeights]);
+
+  const hasUnrankedRoles = unrankedRoleRefs.length > 0;
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -103,11 +118,11 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
 
   const highestAffectedRoleWeight = React.useMemo(() => {
     const weights = allAffectedRoleBindings
-      .map((rb) => ROLE_WEIGHT_MAP[currentRoleMap[rb.roleRef?.name ?? ''] ?? ''])
+      .map((rb) => getRoleRefWeight(rb.roleRef?.name, roleRefWeights))
       .filter((weight): weight is number => weight !== undefined);
 
     return weights.length === 0 ? undefined : Math.max(...weights);
-  }, [allAffectedRoleBindings, currentRoleMap]);
+  }, [allAffectedRoleBindings, roleRefWeights]);
 
   const getUserHighestRole = React.useMemo(() => {
     return (username: string): string => {
@@ -121,21 +136,31 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
       }
 
       const highestRole = allUserRoles.reduce((max, role) => {
-        const roleWeight = ROLE_WEIGHT_MAP[currentRoleMap[role]] ?? 0;
-        const maxWeight = ROLE_WEIGHT_MAP[currentRoleMap[max]] ?? 0;
+        const roleWeight = getRoleRefWeight(role, roleRefWeights);
+        const maxWeight = getRoleRefWeight(max, roleRefWeights);
+        if (roleWeight === undefined) {
+          return max;
+        }
+        if (maxWeight === undefined) {
+          return role;
+        }
         return roleWeight > maxWeight ? role : max;
       }, allUserRoles[0]);
 
-      return currentRoleMap[highestRole];
+      return currentRoleMap[highestRole] ?? highestRole;
     };
-  }, [allAffectedRoleBindings, currentRoleMap]);
+  }, [allAffectedRoleBindings, currentRoleMap, roleRefWeights]);
 
   const isModalSaveDisabled = React.useMemo(() => {
+    if (hasUnrankedRoles) {
+      return true;
+    }
+
     if (!modalSelectedRoleRef) {
       return true;
     }
 
-    const selectedRoleWeight = ROLE_WEIGHT_MAP[currentRoleMap[modalSelectedRoleRef] ?? ''];
+    const selectedRoleWeight = getRoleRefWeight(modalSelectedRoleRef, roleRefWeights);
     if (selectedRoleWeight === undefined) {
       return true;
     }
@@ -146,12 +171,18 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
     }
 
     if (highestAffectedRoleWeight === undefined) {
-      return false;
+      return true;
     }
 
     // Downgrade exists?
     return highestAffectedRoleWeight > selectedRoleWeight;
-  }, [modalSelectedRoleRef, selectedCount, highestAffectedRoleWeight, currentRoleMap]);
+  }, [
+    hasUnrankedRoles,
+    modalSelectedRoleRef,
+    selectedCount,
+    highestAffectedRoleWeight,
+    roleRefWeights,
+  ]);
 
   const handleSave = async () => {
     if (!modalSelectedRoleRef || isModalSaveDisabled) {
@@ -189,9 +220,11 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
             onClick={() => void handleSave()}
             isDisabled={isModalSaveDisabled}
             tooltip={
-              !modalSelectedRoleRef
-                ? 'No role selected. Select a role to save the changes.'
-                : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
+              hasUnrankedRoles
+                ? 'Cannot change roles: one or more affected role bindings use a role that is not configured in this cluster.'
+                : !modalSelectedRoleRef
+                  ? 'No role selected. Select a role to save the changes.'
+                  : 'You cannot save the changes. The selected role is not allowed to downgrade the users.'
             }
           >
             Save
@@ -209,6 +242,16 @@ export const UserAccessChangeRoleModal: React.FC<UserAccessChangeRoleModalProps>
             displayed)
           </Text>
         </FlexItem>
+        {hasUnrankedRoles ? (
+          <FlexItem>
+            <Alert variant={AlertVariant.danger} title="Unsupported roles" isInline>
+              Cannot evaluate role changes for: {unrankedRoleRefs.join(', ')}. These role bindings
+              reference roles that are not listed in the cluster Konflux configuration, or the
+              configuration order is invalid. Update konflux-public-info or remove affected users
+              before continuing.
+            </Alert>
+          </FlexItem>
+        ) : null}
         <FlexItem>
           <Alert variant={AlertVariant.warning} title="Role change information" isInline>
             When changing access, the user will be removed from all role bindings in the current

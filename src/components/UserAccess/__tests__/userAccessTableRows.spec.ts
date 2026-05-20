@@ -1,7 +1,53 @@
-import { mockRoleBinding, mockRoleBindingsWithMultipleUsers } from '~/__data__/rolebinding-data';
-import { expandRoleBindingsToTableRows, filterUserAccessRows } from '../userAccessTableRows';
+import {
+  mockRoleBinding,
+  mockRoleBindingsWithMultipleUsers,
+  mockSingleSubjectRoleBinding,
+} from '~/__data__/rolebinding-data';
+import {
+  buildUserAccessRowKey,
+  expandRoleBindingsToTableRows,
+  filterUserAccessRows,
+  splitRowKey,
+} from '../userAccessTableRows';
 
 describe('userAccessTableRows', () => {
+  describe('row key encoding', () => {
+    it('round-trips keys built by expandRoleBindingsToTableRows', () => {
+      const rb = mockSingleSubjectRoleBinding(
+        'konflux-contributor-alice',
+        'alice',
+        'konflux-contributor-user-actions',
+      );
+      const rowKey = expandRoleBindingsToTableRows([rb])[0].rowKey;
+      expect(splitRowKey(rowKey)).toEqual({
+        roleRefName: 'konflux-contributor-user-actions',
+        roleName: 'contributor',
+        index: '0',
+        subjectKind: 'User',
+        username: 'alice',
+        bindingName: 'konflux-contributor-alice',
+      });
+    });
+
+    it('rejects keys when a field contains the separator', () => {
+      expect(() =>
+        buildUserAccessRowKey({
+          roleRefName: 'konflux-contributor-user-actions',
+          subjectIndex: 0,
+          subjectKind: 'User',
+          subjectName: 'alice__extra',
+          bindingName: 'rb1',
+        }),
+      ).toThrow(/must not contain/);
+    });
+
+    it('rejects keys with the wrong number of segments', () => {
+      expect(() => splitRowKey('konflux-contributor-user-actions__0__User__alice')).toThrow(
+        /expected 5 segments/,
+      );
+    });
+  });
+
   describe('expandRoleBindingsToTableRows', () => {
     it('creates one row per subject on the same role binding', () => {
       const rows = expandRoleBindingsToTableRows(mockRoleBindingsWithMultipleUsers);

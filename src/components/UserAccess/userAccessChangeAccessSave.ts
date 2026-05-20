@@ -1,8 +1,8 @@
 import type { RoleMap } from '~/hooks/useRole';
 import { logger } from '~/monitoring/logger';
 import type { NamespaceRole, RoleBinding } from '~/types';
-import { splitRowKey } from './UserAccessChangeRoleModal';
 import { createRBs, deleteRB, restoreRB } from './UserAccessForm/form-utils';
+import { splitRowKey } from './userAccessTableRows';
 
 export function getUniqueSelectedUsers(rowKeys: Set<string>): Set<string> {
   return new Set([...rowKeys].map((rowKey) => splitRowKey(rowKey).username));
@@ -36,9 +36,28 @@ export function userHasRoleBindingOutsideDeletions(
   );
 }
 
-/** Deep clone for rollback (Jest/jsdom may not expose `structuredClone`). */
+/** Snapshot for rollback; clone nested fields read by restoreRB so in-place edits cannot affect the original. */
 export function cloneRoleBindingSnapshot(rb: RoleBinding): RoleBinding {
-  return JSON.parse(JSON.stringify(rb));
+  return {
+    ...rb,
+    roleRef: { ...rb.roleRef },
+    subjects: rb.subjects?.map((subject) => ({ ...subject })),
+  };
+}
+
+export type ChangeAccessSaveSnapshot = {
+  selectedRowKeys: Set<string>;
+  roleBindings: RoleBinding[];
+};
+
+export function snapshotChangeAccessSaveContext(
+  selectedRowKeys: Set<string>,
+  roleBindings: RoleBinding[],
+): ChangeAccessSaveSnapshot {
+  return {
+    selectedRowKeys: new Set(selectedRowKeys),
+    roleBindings: roleBindings.map(cloneRoleBindingSnapshot),
+  };
 }
 
 async function deleteBindingsBestEffort(

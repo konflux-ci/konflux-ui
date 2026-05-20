@@ -12,6 +12,11 @@ export type UseChangeAccessSaveParams = {
   setSelectedRowKeys: React.Dispatch<React.SetStateAction<Set<string>>>;
 };
 
+/**
+ * Returns a save handler for the change-access modal.
+ * Pass stable `selectedRowKeys` and `roleBindings` frozen at modal open so saves are not
+ * affected by watch updates between opening the modal and clicking Save.
+ */
 export function useChangeAccessSave({
   namespace,
   currentRoleMap,

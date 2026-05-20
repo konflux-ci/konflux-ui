@@ -33,7 +33,12 @@ import { useAccessReviewForModel } from '~/utils/rbac';
 import { ButtonWithAccessTooltip } from '../ButtonWithAccessTooltip';
 import { UserAccessTableHeaderRow } from './RBListHeader';
 import { UserAccessTableBodyRow } from './RBListRow';
-import { getAllAffectedRoleBindings, getUniqueSelectedUsers } from './userAccessChangeAccessSave';
+import {
+  getAllAffectedRoleBindings,
+  getUniqueSelectedUsers,
+  snapshotChangeAccessSaveContext,
+  type ChangeAccessSaveSnapshot,
+} from './userAccessChangeAccessSave';
 import { UserAccessChangeRoleModal } from './UserAccessChangeRoleModal';
 import {
   expandRoleBindingsToTableRows,
@@ -124,8 +129,24 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
     );
   }, [tableRows, usernameFilter, roleBindingNameFilter, activeFilter]);
 
+  /** Keys from {@link expandRoleBindingsToTableRows} only — see `userAccessTableRows` for encoding rules. */
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<Set<string>>(() => new Set());
   const [isChangeAccessModalOpen, setChangeAccessModalOpen] = React.useState(false);
+  const [changeAccessSnapshot, setChangeAccessSnapshot] =
+    React.useState<ChangeAccessSaveSnapshot | null>(null);
+
+  const openChangeAccessModal = () => {
+    setChangeAccessSnapshot(snapshotChangeAccessSaveContext(selectedRowKeys, roleBindings));
+    setChangeAccessModalOpen(true);
+  };
+
+  const closeChangeAccessModal = () => {
+    setChangeAccessModalOpen(false);
+    setChangeAccessSnapshot(null);
+  };
+
+  const changeAccessSelectedRowKeys = changeAccessSnapshot?.selectedRowKeys ?? selectedRowKeys;
+  const changeAccessRoleBindings = changeAccessSnapshot?.roleBindings ?? roleBindings;
 
   React.useEffect(() => {
     const allowed = new Set(filterRBs.map((row) => row.rowKey));
@@ -177,15 +198,19 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
   const handleModalSave = useChangeAccessSave({
     namespace,
     currentRoleMap: currentRoleMap as Record<string, NamespaceRole>,
-    roleBindings,
+    roleBindings: changeAccessRoleBindings,
     roleMap,
-    selectedRowKeys,
+    selectedRowKeys: changeAccessSelectedRowKeys,
     setSelectedRowKeys,
   });
 
   const allAffectedRoleBindingsForModal = React.useMemo(
-    () => getAllAffectedRoleBindings(getUniqueSelectedUsers(selectedRowKeys), roleBindings),
-    [roleBindings, selectedRowKeys],
+    () =>
+      getAllAffectedRoleBindings(
+        getUniqueSelectedUsers(changeAccessSelectedRowKeys),
+        changeAccessRoleBindings,
+      ),
+    [changeAccessRoleBindings, changeAccessSelectedRowKeys],
   );
 
   const selectedCount = selectedRowKeys.size;
@@ -293,7 +318,7 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
           <ButtonWithAccessTooltip
             variant="secondary"
             type="button"
-            onClick={() => setChangeAccessModalOpen(true)}
+            onClick={openChangeAccessModal}
             isDisabled={selectedCount === 0 || !canModifyAllSelectedUsers}
             tooltip={
               selectedCount === 0
@@ -359,8 +384,8 @@ export const UserAccessListView: React.FC<React.PropsWithChildren<unknown>> = ()
       )}
       <UserAccessChangeRoleModal
         isOpen={isChangeAccessModalOpen}
-        onClose={() => setChangeAccessModalOpen(false)}
-        selectedRowKeys={selectedRowKeys}
+        onClose={closeChangeAccessModal}
+        selectedRowKeys={changeAccessSelectedRowKeys}
         allAffectedRoleBindings={allAffectedRoleBindingsForModal}
         onSave={handleModalSave}
       />
