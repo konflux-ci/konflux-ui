@@ -1,0 +1,58 @@
+name: PR Title Check
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Validate PR title
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = context.payload.pull_request.title;
+
+            // Pattern: type(TICKET-ID): summary
+            // type: feat, fix, chore, refactor, docs, test, ci, build, perf, style, revert
+            // TICKET-ID: JIRA (KFLUXUI-123, KONFLUX-456) or GitHub issue (#123)
+            const pattern = /^(feat|fix|chore|refactor|docs|test|ci|build|perf|style|revert)\(([A-Z]+-\d+|#\d+)\): .+$/;
+
+            if (pattern.test(title)) {
+              console.log(`PR title is valid: "${title}"`);
+              return;
+            }
+
+            const body = [
+              `### PR Title Check Failed`,
+              ``,
+              `The PR title does not follow the required format:`,
+              ``,
+              '```',
+              `<type>(<ticket-id>): <summary>`,
+              '```',
+              ``,
+              `**Allowed types:** \`feat\`, \`fix\`, \`chore\`, \`refactor\`, \`docs\`, \`test\`, \`ci\`, \`build\`, \`perf\`, \`style\`, \`revert\``,
+              ``,
+              `**Ticket ID:** Jira ticket (e.g., \`KFLUXUI-123\`, \`KONFLUX-456\`) or GitHub issue (e.g., \`#123\`)`,
+              ``,
+              `**Examples:**`,
+              `- \`feat(KFLUXUI-1200): add syntax highlighting for JSON log lines\``,
+              `- \`fix(KONFLUX-456): resolve alignment issue in table header\``,
+              `- \`chore(#42): update CI pipeline configuration\``,
+              ``,
+              `Please update the PR title and the check will re-run automatically.`,
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+            core.setFailed(`PR title "${title}" does not match the required format.`);

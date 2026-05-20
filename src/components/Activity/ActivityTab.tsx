@@ -12,6 +12,10 @@ import './ActivityTab.scss';
 
 export const ACTIVITY_SECONDARY_TAB_KEY = 'activity-secondary-tab';
 
+/**
+ * @deprecated
+ * Replaced by ActivityTabV2 with new component model
+ */
 export const ActivityTab: React.FC = () => {
   const params = useParams<RouterParams>();
   const { applicationName, workspaceName, activityTab = 'latest-commits' } = params;

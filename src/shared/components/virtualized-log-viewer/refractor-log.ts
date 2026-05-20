@@ -212,7 +212,7 @@ export default function registerLogSyntax(PrismInstance: typeof Prism) {
 
     time: {
       pattern:
-        /\b\d{1,2}:\d{1,2}:\d{1,2}(?:[.,:]\d+)?(?:\s?[+-]\d{2}:?\d{2}|Z)?\b|\b\d+(?:\.\d+)?\s?(?:sec|ms|[smh])\b/i,
+        /\b\d{1,2}:\d{1,2}:\d{1,2}(?:[.,:]\d+)?(?:\s?[+-]\d{2}:?\d{2}|Z)?\b|\b(?:\d+(?:\.\d+)?(?:sec|ms|[smhd])\s?)+\b/i,
       alias: 'number',
     },
 

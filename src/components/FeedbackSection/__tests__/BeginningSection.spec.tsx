@@ -1,6 +1,11 @@
+import React from 'react';
 import { fireEvent, render } from '@testing-library/react';
 import BeginningSection from '../components/BeginningSection';
 import { FeedbackSections } from '../consts';
+
+jest.mock('~/feature-flags/hooks', () => ({
+  IfFeature: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
 const setCurrentSectionMock = jest.fn();
 const onCancelMock = jest.fn();

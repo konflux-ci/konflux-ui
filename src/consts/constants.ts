@@ -7,6 +7,7 @@ export const KONFLUX_INFO_NAMESPACE = 'konflux-info';
 
 // Session Storage Keys
 export const SESSION_STORAGE_KEYS = {
+  PIPELINES_VISIBLE_COLUMNS: 'pipeline-runs-columns',
   COMMITS_VISIBLE_COLUMNS: 'commits-visible-columns',
   RELEASES_VISIBLE_COLUMNS: 'releases-visible-columns',
   RELEASE_PIPELINE_VISIBLE_COLUMNS: 'release-pipeline-visible-columns',

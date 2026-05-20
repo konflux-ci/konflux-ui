@@ -8,6 +8,22 @@ import { VirtualizedLogContent } from '../VirtualizedLogContent';
 // Register the log language
 registerLogSyntax(Prism);
 
+// Spy to capture scrollToIndex calls from the virtualizer.
+let scrollToIndexSpy: jest.Mock | null = null;
+jest.mock('@tanstack/react-virtual', () => {
+  const actual = jest.requireActual('@tanstack/react-virtual');
+  return {
+    ...actual,
+    useVirtualizer: (options: unknown) => {
+      const virtualizer = actual.useVirtualizer(options);
+      if (scrollToIndexSpy) {
+        return { ...virtualizer, scrollToIndex: scrollToIndexSpy };
+      }
+      return virtualizer;
+    },
+  };
+});
+
 // Mock lodash-es debounce to make tests synchronous
 jest.mock('lodash-es', () => ({
   ...jest.requireActual('lodash-es'),
@@ -655,6 +671,30 @@ Another short line`;
       // Should render normally
       const listElement = document.querySelector('.log-content__list');
       expect(listElement).toBeInTheDocument();
+    });
+
+    it('should use instant scroll (behavior: auto) for hash navigation', () => {
+      window.location.hash = '#L2';
+
+      // Make RAF synchronous so the double-RAF in the scroll effect executes immediately
+      const originalRAF = window.requestAnimationFrame;
+      window.requestAnimationFrame = (cb: FrameRequestCallback) => {
+        cb(0);
+        return 0;
+      };
+
+      // Enable the module-level scrollToIndex spy
+      scrollToIndexSpy = jest.fn();
+
+      renderWithQueryClientAndRouter(<VirtualizedLogContent {...defaultProps} />);
+
+      expect(scrollToIndexSpy).toHaveBeenCalled();
+      const lastCall = scrollToIndexSpy.mock.calls[scrollToIndexSpy.mock.calls.length - 1];
+      expect(lastCall[1]).toEqual(expect.objectContaining({ behavior: 'auto' }));
+
+      // Cleanup
+      scrollToIndexSpy = null;
+      window.requestAnimationFrame = originalRAF;
     });
   });
 });

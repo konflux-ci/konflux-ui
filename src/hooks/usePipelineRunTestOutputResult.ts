@@ -1,26 +1,22 @@
 import { useEffect, useMemo } from 'react';
-import { runStatus, TestOutputResult } from '~/consts/pipelinerun';
 import { PipelineRunKind } from '~/types';
 import {
   getPipelineRunStatusResults,
   isTaskV1Beta1,
+  TaskTestResult,
   taskTestResultStatus,
-  testOutputResultToRunStatus,
 } from '~/utils/pipeline-utils';
 import { useTaskRunsForPipelineRuns } from './useTaskRunsV2';
 
 type UsePipelineRunTestOutputResult = [
-  runStatus | null,
+  AggregatedTestResult | null, // aggregated test result from task runs (successes, failures, warnings)
   boolean, // loading
-  string | undefined, // test output result note
 ];
 
-const TEST_STATUS_RANK_ORDER: Record<string, number> = {
-  SUCCESS: 0,
-  SKIPPED: 1,
-  WARNING: 2,
-  FAILURE: 3,
-  ERROR: 4,
+export type AggregatedTestResult = {
+  successes: number;
+  failures: number;
+  warnings: number;
 };
 
 export const usePipelineRunTestOutputResult = (
@@ -51,13 +47,13 @@ export const usePipelineRunTestOutputResult = (
     }
   }, [nextPageProps.hasNextPage, nextPageProps.isFetchingNextPage, loaded, getNextPage, error]);
 
-  const testStatus = useMemo(() => {
+  const testStatuses = useMemo<TaskTestResult[] | null>(() => {
     if (!plr) return null;
 
     const results = getPipelineRunStatusResults(plr);
     const testResultStatus = taskTestResultStatus(results ?? []);
 
-    if (testResultStatus) return testResultStatus;
+    if (testResultStatus) return [testResultStatus];
 
     const testResults = taskRuns
       ?.map((taskRun) => {
@@ -66,26 +62,44 @@ export const usePipelineRunTestOutputResult = (
           : taskRun.status?.results;
         return taskTestResultStatus(taskResults ?? []);
       })
-      .filter((testResult) => !!testResult)
-      .sort((a, b) => {
-        const rankA = TEST_STATUS_RANK_ORDER[a.result] ?? -1;
-        const rankB = TEST_STATUS_RANK_ORDER[b.result] ?? -1;
-        return rankB - rankA;
-      });
+      .filter((testResult) => !!testResult);
 
-    return testResults?.[0];
+    return testResults;
   }, [plr, taskRuns]);
 
-  const convertedStatus = useMemo<runStatus | null>(
-    () => testOutputResultToRunStatus(testStatus?.result as TestOutputResult),
-    [testStatus?.result],
-  );
+  const aggregatedTestResult = useMemo<AggregatedTestResult | null>(() => {
+    if (!testStatuses || testStatuses.length === 0) return null;
+
+    let hasAnyNumericField = false;
+    const aggregated = testStatuses.reduce<AggregatedTestResult>(
+      (acc, testResultStatus) => {
+        if (testResultStatus) {
+          if (testResultStatus.successes !== undefined) {
+            acc.successes += testResultStatus.successes;
+            hasAnyNumericField = true;
+          }
+          if (testResultStatus.failures !== undefined) {
+            acc.failures += testResultStatus.failures;
+            hasAnyNumericField = true;
+          }
+          if (testResultStatus.warnings !== undefined) {
+            acc.warnings += testResultStatus.warnings;
+            hasAnyNumericField = true;
+          }
+        }
+        return acc;
+      },
+      { successes: 0, failures: 0, warnings: 0 },
+    );
+
+    return hasAnyNumericField ? aggregated : null;
+  }, [testStatuses]);
 
   // when taskRunNamespace is null we are not fetching task runs (e.g. PLR has TEST_OUTPUT); treat as not loading
   const isLoading =
     taskRunNamespace !== null ? (!loaded && !error) || nextPageProps.isFetchingNextPage : false;
 
-  return [convertedStatus, isLoading, testStatus?.note];
+  return [aggregatedTestResult, isLoading];
 };
 
 export default usePipelineRunTestOutputResult;

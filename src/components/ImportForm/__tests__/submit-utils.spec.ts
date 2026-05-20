@@ -9,13 +9,10 @@ import { createIntegrationTest } from '../../IntegrationTests/IntegrationTestFor
 import { createResourcesWithLinkingComponents } from '../submit-utils';
 
 jest.mock('../../../utils/create-utils', () => ({
-  ...jest.requireActual('../../../utils/create-utils'),
   createApplication: jest.fn(),
   createComponent: jest.fn(),
   createImageRepository: jest.fn(),
-  createSecret: jest.fn(),
   createSecretWithLinkingComponents: jest.fn(),
-  useRef: jest.fn(() => ({ current: null })),
 }));
 
 jest.mock('../../IntegrationTests/IntegrationTestForm/utils/create-utils', () => ({

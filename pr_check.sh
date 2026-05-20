@@ -303,23 +303,43 @@ send_report() {
     fi
 
     MESSAGE="$MESSAGE $JOB_URL"
-    
+
     echo "Message: $MESSAGE"
+
+    # Build JSON payload properly using jq to avoid injection issues
+    PAYLOAD=$(jq -n \
+        --arg channel "${SLACK_CHANNEL_ID}" \
+        --arg text "$MESSAGE" \
+        '{channel: $channel, text: $text}')
+
+    # For testing: print the Slack payload without actually sending
+    if [ "${DRY_RUN:-false}" = "true" ]; then
+        echo ""
+        echo "=== DRY RUN: Would send to Slack ==="
+        echo "Channel: ${SLACK_CHANNEL_ID:-[NOT SET]}"
+        echo "Message:"
+        echo -e "$MESSAGE"
+        echo ""
+        echo "JSON Payload:"
+        echo "$PAYLOAD" | jq '.'
+        echo "===================================="
+        return 0
+    fi
 
     curl -X POST https://slack.com/api/chat.postMessage \
         -H "Authorization: Bearer ${SLACK_TOKEN}" \
         -H "Content-Type: application/json; charset=utf-8" \
-        -d "{\"channel\": \"${SLACK_CHANNEL_ID}\", \"text\": \"${MESSAGE}\"}"
+        -d "$PAYLOAD"
 
 }
 
 USAGE_MESSAGE="Usage: $0 [build|test|upload-coverage|send-report]
 
-   send-report <exit_status> <message> 
-       exit_status: mandatory 
-           values: success, failure 
+   send-report <exit_status> <message>
+       exit_status: mandatory
+           values: success, failure
        message: optional
-           if empty, message is generated 
+           if empty, message is generated
            if set, message is used as is and JOB_URL is added after message"
 
 if [ $# -eq 0 ]; then

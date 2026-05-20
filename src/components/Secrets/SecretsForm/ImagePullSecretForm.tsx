@@ -22,7 +22,9 @@ const isValidDockerConfigFile = (filename?: string): boolean => {
   return lowerName.endsWith('.dockercfg') || lowerName.endsWith('.json');
 };
 
-export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = () => {
+export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?: boolean }>> = ({
+  isEditMode = false,
+}) => {
   const [{ value: type }] = useField<ImagePullSecretType>('image.authType');
   const [registryValidations, setRegistryValidations] = React.useState<RegistryValidation[]>([]);
   const [fileTypeError, setFileTypeError] = React.useState<string>();
@@ -76,12 +78,17 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = (
       <DropdownField
         name="image.authType"
         label="Authentication type"
-        helpText="Select how you want to authenticate"
+        helpText={
+          isEditMode
+            ? 'You cannot edit the authentication type in edit mode'
+            : 'Select how you want to authenticate'
+        }
         items={[
           { key: 'imageRegistryCreds', value: ImagePullSecretType.ImageRegistryCreds },
           { key: 'uploadConfigFile', value: ImagePullSecretType.UploadConfigFile },
         ]}
         required
+        isDisabled={isEditMode}
         className="secret-type-subform__dropdown"
         validateOnChange
       />
@@ -95,7 +102,7 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = (
               </HelperTextItem>
             </HelperText>
           </Title>
-          <MultiImageCredentialForm name="image.registryCreds" />
+          <MultiImageCredentialForm name="image.registryCreds" isEditMode={isEditMode} />
         </>
       ) : (
         <>
@@ -103,7 +110,7 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<unknown>> = (
             name="image.dockerconfig"
             id="text-file-docker-config"
             label="Upload a .dockercfg or .docker/config.json file"
-            helpText="This file contains configuration details and credentials to connect to a secure image registry"
+            helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
             required
             onValidate={validateDockerConfig}
           />

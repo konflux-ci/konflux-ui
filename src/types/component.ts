@@ -12,6 +12,15 @@ export type ResourceRequirements = {
   };
 };
 
+export type ComponentSourceVersion = {
+  name: string;
+  revision: string;
+  context?: string;
+  dockerfileUri?: string;
+  'skip-builds'?: boolean;
+  'build-pipeline'?: Record<string, unknown>;
+};
+
 export type ComponentSource = {
   url?: string; // Will be required when we remove old component model
   /** @deprecated Will be removed when we remove old component model */
@@ -22,9 +31,9 @@ export type ComponentSource = {
     revision?: string;
     context?: string;
   };
-
+  versions?: ComponentSourceVersion[];
   dockerfileUri?: string;
-  versions?: ComponentVersion[]; // Will be required when we remove old component model
+
 };
 
 export type RepositorySettings = {
