@@ -40,9 +40,11 @@ import {
   GIT_PROVIDER_URL_ANNOTATION,
 } from './component-utils';
 import {
+  createK8sSecretResource,
   getAnnotationForSecret,
   getLabelsForSecret,
   getSecretFormData,
+  normalizeDockerConfigForDockerconfigjson,
   SecretForComponentOption,
 } from './secrets/secret-utils';
 import {
@@ -353,8 +355,12 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
     } else {
       data = values.image.dockerconfig
         ? {
-            ['.dockercfg']: Base64.encode(
-              JSON.stringify(JSON.parse(Base64.decode(values.image.dockerconfig))),
+            ['.dockerconfigjson']: Base64.encode(
+              JSON.stringify(
+                normalizeDockerConfigForDockerconfigjson(
+                  JSON.parse(Base64.decode(values.image.dockerconfig)),
+                ),
+              ),
             ),
           }
         : '';
@@ -366,12 +372,15 @@ export const getSecretObject = (values: SecretFormValues, namespace: string): Se
       return acc;
     }, {});
   }
+
+  const importLabels = getLabelsForSecret(values);
   const secretResource: SecretKind = {
     apiVersion: SecretModel.apiVersion,
     kind: SecretModel.kind,
     metadata: {
       name: values.secretName,
       namespace,
+      ...(importLabels && Object.keys(importLabels).length > 0 ? { labels: importLabels } : {}),
     },
     type:
       values.type === SecretTypeDropdownLabel.source
@@ -461,21 +470,7 @@ export const createSecretResourceWithLinkingComponents = async (
   dryRun: boolean,
 ) => {
   const secretResource: SecretKind = getSecretFormData(values, namespace);
-  const labels = {
-    secret: getLabelsForSecret(values),
-  };
-
-  const annotations = getAnnotationForSecret(values);
-  const k8sSecretResource = {
-    ...secretResource,
-    metadata: {
-      ...secretResource.metadata,
-      labels: {
-        ...labels?.secret,
-      },
-      annotations,
-    },
-  };
+  const k8sSecretResource = createK8sSecretResource(values, secretResource);
 
   const createdSecret = await K8sQueryCreateResource({
     model: SecretModel,

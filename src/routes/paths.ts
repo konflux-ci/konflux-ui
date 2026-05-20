@@ -23,6 +23,8 @@ export const SECRET_LIST_PATH = WORKSPACE_PATH.extend(`secrets`);
 
 export const SECRET_CREATE_PATH = SECRET_LIST_PATH.extend('create');
 
+export const SECRET_EDIT_PATH = SECRET_LIST_PATH.extend('edit');
+
 export const APPLICATION_DETAILS_PATH = APPLICATION_LIST_PATH.extend(
   `:${RouterParams.applicationName}`,
 );

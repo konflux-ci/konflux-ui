@@ -490,4 +490,15 @@ describe('create-utils getSecretObject', () => {
     const obj = getSecretObject(secretFormValues, 'test-ns');
     expect(obj.stringData).toEqual({ test: 'dGVzdA==' });
   });
+
+  it('should set metadata.labels from import form labels', () => {
+    const obj = getSecretObject(
+      {
+        ...secretFormValues,
+        labels: [{ key: 'env', value: 'staging' }],
+      },
+      'test-ns',
+    );
+    expect(obj.metadata.labels).toEqual({ env: 'staging' });
+  });
 });

@@ -1,4 +1,9 @@
-import { mockSecret } from '../../components/Secrets/__data__/mock-secrets';
+import { Base64 } from 'js-base64';
+import {
+  mockImageSecretDockerconfigjsonForEdit,
+  mockOpaqueSecretForEdit,
+  mockSecret,
+} from '../../components/Secrets/__data__/mock-secrets';
 import {
   sampleImagePullSecret,
   sampleOpaqueSecret,
@@ -11,6 +16,7 @@ import {
   ImagePullSecretType,
   RemoteSecretStatusReason,
   SecretFor,
+  SecretForComponentOption,
   SecretLabels,
   SecretType,
   SecretTypeDropdownLabel,
@@ -18,10 +24,13 @@ import {
 } from '../../types';
 import {
   createSecretResource,
+  editSecretResource,
   getAnnotationForSecret,
   getKubernetesSecretType,
   getLabelsForSecret,
+  getRegistryCreds,
   getSecretFormData,
+  normalizeDockerConfigForDockerconfigjson,
   getSupportedPartnerTaskKeyValuePairs,
   getSupportedPartnerTaskSecrets,
   getTargetLabelsForRemoteSecret,
@@ -95,6 +104,25 @@ describe('createSecretResource', () => {
   it('should create Image pull secret resource', async () => {
     await createSecretResource(sampleImagePullSecret, 'test-ns', false);
     expect(k8sCreateResourceMock).toHaveBeenCalled();
+  });
+});
+
+describe('getRegistryCreds', () => {
+  it('returns parsed registry credentials including password from .dockerconfigjson', () => {
+    expect(getRegistryCreds(mockImageSecretDockerconfigjsonForEdit)).toEqual([
+      expect.objectContaining({
+        registry: 'registry.example.com',
+        username: 'reguser',
+        password: 'regpass',
+        email: 'reg@example.com',
+      }),
+    ]);
+  });
+
+  it('returns default empty row when secret is not dockerconfigjson type', () => {
+    expect(getRegistryCreds(mockOpaqueSecretForEdit)).toEqual([
+      { registry: '', username: '', password: '', email: '' },
+    ]);
   });
 });
 
@@ -269,6 +297,28 @@ const formValuesForSCM: AddSecretFormValues = {
   },
 };
 
+describe('normalizeDockerConfigForDockerconfigjson', () => {
+  it('wraps legacy flat dockercfg map in auths', () => {
+    const legacy = { 'https://index.docker.io/v1/': { auth: 'abc' } };
+    expect(normalizeDockerConfigForDockerconfigjson(legacy)).toEqual({
+      auths: legacy,
+    });
+  });
+
+  it('preserves modern config.json with auths', () => {
+    const modern = {
+      auths: { 'registry.io': { auth: 'xyz' } },
+      credHelpers: { 'registry.io': 'desktop' },
+    };
+    expect(normalizeDockerConfigForDockerconfigjson(modern)).toEqual(modern);
+  });
+
+  it('returns empty auths for invalid input', () => {
+    expect(normalizeDockerConfigForDockerconfigjson(null)).toEqual({ auths: {} });
+    expect(normalizeDockerConfigForDockerconfigjson([])).toEqual({ auths: {} });
+  });
+});
+
 describe('getKubernetesSecretType', () => {
   it('should return opaque secret type', () => {
     const opaqueFormValues = formValues;
@@ -290,7 +340,7 @@ describe('getKubernetesSecretType', () => {
       type: SecretTypeDropdownLabel.image,
       image: { ...formValues.image, authType: ImagePullSecretType.UploadConfigFile },
     };
-    expect(getKubernetesSecretType(uploadConfigFormValues)).toBe('kubernetes.io/dockercfg');
+    expect(getKubernetesSecretType(uploadConfigFormValues)).toBe('kubernetes.io/dockerconfigjson');
   });
   it('should return source secret type', () => {
     const sourceBasiAuthFormValues = { ...formValues, type: SecretTypeDropdownLabel.source };
@@ -335,10 +385,42 @@ describe('getSecretFormData', () => {
     };
     expect(getSecretFormData(dockerConfigFormValues, 'test-ns')).toEqual(
       expect.objectContaining({
-        type: 'kubernetes.io/dockercfg',
-        data: { ['.dockercfg']: expect.anything() },
+        type: 'kubernetes.io/dockerconfigjson',
+        data: { ['.dockerconfigjson']: expect.anything() },
       }),
     );
+  });
+
+  it('normalizes legacy .dockercfg-shaped upload to .dockerconfigjson with auths wrapper', () => {
+    const legacyDockercfg = {
+      'https://index.docker.io/v1/': {
+        username: 'user',
+        password: 'pass',
+        auth: 'dXNlcjpwYXNz',
+      },
+    };
+    const dockerconfig = Base64.encode(JSON.stringify(legacyDockercfg));
+    const result = getSecretFormData(
+      {
+        ...formValues,
+        type: SecretTypeDropdownLabel.image,
+        image: {
+          ...formValues.image,
+          authType: ImagePullSecretType.UploadConfigFile,
+          dockerconfig,
+        },
+      },
+      'test-ns',
+    );
+
+    expect(result.type).toBe('kubernetes.io/dockerconfigjson');
+    expect(Object.keys(result.data ?? {})).toEqual(['.dockerconfigjson']);
+    expect(result.data).not.toHaveProperty('.dockercfg');
+
+    const dockerconfigjsonB64 = result.data['.dockerconfigjson'];
+    expect(typeof dockerconfigjsonB64).toBe('string');
+    const parsed = JSON.parse(Base64.decode(dockerconfigjsonB64));
+    expect(parsed).toEqual({ auths: legacyDockercfg });
   });
 
   it('should return source secret resource with encoded data', () => {
@@ -433,6 +515,16 @@ describe('getLabelsForSecret', () => {
       [SecretLabels.HOST_LABEL]: 'www.github.com',
     });
   });
+
+  it('adds common-secret label when linking to all components', () => {
+    expect(
+      getLabelsForSecret({
+        secretForComponentOption: SecretForComponentOption.all,
+      }),
+    ).toEqual({
+      [SecretLabels.COMMON_SECRET_LABEL]: 'true',
+    });
+  });
 });
 
 describe('getAnnotationForSecret', () => {
@@ -453,6 +545,132 @@ describe('getAnnotationForSecret', () => {
     ).toEqual({
       [SecretLabels.REPO_ANNOTATION]: 'hac-dev',
     });
+  });
+});
+
+describe('editSecretResource', () => {
+  beforeEach(() => {
+    k8sPatchResourceMock.mockReset();
+    k8sPatchResourceMock.mockResolvedValue({});
+  });
+
+  it('sends labels and annotations patches as empty objects when form yields no metadata maps', async () => {
+    const values: AddSecretFormValues = {
+      ...formValues,
+      labels: [],
+      source: { authType: SourceSecretType.basic, username: 'u', password: 'p' },
+    };
+    await editSecretResource(values, 'test-ns');
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
+    const { patches, queryOptions } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(queryOptions).toMatchObject({ name: 'test', ns: 'test-ns' });
+    expect(patches[0]).toEqual({ op: 'add', path: '/metadata/labels', value: {} });
+    expect(patches[1]).toEqual({ op: 'add', path: '/metadata/annotations', value: {} });
+    expect(patches[2]).toMatchObject({ op: 'replace', path: '/data' });
+    expect(patches[2].value).toEqual({ test: 'dGVzdA==' });
+  });
+
+  it('sends SCM labels and repo annotation when host and repo are set', async () => {
+    await editSecretResource(formValuesForSCM, 'test-ns');
+
+    expect(k8sPatchResourceMock).toHaveBeenCalledTimes(1);
+    const { patches } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(patches[0]).toEqual({
+      op: 'add',
+      path: '/metadata/labels',
+      value: {
+        [SecretLabels.CREDENTIAL_LABEL]: SecretLabels.CREDENTIAL_VALUE,
+        [SecretLabels.HOST_LABEL]: 'www.github.com',
+      },
+    });
+    expect(patches[1]).toEqual({
+      op: 'add',
+      path: '/metadata/annotations',
+      value: { [SecretLabels.REPO_ANNOTATION]: 'hac-dev' },
+    });
+    expect(patches[2]).toMatchObject({ op: 'replace', path: '/data' });
+  });
+
+  it('merges user labels with SCM labels in the labels patch', async () => {
+    const values: AddSecretFormValues = {
+      ...formValuesForSCM,
+      labels: [{ key: 'env', value: 'prod' }],
+    };
+    await editSecretResource(values, 'test-ns');
+
+    const labelsPatch = k8sPatchResourceMock.mock.calls[0][0].patches[0];
+    expect(labelsPatch).toEqual({
+      op: 'add',
+      path: '/metadata/labels',
+      value: {
+        env: 'prod',
+        [SecretLabels.CREDENTIAL_LABEL]: SecretLabels.CREDENTIAL_VALUE,
+        [SecretLabels.HOST_LABEL]: 'www.github.com',
+      },
+    });
+  });
+
+  it('sends only user labels when no SCM host and annotations stay empty', async () => {
+    const values: AddSecretFormValues = {
+      ...formValues,
+      labels: [{ key: 'team', value: 'platform' }],
+      source: { authType: SourceSecretType.basic, username: 'u', password: 'p' },
+    };
+    await editSecretResource(values, 'test-ns');
+
+    const { patches } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(patches[0]).toEqual({
+      op: 'add',
+      path: '/metadata/labels',
+      value: { team: 'platform' },
+    });
+    expect(patches[1]).toEqual({ op: 'add', path: '/metadata/annotations', value: {} });
+  });
+
+  it('merges existing cluster annotations with form annotations when existing secret is passed', async () => {
+    const existingWithCliAnnotations = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        name: 'test',
+        namespace: 'test-ns',
+        annotations: {
+          'kubectl.kubernetes.io/last-applied-configuration': '{"kind":"Secret"}',
+          'custom.io/managed-by': 'cli',
+        },
+      },
+    };
+    await editSecretResource(formValuesForSCM, 'test-ns', existingWithCliAnnotations);
+
+    const { patches } = k8sPatchResourceMock.mock.calls[0][0];
+    expect(patches[1]).toEqual({
+      op: 'add',
+      path: '/metadata/annotations',
+      value: {
+        'kubectl.kubernetes.io/last-applied-configuration': '{"kind":"Secret"}',
+        'custom.io/managed-by': 'cli',
+        [SecretLabels.REPO_ANNOTATION]: 'hac-dev',
+      },
+    });
+  });
+
+  it('lets form-derived annotations override existing keys when both define the same key', async () => {
+    const existing = {
+      ...mockSecret,
+      metadata: {
+        ...mockSecret.metadata,
+        name: 'test',
+        namespace: 'test-ns',
+        annotations: {
+          [SecretLabels.REPO_ANNOTATION]: 'old-repo',
+        },
+      },
+    };
+    await editSecretResource(formValuesForSCM, 'test-ns', existing);
+
+    const annotationsPatch = k8sPatchResourceMock.mock.calls[0][0].patches[1];
+    expect(annotationsPatch.value[SecretLabels.REPO_ANNOTATION]).toBe('hac-dev');
   });
 });
 

@@ -6,6 +6,7 @@ import { FilterContext } from '~/components/Filter/generic/FilterContext';
 import { BaseTextFilterToolbar } from '~/components/Filter/toolbars/BaseTextFIlterToolbar';
 import { useDeepCompareMemoize } from '~/shared';
 import { getErrorState } from '~/shared/utils/error-utils';
+import { filterByText } from '~/utils/text-filter-utils';
 import secretEmptyStateIcon from '../../../assets/secret.svg';
 import { useSecrets } from '../../../hooks/useSecrets';
 import { SecretModel } from '../../../models';
@@ -27,10 +28,10 @@ const SecretsListView: React.FC = () => {
   const { name: nameFilter } = filters;
   const [canCreateRemoteSecret] = useAccessReviewForModel(SecretModel, 'create');
 
-  const filteredRemoteSecrets = React.useMemo(() => {
-    // apply name filter
-    return nameFilter ? secrets.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1) : secrets;
-  }, [secrets, nameFilter]);
+  const filteredRemoteSecrets = React.useMemo(
+    () => filterByText(secrets, nameFilter, (s) => s.metadata.name),
+    [secrets, nameFilter],
+  );
 
   const createSecretButton = React.useMemo(() => {
     return (

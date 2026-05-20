@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { useTheme } from '~/shared/theme';
 import { mockConsole, MockConsole } from '~/unit-test-utils';
+import { renderWithQueryClientAndRouter as render } from '~/unit-test-utils/rendering-utils';
 import LogViewer from '../LogViewer';
 import { useLogViewerTheme } from '../useLogViewerTheme';
 
@@ -635,6 +636,30 @@ describe('LogViewer Integration Tests', () => {
       // Search component should be able to access toolbar context
       const searchInput = screen.getByPlaceholderText('Search');
       expect(searchInput).toBeInTheDocument();
+    });
+  });
+
+  describe('Keyboard shortcuts popover', () => {
+    it('should render the keyboard shortcut button', () => {
+      render(<LogViewer {...defaultProps} />);
+
+      const button = screen.getByRole('button', { name: /show keyboard shortcuts/i });
+      expect(button).toBeInTheDocument();
+    });
+
+    it('should toggle the shortcuts popover on button click', async () => {
+      const user = userEvent.setup();
+      render(<LogViewer {...defaultProps} />);
+
+      const button = screen.getByRole('button', { name: /show keyboard shortcuts/i });
+      await user.click(button);
+
+      expect(screen.getByText('Keyboard shortcuts')).toBeInTheDocument();
+      expect(screen.getByText('Scroll up one line')).toBeInTheDocument();
+      expect(screen.getByText('Scroll down one line')).toBeInTheDocument();
+      expect(screen.getByText('Scroll to top')).toBeInTheDocument();
+      expect(screen.getByText('Scroll to bottom')).toBeInTheDocument();
+      expect(screen.getByText('Click the log area to enable these shortcuts.')).toBeInTheDocument();
     });
   });
 

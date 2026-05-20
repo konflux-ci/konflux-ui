@@ -197,6 +197,7 @@ describe('ComponentImageRepositoryVisibility', () => {
       expect(useImageRepositoryMock).toHaveBeenCalledWith(
         mockComponent.metadata.namespace,
         mockComponent.metadata.name,
+        null,
         false,
       );
     });
