@@ -161,8 +161,10 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
     [commits, commitStatusMap],
   );
 
-  // TODO: temporary until item count is not removed from MultiSelect
-  const versionFilterObj = Object.fromEntries(allVersionBranches.map((b) => [b, 0]));
+  const versionFilterObj = React.useMemo(
+    () => createFilterObj(commits, (c) => c.branch, allVersionBranches, versionLabelMap),
+    [commits, allVersionBranches, versionLabelMap],
+  );
 
   const filteredCommits = React.useMemo(
     () =>
@@ -238,7 +240,6 @@ const CommitsListViewV2: React.FC<React.PropsWithChildren<CommitsListViewPropsV2
           values={versionFilter}
           setValues={(newFilters) => setFilters({ ...filters, version: newFilters })}
           options={versionFilterObj}
-          optionLabels={versionLabelMap}
         />
       )}
     </BaseTextFilterToolbar>

@@ -6,10 +6,9 @@ type PipelineRunsFilterToolbarProps = {
   filters: PipelineRunsFilterState;
   setFilters: (filters: PipelineRunsFilterState) => void;
   onClearFilters: () => void;
-  typeOptions: { [key: string]: number };
-  statusOptions: { [key: string]: number };
-  versionOptions?: { [key: string]: number };
-  versionLabels?: Record<string, string>;
+  typeOptions: { key: string; count?: number; label?: string }[];
+  statusOptions: { key: string; count?: number; label?: string }[];
+  versionOptions?: { key: string; count?: number; label?: string }[];
   openColumnManagement?: () => void;
   totalColumns?: number;
 };
@@ -21,7 +20,6 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
   typeOptions,
   statusOptions,
   versionOptions,
-  versionLabels,
   openColumnManagement,
   totalColumns,
 }: PipelineRunsFilterToolbarProps) => {
@@ -57,7 +55,6 @@ const PipelineRunsFilterToolbar: React.FC<PipelineRunsFilterToolbarProps> = ({
           values={version ?? []}
           setValues={(newFilters) => setFilters({ ...filters, version: newFilters })}
           options={versionOptions}
-          optionLabels={versionLabels}
         />
       )}
     </BaseTextFilterToolbar>
