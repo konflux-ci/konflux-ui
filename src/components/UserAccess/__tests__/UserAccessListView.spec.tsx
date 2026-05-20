@@ -441,15 +441,9 @@ describe('UserAccessListView', () => {
       expect(screen.getByRole('dialog', { name: 'Change role' })).toBeInTheDocument();
 
       expect(createRBsMock).toHaveBeenCalledTimes(2);
-      expect(deleteRBMock).toHaveBeenCalledTimes(2);
-      expect(deleteRBMock).toHaveBeenNthCalledWith(1, shared);
-      expect(deleteRBMock).toHaveBeenNthCalledWith(2, partialNewBinding);
-      expect(restoreRBMock).toHaveBeenCalledTimes(1);
-      expect(restoreRBMock.mock.calls[0][0]).toEqual(
-        expect.objectContaining({
-          metadata: expect.objectContaining({ name: shared.metadata?.name }),
-        }),
-      );
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(partialNewBinding);
+      expect(restoreRBMock).not.toHaveBeenCalled();
       expect(screen.getByTestId('user-access-selected-count')).toHaveTextContent('1 user selected');
       expect(errorSpy).toHaveBeenCalled();
 
@@ -483,6 +477,37 @@ describe('UserAccessListView', () => {
       expect(createRBsMock).toHaveBeenNthCalledWith(
         2,
         expect.objectContaining({ usernames: ['bob'], role: 'Contributor' }),
+        ns,
+      );
+    });
+
+    it('unselected user on multi-subject binding already has standalone role: does not recreate preserve binding', async () => {
+      const user = userEvent.setup();
+      const aliceContrib = mockSingleSubjectRoleBinding(
+        'konflux-contributor-alice-user-actions',
+        'alice',
+        'konflux-contributor-user-actions',
+      );
+      const shared: RoleBinding = {
+        ...mockSingleSubjectRoleBinding('rb-shared', 'bob', 'konflux-contributor-user-actions'),
+        subjects: [
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'alice' },
+          { apiGroup: 'rbac.authorization.k8s.io', kind: 'User', name: 'bob' },
+        ],
+      };
+      useRoleBindingsMock.mockReturnValue([[aliceContrib, shared], true]);
+      render(UserAccessList);
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      // Rows: select-all, alice standalone, alice on shared, bob on shared
+      await user.click(checkboxes[3]);
+      await selectNewRoleInModalAndSave(user, 'Maintainer');
+
+      expect(deleteRBMock).toHaveBeenCalledTimes(1);
+      expect(deleteRBMock).toHaveBeenCalledWith(shared);
+      expect(createRBsMock).toHaveBeenCalledTimes(1);
+      expect(createRBsMock).toHaveBeenCalledWith(
+        expect.objectContaining({ usernames: ['bob'], role: 'Maintainer' }),
         ns,
       );
     });

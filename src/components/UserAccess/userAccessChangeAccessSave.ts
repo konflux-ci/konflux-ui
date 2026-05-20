@@ -19,6 +19,23 @@ export function roleBindingHasNonUserSubject(rb: RoleBinding): boolean {
   return (rb.subjects ?? []).some((subject) => subject.kind !== 'User');
 }
 
+export function userHasRoleBindingOutsideDeletions(
+  username: string,
+  roleRefName: string,
+  allBindings: RoleBinding[],
+  bindingsToDelete: RoleBinding[],
+): boolean {
+  const deleteNames = new Set(
+    bindingsToDelete.map((rb) => rb.metadata?.name).filter((name): name is string => Boolean(name)),
+  );
+  return allBindings.some(
+    (rb) =>
+      !deleteNames.has(rb.metadata?.name ?? '') &&
+      rb.roleRef?.name === roleRefName &&
+      (rb.subjects ?? []).some((subject) => subject.kind === 'User' && subject.name === username),
+  );
+}
+
 /** Deep clone for rollback (Jest/jsdom may not expose `structuredClone`). */
 export function cloneRoleBindingSnapshot(rb: RoleBinding): RoleBinding {
   return JSON.parse(JSON.stringify(rb));
@@ -103,7 +120,9 @@ export async function performUserAccessRoleChange({
   });
 
   const usernamesNeedingTargetRoleCreate = [...selectedUsernames].filter(
-    (username) => !usernamesSkippingTargetRoleCreate.has(username),
+    (username) =>
+      !usernamesSkippingTargetRoleCreate.has(username) &&
+      !userHasRoleBindingOutsideDeletions(username, newRoleRef, roleBindings, toDelete),
   );
 
   const preservedFromMultiSubject = toDelete
@@ -116,7 +135,16 @@ export async function performUserAccessRoleChange({
       return (
         rb.subjects
           ?.filter((subject) => !selectedUsernames.has(subject.name))
-          .map((subject): [string, NamespaceRole] => [subject.name, currentRole]) ?? []
+          .map((subject): [string, NamespaceRole] => [subject.name, currentRole])
+          .filter(
+            ([username]) =>
+              !userHasRoleBindingOutsideDeletions(
+                username,
+                rb.roleRef.name,
+                roleBindings,
+                toDelete,
+              ),
+          ) ?? []
       );
     });
 
@@ -124,16 +152,10 @@ export async function performUserAccessRoleChange({
   if (!newRole) {
     throw new Error(`Target role "${newRoleRef}" not found in role map.`);
   }
-  const deletionSnapshots: RoleBinding[] = [];
+  const deletedSnapshots: RoleBinding[] = [];
   const createdBindings: RoleBinding[] = [];
 
   try {
-    for (const rb of toDelete) {
-      const snap = cloneRoleBindingSnapshot(rb);
-      await deleteRB(rb);
-      deletionSnapshots.push(snap);
-    }
-
     if (usernamesNeedingTargetRoleCreate.length > 0) {
       createdBindings.push(
         ...(await createRBs(
@@ -149,14 +171,19 @@ export async function performUserAccessRoleChange({
       );
     }
 
+    for (const rb of toDelete) {
+      await deleteRB(rb);
+      deletedSnapshots.push(cloneRoleBindingSnapshot(rb));
+    }
+
     onSuccessClearSelection();
   } catch (err: unknown) {
+    await restoreBindingsBestEffort(deletedSnapshots, namespace);
     await deleteBindingsBestEffort(
       createdBindings,
       namespace,
       'Failed to delete partially created RoleBinding after user access change failure',
     );
-    await restoreBindingsBestEffort(deletionSnapshots, namespace);
     logger.error(
       'Error while applying user access role change',
       err instanceof Error ? err : new Error(String(err)),
