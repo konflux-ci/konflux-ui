@@ -14,6 +14,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  resolvePipelineRunVisibleColumns,
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../consts/pipeline';
@@ -60,6 +61,11 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
   const [visibleColumns, setVisibleColumns] = useVisibleColumns(
     SESSION_STORAGE_KEYS.PIPELINES_VISIBLE_COLUMNS,
     DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  );
+  const safeVisibleColumns = React.useMemo(
+    (): Set<PipelineRunColumnKeys> =>
+      resolvePipelineRunVisibleColumns([...visibleColumns], DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS),
+    [visibleColumns],
   );
   const [isColumnManagementOpen, setIsColumnManagementOpen] = React.useState(false);
 
@@ -170,7 +176,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}
         aria-label="Pipeline run List"
         customData={vulnerabilities}
-        Header={getPipelineRunListHeader(visibleColumns)}
+        Header={getPipelineRunListHeader(safeVisibleColumns)}
         Row={(props) => (
           // TODO: use new rows which use the new component model
           <PipelineRunListRowWithColumns
@@ -178,7 +184,7 @@ const PipelineRunsListViewV2: React.FC<React.PropsWithChildren<PipelineRunsListV
             columns={props.columns || []}
             customData={vulnerabilities}
             index={props.index}
-            visibleColumns={visibleColumns}
+            visibleColumns={safeVisibleColumns}
           />
         )}
         loaded={isFetchingNextPage || plrLoaded}

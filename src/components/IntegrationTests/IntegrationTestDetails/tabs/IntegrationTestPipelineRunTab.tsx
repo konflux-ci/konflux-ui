@@ -5,6 +5,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import {
   INTEGRATION_TEST_PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES,
+  resolvePipelineRunVisibleColumns,
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
@@ -49,12 +50,14 @@ const IntegrationTestPipelineRunTab: React.FC<React.PropsWithChildren> = () => {
     `integration-test-pipeline-runs-columns-${applicationName}-${integrationTestName}`,
   );
 
-  const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {
-      return new Set(persistedColumns as PipelineRunColumnKeys[]);
-    }
-    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES);
-  }, [persistedColumns]);
+  const safeVisibleColumns = React.useMemo(
+    (): Set<PipelineRunColumnKeys> =>
+      resolvePipelineRunVisibleColumns(
+        persistedColumns,
+        DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_NO_VULNERABILITIES,
+      ),
+    [persistedColumns],
+  );
 
   if (error) {
     return getErrorState(error, loaded, 'pipeline runs');

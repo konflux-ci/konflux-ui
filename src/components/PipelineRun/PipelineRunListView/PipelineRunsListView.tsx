@@ -6,6 +6,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  resolvePipelineRunVisibleColumns,
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../consts/pipeline';
@@ -60,12 +61,11 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
     `pipeline-runs-columns-${applicationName}${componentName ? `-${componentName}` : ''}`,
   );
 
-  const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (Array.isArray(persistedColumns) && persistedColumns.length > 0) {
-      return new Set(persistedColumns as PipelineRunColumnKeys[]);
-    }
-    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
-  }, [persistedColumns]);
+  const safeVisibleColumns = React.useMemo(
+    (): Set<PipelineRunColumnKeys> =>
+      resolvePipelineRunVisibleColumns(persistedColumns, DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS),
+    [persistedColumns],
+  );
 
   const { name, status, type } = filters;
 

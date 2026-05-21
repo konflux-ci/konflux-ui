@@ -6,6 +6,7 @@ import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT,
+  resolvePipelineRunVisibleColumns,
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../consts/pipeline';
@@ -57,12 +58,14 @@ const SnapshotPipelineRunsList: React.FC<React.PropsWithChildren<SnapshotPipelin
     `snapshot-pipeline-runs-columns-${applicationName}`,
   );
 
-  const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (Array.isArray(visibleColumnKeys) && visibleColumnKeys.length > 0) {
-      return new Set(visibleColumnKeys as PipelineRunColumnKeys[]);
-    }
-    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT);
-  }, [visibleColumnKeys]);
+  const safeVisibleColumns = React.useMemo(
+    (): Set<PipelineRunColumnKeys> =>
+      resolvePipelineRunVisibleColumns(
+        visibleColumnKeys,
+        DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS_SNAPSHOT_CONTEXT,
+      ),
+    [visibleColumnKeys],
+  );
 
   const statusFilterObj = React.useMemo(
     () =>

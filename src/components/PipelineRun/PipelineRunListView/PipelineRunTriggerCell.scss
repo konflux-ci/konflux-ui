@@ -1,0 +1,19 @@
+.pipeline-run-trigger-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--pf-v5-global--spacer--xs);
+  min-width: 0;
+  max-width: 100%;
+
+  &__event {
+    display: block;
+    white-space: nowrap;
+    line-height: var(--pf-v5-global--LineHeight--sm);
+  }
+}
+
+.table .pf-v5-c-table td.pipeline-run-list__trigger-cell {
+  min-width: 0;
+  overflow: hidden;
+}

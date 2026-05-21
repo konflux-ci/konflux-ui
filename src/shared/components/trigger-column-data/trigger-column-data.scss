@@ -1,0 +1,81 @@
+.trigger-column-data {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--pf-v5-global--spacer--xs);
+  max-width: 100%;
+  min-width: 0;
+  vertical-align: middle;
+
+  &--with-pr {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--pf-v5-global--spacer--xs);
+    max-width: 100%;
+  }
+
+  &__row {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--pf-v5-global--spacer--xs);
+    max-width: 100%;
+    min-width: 0;
+
+    &--sha {
+      max-width: 100%;
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 14px;
+    height: 19px;
+    margin-right: 0;
+  }
+
+  &__pr-link-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 11rem;
+    overflow: hidden;
+  }
+
+  &__pr-link {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+
+  &__pr-link-text {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sha-label {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  .pf-v5-c-label {
+    margin-bottom: 0;
+  }
+
+  a.pf-v5-c-button.pf-m-link {
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

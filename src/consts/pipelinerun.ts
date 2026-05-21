@@ -37,6 +37,9 @@ export enum PipelineRunLabel {
   TEST_SERVICE_COMMIT = 'pac.test.appstudio.openshift.io/sha',
   TEST_SERVICE_COMMIT_TITLE = 'pac.test.appstudio.openshift.io/sha-title',
   TEST_SERVICE_EVENT_TYPE_LABEL = 'pac.test.appstudio.openshift.io/event-type',
+  TEST_PULL_REQUEST_NUMBER_LABEL = 'pac.test.appstudio.openshift.io/pull-request',
+  TEST_REPO_URL_ANNOTATION = 'pac.test.appstudio.openshift.io/repo-url',
+  TEST_SHA_URL_ANNOTATION = 'pac.test.appstudio.openshift.io/sha-url',
   TEST_SERVICE_SCENARIO = 'test.appstudio.openshift.io/scenario',
   ASEB_APPLICATION = 'appstudio.application',
 

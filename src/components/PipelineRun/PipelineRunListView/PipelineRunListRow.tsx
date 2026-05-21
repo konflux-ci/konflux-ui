@@ -16,7 +16,6 @@ import {
 import ActionMenu from '~/shared/components/action-menu/ActionMenu';
 import { RowFunctionArgs, TableData } from '~/shared/components/table';
 import { Timestamp } from '~/shared/components/timestamp/Timestamp';
-import { TriggerColumnData } from '~/shared/components/trigger-column-data/trigger-column-data';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { PipelineRunKind, TaskRunKind } from '~/types';
 import { ReleaseKind, ReleasePlanKind } from '~/types/coreBuildService';
@@ -26,6 +25,7 @@ import { ScanResults } from '~/utils/scan/scan-utils';
 import { usePipelinerunActionsLazy } from './pipelinerun-actions';
 import { pipelineRunTableColumnClasses, getDynamicColumnClasses } from './PipelineRunListHeader';
 import { PipelineRunTestResultCell } from './PipelineRunTestResultCell';
+import { PipelineRunTriggerCell } from './PipelineRunTriggerCell';
 import { ScanStatus } from './ScanStatus';
 
 type PipelineRunListRowProps = RowFunctionArgs<
@@ -47,16 +47,8 @@ type BasePipelineRunListRowProps = PipelineRunListRowProps & {
   showTestResult?: boolean;
   showSnapshot?: boolean;
   showComponent?: boolean;
-  showReference?: boolean;
   showTrigger?: boolean;
 };
-
-export enum PipelineRunEventTypeLabel {
-  push = 'Push',
-  pull_request = 'Pull Request',
-  incoming = 'Incoming',
-  'retest-all-comment' = 'Retest All Comment',
-}
 
 const usePipelineRunScanResults = (
   pipelineRun: PipelineRunKind,
@@ -148,7 +140,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   showSnapshot,
   showComponent,
   showTrigger,
-  showReference,
   customData,
 }) => {
   const namespace = useNamespace();
@@ -277,21 +268,10 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         </TableData>
       ) : null}
       {showTrigger ? (
-        <TableData className={pipelineRunTableColumnClasses.trigger}>
-          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
-        </TableData>
-      ) : null}
-      {showReference ? (
-        <TableData className={pipelineRunTableColumnClasses.reference}>
-          <TriggerColumnData
-            repoOrg={commit?.repoOrg}
-            repoName={commit?.repoName}
-            repoURL={commit?.repoURL}
-            prNumber={commit?.pullRequestNumber}
-            eventType={commit?.eventType}
-            commitSha={commit?.sha}
-            shaUrl={commit?.shaURL}
-          />
+        <TableData
+          className={`${pipelineRunTableColumnClasses.trigger} pipeline-run-list__trigger-cell`}
+        >
+          <PipelineRunTriggerCell commit={commit} />
         </TableData>
       ) : null}
       <TableData data-test="plr-list-row-kebab" className={pipelineRunTableColumnClasses.kebab}>
@@ -303,11 +283,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
 
 export const PipelineRunListRow: React.FC<React.PropsWithChildren<PipelineRunListRowProps>> = (
   props,
-) => <BasePipelineRunListRow {...props} showComponent showTestResult showReference showTrigger />;
+) => <BasePipelineRunListRow {...props} showComponent showTestResult showTrigger />;
 
 export const PipelineRunListRowWithVulnerabilities: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
-> = (props) => <BasePipelineRunListRow {...props} showVulnerabilities showTrigger showReference />;
+> = (props) => <BasePipelineRunListRow {...props} showVulnerabilities showTrigger />;
 
 export const PipelineRunListRowForRelease: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
@@ -466,21 +446,8 @@ const DynamicPipelineRunListRow: React.FC<
         </TableData>
       )}
       {visibleColumns.has('trigger') && (
-        <TableData className={dynamicClasses.trigger}>
-          {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
-        </TableData>
-      )}
-      {visibleColumns.has('reference') && (
-        <TableData className={dynamicClasses.reference}>
-          <TriggerColumnData
-            repoOrg={commit?.repoOrg}
-            repoName={commit?.repoName}
-            repoURL={commit?.repoURL}
-            prNumber={commit?.pullRequestNumber}
-            eventType={commit?.eventType}
-            commitSha={commit?.sha}
-            shaUrl={commit?.shaURL}
-          />
+        <TableData className={`${dynamicClasses.trigger} pipeline-run-list__trigger-cell`}>
+          <PipelineRunTriggerCell commit={commit} />
         </TableData>
       )}
       <TableData data-test="plr-list-row-kebab" className={dynamicClasses.kebab}>

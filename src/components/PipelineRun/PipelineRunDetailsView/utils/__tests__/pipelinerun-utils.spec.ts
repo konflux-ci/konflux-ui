@@ -82,6 +82,20 @@ describe('pipelinerun-utils', () => {
       expect(result).toBe('https://gitlab.com/user/repo');
     });
 
+    it('should return URL from pac.test repo-url annotation', () => {
+      const pipelineRun = {
+        metadata: {
+          annotations: {
+            [PipelineRunLabel.TEST_REPO_URL_ANNOTATION]:
+              'https://github.com/test-org/test-repo?ref=main',
+          },
+        },
+      } as unknown as PipelineRunKind;
+
+      const result = getSourceUrl(pipelineRun);
+      expect(result).toBe('https://github.com/test-org/test-repo');
+    });
+
     it('should prefer PAC annotation over BuildService annotation', () => {
       const pipelineRun = {
         metadata: {

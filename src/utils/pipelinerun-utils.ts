@@ -20,12 +20,16 @@ export const getSourceUrl = (pipelineRun: PipelineRunKind): string => {
     return undefined;
   }
 
-  const repoFromBuildServiceAnnotation =
-    pipelineRun.metadata?.annotations?.[PipelineRunLabel.BUILD_SERVICE_REPO_ANNOTATION];
-  const repoFromPACAnnotation =
-    pipelineRun.metadata?.annotations?.[PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION];
+  const { labels, annotations } = pipelineRun.metadata ?? {};
 
-  return stripQueryStringParams(repoFromPACAnnotation || repoFromBuildServiceAnnotation);
+  const repoFromPAC =
+    annotations?.[PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION] ||
+    annotations?.[PipelineRunLabel.TEST_REPO_URL_ANNOTATION] ||
+    labels?.[PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION] ||
+    labels?.[PipelineRunLabel.TEST_REPO_URL_ANNOTATION];
+  const repoFromBuildService = annotations?.[PipelineRunLabel.BUILD_SERVICE_REPO_ANNOTATION];
+
+  return stripQueryStringParams(repoFromPAC || repoFromBuildService);
 };
 
 const QueryRun = curry(

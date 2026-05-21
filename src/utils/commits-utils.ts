@@ -9,6 +9,20 @@ import { PipelineRunKind, Commit } from '../types';
 import { Snapshot } from '../types/coreBuildService';
 import { getSourceUrl, stripQueryStringParams } from './pipelinerun-utils';
 
+const getMetadataString = (
+  labels: Record<string, string> | undefined,
+  annotations: Record<string, string> | undefined,
+  ...keys: string[]
+): string => {
+  for (const key of keys) {
+    const value = labels?.[key] ?? annotations?.[key];
+    if (value != null && value !== '' && String(value) !== 'undefined') {
+      return String(value);
+    }
+  }
+  return '';
+};
+
 export const statuses = [
   runStatus.Running,
   runStatus['In Progress'],
@@ -38,19 +52,28 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
   const creationTime = plr.metadata.creationTimestamp;
   const application = plr.metadata.labels?.[PipelineRunLabel.APPLICATION];
   const component = plr.metadata.labels?.[PipelineRunLabel.COMPONENT] ?? '';
-  const repoName =
-    plr.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_URL_LABEL] ||
-    plr.metadata.labels?.[PipelineRunLabel.TEST_REPOSITORY_NAME] ||
-    plr.metadata.annotations?.[PipelineRunLabel.TEST_REPOSITORY_NAME];
+  const { labels, annotations } = plr.metadata ?? {};
+  const repoName = getMetadataString(
+    labels,
+    annotations,
+    PipelineRunLabel.COMMIT_REPO_URL_LABEL,
+    PipelineRunLabel.REPOSITORY_NAME,
+    PipelineRunLabel.TEST_REPOSITORY_NAME,
+  );
   const repoURL = getSourceUrl(plr);
-  const repoOrg =
-    plr.metadata.labels?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
-    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_REPO_ORG_LABEL] ||
-    plr.metadata.labels?.[PipelineRunLabel.TEST_REPO_ORG_LABEL] ||
-    plr.metadata.annotations?.[PipelineRunLabel.TEST_REPO_ORG_LABEL];
+  const repoOrg = getMetadataString(
+    labels,
+    annotations,
+    PipelineRunLabel.COMMIT_REPO_ORG_LABEL,
+    PipelineRunLabel.TEST_REPO_ORG_LABEL,
+  );
   const shaURL =
-    plr.metadata.annotations?.[PipelineRunLabel.COMMIT_URL_ANNOTATION] ||
-    `${repoURL}/commit/${commitSHA}`;
+    getMetadataString(
+      labels,
+      annotations,
+      PipelineRunLabel.COMMIT_URL_ANNOTATION,
+      PipelineRunLabel.TEST_SHA_URL_ANNOTATION,
+    ) || (repoURL ? `${repoURL}/commit/${commitSHA}` : '');
   const shaTitle =
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_SHA_TITLE_ANNOTATION] || 'manual build';
   const gitProvider =
@@ -58,12 +81,20 @@ export const createCommitObjectFromPLR = (plr: PipelineRunKind): Commit => {
     plr.metadata.annotations?.[PipelineRunLabel.COMMIT_PROVIDER_LABEL] ||
     plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL] ||
     plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_PROVIDER_LABEL];
-  const pullRequestNumber = plr.metadata.labels?.[PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL] ?? '';
-  const eventType =
-    plr.metadata.labels?.[PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL] ||
-    plr.metadata.labels?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL] ||
-    plr.metadata.annotations?.[PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL];
-  const isPullRequest = eventType === PipelineRunEventType.PULL;
+  const pullRequestNumber = getMetadataString(
+    labels,
+    annotations,
+    PipelineRunLabel.PULL_REQUEST_NUMBER_LABEL,
+    PipelineRunLabel.TEST_PULL_REQUEST_NUMBER_LABEL,
+  );
+  const eventType = getMetadataString(
+    labels,
+    annotations,
+    PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL,
+    PipelineRunLabel.TEST_COMMIT_EVENT_TYPE_LABEL,
+    PipelineRunLabel.TEST_SERVICE_EVENT_TYPE_LABEL,
+  );
+  const isPullRequest = eventType === PipelineRunEventType.PULL || Boolean(pullRequestNumber);
 
   return {
     metadata: {

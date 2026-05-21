@@ -9,6 +9,7 @@ import { getErrorState } from '~/shared/utils/error-utils';
 import {
   PIPELINE_RUN_COLUMNS_DEFINITIONS,
   DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS,
+  resolvePipelineRunVisibleColumns,
   NON_HIDABLE_PIPELINE_RUN_COLUMNS,
   PipelineRunColumnKeys,
 } from '../../../../consts/pipeline';
@@ -83,12 +84,11 @@ const CommitsPipelineRunTab: React.FC = () => {
     `commit-pipeline-runs-columns-${applicationName}-${commitName}`,
   );
 
-  const safeVisibleColumns = React.useMemo((): Set<PipelineRunColumnKeys> => {
-    if (Array.isArray(visibleColumnKeys) && visibleColumnKeys.length > 0) {
-      return new Set(visibleColumnKeys as PipelineRunColumnKeys[]);
-    }
-    return new Set(DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS);
-  }, [visibleColumnKeys]);
+  const safeVisibleColumns = React.useMemo(
+    (): Set<PipelineRunColumnKeys> =>
+      resolvePipelineRunVisibleColumns(visibleColumnKeys, DEFAULT_VISIBLE_PIPELINE_RUN_COLUMNS),
+    [visibleColumnKeys],
+  );
 
   const { name, status, type } = filters;
 

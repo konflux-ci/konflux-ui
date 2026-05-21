@@ -1,9 +1,11 @@
 import { mockSnapshot } from '../../__data__/mock-snapshots';
+import { testPipelineRuns } from '../../components/ApplicationDetails/tabs/overview/visualization/hooks/__data__/test-pipeline-data';
 import {
   pipelineWithoutCommits,
   pipelineWithCommits,
   mockCommits,
 } from '../../components/Commits/__data__/pipeline-with-commits';
+import { PipelineRunLabel } from '../../consts/pipelinerun';
 import { Commit } from '../../types';
 import {
   createCommitObjectFromPLR,
@@ -108,6 +110,18 @@ describe('commit-utils', () => {
       const result = createCommitObjectFromPLR(missingPRnumberLabel);
       expect(result.isPullRequest).toBe(true);
       expect(result.pullRequestNumber).toBe('');
+    });
+
+    it('Should read pac.test pull-request and repo-url for integration test pipeline runs', () => {
+      const integrationTestPlr = testPipelineRuns.find(
+        (plr) => plr.metadata.labels?.[PipelineRunLabel.TEST_PULL_REQUEST_NUMBER_LABEL] === '7',
+      );
+      expect(integrationTestPlr).toBeDefined();
+
+      const result = createCommitObjectFromPLR(integrationTestPlr);
+      expect(result.pullRequestNumber).toBe('7');
+      expect(result.repoURL).toBe('https://github.com/karthikjeeyar/node-express-hello');
+      expect(result.isPullRequest).toBe(true);
     });
   });
 
