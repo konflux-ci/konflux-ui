@@ -256,8 +256,7 @@ const EditSecretForm: React.FC = () => {
           !payloadSecret.data
         ) {
           actions.setStatus({
-            submitError:
-              'Reveal sensitive fields (eye icon) or secret values to load data from the cluster before saving.',
+            submitError: 'Reveal secret values to load data from the cluster before saving.',
           });
           actions.setSubmitting(false);
           return;

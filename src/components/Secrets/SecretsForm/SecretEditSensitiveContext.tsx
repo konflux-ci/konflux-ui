@@ -26,3 +26,8 @@ export const SecretEditSensitiveProvider: React.FC<
 
 export const useOptionalSecretEditSensitive = (): SecretEditSensitiveContextValue | null =>
   React.useContext(SecretEditSensitiveContext);
+
+export const useAreSecretSensitiveFieldsHidden = (): boolean => {
+  const sensitive = useOptionalSecretEditSensitive();
+  return sensitive !== null && sensitive.fullSecret === null;
+};

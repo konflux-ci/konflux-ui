@@ -1,12 +1,15 @@
 import React from 'react';
-import { Button, Flex, FlexItem, TextInputTypes } from '@patternfly/react-core';
-import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { TextInputTypes } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
 import { SourceSecretType } from '~/types/secret';
 import EncodedFileUploadField from './EncodedFileUploadField';
-import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
+import {
+  useAreSecretSensitiveFieldsHidden,
+  useOptionalSecretEditSensitive,
+} from './SecretEditSensitiveContext';
+import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type SourceSecretFormProps = {
   onAuthTypeChange?: (type: SourceSecretType) => void;
@@ -22,27 +25,24 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
   const [passwordField] = useField('source.password');
   const { setFieldValue } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
+  const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
 
   React.useEffect(() => {
     onAuthTypeChange?.(type);
   }, [type, onAuthTypeChange]);
 
-  const revealUsername = React.useCallback(async () => {
+  const revealBasicAuthValues = React.useCallback(async () => {
     if (!sensitive) {
       return;
     }
     const s = await sensitive.requestFullSecret();
-    if (s?.data?.username) {
+    if (!s?.data) {
+      return;
+    }
+    if (s.data.username) {
       void setFieldValue('source.username', atob(s.data.username));
     }
-  }, [sensitive, setFieldValue]);
-
-  const revealPassword = React.useCallback(async () => {
-    if (!sensitive) {
-      return;
-    }
-    const s = await sensitive.requestFullSecret();
-    if (s?.data?.password) {
+    if (s.data.password) {
       void setFieldValue('source.password', atob(s.data.password));
     }
   }, [sensitive, setFieldValue]);
@@ -80,12 +80,9 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
       <InputField name="source.repo" label="Repository" helperText="Repository for the secret" />
       {type === SourceSecretType.basic ? (
         <>
-          <Flex
-            alignItems={{ default: 'alignItemsFlexEnd' }}
-            gap={{ default: 'gapMd' }}
-            className="pf-v5-u-mb-md"
-          >
-            <FlexItem grow={{ default: 'grow' }}>
+          <SensitiveValuesRevealBanner onReveal={revealBasicAuthValues} />
+          {!sensitiveFieldsHidden ? (
+            <>
               <InputField
                 name="source.username"
                 data-test="secret-source-username"
@@ -96,26 +93,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
                   sensitive?.onSensitiveFieldBlur('source.username');
                 }}
               />
-            </FlexItem>
-            {isEditMode && sensitive ? (
-              <FlexItem>
-                <Button
-                  type="button"
-                  variant="plain"
-                  aria-label="Reveal username from cluster"
-                  icon={<EyeIcon />}
-                  isLoading={sensitive.isLoadingFullSecret}
-                  onClick={() => void revealUsername()}
-                />
-              </FlexItem>
-            ) : null}
-          </Flex>
-          <Flex
-            alignItems={{ default: 'alignItemsFlexEnd' }}
-            gap={{ default: 'gapMd' }}
-            className="pf-v5-u-mb-md"
-          >
-            <FlexItem grow={{ default: 'grow' }}>
               <InputField
                 name="source.password"
                 data-test="secret-source-password"
@@ -129,28 +106,13 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
                   sensitive?.onSensitiveFieldBlur('source.password');
                 }}
               />
-            </FlexItem>
-            {isEditMode && sensitive ? (
-              <FlexItem>
-                <Button
-                  type="button"
-                  variant="plain"
-                  aria-label="Reveal password from cluster"
-                  icon={<EyeIcon />}
-                  isLoading={sensitive.isLoadingFullSecret}
-                  onClick={() => void revealPassword()}
-                />
-              </FlexItem>
-            ) : null}
-          </Flex>
+            </>
+          ) : null}
         </>
       ) : (
-        <Flex
-          alignItems={{ default: 'alignItemsFlexStart' }}
-          gap={{ default: 'gapMd' }}
-          className="pf-v5-u-mb-md"
-        >
-          <FlexItem grow={{ default: 'grow' }}>
+        <>
+          <SensitiveValuesRevealBanner onReveal={revealSshKey} />
+          {!sensitiveFieldsHidden ? (
             <EncodedFileUploadField
               name="source.ssh-privatekey"
               id="text-file-ssh"
@@ -163,21 +125,8 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
               required={!isEditMode}
               sensitiveFieldPath={isEditMode && sensitive ? 'source.ssh-privatekey' : undefined}
             />
-          </FlexItem>
-          {isEditMode && sensitive ? (
-            <FlexItem>
-              <Button
-                type="button"
-                variant="plain"
-                className="pf-v5-u-mt-xl"
-                aria-label="Reveal SSH private key from cluster"
-                icon={<EyeIcon />}
-                isLoading={sensitive.isLoadingFullSecret}
-                onClick={() => void revealSshKey()}
-              />
-            </FlexItem>
           ) : null}
-        </Flex>
+        </>
       )}
     </>
   );

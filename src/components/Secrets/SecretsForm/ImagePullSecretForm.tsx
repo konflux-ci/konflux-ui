@@ -1,22 +1,16 @@
 import React from 'react';
-import {
-  Alert,
-  Button,
-  Flex,
-  FlexItem,
-  HelperText,
-  HelperTextItem,
-  Title,
-  TitleSizes,
-} from '@patternfly/react-core';
-import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { Alert, HelperText, HelperTextItem, Title, TitleSizes } from '@patternfly/react-core';
 import { useField, useFormikContext } from 'formik';
 import { Base64 } from 'js-base64';
 import DropdownField from '~/shared/components/formik-fields/DropdownField';
 import { ImagePullSecretType } from '~/types';
 import EncodedFileUploadField from './EncodedFileUploadField';
 import { MultiImageCredentialForm } from './MultiImageCredentialForm';
-import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
+import {
+  useAreSecretSensitiveFieldsHidden,
+  useOptionalSecretEditSensitive,
+} from './SecretEditSensitiveContext';
+import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type RegistryValidation = {
   registry: string;
@@ -39,6 +33,7 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
   const [{ value: type }] = useField<ImagePullSecretType>('image.authType');
   const { setFieldValue } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
+  const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
   const [registryValidations, setRegistryValidations] = React.useState<RegistryValidation[]>([]);
   const [fileTypeError, setFileTypeError] = React.useState<string>();
 
@@ -130,36 +125,18 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
         </>
       ) : (
         <>
-          <Flex
-            alignItems={{ default: 'alignItemsFlexStart' }}
-            gap={{ default: 'gapMd' }}
-            className="pf-v5-u-mb-md"
-          >
-            <FlexItem grow={{ default: 'grow' }}>
-              <EncodedFileUploadField
-                name="image.dockerconfig"
-                id="text-file-docker-config"
-                label="Upload a .dockercfg or .docker/config.json file"
-                helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
-                required
-                onValidate={validateDockerConfig}
-                sensitiveFieldPath={isEditMode && sensitive ? 'image.dockerconfig' : undefined}
-              />
-            </FlexItem>
-            {isEditMode && sensitive ? (
-              <FlexItem>
-                <Button
-                  type="button"
-                  variant="plain"
-                  className="pf-v5-u-mt-xl"
-                  aria-label="Reveal docker config from cluster"
-                  icon={<EyeIcon />}
-                  isLoading={sensitive.isLoadingFullSecret}
-                  onClick={() => void revealDockerConfig()}
-                />
-              </FlexItem>
-            ) : null}
-          </Flex>
+          <SensitiveValuesRevealBanner onReveal={revealDockerConfig} />
+          {!sensitiveFieldsHidden ? (
+            <EncodedFileUploadField
+              name="image.dockerconfig"
+              id="text-file-docker-config"
+              label="Upload a .dockercfg or .docker/config.json file"
+              helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
+              required
+              onValidate={validateDockerConfig}
+              sensitiveFieldPath={isEditMode && sensitive ? 'image.dockerconfig' : undefined}
+            />
+          ) : null}
           {fileTypeError && (
             <Alert variant="danger" isInline title={fileTypeError} style={{ marginTop: '1rem' }} />
           )}

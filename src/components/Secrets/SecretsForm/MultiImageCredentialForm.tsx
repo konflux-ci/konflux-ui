@@ -1,20 +1,21 @@
 import React from 'react';
 import {
   Button,
-  Flex,
-  FlexItem,
   FormFieldGroupExpandable,
   FormFieldGroupHeader,
   TextInputTypes,
 } from '@patternfly/react-core';
-import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
 import { MinusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/minus-circle-icon';
 import { PlusCircleIcon } from '@patternfly/react-icons/dist/esm/icons/plus-circle-icon';
 import { FieldArray, useField, useFormikContext } from 'formik';
 import { InputField } from 'formik-pf';
 import { uniqueId } from 'lodash-es';
 import { getRegistryCreds } from '~/utils/secrets/secret-utils';
-import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
+import {
+  useAreSecretSensitiveFieldsHidden,
+  useOptionalSecretEditSensitive,
+} from './SecretEditSensitiveContext';
+import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type MultiImageCredentialFormProps = {
   name: string;
@@ -35,6 +36,7 @@ export const MultiImageCredentialForm: React.FC<
   const [uniqId, setUniqId] = React.useState(uniqueId());
   const { setFieldValue, getFieldProps } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
+  const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
 
   const revealRegistryCredentialRow = React.useCallback(async () => {
     if (!sensitive) {
@@ -63,51 +65,50 @@ export const MultiImageCredentialForm: React.FC<
       name={name}
       render={(arrayHelpers) => (
         <>
-          {fieldValues?.map((_v, idx) => (
-            <FormFieldGroupExpandable
-              key={`${idx.toString()}-${uniqId}`}
-              toggleAriaLabel="Details"
-              isExpanded
-              header={
-                <FormFieldGroupHeader
-                  titleText={{ text: `Credentials ${idx + 1}`, id: `${idx.toString()}-${uniqId}` }}
-                  actions={
-                    fieldValues.length > 1 && (
-                      <Button
-                        type="button"
-                        data-test="remove-credentials-button"
-                        onClick={() => {
-                          setUniqId(uniqueId());
-                          arrayHelpers.remove(idx);
-                        }}
-                        variant="link"
-                        icon={<MinusCircleIcon />}
-                      >
-                        {`Remove credentials ${idx + 1}`}
-                      </Button>
-                    )
+          <SensitiveValuesRevealBanner onReveal={revealRegistryCredentialRow} />
+          {!sensitiveFieldsHidden
+            ? fieldValues?.map((_v, idx) => (
+                <FormFieldGroupExpandable
+                  key={`${idx.toString()}-${uniqId}`}
+                  toggleAriaLabel="Details"
+                  isExpanded
+                  header={
+                    <FormFieldGroupHeader
+                      titleText={{
+                        text: `Credentials ${idx + 1}`,
+                        id: `${idx.toString()}-${uniqId}`,
+                      }}
+                      actions={
+                        fieldValues.length > 1 && (
+                          <Button
+                            type="button"
+                            data-test="remove-credentials-button"
+                            onClick={() => {
+                              setUniqId(uniqueId());
+                              arrayHelpers.remove(idx);
+                            }}
+                            variant="link"
+                            icon={<MinusCircleIcon />}
+                          >
+                            {`Remove credentials ${idx + 1}`}
+                          </Button>
+                        )
+                      }
+                    />
                   }
-                />
-              }
-            >
-              <InputField
-                name={`${name}.${idx.toString()}.registry`}
-                label="Registry server address"
-                helperText="For example quay.io or docker.io"
-                isRequired
-              />
-              <InputField
-                name={`${name}.${idx.toString()}.username`}
-                label="Username"
-                helperText="For image registry authentication"
-                isRequired
-              />
-              <Flex
-                alignItems={{ default: 'alignItemsFlexEnd' }}
-                gap={{ default: 'gapMd' }}
-                className="pf-v5-u-mb-md"
-              >
-                <FlexItem grow={{ default: 'grow' }}>
+                >
+                  <InputField
+                    name={`${name}.${idx.toString()}.registry`}
+                    label="Registry server address"
+                    helperText="For example quay.io or docker.io"
+                    isRequired
+                  />
+                  <InputField
+                    name={`${name}.${idx.toString()}.username`}
+                    label="Username"
+                    helperText="For image registry authentication"
+                    isRequired
+                  />
                   <InputField
                     name={`${name}.${idx.toString()}.password`}
                     label="Password"
@@ -123,39 +124,28 @@ export const MultiImageCredentialForm: React.FC<
                       sensitive?.onSensitiveFieldBlur(fieldPath);
                     }}
                   />
-                </FlexItem>
-                {isEditMode && sensitive ? (
-                  <FlexItem>
-                    <Button
-                      type="button"
-                      variant="plain"
-                      aria-label={`Reveal password for credentials ${idx + 1}`}
-                      icon={<EyeIcon />}
-                      isLoading={sensitive.isLoadingFullSecret}
-                      onClick={() => void revealRegistryCredentialRow()}
-                    />
-                  </FlexItem>
-                ) : null}
-              </Flex>
-              <InputField
-                name={`${name}.${idx.toString()}.email`}
-                label="Email"
-                type={TextInputTypes.email}
-              />
-            </FormFieldGroupExpandable>
-          ))}
-          <Button
-            className="pf-v5-u-text-align-left"
-            onClick={() =>
-              arrayHelpers.push({ registry: '', username: '', password: '', email: '' })
-            }
-            type="button"
-            data-test="add-credentials-button"
-            variant="link"
-            icon={<PlusCircleIcon />}
-          >
-            Add another credentials
-          </Button>
+                  <InputField
+                    name={`${name}.${idx.toString()}.email`}
+                    label="Email"
+                    type={TextInputTypes.email}
+                  />
+                </FormFieldGroupExpandable>
+              ))
+            : null}
+          {!sensitiveFieldsHidden ? (
+            <Button
+              className="pf-v5-u-text-align-left"
+              onClick={() =>
+                arrayHelpers.push({ registry: '', username: '', password: '', email: '' })
+              }
+              type="button"
+              data-test="add-credentials-button"
+              variant="link"
+              icon={<PlusCircleIcon />}
+            >
+              Add another credentials
+            </Button>
+          ) : null}
         </>
       )}
     />

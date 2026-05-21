@@ -1,16 +1,12 @@
 import React from 'react';
-import {
-  Alert,
-  Button,
-  HelperText,
-  HelperTextItem,
-  Title,
-  TitleSizes,
-} from '@patternfly/react-core';
-import { EyeIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { HelperText, HelperTextItem, Title, TitleSizes } from '@patternfly/react-core';
 import { useFormikContext } from 'formik';
 import EncodedKeyValueFileInputField from './EncodedKeyValueUploadField';
-import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
+import {
+  useAreSecretSensitiveFieldsHidden,
+  useOptionalSecretEditSensitive,
+} from './SecretEditSensitiveContext';
+import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
 type KeyValueSecretFormProps = {
   isEditMode?: boolean;
@@ -19,6 +15,7 @@ type KeyValueSecretFormProps = {
 export const KeyValueSecretForm: React.FC<KeyValueSecretFormProps> = ({ isEditMode = false }) => {
   const { setFieldValue } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
+  const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
 
   const revealOpaqueValues = React.useCallback(async () => {
     if (!sensitive) {
@@ -46,29 +43,14 @@ export const KeyValueSecretForm: React.FC<KeyValueSecretFormProps> = ({ isEditMo
           </HelperTextItem>
         </HelperText>
       </Title>
-      {isEditMode && sensitive ? (
-        <Alert
-          variant="info"
-          isInline
-          title="Sensitive values are hidden"
-          className="pf-v5-u-mb-md"
-        >
-          <Button
-            type="button"
-            variant="secondary"
-            icon={<EyeIcon />}
-            isLoading={sensitive.isLoadingFullSecret}
-            onClick={() => void revealOpaqueValues()}
-          >
-            Reveal secret values
-          </Button>
-        </Alert>
+      <SensitiveValuesRevealBanner onReveal={revealOpaqueValues} />
+      {!sensitiveFieldsHidden ? (
+        <EncodedKeyValueFileInputField
+          name="opaque.keyValues"
+          data-test="secret-key-value-pair"
+          isEditMode={isEditMode}
+        />
       ) : null}
-      <EncodedKeyValueFileInputField
-        name="opaque.keyValues"
-        data-test="secret-key-value-pair"
-        isEditMode={isEditMode}
-      />
     </>
   );
 };
