@@ -76,3 +76,7 @@ export const initPerfMeasuring = (logFile: string) => {
     });
   });
 };
+
+before(() => {
+  Cypress.env('performanceMetrics', {});
+});

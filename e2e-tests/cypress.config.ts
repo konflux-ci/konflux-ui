@@ -1,5 +1,6 @@
 import { defineConfig } from 'cypress';
 import * as fs from 'fs-extra';
+
 const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
 const codeCoverageTask = require('@cypress/code-coverage/task');
 
