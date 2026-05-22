@@ -1,3 +1,4 @@
+import { TEXT_SEARCH_TYPES } from '~/consts/constants';
 import { textMatch } from '~/utils/text-filter-utils';
 import { PipelineRunLabel } from '../../../consts/pipelinerun';
 import { PipelineRunKind } from '../../../types';
@@ -84,4 +85,22 @@ export const createFilterObj = <T>(
       uniqueKeys.add(key);
     });
   return Array.from(uniqueKeys).map((key: string) => ({ key, label: labels?.[key] ?? undefined }));
+};
+
+export const createTextSearchFilterObj = (
+  newSearchValue: string,
+  searchTypes: string,
+  filters: FilterType,
+  setFilters: (filters: FilterType) => void,
+) => {
+  switch (searchTypes) {
+    case TEXT_SEARCH_TYPES.NAME:
+      setFilters({ ...filters, name: newSearchValue, version: '' });
+      break;
+    case TEXT_SEARCH_TYPES.VERSION:
+      setFilters({ ...filters, name: '', version: newSearchValue });
+      break;
+    default:
+      setFilters({ ...filters, name: newSearchValue, version: '' });
+  }
 };
