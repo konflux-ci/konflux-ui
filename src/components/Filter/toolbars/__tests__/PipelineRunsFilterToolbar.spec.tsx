@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { TEXT_SEARCH_TYPES } from '~/consts/constants';
 import PipelineRunsFilterToolbar from '../PipelineRunsFilterToolbar';
 
 const typeOptions = [
@@ -7,11 +8,7 @@ const typeOptions = [
   { key: 'test', count: 2 },
 ];
 const statusOptions = [{ key: 'Succeeded', count: 4 }];
-const versionOptions = [{ key: 'main' }, { key: 'release-1.0' }];
-const versionOptionsWithLabels = [
-  { key: 'main', label: 'Main Branch' },
-  { key: 'release-1.0', label: 'Release 1.0' },
-];
+const searchOptions = Object.values(TEXT_SEARCH_TYPES);
 
 describe('PipelineRunsFilterToolbar', () => {
   it('it should render filter tooblar accurately', () => {
@@ -44,6 +41,7 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
+          version: '',
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
@@ -56,7 +54,7 @@ describe('PipelineRunsFilterToolbar', () => {
     await user.type(name, 'test');
     expect(name.value).toBe('test');
     await waitFor(() => expect(setFilters).toHaveBeenCalledTimes(1));
-    expect(setFilters).toHaveBeenCalledWith({ name: 'test', status: [], type: [] });
+    expect(setFilters).toHaveBeenCalledWith({ name: 'test', status: [], type: [], version: '' });
   });
 
   it('it should update status filter', async () => {
@@ -135,7 +133,7 @@ describe('PipelineRunsFilterToolbar', () => {
     });
   });
 
-  it('should not render version filter when versionOptions is not provided', () => {
+  it('should not render search type dropdown when searchOptions is not provided', () => {
     render(
       <PipelineRunsFilterToolbar
         filters={{
@@ -150,32 +148,35 @@ describe('PipelineRunsFilterToolbar', () => {
       />,
     );
 
+    expect(screen.queryByRole('button', { name: TEXT_SEARCH_TYPES.NAME })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Version filter menu' })).not.toBeInTheDocument();
   });
 
-  it('should render version filter when versionOptions is provided', () => {
+  it('should render search type dropdown when searchOptions is provided', () => {
     render(
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
           status: [],
           type: [],
-          version: [],
+          version: '',
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
         typeOptions={typeOptions}
         statusOptions={statusOptions}
-        versionOptions={versionOptions}
+        searchOptions={searchOptions}
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Version filter menu' })).toBeVisible();
+    expect(screen.getByRole('button', { name: TEXT_SEARCH_TYPES.NAME })).toBeVisible();
+    expect(screen.getByPlaceholderText('Filter by name...')).toBeVisible();
   });
 
-  it('should update version filter when a version option is selected', async () => {
+  it('should update version filter when Version search type is selected', async () => {
+    jest.useFakeTimers();
     const setFilters = jest.fn();
-    const user = userEvent.setup();
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
 
     render(
       <PipelineRunsFilterToolbar
@@ -183,61 +184,58 @@ describe('PipelineRunsFilterToolbar', () => {
           name: '',
           status: [],
           type: [],
-          version: [],
+          version: '',
         }}
         setFilters={setFilters}
         onClearFilters={jest.fn()}
         typeOptions={typeOptions}
         statusOptions={statusOptions}
-        versionOptions={versionOptions}
+        searchOptions={searchOptions}
       />,
     );
 
-    const versionFilter = screen.getByRole('button', {
-      name: /version filter menu/i,
-    });
-    await user.click(versionFilter);
-    expect(versionFilter).toHaveAttribute('aria-expanded', 'true');
+    await user.click(screen.getByRole('button', { name: TEXT_SEARCH_TYPES.NAME }));
+    await user.click(screen.getByRole('menuitem', { name: TEXT_SEARCH_TYPES.VERSION }));
 
-    const mainOption = screen.getByLabelText(/main/i, {
-      selector: 'input',
-    });
-    await user.click(mainOption);
+    const versionInput = await waitFor(() =>
+      screen.getByPlaceholderText<HTMLInputElement>('Filter by version...'),
+    );
+    setFilters.mockClear();
+    await user.type(versionInput, 'main');
 
-    expect(setFilters).toHaveBeenCalledTimes(1);
-    expect(setFilters).toHaveBeenCalledWith({
-      name: '',
-      status: [],
-      type: [],
-      version: ['main'],
-    });
+    jest.advanceTimersByTime(600);
+
+    await waitFor(() =>
+      expect(setFilters).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: '',
+          status: [],
+          type: [],
+          version: 'main',
+        }),
+      ),
+    );
+
+    jest.useRealTimers();
   });
 
-  it('should display labels instead of keys when version options include labels', async () => {
-    const user = userEvent.setup();
-
+  it('should display version value in search input when version filter is set', () => {
     render(
       <PipelineRunsFilterToolbar
         filters={{
           name: '',
           status: [],
           type: [],
-          version: [],
+          version: 'release-1.0',
         }}
         setFilters={jest.fn()}
         onClearFilters={jest.fn()}
         typeOptions={typeOptions}
         statusOptions={statusOptions}
-        versionOptions={versionOptionsWithLabels}
+        searchOptions={searchOptions}
       />,
     );
 
-    const versionFilter = screen.getByRole('button', {
-      name: /version filter menu/i,
-    });
-    await user.click(versionFilter);
-
-    expect(screen.getByText('Main Branch')).toBeInTheDocument();
-    expect(screen.getByText('Release 1.0')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'name filter' })).toHaveValue('release-1.0');
   });
 });

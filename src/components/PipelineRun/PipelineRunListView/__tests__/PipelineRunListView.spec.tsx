@@ -93,14 +93,16 @@ jest.mock('../../../../shared/components/table/TableComponent', () => {
         <Thead>
           <Tr>
             {columns.map((col, idx) => (
-              <Th key={idx} {...(col.props ?? {})}>{col.title}</Th>
+              <Th key={idx} {...(col.props ?? {})}>
+                {col.title}
+              </Th>
             ))}
           </Tr>
         </Thead>
         <Tbody>
           {props.data.map((d, i) => (
-            <Tr key={i}>
-              <PipelineRunListRow columns={null} obj={d} />
+            <Tr key={props.getRowProps?.(d)?.id ?? i}>
+              <Row obj={d} index={i} columns={columns} />
             </Tr>
           ))}
         </Tbody>
