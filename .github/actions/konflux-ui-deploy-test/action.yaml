@@ -60,6 +60,7 @@ runs:
         QUAY_ORGANIZATION: ${{ env.QUAY_TEST_ORG }}
         SMEE_CHANNEL: ${{ env.SMEE_URL }}
         OPERATOR_INSTALL_METHOD: release
+        SET_SKIP_CHECKS: 'true'
       run: |
         : Deploy Konflux using operator-based deployment
         cd konflux-ci
@@ -70,6 +71,16 @@ runs:
       run: |
         : List namespaces
         kubectl get namespace
+      shell: bash
+
+    # can't delete the application after tests without admin role
+    - name: Grant admin permissions to test user in default-tenant
+      run: |
+        TEST_USER="${CYPRESS_USERNAME:-user2@konflux.dev}"
+        kubectl create rolebinding user2-konflux-admin \
+          --clusterrole=konflux-admin-user-actions \
+          --user="$TEST_USER" \
+          -n default-tenant
       shell: bash
 
     - name: Build konflux-ui image
