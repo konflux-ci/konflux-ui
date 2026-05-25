@@ -13,6 +13,11 @@ function measureCheckpoint(checkpoint: number, name: string) {
   return duration;
 }
 
+function saveArtifacts() {
+    const metrics = Cypress.env('performanceMetrics') as PerformanceMetrics;
+    cy.writeFile('output/performance-metrics.json', JSON.stringify(metrics));
+}
+
 function submitData() {
   const metrics = Cypress.env('performanceMetrics') as PerformanceMetrics;
   cy.log(`Performance metrics: ${JSON.stringify(metrics)}`);
@@ -28,4 +33,4 @@ function submitData() {
 }
 
 
-export { createCheckpoint, measureCheckpoint, submitData };
+export { createCheckpoint, measureCheckpoint, submitData, saveArtifacts };
