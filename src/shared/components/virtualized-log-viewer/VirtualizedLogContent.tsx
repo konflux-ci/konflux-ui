@@ -1,7 +1,7 @@
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
-import type { SearchedWord } from './types';
+import type { SearchedWord, LogSection } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
 import { useLineRenderer } from './useLineRenderer';
@@ -19,8 +19,14 @@ import {
 
 import './VirtualizedLogContent.scss';
 
+// ANSI escape code regex for removing color codes from terminal output
+// ESC character (\u001b) is a control character but necessary for ANSI escape sequences
+// eslint-disable-next-line no-control-regex
+const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
+const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
+
 export interface VirtualizedLogContentProps {
-  data: string;
+  sections: LogSection[];
   height: number;
   width: string | number;
   scrollToRow?: number;
@@ -34,7 +40,7 @@ export interface VirtualizedLogContentProps {
 }
 
 export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
-  data,
+  sections,
   height,
   width,
   scrollToRow,
@@ -48,8 +54,21 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
   const avgCharWidthRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHAR_WIDTH);
   const charsPerLineRef = React.useRef(VIRTUALIZATION_CONFIG.FALLBACK_CHARS_PER_LINE);
 
-  // Split data into lines
-  const lines = React.useMemo(() => data.split('\n'), [data]);
+  const { lines, headerIndices } = React.useMemo(() => {
+    const result: string[] = [];
+    const headers = new Set<number>();
+    for (const section of sections) {
+      if (section.containerName) {
+        headers.add(result.length);
+        result.push(section.containerName);
+      }
+      if (section.data) {
+        const cleaned = normalizeLineEndings(section.data).replace(ANSI_ESCAPE_REGEX, '');
+        result.push(...cleaned.split('\n'));
+      }
+    }
+    return { lines: result, headerIndices: headers };
+  }, [sections]);
 
   // Suppress harmless ResizeObserver errors from virtualizer
   useResizeObserverFix();
@@ -255,12 +274,14 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
             {virtualItems.map((virtualItem) => {
               const lineNumber: number = virtualItem.index + 1;
               const isHighlighted = isLineHighlighted(lineNumber);
+              const isHeader = headerIndices.has(virtualItem.index);
+              const hasHeaders = headerIndices.size > 0;
               return (
                 <div
                   key={virtualItem.key}
                   data-index={virtualItem.index}
                   ref={virtualizer.measureElement}
-                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''}`}
+                  className={`pf-v5-c-log-viewer__list-item ${isHighlighted ? 'log-content__line--highlighted' : ''} ${hasHeaders && !isHeader ? 'log-content__line--indented' : ''}`}
                   style={{
                     position: 'absolute',
                     top: 0,
