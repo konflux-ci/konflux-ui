@@ -23,6 +23,7 @@ import { pipelineRunStatus } from '../../../utils/pipeline-utils';
 import { useAccessReviewForModel } from '../../../utils/rbac';
 
 export const BUILD_REQUEST_LABEL = 'test.appstudio.openshift.io/run';
+const PIPELINE_RUN_CANCELLING_MESSAGE = 'Cannot rerun while the pipeline run is being cancelled';
 
 // [TODO]: remove this once Snapshot details page is added
 
@@ -86,6 +87,7 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
   const runType = pipelineRun?.metadata?.labels[PipelineRunLabel.PIPELINE_TYPE];
 
   const scenario = pipelineRun?.metadata?.labels?.[PipelineRunLabel.TEST_SERVICE_SCENARIO];
+  const isCancelling = status === runStatus.Cancelling;
 
   const eventType = pipelineRun?.metadata?.labels?.[
     PipelineRunLabel.COMMIT_EVENT_TYPE_LABEL
@@ -127,11 +129,8 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
                 }),
               );
             }),
-          isDisabled: status === runStatus.Cancelling,
-          disabledTooltip:
-            status === runStatus.Cancelling
-              ? 'Cannot rerun while the pipeline run is being cancelled'
-              : null,
+          isDisabled: isCancelling,
+          disabledTooltip: isCancelling ? PIPELINE_RUN_CANCELLING_MESSAGE : null,
         };
       }
 
@@ -155,11 +154,8 @@ export const usePipelinererunAction = (pipelineRun: PipelineRunKind): RerunActio
                 }),
               );
             }),
-          isDisabled: status === runStatus.Cancelling,
-          disabledTooltip:
-            status === runStatus.Cancelling
-              ? 'Cannot rerun while the pipeline run is being cancelled'
-              : null,
+          isDisabled: isCancelling,
+          disabledTooltip: isCancelling ? PIPELINE_RUN_CANCELLING_MESSAGE : null,
         };
       }
 
@@ -259,6 +255,7 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
   const isPushBuildType =
     eventType === PipelineRunEventType.PUSH || eventType === PipelineRunEventType.INCOMING;
   const status = pipelineRunStatus(pipelineRun);
+  const isCancelling = status === runStatus.Cancelling;
 
   return useLazyActionMenu({
     loadContext: async () => {
@@ -345,11 +342,8 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                     }),
                   );
                 }),
-              disabled: status === runStatus.Cancelling,
-              disabledTooltip:
-                status === runStatus.Cancelling
-                  ? 'Cannot rerun while the pipeline run is being cancelled'
-                  : null,
+              disabled: isCancelling,
+              disabledTooltip: isCancelling ? PIPELINE_RUN_CANCELLING_MESSAGE : null,
             },
           ];
         }
@@ -379,8 +373,9 @@ export const useRerunActionLazy = (pipelineRun: PipelineRunKind): LazyActionHook
                     }),
                   );
                 }),
-              disabled: status === runStatus.Cancelling,
-              disabledTooltip: undefined,
+              disabled: isCancelling,
+              disabledTooltip:
+                status === runStatus.Cancelling ? PIPELINE_RUN_CANCELLING_MESSAGE : null,
             },
           ];
         }
