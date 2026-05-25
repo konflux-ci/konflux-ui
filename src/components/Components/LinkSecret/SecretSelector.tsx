@@ -27,7 +27,9 @@ export const SecretSelector: React.FC<React.PropsWithChildren<SecretSelectorProp
   onClose,
 }) => {
   const namespace = useNamespace();
-  const [secrets, secretsLoaded, secretsError] = useSecrets(namespace);
+  const [secrets, secretsLoaded, secretsError] = useSecrets(namespace, true, {
+    metadataOnly: true,
+  });
   const [linkedSecretsList, setLinkedSecretsList] = useState<string[]>([]);
   const { componentName } = useParams<RouterParams>();
   const [component, compLoaded, compError] = useComponent(namespace, componentName);
