@@ -14,7 +14,6 @@ import {
   TextInputGroupUtilities,
   Button,
 } from '@patternfly/react-core';
-
 import { TimesIcon } from '@patternfly/react-icons/dist/esm/icons/times-icon';
 import { NO_RESULTS } from '~/consts/constants';
 import { filterByText } from '~/utils/text-filter-utils';
