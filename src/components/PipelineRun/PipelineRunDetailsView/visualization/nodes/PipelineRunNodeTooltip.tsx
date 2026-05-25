@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Duration from '~/shared/components/duration/Duration';
+import { Duration } from '~/shared/components/duration';
 import { ColoredStatusIcon } from '../../../../topology/StatusIcon';
 import { StepStatus } from '../types';
 
