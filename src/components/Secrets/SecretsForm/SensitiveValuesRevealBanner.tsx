@@ -1,6 +1,5 @@
 import React from 'react';
-import { Alert, Button, Flex, FlexItem } from '@patternfly/react-core';
-import { EyeIcon, EyeSlashIcon } from '@patternfly/react-icons/dist/esm/icons';
+import { Alert, AlertActionLink } from '@patternfly/react-core';
 import {
   useAreSecretSensitiveFieldsHidden,
   useOptionalSecretEditSensitive,
@@ -36,28 +35,15 @@ export const SensitiveValuesRevealBanner: React.FC<SensitiveValuesRevealBannerPr
         title={
           sensitiveFieldsHidden ? 'Sensitive values are hidden' : 'Sensitive values are visible'
         }
-      />
-      <Flex
-        alignItems={{ default: 'alignItemsCenter' }}
-        gap={{ default: 'gapSm' }}
-        className="pf-v5-u-mt-sm"
-      >
-        <FlexItem>
-          {sensitiveFieldsHidden ? 'To show secret values' : 'To hide secret values'}
-        </FlexItem>
-        <FlexItem>
-          <Button
-            type="button"
-            variant="primary"
-            icon={sensitiveFieldsHidden ? <EyeIcon /> : <EyeSlashIcon />}
-            aria-label={sensitiveFieldsHidden ? 'Show secret values' : 'Hide secret values'}
-            isLoading={sensitive.isLoadingFullSecret}
-            onClick={handleToggle}
-          >
+        actionLinks={
+          <AlertActionLink onClick={handleToggle}>
             {sensitiveFieldsHidden ? 'Show values' : 'Hide values'}
-          </Button>
-        </FlexItem>
-      </Flex>
+          </AlertActionLink>
+        }
+      >
+        For security, secret values are hidden by default. Click &quot;
+        {sensitiveFieldsHidden ? 'Show values' : 'Hide values'}&quot; to toggle visibility.
+      </Alert>
     </div>
   );
 };
