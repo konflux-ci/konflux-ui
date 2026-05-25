@@ -13,7 +13,7 @@ Investigate failed Cypress e2e test runs by downloading logs and artifacts from 
 ## Startup
 
 ```bash
-gh auth status 2>&1 | head -3 && echo "---" && gh repo view --json nameWithOwner -q .nameWithOwner
+gh repo view --json nameWithOwner -q .nameWithOwner
 ```
 
 Expected repo: `konflux-ci/konflux-ui`
@@ -76,21 +76,21 @@ Use the artifact file list from Step 2. Analyze in priority order — stop early
 4. **Saved DOMs** (`saved-doms/*.html`) — Check for: element not visible, error banner/modal blocking UI, loading state, logged out.
 5. **Infrastructure logs** — When the failure points to backend/cluster issues:
 
-| File                              | What to look for                                |
-| --------------------------------- | ----------------------------------------------- |
-| `konflux-ui.log`                  | Proxy pod logs, API routing errors              |
-| `pipelinerun-res.log`             | PipelineRun status (empty = none created)       |
-| `taskrun-res.log`                 | TaskRun status, Tekton-level failures           |
+| File                              | What to look for                                                               |
+| --------------------------------- | ------------------------------------------------------------------------------ |
+| `konflux-ui.log`                  | Proxy pod logs, API routing errors                                             |
+| `pipelinerun-res.log`             | PipelineRun status (empty = none created)                                      |
+| `taskrun-res.log`                 | TaskRun status, Tekton-level failures                                          |
 | `failed-pods-logs.log`            | Container failures, OOMKilled, CrashLoopBackOff (only if Warning events exist) |
-| `failed-pods-definitions.yaml`    | Pod specs for failed pods (only if Warning events exist) |
-| `operator-logs.log`               | Operator crashes, reconciliation errors         |
-| `system-resources.log`            | Node CPU/memory pressure, disk usage            |
-| `cluster-resources.log`           | Cluster-wide resource overview                  |
-| `container-resources.log`         | Per-container resource usage                    |
-| `mem.log`                         | Memory usage over time during test run          |
-| `konflux-crs-status.log`          | Custom Resource readiness conditions            |
-| `failed-deployment-event-log.log` | Deployment rollout failures                     |
-| `kyverno-policy-pods.log`         | Kyverno policy violations                       |
+| `failed-pods-definitions.yaml`    | Pod specs for failed pods (only if Warning events exist)                       |
+| `operator-logs.log`               | Operator crashes, reconciliation errors                                        |
+| `system-resources.log`            | Node CPU/memory pressure, disk usage                                           |
+| `cluster-resources.log`           | Cluster-wide resource overview                                                 |
+| `container-resources.log`         | Per-container resource usage                                                   |
+| `mem.log`                         | Memory usage over time during test run                                         |
+| `konflux-crs-status.log`          | Custom Resource readiness conditions                                           |
+| `failed-deployment-event-log.log` | Deployment rollout failures                                                    |
+| `kyverno-policy-pods.log`         | Kyverno policy violations                                                      |
 
 6. **Cluster resource dumps** (`artifacts/`) — `events.json` for timing issues, `pipelineruns.json`, `components.json`. Pod logs in `artifacts/pods/` (especially build-service and PaC controller).
 7. **Skip** `index.html` (mochawesome — too large to read) and `videos/*.mp4` (can't view in CLI).
@@ -121,6 +121,7 @@ Cross-reference: selector changes (`data-test`), API endpoint changes, component
 **Failed tests:** X of Y (Z cascade failures)
 
 ### Root Failure
+
 **Test:** [test name]
 **Category:** [A/B/C/D/E] — [category name]
 **Error:** [one-line error message]
@@ -132,9 +133,11 @@ Cross-reference: selector changes (`data-test`), API endpoint changes, component
 [Concrete suggestion — file path, what to change, or "retry if flake"]
 
 ### Cascade Failures (if any)
+
 - [test name] — caused by root failure above
 
 ### Artifacts reviewed
+
 - [list of files that were analyzed]
 ```
 
