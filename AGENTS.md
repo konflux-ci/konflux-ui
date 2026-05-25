@@ -7,6 +7,31 @@
 - Read `CONTRIBUTING.md` (section "Commit Guidelines") before committing.
 - Fill every section of `.github/PULL_REQUEST_TEMPLATE.md` when creating a PR.
 
+## Guidelines (docs/guidelines/)
+
+Detailed guides for AI agents and developers:
+
+| Document | Use When |
+|---|---|
+| `docs/guidelines/component-guidelines.md` | Creating new components (imports, architecture, conventions) |
+| `docs/guidelines/table-component.md` | Building list views with the shared table system |
+| `docs/guidelines/layout-and-pages.md` | Creating pages (list, detail, form, modal patterns) |
+| `docs/guidelines/hooks-and-data-fetching.md` | Using K8s hooks, React Query, RBAC, state management |
+| `docs/guidelines/patternfly-guidelines.md` | PatternFly components, layout, design tokens, SCSS |
+| `docs/guidelines/unit-testing.md` | Writing unit tests (mocks, renderers, patterns) |
+
+## Other Documentation (docs/)
+
+| Document | Purpose |
+|---|---|
+| `docs/best-practices.md` | Full coding standards and conventions |
+| `docs/pr-review-guidelines.md` | PR review checklist |
+| `docs/feature-flags.md` | Feature flag system (flags, persistence, URL grammar, lifecycle) |
+| `docs/conditions.md` | Feature flag conditions (`allOf`/`anyOf` guards, `registerCondition`) |
+| `docs/analytics.md` | Segment analytics (events, config, codegen, obfuscation) |
+| `docs/kubearchive.md` | KubeArchive dual-source data (cluster + archive hooks, deduplication) |
+| `docs/e2e-coverage.md` | E2E coverage via Istanbul + Cypress |
+
 ## Commands
 
 | Task | Command |
@@ -76,37 +101,14 @@ Run `yarn lint:restricted-imports` to verify before pushing.
 
 ## Testing
 
+See `docs/guidelines/unit-testing.md` for full testing patterns, mock utilities, rendering utilities, and examples.
+
+Quick reference:
 - **Framework:** Jest + React Testing Library (SWC transform via `.swcrc`)
 - **Test location:** `__tests__/` directories alongside source, `.spec.ts` or `.spec.tsx` extension
 - **Test data:** `__data__/` directories alongside `__tests__/` for mock data and fixtures
 - **Test ID attribute:** `data-test` (configured in `config/jest.setup.js`)
-- **Prefer semantic queries:** `getByRole`, `getByLabelText`, `getByText` -- avoid `getByTestId`
-- **User interactions:** use `userEvent.setup()` + `userEvent`, not `fireEvent`
 - **No snapshot tests**
-
-### Rendering Utilities (from `~/unit-test-utils/`)
-
-- `renderWithQueryClientAndRouter` -- BrowserRouter + QueryClientProvider
-- `renderWithQueryClient` -- QueryClientProvider only (no router)
-- `formikRenderer` -- Formik + QueryClientProvider
-- `namespaceRenderer` -- NamespaceContext wrapper
-- `routerRenderer` -- BrowserRouter wrapper only
-
-### Mock Utilities (from `~/unit-test-utils/`)
-
-- `createK8sWatchResourceMock` -- mock `useK8sWatchResource`
-- `createK8sUtilMock(name)` -- mock any named k8s utility
-- `mockUseNamespaceHook(ns)` -- mock `useNamespace`; returns the mock for further configuration
-- `mockAccessReviewUtil(name, value)` -- mock RBAC utilities (e.g., `useAccessReviewForModel`)
-- `createUseParamsMock(params)` -- mock `useParams`
-- `createReactRouterMock(name)` -- mock any `react-router-dom` export
-- `createKubearchiveUtilMock(name)` -- mock kubearchive utilities
-- `mockAnalyticsServiceFn(name)` -- mock `analyticsService` instance methods
-- `waitForLoadingToFinish` -- waits for `role="progressbar"` to be removed
-
-### Global Mocks (in `config/jest.setup.js`)
-
-These modules are auto-mocked with `jest.requireActual` passthrough: `src/k8s`, `react-router-dom`, `src/shared/providers/Namespace/useNamespaceInfo`, `src/utils/rbac`, `src/hooks/useApplications`, `src/hooks/useKonfluxPublicInfo`, `src/kubearchive/fetch-utils`. You can `jest.mocked(fn).mockReturnValue(...)` in tests without additional `jest.mock()` calls.
 
 ## Commits
 
@@ -117,44 +119,23 @@ These modules are auto-mocked with `jest.requireActual` passthrough: `src/k8s`, 
 
 ## Code Conventions
 
-- **No `as` type assertions** -- use type guards or fix the actual type (`as const` and test mocks excepted)
-- **No `useEffect` to derive state from props** -- use `useMemo`
-- **`useCallback` only when reference stability matters** (memoized child props, dependency arrays, hook returns)
-- **Memoize return values from custom hooks** (objects, arrays, functions)
-- **PatternFly components over raw HTML** -- use PF layout components (Flex, Stack, Split, Grid), PF design tokens for spacing/color
-- **No inline styles** -- use co-located SCSS with BEM naming
-- **No magic strings** -- use constants from `src/consts/`
-- **Data-driven objects/arrays over if/else chains** for type/status mappings
-- **`useLocalStorage` hook** from `~/shared/hooks/useLocalStorage` -- never use `localStorage` directly
-- **Analytics in components:** use `useTrackAnalyticsEvent()` from `~/analytics/hooks`, never `analyticsService` directly
-- **RBAC-gated actions:** use `useAccessReviewForModel` from `~/utils/rbac`
+See `docs/guidelines/component-guidelines.md` for full conventions with examples.
 
 ### TypeScript Strictness
 
 `tsconfig.json` enforces `noUnusedLocals` and `noUnusedParameters`. Unused variables/params will fail `yarn type-checks` even if lint passes. Prefix intentionally unused params with `_`.
 
-### State Management
-
-| Data type | Tool |
-|---|---|
-| K8s resources (watch) | `useK8sWatchResource` from `~/k8s` |
-| Server data (REST) | React Query (`@tanstack/react-query`) |
-| Global client state | Zustand stores |
-| Scoped UI state | React Context |
-| Persistent preferences | `useLocalStorage` from `~/shared/hooks/useLocalStorage` |
-
 ## Feature Flags
 
-Flags are defined in `src/feature-flags/flags.ts`. No backend; purely client-side via localStorage + URL params.
+See `docs/feature-flags.md` for the full system. See `docs/conditions.md` for runtime guards.
 
+Quick reference:
 - Render gating: `<IfFeature flag="flagName">` component
 - Logic gating: `useIsOnFeatureFlag('flagName')` hook
 - Route gating (no hooks): `ensureFeatureFlagOnLoader('flagName')` in loader/lazy
 - Test via URL: `?ff=flagName` or `?ff_flagName=true`
 - New flags: set `defaultEnabled: false`, `status: 'wip'`
 - Cleanup: when stable, set `status: 'ready'` + `defaultEnabled: true`, verify, then delete the flag entry
-
-Flags can have runtime guards (conditions). See `docs/conditions.md` for the `registerCondition` / `allOf` / `anyOf` API and available conditions (`isKubearchiveEnabled`, `isStagingCluster`, etc.). Register new conditions in `src/registers.ts`.
 
 ## Stack Quick Reference
 
