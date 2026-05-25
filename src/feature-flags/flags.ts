@@ -153,6 +153,12 @@ const InternalFLAGS = {
       visibleInFeatureFlagPanel: false,
     },
   },
+  mintmaker: {
+    key: 'mintmaker',
+    description: 'Enable Mintmaker in the UI',
+    defaultEnabled: false,
+    status: 'wip',
+  },
 } satisfies Record<string, FeatureMeta>;
 
 export type FlagKey = keyof typeof InternalFLAGS;

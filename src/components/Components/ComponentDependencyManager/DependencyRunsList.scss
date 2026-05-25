@@ -1,0 +1,17 @@
+.dependency-runs-list {
+  .dependency-runs-list__name {
+    --pf-v5-c-table--cell--MinWidth: 12rem;
+  }
+
+  .dependency-runs-list__started {
+    --pf-v5-c-table--cell--MinWidth: 11rem;
+  }
+
+  .dependency-runs-list__duration {
+    --pf-v5-c-table--cell--MinWidth: 7rem;
+  }
+
+  .dependency-runs-list__status {
+    --pf-v5-c-table--cell--MinWidth: 6.5rem;
+  }
+}

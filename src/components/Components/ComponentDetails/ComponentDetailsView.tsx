@@ -4,6 +4,7 @@ import { Bullseye, ButtonVariant, Spinner, Text, TextVariants } from '@patternfl
 import isFunction from 'lodash/isFunction';
 import isObject from 'lodash/isObject';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { getErrorState } from '~/shared/utils/error-utils';
 import pipelineImg from '../../../assets/Pipeline.svg';
 import { useComponent } from '../../../hooks/useComponents';
@@ -32,6 +33,7 @@ const ComponentDetailsView: React.FC = () => {
   const showModal = useModalLauncher();
   const [component, loaded, componentError] = useComponent(namespace, componentName);
   const [canPatchComponent] = useAccessReviewForModel(ComponentModel, 'patch');
+  const isMintmakerEnabled = useIsOnFeatureFlag('mintmaker');
 
   const componentActions = useComponentActions(loaded ? component : undefined, componentName);
   const actions: Action[] = React.useMemo(
@@ -144,6 +146,9 @@ const ComponentDetailsView: React.FC = () => {
             key: 'activity',
             label: 'Activity',
           },
+          ...(isMintmakerEnabled
+            ? [{ key: 'dependency-updates', label: 'Dependency updates' }]
+            : []),
         ]}
       />
     </>
