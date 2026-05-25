@@ -134,7 +134,7 @@ describe('EditSecretForm', () => {
       expect(screen.getAllByTestId('dropdown-toggle')[0]).toHaveTextContent(
         SecretTypeDropdownLabel.opaque,
       );
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('key1')).toBeInTheDocument();
       });
@@ -156,7 +156,7 @@ describe('EditSecretForm', () => {
       );
       expect(screen.getByText('Authentication type')).toBeInTheDocument();
       expect(screen.getAllByText('Image registry credentials').length).toBeGreaterThan(0);
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('registry.example.com')).toBeInTheDocument();
       });
@@ -178,7 +178,7 @@ describe('EditSecretForm', () => {
       );
       expect(screen.getByText('Authentication type')).toBeInTheDocument();
 
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(fetchFullSecret).toHaveBeenCalled();
         expect(screen.getByText(/Upload a .dockercfg or .docker/)).toBeInTheDocument();
@@ -206,7 +206,7 @@ describe('EditSecretForm', () => {
       );
       expect(screen.getByText('Authentication type')).toBeInTheDocument();
       expect(screen.getByText(SourceSecretType.basic)).toBeInTheDocument();
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
       });
@@ -229,7 +229,7 @@ describe('EditSecretForm', () => {
       expect(screen.getByText('Authentication type')).toBeInTheDocument();
       expect(screen.getByLabelText(/^Host/)).toHaveValue('gitlab.com');
       expect(screen.getByLabelText(/^Repository/)).toHaveValue('group/project');
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByText('SSH private key')).toBeInTheDocument();
         const sshKeyField = document.getElementById('text-file-ssh');
@@ -297,7 +297,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('key1')).toBeInTheDocument();
       });
@@ -347,7 +347,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('registry.example.com')).toBeInTheDocument();
       });
@@ -399,7 +399,7 @@ describe('EditSecretForm', () => {
 
       renderWithSecret(mockSourceSecretBasicAuthForEdit);
 
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
         expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
@@ -441,7 +441,7 @@ describe('EditSecretForm', () => {
       const user = userEvent.setup();
       renderWithSecret(mockSourceSecretBasicAuthForEdit);
 
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
       });
@@ -464,7 +464,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByLabelText(/^Host/)).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
       });
@@ -507,7 +507,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('reguser')).toBeInTheDocument();
       });
@@ -555,7 +555,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('user-a')).toBeInTheDocument();
         expect(screen.getByDisplayValue('user-b')).toBeInTheDocument();
@@ -608,7 +608,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(fetchFullSecret).toHaveBeenCalled();
         expect(screen.getByRole('textbox', { name: 'File upload' })).toBeInTheDocument();
@@ -632,7 +632,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(fetchFullSecret).toHaveBeenCalled();
         expect(screen.getByRole('textbox', { name: 'File upload' })).toBeInTheDocument();
@@ -660,7 +660,7 @@ describe('EditSecretForm', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
       });
-      await user.click(screen.getByRole('button', { name: /Reveal secret values/i }));
+      await user.click(screen.getByRole('button', { name: /Show secret values/i }));
       await waitFor(() => {
         expect(screen.getByDisplayValue('key1')).toBeInTheDocument();
       });
