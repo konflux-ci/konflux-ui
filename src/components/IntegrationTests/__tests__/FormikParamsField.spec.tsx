@@ -1,17 +1,20 @@
 import { screen, render, act, fireEvent, waitFor } from '@testing-library/react';
-import { useField, FieldArray } from 'formik';
+import { useField, FieldArray, useFormikContext } from 'formik';
 import FormikParamsField from '../FormikParamsField';
 
 jest.mock('formik', () => ({
   useField: jest.fn(),
   FieldArray: jest.fn(),
+  useFormikContext: jest.fn(),
 }));
 
 const useFieldMock = useField as jest.Mock;
 const FieldArrayMock = FieldArray as jest.Mock;
+const useFormikContextMock = useFormikContext as jest.Mock;
 
 describe('FormikParamsField', () => {
   beforeEach(() => {
+    useFormikContextMock.mockReturnValue({ setFieldValue: jest.fn() });
     FieldArrayMock.mockImplementation((props) => {
       const renderFunction = props.render;
       return <div>{renderFunction()}</div>;
