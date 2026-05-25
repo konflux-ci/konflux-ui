@@ -64,15 +64,12 @@ describe('Basic Happy Path', () => {
 
   it('Create an Application with a component', () => {
     var checkpoint = createCheckpoint();
-    cy.wait(Cypress._.random(1000, 10000));
     Applications.createApplication(applicationName);
     measureCheckpoint(checkpoint, "createApplication");
     checkpoint = createCheckpoint();
-    cy.wait(Cypress._.random(10000, 20000));
     Applications.createComponent(publicRepo, componentName, pipeline);
     measureCheckpoint(checkpoint, "createComponent");
     checkpoint = createCheckpoint();
-    cy.wait(Cypress._.random(20000, 30000));
     Applications.checkComponentInListView(
       componentName,
       applicationName,
