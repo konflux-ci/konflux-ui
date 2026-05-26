@@ -299,7 +299,7 @@ const EditSecretForm: React.FC = () => {
             }
             footer={
               <FormFooter
-                submitLabel="Edit secret"
+                submitLabel="Save changes"
                 handleSubmit={formik.handleSubmit}
                 errorMessage={formik.status && formik.status.submitError}
                 handleCancel={formik.handleReset}
