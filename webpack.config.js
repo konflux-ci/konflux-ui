@@ -62,7 +62,6 @@ export default {
     new MonacoWebpackPlugin({
       languages: ['yaml'], // add only 'yaml' language, since that's the only one we're going to support for now
       features: ['find', 'quickCommand', 'hover'], // only basic features we might need for now
-      globalAPI: true,
       customLanguages: [
         {
           label: 'yaml',
