@@ -1,6 +1,7 @@
 import React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LineNumberGutter } from './LineNumberGutter';
+import { normalizeLineEndings, stripAnsiCodes } from './log-viewer-utils';
 import type { SearchedWord, LogSection } from './types';
 import { useKeyboardNavigation } from './useKeyboardNavigation';
 import { useLineNumberNavigation } from './useLineNumberNavigation';
@@ -18,12 +19,6 @@ import {
 } from './virtualization-utils';
 
 import './VirtualizedLogContent.scss';
-
-// ANSI escape code regex for removing color codes from terminal output
-// ESC character (\u001b) is a control character but necessary for ANSI escape sequences
-// eslint-disable-next-line no-control-regex
-const ANSI_ESCAPE_REGEX = /\u001b\[[0-9;]*m/g;
-const normalizeLineEndings = (value: string): string => value.replace(/\r\n?/g, '\n');
 
 export interface VirtualizedLogContentProps {
   sections: LogSection[];
@@ -63,7 +58,7 @@ export const VirtualizedLogContent: React.FC<VirtualizedLogContentProps> = ({
         result.push(section.containerName);
       }
       if (section.data) {
-        const cleaned = normalizeLineEndings(section.data).replace(ANSI_ESCAPE_REGEX, '');
+        const cleaned = stripAnsiCodes(normalizeLineEndings(section.data));
         result.push(...cleaned.split('\n'));
       }
     }
