@@ -14,6 +14,10 @@
 
 CI runs: `yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks` -> `yarn test` (Node 20 + 22).
 
+## Setup
+
+One-command setup: ./setup.sh (checks Node.js >= 20, enables Corepack, installs dependencies, starts dev server)
+
 ## Key Conventions
 
 - `~/` -> `src/`, `@routes/` -> `src/routes/` -- use absolute imports, never `../../../`
