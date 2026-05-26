@@ -39,16 +39,31 @@ export const TriggerColumnData: React.FC<TriggerColumnData> = ({
   const pullRequestURL = `${repoURL}/pull/${prNumber}`;
 
   return (
-    <Flex spaceItems={{ default: 'spaceItemsXs' }} alignItems={{ default: 'alignItemsCenter' }}>
-      <FlexItem>{icon}</FlexItem>
-      {isPullRequest && (
+    <Flex
+      direction={isPullRequest ? { default: 'column' } : { default: 'row' }}
+      spaceItems={{ default: 'spaceItemsXs' }}
+      alignItems={
+        isPullRequest ? { default: 'alignItemsFlexStart' } : { default: 'alignItemsCenter' }
+      }
+      flexWrap={{ default: 'nowrap' }}
+    >
+      {isPullRequest ? (
         <FlexItem>
-          <ExternalLink
-            href={pullRequestURL}
-            text={<Truncate content={pullRequestText} />}
-            hideIcon={true}
-          />
+          <Flex
+            alignItems={{ default: 'alignItemsCenter' }}
+            spaceItems={{ default: 'spaceItemsNone' }}
+            flexWrap={{ default: 'nowrap' }}
+          >
+            <FlexItem flex={{ default: 'flexNone' }}>{icon}</FlexItem>
+            <FlexItem flex={{ default: 'flexNone' }}>
+              <ExternalLink href={pullRequestURL} hideIcon>
+                <Truncate content={pullRequestText} style={{ maxWidth: '15ch' }} />
+              </ExternalLink>
+            </FlexItem>
+          </Flex>
         </FlexItem>
+      ) : (
+        <FlexItem>{icon}</FlexItem>
       )}
       <FlexItem>
         <Label color="blue" isCompact>
