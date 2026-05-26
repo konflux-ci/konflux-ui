@@ -1,30 +1,8 @@
 import { isTaskV1Beta1, SBOMResultKeys } from '~/utils/pipeline-utils';
-import { PipelineRunLabel } from '../../../../consts/pipelinerun';
-import { PipelineRunKind, TaskRunKind, TektonResourceLabel } from '../../../../types';
+import { getSourceUrl, stripQueryStringParams } from '~/utils/pipelinerun-utils';
+import { TaskRunKind, TektonResourceLabel } from '../../../../types';
 
-export const stripQueryStringParams = (url: string) => {
-  if (!url) return undefined;
-
-  const { origin, pathname } = new URL(url);
-  return `${origin}${pathname}`;
-};
-
-export const getSourceUrl = (pipelineRun: PipelineRunKind): string => {
-  if (!pipelineRun) {
-    return undefined;
-  }
-
-  const { labels, annotations } = pipelineRun.metadata ?? {};
-
-  const repoFromPAC =
-    annotations?.[PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION] ||
-    annotations?.[PipelineRunLabel.TEST_REPO_URL_ANNOTATION] ||
-    labels?.[PipelineRunLabel.COMMIT_FULL_REPO_URL_ANNOTATION] ||
-    labels?.[PipelineRunLabel.TEST_REPO_URL_ANNOTATION];
-  const repoFromBuildService = annotations?.[PipelineRunLabel.BUILD_SERVICE_REPO_ANNOTATION];
-
-  return stripQueryStringParams(repoFromPAC || repoFromBuildService);
-};
+export { getSourceUrl, stripQueryStringParams };
 
 export type TaskRunSBOM = {
   url?: string;
