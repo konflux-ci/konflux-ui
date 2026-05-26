@@ -7,10 +7,12 @@ import { YAMLCodeEditor } from '~/shared/components/code-editor/YAMLCodeEditor';
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 
+import './ReleaseYamlTab.scss';
+
 export const ReleaseYamlTab: React.FC = () => {
   const { releaseName } = useParams<RouterParams>();
   const namespace = useNamespace();
-  const [release, loaded, error] = useRelease(namespace, releaseName);
+  const [release, loaded, error] = useRelease(namespace, releaseName ?? '');
 
   if (!loaded) {
     return (
@@ -25,7 +27,7 @@ export const ReleaseYamlTab: React.FC = () => {
   }
 
   return (
-    <Flex className="pf-v5-u-py-lg">
+    <Flex className="release-yaml-tab">
       <YAMLCodeEditor code={release} />
     </Flex>
   );
