@@ -47,7 +47,6 @@ type BasePipelineRunListRowProps = PipelineRunListRowProps & {
   showTestResult?: boolean;
   showSnapshot?: boolean;
   showComponent?: boolean;
-  showReference?: boolean;
   showTrigger?: boolean;
 };
 
@@ -148,7 +147,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
   showSnapshot,
   showComponent,
   showTrigger,
-  showReference,
   customData,
 }) => {
   const namespace = useNamespace();
@@ -279,10 +277,6 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
       {showTrigger ? (
         <TableData className={pipelineRunTableColumnClasses.trigger}>
           {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
-        </TableData>
-      ) : null}
-      {showReference ? (
-        <TableData className={pipelineRunTableColumnClasses.reference}>
           <TriggerColumnData
             repoOrg={commit?.repoOrg}
             repoName={commit?.repoName}
@@ -303,11 +297,11 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
 
 export const PipelineRunListRow: React.FC<React.PropsWithChildren<PipelineRunListRowProps>> = (
   props,
-) => <BasePipelineRunListRow {...props} showComponent showTestResult showReference showTrigger />;
+) => <BasePipelineRunListRow {...props} showComponent showTestResult showTrigger />;
 
 export const PipelineRunListRowWithVulnerabilities: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
-> = (props) => <BasePipelineRunListRow {...props} showVulnerabilities showTrigger showReference />;
+> = (props) => <BasePipelineRunListRow {...props} showVulnerabilities showTrigger />;
 
 export const PipelineRunListRowForRelease: React.FC<
   React.PropsWithChildren<PipelineRunListRowProps>
@@ -468,10 +462,6 @@ const DynamicPipelineRunListRow: React.FC<
       {visibleColumns.has('trigger') && (
         <TableData className={dynamicClasses.trigger}>
           {PipelineRunEventTypeLabel[commit?.eventType] ?? '-'}
-        </TableData>
-      )}
-      {visibleColumns.has('reference') && (
-        <TableData className={dynamicClasses.reference}>
           <TriggerColumnData
             repoOrg={commit?.repoOrg}
             repoName={commit?.repoName}
