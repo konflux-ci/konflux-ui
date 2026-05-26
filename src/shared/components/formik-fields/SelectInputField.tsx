@@ -19,6 +19,8 @@ import { getFieldId } from './field-utils';
 import FieldHelperText from './FieldHelperText';
 import './SelectInputField.scss';
 
+const CREATE_NEW_OPTION = '__create_new__';
+
 const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>> = ({
   name,
   label,
@@ -77,7 +79,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
 
     const selection = String(value);
 
-    if (selection === `__create_new__:${filterValue}`) {
+    if (selection === CREATE_NEW_OPTION) {
       const newVal = filterValue;
       const hasDuplicate = newOptions.find((op) => op.value === newVal);
 
@@ -192,7 +194,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
           onChange={onTextInputChange}
           autoComplete="off"
           innerRef={textInputRef}
-          placeholder={typeof placeholderText === 'string' ? placeholderText : undefined}
+          placeholder={placeholderText}
           role="combobox"
           isExpanded={isOpen}
           aria-controls={`${fieldId}-listbox`}
@@ -244,9 +246,10 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
             </SelectOption>
           ))}
           {showCreateOption && (
-            <SelectOption
-              value={`__create_new__:${filterValue}`}
-            >{`Create "${filterValue}"`}</SelectOption>
+            <SelectOption value={CREATE_NEW_OPTION}>{`Create "${filterValue}"`}</SelectOption>
+          )}
+          {filteredOptions.length === 0 && !showCreateOption && (
+            <SelectOption isDisabled>No results found</SelectOption>
           )}
         </SelectList>
       </Select>

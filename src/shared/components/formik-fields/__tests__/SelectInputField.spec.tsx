@@ -253,6 +253,19 @@ describe('SelectInputField', () => {
         expect(screen.getByText('option-a')).toBeVisible();
       });
     });
+
+    it('shows "No results found" when filter matches nothing and create is disabled', async () => {
+      const user = setupUser();
+      renderField({ variant: 'typeahead' });
+      await openDropdown(user);
+
+      const input = screen.getByRole('combobox');
+      await user.type(input, 'zzz-no-match');
+
+      await waitFor(() => {
+        expect(screen.getByText('No results found')).toBeVisible();
+      });
+    });
   });
 
   describe('creatable options', () => {

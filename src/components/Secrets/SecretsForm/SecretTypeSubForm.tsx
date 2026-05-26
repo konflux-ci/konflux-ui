@@ -162,7 +162,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
             toggleId="secret-name-toggle"
             variant="typeahead"
             options={options}
-            isCreatable
+            isCreatable={false}
             hasOnCreateOption
             isDisabled={isEditMode}
             required

@@ -176,7 +176,7 @@ export interface SelectInputFieldProps extends FieldProps {
   onSelect?: (e: React.MouseEvent<Element> | undefined, selectedValue: unknown) => void;
   onClear?: () => void;
   options: SelectInputOption[];
-  placeholderText?: React.ReactNode;
+  placeholderText?: string;
   isCreatable?: boolean;
   hasOnCreateOption?: boolean;
 }
