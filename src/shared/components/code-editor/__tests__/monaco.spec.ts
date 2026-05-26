@@ -55,11 +55,11 @@ describe('registerYAMLinMonaco', () => {
     };
 
     jest.isolateModules(() => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const monacoModule = require('../monaco');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const schemaModule = require('../openapi-to-json-schema');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const loggerModule = require('~/monitoring/logger');
       result.registerYAMLinMonaco = monacoModule.registerYAMLinMonaco;
       result.openAPItoJSONSchema = schemaModule.openAPItoJSONSchema;
