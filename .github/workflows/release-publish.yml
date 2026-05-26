@@ -137,32 +137,6 @@ jobs:
 
           CHANGELOG=$(cat /tmp/changelog.md)
 
-          - name: Close Jira tickets
-            env:
-              TAG: ${{ steps.tag.outputs.tag }}
-              RELEASE_DATE: ${{ steps.meta.outputs.release_date }}
-              NEW_SHA: ${{ steps.meta.outputs.new_sha }}
-              OLD_SHA: ${{ steps.meta.outputs.old_sha }}
-            run: |
-              # Generate changelog using the release script
-              chmod +x .github/scripts/generate-release-changelog.sh
-              .github/scripts/generate-release-changelog.sh \
-                -r "$KONFLUX_UI_REPO" \
-                -b "$OLD_SHA" \
-                -t "$NEW_SHA" \
-                -d "$(pwd)" \
-                -o /tmp/changelog.md
-
-              CHANGELOG=$(cat /tmp/changelog.md)
-              chmod +x .github/scripts/close-jira-tickets.sh
-              .github/scripts/close-jira-tickets.sh \
-                -t "$TAG" \
-                -d "$CHANGELOG"
-
-              echo "Jira tickets closed"
-
-
-
           # Idempotency: skip if release already exists
           if gh release view "$TAG" --repo "$KONFLUX_UI_REPO" >/dev/null 2>&1; then
             echo "Release $TAG already exists — skipping creation."
@@ -172,6 +146,14 @@ jobs:
               --title "Production release ${RELEASE_DATE}" \
               --notes "$CHANGELOG"
           fi
+
+      - name: Close Jira issues
+        env:
+          JIRA_USER: ${{ secrets.JIRA_USER }}
+          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+        run: |
+          chmod +x .github/scripts/close-jira-issues.sh
+          .github/scripts/close-jira-issues.sh /tmp/changelog.md
 
       # --- Update tracking issue with completion status ---
       - name: Update tracking issue

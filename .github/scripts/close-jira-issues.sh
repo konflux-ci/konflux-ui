@@ -1,15 +1,36 @@
 #!/usr/bin/env bash
-# Print all Jira issue URLs from a changelog (or any markdown file).
-# Usage: ./print-jira-urls.sh [path/to/changelog.md]
+# Close Jira issues referenced in a changelog (or any markdown file).
+# Requires JIRA_USER and JIRA_TOKEN environment variables.
+# Usage: ./close-jira-issues.sh [path/to/changelog.md]
 
 set -euo pipefail
 
 CHANGELOG="${1:-/tmp/changelog.md}"
 SKIPPED=() #issues that were already closed
 CLOSED=()
-#TODO - get USER and TOKEN
-TOKEN=""
-USER=""
+FAILED=()
+USER="${JIRA_USER:-}"
+TOKEN="${JIRA_TOKEN:-}"
+JIRA_API_BASE="https://redhat.atlassian.net/rest/api/2"
+
+if [[ -z "$USER" || -z "$TOKEN" ]]; then
+  echo "JIRA_USER and JIRA_TOKEN must be set" >&2
+  exit 1
+fi
+
+get_close_transition_id() {
+  local issue_key="$1"
+  local transitions_response
+  if ! transitions_response="$(
+    curl -sS --fail-with-body -u "${USER}:${TOKEN}" \
+      -H 'Accept: application/json' \
+      "${JIRA_API_BASE}/issue/${issue_key}/transitions"
+  )"; then
+    echo "Failed to fetch transitions for ${issue_key}: ${transitions_response:-curl request failed}" >&2
+    return 1
+  fi
+  jq -r '[.transitions[] | select(.to.name == "Closed") | .id][0] // empty' <<<"$transitions_response"
+}
 
 if [[ ! -f "$CHANGELOG" ]]; then
   echo "File not found: $CHANGELOG" >&2
@@ -28,32 +49,70 @@ if [[ ${#JIRA_ISSUES[@]} -eq 0 ]]; then
 fi
 
 for issue_key in "${JIRA_ISSUES[@]}"; do
-  status="$(curl -s -u "${USER}:${TOKEN}" \
-    -H 'Accept: application/json' \
-    "https://redhat.atlassian.net/rest/api/2/issue/${issue_key}" \
-    | jq -r '.fields.status.name // empty')"
+  issue_response=""
+  if ! issue_response="$(
+    curl -sS --fail-with-body -u "${USER}:${TOKEN}" \
+      -H 'Accept: application/json' \
+      "${JIRA_API_BASE}/issue/${issue_key}"
+  )"; then
+    echo "Failed to fetch status for ${issue_key}: ${issue_response:-curl request failed}" >&2
+    FAILED+=("$issue_key")
+    continue
+  fi
+
+  status="$(jq -r '.fields.status.name // empty' <<<"$issue_response")"
 
   if [[ "$status" == *"Closed"* ]]; then
     SKIPPED+=("$issue_key")
     continue
   fi
 
-  #close the issue
-  curl --request POST \
-  --url "https://redhat.atlassian.net/rest/api/2/issue/${issue_key}/transitions" \
-  --user "${USER}":"${TOKEN}" \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-  "resolution": {
-    "name": "Closed"
-  },
-  "transition": {
-    "id": "51"
-  }
-}'
-  CLOSED+=("$issue_key")
+  transition_id=""
+  if ! transition_id="$(get_close_transition_id "$issue_key")"; then
+    FAILED+=("$issue_key")
+    continue
+  fi
+  if [[ -z "$transition_id" ]]; then
+    echo "No Close transition available for ${issue_key} (status: ${status:-unknown})" >&2
+    FAILED+=("$issue_key")
+    continue
+  fi
+
+  transition_payload="$(jq -n \
+    --arg transition_id "$transition_id" \
+    '{
+      "resolution": { "name": "Closed" },
+      "transition": { "id": $transition_id }
+    }')"
+
+  if ! transition_response="$(
+    curl -sS -w $'\n%{http_code}' -u "${USER}:${TOKEN}" \
+      -H 'Accept: application/json' \
+      -H 'Content-Type: application/json' \
+      -X POST \
+      "${JIRA_API_BASE}/issue/${issue_key}/transitions" \
+      -d "$transition_payload"
+  )"; then
+    echo "Failed to close ${issue_key}: curl request failed" >&2
+    FAILED+=("$issue_key")
+    continue
+  fi
+
+  http_code="${transition_response##*$'\n'}"
+  response_body="${transition_response%$'\n'*}"
+
+  if [[ "$http_code" =~ ^2[0-9]{2}$ ]]; then
+    CLOSED+=("$issue_key")
+  else
+    echo "Failed to close ${issue_key} (HTTP ${http_code}): ${response_body:-empty response}" >&2
+    FAILED+=("$issue_key")
+  fi
 done
 
-echo "Skipped issues: ${SKIPPED[@]}"
-echo "Closed issues: ${CLOSED[@]}"
+echo "Skipped issues: ${SKIPPED[*]:-none}"
+echo "Closed issues: ${CLOSED[*]:-none}"
+echo "Failed issues: ${FAILED[*]:-none}"
+
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+  exit 1
+fi
