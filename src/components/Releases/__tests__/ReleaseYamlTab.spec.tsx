@@ -1,11 +1,11 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
 import { stringify as yamlStringify } from 'yaml';
-import { useRelease } from '../../../hooks/useReleases';
-import { mockedSwaggerDefinitions } from '../../../shared/components/code-editor/__data__/mock-data';
-import { useSwaggerDefinitions } from '../../../shared/components/code-editor/hooks/useSwaggerDefinitions';
-import { renderWithQueryClient } from '../../../unit-test-utils';
-import { mockUseNamespaceHook } from '../../../unit-test-utils/mock-namespace';
+import { useRelease } from '~/hooks/useReleases';
+import { mockedSwaggerDefinitions } from '~/shared/components/code-editor/__data__/mock-data';
+import { useSwaggerDefinitions } from '~/shared/components/code-editor/hooks/useSwaggerDefinitions';
+import { renderWithQueryClient } from '~/unit-test-utils';
+import { mockUseNamespaceHook } from '~/unit-test-utils/mock-namespace';
 import { mockReleases } from '../__data__/mock-release-data';
 import { ReleaseYamlTab } from '../ReleaseYamlTab';
 
@@ -14,15 +14,15 @@ jest.mock('react-router-dom', () => ({
   useParams: () => ({ releaseName: 'test-release' }),
 }));
 
-jest.mock('../../../hooks/useReleases', () => ({
+jest.mock('~/hooks/useReleases', () => ({
   useRelease: jest.fn(),
 }));
 
-jest.mock('../../../shared/components/code-editor/hooks/useSwaggerDefinitions', () => ({
+jest.mock('~/shared/components/code-editor/hooks/useSwaggerDefinitions', () => ({
   useSwaggerDefinitions: jest.fn(),
 }));
 
-jest.mock('../../../shared/components/code-editor/monaco', () => ({
+jest.mock('~/shared/components/code-editor/monaco', () => ({
   registerYAMLinMonaco: jest.fn(),
 }));
 
