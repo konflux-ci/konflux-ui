@@ -1,0 +1,25 @@
+{
+  "name": "@konflux-ui/screenshot-ui",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.6.0",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "capture": "tsx src/index.ts",
+    "test": "node --import tsx --test src/__tests__/*.test.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "^3.4.0",
+    "deepmerge": "^4.3.1",
+    "dotenv": "^16.4.7",
+    "playwright": "^1.52.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

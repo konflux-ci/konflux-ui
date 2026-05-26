@@ -43,5 +43,10 @@ tsconfig.tsbuildinfo
 CLAUDE.local.md
 .claude/worktrees/**/*
 
+# Screenshot UI automation (session, cache, outputs)
+.screenshot-auth/
+.screenshot-cache/
+.screenshots/
+
 # Snyk Security Extension - AI Rules (auto-generated)
 .cursor/rules/snyk_rules.mdc

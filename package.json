@@ -21,7 +21,8 @@
     "prepare": "husky",
     "analyze": "source-map-explorer 'dist/*.js'",
     "analyze:webpack": "webpack --analyze -c ./webpack.prod.config.js",
-    "generate:analytics-types": "node scripts/generate-analytics-types.mjs"
+    "generate:analytics-types": "node scripts/generate-analytics-types.mjs",
+    "screenshot-ui": "yarn --cwd scripts/screenshot-ui capture"
   },
   "dependencies": {
     "@patternfly/patternfly": "^5.3.1",
