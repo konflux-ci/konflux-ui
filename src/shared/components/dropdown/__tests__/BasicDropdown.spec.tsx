@@ -79,7 +79,7 @@ describe('BasicDropdown', () => {
       // Items without a description field should not have PF's description element
       menuItems.forEach((item) => {
         const descriptionEl = item.querySelector('.pf-v5-c-menu__item-description');
-        expect(descriptionEl).not.toBeInTheDocument();
+        expect(descriptionEl).toBeNull();
       });
     });
   });
