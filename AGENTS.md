@@ -10,6 +10,7 @@
 | Lint | `yarn lint` |
 | Import boundaries | `yarn lint:restricted-imports` |
 | Type check | `yarn type-checks` |
+| Start dev server| `yarn start` |
 
 CI runs: `yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks` -> `yarn test` (Node 20 + 22).
 

@@ -326,22 +326,50 @@ const stableFilters = useDeepCompareMemoize({
 
 ### useLazyActionMenu
 
-Defers RBAC permission loading until the action menu is opened:
+Defers expensive context loading (resource fetches, etc.) until the action menu is opened. Actions show "Checking permissions..." while loading:
 
 ```ts
-import { useLazyActionMenu, composeLazyActions } from '~/shared/hooks';
+import { useLazyActionMenu, composeLazyActions, LazyActionHookResult } from '~/shared/hooks';
+import { Action } from '~/shared/components/action-menu/types';
 
-const [actions, onOpen] = useLazyActionMenu({
-  buildActions: (permissions) => [
-    { id: 'edit', label: 'Edit', cta: handleEdit },
-    { id: 'delete', label: 'Delete', cta: handleDelete, disabled: !permissions.canDelete },
-  ],
-  loadContext: async () => {
-    const canDelete = await checkAccess({ group, resource, verb: 'delete', namespace });
-    return { canDelete };
-  },
-});
+// Single action group with lazy-loaded context
+const useMyActionsLazy = (resource: MyKind): LazyActionHookResult<Action> => {
+  return useLazyActionMenu({
+    loadContext: async () => {
+      const related = await k8sQueryGetResource<RelatedKind>({
+        model: RelatedModel,
+        queryOptions: { ns: namespace, name: resource.metadata.labels?.relatedName },
+      });
+      return { related };
+    },
+    buildActions: (ctx): Action[] => {
+      const context = ctx as { related: RelatedKind | null } | null;
+      return [
+        { id: 'edit', label: 'Edit', cta: () => handleEdit(context?.related) },
+        { id: 'delete', label: 'Delete', cta: handleDelete },
+      ];
+    },
+  });
+};
 
+// Without lazy loading (no loadContext) -- actions are built immediately
+const useSimpleActionsLazy = (resource: MyKind): LazyActionHookResult<Action> => {
+  return useLazyActionMenu({
+    buildActions: () => [
+      { id: 'download', label: 'Download YAML', cta: () => downloadYaml(resource) },
+    ],
+  });
+};
+
+// Compose multiple lazy action hooks into a single menu
+const useAllActionsLazy = (resource: MyKind): LazyActionHookResult<Action> => {
+  const myActions = useMyActionsLazy(resource);
+  const simpleActions = useSimpleActionsLazy(resource);
+  return composeLazyActions(myActions, simpleActions);
+};
+
+// Usage in component
+const [actions, onOpen] = useAllActionsLazy(resource);
 <ActionMenu actions={actions} onOpen={onOpen} />
 ```
 

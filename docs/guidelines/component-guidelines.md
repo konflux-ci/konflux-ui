@@ -171,28 +171,7 @@ const getStatusIcon = (status: string) => {
 };
 ```
 
-### 10. Analytics in Components
-
-Always use the `useTrackAnalyticsEvent()` hook. Never import `analyticsService` directly in components:
-
-```tsx
-import { useTrackAnalyticsEvent } from '~/analytics/hooks';
-
-const MyComponent = () => {
-  const track = useTrackAnalyticsEvent();
-
-  return (
-    <AnalyticsButton
-      analytics={{ link_name: 'my-button', app_name: applicationName }}
-      onClick={handleClick}
-    >
-      Click me
-    </AnalyticsButton>
-  );
-};
-```
-
-### 11. RBAC-Gated Actions
+### 10. RBAC-Gated Actions
 
 Use `useAccessReviewForModel` from `~/utils/rbac` for permission-gated actions:
 

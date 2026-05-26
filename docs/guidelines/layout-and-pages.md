@@ -40,7 +40,7 @@ import PageLayout from '~/components/PageLayout/PageLayout';
   ]}
   footer={<FormFooter ... />}   {/* Optional: for form pages */}
 >
-  <PageSection variant="light" isFilled>
+  <PageSection variant={PageSectionVariants.light} isFilled>
     {children}
   </PageSection>
 </PageLayout>
@@ -276,7 +276,7 @@ const MyFeatureForm: React.FC = () => {
         />
       }
     >
-      <PageSection variant="light" isFilled>
+      <PageSection variant={PageSectionVariants.light} isFilled>
         <Form onSubmit={handleSubmit}>
           <InputField name="name" label="Name" required />
           <DropdownField name="type" label="Type" items={typeOptions} />

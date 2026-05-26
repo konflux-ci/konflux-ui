@@ -101,7 +101,7 @@ import { PageSection, PageSectionVariants } from '@patternfly/react-core';
 | Right-aligned element in a row | `Flex` > `Flex align={{ default: 'alignRight' }}` |
 | Vertical list with spacing | `Stack hasGutter` |
 | Center a spinner/empty state | `Bullseye` |
-| Page content section | `PageSection variant="light"` |
+| Page content section | `PageSection variant={PageSectionVariants.light}` |
 | Two-column detail view | `Flex` with `flex={{ default: 'flex_3' }}` children |
 
 **Not used in this codebase:** `Split`/`SplitItem`, `Gallery`. Prefer `Flex` for all horizontal layouts.
