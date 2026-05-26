@@ -34,7 +34,7 @@ export const MultiImageCredentialForm: React.FC<
 > = ({ name, isEditMode = false }) => {
   const [{ value: fieldValues }] = useField<RegistryCredential[]>(name);
   const [uniqId, setUniqId] = React.useState(uniqueId());
-  const { setFieldValue, getFieldProps } = useFormikContext();
+  const { setFieldValue } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
   const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
 
@@ -118,11 +118,6 @@ export const MultiImageCredentialForm: React.FC<
                       isEditMode ? 'To keep the same password, leave this field blank' : ''
                     }
                     isRequired={!isEditMode}
-                    onBlur={(e) => {
-                      const fieldPath = `${name}.${idx.toString()}.password`;
-                      getFieldProps(fieldPath).onBlur(e);
-                      sensitive?.onSensitiveFieldBlur(fieldPath);
-                    }}
                   />
                   <InputField
                     name={`${name}.${idx.toString()}.email`}

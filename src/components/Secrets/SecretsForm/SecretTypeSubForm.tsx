@@ -78,7 +78,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
   const selectedForm = React.useMemo(() => {
     const form = secretTypes.find((t) => t.label === currentType);
     if (form?.key === 'key-value') {
-      form.component = <KeyValueSecretForm isEditMode={isEditMode} />;
+      form.component = <KeyValueSecretForm />;
     }
     if (form?.key === 'source') {
       form.component = (

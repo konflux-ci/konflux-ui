@@ -13,21 +13,17 @@ import { uniqueId } from 'lodash-es';
 import { FieldProps } from '~/shared/components/formik-fields/field-types';
 import { KeyValueEntry } from '~/types';
 import EncodedFileUploadField from './EncodedFileUploadField';
-import { useOptionalSecretEditSensitive } from './SecretEditSensitiveContext';
-
 type EncodedKeyValueEntryFormProps = {
   label?: string;
   helpText?: string;
   onChange?: (value: string, keyIndex: string) => void;
-  isEditMode?: boolean;
 };
 
 const EncodedKeyValueFileInputField: React.FC<
   React.PropsWithChildren<EncodedKeyValueEntryFormProps & FieldProps>
-> = ({ name, isEditMode = false }) => {
+> = ({ name }) => {
   const [{ value: fieldValues }] = useField<KeyValueEntry[]>(name);
   const [uniqId, setUniqId] = React.useState(uniqueId());
-  const sensitive = useOptionalSecretEditSensitive();
 
   return (
     <FieldArray
@@ -76,9 +72,6 @@ const EncodedKeyValueFileInputField: React.FC<
                 id="value"
                 label="Upload the file with value for your key or paste its contents"
                 name={`${name}.${idx.toString()}.value`}
-                sensitiveFieldPath={
-                  isEditMode && sensitive ? `${name}.${idx.toString()}.value` : undefined
-                }
               />
             </FormFieldGroupExpandable>
           ))}

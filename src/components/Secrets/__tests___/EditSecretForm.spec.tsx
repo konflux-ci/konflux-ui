@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { userEvent, type UserEvent } from '@testing-library/user-event';
 import { Base64 } from 'js-base64';
 import { SECRET_LIST_PATH } from '@routes/paths';
@@ -294,6 +294,33 @@ describe('EditSecretForm', () => {
         expect(screen.queryByDisplayValue('key1')).not.toBeInTheDocument();
       });
     });
+
+    it('keeps revealed values visible after blurring a sensitive field', async () => {
+      const user = userEvent.setup();
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+      });
+
+      await showSecretValues(user);
+      await waitFor(() => {
+        expectSensitiveValuesBannerVisible();
+        expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
+      });
+
+      const passwordInput = screen.getByTestId('secret-source-password');
+      await user.click(passwordInput);
+      await user.clear(passwordInput);
+      await user.type(passwordInput, 'edited');
+      await user.click(screen.getByLabelText(/^Host/));
+
+      await waitFor(() => {
+        expectSensitiveValuesBannerVisible();
+        expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
+        expect(passwordInput).toHaveValue('edited');
+      });
+    });
   });
 
   describe('edit mode behavior', () => {
@@ -408,11 +435,9 @@ describe('EditSecretForm', () => {
         expect(screen.getByDisplayValue('registry.example.com')).toBeInTheDocument();
       });
 
-      // Fill password to satisfy validation and make form dirty
       const passwordInput = screen.getByLabelText(/Password/i, { selector: 'input' });
-      // userEvent.type focuses the field; clicking submit blurs it first and onSensitiveFieldBlur clears
-      // the password before Formik submit runs. fireEvent.input updates the value without focusing.
-      fireEvent.input(passwordInput, { target: { value: 'newpass' } });
+      await user.clear(passwordInput);
+      await user.type(passwordInput, 'newpass');
 
       await waitFor(() => {
         expect(screen.getByTestId('submit-button')).not.toBeDisabled();
@@ -461,10 +486,9 @@ describe('EditSecretForm', () => {
         expect(screen.getByTestId('secret-source-password')).toBeInTheDocument();
       });
 
-      // See image dockerconfigjson submit test: fireEvent.input avoids focus/blur clearing the field.
-      fireEvent.input(screen.getByTestId('secret-source-password'), {
-        target: { value: 'newpassword' },
-      });
+      const passwordInput = screen.getByTestId('secret-source-password');
+      await user.clear(passwordInput);
+      await user.type(passwordInput, 'newpassword');
 
       await user.click(screen.getByTestId('submit-button'));
 

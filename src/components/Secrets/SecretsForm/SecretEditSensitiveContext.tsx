@@ -6,8 +6,6 @@ export type SecretEditSensitiveContextValue = {
   requestFullSecret: () => Promise<SecretKind | undefined>;
   /** Drops full secret from memory and clears sensitive Formik fields. */
   clearFullSecretAndSensitiveFields: () => void;
-  /** Call when a sensitive control loses focus (clears value + may drop full secret). */
-  onSensitiveFieldBlur: (fieldPath: string) => void;
   fullSecret: SecretKind | null;
   isLoadingFullSecret: boolean;
 };

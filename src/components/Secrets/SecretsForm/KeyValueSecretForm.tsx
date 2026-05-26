@@ -8,11 +8,7 @@ import {
 } from './SecretEditSensitiveContext';
 import { SensitiveValuesRevealBanner } from './SensitiveValuesRevealBanner';
 
-type KeyValueSecretFormProps = {
-  isEditMode?: boolean;
-};
-
-export const KeyValueSecretForm: React.FC<KeyValueSecretFormProps> = ({ isEditMode = false }) => {
+export const KeyValueSecretForm: React.FC = () => {
   const { setFieldValue } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
   const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
@@ -45,11 +41,7 @@ export const KeyValueSecretForm: React.FC<KeyValueSecretFormProps> = ({ isEditMo
       </Title>
       <SensitiveValuesRevealBanner onReveal={revealOpaqueValues} />
       {!sensitiveFieldsHidden ? (
-        <EncodedKeyValueFileInputField
-          name="opaque.keyValues"
-          data-test="secret-key-value-pair"
-          isEditMode={isEditMode}
-        />
+        <EncodedKeyValueFileInputField name="opaque.keyValues" data-test="secret-key-value-pair" />
       ) : null}
     </>
   );

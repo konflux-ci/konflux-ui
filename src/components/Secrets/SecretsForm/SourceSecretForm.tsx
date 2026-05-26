@@ -21,8 +21,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
   isEditMode = false,
 }) => {
   const [{ value: type }] = useField<SourceSecretType>('source.authType');
-  const [usernameField] = useField('source.username');
-  const [passwordField] = useField('source.password');
   const { setFieldValue } = useFormikContext();
   const sensitive = useOptionalSecretEditSensitive();
   const sensitiveFieldsHidden = useAreSecretSensitiveFieldsHidden();
@@ -88,10 +86,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
                 data-test="secret-source-username"
                 label="Username"
                 helperText="For Git authentication"
-                onBlur={(e) => {
-                  usernameField.onBlur(e);
-                  sensitive?.onSensitiveFieldBlur('source.username');
-                }}
               />
               <InputField
                 name="source.password"
@@ -101,10 +95,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
                 helperText="For Git authentication"
                 placeholder={isEditMode ? 'To keep the same password, leave this field blank' : ''}
                 required={!isEditMode}
-                onBlur={(e) => {
-                  passwordField.onBlur(e);
-                  sensitive?.onSensitiveFieldBlur('source.password');
-                }}
               />
             </>
           ) : null}
@@ -123,7 +113,6 @@ export const SourceSecretForm: React.FC<SourceSecretFormProps> = ({
                   : 'For Git authentication'
               }
               required={!isEditMode}
-              sensitiveFieldPath={isEditMode && sensitive ? 'source.ssh-privatekey' : undefined}
             />
           ) : null}
         </>

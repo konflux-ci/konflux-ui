@@ -237,10 +237,6 @@ const EditSecretForm: React.FC = () => {
         void setFieldValue(`opaque.keyValues.${idx}.value`, '');
       });
     },
-    onSensitiveFieldBlur: (fieldPath: string) => {
-      void formik.setFieldValue(fieldPath, '');
-      clearSensitiveMemory();
-    },
   });
 
   return (

@@ -134,7 +134,6 @@ export const ImagePullSecretForm: React.FC<React.PropsWithChildren<{ isEditMode?
               helpText="This file contains configuration details and credentials to connect to a secure image registry. An uploaded .dockercfg file will be normalized and saved as .dockerconfigjson format"
               required
               onValidate={validateDockerConfig}
-              sensitiveFieldPath={isEditMode && sensitive ? 'image.dockerconfig' : undefined}
             />
           ) : null}
           {fileTypeError && (
