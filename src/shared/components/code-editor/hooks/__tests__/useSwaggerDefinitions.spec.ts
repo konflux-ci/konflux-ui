@@ -8,7 +8,7 @@ import { useSwaggerDefinitions } from '../useSwaggerDefinitions';
 
 const mockCommonFetch = jest.fn();
 
-jest.mock('../../../../../k8s', () => ({
+jest.mock('~/k8s', () => ({
   commonFetch: (...args: unknown[]) => mockCommonFetch(...args),
 }));
 
