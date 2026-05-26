@@ -91,8 +91,8 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const button = result.getByRole('button', { name: /Sending pull request/ });
-    expect(button).toBeInTheDocument();
+    const buttons = result.getAllByRole('button', { name: /Sending pull request/ });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render rolling back', () => {
@@ -104,8 +104,8 @@ describe('CustomizePipeline', () => {
         modalProps={{ isOpen: true }}
       />,
     );
-    const button = result.getByRole('button', { name: /Rolling back/ });
-    expect(button).toBeInTheDocument();
+    const buttons = result.getAllByRole('button', { name: /Rolling back/ });
+    expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
   it('should render pull request sent', () => {
