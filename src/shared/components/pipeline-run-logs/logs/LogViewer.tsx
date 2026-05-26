@@ -32,6 +32,7 @@ import { saveAs } from 'file-saver';
 import { debounce } from 'lodash-es';
 import { v4 as uuidv4 } from 'uuid';
 import { FeatureFlagIndicator } from '~/feature-flags/FeatureFlagIndicator';
+import { logger } from '~/monitoring/logger';
 import {
   KeyboardShortcutHint,
   type ShortcutEntry,
@@ -40,6 +41,7 @@ import { useAutoScrollWithResume } from '~/shared/components/pipeline-run-logs/l
 import { useLogViewerSearch } from '~/shared/components/pipeline-run-logs/logs/useLogViewerSearch';
 import { LoadingInline } from '~/shared/components/status-box/StatusBox';
 import { VirtualizedLogViewer, type LogSection } from '~/shared/components/virtualized-log-viewer';
+import { buildLines } from '~/shared/components/virtualized-log-viewer/log-viewer-utils';
 import { useFullscreen } from '~/shared/hooks/fullscreen';
 import { TaskRunKind } from '~/types';
 import LogsTaskDuration from './LogsTaskDuration';
@@ -94,18 +96,7 @@ const LogViewer: React.FC<Props> = ({
       onScroll: onScrollProp,
     });
 
-  const lines = React.useMemo(() => {
-    const result: string[] = [];
-    for (const section of sections) {
-      if (section.containerName) {
-        result.push(section.containerName);
-      }
-      if (section.data) {
-        result.push(...section.data.split('\n'));
-      }
-    }
-    return result;
-  }, [sections]);
+  const lines = React.useMemo(() => buildLines(sections), [sections]);
 
   // Search state and context management
   const { logViewerContextValue, toolbarContextValue, scrolledRow } = useLogViewerSearch({
@@ -140,8 +131,7 @@ const LogViewer: React.FC<Props> = ({
       })
       .catch((err: Error) => {
         setDownloadAllStatus(false);
-        // eslint-disable-next-line no-console
-        console.warn(err.message || 'Error downloading logs.');
+        logger.warn(err.message || 'Error downloading logs.');
       });
   };
 

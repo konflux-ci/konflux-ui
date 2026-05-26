@@ -385,7 +385,7 @@ describe('LogViewer Integration Tests', () => {
         expect(downloadAllButton).not.toBeDisabled();
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith('Download failed');
+      expect(consoleSpy).toHaveBeenCalledWith('[WARN] Download failed', '');
       consoleSpy.mockRestore();
     });
   });
