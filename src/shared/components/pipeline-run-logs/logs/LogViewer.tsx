@@ -288,7 +288,7 @@ const LogViewer: React.FC<Props> = ({
           </div>
 
           {/* Header */}
-          <Banner data-testid="logs-taskName">
+          <Banner data-test="logs-taskName">
             <Flex gap={{ default: 'gapSm' }}>
               {taskName && (
                 <FlexItem flex={{ default: 'flex_1' }} className="log-viewer__task-name">
@@ -324,7 +324,7 @@ const LogViewer: React.FC<Props> = ({
           {showResumeStreamButton && (
             <div className="log-viewer__resume-stream-button-wrapper">
               <Button
-                data-testid="resume-log-stream"
+                data-test="resume-log-stream"
                 variant="primary"
                 isBlock
                 onClick={handleResumeClick}
