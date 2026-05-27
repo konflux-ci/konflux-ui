@@ -30,7 +30,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
   hasOnCreateOption,
   helpText,
   required,
-  variant,
+  variant = 'typeaheadMulti',
   toggleId,
   toggleAriaLabel,
   isDisabled,
@@ -46,7 +46,7 @@ const SelectInputField: React.FC<React.PropsWithChildren<SelectInputFieldProps>>
   const fieldId = getFieldId(name, 'select-input');
   const isValid = !(touched && error);
   const errorMessage = !isValid ? error : '';
-  const isMulti = (variant || 'typeaheadMulti') === 'typeaheadMulti';
+  const isMulti = variant === 'typeaheadMulti';
   const selections: string[] = isMulti ? (Array.isArray(field.value) ? field.value : []) : [];
   const memoizedValue = useDeepCompareMemoize(field.value);
 
