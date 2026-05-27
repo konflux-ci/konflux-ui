@@ -5,12 +5,7 @@ metadata:
     test.appstudio.openshift.io/optional: 'false'
   name: konflux-ui-periodic-main
 spec:
-  application: konflux-e2e
-  contexts:
-    - description: execute the integration test in all cases - this would be the default state
-      name: application
-    - description: execute the integration test for a Snapshot created for a `pull request` event
-      name: pull_request
+  application: konflux-ui
   params:
     - name: konflux-test-infra-secret
       value: konflux-test-infra

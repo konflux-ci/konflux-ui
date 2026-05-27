@@ -90,40 +90,9 @@ spec:
           value: $(params.SNAPSHOT)
         - name: test-name
           value: $(context.pipelineRun.name)
-    - name: show-snapshot-data
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/konflux-ci/konflux-ui
-          - name: revision
-            value: main
-          - name: pathInRepo
-            value: integration-tests/tasks/show-snapshot-data.yaml
-      params:
-        - name: snapshot
-          value: $(params.SNAPSHOT)
-    - name: check-org-membership
-      runAfter:
-        - show-snapshot-data
-        - konflux-ui-pr-metadata
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/konflux-ci/konflux-ui
-          - name: revision
-            value: main
-          - name: pathInRepo
-            value: integration-tests/tasks/check-org-membership.yaml
-      params:
-        - name: job-spec
-          value: $(tasks.konflux-ui-pr-metadata.results.job-spec)
-        - name: github-credentials-secret
-          value: $(params.github-credentials-secret)
     - name: provision-kind-cluster
       runAfter:
-        - check-org-membership
+        - konflux-ui-pr-metadata
       when:
         - input: '$(tasks.konflux-ui-pr-metadata.results.pull-request-author)'
           operator: notin
@@ -203,41 +172,6 @@ spec:
           value: $(params.oci-credentials-secret)
         - name: build-credentials
           value: $(params.build-credentials-secret)
-    - name: build-test-image
-      when:
-        - input: '$(tasks.konflux-ui-pr-metadata.results.pull-request-author)'
-          operator: notin
-          values: ['red-hat-konflux[bot]']
-      runAfter:
-        - check-org-membership
-      taskRef:
-        resolver: git
-        params:
-          - name: url
-            value: https://github.com/konflux-ci/konflux-ui
-          - name: revision
-            value: main
-          - name: pathInRepo
-            value: integration-tests/tasks/build-test-image.yaml
-      params:
-        - name: git-url
-          value: '$(tasks.konflux-ui-pr-metadata.results.git-url)'
-        - name: git-revision
-          value: '$(tasks.konflux-ui-pr-metadata.results.git-revision)'
-        - name: target-branch
-          value: '$(tasks.konflux-ui-pr-metadata.results.target-repo-branch)'
-        - name: pull-request-number
-          value: '$(tasks.konflux-ui-pr-metadata.results.pull-request-number)'
-        - name: default-test-image
-          value: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
-        - name: test-image-repo
-          value: '$(params.oci-container-repo)'
-        - name: quay-secret
-          value: $(params.oci-credentials-secret)
-        - name: pr-test-image
-          value: 'quay.io/konflux_ui_qe/konflux-ui-tests:pr-$(tasks.konflux-ui-pr-metadata.results.pull-request-number)'
-        - name: component-image
-          value: '$(tasks.konflux-ui-pr-metadata.results.container-image)'
     - name: monitor-webhook-logs
       when:
         - input: '$(tasks.konflux-ui-pr-metadata.results.pull-request-author)'
@@ -264,7 +198,6 @@ spec:
           values: ['red-hat-konflux[bot]']
       runAfter:
         - deploy-konflux
-        - build-test-image
       taskRef:
         resolver: git
         params:
@@ -276,7 +209,7 @@ spec:
             value: integration-tests/tasks/run-periodic-konflux-ui.yaml
       params:
         - name: test-image
-          value: '$(params.oci-container-repo):pr-$(tasks.konflux-ui-pr-metadata.results.pull-request-number)'
+          value: 'quay.io/konflux_ui_qe/konflux-ui-tests:latest'
         - name: test-name
           value: '$(context.pipelineRun.name)'
         - name: git-repo
