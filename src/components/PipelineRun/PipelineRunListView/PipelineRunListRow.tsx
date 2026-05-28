@@ -5,7 +5,12 @@ import { ClipboardCheckIcon } from '@patternfly/react-icons/dist/esm/icons/clipb
 import { ExclamationTriangleIcon } from '@patternfly/react-icons/dist/esm/icons/exclamation-triangle-icon';
 import { StatusIconWithText } from '~/components/StatusIcon/StatusIcon';
 import { PipelineRunColumnKeys } from '~/consts/pipeline';
-import { PipelineRunLabel, PipelineRunType, UNFINISHED_PLR_STATUSES } from '~/consts/pipelinerun';
+import {
+  PipelineRunLabel,
+  PipelineRunType,
+  runStatus,
+  UNFINISHED_PLR_STATUSES,
+} from '~/consts/pipelinerun';
 import { useIsOnFeatureFlag } from '~/feature-flags/hooks';
 import { useKarchScanResults } from '~/hooks/useScanResults';
 import {
@@ -217,7 +222,7 @@ const BasePipelineRunListRow: React.FC<React.PropsWithChildren<BasePipelineRunLi
         </TableData>
       ) : null}
       <TableData className={pipelineRunTableColumnClasses.duration}>
-        {status !== 'Pending' ? (
+        {status !== runStatus.Pending ? (
           <Duration
             startTime={typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined}
             endTime={
@@ -405,7 +410,7 @@ const DynamicPipelineRunListRow: React.FC<
       )}
       {visibleColumns.has('duration') && (
         <TableData className={dynamicClasses.duration}>
-          {status !== 'Pending' ? (
+          {status !== runStatus.Pending ? (
             <Duration
               startTime={
                 typeof obj.status?.startTime === 'string' ? obj.status?.startTime : undefined
