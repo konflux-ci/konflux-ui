@@ -8,6 +8,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "setup": "./setup.sh",
     "build": "webpack -c ./webpack.prod.config.js",
     "build:instrumented": "webpack -c ./webpack.instrumented.config.js",
     "start": "dotenvx run -- webpack server --open -c ./webpack.dev.config.js",

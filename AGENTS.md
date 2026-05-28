@@ -53,7 +53,7 @@ yarn test path/to/file.spec.tsx
 
 ## Setup
 
-One-command setup: ./setup.sh (checks Node.js >= 24, enables Corepack, installs dependencies, starts dev server)
+One-command setup: `yarn setup` or `./setup.sh` (checks Node.js >= 24, enables Corepack, installs dependencies, starts dev server)
 
 ## Key Conventions
 
