@@ -14,6 +14,43 @@
 
 CI runs two parallel jobs on Node 24: **lint** (`yarn lint` -> `yarn lint:restricted-imports` -> `yarn type-checks`) and **test** (`yarn test`).
 
+## Single-File Verification
+
+Fast feedback on one changed file — no webpack build. Use `yarn` so tool versions match the repo.
+
+### Single-file lint command
+
+```bash
+yarn eslint path/to/file.ts
+```
+
+Add flags for CI-equivalent checks (`.ts` and `.tsx` paths):
+
+```bash
+yarn eslint path/to/file.ts --report-unused-disable-directives --max-warnings 0
+yarn eslint path/to/file.ts --config .eslintrc.restrict-imports.cjs --no-eslintrc --max-warnings 0
+```
+
+SCSS: `yarn stylelint path/to/file.scss --config .stylelintrc.json`
+
+### Single-file type-check command
+
+```bash
+yarn tsc --noEmit path/to/file.ts
+```
+
+For edits using `~/` or `@routes/` imports, prefer project-wide check (~4s, no build):
+
+```bash
+yarn type-checks
+```
+
+### Unit test (optional)
+
+```bash
+yarn test path/to/file.spec.tsx
+```
+
 ## Setup
 
 One-command setup: ./setup.sh (checks Node.js >= 24, enables Corepack, installs dependencies, starts dev server)
