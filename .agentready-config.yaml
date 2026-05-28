@@ -1,0 +1,18 @@
+# AgentReady config for konflux-ui (React SPA — not a REST API server).
+#
+# Assess this repo (config is auto-loaded from the repo root — no --config flag needed):
+#   uv run python -m agentready assess /path/to/konflux-ui
+#
+# Do NOT run with `--config .agentready-config.yaml` when your shell cwd is the
+# agentready checkout; that resolves the config relative to cwd, not konflux-ui,
+# and openapi_specs will still be assessed.
+#
+# Alternatives if auto-load does not apply:
+#   --config /path/to/konflux-ui/.agentready-config.yaml
+#   --exclude openapi_specs
+#
+# Open `.agentready/report-latest.html` after a run (older timestamped reports are stale).
+
+excluded_attributes:
+  # UI consumes Kubernetes/cluster APIs; no owned OpenAPI spec in this repo.
+  - openapi_specs
