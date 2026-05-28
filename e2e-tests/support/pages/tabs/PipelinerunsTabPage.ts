@@ -221,27 +221,37 @@ export class DetailsTab {
     UIhelper.verifyLabelAndValue('Status', 'Succeeded');
   }
 
+  private static debugRequest(options: Partial<Cypress.RequestOptions>) {
+    try {
+      return APIHelper.requestHACAPI({ ...options, failOnStatusCode: false });
+    } catch (_e) {
+      return cy.request({ ...options, failOnStatusCode: false });
+    }
+  }
+
   private static dumpPLRDebugInfo(statusText: string) {
     cy.log(`⚠️ PLR status is "${statusText}", dumping debug info`);
     const ns = Cypress.env('HAC_NAMESPACE');
 
     cy.url().then((url) => {
       const plrName = url.match(/pipelineruns\/([^/]+)/)?.[1];
-      if (!plrName) return;
+      if (!plrName) {
+        cy.log('Could not extract PLR name from URL');
+        return;
+      }
+      cy.log(`PLR name: ${plrName}, namespace: ${ns}`);
 
-      APIHelper.requestHACAPI({
+      DetailsTab.debugRequest({
         method: 'GET',
         url: `/api/k8s/apis/tekton.dev/v1/namespaces/${ns}/pipelineruns/${plrName}`,
-        failOnStatusCode: false,
       }).then((resp) => {
         const conditions = resp.body?.status?.conditions;
         cy.log(`PLR conditions: ${JSON.stringify(conditions)}`);
       });
 
-      APIHelper.requestHACAPI({
+      DetailsTab.debugRequest({
         method: 'GET',
         url: `/api/k8s/apis/tekton.dev/v1/namespaces/${ns}/taskruns?labelSelector=tekton.dev/pipelineRun=${plrName}`,
-        failOnStatusCode: false,
       }).then((resp) => {
         const taskRuns = resp.body?.items || [];
         taskRuns.forEach((tr) => {
@@ -256,10 +266,9 @@ export class DetailsTab {
 
             const containers = (tr.status?.steps || []).map((s) => s.container || `step-${s.name}`);
             containers.forEach((container) => {
-              APIHelper.requestHACAPI({
+              DetailsTab.debugRequest({
                 method: 'GET',
                 url: `/api/k8s/api/v1/namespaces/${ns}/pods/${podName}/log?container=${container}`,
-                failOnStatusCode: false,
               }).then((logResp) => {
                 cy.log(`${podName}/${container} logs: ${String(logResp.body).substring(0, 3000)}`);
               });
@@ -268,10 +277,9 @@ export class DetailsTab {
         });
       });
 
-      APIHelper.requestHACAPI({
+      DetailsTab.debugRequest({
         method: 'GET',
         url: `/api/k8s/apis/appstudio.redhat.com/v1alpha1/namespaces/${ns}/snapshots`,
-        failOnStatusCode: false,
       }).then((resp) => {
         const snapshots = resp.body?.items || [];
         snapshots.forEach((s) => {
