@@ -69,9 +69,11 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
   onRowsRendered,
   infiniteLoaderProps,
   isInfiniteLoading,
+  isFixedLayout = false,
 }) => {
   const filters = useDeepCompareMemoize(initFilters);
   const Header = useDeepCompareMemoize(initHeader);
+  const tableLayoutClassName = isFixedLayout ? 'pf-m-fixed pf-m-truncate' : '';
   const [columns] = React.useMemo(() => {
     const cProps = getComponentProps(data, unfilteredData, filters, selected, match, kindObj);
     const expandColumn = [];
@@ -111,6 +113,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                         getRowProps={getRowProps}
                         onRowsRendered={handleRowsRendered}
                         ExpandedContent={ExpandedContent}
+                        isFixedLayout={isFixedLayout}
                       />
                     </div>
                   );
@@ -132,6 +135,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
                   getRowProps={getRowProps}
                   onRowsRendered={onRowsRendered}
                   ExpandedContent={ExpandedContent}
+                  isFixedLayout={isFixedLayout}
                 />
               </div>
             )
@@ -162,7 +166,7 @@ const TableComponent: React.FC<React.PropsWithChildren<TableProps>> = ({
     <div className="table">
       <TableWrapper virtualize={virtualize} ariaLabel={ariaLabel} ariaRowCount={ariaRowCount}>
         <PfTable
-          className="table__header"
+          className={`table__header ${tableLayoutClassName}`.trim()}
           cells={columns}
           gridBreakPoint={gridBreakPoint}
           role={virtualize ? 'presentation' : 'grid'}

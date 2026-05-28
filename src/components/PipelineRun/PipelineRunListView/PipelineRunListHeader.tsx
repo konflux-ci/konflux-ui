@@ -1,18 +1,32 @@
 import { PipelineRunColumnKeys } from '../../../consts/pipeline';
 import {
+  createColumnConfig,
   generateDynamicColumnClasses,
   COMMON_COLUMN_CONFIGS,
 } from '../../../shared/components/table/dynamic-columns';
 
+/** Pipeline run table responsiveness targets tablet (md) and above; phone is out of scope. */
+const PIPELINE_RUN_COLUMN_CONFIGS = {
+  ...COMMON_COLUMN_CONFIGS,
+  status: createColumnConfig(10, 8, 1),
+  trigger: createColumnConfig(15, 8, 3),
+};
+
+/** Shift sm breakpoints to md so column widths and visibility apply from tablet up. */
+const normalizeForTabletAndUp = (className: string) =>
+  className
+    .replace(/\bpf-m-visible-on-sm\b/g, 'pf-m-visible-on-md')
+    .replace(/\bpf-m-width-(\d+)-on-sm\b/g, 'pf-m-width-$1-on-md');
+
 export const getDynamicColumnClasses = (visibleColumns: Set<PipelineRunColumnKeys>) => {
-  const rawClasses = generateDynamicColumnClasses(visibleColumns, COMMON_COLUMN_CONFIGS);
+  const rawClasses = generateDynamicColumnClasses(visibleColumns, PIPELINE_RUN_COLUMN_CONFIGS);
 
   const mappedClasses: Record<string, string> = Object.entries(rawClasses).reduce(
     (acc, [key, value]) => {
       let mappedKey = key;
       if (key === 'testResult') mappedKey = 'testResultStatus';
       if (key === 'namespace') mappedKey = 'workspace';
-      acc[mappedKey] = value;
+      acc[mappedKey] = normalizeForTabletAndUp(value);
       return acc;
     },
     {} as Record<string, string>,
@@ -26,13 +40,13 @@ export const pipelineRunTableColumnClasses = {
   status: 'pf-m-width-10 pf-m-width-5-on-xl',
   testResultStatus: 'pf-m-width-10 pf-m-width-10-on-xl',
   started: 'pf-m-width-20 pf-m-width-10-on-xl',
-  vulnerabilities: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  type: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
-  duration: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-10',
-  component: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  workspace: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  snapshot: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-15',
-  trigger: 'pf-m-hidden pf-m-visible-on-xl pf-m-width-20',
+  vulnerabilities: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-15',
+  type: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-10',
+  duration: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-10',
+  component: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-15',
+  workspace: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-15',
+  snapshot: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-15',
+  trigger: 'pf-m-hidden pf-m-visible-on-lg pf-m-width-20',
   kebab: 'pf-v5-c-table__action',
 };
 

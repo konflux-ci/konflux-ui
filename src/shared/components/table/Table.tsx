@@ -56,6 +56,8 @@ export type TableProps<D = unknown, C = unknown> = Partial<ComponentProps<D>> & 
   onRowsRendered?: VirtualBodyProps<D>['onRowsRendered'];
   isInfiniteLoading?: boolean;
   infiniteLoaderProps?: InfiniteLoaderProps;
+  /** Applies PatternFly pf-m-fixed (+ pf-m-truncate) for viewport-based column width behavior */
+  isFixedLayout?: boolean;
 };
 
 const Table: React.FC<React.PropsWithChildren<TableProps>> = ({

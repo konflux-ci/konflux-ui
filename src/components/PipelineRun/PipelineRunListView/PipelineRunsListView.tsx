@@ -152,6 +152,7 @@ const PipelineRunsListView: React.FC<React.PropsWithChildren<PipelineRunsListVie
         />
       )}
       <Table
+        isFixedLayout
         data={filteredPLRs}
         unfilteredData={sortedPipelineRuns}
         EmptyMsg={isFiltered ? EmptyMsg : NoDataEmptyMsg}

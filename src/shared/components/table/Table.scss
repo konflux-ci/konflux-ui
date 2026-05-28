@@ -25,6 +25,11 @@
   align-items: flex-start;
 }
 
+.table .pf-v5-c-table.pf-m-fixed tr > th,
+.table .pf-v5-c-table.pf-m-fixed tr > td {
+  min-width: 0;
+}
+
 .table .pf-v5-c-table .pf-v5-c-table__action {
   --pf-v5-c-table--cell--MinWidth: 0;
   --pf-v5-c-table--cell--MaxWidth: none;

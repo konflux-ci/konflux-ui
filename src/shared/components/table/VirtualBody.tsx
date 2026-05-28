@@ -22,6 +22,7 @@ export type VirtualBodyProps<D = unknown, C = unknown> = {
   scrollTop: number;
   width: number;
   expand: boolean;
+  isFixedLayout?: boolean;
   getRowProps?: (obj: D) => Partial<Pick<TableRowProps, 'id' | 'className' | 'title'>>;
   onRowsRendered?: (params: {
     overscanStartIndex: number;
@@ -77,6 +78,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     onRowsRendered,
     ExpandedContent,
     expand,
+    isFixedLayout = false,
   } = props;
 
   const cellMeasurementCache = React.useMemo(() => {
@@ -205,7 +207,7 @@ export const VirtualBody: React.FC<React.PropsWithChildren<VirtualBodyProps>> = 
     <VirtualTableBody
       ref={listRef}
       autoHeight
-      className="pf-v5-c-table pf-m-compact pf-m-border-rows pf-v5-c-window-scroller"
+      className={`pf-v5-c-table pf-m-compact pf-m-border-rows pf-v5-c-window-scroller${isFixedLayout ? ' pf-m-fixed pf-m-truncate' : ''}`}
       deferredMeasurementCache={cellMeasurementCache}
       rowHeight={cellMeasurementCache.rowHeight}
       height={height || 0}
