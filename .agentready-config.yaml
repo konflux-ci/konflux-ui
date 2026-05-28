@@ -9,10 +9,21 @@
 #
 # Alternatives if auto-load does not apply:
 #   --config /path/to/konflux-ui/.agentready-config.yaml
-#   --exclude openapi_specs
+#   --exclude openapi_specs,dbt_project_config,dbt_model_documentation,dbt_data_tests,dbt_project_structure,cyclomatic_complexity,structured_logging,inline_documentation
 #
 # Open `.agentready/report-latest.html` after a run (older timestamped reports are stale).
 
 excluded_attributes:
   # UI consumes Kubernetes/cluster APIs; no owned OpenAPI spec in this repo.
   - openapi_specs
+  # React SPA — no dbt/SQL data layer in this repo.
+  - dbt_project_config
+  - dbt_model_documentation
+  - dbt_data_tests
+  - dbt_project_structure
+  # Complexity enforced via ESLint/CI if needed; lizard is Python-only and not integrated.
+  - cyclomatic_complexity
+  # Browser SPA — client-side logger; AgentReady check targets server-side patterns.
+  - structured_logging
+  # Docstring-style check not implemented for TypeScript/React in AgentReady.
+  - inline_documentation
