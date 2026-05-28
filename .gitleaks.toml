@@ -1,0 +1,14 @@
+title = "konflux-ui gitleaks config"
+
+[allowlist]
+description = "Test fixtures, mock data, and detect-secrets baseline fingerprints"
+paths = [
+  '''\.secrets\.baseline$''',
+  '''(^|/)__data__/''',
+  '''(^|/)__tests__/''',
+  '''\.spec\.(ts|tsx)$''',
+  '''(^|/)mock[^/]*\.(ts|tsx)$''',
+  '''(^|/)Mock[^/]*''',
+  '''(^|/)\.agentready/''',
+  '''node_modules/''',
+]
