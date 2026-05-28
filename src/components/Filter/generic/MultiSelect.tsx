@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Divider, ToolbarFilter } from '@patternfly/react-core';
 import {
+  Badge,
+  Divider,
+  MenuToggle,
   Select,
   SelectGroup,
+  SelectList,
   SelectOption,
-  SelectVariant,
-} from '@patternfly/react-core/deprecated';
+  ToolbarFilter,
+} from '@patternfly/react-core';
 import { FilterIcon } from '@patternfly/react-icons/dist/esm/icons/filter-icon';
 
 export const MENU_DIVIDER = '--divider--';
@@ -54,41 +57,47 @@ export const MultiSelect = ({
       categoryName={label}
     >
       <Select
-        placeholderText={placeholderText ?? label}
-        toggleIcon={<FilterIcon />}
-        toggleAriaLabel={toggleAriaLabel ?? `${label} filter menu`}
-        variant={SelectVariant.checkbox}
+        role="menu"
         isOpen={expanded}
-        onToggle={(_, exp: boolean) => setExpanded(exp)}
-        onSelect={(event, selection) => {
-          const checked = (event.target as HTMLInputElement).checked;
+        selected={values}
+        onSelect={(_, selection) => {
+          const value = String(selection);
           setValues(
-            checked
-              ? [...values, String(selection)]
-              : values.filter((value) => value !== selection),
+            values.includes(value) ? values.filter((v) => v !== value) : [...values, value],
           );
         }}
-        selections={values}
-        isGrouped
+        onOpenChange={setExpanded}
+        toggle={(toggleRef) => (
+          <MenuToggle
+            ref={toggleRef}
+            onClick={() => setExpanded(!expanded)}
+            isExpanded={expanded}
+            icon={<FilterIcon />}
+            aria-label={toggleAriaLabel ?? `${label} filter menu`}
+          >
+            {placeholderText ?? label}
+            {values.length > 0 && <Badge isRead>{values.length}</Badge>}
+          </MenuToggle>
+        )}
       >
-        {[
-          <SelectGroup label={label} key={filterKey}>
+        <SelectGroup label={label} key={filterKey}>
+          <SelectList>
             {Object.keys(options).map((filter) =>
               filter.startsWith(MENU_DIVIDER) ? (
-                <Divider key={filter} />
+                <Divider component="li" key={filter} />
               ) : (
                 <SelectOption
+                  hasCheckbox
                   key={filter}
                   value={filter}
-                  isChecked={values.includes(filter)}
-                  // TODO: remove the item count from other components, it is not accurate anyway as it only counts fetched resources
+                  isSelected={values.includes(filter)}
                 >
                   {optionLabels?.[filter] ?? filter}
                 </SelectOption>
               ),
             )}
-          </SelectGroup>,
-        ]}
+          </SelectList>
+        </SelectGroup>
       </Select>
     </ToolbarFilter>
   );

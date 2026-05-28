@@ -193,7 +193,7 @@ export const SecretTypeSubForm: React.FC<React.PropsWithChildren<{ isEditMode?: 
           helperText={secretNameHelperText}
           placeholder="Enter name"
           isDisabled={isEditMode}
-          required
+          isRequired
         />
       )}
 
