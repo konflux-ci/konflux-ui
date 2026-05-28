@@ -208,7 +208,79 @@ export class DetailsTab {
   static waitForPLRAndDownloadAllLogs(allTaskLogs = true) {
     DetailsTab.waitUntilStatusIsNotRunning();
     LogsTab.downloadAllTaskLogs(allTaskLogs);
+
+    cy.get(pipelinerunsTabPO.statusPO)
+      .scrollIntoView()
+      .invoke('text')
+      .then((statusText) => {
+        if (statusText.trim() !== 'Succeeded') {
+          DetailsTab.dumpPLRDebugInfo(statusText.trim());
+        }
+      });
+
     UIhelper.verifyLabelAndValue('Status', 'Succeeded');
+  }
+
+  private static dumpPLRDebugInfo(statusText: string) {
+    cy.log(`⚠️ PLR status is "${statusText}", dumping debug info`);
+    const ns = Cypress.env('HAC_NAMESPACE');
+
+    cy.url().then((url) => {
+      const plrName = url.match(/pipelineruns\/([^/]+)/)?.[1];
+      if (!plrName) return;
+
+      APIHelper.requestHACAPI({
+        method: 'GET',
+        url: `/api/k8s/apis/tekton.dev/v1/namespaces/${ns}/pipelineruns/${plrName}`,
+        failOnStatusCode: false,
+      }).then((resp) => {
+        const conditions = resp.body?.status?.conditions;
+        cy.log(`PLR conditions: ${JSON.stringify(conditions)}`);
+      });
+
+      APIHelper.requestHACAPI({
+        method: 'GET',
+        url: `/api/k8s/apis/tekton.dev/v1/namespaces/${ns}/taskruns?labelSelector=tekton.dev/pipelineRun=${plrName}`,
+        failOnStatusCode: false,
+      }).then((resp) => {
+        const taskRuns = resp.body?.items || [];
+        taskRuns.forEach((tr) => {
+          const trName = tr.metadata?.name;
+          cy.log(`TaskRun: ${trName} | conditions: ${JSON.stringify(tr.status?.conditions)}`);
+
+          const podName = tr.status?.podName;
+          if (podName && trName?.includes('enterprise-contract') && trName?.includes('verify')) {
+            (tr.status?.steps || []).forEach((step) => {
+              cy.log(`Step "${step.name}" terminated: ${JSON.stringify(step.terminated)}`);
+            });
+
+            const containers = (tr.status?.steps || []).map((s) => s.container || `step-${s.name}`);
+            containers.forEach((container) => {
+              APIHelper.requestHACAPI({
+                method: 'GET',
+                url: `/api/k8s/api/v1/namespaces/${ns}/pods/${podName}/log?container=${container}`,
+                failOnStatusCode: false,
+              }).then((logResp) => {
+                cy.log(`${podName}/${container} logs: ${String(logResp.body).substring(0, 3000)}`);
+              });
+            });
+          }
+        });
+      });
+
+      APIHelper.requestHACAPI({
+        method: 'GET',
+        url: `/api/k8s/apis/appstudio.redhat.com/v1alpha1/namespaces/${ns}/snapshots`,
+        failOnStatusCode: false,
+      }).then((resp) => {
+        const snapshots = resp.body?.items || [];
+        snapshots.forEach((s) => {
+          cy.log(
+            `Snapshot: ${s.metadata?.name} | conditions: ${JSON.stringify(s.status?.conditions)}`,
+          );
+        });
+      });
+    });
   }
 }
 
