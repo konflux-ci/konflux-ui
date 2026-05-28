@@ -43,7 +43,9 @@ describe('Basic Happy Path', () => {
   const pipeline: string = Cypress.env('PIPELINE');
   const pipelineConfig = pipelineConfigs[pipeline];
   if (!pipelineConfig) {
-    throw new Error(`Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`);
+    throw new Error(
+      `Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`,
+    );
   }
   const piplinerunlogsTasks = pipelineConfig.tasks;
 
@@ -173,6 +175,12 @@ describe('Basic Happy Path', () => {
     it('Verify Enterprise contract Test pipeline run Details', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       DetailsTab.waitForPLRAndDownloadAllLogs(false);
+    });
+
+    it('Debug enterprise contract test pipeline run', () => {
+      DetailsTab.clickOnNode('verify');
+      DetailsTab.clickOnDrawerPanelLogsTab();
+      DetailsTab.verifyLogs('Error');
     });
 
     it('Verify vulnerabilities column exists in Pipeline runs table', () => {
