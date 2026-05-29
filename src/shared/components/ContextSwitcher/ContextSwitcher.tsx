@@ -85,10 +85,7 @@ export const ContextSwitcher: React.FC<React.PropsWithChildren<ContextSwitcherPr
   }, [menuItems, resourceType, selectedItem, recentItems]);
 
   const [filteredRecentItems, filteredAllItems] = React.useMemo(
-    () => [
-      filteredItems(recentMenuItems, searchText.toLowerCase()),
-      filteredItems(menuItems, searchText.toLowerCase()),
-    ],
+    () => [filteredItems(recentMenuItems, searchText), filteredItems(menuItems, searchText)],
     [menuItems, recentMenuItems, searchText],
   );
 

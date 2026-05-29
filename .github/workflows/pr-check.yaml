@@ -23,7 +23,7 @@ jobs:
             exit 0
           fi
 
-          WHITELISTED_BOTS=("red-hat-konflux[bot]" "konflux-ci-coder[bot]")
+          WHITELISTED_BOTS=("red-hat-konflux[bot]" "konflux-ci-coder[bot]" "fullsend-ai-coder[bot]")
           REQUIRED_LABEL_NAME="ok-to-test"
 
           ORG="${{ github.repository_owner }}"
