@@ -43,7 +43,9 @@ describe('Basic Happy Path', () => {
   const pipeline: string = Cypress.env('PIPELINE');
   const pipelineConfig = pipelineConfigs[pipeline];
   if (!pipelineConfig) {
-    throw new Error(`Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`);
+    throw new Error(
+      `Unknown pipeline "${pipeline}". Supported: ${Object.keys(pipelineConfigs).join(', ')}`,
+    );
   }
   const piplinerunlogsTasks = pipelineConfig.tasks;
 
@@ -143,7 +145,11 @@ describe('Basic Happy Path', () => {
           UIhelper.checkTableHasRows('Pipeline run List', componentName, 2);
           UIhelper.clickRowCellInTable('Pipeline run List', pipelinerunName, pipelinerunName);
           UIhelper.verifyLabelAndValue('Namespace', Cypress.env('HAC_NAMESPACE'));
-          UIhelper.verifyLabelAndValue('Pipeline', pipelinerunName);
+          // Use the pipelinerunName excluding the last hyphenated part "-<generated_number>"
+          const lastDashIndex = pipelinerunName.lastIndexOf('-');
+          const shortPipelinerunName =
+            lastDashIndex !== -1 ? pipelinerunName.substring(0, lastDashIndex) : pipelinerunName;
+          UIhelper.verifyLabelAndValue('Pipeline', shortPipelinerunName);
           UIhelper.verifyLabelAndValue('Application', applicationName);
           UIhelper.verifyLabelAndValue('Component', componentName);
           UIhelper.verifyLabelAndValue('Related pipelines', '0 pipelines');
