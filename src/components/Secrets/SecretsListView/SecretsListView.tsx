@@ -14,6 +14,7 @@ import FilteredEmptyState from '~/shared/components/empty-state/FilteredEmptySta
 import { useNamespace } from '~/shared/providers/Namespace';
 import { getErrorState } from '~/shared/utils/error-utils';
 import { useAccessReviewForModel } from '~/utils/rbac';
+import { filterByText } from '~/utils/text-filter-utils';
 import SecretsList from './SecretsList';
 
 const SecretsListView: React.FC = () => {
@@ -27,10 +28,10 @@ const SecretsListView: React.FC = () => {
   const { name: nameFilter } = filters;
   const [canCreateRemoteSecret] = useAccessReviewForModel(SecretModel, 'create');
 
-  const filteredRemoteSecrets = React.useMemo(() => {
-    // apply name filter
-    return nameFilter ? secrets.filter((s) => s.metadata.name.indexOf(nameFilter) !== -1) : secrets;
-  }, [secrets, nameFilter]);
+  const filteredRemoteSecrets = React.useMemo(
+    () => filterByText(secrets, nameFilter, (s) => s.metadata.name),
+    [secrets, nameFilter],
+  );
 
   const createSecretButton = React.useMemo(() => {
     return (

@@ -134,6 +134,7 @@ const EditSecretSensitiveContextProvider: React.FC<EditSecretSensitiveContextPro
     const { setFieldValue, values: v } = formikRef.current;
     void setFieldValue('source.password', '');
     void setFieldValue('source.ssh-privatekey', '');
+    void setFieldValue('image.dockerconfig', undefined);
     v.image?.registryCreds?.forEach((_c, idx) => {
       void setFieldValue(`image.registryCreds.${idx}.password`, '');
     });
@@ -141,6 +142,16 @@ const EditSecretSensitiveContextProvider: React.FC<EditSecretSensitiveContextPro
       void setFieldValue(`opaque.keyValues.${idx}.value`, '');
     });
   }, [clearSensitiveMemory]);
+
+  React.useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        clearFullSecretAndSensitiveFields();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [clearFullSecretAndSensitiveFields]);
 
   const contextValue = React.useMemo(
     (): SecretEditSensitiveContextValue => ({
@@ -171,16 +182,6 @@ const EditSecretForm: React.FC = () => {
   React.useEffect(() => {
     clearSensitiveMemory();
   }, [namespace, secretName, clearSensitiveMemory]);
-
-  React.useEffect(() => {
-    const onVisibility = () => {
-      if (document.visibilityState === 'hidden') {
-        clearSensitiveMemory();
-      }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-    return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [clearSensitiveMemory]);
 
   const requestFullSecret = React.useCallback(async () => {
     if (fullSecret) {

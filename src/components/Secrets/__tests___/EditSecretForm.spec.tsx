@@ -321,6 +321,66 @@ describe('EditSecretForm', () => {
         expect(passwordInput).toHaveValue('edited');
       });
     });
+
+    it('clears docker config from form state when hiding upload configuration values', async () => {
+      const user = userEvent.setup();
+      (editSecretResource as jest.Mock).mockResolvedValue(undefined);
+      renderWithSecret(mockImageSecretDockercfgForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+      });
+      await showSecretValues(user);
+      await waitFor(() => {
+        expectSensitiveValuesBannerVisible();
+        expect(fetchFullSecret).toHaveBeenCalledTimes(1);
+        const dockerConfigField = document.getElementById('text-file-docker-config');
+        const dockerConfigInput =
+          dockerConfigField?.querySelector('input, textarea') ?? dockerConfigField;
+        expect((dockerConfigInput as HTMLInputElement | HTMLTextAreaElement).value).not.toBe('');
+      });
+
+      await hideSecretValues(user);
+      await waitFor(() => {
+        expectSensitiveValuesBannerHidden();
+        expect(document.getElementById('text-file-docker-config')).not.toBeInTheDocument();
+      });
+
+      await user.click(screen.getByTestId('add-button'));
+      const labelKeyInputs = screen.getAllByTestId('pairs-list-name');
+      await user.type(labelKeyInputs[labelKeyInputs.length - 1], 'test-label');
+      const labelValueInputs = screen.getAllByTestId('pairs-list-value');
+      await user.type(labelValueInputs[labelValueInputs.length - 1], 'test-value');
+
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).toBeDisabled();
+      });
+      expect(editSecretResource).not.toHaveBeenCalled();
+    });
+
+    it('clears sensitive form values when the document becomes hidden', async () => {
+      const user = userEvent.setup();
+      renderWithSecret(mockSourceSecretBasicAuthForEdit);
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { name: 'Edit secret' })).toBeInTheDocument();
+      });
+      await showSecretValues(user);
+      await waitFor(() => {
+        expectSensitiveValuesBannerVisible();
+        expect(screen.getByDisplayValue('gituser')).toBeInTheDocument();
+      });
+
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+
+      await waitFor(() => {
+        expectSensitiveValuesBannerHidden();
+      });
+    });
   });
 
   describe('edit mode behavior', () => {
