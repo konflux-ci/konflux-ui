@@ -1,8 +1,8 @@
 import React from 'react';
-import { PIPELINE_SERVICE_ACCOUNT_PREFIX } from '../consts/pipeline';
-import { SecretKind } from '../types';
-import { useSecrets } from './useSecrets';
-import { useServiceAccount } from './useServiceAccount';
+import { PIPELINE_SERVICE_ACCOUNT_PREFIX } from '~/consts/pipeline';
+import { useSecrets } from '~/hooks/useSecrets';
+import { useServiceAccount } from '~/hooks/useServiceAccount';
+import { SecretKind } from '~/types';
 
 export const useLinkedSecrets = (
   namespace: string,

@@ -1,8 +1,8 @@
+import { K8S_ACCEPT_TABLE } from '~/k8s/consts/k8s-accept';
+import { commonFetchJSON } from '~/k8s/fetch';
+import { getK8sResourceURL } from '~/k8s/k8s-utils';
 import { SecretModel } from '~/models';
 import { SecretKind } from '~/types';
-import { K8S_ACCEPT_TABLE } from './consts/k8s-accept';
-import { commonFetchJSON } from './fetch';
-import { getK8sResourceURL } from './k8s-utils';
 
 const defaultTimeout = 60_000;
 
@@ -137,5 +137,5 @@ export const fetchSecretGetTable = async (
     true,
   );
   const items = parseSecretTableToSecretKinds(table, namespace);
-  return items.find((s) => s.metadata?.name === name) ?? items[0];
+  return items.find((s) => s.metadata?.name === name);
 };

@@ -60,7 +60,7 @@ const AddSecretForm: React.FC = () => {
             actions.setStatus({ submitError: error.message });
           });
       }}
-      validationSchema={secretFormValidationSchema()}
+      validationSchema={secretFormValidationSchema}
     >
       {({ status, isSubmitting, handleReset, dirty, errors, handleSubmit }) => (
         <PageLayout

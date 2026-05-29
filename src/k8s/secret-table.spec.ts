@@ -1,4 +1,4 @@
-import { parseSecretTableToSecretKinds } from './secret-table';
+import { parseSecretTableToSecretKinds } from '~/k8s/secret-table';
 
 describe('parseSecretTableToSecretKinds', () => {
   it('maps table rows from columnDefinitions + cells (type from Type column)', () => {

@@ -110,6 +110,51 @@ function editRequiresFullSecretPayload(
   }
 }
 
+type EditSecretSensitiveContextProviderProps = React.PropsWithChildren<{
+  formik: FormikProps<AddSecretFormValues>;
+  fullSecret: SecretKind | null;
+  isLoadingFullSecret: boolean;
+  requestFullSecret: () => Promise<SecretKind | undefined>;
+  clearSensitiveMemory: () => void;
+}>;
+
+const EditSecretSensitiveContextProvider: React.FC<EditSecretSensitiveContextProviderProps> = ({
+  formik,
+  fullSecret,
+  isLoadingFullSecret,
+  requestFullSecret,
+  clearSensitiveMemory,
+  children,
+}) => {
+  const formikRef = React.useRef(formik);
+  formikRef.current = formik;
+
+  const clearFullSecretAndSensitiveFields = React.useCallback(() => {
+    clearSensitiveMemory();
+    const { setFieldValue, values: v } = formikRef.current;
+    void setFieldValue('source.password', '');
+    void setFieldValue('source.ssh-privatekey', '');
+    v.image?.registryCreds?.forEach((_c, idx) => {
+      void setFieldValue(`image.registryCreds.${idx}.password`, '');
+    });
+    v.opaque?.keyValues?.forEach((_kv, idx) => {
+      void setFieldValue(`opaque.keyValues.${idx}.value`, '');
+    });
+  }, [clearSensitiveMemory]);
+
+  const contextValue = React.useMemo(
+    (): SecretEditSensitiveContextValue => ({
+      fullSecret,
+      isLoadingFullSecret,
+      requestFullSecret,
+      clearFullSecretAndSensitiveFields,
+    }),
+    [fullSecret, isLoadingFullSecret, requestFullSecret, clearFullSecretAndSensitiveFields],
+  );
+
+  return <SecretEditSensitiveProvider value={contextValue}>{children}</SecretEditSensitiveProvider>;
+};
+
 const EditSecretForm: React.FC = () => {
   const namespace = useNamespace();
   const navigate = useNavigate();
@@ -216,29 +261,6 @@ const EditSecretForm: React.FC = () => {
     labels: [...readLabels] as KeyValueEntry[],
   };
 
-  const buildSensitiveContext = (
-    formik: FormikProps<AddSecretFormValues>,
-  ): SecretEditSensitiveContextValue => ({
-    fullSecret,
-    isLoadingFullSecret,
-    requestFullSecret: async () => {
-      const s = await requestFullSecret();
-      return s;
-    },
-    clearFullSecretAndSensitiveFields: () => {
-      clearSensitiveMemory();
-      const { setFieldValue, values: v } = formik;
-      void setFieldValue('source.password', '');
-      void setFieldValue('source.ssh-privatekey', '');
-      v.image?.registryCreds?.forEach((_c, idx) => {
-        void setFieldValue(`image.registryCreds.${idx}.password`, '');
-      });
-      v.opaque?.keyValues?.forEach((_kv, idx) => {
-        void setFieldValue(`opaque.keyValues.${idx}.value`, '');
-      });
-    },
-  });
-
   return (
     <Formik
       initialValues={initialValues}
@@ -272,17 +294,24 @@ const EditSecretForm: React.FC = () => {
             navigate(SECRET_LIST_PATH.createPath({ workspaceName: namespace }));
           })
           .catch((editError) => {
+            const errorMessage = editError instanceof Error ? editError.message : String(editError);
             logger.warn('Error while submitting secret form', {
-              message: editError,
+              message: errorMessage,
             });
             actions.setSubmitting(false);
-            actions.setStatus({ submitError: editError.message });
+            actions.setStatus({ submitError: errorMessage });
           });
       }}
       validationSchema={secretFormValidationSchema({ isEditMode: true })}
     >
       {(formik) => (
-        <SecretEditSensitiveProvider value={buildSensitiveContext(formik)}>
+        <EditSecretSensitiveContextProvider
+          formik={formik}
+          fullSecret={fullSecret}
+          isLoadingFullSecret={isLoadingFullSecret}
+          requestFullSecret={requestFullSecret}
+          clearSensitiveMemory={clearSensitiveMemory}
+        >
           <PageLayout
             breadcrumbs={getSecretBreadcrumbs(namespace, 'Edit')}
             title={
@@ -309,12 +338,12 @@ const EditSecretForm: React.FC = () => {
             }
           >
             <PageSection variant={PageSectionVariants.light} isFilled isWidthLimited>
-              <Form style={{ maxWidth: '70%' }}>
+              <Form className="edit-secret-form__content">
                 <SecretTypeSubForm isEditMode={true} />
               </Form>
             </PageSection>
           </PageLayout>
-        </SecretEditSensitiveProvider>
+        </EditSecretSensitiveContextProvider>
       )}
     </Formik>
   );
