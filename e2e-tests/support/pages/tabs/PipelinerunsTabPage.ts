@@ -205,10 +205,10 @@ export class DetailsTab {
       });
   }
 
-  static waitForPLRAndDownloadAllLogs(allTaskLogs = true) {
+  static waitForPLRAndDownloadAllLogs(allTaskLogs = true, expectedStatus = 'Succeeded') {
     DetailsTab.waitUntilStatusIsNotRunning();
     LogsTab.downloadAllTaskLogs(allTaskLogs);
-    UIhelper.verifyLabelAndValue('Status', 'Succeeded');
+    UIhelper.verifyLabelAndValue('Status', expectedStatus);
   }
 }
 
