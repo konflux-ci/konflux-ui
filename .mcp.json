@@ -3,6 +3,16 @@
     "patternfly": {
       "command": "npx",
       "args": ["-y", "@patternfly/patternfly-mcp@latest"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--caps=core,storage,vision",
+        "--ignore-https-errors",
+        "--viewport-size=1440x900"
+      ]
     }
   }
 }

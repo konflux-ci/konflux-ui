@@ -9,16 +9,8 @@ export const ROUTES_DIR = path.join(REPO_ROOT, 'src/routes/page-routes');
 export const PATHS_FILE = path.join(REPO_ROOT, 'src/routes/paths.ts');
 export const ROUTES_INDEX_FILE = path.join(REPO_ROOT, 'src/routes/index.tsx');
 
-export const UI_COMPONENT_DIRS = [
-  path.join(REPO_ROOT, 'src/components'),
-  path.join(REPO_ROOT, 'src/shared/components'),
-];
-
 export const DEFAULT_DEV_SERVER_URL = 'https://localhost:8080';
 export const DEFAULT_BASE_REF = 'origin/main';
-export const DEFAULT_OUTPUT_DIR = path.join(REPO_ROOT, '.screenshots');
-export const DEFAULT_AUTH_STATE_PATH = path.join(REPO_ROOT, '.screenshot-auth/state.json');
-export const DEFAULT_CACHE_DIR = path.join(REPO_ROOT, '.screenshot-cache');
 
 export const PARAM_HINTS: Record<string, import('./types.js').InteractionHint> = {
   workspaceName: 'namespace-select',
