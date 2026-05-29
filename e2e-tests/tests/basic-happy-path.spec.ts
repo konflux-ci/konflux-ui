@@ -176,7 +176,7 @@ describe('Basic Happy Path', () => {
       UIhelper.clickRowCellInTable('Pipeline run List', 'Test', `${applicationName}-`);
       // We encountered problems with EC checks on a local deployment,
       // so we only check for Succeeded status on the stage job
-      if (Cypress.env('CYPRESS_PERIODIC_RUN_STAGE') === 'true') {
+      if (Cypress.env('PERIODIC_RUN_STAGE') === 'true') {
         DetailsTab.waitForPLRAndDownloadAllLogs(false, 'Succeeded');
       } else {
         DetailsTab.waitForPLRAndDownloadAllLogs(false, '(Succeeded|Failed)');
