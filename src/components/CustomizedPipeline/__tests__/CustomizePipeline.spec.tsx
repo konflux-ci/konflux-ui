@@ -92,7 +92,7 @@ describe('CustomizePipeline', () => {
       />,
     );
     const buttons = result.getAllByRole('button', { name: /Sending pull request/ });
-    expect(buttons.length).toBeGreaterThanOrEqual(1);
+    expect(buttons).toHaveLength(2);
   });
 
   it('should render rolling back', () => {
@@ -105,7 +105,7 @@ describe('CustomizePipeline', () => {
       />,
     );
     const buttons = result.getAllByRole('button', { name: /Rolling back/ });
-    expect(buttons.length).toBeGreaterThanOrEqual(1);
+    expect(buttons).toHaveLength(2);
   });
 
   it('should render pull request sent', () => {
