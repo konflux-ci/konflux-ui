@@ -49,7 +49,7 @@ export class UIhelper {
     return cy
       .contains(UIhelperPO.listGroup_dt, new RegExp(`^\\s*${label}\\s*$`))
       .siblings('dd')
-      .contains(value)
+      .contains(new RegExp(value))
       .scrollIntoView()
       .should('be.visible');
   }
